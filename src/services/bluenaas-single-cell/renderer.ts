@@ -37,6 +37,7 @@ import {
   createSegmentMesh,
   NeuronSegementInfo as NeuronSegmentInfo,
 } from './renderer-utils';
+import { computeSegmentsPositions } from './dendrogram-renderer/positions';
 import type { Morphology, SecMarkerConfig } from './types';
 
 import { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
@@ -240,7 +241,9 @@ export default class NeuronViewerRenderer {
     if (!dendrogram || !this.morphology) return;
 
     console.log('Dendrogram:', dendrogram);
-    const group = buildDendrogram(dendrogram, this.neuroSegmentInfo);
+    const tree = computeSegmentsPositions(dendrogram);
+    console.log('🚀 [renderer] tree = ', tree); // @FIXME: Remove this line written on 2024-09-25 at 17:44
+    const group = buildDendrogram(tree, this.neuroSegmentInfo);
     this.morphObj.clear().add(group);
     this.camera.setRotationFromQuaternion(new Quaternion());
   }
