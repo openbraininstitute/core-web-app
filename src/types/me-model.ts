@@ -1,4 +1,5 @@
 import type { EModelMenuItem, MEModelMenuItem } from './e-model';
+import { IdWithType, Type } from './explore-section/common';
 import { Annotation } from './explore-section/delta-properties';
 import { ESeModel } from './explore-section/es';
 import { BrainLocation, Entity, ResourceMetadata } from '@/types/nexus';
@@ -62,6 +63,10 @@ export type DefaultMEModelType = {
 
 /* ------------------------------ MEModel Build ----------------------------- */
 
+type MEModelContribution = Type<'Contribution'> & {
+  agent: IdWithType<string[]> & { name: string; givenName: string; familyName: string };
+};
+
 export interface MEModel extends Entity {
   name: string;
   description: string;
@@ -77,6 +82,7 @@ export interface MEModel extends Entity {
       name?: string;
     },
   ];
+  contribution: MEModelContribution[];
   image?: ESeModel['image'];
   validated: boolean;
   status: 'initialized' | 'processing' | 'done' | 'running' | 'error';
