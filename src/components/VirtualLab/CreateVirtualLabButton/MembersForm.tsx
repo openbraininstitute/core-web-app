@@ -14,6 +14,7 @@ type MembersFormProps = {
   setVirtualLabFn: Dispatch<SetStateAction<VirtualLabWithOptionalId>>;
   closeModalFn: () => void;
   createVirtualLabFn: () => void;
+  handleBackClick: () => void;
 };
 
 function NewMemberForm({
@@ -171,6 +172,7 @@ export default function MembersForm({
   setVirtualLabFn,
   closeModalFn,
   createVirtualLabFn,
+  handleBackClick,
 }: MembersFormProps) {
   const { data } = useSession();
 
@@ -204,7 +206,10 @@ export default function MembersForm({
         <NewMemberForm setVirtualLabFn={setVirtualLabFn} />
       </div>
       <div className="flex flex-row justify-end gap-2">
-        <Button type="text" className="min-w-36 text-primary-8" onClick={() => closeModalFn()}>
+        <Button type="dashed" className="min-w-36 border text-primary-8" onClick={handleBackClick}>
+          Back
+        </Button>
+        <Button type="dashed" className="min-w-36 text-primary-8" onClick={closeModalFn}>
           Cancel
         </Button>
         <Button
