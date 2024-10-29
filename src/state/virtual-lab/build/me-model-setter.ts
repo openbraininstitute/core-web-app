@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithDefault } from 'jotai/utils';
-
+import { virtualLabProjectUsersAtomFamily } from '../projects';
 import {
   selectedEModelIdAtom,
   selectedMModelIdAtom,
@@ -16,6 +16,7 @@ import { createResource, fetchResourceById, updateResource } from '@/api/nexus';
 import { composeUrl } from '@/util/nexus';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
+import { env } from '@/env.mjs';
 
 type MEModelDetails = {
   description: string;
@@ -32,8 +33,15 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
     const selectedMModel = await get(selectedMModelAtom);
     const selectedEModel = await get(selectedEModelAtom);
     const meModelDetails = get(meModelDetailsAtom);
-
-    if (!session || !meModelDetails || !selectedMModel || !selectedEModel) return null;
+    const contributors = await get(
+      virtualLabProjectUsersAtomFamily({
+        projectId: virtualLabInfo.projectId,
+        virtualLabId: virtualLabInfo.virtualLabId,
+      })
+    );
+    const realm = env.NEXT_PUBLIC_KEYCLOAK_ISSUER.split('/').pop();
+    if (!session || !meModelDetails || !selectedMModel || !selectedEModel || !contributors)
+      return null;
 
     let brainLocation: BrainLocation | undefined;
     if (meModelDetails.brainRegion) {
@@ -73,6 +81,16 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
           name: selectedMModel.name,
         },
       ],
+      contribution: contributors.map((contributor) => ({
+        '@type': 'Contribution',
+        agent: {
+          '@id': `${nexus.url}/realms/${realm}/users/${contributor.username}`,
+          '@type': ['Agent', 'Person'],
+          familyName: contributor.last_name,
+          givenName: contributor.first_name,
+          name: `${contributor.first_name} ${contributor.last_name}`,
+        },
+      })),
       annotation: annotationList,
       brainLocation,
       // 'image' will be added after me-model validation

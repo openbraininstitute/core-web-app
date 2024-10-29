@@ -11,7 +11,6 @@ export const env = createEnv({
   server: {
     KEYCLOAK_CLIENT_ID: z.string().min(3),
     KEYCLOAK_CLIENT_SECRET: z.string().min(5),
-    KEYCLOAK_ISSUER: z.string().url(),
 
     NEXTAUTH_SECRET: z.string().min(5),
 
@@ -23,6 +22,8 @@ export const env = createEnv({
   },
 
   client: {
+    NEXT_PUBLIC_KEYCLOAK_ISSUER: z.string().url(),
+
     NEXT_PUBLIC_BASE_PATH: z.preprocess((basePath) => basePath ?? '', z.string()),
 
     // When run on non-protected branch in Gitlab CI the value of env var will be an empty string.
@@ -91,6 +92,8 @@ export const env = createEnv({
   },
 
   experimental__runtimeEnv: {
+    NEXT_PUBLIC_KEYCLOAK_ISSUER: process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER,
+
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
 
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
