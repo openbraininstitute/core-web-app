@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
+import Image from 'next/image';
 import { selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
@@ -112,5 +113,68 @@ function SectionTabs({ projectId, label }: { projectId: string; label: string })
 }
 
 export default function ScopeSelector({ projectId, label }: { projectId: string; label: string }) {
-  return <SectionTabs projectId={projectId} label={label} />;
+  const tileJSX = (title: string, text: string, imgSrc: string) => (
+    <div className="flex items-center justify-center rounded border border-primary-4 bg-primary-9 p-5 text-white">
+      <div className="flex">
+        <div>
+          <div className="text-4xl">{title}</div>
+          <div>{text}</div>
+        </div>
+        <Image src={imgSrc} width={50} height={50} alt={title} />
+      </div>
+    </div>
+  );
+  return (
+    <>
+      <SectionTabs projectId={projectId} label={label} />
+      <div>
+        <div className="mt-12 text-[40px] font-bold text-primary-4">
+          Select a scale for your model
+        </div>
+
+        <div className="mt-8 grid grid-cols-3 gap-10  ">
+          <div className="text-4xl text-primary-4">CELLULAR</div>
+          <div className="text-4xl text-primary-4">CIRCUIT</div>
+          <div className="text-4xl text-primary-4">SYSTEM</div>
+          {tileJSX(
+            'Ion channel',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.',
+            '/images/scales/ionChannel.jpg'
+          )}
+          {/* {tileJSX(
+            'Paired neuron',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )}
+          {tileJSX(
+            'Brain region',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )}
+          {tileJSX(
+            'Single neuron',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )}
+          {tileJSX(
+            'Microcircuit',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )}
+          {tileJSX(
+            'Brain system',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )}
+          {tileJSX(
+            'Synaptome',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )}
+          {tileJSX(
+            'NGV',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )}
+          {tileJSX(
+            'Whole brain',
+            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+          )} */}
+        </div>
+      </div>
+    </>
+  );
 }
