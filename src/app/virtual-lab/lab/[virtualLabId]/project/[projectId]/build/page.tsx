@@ -135,7 +135,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
   return (
     <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
       <VirtualLabTopMenu />
-      <ScopeSelector />
+      <ScopeSelector projectId={params.projectId} label="model" />
       {selectedModelType && tabDetails ? (
         <div className="flex grow flex-col">
           <div className="flex justify-between">
