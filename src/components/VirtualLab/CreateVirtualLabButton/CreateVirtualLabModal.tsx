@@ -57,10 +57,6 @@ export default function CreateVirtualLabModal() {
     setIsFormValid(false);
   }, [setIsModalVisible, setIsFormValid]);
 
-  const handleBackClick = () => {
-    setStep('Information');
-  };
-
   const onVirtualLabCreate = async () => {
     setLoading(true);
 
@@ -108,7 +104,7 @@ export default function CreateVirtualLabModal() {
             setVirtualLabFn={setVirtualLab}
             closeModalFn={closeModalFn}
             createVirtualLabFn={onVirtualLabCreate}
-            handleBackClick={handleBackClick}
+            handleBackClick={() => setStep('Information')}
           />
         )}
       </div>
