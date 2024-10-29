@@ -104,6 +104,7 @@ export default function CreateVirtualLabModal() {
             setVirtualLabFn={setVirtualLab}
             closeModalFn={closeModalFn}
             createVirtualLabFn={onVirtualLabCreate}
+            handleBackClick={() => setStep('Information')}
           />
         )}
       </div>
