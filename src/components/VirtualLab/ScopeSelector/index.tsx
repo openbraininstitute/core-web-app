@@ -1,14 +1,8 @@
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useAtom, useAtomValue } from 'jotai';
-import { ConfigProvider, Collapse } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
-
-import { selectedSimulationScopeAtom } from '@/state/simulate';
-import { projectTopMenuRefAtom } from '@/state/virtual-lab/lab';
-import { SimulationType } from '@/types/virtual-lab/lab';
+import { useAtom } from 'jotai';
+import capitalize from 'lodash/capitalize';
+import { selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
-import hoverStyles from './hover-styles.module.css';
+import { SimulationType } from '@/types/virtual-lab/lab';
 
 export enum SimulationScope {
   Cellular = 'cellular',
@@ -20,15 +14,6 @@ type Item = {
   description: string;
   key: SimulationType;
   scope: `${SimulationScope}`;
-  title: string;
-};
-
-type SlideProps = {
-  className?: string;
-  description: string;
-  id: SimulationType;
-  onChange: () => void;
-  selectedSimulationScope: SimulationType;
   title: string;
 };
 
@@ -92,162 +77,40 @@ export const items: Array<Item> = [
   },
 ];
 
-function ScopeFilter({
-  contentIsVisible,
-  onClick,
-  onChange,
-  selectedScope,
-}: {
-  contentIsVisible: boolean;
-  onChange: (scope: SimulationScope) => void;
-  onClick: (scope: SimulationScope) => void;
-  selectedScope: SimulationScope | null;
-}) {
-  const projectTopMenuRef = useAtomValue(projectTopMenuRefAtom);
+function SectionTabs({ projectId, label }: { projectId: string; label: string }) {
+  const [selectedTab, setSelectedTab] = useAtom(selectedTabFamily('build' + projectId));
 
-  const controls = (
-    <div className="flex flex-row !divide-x !divide-primary-3 border border-primary-3">
-      {Object.entries(SimulationScope).map(([accessibleLabel, scope]) => {
-        const isSelectedScope = scope === selectedScope;
+  const tabJSX = (tab: typeof selectedTab) => {
+    const isSelected = selectedTab === tab;
+    return (
+      <label
+        className={classNames(
+          'flex grow cursor-pointer items-center justify-center text-2xl font-bold transition-all hover:bg-primary-8 hover:text-white',
+          isSelected && 'bg-white text-primary-9'
+        )}
+        htmlFor={`scope-filter-${tab}`}
+      >
+        <input
+          aria-label={tab}
+          checked={isSelected}
+          className="sr-only"
+          id={`scope-filter-${tab}`}
+          onChange={() => setSelectedTab(tab)}
+          type="radio"
+        />
+        {capitalize(`${tab} ${label}`) + (tab === 'browse' ? 's' : '')}
+      </label>
+    );
+  };
 
-        return (
-          <label
-            className={classNames(
-              'flex cursor-pointer flex-row items-center gap-5 px-5 text-lg capitalize transition-all hover:bg-primary-8 hover:text-white',
-              isSelectedScope && 'bg-white font-bold text-primary-9'
-            )}
-            key={scope}
-            htmlFor={`scope-filter-${scope}`}
-          >
-            <input
-              aria-label={accessibleLabel}
-              checked={isSelectedScope}
-              className="sr-only"
-              id={`scope-filter-${scope}`}
-              onChange={() => onChange(scope)}
-              onClick={() => onClick(scope)}
-              type="radio"
-            />
-            {isSelectedScope ? (
-              <>
-                <span>{scope}</span>
-                {contentIsVisible && (
-                  <DownOutlined
-                    style={{
-                      fontSize: 12,
-                    }}
-                    size={4}
-                  />
-                )}
-              </>
-            ) : (
-              scope
-            )}
-          </label>
-        );
-      })}
+  return (
+    <div className="-mt-[67px] inline-flex h-[65px] w-[1000px] divide-x divide-primary-3 border border-primary-3">
+      {tabJSX('new')}
+      {tabJSX('browse')}
     </div>
   );
-
-  return projectTopMenuRef?.current && createPortal(controls, projectTopMenuRef.current);
 }
 
-function ScopeOption(props: SlideProps) {
-  const { className, description, id: key, onChange, selectedSimulationScope, title } = props;
-
-  const currentScopeIsSelected = selectedSimulationScope === key; // This particular scope is selected.
-
-  const anyScopeIsSelected = !!selectedSimulationScope;
-  const anotherScopeIsSelected = anyScopeIsSelected && !currentScopeIsSelected; // A scope is selected, but it isn't this one.
-
-  return (
-    <label
-      className={classNames(
-        'flex w-96 cursor-pointer flex-col text-left text-white',
-        currentScopeIsSelected && hoverStyles.isSelected,
-        anotherScopeIsSelected && hoverStyles.isNotSelected,
-        className
-      )}
-      htmlFor={`scope-${key}`}
-    >
-      <input
-        aria-describedby={`scope-${key}-description`}
-        aria-label={title}
-        checked={currentScopeIsSelected}
-        className="sr-only"
-        id={`scope-${key}`}
-        onChange={onChange}
-        type="radio"
-      />
-      <h2 className="text-3xl">{title}</h2>
-      <span className="font-light" id={`scope-${key}-description`}>
-        {description}
-      </span>
-    </label>
-  );
-}
-
-export default function ScopeSelector() {
-  const [selectedScope, setSelectedScope] = useState<SimulationScope>(SimulationScope.Cellular);
-
-  const [selectedSimulationScope, setSelectedSimulationScope] = useAtom(
-    selectedSimulationScopeAtom
-  );
-
-  const [contentIsVisible, setContentVisibility] = useState<boolean>(false);
-
-  const availableScopes = items
-    .filter(({ scope }) => !selectedScope || scope === selectedScope)
-    .map(({ description, key, title }) => (
-      <ScopeOption
-        className={hoverStyles.customSlide}
-        description={description}
-        id={key}
-        key={key}
-        onChange={() => {
-          setSelectedSimulationScope(key);
-          setContentVisibility(false);
-        }}
-        selectedSimulationScope={selectedSimulationScope}
-        title={title}
-      />
-    ));
-
-  return (
-    <>
-      <ScopeFilter
-        contentIsVisible={contentIsVisible}
-        onChange={(scope: SimulationScope) => setSelectedScope(scope)}
-        onClick={(scope: SimulationScope) =>
-          scope === selectedScope || !contentIsVisible
-            ? setContentVisibility((isVisible) => !isVisible)
-            : {}
-        }
-        selectedScope={selectedScope}
-      />
-      <ConfigProvider
-        theme={{
-          components: {
-            Collapse: {
-              contentPadding: 0,
-              headerPadding: 0,
-            },
-          },
-        }}
-      >
-        <Collapse
-          activeKey={contentIsVisible ? 1 : undefined}
-          bordered={false}
-          expandIcon={() => false}
-          items={[
-            {
-              key: '1',
-              label: '',
-              children: <div className="my-6 flex gap-8 bg-primary-9">{availableScopes}</div>,
-            },
-          ]}
-        />
-      </ConfigProvider>
-    </>
-  );
+export default function ScopeSelector({ projectId, label }: { projectId: string; label: string }) {
+  return <SectionTabs projectId={projectId} label={label} />;
 }
