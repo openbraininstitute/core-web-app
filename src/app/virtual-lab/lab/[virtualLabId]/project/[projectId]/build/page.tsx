@@ -2,7 +2,7 @@
 
 import { HTMLProps, useEffect, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { Button } from 'antd';
 import { useRouter } from 'next/navigation';
 
@@ -17,7 +17,6 @@ import { SimulationScopeToModelType, SimulationType } from '@/types/virtual-lab/
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
-import ScopeSelector from '@/components/VirtualLab/ScopeSelector';
 import BookmarkButton from '@/components/explore-section/BookmarkButton';
 import GenericButton from '@/components/Global/GenericButton';
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
@@ -25,6 +24,8 @@ import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { isModel } from '@/types/virtual-lab/bookmark';
 import { classNames } from '@/util/utils';
+import { ScopeSelector, SectionTabs } from '@/components/VirtualLab/ScopeSelector';
+import { selectedTabFamily } from '@/components/VirtualLab/ScopeSelector/state';
 import Styles from '@/styles/vlabs.module.scss';
 
 type Params = {
@@ -57,6 +58,17 @@ const SupportedTypeToTabDetails: Record<string, TabDetails> = {
 };
 
 export default function VirtualLabProjectBuildPage({ params }: Params) {
+  const [selectedTab] = useAtom(selectedTabFamily('build' + params.projectId));
+  return (
+    <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
+      <VirtualLabTopMenu />
+      <SectionTabs projectId={params.projectId} label="model" />
+      {selectedTab === 'new' && <ScopeSelector projectId={params.projectId} />}
+    </div>
+  );
+}
+
+function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
   const router = useRouter();
   const selectedSimulationScope = useAtomValue(selectedSimulationScopeAtom);
   const [selectedModelType, setSelectedModelType] = useState<DataType | null>();
@@ -121,7 +133,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
     switch (selectedSimulationScope) {
       case SimulationType.SingleNeuron:
       case SimulationType.Synaptome: {
-        const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
+        const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
         const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
         const baseExploreUrl = `${vlProjectUrl}/${SupportedTypeToTabDetails[dataType].viewUrl}`;
         router.push(`${baseExploreUrl}/${pathId}`);
@@ -133,9 +145,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
-      <VirtualLabTopMenu />
-      <ScopeSelector projectId={params.projectId} label="model" />
+    <>
       {selectedModelType && tabDetails ? (
         <div className="flex grow flex-col">
           <div className="flex justify-between">
@@ -160,7 +170,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
               controlsVisible={false}
               dataType={selectedModelType ?? DataType.CircuitMEModel}
               dataScope={ExploreDataScope.NoScope}
-              virtualLabInfo={{ virtualLabId: params.virtualLabId, projectId: params.projectId }}
+              virtualLabInfo={{ virtualLabId, projectId }}
               selectionType="radio"
               style={{ background: 'bg-white' }}
               containerClass="grow bg-primary-9 flex flex-col"
@@ -172,8 +182,8 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
               <div className="fixed bottom-3 right-[60px] mb-6 flex items-center justify-end gap-2">
                 {isModel(MODEL_DATA_TYPES[selectedModelType].name) && (
                   <BookmarkButton
-                    virtualLabId={params.virtualLabId}
-                    projectId={params.projectId}
+                    virtualLabId={virtualLabId}
+                    projectId={projectId}
                     // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
                     resourceId={selectedRows[0]?._source['@id']}
                     type={MODEL_DATA_TYPES[selectedModelType].name}
@@ -187,7 +197,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
       ) : (
         <div className="m-auto w-fit border p-6">Coming Soon</div>
       )}
-    </div>
+    </>
   );
 }
 
