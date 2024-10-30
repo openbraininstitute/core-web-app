@@ -1,0 +1,140 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "paths": {
+    "/": {
+      "options": {
+        "summary": "Options",
+        "description": "Sets CORS headers.",
+        "operationId": "options__options",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    },
+    "/session": {
+      "get": {
+        "summary": "Session",
+        "description": "Starts user bbp-workflow instance and sets session cookie.\n\nShould be the first endpoint invoked by UI to establish session.",
+        "operationId": "session_session_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    },
+    "/auth": {
+      "get": {
+        "summary": "Auth",
+        "description": "Injects OAuth token.\n\nShould be the second endpoint invoked by UI to make sure bbp-workflow service\nis healthy and contains valid token. When invoked, should include credentials(session_id).\n\nIf service is not yet available, return status code: 503 with retry-after header.",
+        "operationId": "auth_auth_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    },
+    "/launch": {
+      "post": {
+        "summary": "Launch",
+        "description": "Launches workflow.",
+        "operationId": "launch_launch_post",
+        "parameters": [
+          {
+            "name": "virtual_lab",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Virtual Lab" }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Project" }
+          },
+          {
+            "name": "task",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Task" }
+          },
+          {
+            "name": "config",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Config" }
+          },
+          {
+            "name": "files",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Files" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{proxy+}": {
+      "get": {
+        "summary": "Default",
+        "description": "Forwards to user bbp-workflow instance.",
+        "operationId": "default__proxy___get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
