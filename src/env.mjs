@@ -9,6 +9,7 @@ export const env = createEnv({
   skipValidation: ['lint', 'test', 'test:ci', 'build'].includes(process.env.npm_lifecycle_event),
 
   server: {
+    KEYCLOAK_ISSUER: z.string().url(),
     KEYCLOAK_CLIENT_ID: z.string().min(3),
     KEYCLOAK_CLIENT_SECRET: z.string().min(5),
 
@@ -22,7 +23,6 @@ export const env = createEnv({
   },
 
   client: {
-    NEXT_PUBLIC_KEYCLOAK_ISSUER: z.string().url(),
 
     NEXT_PUBLIC_BASE_PATH: z.preprocess((basePath) => basePath ?? '', z.string()),
 
@@ -92,7 +92,7 @@ export const env = createEnv({
   },
 
   experimental__runtimeEnv: {
-    NEXT_PUBLIC_KEYCLOAK_ISSUER: process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER,
+    KEYCLOAK_ISSUER: process.env.KEYCLOAK_ISSUER,
 
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
 

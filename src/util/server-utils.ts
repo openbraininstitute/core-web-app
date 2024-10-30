@@ -12,6 +12,6 @@ export async function keycloakLogout() {
   });
 
   return fetch(
-    `${env.NEXT_PUBLIC_KEYCLOAK_ISSUER}/protocol/openid-connect/logout?${params.toString()}`
+    `${env.KEYCLOAK_ISSUER}/protocol/openid-connect/logout?${params.toString()}`
   );
 }

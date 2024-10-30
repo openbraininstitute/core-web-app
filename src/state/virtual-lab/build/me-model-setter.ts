@@ -39,7 +39,7 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
         virtualLabId: virtualLabInfo.virtualLabId,
       })
     );
-    const realm = env.NEXT_PUBLIC_KEYCLOAK_ISSUER.split('/').pop();
+    const realm = "SBO"; // temporarily hardcoding it
     if (!session || !meModelDetails || !selectedMModel || !selectedEModel || !contributors)
       return null;
 
