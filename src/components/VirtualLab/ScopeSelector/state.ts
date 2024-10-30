@@ -8,6 +8,10 @@ export const selectedTabFamily = memoize((_key: string) => {
   return atom<Tab>('new');
 });
 
-export const selectedSimTypeFamily = memoize((_key: string) => {
+export const selectedNewSimTypeFamily = memoize((_key: string) => {
   return atom<SimulationType | null>(null);
+});
+
+export const selectedBrowseSimTypeFamily = memoize((_key: string) => {
+  return atom<SimulationType>(SimulationType.IonChannel);
 });
