@@ -1,9 +1,10 @@
 import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
 import Image from 'next/image';
-import { selectedTabFamily } from './state';
+import { selectedSimTypeFamily, selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
+import Styles from './styles.module.css';
 
 export enum SimulationScope {
   Cellular = 'cellular',
@@ -105,7 +106,7 @@ function SectionTabs({ projectId, label }: { projectId: string; label: string })
   };
 
   return (
-    <div className="-mt-[67px] inline-flex h-[65px] w-[1000px] divide-x divide-primary-3 border border-primary-3">
+    <div className="-mt-[67px] inline-flex min-h-[50px] w-[65%] divide-x divide-primary-3 border border-primary-3">
       {tabJSX('new')}
       {tabJSX('browse')}
     </div>
@@ -113,17 +114,31 @@ function SectionTabs({ projectId, label }: { projectId: string; label: string })
 }
 
 export default function ScopeSelector({ projectId, label }: { projectId: string; label: string }) {
-  const tileJSX = (title: string, text: string, imgSrc: string) => (
-    <div className="flex items-center justify-center rounded border border-primary-4 bg-primary-9 p-5 text-white">
-      <div className="flex">
-        <div>
-          <div className="text-4xl">{title}</div>
-          <div>{text}</div>
+  const [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily('build' + projectId));
+  console.log(selectedSimType);
+  const tileJSX = (type: SimulationType, description: string, imgSrc: string, disabled = false) => {
+    const title = capitalize(type.replace('-', ' '));
+    return (
+      <button
+        disabled={disabled}
+        type="button"
+        className="flex justify-between gap-3  rounded border border-primary-4 bg-primary-9 p-5 text-white"
+        onClick={() => setSelectedSimType(type)}
+      >
+        <div className="text-left">
+          <div className="mb-2 text-3xl">{title}</div>
+          <div className="text-sm text-gray-100">{description}</div>
         </div>
-        <Image src={imgSrc} width={50} height={50} alt={title} />
-      </div>
-    </div>
-  );
+        <Image
+          src={imgSrc}
+          width={100}
+          height={100}
+          alt={title}
+          className={classNames(Styles.imageCircle, 'self-center')}
+        />
+      </button>
+    );
+  };
   return (
     <>
       <SectionTabs projectId={projectId} label={label} />
@@ -132,49 +147,38 @@ export default function ScopeSelector({ projectId, label }: { projectId: string;
           Select a scale for your model
         </div>
 
-        <div className="mt-8 grid grid-cols-3 gap-10  ">
+        <div className="mt-8 grid grid-cols-3 gap-5">
           <div className="text-4xl text-primary-4">CELLULAR</div>
           <div className="text-4xl text-primary-4">CIRCUIT</div>
           <div className="text-4xl text-primary-4">SYSTEM</div>
+          {tileJSX(SimulationType.IonChannel, 'Coming soon.', imageUrl('ionChannel'), true)}
           {tileJSX(
-            'Ion channel',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.',
-            '/images/scales/ionChannel.jpg'
+            SimulationType.PairedNeuron,
+            'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
+            imageUrl('pairedNeuron'),
+            true
           )}
-          {/* {tileJSX(
-            'Paired neuron',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
-          )}
+          {tileJSX(SimulationType.BrainRegions, 'Coming soon.', imageUrl('brainRegion'), true)}
           {tileJSX(
-            'Brain region',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+            SimulationType.SingleNeuron,
+            'Load Hodgkin-Huxley single cell models, perform current clamp experiments with different levels of input current, and observe the resulting changes in membrane potential.',
+            imageUrl('singleNeuron')
           )}
+          {tileJSX(SimulationType.Microcircuit, 'Coming soon.', imageUrl('microcircuit'), true)}
+          {tileJSX(SimulationType.BrainSystems, 'Coming soon.', imageUrl('brainSystem'), true)}
           {tileJSX(
-            'Single neuron',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
+            SimulationType.Synaptome,
+            'Introduce spikes into the synapses of Hodgkin-Huxley cell models and carry out a virtual experiment by setting up a stimulation and reporting protocol.',
+            imageUrl('synaptome')
           )}
-          {tileJSX(
-            'Microcircuit',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
-          )}
-          {tileJSX(
-            'Brain system',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
-          )}
-          {tileJSX(
-            'Synaptome',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
-          )}
-          {tileJSX(
-            'NGV',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
-          )}
-          {tileJSX(
-            'Whole brain',
-            'Fugiat non cupidatat reprehenderit exercitation eiusmod voluptate eiusmod pariatur labore tempor. Magna reprehenderit commodo duis non id cillum et. Do enim esse nulla duis deserunt. Nulla labore aliqua cillum Lorem culpa consectetur. Elit ea deserunt do occaecat nisi. Exercitation ea in incididunt nulla incididunt nostrud voluptate voluptate. Ea tempor reprehenderit consequat aute eu commodo.'
-          )} */}
+          {tileJSX(SimulationType.NeuroGliaVasculature, 'Coming soon.', imageUrl('ngv'), true)}
+          {tileJSX(SimulationType.WholeBrain, 'Coming soon.', imageUrl('wholeBrain'), true)}
         </div>
       </div>
     </>
   );
+}
+
+function imageUrl(img: string) {
+  return '/images/scales/' + img + '.jpg';
 }

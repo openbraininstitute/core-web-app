@@ -1,0 +1,4 @@
+.imageCircle {
+  clip-path: circle();
+  shape-outside: circle();
+}
