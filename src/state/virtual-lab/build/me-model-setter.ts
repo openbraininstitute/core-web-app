@@ -16,7 +16,6 @@ import { createResource, fetchResourceById, updateResource } from '@/api/nexus';
 import { composeUrl } from '@/util/nexus';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
-import { env } from '@/env.mjs';
 
 type MEModelDetails = {
   description: string;

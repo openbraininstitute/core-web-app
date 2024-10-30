@@ -92,7 +92,6 @@ export const env = createEnv({
   },
 
   experimental__runtimeEnv: {
-    KEYCLOAK_ISSUER: process.env.KEYCLOAK_ISSUER,
 
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
 
