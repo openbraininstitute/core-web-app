@@ -6,8 +6,16 @@ import { classNames } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
 import Styles from './styles.module.css';
 
-export function SectionTabs({ projectId, label }: { projectId: string; label: string }) {
-  const [selectedTab, setSelectedTab] = useAtom(selectedTabFamily('build' + projectId));
+export function SectionTabs({
+  projectId,
+  label,
+  section,
+}: {
+  projectId: string;
+  label: string;
+  section: 'build' | 'simulate';
+}) {
+  const [selectedTab, setSelectedTab] = useAtom(selectedTabFamily(section + projectId));
 
   const tabJSX = (tab: typeof selectedTab) => {
     const isSelected = selectedTab === tab;
@@ -40,32 +48,57 @@ export function SectionTabs({ projectId, label }: { projectId: string; label: st
   );
 }
 
-export function ScopeSelector({ projectId }: { projectId: string }) {
+export function ScopeSelector({
+  projectId,
+  section,
+}: {
+  projectId: string;
+  section: 'build' | 'simulate';
+}) {
   const [selectedSimType, setSelectedSimType] = useAtom(
-    selectedNewSimTypeFamily('build' + projectId)
+    selectedNewSimTypeFamily(section + projectId)
   );
 
-  console.log(selectedSimType);
   const tileJSX = (type: SimulationType, description: string, imgSrc: string, disabled = false) => {
     const title = capitalize(type.replace('-', ' '));
+    const highlight = type === selectedSimType && section === 'build';
+
+    const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
+    const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
+
     return (
       <button
         disabled={disabled}
         type="button"
-        className="flex justify-between gap-3  rounded border border-primary-4 bg-primary-9 p-5 text-white"
+        className={classNames(
+          'box-border flex h-[200px] justify-between gap-5 overflow-hidden text-ellipsis rounded border border-primary-4 p-6',
+          tileStyle
+        )}
         onClick={() => setSelectedSimType(type)}
       >
         <div className="text-left">
-          <div className="mb-2 text-3xl">{title}</div>
-          <div className="text-sm text-gray-100">{description}</div>
+          <div className="mb-2 text-3xl font-semibold">{title}</div>
+          <div className={classNames('text-sm', descStyle)}>{description}</div>
         </div>
-        <Image
-          src={imgSrc}
-          width={100}
-          height={100}
-          alt={title}
-          className={classNames(Styles.imageCircle, 'self-center')}
-        />
+
+        {!highlight && (
+          <Image
+            src={imgSrc}
+            width={100}
+            height={100}
+            alt={title}
+            className={classNames(Styles.imageCircle, 'self-center')}
+          />
+        )}
+
+        {highlight && (
+          <button
+            type="button"
+            className="h-[55px] min-w-[100px] self-center  bg-primary-9 text-xl font-bold text-white"
+          >
+            Build
+          </button>
+        )}
       </button>
     );
   };
@@ -75,7 +108,7 @@ export function ScopeSelector({ projectId }: { projectId: string }) {
         Select a scale for your model
       </div>
 
-      <div className="mt-8 grid grid-cols-3 gap-5">
+      <div className="mb-5 mt-8 grid grid-cols-3 gap-5">
         <div className="text-4xl text-primary-4">CELLULAR</div>
         <div className="text-4xl text-primary-4">CIRCUIT</div>
         <div className="text-4xl text-primary-4">SYSTEM</div>
