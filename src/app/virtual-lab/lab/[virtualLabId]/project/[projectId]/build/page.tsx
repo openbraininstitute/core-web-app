@@ -62,7 +62,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
   return (
     <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
       <VirtualLabTopMenu />
-      <SectionTabs projectId={params.projectId} label="model" section="build" />
+      <SectionTabs projectId={params.projectId} section="build" />
       {selectedTab === 'new' && <ScopeSelector projectId={params.projectId} section="build" />}
     </div>
   );
