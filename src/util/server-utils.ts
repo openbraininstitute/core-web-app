@@ -11,7 +11,5 @@ export async function keycloakLogout() {
     id_token_hint: idToken,
   });
 
-  return fetch(
-    `${env.KEYCLOAK_ISSUER}/protocol/openid-connect/logout?${params.toString()}`
-  );
+  return fetch(`${env.KEYCLOAK_ISSUER}/protocol/openid-connect/logout?${params.toString()}`);
 }

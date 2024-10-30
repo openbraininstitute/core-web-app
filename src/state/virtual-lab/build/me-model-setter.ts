@@ -38,7 +38,7 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
         virtualLabId: virtualLabInfo.virtualLabId,
       })
     );
-    const realm = "SBO"; // temporarily hardcoding it
+    const realm = 'SBO'; // temporarily hardcoding it
     if (!session || !meModelDetails || !selectedMModel || !selectedEModel || !contributors)
       return null;
 
