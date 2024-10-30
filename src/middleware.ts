@@ -4,6 +4,7 @@ import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
 
 const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*'];
 const ASSETS = [
+  '/static*',
   '/images*',
   '/downloads*',
   '/api/marketing',
