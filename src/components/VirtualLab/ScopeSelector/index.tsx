@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
 import Image from 'next/image';
-import { selectedSimTypeFamily, selectedTabFamily } from './state';
+import { selectedNewSimTypeFamily, selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
 import Styles from './styles.module.css';
@@ -114,7 +114,10 @@ function SectionTabs({ projectId, label }: { projectId: string; label: string })
 }
 
 export default function ScopeSelector({ projectId, label }: { projectId: string; label: string }) {
-  const [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily('build' + projectId));
+  const [selectedSimType, setSelectedSimType] = useAtom(
+    selectedNewSimTypeFamily('build' + projectId)
+  );
+
   console.log(selectedSimType);
   const tileJSX = (type: SimulationType, description: string, imgSrc: string, disabled = false) => {
     const title = capitalize(type.replace('-', ' '));
