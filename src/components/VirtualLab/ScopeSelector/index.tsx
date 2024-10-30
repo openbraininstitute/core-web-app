@@ -8,14 +8,13 @@ import Styles from './styles.module.css';
 
 export function SectionTabs({
   projectId,
-  label,
   section,
 }: {
   projectId: string;
-  label: string;
   section: 'build' | 'simulate';
 }) {
   const [selectedTab, setSelectedTab] = useAtom(selectedTabFamily(section + projectId));
+  const label = section === 'build' ? 'model' : 'simulation';
 
   const tabJSX = (tab: typeof selectedTab) => {
     const isSelected = selectedTab === tab;
