@@ -1,9 +1,8 @@
 'use client';
 
-import { HTMLProps, useEffect, useState } from 'react';
-import { PlusOutlined } from '@ant-design/icons';
+import { HTMLProps } from 'react';
+
 import { useAtom, useAtomValue } from 'jotai';
-import { Button } from 'antd';
 import { useRouter } from 'next/navigation';
 
 import { DataType } from '@/constants/explore-section/list-views';
@@ -12,13 +11,12 @@ import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
 import { MODEL_DATA_TYPES } from '@/constants/explore-section/data-types/model-data-types';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { SimulationScopeToModelType, SimulationType } from '@/types/virtual-lab/lab';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import BookmarkButton from '@/components/explore-section/BookmarkButton';
-import GenericButton from '@/components/Global/GenericButton';
+
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { ExploreESHit } from '@/types/explore-section/es';
@@ -67,11 +65,9 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
 
   const tabDetails = selectedSimType && SimTypeToTabDetails[selectedSimType];
 
-  return (
-    <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
-      <VirtualLabTopMenu />
-      <SectionTabs projectId={params.projectId} section="build" />
-      {selectedTab === 'new' && (
+  const renderContent = () => {
+    if (selectedTab === 'new')
+      return (
         <ScopeSelector
           projectId={params.projectId}
           section="build"
@@ -80,15 +76,28 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
             router.push(tabDetails.newUrl);
           }}
         />
-      )}
+      );
+
+    return <BrowseModelsTab projectId={params.projectId} virtualLabId={params.virtualLabId} />;
+  };
+
+  return (
+    <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
+      <VirtualLabTopMenu />
+      <SectionTabs projectId={params.projectId} section="build" />
+      {renderContent()}
     </div>
   );
 }
 
 function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
   const router = useRouter();
-  const selectedSimulationScope = useAtomValue(selectedSimulationTypeFamily);
-  const [selectedModelType, setSelectedModelType] = useState<DataType | null>();
+  const [selectedSimTypeState] = useAtom(selectedSimTypeFamily('build' + projectId));
+  const selectedSimType = selectedSimTypeState ?? SimulationType.SingleNeuron;
+
+  const tabDetails = SimTypeToTabDetails[selectedSimType];
+  const selectedModelType = SimulationScopeToModelType[selectedSimType];
+
   const selectedRows = useAtomValue(
     selectedRowsAtom({ dataType: selectedModelType ?? DataType.CircuitMEModel })
   );
@@ -114,16 +123,15 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   // };
 
   const navigateToDetailPage = (
-    basePath: string,
-    record: ExploreESHit<ExploreSectionResource>,
-    dataType: DataType
+    _basePath: string,
+    record: ExploreESHit<ExploreSectionResource>
   ) => {
-    switch (selectedSimulationScope) {
+    switch (selectedSimType) {
       case SimulationType.SingleNeuron:
       case SimulationType.Synaptome: {
         const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
         const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
-        const baseExploreUrl = `${vlProjectUrl}/${SupportedTypeToTabDetails[dataType].viewUrl}`;
+        const baseExploreUrl = `${vlProjectUrl}/${SimTypeToTabDetails[selectedSimType].viewUrl}`;
         router.push(`${baseExploreUrl}/${pathId}`);
         break;
       }
@@ -136,19 +144,6 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
     <>
       {selectedModelType && tabDetails ? (
         <div className="flex grow flex-col">
-          <div className="flex justify-between">
-            <GenericButton
-              text={tabDetails.title}
-              className="w-96 bg-white text-2xl font-bold text-primary-8"
-            />
-            <Button
-              className="h-12 rounded-none border-none bg-primary-6 px-8 text-white shadow-none"
-              onClick={onNewModel}
-              icon={<PlusOutlined />}
-            >
-              {tabDetails.buildModelLabel}
-            </Button>
-          </div>
           <div
             id="explore-table-container-for-observable"
             className="mb-5 flex w-full grow flex-col"
