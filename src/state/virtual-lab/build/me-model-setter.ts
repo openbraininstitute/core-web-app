@@ -98,14 +98,19 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
     };
     const url = composeUrl('resource', '', {
       sync: true,
-      schema: null,
+      schema: encodeURIComponent('https://neuroshapes.org/dash/memodel'),
       org: virtualLabInfo.virtualLabId,
       project: virtualLabInfo.projectId,
     });
 
-    const meModelResource = await createResource<MEModelResource>(entity, session, url);
-    set(meModelSelfUrlAtom, meModelResource._self);
-    return meModelResource;
+    return createResource<MEModelResource>(entity, session, url)
+      .then((meModelResource) => {
+        set(meModelSelfUrlAtom, meModelResource._self);
+        return meModelResource;
+      })
+      .then(() => {
+        return null;
+      });
   }
 );
 

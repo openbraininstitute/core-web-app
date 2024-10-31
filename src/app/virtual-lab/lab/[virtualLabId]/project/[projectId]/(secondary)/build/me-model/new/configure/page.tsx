@@ -128,7 +128,14 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
 
     createMEModel({ virtualLabId, projectId })
       .then((meModel) => {
-        if (!meModel) return;
+        if (!meModel) {
+          setMeModelCreating(false);
+          notification.error({
+            duration: 7,
+            message: 'ME-model could not be created',
+          });
+          return;
+        }
         const redirectionUrl = detailUrlWithinLab(
           virtualLabId,
           projectId,
