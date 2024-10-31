@@ -158,7 +158,7 @@ export const createSingleNeuronSimulationAtom = atom<
 
   const resourceUrl = composeUrl('resource', '', {
     sync: true,
-    schema: null,
+    schema: encodeURIComponent('https://bbp.epfl.ch/shapes/dash/singleneuronsimulation'),
     project: projectId,
     org: vLabId,
   });

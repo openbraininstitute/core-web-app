@@ -103,14 +103,9 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
       project: virtualLabInfo.projectId,
     });
 
-    return createResource<MEModelResource>(entity, session, url)
-      .then((meModelResource) => {
-        set(meModelSelfUrlAtom, meModelResource._self);
-        return meModelResource;
-      })
-      .then(() => {
-        return null;
-      });
+    const meModelResource = await createResource<MEModelResource>(entity, session, url);
+    set(meModelSelfUrlAtom, meModelResource._self);
+    return meModelResource;
   }
 );
 
