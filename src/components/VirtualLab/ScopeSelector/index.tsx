@@ -2,8 +2,7 @@ import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
 import Image from 'next/image';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
-import { useState } from 'react';
-import { selectedSimTypeFamily, selectedTabFamily } from './state';
+import { scopeSelectorExpandedAtom, selectedSimTypeFamily, selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
 import Styles from './styles.module.css';
@@ -148,7 +147,7 @@ export function ScopeSelectorSmall({
   projectId: string;
   section: 'build' | 'simulate';
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useAtom(scopeSelectorExpandedAtom(section + projectId));
   let [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(section + projectId)); // eslint-disable-line prefer-const
   selectedSimType = selectedSimType ?? SimulationType.SingleNeuron;
 
@@ -179,8 +178,8 @@ export function ScopeSelectorSmall({
           {capitalize(selectedSimType.replace('-', ' '))}
         </span>
 
-        {!expanded && <UpOutlined className={iconClass} />}
-        {expanded && <DownOutlined className={iconClass} />}
+        {!expanded && <DownOutlined className={iconClass} />}
+        {expanded && <UpOutlined className={iconClass} />}
       </button>
 
       {expanded && (

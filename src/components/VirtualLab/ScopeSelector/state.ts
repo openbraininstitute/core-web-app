@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import memoizeOne from 'memoize-one';
 import { memoize } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
 
@@ -10,4 +11,8 @@ export const selectedTabFamily = memoize((_key: string) => {
 
 export const selectedSimTypeFamily = memoize((_key: string) => {
   return atom<SimulationType | null>(null);
+});
+
+export const scopeSelectorExpandedAtom = memoizeOne((_key: string) => {
+  return atom(false);
 });

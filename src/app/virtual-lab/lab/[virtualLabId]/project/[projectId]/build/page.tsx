@@ -28,6 +28,7 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import {
+  scopeSelectorExpandedAtom,
   selectedSimTypeFamily,
   selectedTabFamily,
 } from '@/components/VirtualLab/ScopeSelector/state';
@@ -106,6 +107,8 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
     selectedRowsAtom({ dataType: selectedModelType ?? DataType.CircuitMEModel })
   );
 
+  const [expanded] = useAtom(scopeSelectorExpandedAtom('build' + projectId));
+
   // Note: Disabled temporarily until SFN
   // const generateCloneUrl = () => {
   //   const model = selectedRows[0];
@@ -151,7 +154,10 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
         {selectedModelType ? (
           <div
             id="explore-table-container-for-observable"
-            className="mb-5 flex w-full grow flex-col"
+            className={classNames(
+              'mb-5 flex w-full grow flex-col',
+              expanded ? 'bg-black opacity-30' : ''
+            )}
           >
             <ExploreSectionListingView
               tableScrollable={false}
