@@ -1,6 +1,8 @@
 import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
 import Image from 'next/image';
+import { DownOutlined, UpOutlined } from '@ant-design/icons';
+import { useState } from 'react';
 import { selectedSimTypeFamily, selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
@@ -21,7 +23,7 @@ export function SectionTabs({
     return (
       <label
         className={classNames(
-          'flex grow cursor-pointer items-center justify-center text-2xl font-bold transition-all hover:bg-primary-8 hover:text-white',
+          'flex grow cursor-pointer items-center justify-center text-xl font-bold transition-all hover:bg-primary-8 hover:text-white',
           isSelected && 'bg-white text-primary-9'
         )}
         htmlFor={`scope-filter-${tab}`}
@@ -40,7 +42,7 @@ export function SectionTabs({
   };
 
   return (
-    <div className="-mt-[67px] inline-flex min-h-[50px] w-[65%] divide-x divide-primary-3 border border-primary-3">
+    <div className="-mt-[67px] inline-flex min-h-[50px] w-[55%] divide-x divide-primary-3 border border-primary-3">
       {tabJSX('new')}
       {tabJSX('browse')}
     </div>
@@ -136,6 +138,60 @@ export function ScopeSelector({
         {tileJSX(SimulationType.WholeBrain, 'Coming soon.', imageUrl('wholeBrain'), true)}
       </div>
     </div>
+  );
+}
+
+export function ScopeSelectorSmall({
+  projectId,
+  section,
+}: {
+  projectId: string;
+  section: 'build' | 'simulate';
+}) {
+  const [expanded, setExpanded] = useState(false);
+  let [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(section + projectId)); // eslint-disable-line prefer-const
+  selectedSimType = selectedSimType ?? SimulationType.SingleNeuron;
+
+  const header = (label: string) => <div className="font-semibold text-gray-400">{label}</div>;
+
+  const tile = (type: SimulationType) => (
+    <button
+      type="button"
+      key={type}
+      onClick={() => setSelectedSimType(type)}
+      className="flex h-[40px] items-center border border-gray-300 pl-5 font-semibold text-primary-9"
+    >
+      {capitalize(type.replace('-', ' '))}
+    </button>
+  );
+
+  const iconClass = 'relative top-[9px] float-right text-base text-primary-9';
+
+  return (
+    <>
+      <button
+        type="button"
+        className="w-1/2 bg-white px-10  py-4 text-left text-2xl"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span className="inline-block text-gray-300">Scale</span>
+        <span className="inlie-block ml-3 font-bold text-[#B3BFD2]">
+          {capitalize(selectedSimType.replace('-', ' '))}
+        </span>
+
+        {!expanded && <UpOutlined className={iconClass} />}
+        {expanded && <DownOutlined className={iconClass} />}
+      </button>
+
+      {expanded && (
+        <div className="grid grid-cols-3 gap-5 bg-white px-8 py-6">
+          {header('CELLULAR')}
+          {header('CIRCUIT')}
+          {header('SYSTEM')}
+          {Object.values(SimulationType).map((v) => tile(v))}
+        </div>
+      )}
+    </>
   );
 }
 

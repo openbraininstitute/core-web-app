@@ -22,7 +22,11 @@ import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { isModel } from '@/types/virtual-lab/bookmark';
 import { classNames } from '@/util/utils';
-import { ScopeSelector, SectionTabs } from '@/components/VirtualLab/ScopeSelector';
+import {
+  ScopeSelector,
+  ScopeSelectorSmall,
+  SectionTabs,
+} from '@/components/VirtualLab/ScopeSelector';
 import {
   selectedSimTypeFamily,
   selectedTabFamily,
@@ -92,10 +96,10 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
 
 function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
   const router = useRouter();
-  const [selectedSimTypeState] = useAtom(selectedSimTypeFamily('build' + projectId));
-  const selectedSimType = selectedSimTypeState ?? SimulationType.SingleNeuron;
+  const selectedSimType =
+    useAtomValue(selectedSimTypeFamily('build' + projectId)) ?? SimulationType.SingleNeuron;
 
-  const tabDetails = SimTypeToTabDetails[selectedSimType];
+  // const tabDetails = SimTypeToTabDetails[selectedSimType];
   const selectedModelType = SimulationScopeToModelType[selectedSimType];
 
   const selectedRows = useAtomValue(
@@ -142,8 +146,9 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
 
   return (
     <>
-      {selectedModelType && tabDetails ? (
-        <div className="flex grow flex-col">
+      <div className="flex grow flex-col">
+        <ScopeSelectorSmall projectId={projectId} section="build" />
+        {selectedModelType ? (
           <div
             id="explore-table-container-for-observable"
             className="mb-5 flex w-full grow flex-col"
@@ -176,10 +181,10 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               </div>
             )}
           </div>
-        </div>
-      ) : (
-        <div className="m-auto w-fit border p-6">Coming Soon</div>
-      )}
+        ) : (
+          <div className="m-auto w-fit border p-6">Coming Soon</div>
+        )}
+      </div>
     </>
   );
 }
