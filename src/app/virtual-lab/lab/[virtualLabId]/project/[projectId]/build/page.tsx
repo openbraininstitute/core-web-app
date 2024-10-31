@@ -25,7 +25,10 @@ import { ExploreESHit } from '@/types/explore-section/es';
 import { isModel } from '@/types/virtual-lab/bookmark';
 import { classNames } from '@/util/utils';
 import { ScopeSelector, SectionTabs } from '@/components/VirtualLab/ScopeSelector';
-import { selectedTabFamily } from '@/components/VirtualLab/ScopeSelector/state';
+import {
+  selectedSimTypeFamily,
+  selectedTabFamily,
+} from '@/components/VirtualLab/ScopeSelector/state';
 import Styles from '@/styles/vlabs.module.scss';
 
 type Params = {
@@ -42,14 +45,14 @@ type TabDetails = {
   viewUrl: string;
 };
 
-const SupportedTypeToTabDetails: Record<string, TabDetails> = {
-  [DataType.CircuitMEModel]: {
+const SimTypeToTabDetails: { [key: string]: TabDetails } = {
+  [SimulationType.SingleNeuron]: {
     title: 'Single neuron model',
     buildModelLabel: 'New model',
     newUrl: 'build/me-model/new',
     viewUrl: 'explore/interactive/model/me-model',
   },
-  [DataType.SingleNeuronSynaptome]: {
+  [SimulationType.Synaptome]: {
     title: 'Synaptome',
     buildModelLabel: 'New synaptome model',
     newUrl: 'build/synaptome/new',
@@ -58,31 +61,37 @@ const SupportedTypeToTabDetails: Record<string, TabDetails> = {
 };
 
 export default function VirtualLabProjectBuildPage({ params }: Params) {
+  const router = useRouter();
   const [selectedTab] = useAtom(selectedTabFamily('build' + params.projectId));
+  const [selectedSimType] = useAtom(selectedSimTypeFamily('build' + params.projectId));
+
+  const tabDetails = selectedSimType && SimTypeToTabDetails[selectedSimType];
+
   return (
     <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
       <VirtualLabTopMenu />
       <SectionTabs projectId={params.projectId} section="build" />
-      {selectedTab === 'new' && <ScopeSelector projectId={params.projectId} section="build" />}
+      {selectedTab === 'new' && (
+        <ScopeSelector
+          projectId={params.projectId}
+          section="build"
+          handleBuildClick={() => {
+            if (!tabDetails) return;
+            router.push(tabDetails.newUrl);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
   const router = useRouter();
-  const selectedSimulationScope = useAtomValue(selectedSimulationScopeAtom);
+  const selectedSimulationScope = useAtomValue(selectedSimulationTypeFamily);
   const [selectedModelType, setSelectedModelType] = useState<DataType | null>();
   const selectedRows = useAtomValue(
     selectedRowsAtom({ dataType: selectedModelType ?? DataType.CircuitMEModel })
   );
-
-  useEffect(() => {
-    if (selectedSimulationScope && selectedSimulationScope in SimulationScopeToModelType) {
-      setSelectedModelType(SimulationScopeToModelType[selectedSimulationScope]);
-    } else {
-      setSelectedModelType(null);
-    }
-  }, [selectedSimulationScope]);
 
   // Note: Disabled temporarily until SFN
   // const generateCloneUrl = () => {
@@ -93,27 +102,6 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   //     return `${baseBuildUrl}?mode=clone&model=${to64(model._source['@id'])}`;
   //   }
   // };
-
-  const tabDetails = selectedModelType && SupportedTypeToTabDetails[selectedModelType];
-
-  const onNewModel = () => {
-    switch (selectedSimulationScope) {
-      case SimulationType.SingleNeuron: {
-        if (tabDetails) {
-          return router.push(tabDetails.newUrl);
-        }
-        break;
-      }
-      case SimulationType.Synaptome: {
-        if (tabDetails) {
-          return router.push(tabDetails.newUrl);
-        }
-        break;
-      }
-      default:
-        return null;
-    }
-  };
 
   // const onCloneModel = () => {
   //   switch (selectedSimulationScope) {
