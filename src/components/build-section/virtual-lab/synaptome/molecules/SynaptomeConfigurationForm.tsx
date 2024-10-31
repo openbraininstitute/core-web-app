@@ -242,7 +242,7 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
         org,
         project,
         sync: true,
-        schema: null,
+        schema: encodeURIComponent('https://bbp.epfl.ch/shapes/dash/singleneuronsynaptome'),
       });
 
       const sanitizedResource = {
