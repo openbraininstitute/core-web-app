@@ -2,7 +2,7 @@ import { ArrowRightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 import { basePath } from '@/config';
-import { THREE_COLUMN_SCREEN_ONE } from '@/constants/home/content-home';
+import { THREE_COLUMN_SCREEN_ONE, ThreeColumnScreenOne } from '@/constants/home/content-home';
 
 export function LargeButton() {
   return (
@@ -20,18 +20,20 @@ export function LargeButton() {
 export default function HeaderScreen() {
   return (
     <div className="relative flex h-screen w-screen snap-start snap-always flex-col items-center justify-center px-[16vw] text-white">
-      <h1 className="relative z-10 w-full font-title text-8xl font-bold">
+      <h1 className="relative z-10 w-full font-title text-3xl font-bold leading-[1.15] lg:text-[6vw] 2xl:text-[5vw]">
         {'Virtual labs for\nexploring, building and\nsimulating the brain'}
       </h1>
 
       <div className="relative z-10 mt-10 grid w-full grid-cols-3 gap-x-12">
-        {THREE_COLUMN_SCREEN_ONE.map((paragraph: string, index: number) => (
+        {THREE_COLUMN_SCREEN_ONE.map((section: ThreeColumnScreenOne, index: number) => (
           <div
-            className="flex flex-col gap-y-2 font-title text-xl font-normal"
+            className="flex flex-col gap-y-2 font-title font-normal leading-[1.45] lg:text-[1.6vw] 2xl:text-[1.2vw]"
             key={`Subtitle-${index + 1}`}
           >
-            <div>{index + 1}</div>
-            <h2>{paragraph}</h2>
+            <div className="capitalize">
+              {index + 1} &#8212; {section.section}
+            </div>
+            <h2>{section.content}</h2>
           </div>
         ))}
       </div>

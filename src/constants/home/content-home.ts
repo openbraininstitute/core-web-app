@@ -1,7 +1,21 @@
-export const THREE_COLUMN_SCREEN_ONE = [
-  'Explore resources with the Blue Brain Atlas',
-  'Configure and build multi scale models',
-  'Run simulations of your own models',
+export type ThreeColumnScreenOne = {
+  section: string;
+  content: string;
+};
+
+export const THREE_COLUMN_SCREEN_ONE: ThreeColumnScreenOne[] = [
+  {
+    section: 'explore',
+    content: 'Explore resources with the Blue Brain Atlas',
+  },
+  {
+    section: 'model',
+    content: 'Configure and build multi scale models',
+  },
+  {
+    section: 'simulate',
+    content: 'Run simulations of your own models',
+  },
 ];
 
 export const SCREEN_TWO = {

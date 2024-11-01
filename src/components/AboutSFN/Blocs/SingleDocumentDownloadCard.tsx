@@ -4,25 +4,17 @@ import { useState } from 'react';
 
 import { SingleDocumentProps } from '@/types/about/document-download';
 import { classNames } from '@/util/utils';
-import downloadFileByHref from '@/util/downloadFileByHref';
 
 export default function SingleDocumentDownloadCard({
   content,
   index,
   inView,
-  openModal,
 }: {
   content: SingleDocumentProps;
   index: number;
   inView: boolean;
-  openModal: (singleDocument: SingleDocumentProps) => void;
 }) {
   const [onMouseHover, setOnMouseHover] = useState<boolean>(false);
-
-  const handleClick = () => {
-    if (content.access === 'restricted') openModal(content);
-    else downloadFileByHref(content.url, `${content.file}.pdf`);
-  };
 
   return (
     <div
@@ -64,7 +56,7 @@ export default function SingleDocumentDownloadCard({
           <button
             type="button"
             className="relative mt-4 flex w-full flex-col items-center bg-white py-8 font-sans text-lg uppercase leading-none tracking-wider text-primary-8 md:flex"
-            onClick={handleClick}
+            aria-label="Download Brochure"
           >
             <span className="font-bold ">Download Brochure</span>
             <span className="font-light">(PDF)</span>

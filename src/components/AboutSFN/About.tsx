@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useQueryState } from 'nuqs';
+import { useState } from 'react';
 
 import DownloadDocument from './Blocs/DownloadDocument';
 import Footer from './Blocs/Footer';
