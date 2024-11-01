@@ -9,7 +9,6 @@ import ExploreSectionListingView from '@/components/explore-section/ExploreSecti
 import GenericButton from '@/components/Global/GenericButton';
 import Link from '@/components/Link';
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
-// import ScopeSelector from '@/components/VirtualLab/ScopeSelector';
 
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { SimulationScopeToDataType } from '@/types/virtual-lab/lab';
