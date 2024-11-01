@@ -7,55 +7,54 @@ import NavigationContributors from './NavigationContributors';
 
 import { CONTRIBUTORS } from '@/constants/home/content-home';
 import { ContributorProps, CONTRIBUTORS_LIST } from '@/constants/home/contributors-list';
-import { classNames } from '@/util/utils';
 
-export function SingleContributorCard({ name, link }: { name: string; link: string }) {
-  const [onMouseHover, setOnMouseHover] = useState(false);
+export type LinkListProps = {
+  link: string;
+  name: string;
+};
+
+export function SingleContributorCard({ content }: { content: ContributorProps }) {
+  const linkList = [];
+
+  if (content.ORCID !== null) {
+    linkList.push({ link: `https://orcid.org/${content.ORCID}`, name: 'ORCID' });
+  }
+
+  if (content.google_scholar !== null) {
+    linkList.push({
+      link: `https://scholar.google.com/citations?user=${content.google_scholar}`,
+      name: 'Google Scholar',
+    });
+  }
 
   return (
-    <Link
-      href={link}
-      className="relative"
-      onMouseOver={() => setOnMouseHover(true)}
-      onFocus={() => setOnMouseHover(true)}
-      onMouseOut={() => setOnMouseHover(false)}
-      onBlur={() => setOnMouseHover(false)}
-    >
-      <div
-        className="relative z-10 font-sans text-lg font-semibold leading-tight text-white transition-all duration-300 ease-out-expo"
-        style={{ left: onMouseHover ? '-10px' : '0' }}
-      >
-        {name}
+    <div className="relative flex flex-col gap-y-2">
+      <div className="relative z-10 font-sans text-xl font-semibold leading-tight text-white transition-all duration-300 ease-out-expo">
+        {content.full_name}
       </div>
-      <div
+      <div className="relative z-20 flex flex-row gap-x-4">
+        {content.ORCID !== null && (
+          <Link
+            href={`https://orcid.org/${content.ORCID}`}
+            className="flex h-10 items-center justify-center bg-primary-8 px-4 text-sm uppercase text-white"
+          >
+            ORCID
+          </Link>
+        )}
+        {content.google_scholar !== null && (
+          <Link
+            href={`https://scholar.google.com/citations?user=${content.google_scholar}`}
+            className="whitespace-nowraps flex h-10 items-center justify-center bg-primary-8 px-4 text-sm uppercase text-white"
+          >
+            Google Scholar
+          </Link>
+        )}
+      </div>
+      {/* <div
         className="absolute left-0 z-0 h-12 -translate-x-8 -translate-y-[32px] bg-primary-6 transition-width duration-500 ease-out-expo"
         style={{ width: onMouseHover ? '72px' : '46px' }}
-      />
-    </Link>
-  );
-}
-
-export function LoadButton({
-  onClick,
-  label,
-  type,
-}: {
-  onClick: (type: 'more' | 'less') => void;
-  label: string;
-  type: 'more' | 'less';
-}) {
-  return (
-    <button
-      type="button"
-      aria-label="Load 25 more contributors's name"
-      onClick={() => onClick(type)}
-      className={classNames(
-        'relative flex items-center justify-center rounded-full px-16 py-4 font-sans text-xl font-semibold',
-        type === 'more' ? 'border border-solid border-primary-4 text-white' : 'text-primary-4'
-      )}
-    >
-      {label}
-    </button>
+      /> */}
+    </div>
   );
 }
 
@@ -77,12 +76,11 @@ export default function ScreenContributors() {
           selectedLetter={selectedLetter}
           setSelectedLetter={setSelectedLetter}
         />
-        <div className="relative left-8 mt-4 grid w-full grid-cols-5 gap-x-12 gap-y-20">
+        <div className="relative left-8 mt-4 grid w-full grid-cols-4 gap-x-12 gap-y-20">
           {filteredContributors.map((contributor: ContributorProps, index: number) => (
             <SingleContributorCard
+              content={contributor}
               key={`Contributor-${contributor.last_name}_Card_${index + 1}`}
-              name={contributor.full_name}
-              link="#"
             />
           ))}
         </div>
