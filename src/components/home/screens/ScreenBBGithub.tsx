@@ -14,16 +14,18 @@ export default function ScreenBBGithub() {
 
   return (
     <div
-      className="relative flex h-screen w-screen snap-start snap-always flex-col items-center justify-center gap-y-6 px-[16vw] text-white"
+      className="relative flex h-screen w-screen snap-start snap-always flex-col items-center justify-center gap-y-6 px-[16vw] "
       ref={ref}
     >
       <div className="relative z-10 flex flex-col gap-y-8">
-        <h3 className="font-title text-7xl font-bold">{SCREEN_TWO.title}</h3>
-        <div className="grid grid-cols-2 gap-x-6">
+        <h3 className="font-title text-7xl font-bold text-white">{SCREEN_TWO.title}</h3>
+        <div className="grid grid-cols-2 gap-x-10">
           {SCREEN_TWO.content.map((content: { title: string; paragraph: string }) => (
             <div className="flex flex-col gap-y-2 font-title" key={content.title}>
-              <h4 className="text-2xl font-semibold uppercase tracking-wider">{content.title}</h4>
-              <p className="text-lg leading-normal">{content.paragraph}</p>
+              <h4 className="text-2xl font-semibold uppercase tracking-wider text-primary-4">
+                {content.title}
+              </h4>
+              <p className="text-lg leading-normal text-white">{content.paragraph}</p>
             </div>
           ))}
         </div>

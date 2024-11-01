@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { SingleDocumentProps } from '@/types/about/document-download';
 import { classNames } from '@/util/utils';
+import Link from 'next/link';
 
 export default function SingleDocumentDownloadCard({
   content,
@@ -53,14 +54,15 @@ export default function SingleDocumentDownloadCard({
             onMouseHover ? 'bottom-4' : '-bottom-32'
           )}
         >
-          <button
-            type="button"
+          <Link
             className="relative mt-4 flex w-full flex-col items-center bg-white py-8 font-sans text-lg uppercase leading-none tracking-wider text-primary-8 md:flex"
             aria-label="Download Brochure"
+            href={content.url}
+            target="_blank"
           >
             <span className="font-bold ">Download Brochure</span>
             <span className="font-light">(PDF)</span>
-          </button>
+          </Link>
         </div>
       </div>
     </div>

@@ -79,7 +79,7 @@ export default function Footer({
       )}
     >
       <OBPLogo color="text-white" className="mb-4 md:mb-0" />
-      <div className="relative flex w-full flex-col justify-between gap-8 gap-x-10 md:flex-row xl:gap-0">
+      <div className="relative flex w-1/2 flex-col justify-between gap-8 gap-x-10 md:flex-row xl:gap-0">
         {content.map((section: SingleSectionProps, index: number) => (
           <div
             key={`Footer_element-${section.title}-${index + 1}`}

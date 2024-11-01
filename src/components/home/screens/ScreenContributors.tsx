@@ -37,6 +37,7 @@ export function SingleContributorCard({ content }: { content: ContributorProps }
           <Link
             href={`https://orcid.org/${content.ORCID}`}
             className="flex h-10 items-center justify-center bg-primary-8 px-4 text-sm uppercase text-white"
+            target="_blank"
           >
             ORCID
           </Link>
@@ -45,15 +46,12 @@ export function SingleContributorCard({ content }: { content: ContributorProps }
           <Link
             href={`https://scholar.google.com/citations?user=${content.google_scholar}`}
             className="whitespace-nowraps flex h-10 items-center justify-center bg-primary-8 px-4 text-sm uppercase text-white"
+            target="_blank"
           >
             Google Scholar
           </Link>
         )}
       </div>
-      {/* <div
-        className="absolute left-0 z-0 h-12 -translate-x-8 -translate-y-[32px] bg-primary-6 transition-width duration-500 ease-out-expo"
-        style={{ width: onMouseHover ? '72px' : '46px' }}
-      /> */}
     </div>
   );
 }
@@ -76,7 +74,7 @@ export default function ScreenContributors() {
           selectedLetter={selectedLetter}
           setSelectedLetter={setSelectedLetter}
         />
-        <div className="relative left-8 mt-4 grid w-full grid-cols-1 gap-x-12 gap-y-20 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+        <div className="relative mt-4 grid w-full grid-cols-1 gap-x-12 gap-y-20 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
           {filteredContributors.map((contributor: ContributorProps, index: number) => (
             <SingleContributorCard
               content={contributor}

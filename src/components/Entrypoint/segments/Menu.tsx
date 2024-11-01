@@ -46,7 +46,7 @@ export default function EntrypointMenu() {
   return (
     <div className="fixed z-50 flex w-full flex-row items-center justify-between px-6 pt-6">
       <OBPLogo />
-      <div className="relative flex justify-between gap-1 ">
+      <div className="relative hidden justify-between gap-1 md:flex ">
         {/* TODO: Re-enable hidden buttons after SfN */}
         {/* <MenuLink title="Getting Started" href="#" /> */}
         <PrimaryButtonHome
