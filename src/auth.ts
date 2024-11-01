@@ -3,7 +3,7 @@ import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next
 
 import { env } from '@/env.mjs';
 
-const issuer = env.KEYCLOAK_ISSUER;
+const issuer = 'https://staging.openbluebrain.com/auth/realms/SBO';
 const clientId = env.KEYCLOAK_CLIENT_ID;
 const clientSecret = env.KEYCLOAK_CLIENT_SECRET;
 const basePath = env.NEXT_PUBLIC_BASE_PATH;
