@@ -16,7 +16,6 @@ import { createResource, fetchResourceById, updateResource } from '@/api/nexus';
 import { composeUrl } from '@/util/nexus';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
-import { env } from '@/env.mjs';
 
 type MEModelDetails = {
   description: string;
@@ -39,7 +38,7 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
         virtualLabId: virtualLabInfo.virtualLabId,
       })
     );
-    const realm = env.NEXT_PUBLIC_KEYCLOAK_ISSUER.split('/').pop();
+    const realm = 'SBO'; // temporarily hardcoding it
     if (!session || !meModelDetails || !selectedMModel || !selectedEModel || !contributors)
       return null;
 
