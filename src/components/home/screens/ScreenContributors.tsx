@@ -76,7 +76,7 @@ export default function ScreenContributors() {
           selectedLetter={selectedLetter}
           setSelectedLetter={setSelectedLetter}
         />
-        <div className="relative left-8 mt-4 grid w-full grid-cols-4 gap-x-12 gap-y-20">
+        <div className="relative left-8 mt-4 grid w-full grid-cols-1 gap-x-12 gap-y-20 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
           {filteredContributors.map((contributor: ContributorProps, index: number) => (
             <SingleContributorCard
               content={contributor}
