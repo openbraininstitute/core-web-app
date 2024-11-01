@@ -55,12 +55,13 @@ export default function EntrypointMenu() {
           hasIcon
           theme="dark"
         />
-        <PrimaryButtonHome
+        {/* TODO: Re-enable once the page on AWS is available */}
+        {/* <PrimaryButtonHome
           label="BlueBrain Open data"
           url="https://registry.opendata.aws/"
           hasIcon
           theme="dark"
-        />
+        /> */}
         <PrimaryButtonHome label="About" url="/about" hasIcon={false} theme="dark" />
         <PrimaryButtonHome label="Log in" url="/log-in" hasIcon={false} theme="light" />
       </div>

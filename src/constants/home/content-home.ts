@@ -1,20 +1,24 @@
 export type ThreeColumnScreenOne = {
   section: string;
   content: string;
+  available: boolean;
 };
 
 export const THREE_COLUMN_SCREEN_ONE: ThreeColumnScreenOne[] = [
   {
     section: 'explore',
     content: 'Explore resources with the Blue Brain Atlas',
+    available: true,
   },
   {
     section: 'model',
     content: 'Configure and build multi scale models',
+    available: false,
   },
   {
     section: 'simulate',
     content: 'Run simulations of your own models',
+    available: false,
   },
 ];
 

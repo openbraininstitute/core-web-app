@@ -29,9 +29,15 @@ export default function HeaderScreen() {
           <div
             className="flex flex-col gap-y-2 font-title font-normal leading-[1.45] lg:text-[1.6vw] 2xl:text-[1.2vw]"
             key={`Subtitle-${index + 1}`}
+            style={{ color: section.available ? '#fff' : '#69c0ff' }}
           >
-            <div className="capitalize">
-              {index + 1} &#8212; {section.section}
+            <div className="flex flex-row items-center capitalize">
+              {index + 1} &#8212; {section.section}{' '}
+              {!section.available && (
+                <div className="ml-4 rounded-full border border-solid border-primary-3 px-6 py-2 text-base">
+                  Coming soon
+                </div>
+              )}
             </div>
             <h2>{section.content}</h2>
           </div>
