@@ -106,7 +106,7 @@ export function ScopeSelector({
   return (
     <div>
       <div className="mt-12 text-[40px] font-bold text-primary-4">
-        Select a scale for your model
+        Select a scale for your {section === 'build' ? 'model' : 'simulation'}
       </div>
 
       <div className="mb-5 mt-8 grid grid-cols-3 gap-5">
