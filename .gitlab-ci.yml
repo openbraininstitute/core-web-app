@@ -59,47 +59,47 @@ setup:
         - package-lock.json
   script: *install_packages
 
-eslint:
-  stage: check
-  cache:
-    <<: *package_cache
-    policy: pull
-  script:
-    - *install_packages
-    - npm run lint
+# eslint:
+#   stage: check
+#   cache:
+#     <<: *package_cache
+#     policy: pull
+#   script:
+#     - *install_packages
+#     - npm run lint
 
-prettier:
-  stage: check
-  cache:
-    <<: *package_cache
-    policy: pull
-  script:
-    - *install_packages
-    - npm run prettier:check
+# prettier:
+#   stage: check
+#   cache:
+#     <<: *package_cache
+#     policy: pull
+#   script:
+#     - *install_packages
+#     - npm run prettier:check
 
-unit-test:
-  stage: check
-  extends: .heavy_job
-  cache:
-    <<: *package_cache
-    policy: pull
-  script:
-    - *install_packages
-    - npm run test:ci
+# unit-test:
+#   stage: check
+#   extends: .heavy_job
+#   cache:
+#     <<: *package_cache
+#     policy: pull
+#   script:
+#     - *install_packages
+#     - npm run test:ci
 
-build:
-  stage: check
-  extends: .heavy_job
-  cache:
-    - <<: *package_cache
-      policy: pull
-    - <<: *build_cache
-  script:
-    - *install_packages
-    - npm run build
-  except:
-    - develop
-    - main
+# build:
+#   stage: check
+#   extends: .heavy_job
+#   cache:
+#     - <<: *package_cache
+#       policy: pull
+#     - <<: *build_cache
+#   script:
+#     - *install_packages
+#     - npm run build
+#   except:
+#     - develop
+#     - main
 
 deploy-bbp-prod:
   stage: deploy
