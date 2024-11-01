@@ -9,7 +9,7 @@ import ExploreSectionListingView from '@/components/explore-section/ExploreSecti
 import GenericButton from '@/components/Global/GenericButton';
 import Link from '@/components/Link';
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
-import ScopeSelector from '@/components/VirtualLab/ScopeSelector';
+// import ScopeSelector from '@/components/VirtualLab/ScopeSelector';
 
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { SimulationScopeToDataType } from '@/types/virtual-lab/lab';
@@ -74,7 +74,7 @@ export default function VirtualLabProjectSimulatePage({
   return (
     <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
       <VirtualLabTopMenu />
-      <ScopeSelector />
+      {/* <ScopeSelector /> */}
       {simulationType && tabDetails ? (
         <div className="flex w-full grow flex-col">
           <div className="flex justify-between">

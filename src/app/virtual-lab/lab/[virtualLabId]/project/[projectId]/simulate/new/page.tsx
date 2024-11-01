@@ -25,7 +25,7 @@ import { ensureArray } from '@/util/nexus';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
-import ScopeSelector from '@/components/VirtualLab/ScopeSelector';
+// import ScopeSelector from '@/components/VirtualLab/ScopeSelector';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { classNames } from '@/util/utils';
 import Styles from '@/styles/vlabs.module.scss';
@@ -82,7 +82,7 @@ export default function NewSimulation({
     >
       <div className="mb-5 flex flex-col gap-5">
         <VirtualLabTopMenu />
-        <ScopeSelector />
+        {/* <ScopeSelector /> */}
       </div>
 
       {modelType ? (
