@@ -122,22 +122,11 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   //   }
   // };
 
-  const navigateToDetailPage = (
-    _basePath: string,
-    record: ExploreESHit<ExploreSectionResource>
-  ) => {
-    switch (selectedSimType) {
-      case SimulationType.SingleNeuron:
-      case SimulationType.Synaptome: {
-        const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-        const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
-        const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLs[selectedSimType].viewUrl}`;
-        router.push(`${baseExploreUrl}/${pathId}`);
-        break;
-      }
-      default:
-        break;
-    }
+  const navigateToDetailPage = (_: string, record: ExploreESHit<ExploreSectionResource>) => {
+    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
+    const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
+    const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLs[selectedSimType].viewUrl}`;
+    router.push(`${baseExploreUrl}/${pathId}`);
   };
 
   return (
