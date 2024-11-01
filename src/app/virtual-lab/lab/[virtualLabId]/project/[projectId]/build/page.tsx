@@ -41,23 +41,17 @@ type Params = {
   };
 };
 
-type TabDetails = {
-  title: string;
-  buildModelLabel: string;
+type SimURLs = {
   newUrl: string;
   viewUrl: string;
 };
 
-const SimTypeToTabDetails: { [key: string]: TabDetails } = {
+const SimTypeURLs: { [key: string]: SimURLs } = {
   [SimulationType.SingleNeuron]: {
-    title: 'Single neuron model',
-    buildModelLabel: 'New model',
     newUrl: 'build/me-model/new',
     viewUrl: 'explore/interactive/model/me-model',
   },
   [SimulationType.Synaptome]: {
-    title: 'Synaptome',
-    buildModelLabel: 'New synaptome model',
     newUrl: 'build/synaptome/new',
     viewUrl: 'explore/interactive/model/synaptome',
   },
@@ -68,7 +62,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
   const [selectedTab] = useAtom(selectedTabFamily('build' + params.projectId));
   const [selectedSimType] = useAtom(selectedSimTypeFamily('build' + params.projectId));
 
-  const tabDetails = selectedSimType && SimTypeToTabDetails[selectedSimType];
+  const URLs = selectedSimType && SimTypeURLs[selectedSimType];
 
   const renderContent = () => {
     if (selectedTab === 'new')
@@ -77,8 +71,8 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
           projectId={params.projectId}
           section="build"
           handleBuildClick={() => {
-            if (!tabDetails) return;
-            router.push(tabDetails.newUrl);
+            if (!URLs) return;
+            router.push(URLs.newUrl);
           }}
         />
       );
@@ -100,7 +94,6 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const selectedSimType =
     useAtomValue(selectedSimTypeFamily('build' + projectId)) ?? SimulationType.SingleNeuron;
 
-  // const tabDetails = SimTypeToTabDetails[selectedSimType];
   const selectedModelType = SimulationScopeToModelType[selectedSimType];
 
   const selectedRows = useAtomValue(
@@ -138,7 +131,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
       case SimulationType.Synaptome: {
         const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
         const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
-        const baseExploreUrl = `${vlProjectUrl}/${SimTypeToTabDetails[selectedSimType].viewUrl}`;
+        const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLs[selectedSimType].viewUrl}`;
         router.push(`${baseExploreUrl}/${pathId}`);
         break;
       }
