@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import NavigationContributors from './NavigationContributors';
+
 import { CONTRIBUTORS } from '@/constants/home/content-home';
 import { ContributorProps, CONTRIBUTORS_LIST } from '@/constants/home/contributors-list';
 import { classNames } from '@/util/utils';
@@ -58,33 +60,11 @@ export function LoadButton({
 }
 
 export default function ScreenContributors() {
-  const [displayedNameNumber, setDisplayedNameNumber] = useState(20);
+  const [selectedLetter, setSelectedLetter] = useState<string>('A');
 
-  const handleNameDisplay = (type: 'more' | 'less') => {
-    if (type === 'more') {
-      if (displayedNameNumber >= CONTRIBUTORS_LIST.length) return;
-      setDisplayedNameNumber(displayedNameNumber + 25);
-
-      window.scrollBy({
-        top: 200,
-        left: 0,
-        behavior: 'smooth',
-      });
-    } else {
-      if (displayedNameNumber <= 25) return;
-      setDisplayedNameNumber(displayedNameNumber - 25);
-
-      window.scrollBy({
-        top: -200,
-        left: 0,
-        behavior: 'smooth',
-      });
-    }
-  };
-
-  const handleCollapseAll = () => {
-    setDisplayedNameNumber(25);
-  };
+  const filteredContributors = CONTRIBUTORS_LIST.filter(
+    (contributor: ContributorProps) => contributor.last_name[0] === selectedLetter
+  );
 
   return (
     <div className="relative flex min-h-screen w-screen snap-start snap-always flex-col items-center gap-y-6 pb-56 pt-[24vh]">
@@ -92,27 +72,21 @@ export default function ScreenContributors() {
         <h3 className="text-7xl font-bold text-white">{CONTRIBUTORS.title}</h3>
         <h4 className="text-4xl font-normal text-primary-2">{CONTRIBUTORS.subtitle}</h4>
       </div>
-      <div className="relative left-8 mb-12 mt-20 grid w-full grid-cols-5 gap-x-12 gap-y-20 px-[8vw]">
-        {CONTRIBUTORS_LIST.slice(0, displayedNameNumber).map(
-          (contributor: ContributorProps, index) => (
+      <div className="mt-32 flex w-full flex-col gap-y-12 px-[16vw]">
+        <NavigationContributors
+          selectedLetter={selectedLetter}
+          setSelectedLetter={setSelectedLetter}
+        />
+        <div className="relative left-8 mt-4 grid w-full grid-cols-5 gap-x-12 gap-y-20">
+          {filteredContributors.map((contributor: ContributorProps, index: number) => (
             <SingleContributorCard
               key={`Contributor-${contributor.last_name}_Card_${index + 1}`}
               name={contributor.full_name}
               link="#"
             />
-          )
-        )}
-      </div>
-      {displayedNameNumber === CONTRIBUTORS_LIST.length ? (
-        <LoadButton type="more" label="Collapse" onClick={handleCollapseAll} />
-      ) : (
-        <div className="flex flex-col gap-y-2">
-          <LoadButton type="more" label="Load 25 more" onClick={handleNameDisplay} />
-          {displayedNameNumber > 25 && (
-            <LoadButton type="less" label="Show 25 less" onClick={handleNameDisplay} />
-          )}
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

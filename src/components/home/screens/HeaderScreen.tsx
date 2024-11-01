@@ -21,7 +21,7 @@ export default function HeaderScreen() {
   return (
     <div className="relative flex h-screen w-screen snap-start snap-always flex-col items-center justify-center px-[16vw] text-white">
       <h1 className="relative z-10 w-full font-title text-3xl font-bold leading-[1.15] lg:text-[6vw] 2xl:text-[5vw]">
-        {'Virtual labs for\nexploring, building and\nsimulating the brain'}
+        Virtual labs to explore, build and simulate the brain
       </h1>
 
       <div className="relative z-10 mt-10 grid w-full grid-cols-3 gap-x-12">

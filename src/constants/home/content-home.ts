@@ -12,7 +12,7 @@ export const THREE_COLUMN_SCREEN_ONE: ThreeColumnScreenOne[] = [
   },
   {
     section: 'model',
-    content: 'Configure and build multi scale models',
+    content: 'Configure and build multiscale models',
     available: false,
   },
   {

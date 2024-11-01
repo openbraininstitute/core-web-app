@@ -74,7 +74,7 @@ export default function Footer({
     <div
       ref={ref}
       className={classNames(
-        'relative flex w-full snap-start flex-col items-start justify-between gap-5 border-t border-solid border-primary-4 px-[14vw] pb-20 pt-32 md:mt-[30vh] xl:flex-row',
+        'relative flex w-full snap-start flex-col items-start justify-between gap-x-8 border-t border-solid border-primary-4 px-[14vw] pb-20 pt-32 md:mt-[30vh] xl:flex-row',
         className
       )}
     >
@@ -85,7 +85,7 @@ export default function Footer({
             key={`Footer_element-${section.title}-${index + 1}`}
             className="flex w-full flex-col gap-y-3"
           >
-            <h4 className="w-full text-xl font-semibold uppercase tracking-[0.06em]">
+            <h4 className="w-full text-xl font-semibold uppercase tracking-[0.06em] text-primary-2">
               {section.title}
             </h4>
             {section.items.map((item: { title: string; url: string }, idx: number) => (
