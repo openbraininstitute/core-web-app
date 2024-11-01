@@ -3,8 +3,12 @@ import { useSearchParams } from 'next/navigation';
 import { OBPLogo } from './Splash';
 
 import PrimaryButtonHome from '@/components/home/PrimaryButtonHome';
+import { CloseIcon } from '@/components/icons';
+import MenuMobileIcon from '@/components/icons/MenuMobileIcon';
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
+import { useState } from 'react';
+import MobileMenu from './MobileMenu';
 
 interface MenuItemProps {
   title: string;
@@ -43,9 +47,27 @@ function MenuItem({ title, bgcolor = defaultBgColor }: MenuItemProps) {
 }
 
 export default function EntrypointMenu() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
   return (
-    <div className="fixed z-50 flex w-full flex-row items-center justify-between px-6 pt-6">
+    <div className="fixed z-50 flex w-full flex-row items-start justify-between px-6 pt-6 md:items-center">
       <OBPLogo />
+      <button
+        type="button"
+        aria-label="Menu mobile"
+        className="relative z-[9999] flex h-11 w-11 items-center justify-center  md:hidden"
+        style={{
+          background: isMobileMenuOpen ? 'transparent' : '#0050b3',
+        }}
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        {isMobileMenuOpen ? (
+          <CloseIcon iconColor="white" className="h-4 w-auto" />
+        ) : (
+          <MenuMobileIcon iconColor="white" className="h-4 w-auto" />
+        )}
+      </button>
+      <MobileMenu style={{ left: isMobileMenuOpen ? '0' : '100vw' }} />
       <div className="relative hidden justify-between gap-1 md:flex ">
         {/* TODO: Re-enable hidden buttons after SfN */}
         {/* <MenuLink title="Getting Started" href="#" /> */}

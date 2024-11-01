@@ -1,6 +1,6 @@
+import { ArrowRightOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRightOutlined } from '@ant-design/icons';
 
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
