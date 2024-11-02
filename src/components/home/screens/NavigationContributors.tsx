@@ -26,12 +26,12 @@ export default function NavigationContributors({
   };
 
   return (
-    <nav className="relative flex w-full flex-row items-center justify-between gap-x-4">
+    <nav className="sticky top-3 flex w-full flex-row items-center justify-between gap-x-2 overflow-x-scroll px-8 md:relative md:top-0 md:gap-x-4 md:overflow-x-auto md:px-0">
       {allAvailableFirstLetter().map((letter: string, index: number) => (
         <button
           key={`Letter-${letter}_Button_${index + 1}`}
           type="button"
-          className="relative flex h-8 w-8 items-center justify-center rounded-full font-sans text-base font-semibold"
+          className="relative flex h-12 w-12 items-center justify-center rounded-full px-5 font-sans text-2xl font-semibold md:h-8 md:w-8 md:px-0 md:text-base"
           style={{
             color: selectedLetter === letter ? '#002766' : '#69c0ff',
             background: selectedLetter === letter ? '#69c0ff' : 'transparent',
