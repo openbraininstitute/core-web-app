@@ -1,14 +1,16 @@
 import { useSearchParams } from 'next/navigation';
 
+import { useState } from 'react';
+
 import { OBPLogo } from './Splash';
+
+import MobileMenu from './MobileMenu';
 
 import PrimaryButtonHome from '@/components/home/PrimaryButtonHome';
 import { CloseIcon } from '@/components/icons';
 import MenuMobileIcon from '@/components/icons/MenuMobileIcon';
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
-import { useState } from 'react';
-import MobileMenu from './MobileMenu';
 
 interface MenuItemProps {
   title: string;

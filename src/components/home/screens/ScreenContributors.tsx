@@ -29,25 +29,24 @@ export function SingleContributorCard({ content }: { content: ContributorProps }
     });
   }
 
+  const buttonStyle =
+    'whitespace-nowraps flex h-12 items-center justify-center bg-primary-8 px-8 text-lg uppercase text-white md:h-10 md:px-4 md:text-sm transition-colors duration-200 ease-linear hover:bg-primary-6';
+
   return (
     <div className="relative flex flex-col gap-y-2">
-      <div className="relative z-10 font-sans text-3xl font-semibold leading-tight text-white transition-all duration-300 ease-out-expo md:text-xl">
+      <div className="relative z-10 font-sans text-xl font-bold leading-tight text-white transition-all duration-300 ease-out-expo md:text-2xl">
         {content.full_name}
       </div>
       <div className="relative z-20 flex flex-row gap-x-4">
         {content.ORCID !== null && (
-          <Link
-            href={`https://orcid.org/${content.ORCID}`}
-            className="flex h-12 items-center justify-center bg-primary-8 px-8 text-lg uppercase text-white md:h-10 md:px-4 md:text-sm"
-            target="_blank"
-          >
+          <Link href={`https://orcid.org/${content.ORCID}`} className={buttonStyle} target="_blank">
             ORCID
           </Link>
         )}
         {content.google_scholar !== null && (
           <Link
             href={`https://scholar.google.com/citations?user=${content.google_scholar}`}
-            className="whitespace-nowraps flex h-12 items-center justify-center bg-primary-8 px-8 text-lg uppercase text-white md:h-10 md:px-4 md:text-sm"
+            className={buttonStyle}
             target="_blank"
           >
             Google Scholar

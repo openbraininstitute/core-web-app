@@ -1,6 +1,6 @@
 import { getToken } from 'next-auth/jwt';
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
-import { NextRequest, NextResponse, userAgent } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*'];
 const ASSETS = [
@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   const session = await getToken<false, { accessTokenExpires: number }>({ req: request });
   const sessionValid = session && Date.now() < session.accessTokenExpires;
   const requestUrl = request.nextUrl.pathname;
-  const { device } = userAgent(request);
+  // const { device } = userAgent(request);
 
   // Allow free access to assets
   if (isFreeAccessRoute(requestUrl, ASSETS)) {

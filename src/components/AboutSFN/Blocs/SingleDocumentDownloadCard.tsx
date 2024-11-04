@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 
+import Link from 'next/link';
+
 import { SingleDocumentProps } from '@/types/about/document-download';
 import { classNames } from '@/util/utils';
-import Link from 'next/link';
 
 export default function SingleDocumentDownloadCard({
   content,
