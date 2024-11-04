@@ -3,8 +3,6 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
 import { HTMLProps } from 'react';
-import find from 'lodash/find';
-import flatMap from 'lodash/flatMap';
 
 import {
   SimulationScopeToDataType,
@@ -21,14 +19,8 @@ import BookmarkButton from '@/components/explore-section/BookmarkButton';
 import { SIMULATION_DATA_TYPES } from '@/constants/explore-section/data-types/simulation-data-types';
 import { isSimulation } from '@/types/virtual-lab/bookmark';
 import { Btn } from '@/components/Btn';
-import {
-  DataType,
-  DataTypeToNewSimulationPage,
-  DataTypeToNexusType,
-  DataTypeToViewModelPage,
-} from '@/constants/explore-section/list-views';
+import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { ensureArray } from '@/util/nexus';
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
 import { classNames } from '@/util/utils';
@@ -44,9 +36,15 @@ import {
 } from '@/components/VirtualLab/ScopeSelector';
 import Styles from '@/styles/vlabs.module.scss';
 
-const SimTypeURLParams: { [key: string]: string } = {
-  [SimulationType.SingleNeuron]: 'single-neuron-simulation',
-  [SimulationType.Synaptome]: 'synaptome-simulation',
+const SimTypeURLParams: Record<string, { view: string; model: string }> = {
+  [SimulationType.SingleNeuron]: {
+    view: 'single-neuron-simulation',
+    model: 'explore/interactive/model/me-model',
+  },
+  [SimulationType.Synaptome]: {
+    view: 'synaptome-simulation',
+    model: 'explore/interactive/model/synaptome',
+  },
 };
 
 export default function VirtualLabProjectSimulatePage({
@@ -85,7 +83,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const generateDetailUrl = (selectedRow: ExploreESHit<ExploreResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const baseBuildUrl = `${vlProjectUrl}/explore/simulate/${SimTypeURLParams[selectedSimType]}/view`;
+    const baseBuildUrl = `${vlProjectUrl}/explore/simulate/${SimTypeURLParams[selectedSimType].view}/view`;
     return `${baseBuildUrl}/${to64(`${virtualLabId}/${projectId}!/!${selectedRow._id}`)}`;
   };
 
@@ -149,34 +147,15 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
 
   const onModelSelected = (model: ExploreESHit<ExploreSectionResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const simulateType = flatMap(ensureArray(model._source['@type']), (type) =>
-      find(DataTypeToNexusType, (value) => value === type)
-    ).at(0);
-    if (simulateType) {
-      const simulatePagePath = DataTypeToNewSimulationPage[simulateType];
-      if (simulatePagePath) {
-        const baseBuildUrl = `${vlProjectUrl}/simulate/${simulatePagePath}/new`;
-        router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
-      }
-    }
+    const baseBuildUrl = `${vlProjectUrl}/simulate/${selectedSimulationScope}/new`;
+    router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
   };
-  const navigateToDetailPage = (
-    basePath: string,
-    record: ExploreESHit<ExploreSectionResource>,
-    dataType: DataType
-  ) => {
-    switch (dataType) {
-      case DataType.CircuitMEModel:
-      case DataType.SingleNeuronSynaptome: {
-        const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-        const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
-        const baseExploreUrl = `${vlProjectUrl}/${DataTypeToViewModelPage[dataType]}`;
-        router.push(`${baseExploreUrl}/${pathId}`);
-        break;
-      }
-      default:
-        break;
-    }
+
+  const navigateToDetailPage = (_: string, record: ExploreESHit<ExploreSectionResource>) => {
+    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
+    const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
+    const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLParams[selectedSimulationScope].model}`;
+    router.push(`${baseExploreUrl}/${pathId}`);
   };
 
   const selectedRows = useAtomValue(selectedRowsAtom({ dataType: modelType }));
