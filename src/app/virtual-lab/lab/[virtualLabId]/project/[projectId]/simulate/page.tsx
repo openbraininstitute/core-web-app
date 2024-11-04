@@ -46,8 +46,7 @@ export default function VirtualLabProjectSimulatePage({
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + params.projectId));
 
   const renderContent = () => {
-    if (selectedTab === 'new')
-      return <ScopeSelector projectId={params.projectId} section="simulate" />;
+    if (selectedTab === 'new') return <NewSim projectId={params.projectId} />;
 
     return <BrowseSimsTab projectId={params.projectId} virtualLabId={params.virtualLabId} />;
   };
@@ -63,8 +62,9 @@ export default function VirtualLabProjectSimulatePage({
 
 function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
   const router = useRouter();
-  const selectedSimType =
-    useAtomValue(selectedSimTypeFamily('simulate' + projectId)) ?? 'single-neuron';
+  const [selectedTab] = useAtom(selectedTabFamily('simulate' + projectId));
+  const atomKey = 'simulate' + selectedTab + projectId;
+  const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey)) ?? 'single-neuron';
 
   const dataType = SimulationScopeToDataType[selectedSimType];
 
@@ -78,12 +78,12 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     return `${baseBuildUrl}/${to64(`${virtualLabId}/${projectId}!/!${selectedRow._id}`)}`;
   };
 
-  const [expanded] = useAtom(scopeSelectorExpandedAtom('simulate' + projectId));
+  const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
   return (
     <>
       <div className="flex w-full grow flex-col">
-        <ScopeSelectorSmall projectId={projectId} section="simulate" />
+        <ScopeSelectorSmall atomKey={atomKey} />
         {dataType && (
           <>
             <div
@@ -127,6 +127,12 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
       </div>
     </>
   );
+}
+
+function NewSim({ projectId }: { projectId: string }) {
+  const [selectedTab] = useAtom(selectedTabFamily('simulate' + projectId));
+  const atomKey = 'simulate' + selectedTab + projectId;
+  return <ScopeSelector atomKey={atomKey} section="simulate" />;
 }
 
 function customBookmarkButton({ onClick, children }: HTMLProps<HTMLButtonElement>) {
