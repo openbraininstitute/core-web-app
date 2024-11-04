@@ -167,16 +167,14 @@ type BluenaasError = {
 type StreamSimulationEvent = 'init' | 'info' | 'data' | 'error';
 type StreamSimulationStatus = 'pending' | 'started' | 'success' | 'failure';
 
-type SimulationSteamData = {
-  label: string;
-  amplitude: number;
-  frequency: number;
+export type SimulationStreamData = {
+  name: string;
+  amplitude?: number;
+  frequency?: number;
   recording: string;
   varying_key: string;
-  varying_type: string;
-  varying_order: number;
-  t: Array<number>;
-  v: Array<number>;
+  x: Array<number>;
+  y: Array<number>;
 };
 
 export type StreamSimulationResponse = {
@@ -184,7 +182,7 @@ export type StreamSimulationResponse = {
   description: string;
   event: StreamSimulationEvent;
   state: StreamSimulationStatus;
-  data: SimulationSteamData;
+  data: SimulationStreamData;
 };
 
 export const isBluenaasError = (obj: Object): obj is BluenaasError => {

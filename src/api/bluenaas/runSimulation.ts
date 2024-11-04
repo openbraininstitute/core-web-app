@@ -30,7 +30,7 @@ export const runGenericSingleNeuronSimulation = async ({
 }) => {
   const formattedConfig = convertObjectKeystoSnakeCase(config);
   return await fetch(
-    `${blueNaasUrl}/simulation/single-neuron/${vlabId}/${projectId}/run?model_self=${encodeURIComponent(modelUrl)}`,
+    `${blueNaasUrl}/simulation/single-neuron/${vlabId}/${projectId}/run?model_id=${encodeURIComponent(modelUrl)}&realtime=True`,
     {
       method: 'post',
       headers: {
@@ -38,11 +38,7 @@ export const runGenericSingleNeuronSimulation = async ({
         authorization: `bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        config: formattedConfig,
-        autosave: false,
-        realtime: true,
-      }),
+      body: JSON.stringify(formattedConfig),
     }
   );
 };

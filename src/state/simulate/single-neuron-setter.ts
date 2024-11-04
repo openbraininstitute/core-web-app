@@ -34,8 +34,8 @@ import { EModel } from '@/types/e-model';
 import { MEModel } from '@/types/me-model';
 import {
   SingleNeuronModelSimulationConfig,
-  isBluenaasSimulationError,
-  StreamSimulationResponse,
+  isBluenaasError,
+  SimulationStreamData,
 } from '@/types/simulation/single-neuron';
 import { SimulationType } from '@/types/simulation/common';
 import { isJSON } from '@/util/utils';
@@ -194,7 +194,6 @@ export const launchSimulationAtom = atom<
     const synaptomeConfig = get(synaptomeSimulationConfigAtom);
     const recordFromConfig = get(recordingSourceForSimulationAtom);
     const conditionsConfig = get(simulationExperimentalSetupAtom);
-
     if (simulationType === 'single-neuron-simulation') {
       if (!currentInjectionConfig) {
         throw new Error('Cannot run simulation without valid configuration for current injection');
@@ -327,68 +326,53 @@ export const launchSimulationAtom = atom<
 
     function mergeJsonBuffer(part: string) {
       if (part && isJSON(part)) {
-        const response = JSON.parse(part) as StreamSimulationResponse;
+        const jsonData = JSON.parse(part) as SimulationStreamData;
 
-        if (isBluenaasSimulationError(response)) {
+        if (isBluenaasError(jsonData)) {
           throw new Error(
-            response.description ??
+            jsonData.details ??
               'Simulation encountered an error, please be sure that the configuration is correct and try again',
             { cause: 'BluenaasError' }
           );
         }
-        if (response.event === 'init') {
-          // TODO: console.log('[notification] show to user that the task has been acquired by bluenaas')
-        }
-        if (response.event === 'info' && response.state === 'pending') {
-          // TODO: console.log('[notification] show to user that the task is waiting for worker to start')
-        }
-        if (response.event === 'info' && response.state === 'failure') {
-          // TODO: console.log('[notification] show to user that the task failed')
-        }
-        if (response.event === 'data' && response.data) {
-          const jsonData = response.data;
-          const newPlot: PlotDataEntry = {
-            x: jsonData.t,
-            y: jsonData.v,
-            type: 'scatter',
-            name: jsonData.label,
-            recording: jsonData.recording,
-            amplitude: jsonData.amplitude,
-            frequency: jsonData.frequency,
-            varyingKey: jsonData.varying_key,
-            varyingOrder: jsonData.varying_order,
+        const newPlot: PlotDataEntry = {
+          x: jsonData.x,
+          y: jsonData.y,
+          type: 'scatter',
+          name: jsonData.name,
+          recording: jsonData.recording,
+          amplitude: jsonData.amplitude,
+          frequency: jsonData.frequency,
+          varyingKey: jsonData.varying_key,
+        };
+
+        const currentRecording = get(genericSingleNeuronSimulationPlotDataAtom)![
+          jsonData.recording
+        ];
+
+        if (currentRecording) {
+          const updatedPlot = {
+            ...get(genericSingleNeuronSimulationPlotDataAtom),
+            [jsonData.recording]:
+              !currentRecording.length || !currentRecording.find((o) => o.name === newPlot.name)
+                ? [...currentRecording, newPlot]
+                : updateArray({
+                    array: currentRecording,
+                    keyfn: (item) => item.name === newPlot.name,
+                    newVal: (value) => ({
+                      ...value,
+                      x: [...value.x, ...newPlot.x],
+                      y: [...value.y, ...newPlot.y],
+                    }),
+                  }),
           };
 
-          const currentRecording = get(genericSingleNeuronSimulationPlotDataAtom)![
-            jsonData.recording
-          ];
+          // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
+          Object.keys(updatedPlot).forEach((recordingLocation) => {
+            updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
+          });
 
-          if (currentRecording) {
-            const updatedPlot = {
-              ...get(genericSingleNeuronSimulationPlotDataAtom),
-              [jsonData.recording]:
-                !currentRecording.length || !currentRecording.find((o) => o.name === newPlot.name)
-                  ? [...currentRecording, newPlot]
-                  : updateArray({
-                      array: currentRecording,
-                      keyfn: (item) => item.name === newPlot.name,
-                      newVal: (value) => ({
-                        ...value,
-                        x: [...value.x, ...newPlot.x],
-                        y: [...value.y, ...newPlot.y],
-                      }),
-                    }),
-            };
-
-            // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
-            Object.keys(updatedPlot).forEach((recordingLocation) => {
-              updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], [
-                'varyingOrder',
-              ]);
-            });
-
-            set(genericSingleNeuronSimulationPlotDataAtom, updatedPlot);
-          }
+          set(genericSingleNeuronSimulationPlotDataAtom, updatedPlot);
         }
       }
     }
