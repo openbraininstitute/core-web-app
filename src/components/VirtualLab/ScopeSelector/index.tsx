@@ -49,15 +49,15 @@ export function SectionTabs({
 }
 
 export function ScopeSelector({
-  projectId,
+  atomKey,
   section,
   handleBuildClick,
 }: {
   handleBuildClick?: () => void;
-  projectId: string;
   section: 'build' | 'simulate';
+  atomKey: string;
 }) {
-  const [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(section + projectId));
+  const [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(atomKey));
 
   const tileJSX = (type: SimulationType, description: string, imgSrc: string, disabled = false) => {
     const title = capitalize(type.replace('-', ' '));
@@ -140,15 +140,9 @@ export function ScopeSelector({
   );
 }
 
-export function ScopeSelectorSmall({
-  projectId,
-  section,
-}: {
-  projectId: string;
-  section: 'build' | 'simulate';
-}) {
-  const [expanded, setExpanded] = useAtom(scopeSelectorExpandedAtom(section + projectId));
-  let [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(section + projectId)); // eslint-disable-line prefer-const
+export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
+  const [expanded, setExpanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
+  let [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(atomKey)); // eslint-disable-line prefer-const
   selectedSimType = selectedSimType ?? SimulationType.SingleNeuron;
 
   const header = (label: string) => <div className="font-semibold text-gray-400">{label}</div>;

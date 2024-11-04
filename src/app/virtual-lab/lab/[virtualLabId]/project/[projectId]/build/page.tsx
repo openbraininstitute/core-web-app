@@ -60,7 +60,8 @@ const SimTypeURLs: { [key: string]: SimURLs } = {
 export default function VirtualLabProjectBuildPage({ params }: Params) {
   const router = useRouter();
   const [selectedTab] = useAtom(selectedTabFamily('build' + params.projectId));
-  const [selectedSimType] = useAtom(selectedSimTypeFamily('build' + params.projectId));
+  const atomKey = 'build' + selectedTab + params.projectId;
+  const [selectedSimType] = useAtom(selectedSimTypeFamily(atomKey));
 
   const URLs = selectedSimType && SimTypeURLs[selectedSimType];
 
@@ -68,7 +69,7 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
     if (selectedTab === 'new')
       return (
         <ScopeSelector
-          projectId={params.projectId}
+          atomKey={atomKey}
           section="build"
           handleBuildClick={() => {
             if (!URLs) return;
@@ -91,8 +92,10 @@ export default function VirtualLabProjectBuildPage({ params }: Params) {
 
 function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
   const router = useRouter();
+  const [selectedTab] = useAtom(selectedTabFamily('build' + projectId));
+  const atomKey = 'build' + selectedTab + projectId;
   const selectedSimType =
-    useAtomValue(selectedSimTypeFamily('build' + projectId)) ?? SimulationType.SingleNeuron;
+    useAtomValue(selectedSimTypeFamily(atomKey)) ?? SimulationType.SingleNeuron;
 
   const selectedModelType = SimulationScopeToModelType[selectedSimType];
 
@@ -100,7 +103,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
     selectedRowsAtom({ dataType: selectedModelType ?? DataType.CircuitMEModel })
   );
 
-  const [expanded] = useAtom(scopeSelectorExpandedAtom('build' + projectId));
+  const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
   // Note: Disabled temporarily until SFN
   // const generateCloneUrl = () => {
@@ -132,7 +135,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   return (
     <>
       <div className="flex grow flex-col">
-        <ScopeSelectorSmall projectId={projectId} section="build" />
+        <ScopeSelectorSmall atomKey={atomKey} />
         {selectedModelType ? (
           <div
             id="explore-table-container-for-observable"
