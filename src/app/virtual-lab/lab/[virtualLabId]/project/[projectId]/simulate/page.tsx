@@ -2,24 +2,35 @@
 
 import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
-
 import { HTMLProps } from 'react';
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import find from 'lodash/find';
+import flatMap from 'lodash/flatMap';
 
-import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
+import {
+  SimulationScopeToDataType,
+  SimulationScopeToModelType,
+  SimulationType,
+} from '@/types/virtual-lab/lab';
 
-import { SimulationScopeToDataType, SimulationType } from '@/types/virtual-lab/lab';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType } from '@/constants/explore-section/list-views';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { to64 } from '@/util/common';
+import { to64, detailUrlBuilder } from '@/util/common';
 import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
-
+import { ExploreSectionResource } from '@/types/explore-section/resources';
 import BookmarkButton from '@/components/explore-section/BookmarkButton';
 import { SIMULATION_DATA_TYPES } from '@/constants/explore-section/data-types/simulation-data-types';
 import { isSimulation } from '@/types/virtual-lab/bookmark';
 import { Btn } from '@/components/Btn';
+import {
+  DataType,
+  DataTypeToNewSimulationPage,
+  DataTypeToNexusType,
+  DataTypeToViewModelPage,
+} from '@/constants/explore-section/list-views';
+import { ExploreDataScope } from '@/types/explore-section/application';
+import { ensureArray } from '@/util/nexus';
+import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
 import { classNames } from '@/util/utils';
 import {
   scopeSelectorExpandedAtom,
@@ -46,7 +57,8 @@ export default function VirtualLabProjectSimulatePage({
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + params.projectId));
 
   const renderContent = () => {
-    if (selectedTab === 'new') return <NewSim projectId={params.projectId} />;
+    if (selectedTab === 'new')
+      return <NewSim projectId={params.projectId} virtualLabId={params.virtualLabId} />;
 
     return <BrowseSimsTab projectId={params.projectId} virtualLabId={params.virtualLabId} />;
   };
@@ -64,10 +76,9 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
   const router = useRouter();
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + projectId));
   const atomKey = 'simulate' + selectedTab + projectId;
-  const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey)) ?? 'single-neuron';
 
+  const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
   const dataType = SimulationScopeToDataType[selectedSimType];
-
   const selectedRows = useAtomValue(
     selectedRowsAtom({ dataType: dataType ?? DataType.SingleNeuronSimulation })
   );
@@ -129,10 +140,83 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
   );
 }
 
-function NewSim({ projectId }: { projectId: string }) {
+function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + projectId));
   const atomKey = 'simulate' + selectedTab + projectId;
-  return <ScopeSelector atomKey={atomKey} section="simulate" />;
+  const router = useRouter();
+  const selectedSimulationScope = useAtomValue(selectedSimTypeFamily(atomKey));
+  const modelType = SimulationScopeToModelType[selectedSimulationScope] ?? DataType.CircuitMEModel;
+
+  const onModelSelected = (model: ExploreESHit<ExploreSectionResource>) => {
+    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
+    const simulateType = flatMap(ensureArray(model._source['@type']), (type) =>
+      find(DataTypeToNexusType, (value) => value === type)
+    ).at(0);
+    if (simulateType) {
+      const simulatePagePath = DataTypeToNewSimulationPage[simulateType];
+      if (simulatePagePath) {
+        const baseBuildUrl = `${vlProjectUrl}/simulate/${simulatePagePath}/new`;
+        router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
+      }
+    }
+  };
+  const navigateToDetailPage = (
+    basePath: string,
+    record: ExploreESHit<ExploreSectionResource>,
+    dataType: DataType
+  ) => {
+    switch (dataType) {
+      case DataType.CircuitMEModel:
+      case DataType.SingleNeuronSynaptome: {
+        const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
+        const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
+        const baseExploreUrl = `${vlProjectUrl}/${DataTypeToViewModelPage[dataType]}`;
+        router.push(`${baseExploreUrl}/${pathId}`);
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  const selectedRows = useAtomValue(selectedRowsAtom({ dataType: modelType }));
+
+  return (
+    <>
+      <ScopeSelector atomKey={atomKey} section="simulate" />
+
+      <div className="flex grow flex-col">
+        <div className="flex grow flex-col">
+          {/* TODO: replace this list with items saved in Model Library */}
+          <div className="flex w-full grow flex-col" id="explore-table-container-for-observable">
+            <ExploreSectionListingView
+              containerClass="grow bg-primary-9 flex flex-col"
+              tableClass={classNames('mb-5 grow', Styles.table)}
+              tableScrollable={false}
+              controlsVisible={false}
+              dataType={modelType}
+              dataScope={ExploreDataScope.NoScope}
+              virtualLabInfo={{ virtualLabId, projectId }}
+              selectionType="radio"
+              renderButton={() => null}
+              onCellClick={navigateToDetailPage}
+            />
+          </div>
+
+          {selectedRows.length > 0 && (
+            <div className="fixed bottom-3 right-[60px] mb-6 flex items-center justify-end gap-2">
+              <Btn
+                className="bg-primary-9  text-white hover:!bg-primary-7"
+                onClick={() => onModelSelected(selectedRows[0])}
+              >
+                New Simulation
+              </Btn>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
 }
 
 function customBookmarkButton({ onClick, children }: HTMLProps<HTMLButtonElement>) {

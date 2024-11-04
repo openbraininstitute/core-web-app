@@ -94,8 +94,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const router = useRouter();
   const [selectedTab] = useAtom(selectedTabFamily('build' + projectId));
   const atomKey = 'build' + selectedTab + projectId;
-  const selectedSimType =
-    useAtomValue(selectedSimTypeFamily(atomKey)) ?? SimulationType.SingleNeuron;
+  const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
 
   const selectedModelType = SimulationScopeToModelType[selectedSimType];
 
