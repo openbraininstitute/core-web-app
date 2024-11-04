@@ -9,7 +9,7 @@ export const selectedTabFamily = atomFamily((_key: string) => {
 });
 
 export const selectedSimTypeFamily = atomFamily((_key: string) => {
-  return atom<SimulationType | null>(null);
+  return atom<SimulationType>(SimulationType.SingleNeuron);
 });
 
 export const scopeSelectorExpandedAtom = atomFamily((_key: string) => {
