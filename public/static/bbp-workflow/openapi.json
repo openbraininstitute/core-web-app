@@ -1,6 +1,9 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
   "paths": {
     "/": {
       "options": {
@@ -10,7 +13,11 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
           }
         }
       }
@@ -18,12 +25,27 @@
     "/session": {
       "get": {
         "summary": "Session",
-        "description": "Starts user bbp-workflow instance and sets session cookie.\n\nShould be the first endpoint invoked by UI to establish session.",
+        "description": "Starts user bbp-workflow instance(if not already running) and sets session cookie.\n\nShould be the first endpoint invoked by UI to establish session.",
         "operationId": "session_session_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Keycloak token.",
+              "title": "Authorization"
+            },
+            "description": "Keycloak token."
+          }
+        ],
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
           }
         }
       }
@@ -31,65 +53,124 @@
     "/auth": {
       "get": {
         "summary": "Auth",
-        "description": "Injects OAuth token.\n\nShould be the second endpoint invoked by UI to make sure bbp-workflow service\nis healthy and contains valid token. When invoked, should include credentials(session_id).\n\nIf service is not yet available, return status code: 503 with retry-after header.",
+        "description": "Ensures token is present for the workflow.\n\nShould be the second endpoint invoked by UI to make sure bbp-workflow service\nis healthy and contains valid token. When invoked, should include credentials(session cookie).\n\nIf service is not yet available, return status code: 503 with retry-after header.",
         "operationId": "auth_auth_get",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "This endpoint might redircet to keycloak for authentication if there is no SSO session, else redirect to this query param URL.",
+              "title": "Url"
+            },
+            "description": "This endpoint might redircet to keycloak for authentication if there is no SSO session, else redirect to this query param URL."
+          },
+          {
+            "name": "sessionid",
+            "in": "cookie",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Session id cookie.",
+              "title": "Sessionid"
+            },
+            "description": "Session id cookie."
+          }
+        ],
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "description": "Service not ready, retry."
           }
         }
       }
     },
-    "/launch": {
+    "/launch/{task}/": {
       "post": {
         "summary": "Launch",
         "description": "Launches workflow.",
-        "operationId": "launch_launch_post",
+        "operationId": "launch_launch__task___post",
         "parameters": [
+          {
+            "name": "task",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Fully qualified name of the luigi task(e.g. package.module.TaskClass).",
+              "title": "Task"
+            },
+            "description": "Fully qualified name of the luigi task(e.g. package.module.TaskClass)."
+          },
           {
             "name": "virtual_lab",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "title": "Virtual Lab" }
+            "schema": {
+              "type": "string",
+              "description": "Virtual lab id.",
+              "title": "Virtual Lab"
+            },
+            "description": "Virtual lab id."
           },
           {
             "name": "project",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "title": "Project" }
+            "schema": {
+              "type": "string",
+              "description": "Project id.",
+              "title": "Project"
+            },
+            "description": "Project id."
           },
           {
-            "name": "task",
-            "in": "query",
+            "name": "sessionid",
+            "in": "cookie",
             "required": true,
-            "schema": { "type": "string", "title": "Task" }
-          },
-          {
-            "name": "config",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Config" }
-          },
-          {
-            "name": "files",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Files" }
+            "schema": {
+              "type": "string",
+              "description": "Session id cookie.",
+              "title": "Sessionid"
+            },
+            "description": "Session id cookie."
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_launch_launch__task___post"
               }
             }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "WorkflowExecution URL",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "WorkflowExecution": {
+                    "value": "https://host/path/workflow-execution-resource-id"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity"
           }
         }
       }
@@ -102,7 +183,14 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity"
           }
         }
       }
@@ -110,30 +198,26 @@
   },
   "components": {
     "schemas": {
-      "HTTPValidationError": {
+      "Body_launch_launch__task___post": {
         "properties": {
-          "detail": {
-            "items": { "$ref": "#/components/schemas/ValidationError" },
+          "cfg_name": {
+            "type": "string",
+            "title": "Cfg Name",
+            "description": "Configuration file name from the attached form files."
+          },
+          "files": {
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
             "type": "array",
-            "title": "Detail"
+            "title": "Files",
+            "description": "Attached form files required by the workflow."
           }
         },
         "type": "object",
-        "title": "HTTPValidationError"
-      },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": { "type": "string", "title": "Message" },
-          "type": { "type": "string", "title": "Error Type" }
-        },
-        "type": "object",
-        "required": ["loc", "msg", "type"],
-        "title": "ValidationError"
+        "required": ["cfg_name", "files"],
+        "title": "Body_launch_launch__task___post"
       }
     }
   }
