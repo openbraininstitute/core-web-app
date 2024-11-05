@@ -61,7 +61,9 @@ export function ScopeSelector({
 
   const tileJSX = (type: SimulationType, description: string, imgSrc: string, disabled = false) => {
     const title = capitalize(type.replace('-', ' '));
-    const highlight = type === selectedSimType && section === 'build';
+    const highlight = type === selectedSimType;
+
+    const showImage = section !== 'build' || (section === 'build' && !highlight);
 
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
@@ -81,7 +83,7 @@ export function ScopeSelector({
           <div className={classNames('text-sm', descStyle)}>{description}</div>
         </div>
 
-        {!highlight && (
+        {showImage && (
           <Image
             src={imgSrc}
             width={100}
@@ -91,7 +93,7 @@ export function ScopeSelector({
           />
         )}
 
-        {highlight && (
+        {!showImage && (
           <button
             type="button"
             className="h-[55px] min-w-[100px] self-center  bg-primary-9 text-xl font-bold text-white"
