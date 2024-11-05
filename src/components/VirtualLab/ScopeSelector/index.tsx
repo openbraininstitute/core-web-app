@@ -155,7 +155,10 @@ export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
     <button
       type="button"
       key={type}
-      onClick={() => setSelectedSimType(type)}
+      onClick={() => {
+        setExpanded(false);
+        setSelectedSimType(type);
+      }}
       className="flex h-[40px] items-center border border-gray-300 pl-5 font-semibold text-primary-9"
     >
       {capitalize(type.replace('-', ' '))}
