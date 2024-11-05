@@ -124,7 +124,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   //   }
   // };
 
-  const navigateToDetailPage = (_: string, record: ExploreESHit<ExploreSectionResource>) => {
+  const navigateToDetailPage = (record: ExploreESHit<ExploreSectionResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
     const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
     const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLs[selectedSimType].viewUrl}`;
@@ -153,11 +153,17 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               style={{ background: 'bg-white' }}
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
-              onCellClick={navigateToDetailPage}
             />
 
             {selectedRows.length > 0 && (
               <div className="fixed bottom-3 right-[60px] mb-6 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className="h-12 bg-primary-8 px-8 font-semibold text-white"
+                  onClick={() => navigateToDetailPage(selectedRows[0])}
+                >
+                  View
+                </button>
                 {isModel(MODEL_DATA_TYPES[selectedModelType].name) && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}
