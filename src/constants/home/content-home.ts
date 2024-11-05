@@ -30,11 +30,11 @@ export const SCREEN_TWO = {
       paragraph:
         'The Blue Brain Open Platform is built on the Blue Brain Project’s legacy. All of Blue Brain’s tools - including the simulation neuroscience platform - are open-sourced for your convenience. Find them all in this Github repository and run them with your own computing resources.',
     },
-    {
-      title: 'We ♡ Open Science',
-      paragraph:
-        'All Blue Brain models and data used in this platform are independently available via AWS’ open data sponsorship program. This provides all the datasets for simulations in your chosen environment.',
-    },
+    // {
+    //   title: 'We ♡ Open Science',
+    //   paragraph:
+    //     'All Blue Brain models and data used in this platform are independently available via AWS’ open data sponsorship program. This provides all the datasets for simulations in your chosen environment.',
+    // },
   ],
 };
 
