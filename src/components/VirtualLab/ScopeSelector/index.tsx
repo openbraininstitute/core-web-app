@@ -69,14 +69,16 @@ export function ScopeSelector({
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
 
     return (
-      <button
-        disabled={disabled}
-        type="button"
+      <div
+        aria-hidden
         className={classNames(
-          'box-border flex h-[200px] justify-between gap-5 overflow-hidden text-ellipsis rounded border border-primary-4 p-6',
-          tileStyle
+          'box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded border border-primary-4 p-6',
+          tileStyle,
+          !disabled && 'cursor-pointer'
         )}
-        onClick={() => setSelectedSimType(type)}
+        onClick={() => {
+          if (!disabled) setSelectedSimType(type);
+        }}
       >
         <div className="text-left">
           <div className="mb-2 text-3xl font-semibold">{title}</div>
@@ -102,7 +104,7 @@ export function ScopeSelector({
             Build
           </button>
         )}
-      </button>
+      </div>
     );
   };
   return (
