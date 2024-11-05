@@ -156,14 +156,14 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
             />
 
             {selectedRows.length > 0 && (
-              <div className="fixed bottom-3 right-[60px] mb-6 flex items-center justify-end gap-2">
-                <button
+              <div className="fixed bottom-12 right-[45px] flex items-center justify-end gap-2">
+                <Btn
                   type="button"
-                  className="h-12 bg-primary-8 px-8 font-semibold text-white"
+                  className="h-12 bg-primary-9 px-8 text-white"
                   onClick={() => navigateToDetailPage(selectedRows[0])}
                 >
                   View
-                </button>
+                </Btn>
                 {isModel(MODEL_DATA_TYPES[selectedModelType].name) && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}

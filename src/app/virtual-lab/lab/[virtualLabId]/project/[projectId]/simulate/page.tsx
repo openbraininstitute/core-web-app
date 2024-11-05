@@ -113,11 +113,17 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 style={{ background: 'bg-white' }}
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
-                onCellClick={(_, record) => router.push(generateDetailUrl(record))}
               />
             </div>
             {selectedRows.length > 0 && (
-              <div className="fixed bottom-3 right-[60px] mb-6 flex items-center justify-end gap-2">
+              <div className="fixed bottom-12 right-[60px] flex items-center justify-end gap-2">
+                <Btn
+                  type="button"
+                  className="bg-primary-9  text-white hover:!bg-primary-7"
+                  onClick={() => router.push(generateDetailUrl(selectedRows[0]))}
+                >
+                  View
+                </Btn>
                 {isSimulation(SIMULATION_DATA_TYPES[dataType].name) && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}
@@ -151,7 +157,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
     router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
   };
 
-  const navigateToDetailPage = (_: string, record: ExploreESHit<ExploreSectionResource>) => {
+  const navigateToDetailPage = (record: ExploreESHit<ExploreSectionResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
     const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
     const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLParams[selectedSimulationScope].model}`;
@@ -178,12 +184,18 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
               virtualLabInfo={{ virtualLabId, projectId }}
               selectionType="radio"
               renderButton={() => null}
-              onCellClick={navigateToDetailPage}
             />
           </div>
 
           {selectedRows.length > 0 && (
-            <div className="fixed bottom-3 right-[60px] mb-6 flex items-center justify-end gap-2">
+            <div className="fixed bottom-12 right-[60px] flex items-center justify-end gap-2">
+              <Btn
+                type="button"
+                className="bg-primary-9  text-white hover:!bg-primary-7"
+                onClick={() => navigateToDetailPage(selectedRows[0])}
+              >
+                View
+              </Btn>
               <Btn
                 className="bg-primary-9  text-white hover:!bg-primary-7"
                 onClick={() => onModelSelected(selectedRows[0])}
