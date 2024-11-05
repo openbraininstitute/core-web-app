@@ -15,8 +15,8 @@ export const env = createEnv({
 
     NEXTAUTH_SECRET: z.string().min(5),
 
-    MAILCHIMP_API_KEY: z.string().min(1),
-    MAILCHIMP_AUDIENCE_ID: z.string().min(1),
+    // MAILCHIMP_API_KEY: z.string().min(1),
+    // MAILCHIMP_AUDIENCE_ID: z.string().min(1),
 
     CI_COMMIT_SHORT_SHA: z.string().optional(),
     npm_package_version: z.string().optional(),

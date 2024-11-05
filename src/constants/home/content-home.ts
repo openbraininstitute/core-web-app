@@ -1,37 +1,50 @@
-export const THREE_COLUMN_SCREEN_ONE = [
-  'Explore resources with the Blue Brain Atlas',
-  'Configure and build multi scale models',
-  'Run simulations of your own models',
+export type ThreeColumnScreenOne = {
+  section: string;
+  content: string;
+  available: boolean;
+};
+
+export const THREE_COLUMN_SCREEN_ONE: ThreeColumnScreenOne[] = [
+  {
+    section: 'explore',
+    content: 'Explore resources with our Open Brain Atlas',
+    available: true,
+  },
+  {
+    section: 'model',
+    content: 'Configure and build multiscale models',
+    available: false,
+  },
+  {
+    section: 'simulate',
+    content: 'Run simulations of your own models',
+    available: false,
+  },
 ];
 
 export const SCREEN_TWO = {
   title: 'Why Blue Brain Github?',
   content: [
     {
-      title: 'Title 1',
+      title: 'Prefer to go it alone?',
       paragraph:
-        'Donec id elit non mi porta gravida at eget metus. Donec sed odio dui. Donec sed odio dui. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla vitae elit libero, a pharetra augue. Nullam quis risus eget urna mollis ornare vel eu leo.',
+        'The Blue Brain Open Platform is built on the Blue Brain Project’s legacy. All of Blue Brain’s tools - including the simulation neuroscience platform - are open-sourced for your convenience. Find them all in this Github repository and run them with your own computing resources.',
     },
     {
-      title: 'Title 2',
+      title: 'We ♡ Open Science',
       paragraph:
-        'Donec id elit non mi porta gravida at eget metus. Donec sed odio dui. Donec sed odio dui. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla vitae elit libero, a pharetra augue. Nullam quis risus eget urna mollis ornare vel eu leo.',
+        'All Blue Brain models and data used in this platform are independently available via AWS’ open data sponsorship program. This provides all the datasets for simulations in your chosen environment.',
     },
   ],
 };
 
 export const BB_AWS = {
-  title: 'Why Blue Brain Github?',
+  title: 'Discover our AWS Open Data Repository',
   content: [
     {
-      title: 'Title 1',
+      title: 'We ♡ Open Science',
       paragraph:
-        'Donec id elit non mi porta gravida at eget metus. Donec sed odio dui. Donec sed odio dui. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla vitae elit libero, a pharetra augue. Nullam quis risus eget urna mollis ornare vel eu leo.',
-    },
-    {
-      title: 'Title 2',
-      paragraph:
-        'Donec id elit non mi porta gravida at eget metus. Donec sed odio dui. Donec sed odio dui. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla vitae elit libero, a pharetra augue. Nullam quis risus eget urna mollis ornare vel eu leo.',
+        'All Blue Brain models and data used in this platform are independently available via AWS’ open data sponsorship program. This provides all the datasets for simulations in your chosen environment. ',
     },
   ],
 };

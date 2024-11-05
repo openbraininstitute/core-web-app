@@ -1,7 +1,7 @@
 'use client';
 
-import { Dispatch, SetStateAction, useState } from 'react';
 import Link from 'next/link';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 import { classNames } from '@/util/utils';
 
@@ -50,7 +50,7 @@ export default function SingleAnchorLink({
       <h6
         className={classNames(
           'relative font-sans text-sm font-normal uppercase tracking-wider transition-opacity duration-300 ease-linear',
-          'rotate-180 transform whitespace-nowrap text-center [writing-mode:vertical-lr]',
+          'transform whitespace-nowrap text-center [writing-mode:vertical-lr]',
           isMouseHover ? 'opacity-100' : 'opacity-0',
           !siblingHover && isVisible && 'opacity-100',
           siblingHover && siblingHover !== href && 'hidden'

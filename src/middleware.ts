@@ -1,6 +1,6 @@
-import { NextResponse, NextRequest, userAgent } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
+import { NextRequest, NextResponse } from 'next/server';
 
 const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*'];
 const ASSETS = [
@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   const session = await getToken<false, { accessTokenExpires: number }>({ req: request });
   const sessionValid = session && Date.now() < session.accessTokenExpires;
   const requestUrl = request.nextUrl.pathname;
-  const { device } = userAgent(request);
+  // const { device } = userAgent(request);
 
   // Allow free access to assets
   if (isFreeAccessRoute(requestUrl, ASSETS)) {
@@ -42,12 +42,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect to /about on mobile devices
-  if (device.type === 'mobile' && !requestUrl.startsWith('/about')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/about';
-    url.searchParams.set('warning', 'yes');
-    return NextResponse.redirect(url);
-  }
+  // if (device.type === 'mobile' && !requestUrl.startsWith('/about')) {
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = '/about';
+  //   url.searchParams.set('warning', 'yes');
+  //   return NextResponse.redirect(url);
+  // }
 
   // If the user is authenticated and wants to access the home page or log-in page
   // then redirect to the main page
