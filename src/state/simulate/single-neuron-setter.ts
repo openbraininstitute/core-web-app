@@ -137,6 +137,8 @@ export const createSingleNeuronSimulationAtom = atom<
       (r) => `${r.section}_${r.offset}`
     ),
     brainLocation: resource.brainLocation,
+    is_draft: false,
+    status: 'success',
   };
 
   if (simulationType === 'single-neuron-simulation') {
