@@ -35,7 +35,7 @@ export default function PrimaryButtonHome({
   return (
     <Link
       href={url}
-      className="relative flex h-14 w-[200px] flex-row items-center px-4"
+      className="relative flex h-24 w-full flex-row items-center px-8 md:h-14 md:w-[200px] md:px-4"
       style={{
         color: textColor,
         background: theme === 'light' ? '#fff' : '#003A8C',
@@ -47,7 +47,7 @@ export default function PrimaryButtonHome({
       onBlur={() => setIsMouseHover(false)}
       aria-label={`Button link to ${label}`}
     >
-      <div className="text-base! relative z-10 font-semibold">{label}</div>
+      <div className="lg:text-base! relative z-10 text-2xl font-semibold">{label}</div>
       {hasIcon && <ArrowNorthEastIcon iconColor="#40A9FF" className="relative z-10" />}
       <div
         className="absolute left-0 top-0 z-0 h-14 transition-width duration-500 ease-out"
