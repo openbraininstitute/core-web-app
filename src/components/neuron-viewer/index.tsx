@@ -86,8 +86,6 @@ export default function NeuronViewer({
     }
   }, []);
 
-  console.log('Neuron Viewer', modelSelfUrl);
-
   const { loading, error } = useMorphology({
     modelSelfUrl,
     callback: runRenderer,

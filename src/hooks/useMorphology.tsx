@@ -24,8 +24,6 @@ export default function useMorphology({
       throw new Error('No session found');
     }
 
-    console.log('useMorphology', modelSelfUrl);
-
     const response = await getMorphology({ modelId: modelSelfUrl, token: session.accessToken });
     const reader = response.body?.getReader();
     let data: string = '';
