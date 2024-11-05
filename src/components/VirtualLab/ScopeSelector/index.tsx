@@ -153,13 +153,19 @@ export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
 
   const tile = (type: SimulationType) => (
     <button
+      disabled={selectedSimType === type}
       type="button"
       key={type}
       onClick={() => {
         setExpanded(false);
         setSelectedSimType(type);
       }}
-      className="flex h-[40px] items-center border border-gray-300 pl-5 font-semibold text-primary-9"
+      className={classNames(
+        'flex h-[40px] items-center border pl-5 font-semibold',
+        selectedSimType === type
+          ? 'border-none bg-primary-8 text-white'
+          : 'border-gray-300 text-primary-9'
+      )}
     >
       {capitalize(type.replace('-', ' '))}
     </button>
