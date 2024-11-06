@@ -11,9 +11,9 @@ export default function Page() {
 
   if (!isServer) {
     if (source === 'dev') {
-      signIn('keycloak', { callbackUrl: redirectURL || basePath });
+      signIn('keycloak', { callbackUrl: redirectURL || `${basePath}/dev` });
     } else {
-      signIn('keycloak', { callbackUrl: redirectURL || `${basePath}/explore/interactive` });
+      signIn('keycloak', { callbackUrl: redirectURL || basePath });
     }
   }
 

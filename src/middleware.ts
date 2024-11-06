@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
   // }
 
   // If the user is authenticated and wants to access the home page or log-in page
-  // then redirect to the main page
+  // then redirect to the explore home page
   if (sessionValid && (requestUrl === '/' || requestUrl === '/log-in')) {
     const url = request.nextUrl.clone();
     url.pathname = `/explore/interactive`;
@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // If the user is authenticated and wants to access the /dev page
-  // then redirect to the main page
+  // then redirect to the virtual lab main page
   if (sessionValid && requestUrl === '/dev') {
     const url = request.nextUrl.clone();
     url.pathname = `/virtual-lab`;
