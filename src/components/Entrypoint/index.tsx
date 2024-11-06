@@ -8,14 +8,14 @@ import { AcceptInviteErrorDialog, Menu } from './segments';
 
 export default function Entrypoint({
   errorCode,
-  devEntry,
+  callbackUrl,
 }: {
   errorCode?: string;
-  devEntry?: boolean;
+  callbackUrl?: string;
 }) {
   return (
     <div className="relative flex w-screen flex-col bg-primary-9">
-      <Menu devEntry={devEntry} />
+      <Menu callbackUrl={callbackUrl} />
       <div className="h-auto overflow-x-hidden overflow-y-scroll md:h-screen md:snap-y md:snap-mandatory">
         <HeaderScreen />
         <ScreenBBGithub />
