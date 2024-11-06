@@ -25,10 +25,6 @@ const content = [
         title: 'Blue Brain Portal',
         url: 'https://portal.bluebrain.epfl.ch/',
       },
-      {
-        title: "Project's timeline",
-        url: 'https://www.epfl.ch/research/domains/bluebrain/blue-brain/about/timeline/',
-      },
     ],
   },
   {

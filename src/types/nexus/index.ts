@@ -700,6 +700,7 @@ export type CanonicalMorphologyModelConfigPayload = {
   };
 };
 
+export type SimulationStatus = 'pending' | 'started' | 'success' | 'failure';
 export interface SingleNeuronSimulation extends Entity {
   '@type': ['Entity', 'SingleNeuronSimulation'];
   name: string;
@@ -712,6 +713,8 @@ export interface SingleNeuronSimulation extends Entity {
   injectionLocation: string;
   recordingLocation: string[];
   brainLocation?: BrainLocation;
+  isDraft?: boolean;
+  status?: SimulationStatus;
 }
 
 export interface SynaptomeSimulation extends Entity, ResourceMetadata {
@@ -726,6 +729,8 @@ export interface SynaptomeSimulation extends Entity, ResourceMetadata {
   injectionLocation: string;
   recordingLocation: string[];
   brainLocation?: BrainLocation;
+  isDraft?: boolean;
+  status?: SimulationStatus;
 }
 
 export interface SingleNeuronSimulationResource extends ResourceMetadata, SingleNeuronSimulation {
