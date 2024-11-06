@@ -11,4 +11,12 @@
       height: 100%;
     }
   }
+  & :global(.ant-table-row-selected) > * {
+    background: #003a8c !important;
+    color: white;
+  }
+
+  & :global(.ant-empty-description) {
+    color: white;
+  }
 }
