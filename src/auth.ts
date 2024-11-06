@@ -55,7 +55,6 @@ async function refreshAccessToken(token: TokenSet) {
 }
 
 export const authOptions: NextAuthOptions = {
-  debug: true,
   providers: [
     {
       clientId,
