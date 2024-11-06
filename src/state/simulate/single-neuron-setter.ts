@@ -42,7 +42,7 @@ import { isJSON } from '@/util/utils';
 import { getSession } from '@/authFetch';
 import { nexus } from '@/config';
 import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/runSimulation';
-import { convertObjectKeystoSnakeCase } from '@/util/object-keys-format';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import updateArray from '@/util/updateArray';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
@@ -101,11 +101,11 @@ export const createSingleNeuronSimulationAtom = atom<
       simulation: Object.keys(simulationResult).reduce((prev, curr) => {
         return {
           ...prev,
-          [curr]: convertObjectKeystoSnakeCase(simulationResult[curr]),
+          [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
         };
       }, {}),
-      stimulus: convertObjectKeystoSnakeCase(stimulusResults),
-      config: convertObjectKeystoSnakeCase(singleNeuronSimulationConfig),
+      stimulus: convertObjectKeysToSnakeCase(stimulusResults),
+      config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
     },
     simulationType === 'single-neuron-simulation'
       ? `${SIMULATION_CONFIG_FILE_NAME_BASE}-single-neuron.json`

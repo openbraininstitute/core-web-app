@@ -42,6 +42,6 @@ export function convertObjectKeystoCamelCase<T>(obj: T): DeepCamelCase<T> {
   return mapKeysDeep(obj, (_, key) => camelCase(key as string)) as DeepCamelCase<T>;
 }
 
-export function convertObjectKeystoSnakeCase<T>(obj: T): DeepSnakeCase<T> {
+export function convertObjectKeysToSnakeCase<T>(obj: T): DeepSnakeCase<T> {
   return mapKeysDeep(obj, (_, key) => snakeCase(key as string));
 }

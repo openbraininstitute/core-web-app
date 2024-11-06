@@ -6,7 +6,7 @@ import {
   SimulationExperimentalSetup,
   SynaptomeConfig,
 } from '@/types/simulation/single-neuron';
-import { convertObjectKeystoSnakeCase } from '@/util/object-keys-format';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 export const runGenericSingleNeuronSimulation = async ({
   vlabId,
@@ -28,7 +28,7 @@ export const runGenericSingleNeuronSimulation = async ({
     duration: number;
   };
 }) => {
-  const formattedConfig = convertObjectKeystoSnakeCase(config);
+  const formattedConfig = convertObjectKeysToSnakeCase(config);
   return await fetch(
     `${blueNaasUrl}/simulation/single-neuron/${vlabId}/${projectId}/run?model_id=${encodeURIComponent(modelUrl)}&realtime=True`,
     {
