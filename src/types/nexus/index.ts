@@ -713,7 +713,7 @@ export interface SingleNeuronSimulation extends Entity {
   injectionLocation: string;
   recordingLocation: string[];
   brainLocation?: BrainLocation;
-  is_draft?: boolean;
+  isDraft?: boolean;
   status?: SimulationStatus;
 }
 
@@ -729,7 +729,7 @@ export interface SynaptomeSimulation extends Entity, ResourceMetadata {
   injectionLocation: string;
   recordingLocation: string[];
   brainLocation?: BrainLocation;
-  is_draft?: boolean;
+  isDraft?: boolean;
   status?: SimulationStatus;
 }
 
