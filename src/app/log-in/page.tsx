@@ -7,7 +7,15 @@ import { basePath, isServer } from '@/config';
 export default function Page() {
   const searchParams = useSearchParams();
   const redirectURL = searchParams.get('callbackUrl');
-  if (!isServer) signIn('keycloak', { callbackUrl: redirectURL || basePath });
+  const source = searchParams.get('source');
+
+  if (!isServer) {
+    if (source === 'dev') {
+      signIn('keycloak', { callbackUrl: redirectURL || basePath });
+    } else {
+      signIn('keycloak', { callbackUrl: redirectURL || `${basePath}/explore/interactive` });
+    }
+  }
 
   return 'Logging in...';
 }

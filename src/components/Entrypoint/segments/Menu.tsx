@@ -20,6 +20,10 @@ interface MenuButtonProps extends MenuItemProps {
   action?: <T, RT>(input: T) => RT;
 }
 
+interface EntrypointMenuProps {
+  devEntry?: boolean;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function MenuButton({ bgcolor, title, action }: MenuButtonProps) {
   const params = useSearchParams();
@@ -48,7 +52,7 @@ function MenuItem({ title, bgcolor = defaultBgColor }: MenuItemProps) {
   );
 }
 
-export default function EntrypointMenu() {
+export default function EntrypointMenu({ devEntry = false }: EntrypointMenuProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   return (
@@ -87,7 +91,12 @@ export default function EntrypointMenu() {
           theme="dark"
         /> */}
         <PrimaryButtonHome label="About" url="/about" hasIcon={false} theme="dark" />
-        <PrimaryButtonHome label="Log in" url="/log-in" hasIcon={false} theme="light" />
+        <PrimaryButtonHome
+          label="Log in"
+          url={`/log-in${devEntry ? '?source=dev' : ''}`}
+          hasIcon={false}
+          theme="light"
+        />
       </div>
     </div>
   );
