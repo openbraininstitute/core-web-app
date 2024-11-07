@@ -16,6 +16,7 @@ import { createResource, fetchResourceById, updateResource } from '@/api/nexus';
 import { composeUrl } from '@/util/nexus';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
+import { checkAndCreateAgents } from '@/api/agents';
 
 type MEModelDetails = {
   description: string;
@@ -102,6 +103,12 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
       org: virtualLabInfo.virtualLabId,
       project: virtualLabInfo.projectId,
     });
+
+    const contributorIds = contributors.map(
+      (contributor) => `${nexus.url}/realms/${realm}/users/${contributor.username}`
+    );
+
+    await checkAndCreateAgents(contributorIds);
 
     const meModelResource = await createResource<MEModelResource>(entity, session, url);
     set(meModelSelfUrlAtom, meModelResource._self);
