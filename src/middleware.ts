@@ -2,7 +2,7 @@ import { getToken } from 'next-auth/jwt';
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
-const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*'];
+const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*', '/dev'];
 const ASSETS = [
   '/static*',
   '/images*',
@@ -50,8 +50,16 @@ export async function middleware(request: NextRequest) {
   // }
 
   // If the user is authenticated and wants to access the home page or log-in page
-  // then redirect to the main page
+  // then redirect to the explore home page
   if (sessionValid && (requestUrl === '/' || requestUrl === '/log-in')) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/explore/interactive`;
+    return NextResponse.redirect(url);
+  }
+
+  // If the user is authenticated and wants to access the /dev page
+  // then redirect to the virtual lab main page
+  if (sessionValid && requestUrl === '/dev') {
     const url = request.nextUrl.clone();
     url.pathname = `/virtual-lab`;
     return NextResponse.redirect(url);
