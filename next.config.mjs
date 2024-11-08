@@ -77,6 +77,30 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/dev/virtual-lab/:path*',
+        destination: '/virtual-lab/:path*',
+      },
+      {
+        source: '/dev/virtual-lab',
+        destination: '/virtual-lab',
+      },
+      {
+        source: '/public/explore/:path*',
+        destination: '/explore/:path*',
+      },
+      {
+        source: '/public/explore',
+        destination: '/explore',
+      },
+      {
+        source: '/public/about/:path*',
+        destination: '/about/:path*',
+      },
+    ];
+  },
   transpilePackages: ['jotai-devtools'],
   logging: {
     fetches: {

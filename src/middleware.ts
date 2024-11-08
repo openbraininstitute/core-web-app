@@ -2,7 +2,7 @@ import { getToken } from 'next-auth/jwt';
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
-const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*', '/dev'];
+const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*', '/dev', '/public*'];
 const ASSETS = [
   '/static*',
   '/images*',
@@ -49,11 +49,21 @@ export async function middleware(request: NextRequest) {
   //   return NextResponse.redirect(url);
   // }
 
+  // If user is not authenticated and visiting home we redirect to /public
+  if (!sessionValid && requestUrl === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/public';
+    return NextResponse.redirect(url);
+  }
+
   // If the user is authenticated and wants to access the home page or log-in page
   // then redirect to the explore home page
-  if (sessionValid && (requestUrl === '/' || requestUrl === '/log-in')) {
+  if (
+    sessionValid &&
+    (requestUrl === '/' || requestUrl === '/public' || requestUrl === '/log-in')
+  ) {
     const url = request.nextUrl.clone();
-    url.pathname = `/explore/interactive`;
+    url.pathname = `/public/explore/interactive`;
     return NextResponse.redirect(url);
   }
 
@@ -61,7 +71,7 @@ export async function middleware(request: NextRequest) {
   // then redirect to the virtual lab main page
   if (sessionValid && requestUrl === '/dev') {
     const url = request.nextUrl.clone();
-    url.pathname = `/virtual-lab`;
+    url.pathname = `/dev/virtual-lab`;
     return NextResponse.redirect(url);
   }
 

@@ -6,5 +6,7 @@ export default function DevPage({
 }: {
   searchParams: { errorcode: string | undefined };
 }) {
-  return <Entrypoint errorCode={searchParams.errorcode} callbackUrl={`${basePath}/virtual-lab`} />;
+  return (
+    <Entrypoint errorCode={searchParams.errorcode} callbackUrl={`${basePath}/dev/virtual-lab`} />
+  );
 }
