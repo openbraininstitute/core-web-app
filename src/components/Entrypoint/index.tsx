@@ -6,10 +6,16 @@ import ScreenBBGithub from '../home/screens/ScreenBBGithub';
 import ScreenContributors from '../home/screens/ScreenContributors';
 import { AcceptInviteErrorDialog, Menu } from './segments';
 
-export default function Entrypoint({ errorCode }: { errorCode?: string }) {
+export default function Entrypoint({
+  errorCode,
+  callbackUrl,
+}: {
+  errorCode?: string;
+  callbackUrl?: string;
+}) {
   return (
     <div className="relative flex w-screen flex-col bg-primary-9">
-      <Menu />
+      <Menu callbackUrl={callbackUrl} />
       <div className="h-auto overflow-x-hidden overflow-y-scroll md:h-screen md:snap-y md:snap-mandatory">
         <HeaderScreen />
         <ScreenBBGithub />
