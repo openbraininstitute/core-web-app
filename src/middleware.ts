@@ -2,7 +2,7 @@ import { getToken } from 'next-auth/jwt';
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
-const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*', '/dev', '/public*'];
+const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*', '/dev', '/public'];
 const ASSETS = [
   '/static*',
   '/images*',
@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
   // }
 
   // If user is not authenticated and visiting home we redirect to /public
-  if (!sessionValid && requestUrl === '/') {
+  if (requestUrl === '/') {
     const url = request.nextUrl.clone();
     url.pathname = '/public';
     return NextResponse.redirect(url);
@@ -58,10 +58,7 @@ export async function middleware(request: NextRequest) {
 
   // If the user is authenticated and wants to access the home page or log-in page
   // then redirect to the explore home page
-  if (
-    sessionValid &&
-    (requestUrl === '/' || requestUrl === '/public' || requestUrl === '/log-in')
-  ) {
+  if (sessionValid && (requestUrl === '/public' || requestUrl === '/log-in')) {
     const url = request.nextUrl.clone();
     url.pathname = `/public/explore/interactive`;
     return NextResponse.redirect(url);
