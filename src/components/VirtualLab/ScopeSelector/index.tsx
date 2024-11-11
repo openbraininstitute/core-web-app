@@ -1,253 +1,206 @@
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useAtom, useAtomValue } from 'jotai';
-import { ConfigProvider, Collapse } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
-
-import { selectedSimulationScopeAtom } from '@/state/simulate';
-import { projectTopMenuRefAtom } from '@/state/virtual-lab/lab';
-import { SimulationType } from '@/types/virtual-lab/lab';
+import { useAtom } from 'jotai';
+import capitalize from 'lodash/capitalize';
+import Image from 'next/image';
+import { DownOutlined, UpOutlined } from '@ant-design/icons';
+import { scopeSelectorExpandedAtom, selectedSimTypeFamily, selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
-import hoverStyles from './hover-styles.module.css';
+import { SimulationType } from '@/types/virtual-lab/lab';
+import Styles from './styles.module.css';
 
-export enum SimulationScope {
-  Cellular = 'cellular',
-  Circuit = 'circuit',
-  System = 'system',
-}
-
-type Item = {
-  description: string;
-  key: SimulationType;
-  scope: `${SimulationScope}`;
-  title: string;
-};
-
-type SlideProps = {
-  className?: string;
-  description: string;
-  id: SimulationType;
-  onChange: () => void;
-  selectedSimulationScope: SimulationType;
-  title: string;
-};
-
-export const items: Array<Item> = [
-  {
-    description: 'Coming soon.',
-    key: SimulationType.IonChannel,
-    scope: 'cellular',
-    title: 'Ion Channel',
-  },
-  {
-    description:
-      'Load Hodgkin-Huxley single cell models, perform current clamp experiments with different levels of input current, and observe the resulting changes in membrane potential.',
-    key: SimulationType.SingleNeuron,
-    scope: 'cellular',
-    title: 'Single Neuron',
-  },
-  {
-    description:
-      'Introduce spikes into the synapses of Hodgkin-Huxley cell models and carry out a virtual experiment by setting up a stimulation and reporting protocol.',
-    key: SimulationType.Synaptome,
-    scope: 'cellular',
-    title: 'Synaptome',
-  },
-  {
-    description:
-      'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
-    key: SimulationType.PairedNeuron,
-    scope: 'circuit',
-    title: 'Paired Neurons',
-  },
-  {
-    description: 'Coming soon.',
-    key: SimulationType.Microcircuit,
-    scope: 'circuit',
-    title: 'Microcircuit',
-  },
-  {
-    description: 'Coming soon.',
-    key: SimulationType.NeuroGliaVasculature,
-    scope: 'circuit',
-    title: 'Neuro-glia-vasculature',
-  },
-  {
-    description: 'Coming soon.',
-    key: SimulationType.BrainRegions,
-    scope: 'system',
-    title: 'Brain Regions',
-  },
-  {
-    description: 'Coming soon.',
-    key: SimulationType.BrainSystems,
-    scope: 'system',
-    title: 'Brain Systems',
-  },
-  {
-    description: 'Coming soon.',
-    key: SimulationType.WholeBrain,
-    scope: 'system',
-    title: 'Whole Brain',
-  },
-];
-
-function ScopeFilter({
-  contentIsVisible,
-  onClick,
-  onChange,
-  selectedScope,
+export function SectionTabs({
+  projectId,
+  section,
 }: {
-  contentIsVisible: boolean;
-  onChange: (scope: SimulationScope) => void;
-  onClick: (scope: SimulationScope) => void;
-  selectedScope: SimulationScope | null;
+  projectId: string;
+  section: 'build' | 'simulate';
 }) {
-  const projectTopMenuRef = useAtomValue(projectTopMenuRefAtom);
+  const [selectedTab, setSelectedTab] = useAtom(selectedTabFamily(section + projectId));
+  const label = section === 'build' ? 'model' : 'simulation';
 
-  const controls = (
-    <div className="flex flex-row !divide-x !divide-primary-3 border border-primary-3">
-      {Object.entries(SimulationScope).map(([accessibleLabel, scope]) => {
-        const isSelectedScope = scope === selectedScope;
-
-        return (
-          <label
-            className={classNames(
-              'flex cursor-pointer flex-row items-center gap-5 px-5 text-lg capitalize transition-all hover:bg-primary-8 hover:text-white',
-              isSelectedScope && 'bg-white font-bold text-primary-9'
-            )}
-            key={scope}
-            htmlFor={`scope-filter-${scope}`}
-          >
-            <input
-              aria-label={accessibleLabel}
-              checked={isSelectedScope}
-              className="sr-only"
-              id={`scope-filter-${scope}`}
-              onChange={() => onChange(scope)}
-              onClick={() => onClick(scope)}
-              type="radio"
-            />
-            {isSelectedScope ? (
-              <>
-                <span>{scope}</span>
-                {contentIsVisible && (
-                  <DownOutlined
-                    style={{
-                      fontSize: 12,
-                    }}
-                    size={4}
-                  />
-                )}
-              </>
-            ) : (
-              scope
-            )}
-          </label>
-        );
-      })}
-    </div>
-  );
-
-  return projectTopMenuRef?.current && createPortal(controls, projectTopMenuRef.current);
-}
-
-function ScopeOption(props: SlideProps) {
-  const { className, description, id: key, onChange, selectedSimulationScope, title } = props;
-
-  const currentScopeIsSelected = selectedSimulationScope === key; // This particular scope is selected.
-
-  const anyScopeIsSelected = !!selectedSimulationScope;
-  const anotherScopeIsSelected = anyScopeIsSelected && !currentScopeIsSelected; // A scope is selected, but it isn't this one.
+  const tabJSX = (tab: typeof selectedTab) => {
+    const isSelected = selectedTab === tab;
+    return (
+      <label
+        className={classNames(
+          'flex grow cursor-pointer items-center justify-center text-xl font-bold transition-all hover:bg-primary-8 hover:text-white',
+          isSelected && 'bg-white text-primary-9'
+        )}
+        htmlFor={`scope-filter-${tab}`}
+      >
+        <input
+          aria-label={tab}
+          checked={isSelected}
+          className="sr-only"
+          id={`scope-filter-${tab}`}
+          onChange={() => setSelectedTab(tab)}
+          type="radio"
+        />
+        {capitalize(`${tab} ${label}`) + (tab === 'browse' ? 's' : '')}
+      </label>
+    );
+  };
 
   return (
-    <label
-      className={classNames(
-        'flex w-96 cursor-pointer flex-col text-left text-white',
-        currentScopeIsSelected && hoverStyles.isSelected,
-        anotherScopeIsSelected && hoverStyles.isNotSelected,
-        className
-      )}
-      htmlFor={`scope-${key}`}
-    >
-      <input
-        aria-describedby={`scope-${key}-description`}
-        aria-label={title}
-        checked={currentScopeIsSelected}
-        className="sr-only"
-        id={`scope-${key}`}
-        onChange={onChange}
-        type="radio"
-      />
-      <h2 className="text-3xl">{title}</h2>
-      <span className="font-light" id={`scope-${key}-description`}>
-        {description}
-      </span>
-    </label>
+    <div className="-mt-[67px] inline-flex min-h-[50px] w-[55%] divide-x divide-primary-3 border border-primary-3">
+      {tabJSX('new')}
+      {tabJSX('browse')}
+    </div>
   );
 }
 
-export default function ScopeSelector() {
-  const [selectedScope, setSelectedScope] = useState<SimulationScope>(SimulationScope.Cellular);
+export function ScopeSelector({
+  atomKey,
+  section,
+  handleBuildClick,
+}: {
+  handleBuildClick?: () => void;
+  section: 'build' | 'simulate';
+  atomKey: string;
+}) {
+  const [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(atomKey));
 
-  const [selectedSimulationScope, setSelectedSimulationScope] = useAtom(
-    selectedSimulationScopeAtom
+  const tileJSX = (type: SimulationType, description: string, imgSrc: string, disabled = false) => {
+    const title = capitalize(type.replace('-', ' '));
+    const highlight = type === selectedSimType;
+
+    const showImage = section !== 'build' || (section === 'build' && !highlight);
+
+    const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
+    const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
+
+    return (
+      <div
+        aria-hidden
+        className={classNames(
+          'box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded border border-primary-4 p-6',
+          tileStyle,
+          !disabled && 'cursor-pointer'
+        )}
+        onClick={() => {
+          if (!disabled) setSelectedSimType(type);
+        }}
+      >
+        <div className="text-left">
+          <div className="mb-2 text-3xl font-semibold">{title}</div>
+          <div className={classNames('text-sm', descStyle)}>{description}</div>
+        </div>
+
+        {showImage && (
+          <Image
+            src={imgSrc}
+            width={100}
+            height={100}
+            alt={title}
+            className={classNames(Styles.imageCircle, 'self-center')}
+          />
+        )}
+
+        {!showImage && (
+          <button
+            type="button"
+            className="h-[55px] min-w-[100px] self-center  bg-primary-9 text-xl font-bold text-white"
+            onClick={handleBuildClick}
+          >
+            Build
+          </button>
+        )}
+      </div>
+    );
+  };
+  return (
+    <div>
+      <div className="mt-12 text-[40px] font-bold text-primary-4">
+        Select a scale for your {section === 'build' ? 'model' : 'simulation'}
+      </div>
+
+      <div className="mb-5 mt-8 grid grid-cols-3 gap-5">
+        <div className="text-4xl text-primary-4">CELLULAR</div>
+        <div className="text-4xl text-primary-4">CIRCUIT</div>
+        <div className="text-4xl text-primary-4">SYSTEM</div>
+        {tileJSX(SimulationType.IonChannel, 'Coming soon.', imageUrl('ionChannel'), true)}
+        {tileJSX(
+          SimulationType.PairedNeuron,
+          'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
+          imageUrl('pairedNeuron'),
+          true
+        )}
+        {tileJSX(SimulationType.BrainRegions, 'Coming soon.', imageUrl('brainRegion'), true)}
+        {tileJSX(
+          SimulationType.SingleNeuron,
+          'Load Hodgkin-Huxley single cell models, perform current clamp experiments with different levels of input current, and observe the resulting changes in membrane potential.',
+          imageUrl('singleNeuron')
+        )}
+        {tileJSX(SimulationType.Microcircuit, 'Coming soon.', imageUrl('microcircuit'), true)}
+        {tileJSX(SimulationType.BrainSystems, 'Coming soon.', imageUrl('brainSystem'), true)}
+        {tileJSX(
+          SimulationType.Synaptome,
+          'Introduce spikes into the synapses of Hodgkin-Huxley cell models and carry out a virtual experiment by setting up a stimulation and reporting protocol.',
+          imageUrl('synaptome')
+        )}
+        {tileJSX(SimulationType.NeuroGliaVasculature, 'Coming soon.', imageUrl('ngv'), true)}
+        {tileJSX(SimulationType.WholeBrain, 'Coming soon.', imageUrl('wholeBrain'), true)}
+      </div>
+    </div>
+  );
+}
+
+export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
+  const [expanded, setExpanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
+  let [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(atomKey)); // eslint-disable-line prefer-const
+  selectedSimType = selectedSimType ?? SimulationType.SingleNeuron;
+
+  const header = (label: string) => <div className="font-semibold text-gray-400">{label}</div>;
+
+  const tile = (type: SimulationType) => (
+    <button
+      disabled={selectedSimType === type}
+      type="button"
+      key={type}
+      onClick={() => {
+        setExpanded(false);
+        setSelectedSimType(type);
+      }}
+      className={classNames(
+        'flex h-[40px] items-center border pl-5 font-semibold',
+        selectedSimType === type
+          ? 'border-none bg-primary-8 text-white'
+          : 'border-gray-300 text-primary-9'
+      )}
+    >
+      {capitalize(type.replace('-', ' '))}
+    </button>
   );
 
-  const [contentIsVisible, setContentVisibility] = useState<boolean>(false);
-
-  const availableScopes = items
-    .filter(({ scope }) => !selectedScope || scope === selectedScope)
-    .map(({ description, key, title }) => (
-      <ScopeOption
-        className={hoverStyles.customSlide}
-        description={description}
-        id={key}
-        key={key}
-        onChange={() => {
-          setSelectedSimulationScope(key);
-          setContentVisibility(false);
-        }}
-        selectedSimulationScope={selectedSimulationScope}
-        title={title}
-      />
-    ));
+  const iconClass = 'relative top-[9px] float-right text-base text-primary-9';
 
   return (
     <>
-      <ScopeFilter
-        contentIsVisible={contentIsVisible}
-        onChange={(scope: SimulationScope) => setSelectedScope(scope)}
-        onClick={(scope: SimulationScope) =>
-          scope === selectedScope || !contentIsVisible
-            ? setContentVisibility((isVisible) => !isVisible)
-            : {}
-        }
-        selectedScope={selectedScope}
-      />
-      <ConfigProvider
-        theme={{
-          components: {
-            Collapse: {
-              contentPadding: 0,
-              headerPadding: 0,
-            },
-          },
-        }}
+      <button
+        type="button"
+        className="w-1/2 bg-white px-10  py-4 text-left text-2xl"
+        onClick={() => setExpanded(!expanded)}
       >
-        <Collapse
-          activeKey={contentIsVisible ? 1 : undefined}
-          bordered={false}
-          expandIcon={() => false}
-          items={[
-            {
-              key: '1',
-              label: '',
-              children: <div className="my-6 flex gap-8 bg-primary-9">{availableScopes}</div>,
-            },
-          ]}
-        />
-      </ConfigProvider>
+        <span className="inline-block text-gray-300">Scale</span>
+        <span className="inlie-block ml-3 font-bold text-[#B3BFD2]">
+          {capitalize(selectedSimType.replace('-', ' '))}
+        </span>
+
+        {!expanded && <DownOutlined className={iconClass} />}
+        {expanded && <UpOutlined className={iconClass} />}
+      </button>
+
+      {expanded && (
+        <div className="grid grid-cols-3 gap-5 bg-white px-8 py-6">
+          {header('CELLULAR')}
+          {header('CIRCUIT')}
+          {header('SYSTEM')}
+          {Object.values(SimulationType).map((v) => tile(v))}
+        </div>
+      )}
     </>
   );
+}
+
+function imageUrl(img: string) {
+  return '/images/scales/' + img + '.jpg';
 }

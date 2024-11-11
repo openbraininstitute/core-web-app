@@ -35,13 +35,13 @@ export type MockBilling = {
 
 export enum SimulationType {
   IonChannel = 'ion-channel',
-  SingleNeuron = 'single-neuron',
   PairedNeuron = 'paired-neuron',
-  Synaptome = 'synaptome',
-  Microcircuit = 'microcircuit',
-  NeuroGliaVasculature = 'neuro-glia-vasculature',
   BrainRegions = 'brain-regions',
+  SingleNeuron = 'single-neuron',
+  Microcircuit = 'microcircuit',
   BrainSystems = 'brain-systems',
+  Synaptome = 'synaptome',
+  NeuroGliaVasculature = 'neuro-glia-vasculature',
   WholeBrain = 'whole-brain',
 }
 
