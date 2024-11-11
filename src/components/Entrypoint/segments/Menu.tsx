@@ -2,12 +2,11 @@ import { useSearchParams } from 'next/navigation';
 
 import { useState } from 'react';
 
-import { OBPLogo } from './Splash';
-
 import MobileMenu from './MobileMenu';
 
 import PrimaryButtonHome from '@/components/home/PrimaryButtonHome';
 import { CloseIcon } from '@/components/icons';
+import LogoBiColor from '@/components/icons/LogoBiColor';
 import MenuMobileIcon from '@/components/icons/MenuMobileIcon';
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
@@ -53,7 +52,8 @@ export default function EntrypointMenu() {
 
   return (
     <div className="fixed z-50 flex w-full flex-row items-start justify-between px-6 pt-6 md:items-center">
-      <OBPLogo />
+      <LogoBiColor className="mb-20 h-16 w-auto md:mb-0" />
+
       <button
         type="button"
         aria-label="Menu mobile"

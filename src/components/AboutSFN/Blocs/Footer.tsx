@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Dispatch, SetStateAction } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-import { OBPLogo } from '@/components/Entrypoint/segments/Splash';
+import LogoBiColor from '@/components/icons/LogoBiColor';
 import { classNames } from '@/util/utils';
 
 type SingleSectionProps = {
@@ -74,7 +74,7 @@ export default function Footer({
         className
       )}
     >
-      <OBPLogo color="text-white" className="mb-20 md:mb-0" />
+      <LogoBiColor className="mb-20 h-16 w-auto md:mb-0" />
       <div className="relative flex w-full flex-col justify-between gap-16 md:w-1/2 md:flex-row md:gap-8 xl:gap-0">
         {content.map((section: SingleSectionProps, index: number) => (
           <div

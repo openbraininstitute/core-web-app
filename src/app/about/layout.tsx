@@ -1,13 +1,13 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { Alert } from 'antd';
 import { useQueryState } from 'nuqs';
+import { ReactNode } from 'react';
 
 import { Gabarito } from 'next/font/google';
 
-import LoginButton from '@/components/AboutSFN/Buttons/Login';
-import { OBPLogo } from '@/components/Entrypoint/segments/Splash';
+import PrimaryButtonHome from '@/components/home/PrimaryButtonHome';
+import LogoBiColor from '@/components/icons/LogoBiColor';
 import { classNames } from '@/util/utils';
 
 type Props = {
@@ -52,8 +52,8 @@ export default function AboutPageLayout({ children }: Props) {
           warning === 'yes' ? 'top-28 md:top-0' : 'top-0'
         )}
       >
-        <OBPLogo color="text-white" />
-        <LoginButton label="Log in" link="/log-in" type="link" />
+        <LogoBiColor className="mb-20 h-16 w-auto md:mb-0" />
+        <PrimaryButtonHome label="Log in" url="/log-in" hasIcon={false} theme="light" />
       </nav>
       <div className="relative">{children}</div>
     </div>
