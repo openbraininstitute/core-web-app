@@ -5,6 +5,7 @@ import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import { scopeSelectorExpandedAtom, selectedSimTypeFamily, selectedTabFamily } from './state';
 import { classNames } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
+import { basePath } from '@/config';
 import Styles from './styles.module.css';
 
 export function SectionTabs({
@@ -202,5 +203,5 @@ export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
 }
 
 function imageUrl(img: string) {
-  return '/images/scales/' + img + '.jpg';
+  return `${basePath}/images/scales/` + img + '.jpg';
 }
