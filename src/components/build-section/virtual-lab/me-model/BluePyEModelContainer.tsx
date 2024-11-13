@@ -46,7 +46,15 @@ function ElapsedTime() {
 
 type AnalisysState = 'initializing' | 'running' | 'error' | 'done';
 
-function ValidationInit({ onCancel }: { onCancel?: () => void }) {
+function ValidationInit({
+  meModelId,
+  virtualLabInfo,
+}: {
+  meModelId: string;
+  virtualLabInfo: VirtualLabInfo;
+}) {
+  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
       <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">
@@ -68,9 +76,9 @@ function ValidationInit({ onCancel }: { onCancel?: () => void }) {
         style={{ display: 'table', width: '100%', height: '200px' }}
       />
 
-      <button type="button" onClick={onCancel} className="text-neutral-7">
+      <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
         Cancel Validation
-      </button>
+      </Link>
     </div>
   );
 }
@@ -212,7 +220,7 @@ export default function BluePyEModelContainer({
   }, [meModelSelfUrl, router, session, virtualLabInfo.projectId, virtualLabInfo.virtualLabId]);
 
   if (analysisState === 'initializing') {
-    return <ValidationInit onCancel={onClose} />;
+    return <ValidationInit virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
   }
 
   if (analysisState === 'running') {

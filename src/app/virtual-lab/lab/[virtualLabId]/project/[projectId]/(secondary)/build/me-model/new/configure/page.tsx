@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import MorphologyCard from '@/components/build-section/virtual-lab/me-model/MorphologyCard';
 import EModelCard from '@/components/build-section/virtual-lab/me-model/EModelCard';
-// import { usePendingValidationModal } from '@/components/build-section/virtual-lab/me-model/pending-validation-modal-hook';
+import { usePendingValidationModal } from '@/components/build-section/virtual-lab/me-model/pending-validation-modal-hook';
 import { createMEModelAtom, meModelDetailsAtom } from '@/state/virtual-lab/build/me-model-setter';
 import {
   selectedEModelAtom,
@@ -24,6 +24,7 @@ import { ensureArray } from '@/util/nexus';
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { MEModelResource } from '@/types/me-model';
 
 type Params = {
   params: {
@@ -114,14 +115,17 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   const createMEModel = useSetAtom(createMEModelAtom);
   const [meModelCreating, setMeModelCreating] = useState<boolean>(false);
 
-  // const { contextHolder, createModal } = usePendingValidationModal();
+  const { contextHolder, createModal } = usePendingValidationModal();
 
   const modelsAreSelected = selectedEModel && selectedMModel;
 
-  // const onClickWithValidation = () => {
-  //   createMEModel({ virtualLabId, projectId });
-  //   createModal({ virtualLabId, projectId });
-  // };
+  const onClickWithValidation = () => {
+    setMeModelCreating(true);
+    createMEModel({ virtualLabId, projectId });
+    setMeModelCreating(false);
+
+    createModal({ virtualLabId, projectId });
+  };
 
   const onClickWithoutValidation = () => {
     setMeModelCreating(true);
@@ -154,7 +158,7 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
     <div className="absolute bottom-10 right-10 flex flex-row gap-4 text-white">
       <button
         className={classNames(
-          'fit-content fixed bottom-10 right-10 ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',
+          'fit-content ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',
           meModelCreating ? 'bg-neutral-4' : 'bg-primary-8'
         )}
         onClick={onClickWithoutValidation}
@@ -169,14 +173,14 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
           'Save'
         )}
       </button>
-      {/* Hiding for Sfn */}
-      {/* <button
+      <button
         className="fit-content ml-auto flex w-fit items-center bg-primary-8 p-4 font-bold hover:brightness-110"
         onClick={onClickWithValidation}
         type="button"
+        disabled={meModelCreating}
       >
         Launch validation
-      </button> */}
+      </button>
     </div>
   );
 
@@ -197,7 +201,7 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
         </div>
       </div>
       {validateTrigger}
-      {/* {contextHolder} */}
+      {contextHolder}
     </>
   );
 }

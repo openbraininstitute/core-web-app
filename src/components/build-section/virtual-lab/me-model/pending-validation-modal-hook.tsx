@@ -16,8 +16,8 @@ export function usePendingValidationModal() {
     const { destroy } = modal.confirm({
       title: null,
       icon: null,
-      closable: true,
-      maskClosable: true,
+      closable: false,
+      maskClosable: false,
       footer: null,
       width: 680,
       centered: true,
