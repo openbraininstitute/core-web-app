@@ -181,8 +181,8 @@ export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
         className="w-1/2 bg-white px-10  py-4 text-left text-2xl"
         onClick={() => setExpanded(!expanded)}
       >
-        <span className="inline-block text-gray-300">Scale</span>
-        <span className="inlie-block ml-3 font-bold text-[#B3BFD2]">
+        <span className={classNames('text-gray-400', expanded && 'opacity-40')}>Scale</span>
+        <span className={classNames('ml-3 font-bold text-primary-9', expanded && 'opacity-40')}>
           {capitalize(selectedSimType.replace('-', ' '))}
         </span>
 
