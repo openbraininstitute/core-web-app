@@ -173,10 +173,13 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
       <div className="flex grow flex-col">
         <div className="flex grow flex-col">
           {/* TODO: replace this list with items saved in Model Library */}
-          <div className="flex w-full grow flex-col" id="explore-table-container-for-observable">
+          <div
+            className="relative mb-5 flex w-full grow flex-col"
+            id="explore-table-container-for-observable"
+          >
             <ExploreSectionListingView
               containerClass="grow bg-primary-9 flex flex-col"
-              tableClass={classNames('mb-5 grow', Styles.table)}
+              tableClass={classNames('grow', Styles.table)}
               tableScrollable={false}
               controlsVisible={false}
               dataType={modelType}
@@ -185,25 +188,24 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
               selectionType="radio"
               renderButton={() => null}
             />
+            {selectedRows.length > 0 && (
+              <div className="absolute bottom-6 right-4 flex items-center justify-end gap-2">
+                <Btn
+                  type="button"
+                  className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
+                  onClick={() => navigateToDetailPage(selectedRows[0])}
+                >
+                  View
+                </Btn>
+                <Btn
+                  className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
+                  onClick={() => onModelSelected(selectedRows[0])}
+                >
+                  New Simulation
+                </Btn>
+              </div>
+            )}
           </div>
-
-          {selectedRows.length > 0 && (
-            <div className="fixed bottom-12 right-[60px] flex items-center justify-end gap-2">
-              <Btn
-                type="button"
-                className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
-                onClick={() => navigateToDetailPage(selectedRows[0])}
-              >
-                View
-              </Btn>
-              <Btn
-                className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
-                onClick={() => onModelSelected(selectedRows[0])}
-              >
-                New Simulation
-              </Btn>
-            </div>
-          )}
         </div>
       </div>
     </>

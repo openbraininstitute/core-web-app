@@ -111,7 +111,8 @@ export function ScopeSelector({
   return (
     <div>
       <div className="mt-12 text-[40px] font-bold text-primary-4">
-        Select a scale for your {section === 'build' ? 'model' : 'simulation'}
+        {section === 'build' && 'Select a scale for your model'}
+        {section === 'simulate' && 'Select a scale to choose models and simulations'}
       </div>
 
       <div className="mb-5 mt-8 grid grid-cols-3 gap-5">
@@ -181,8 +182,8 @@ export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
         className="w-1/2 bg-white px-10  py-4 text-left text-2xl"
         onClick={() => setExpanded(!expanded)}
       >
-        <span className="inline-block text-gray-300">Scale</span>
-        <span className="inlie-block ml-3 font-bold text-[#B3BFD2]">
+        <span className={classNames('text-gray-400', expanded && 'opacity-40')}>Scale</span>
+        <span className={classNames('ml-3 font-bold text-primary-9', expanded && 'opacity-40')}>
           {capitalize(selectedSimType.replace('-', ' '))}
         </span>
 
