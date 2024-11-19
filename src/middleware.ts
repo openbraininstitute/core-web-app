@@ -61,7 +61,7 @@ export async function middleware(request: NextRequest) {
   // then redirect to the virtual lab main page
   if (sessionValid && requestUrl === '/dev') {
     const url = request.nextUrl.clone();
-    url.pathname = `/virtual-lab`;
+    url.pathname = `/dev/virtual-lab`;
     return NextResponse.redirect(url);
   }
 
