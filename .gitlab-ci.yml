@@ -101,30 +101,7 @@ build:
     - develop
     - main
 
-deploy-bbp-prod:
-  stage: deploy
-  extends:
-    - .heavy_job
-    - .build-image-using-kaniko
-  variables:
-    CI_PROJECT_DIR: /builds/project/sbo/core-web-app
-    CI_REGISTRY_IMAGE: $CI_REGISTRY/project/sbo/core-web-app/prod
-    CI_COMMIT_SHORT_SHA: $CI_COMMIT_SHORT_SHA
-    REGISTRY_IMAGE_TAG: $CI_COMMIT_SHORT_SHA-$(date +%s)
-    NEXT_PUBLIC_ENVIRONMENT: prod
-    NEXT_PUBLIC_BASE_PATH: /mmb-beta
-    NEXT_PUBLIC_SENTRY_DSN: $SENTRY_DSN
-    SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
-    KANIKO_EXTRA_ARGS: >
-      --build-arg=NEXT_PUBLIC_BASE_PATH
-      --build-arg=NEXT_PUBLIC_ENVIRONMENT
-      --build-arg=NEXT_PUBLIC_SENTRY_DSN
-      --build-arg=SENTRY_AUTH_TOKEN
-      --build-arg=NODE_OPTIONS
-  only:
-    - develop
-
-deploy-aws-prod:
+deploy-aws-production:
   stage: deploy
   extends:
     - .heavy_job
@@ -136,7 +113,7 @@ deploy-aws-prod:
     CI_REGISTRY_USER: bbpbuildbot
     CI_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD_DOCKERHUB
     REGISTRY_IMAGE_TAG: latest
-    NEXT_PUBLIC_ENVIRONMENT: prod
+    NEXT_PUBLIC_ENVIRONMENT: Production
     NEXT_PUBLIC_BASE_PATH: /app
     NEXT_PUBLIC_NEXUS_URL: https://openbluebrain.com/api/nexus/v1
     NEXT_PUBLIC_SENTRY_DSN: $SENTRY_DSN
@@ -175,56 +152,56 @@ deploy-aws-prod:
   only:
     - develop
 
-deploy-bbp-dev:
+deploy-aws-staging:
   stage: deploy
   extends:
     - .heavy_job
     - .build-image-using-kaniko
   variables:
     CI_PROJECT_DIR: /builds/project/sbo/core-web-app
-    CI_REGISTRY_IMAGE: $CI_REGISTRY/project/sbo/core-web-app/dev
-    CI_COMMIT_SHORT_SHA: $CI_COMMIT_SHORT_SHA
-    REGISTRY_IMAGE_TAG: $CI_COMMIT_SHORT_SHA-$(date +%s)
-    NEXT_PUBLIC_ENVIRONMENT: dev
-    NEXT_PUBLIC_BASE_PATH: /mmb-beta/dev
-    NEXT_PUBLIC_BBS_ML_URL: https://openbluebrain.com/api/literature/
+    CI_REGISTRY_IMAGE: bluebrain/sbo-core-web-app
+    CI_REGISTRY: https://index.docker.io/v1/
+    CI_REGISTRY_USER: bbpbuildbot
+    CI_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD_DOCKERHUB
+    REGISTRY_IMAGE_TAG: staging
+    NEXT_PUBLIC_ENVIRONMENT: Staging
+    NEXT_PUBLIC_BASE_PATH: /app
+    NEXT_PUBLIC_NEXUS_URL: https://staging.openbluebrain.com/api/nexus/v1
     NEXT_PUBLIC_SENTRY_DSN: $SENTRY_DSN
+    NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_TAG: v2.0.0
+    NEXT_PUBLIC_CELL_COMPOSITION_TAG: v1.1.0
+    NEXT_PUBLIC_ATLAS_ES_VIEW_ID: https://bbp.epfl.ch/data/bbp/atlas/es_aggregate_view_tags_v1.1.0_v2.2.4
+    NEXT_PUBLIC_KG_INFERENCE_BASE_URL: https://staging.openbluebrain.com/api/kg-inference
+    NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: https://staging.openbluebrain.com/api/thumbnail-generation
+    NEXT_PUBLIC_VIRTUAL_LAB_API_URL: https://staging.openbluebrain.com/api/virtual-lab-manager
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_51P6uAFFE4Bi50cLlatJIc0fUPsP0jQkaCCJ8TTkIYOOLIrLzxX1M9p1kVD11drNqsF9p7yiaumWJ8UHb3ptJJRXB00y3qjYReV
+
+    # TODO: the following points to the ML production URL, update when staging URL is known.
+    NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL: http://internal-sbo-poc-private-alb-1398645643.us-east-1.elb.amazonaws.com:3000/api/literature
+
+    NEXT_PUBLIC_CELL_SVC_BASE_URL: https://staging.openbluebrain.com/api/circuit
+    NEXT_PUBLIC_BLUE_NAAS_URL: https://staging.openbluebrain.com/api/bluenaas
     SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
+    MAILCHIMP_API_KEY: $MAILCHIMP_API_KEY
+    MAILCHIMP_AUDIENCE_ID: $MAILCHIMP_AUDIENCE_ID
     KANIKO_EXTRA_ARGS: >
       --build-arg=NEXT_PUBLIC_BASE_PATH
-      --build-arg=NEXT_PUBLIC_BBS_ML_URL
       --build-arg=NEXT_PUBLIC_ENVIRONMENT
       --build-arg=NEXT_PUBLIC_SENTRY_DSN
       --build-arg=SENTRY_AUTH_TOKEN
-      --build-arg=CI_COMMIT_SHORT_SHA
+      --build-arg=NEXT_PUBLIC_NEXUS_URL
+      --build-arg=NEXT_PUBLIC_ATLAS_ES_VIEW_ID
+      --build-arg=NEXT_PUBLIC_KG_INFERENCE_BASE_URL
+      --build-arg=NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL
+      --build-arg=NEXT_PUBLIC_VIRTUAL_LAB_API_URL
+      --build-arg=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+      --build-arg=NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_TAG
+      --build-arg=NEXT_PUBLIC_CELL_COMPOSITION_TAG
+      --build-arg=NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL
+      --build-arg=NEXT_PUBLIC_CELL_SVC_BASE_URL
+      --build-arg=NEXT_PUBLIC_BLUE_NAAS_URL
       --build-arg=NODE_OPTIONS
+      --build-arg=MAILCHIMP_API_KEY
+      --build-arg=MAILCHIMP_AUDIENCE_ID
   only:
     - develop
-
-deploy-test:
-  stage: deploy
-  extends:
-    - .heavy_job
-    - .build-image-using-kaniko
-  variables:
-    CI_PROJECT_DIR: /builds/project/sbo/core-web-app
-    CI_REGISTRY_IMAGE: $CI_REGISTRY/project/sbo/core-web-app/test
-    CI_COMMIT_SHORT_SHA: $CI_COMMIT_SHORT_SHA
-    REGISTRY_IMAGE_TAG: $CI_COMMIT_SHORT_SHA-$(date +%s)
-    NEXT_PUBLIC_ENVIRONMENT: test
-    NEXT_PUBLIC_BASE_PATH: /mmb-beta/test
-    NEXT_PUBLIC_BBS_ML_URL: https://openbluebrain.com/api/literature/
-    NEXT_PUBLIC_SENTRY_DSN: $SENTRY_DSN
-    SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
-    KANIKO_EXTRA_ARGS: >
-      --build-arg=NEXT_PUBLIC_BASE_PATH
-      --build-arg=NEXT_PUBLIC_BBS_ML_URL
-      --build-arg=NEXT_PUBLIC_ENVIRONMENT
-      --build-arg=NEXT_PUBLIC_SENTRY_DSN
-      --build-arg=SENTRY_AUTH_TOKEN
-      --build-arg=CI_COMMIT_SHORT_SHA
-      --build-arg=NODE_OPTIONS
-  except:
-    - main
-    - develop
-  when: manual
