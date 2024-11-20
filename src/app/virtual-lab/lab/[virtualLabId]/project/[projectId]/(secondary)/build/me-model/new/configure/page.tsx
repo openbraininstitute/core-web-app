@@ -24,7 +24,6 @@ import { ensureArray } from '@/util/nexus';
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
-import { MEModelResource } from '@/types/me-model';
 
 type Params = {
   params: {
