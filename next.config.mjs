@@ -55,6 +55,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      { source: '/virtual-lab/:path*', destination: '/dev/virtual-lab/:path*', permanent: false },
       {
         source: '/build',
         destination: '/build/cell-composition/interactive',
