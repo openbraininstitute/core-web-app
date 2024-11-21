@@ -82,8 +82,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/dev/:path*',
-        destination: '/:path*',
+        source: '/dev/virtual-lab/:path*',
+        destination: '/virtual-lab/:path*',
       },
     ];
   },
