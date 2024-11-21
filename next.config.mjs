@@ -77,6 +77,15 @@ const nextConfig = {
       },
     ];
   },
+
+  async rewrites() {
+    return [
+      {
+        source: '/dev/:path*',
+        destination: '/:path*',
+      },
+    ];
+  },
   transpilePackages: ['jotai-devtools'],
   logging: {
     fetches: {

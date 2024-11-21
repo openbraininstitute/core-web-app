@@ -49,6 +49,12 @@ export async function middleware(request: NextRequest) {
   //   return NextResponse.redirect(url);
   // }
 
+  if (requestUrl.startsWith('/virtual-lab')) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/dev/${requestUrl}`;
+    return NextResponse.redirect(url);
+  }
+
   // If the user is authenticated and wants to access the home page or log-in page
   // then redirect to the explore home page
   if (sessionValid && (requestUrl === '/' || requestUrl === '/log-in')) {
