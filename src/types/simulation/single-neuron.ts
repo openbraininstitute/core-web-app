@@ -173,6 +173,7 @@ export type SimulationStreamData = {
   frequency?: number;
   recording: string;
   varying_key: string;
+  varying_order: number;
   x: Array<number>;
   y: Array<number>;
 };

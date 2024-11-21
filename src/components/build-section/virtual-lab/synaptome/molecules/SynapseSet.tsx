@@ -134,6 +134,7 @@ export default function SynapseSet({
       form.setFieldValue(['synapses', index], {
         ...config,
         formula: undefined,
+        distribution: undefined,
         target: newTarget,
         soma_synapse_count: 50,
       });
@@ -141,6 +142,7 @@ export default function SynapseSet({
     if (config?.target === 'soma' && newTarget !== 'soma') {
       form.setFieldValue(['synapses', index], {
         ...config,
+        distribution: 'formula',
         soma_synapse_count: undefined,
         target: newTarget,
       });

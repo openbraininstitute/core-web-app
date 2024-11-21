@@ -35,7 +35,7 @@ import { MEModel } from '@/types/me-model';
 import {
   SingleNeuronModelSimulationConfig,
   isBluenaasError,
-  SimulationStreamData,
+  StreamSimulationResponse,
 } from '@/types/simulation/single-neuron';
 import { SimulationType } from '@/types/simulation/common';
 import { isJSON } from '@/util/utils';
@@ -328,7 +328,11 @@ export const launchSimulationAtom = atom<
 
     function mergeJsonBuffer(part: string) {
       if (part && isJSON(part)) {
-        const jsonData = JSON.parse(part) as SimulationStreamData;
+        const eventInfo = JSON.parse(part) as StreamSimulationResponse;
+        const jsonData = eventInfo.data;
+        if (!jsonData) {
+          return;
+        }
 
         if (isBluenaasError(jsonData)) {
           throw new Error(
@@ -346,6 +350,7 @@ export const launchSimulationAtom = atom<
           amplitude: jsonData.amplitude,
           frequency: jsonData.frequency,
           varyingKey: jsonData.varying_key,
+          varyingOrder: jsonData.varying_order,
         };
 
         const currentRecording = get(genericSingleNeuronSimulationPlotDataAtom)![
@@ -371,7 +376,9 @@ export const launchSimulationAtom = atom<
 
           // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
           Object.keys(updatedPlot).forEach((recordingLocation) => {
-            updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
+            updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], [
+              'varyingOrder',
+            ]);
           });
 
           set(genericSingleNeuronSimulationPlotDataAtom, updatedPlot);
