@@ -9,6 +9,7 @@ type ExternalLinkProps = {
   url: string;
   hasIcon: boolean;
   theme: 'light' | 'dark';
+  openInNewTab?: boolean;
 };
 
 export default function PrimaryButtonHome({
@@ -16,6 +17,7 @@ export default function PrimaryButtonHome({
   url,
   hasIcon = false,
   theme,
+  openInNewTab = false,
 }: ExternalLinkProps) {
   const [isMouseHover, setIsMouseHover] = useState(false);
 
@@ -46,6 +48,8 @@ export default function PrimaryButtonHome({
       onMouseOut={() => setIsMouseHover(false)}
       onBlur={() => setIsMouseHover(false)}
       aria-label={`Button link to ${label}`}
+      target={openInNewTab ? '_blank' : '_self'}
+      rel={openInNewTab ? 'noopener noreferrer' : undefined}
     >
       <div className="relative z-10 text-lg font-semibold">{label}</div>
       {hasIcon && <ArrowNorthEastIcon iconColor="#40A9FF" className="relative z-10" />}

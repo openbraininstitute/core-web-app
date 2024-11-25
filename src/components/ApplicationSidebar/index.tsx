@@ -1,14 +1,8 @@
-import { Suspense, useReducer, useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import { Button } from 'antd';
 import Link from 'next/link';
 import kebabCase from 'lodash/kebabCase';
-import Icon, {
-  PlusOutlined,
-  MinusOutlined,
-  ArrowRightOutlined,
-  UserOutlined,
-  HomeOutlined,
-} from '@ant-design/icons';
+import Icon, { ArrowRightOutlined, UserOutlined, HomeOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 
 import { classNames, signOut } from '@/util/utils';
@@ -191,9 +185,8 @@ function ApplicationSidebarHeader({
     >
       <div
         className={classNames(
-          'order-1 text-2xl font-bold',
-          !expanded &&
-            'relative top-10 order-2 -scale-100 transform text-lg [writing-mode:vertical-lr]'
+          'order-1 w-[21px] rounded-2xl bg-primary-5 py-3 text-base font-semibold text-primary-9',
+          !expanded && 'relative top-3 -scale-100 transform [writing-mode:vertical-lr]'
         )}
       >
         {title({ expanded })}
@@ -205,13 +198,6 @@ function ApplicationSidebarHeader({
           'z-20 order-2 border-none bg-transparent',
           !expanded && 'absolute top-0 order-1'
         )}
-        icon={
-          expanded ? (
-            <MinusOutlined className="text-sm text-white" />
-          ) : (
-            <PlusOutlined className="h-[14px] w-[14px] text-sm text-white" />
-          )
-        }
       />
     </div>
   );
@@ -224,8 +210,8 @@ export default function ApplicationSidebar({
   children,
 }: ApplicationSidebarProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [expanded, toggleExpand] = useReducer((val: boolean) => !val, false);
-
+  const expanded = false;
+  const toggleExpand = () => {};
   useOnClickOutside(
     ref,
     () => {
@@ -253,7 +239,6 @@ export default function ApplicationSidebar({
       </div>
       {(account || navigation) && (
         <div className="absolute bottom-0 z-20 mb-4 mt-auto flex w-[calc(100%-2.5rem)] flex-col items-center justify-center bg-primary-9">
-          {account?.({ expanded })}
           {navigation?.({ expanded })}
         </div>
       )}
