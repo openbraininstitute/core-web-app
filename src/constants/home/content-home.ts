@@ -11,7 +11,7 @@ export const THREE_COLUMN_SCREEN_ONE: ThreeColumnScreenOne[] = [
     available: true,
   },
   {
-    section: 'model',
+    section: 'build',
     content: 'Configure and build multiscale models',
     available: false,
   },
