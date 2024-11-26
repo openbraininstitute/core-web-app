@@ -43,14 +43,20 @@ const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType)
 
 export const pageSizeAtom = atom<number>(PAGE_SIZE);
 
-export const pageNumberAtom = atomFamily(() => atom<number>(PAGE_NUMBER), isListAtomEqual);
-
-export const selectedRowsAtom = atomFamily(
-  () => atom<ExploreESHit<ExploreSectionResource>[]>([]),
+export const pageNumberAtom = atomFamily(
+  (_scope: DataAtomFamilyScopeType) => atom<number>(PAGE_NUMBER),
   isListAtomEqual
 );
 
-export const searchStringAtom = atomFamily(() => atom<string>(''), isListAtomEqual);
+export const selectedRowsAtom = atomFamily(
+  (_scope: DataAtomFamilyScopeType) => atom<ExploreESHit<ExploreSectionResource>[]>([]),
+  isListAtomEqual
+);
+
+export const searchStringAtom = atomFamily(
+  (_scope: DataAtomFamilyScopeType) => atom<string>(''),
+  isListAtomEqual
+);
 
 export const sortStateAtom = atom<SortState | undefined>({ field: 'createdAt', order: 'desc' });
 
