@@ -15,17 +15,21 @@ type SearchProps = {
 
 export default function ExploreSectionNameSearch({ dataType, dataScope }: SearchProps) {
   const [searchString, setSearchString] = useAtom(searchStringAtom({ dataType, dataScope }));
-  const [searchStringLocal, setSearchStringLocal] = useState(searchString);
 
   const searchInputRef: RefObject<HTMLInputElement> = useRef(null);
   useEffect(() => searchInputRef?.current?.focus(), []); // Auto-focus on render
 
-  // To do use atomWithDebounce pattern: https://jotai.org/docs/recipes/atom-with-debounce
   const debouncedUpdateAtom = useDebouncedCallback(
     (searchStr: string) => setSearchString(searchStr),
     [setSearchString],
     600
   );
+
+  /* TODO: Remove these effects and local state, they're only needed because lodash's 
+  debounce can't update the atom for some reason. 
+  Use atomWithDebounce recipe instead: https://jotai.org/docs/recipes/atom-with-debounce */
+
+  const [searchStringLocal, setSearchStringLocal] = useState(searchString);
 
   useEffect(() => {
     debouncedUpdateAtom(searchStringLocal);
