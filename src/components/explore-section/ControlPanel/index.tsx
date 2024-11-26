@@ -170,7 +170,7 @@ export default function ControlPanel({
 
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId }));
-  const setSearchString = useSetAtom(searchStringAtom({ dataType }));
+  const setSearchString = useSetAtom(searchStringAtom({ dataType, dataScope }));
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;

@@ -89,6 +89,7 @@ export default function DefaultListView({
                 filters={filters}
                 displayControlPanel={displayControlPanel}
                 dataType={dataType}
+                dataScope={dataScope}
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
               >
