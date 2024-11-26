@@ -18,6 +18,7 @@ export default function ExploreSectionNameSearch({ dataType, dataScope }: Search
   const [searchStringLocal, setSearchStringLocal] = useState(searchString);
 
   const searchInputRef: RefObject<HTMLInputElement> = useRef(null);
+  useEffect(() => searchInputRef?.current?.focus(), []); // Auto-focus on render
 
   // To do use atomWithDebounce pattern: https://jotai.org/docs/recipes/atom-with-debounce
   const debouncedUpdateAtom = useDebouncedCallback(
