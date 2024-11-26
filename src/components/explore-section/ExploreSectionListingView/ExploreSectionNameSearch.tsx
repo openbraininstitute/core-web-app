@@ -19,7 +19,7 @@ export default function ExploreSectionNameSearch({ dataType, dataScope }: Search
 
   const searchInputRef: RefObject<HTMLInputElement> = useRef(null);
 
-  // To do us atomWithDebounce pattern: https://jotai.org/docs/recipes/atom-with-debounce
+  // To do use atomWithDebounce pattern: https://jotai.org/docs/recipes/atom-with-debounce
   const debouncedUpdateAtom = useDebouncedCallback(
     (searchStr: string) => setSearchString(searchStr),
     [setSearchString],
