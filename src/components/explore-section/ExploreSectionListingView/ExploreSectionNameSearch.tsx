@@ -46,6 +46,7 @@ export default function ExploreSectionNameSearch({ dataType, dataScope }: Search
         placeholder="Search for resources..."
         type="text"
         value={searchStringLocal}
+        aria-label="Search for resources"
       />
       <SearchOutlined className="py-2 text-primary-8" />
     </div>
