@@ -33,7 +33,7 @@ export default function WithControlPanel({
   className?: string;
 }) {
   const activeColumns = useAtomValue(
-    useMemo(() => unwrap(activeColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(activeColumnsAtom({ dataType, dataScope })), [dataType, dataScope])
   );
 
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
