@@ -63,11 +63,11 @@ function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
       value: meModelDetails.brainRegion?.title,
     },
     {
-      title: 'contributors',
+      title: 'created by',
       value: <ul>{contributors?.map(({ id, name }) => <li key={id}>{name}</li>)}</ul>,
     },
     {
-      title: 'registration date',
+      title: 'created date',
       value: new Intl.DateTimeFormat('fr-CH').format(new Date()),
     },
     {
