@@ -154,7 +154,7 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   };
 
   const validateTrigger = modelsAreSelected && (
-    <div className="absolute bottom-10 right-10 flex flex-row gap-4 text-white">
+    <div className="fixed bottom-10 right-10 flex flex-row gap-4 text-white">
       <button
         className={classNames(
           'fit-content ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',
