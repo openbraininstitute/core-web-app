@@ -165,7 +165,7 @@ export default function ControlPanel({
   resourceId,
 }: ControlPanelProps) {
   const [activeColumns, setActiveColumns] = useAtom(
-    useMemo(() => unwrap(activeColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(activeColumnsAtom({ dataType, dataScope })), [dataType, dataScope])
   );
 
   const [filterValues, setFilterValues] = useState<FilterValues>({});

@@ -61,7 +61,7 @@ export default function FilterControls({
   const [activeColumnsLength, setActiveColumnsLength] = useState<number | undefined>(undefined);
 
   const activeColumns = useAtomValue(
-    useMemo(() => unwrap(activeColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(activeColumnsAtom({ dataType, dataScope })), [dataType, dataScope])
   );
 
   const selectedFiltersCount = filters
