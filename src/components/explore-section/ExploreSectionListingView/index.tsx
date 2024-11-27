@@ -51,8 +51,6 @@ export default function DefaultListView({
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
 
-  console.log(columns);
-
   const data = useLoadableValue(
     dataAtom({
       dataType,

@@ -42,8 +42,6 @@ export default function WithControlPanel({
     )
   );
 
-  console.log(activeColumns);
-
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
   const [filters, setFilters] = useAtom(
