@@ -5,6 +5,7 @@ import isEqual from 'lodash/isEqual';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
+import { Field } from '@/constants/explore-section/fields-config/enums';
 
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
@@ -32,6 +33,7 @@ type DataAtomFamilyScopeType = {
   dataScope?: ExploreDataScope;
   resourceId?: string;
   virtualLabInfo?: VirtualLabInfo;
+  isBuildConfig?: boolean;
 };
 
 const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
@@ -61,10 +63,13 @@ export const searchStringAtom = atomFamily(
 export const sortStateAtom = atom<SortState | undefined>({ field: 'createdAt', order: 'desc' });
 
 export const activeColumnsAtom = atomFamily(
-  ({ dataType }: DataAtomFamilyScopeType) =>
+  ({ dataType, isBuildConfig }: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<string[]> | string[]>(async (get) => {
       const dimensionColumns = await get(dimensionColumnsAtom({ dataType }));
-      const { columns } = DATA_TYPES_TO_CONFIGS[dataType];
+      const { columns } = { ...DATA_TYPES_TO_CONFIGS[dataType] };
+
+      if (isBuildConfig) columns.push(Field.CreatedAt);
+      else columns.push(Field.RegistrationDate);
       return ['index', ...(dimensionColumns || []), ...columns];
     }),
   isListAtomEqual
