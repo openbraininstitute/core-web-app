@@ -34,7 +34,7 @@ export default function WithControlPanel({
   className?: string;
 }) {
   const path = usePathname();
-  const isBuildConfig = useMemo(() => path.includes('/new/configure'), [path]);
+  const isBuildConfig = useMemo(() => path?.includes('/new/configure'), [path]);
   const activeColumns = useAtomValue(
     useMemo(
       () => unwrap(activeColumnsAtom({ dataType, dataScope, isBuildConfig })),
