@@ -285,6 +285,8 @@ export default function ExploreSectionTable({
 
   const { displayLoadMoreBtn, toggleDisplayMore } = useShowMore();
 
+  console.log(columns, 'columns');
+
   return (
     <>
       <BaseTable

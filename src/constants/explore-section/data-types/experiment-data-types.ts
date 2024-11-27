@@ -22,6 +22,7 @@ export const EXPERIMENT_DATA_TYPES: { [key: string]: DataTypeConfig } = {
       Field.Name,
       Field.SubjectSpecies,
       Field.Contributors,
+      Field.CreatedAt,
     ],
     curated: true,
     cardViewFields: [

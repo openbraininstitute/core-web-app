@@ -106,9 +106,6 @@ function createdAtDateFieldConfig(
   };
 }
 
-const RegistrationDateConfig = createdAtDateFieldConfig('Registration Date');
-const CreationDateConfig = createdAtDateFieldConfig('Creation Date');
-
 export const COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<
   DeltaExperiment | DeltaSimulationCampaign
 > = {
@@ -165,9 +162,9 @@ export const COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<
       singular: 'Contributor',
     },
   },
-  [Field.RegistrationDate]: RegistrationDateConfig,
-  [Field.CreationDate]: CreationDateConfig,
-  [Field.CreatedAt]: CreationDateConfig,
+  [Field.RegistrationDate]: createdAtDateFieldConfig('Registration date'),
+  [Field.CreationDate]: createdAtDateFieldConfig('Creation date'),
+  [Field.CreatedAt]: createdAtDateFieldConfig('Created at'),
   [Field.CreatedBy]: {
     title: 'Created by',
     esTerms: {

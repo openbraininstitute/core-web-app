@@ -35,13 +35,14 @@ export default function WithControlPanel({
 }) {
   const path = usePathname();
   const isBuildConfig = useMemo(() => path.includes('/new/configure'), [path]);
-
   const activeColumns = useAtomValue(
     useMemo(
       () => unwrap(activeColumnsAtom({ dataType, dataScope, isBuildConfig })),
       [dataType, dataScope, isBuildConfig]
     )
   );
+
+  console.log(activeColumns);
 
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 

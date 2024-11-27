@@ -41,6 +41,7 @@ const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType)
   a.dataType === b.dataType &&
   a.dataScope === b.dataScope &&
   a.resourceId === b.resourceId &&
+  a.isBuildConfig === b.isBuildConfig &&
   isEqual(a.virtualLabInfo, b.virtualLabInfo);
 
 export const pageSizeAtom = atom<number>(PAGE_SIZE);
@@ -68,9 +69,12 @@ export const activeColumnsAtom = atomFamily(
       const dimensionColumns = await get(dimensionColumnsAtom({ dataType }));
       const { columns } = { ...DATA_TYPES_TO_CONFIGS[dataType] };
 
-      if (isBuildConfig) columns.push(Field.CreatedAt);
-      else columns.push(Field.RegistrationDate);
-      return ['index', ...(dimensionColumns || []), ...columns];
+      return [
+        'index',
+        ...(dimensionColumns || []),
+        ...columns,
+        isBuildConfig ? Field.CreationDate : Field.RegistrationDate,
+      ];
     }),
   isListAtomEqual
 );
