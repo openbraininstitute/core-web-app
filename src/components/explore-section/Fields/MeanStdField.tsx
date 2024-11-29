@@ -17,7 +17,7 @@ type MeanStdFieldProps = {
 
 const muMinusOne = (
   <span className="text-neutral-4">
-    µm<sup>⁻1</sup>
+    µm<sup>-1</sup>
   </span>
 );
 

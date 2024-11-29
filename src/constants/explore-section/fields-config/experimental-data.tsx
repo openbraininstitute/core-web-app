@@ -312,10 +312,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
         aggregationField: 'series.value',
       },
     },
-    title: 'Mean ± std',
+    title: 'Mean ± STD',
     unit: (
       <>
-        µm<sup>⁻1</sup>
+        µm<sup>-1</sup>
       </>
     ),
     filter: FilterTypeEnum.ValueRange,
