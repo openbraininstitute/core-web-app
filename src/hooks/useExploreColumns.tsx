@@ -32,6 +32,8 @@ const COL_SIZING = {
   default: 125,
 };
 
+const SKIP_LOWER = ['SEM', 'Mean ± STD'];
+
 /**
  * This fn will get the exact width that the column title must take in the table
  * the returned width will be the Max between the default width and the
@@ -166,7 +168,11 @@ export default function useExploreColumns(
             key,
             title: (
               <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-                <div className={styles.columnTitle}>{term.title}</div>
+                <div className={styles.columnTitle}>
+                  {SKIP_LOWER.includes(term.title)
+                    ? term.title
+                    : term.title.charAt(0) + term.title.slice(1).toLowerCase()}
+                </div>
                 {term.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
               </div>
             ),
