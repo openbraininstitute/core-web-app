@@ -47,7 +47,7 @@ export default function PrimaryButtonHome({
       onBlur={() => setIsMouseHover(false)}
       aria-label={`Button link to ${label}`}
     >
-      <div className="lg:text-base! relative z-10 text-2xl font-semibold">{label}</div>
+      <div className="relative z-10 text-lg font-semibold">{label}</div>
       {hasIcon && <ArrowNorthEastIcon iconColor="#40A9FF" className="relative z-10" />}
       <div
         className="absolute left-0 top-0 z-0 h-14 transition-width duration-500 ease-out"
