@@ -165,12 +165,12 @@ export default function ControlPanel({
   resourceId,
 }: ControlPanelProps) {
   const [activeColumns, setActiveColumns] = useAtom(
-    useMemo(() => unwrap(activeColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(activeColumnsAtom({ dataType, dataScope })), [dataType, dataScope])
   );
 
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId }));
-  const setSearchString = useSetAtom(searchStringAtom({ dataType }));
+  const setSearchString = useSetAtom(searchStringAtom({ dataType, dataScope }));
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;
