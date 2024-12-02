@@ -45,6 +45,13 @@ export const metadata: Metadata = {
       noimageindex: true,
     },
   },
+  metadataBase: new URL('https://www.openbrainplatform.com'),
+  alternates: {
+    canonical: '/',
+    languages: {
+      'en-US': '/en-US',
+    },
+  },
 };
 
 export default function RootPage({
