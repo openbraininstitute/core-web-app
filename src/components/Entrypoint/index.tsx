@@ -1,5 +1,6 @@
 'use client';
 
+import Head from 'next/head';
 import Footer from '../AboutSFN/Blocs/Footer';
 import HeaderScreen from '../home/screens/HeaderScreen';
 import ScreenBBGithub from '../home/screens/ScreenBBGithub';
@@ -14,17 +15,23 @@ export default function Entrypoint({
   callbackUrl?: string;
 }) {
   return (
-    <div className="relative flex w-screen flex-col bg-primary-9">
-      <Menu callbackUrl={callbackUrl} />
-      <div className="h-auto overflow-x-hidden overflow-y-scroll md:h-screen md:snap-y md:snap-mandatory">
-        <HeaderScreen />
-        <ScreenBBGithub />
-        {/* TODO: Re-enable once the page on AWS is available */}
-        {/* <ScreenOpenData /> */}
-        <ScreenContributors />
-        <Footer className="snap-start snap-always" />
+    <>
+      <Head>
+        <title>Open Brain Platform</title>
+        <meta name="description" content="Virtual labs to explore, build and simulate the brain" />
+      </Head>
+      <div className="relative flex w-screen flex-col bg-primary-9">
+        <Menu callbackUrl={callbackUrl} />
+        <div className="h-auto overflow-x-hidden overflow-y-scroll md:h-screen md:snap-y md:snap-mandatory">
+          <HeaderScreen />
+          <ScreenBBGithub />
+          {/* TODO: Re-enable once the page on AWS is available */}
+          {/* <ScreenOpenData /> */}
+          <ScreenContributors />
+          <Footer className="snap-start snap-always" />
+        </div>
+        {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
-      {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
-    </div>
+    </>
   );
 }
