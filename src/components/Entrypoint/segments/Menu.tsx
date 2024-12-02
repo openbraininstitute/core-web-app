@@ -95,7 +95,7 @@ export default function EntrypointMenu({ callbackUrl = '' }: EntrypointMenuProps
           label="Log in"
           url={`/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
           hasIcon={false}
-          theme="light"
+          theme="dark"
         />
       </div>
     </div>
