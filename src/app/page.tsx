@@ -1,4 +1,51 @@
+import { Metadata } from 'next';
+
 import Entrypoint from '@/components/Entrypoint';
+import { basePath } from '@/config';
+
+export const metadata: Metadata = {
+  title: 'Open Brain Platform',
+  description: 'Virtual labs to explore, build and simulate the brain',
+  keywords: [
+    'blue',
+    'institute',
+    'platform',
+    'explore',
+    'build',
+    'model',
+    'simulate',
+    'brain',
+    'simulation',
+    'neuroscience',
+    'virtual labs',
+    'circuit',
+    'cellular',
+    'system',
+  ],
+  authors: [{ name: 'Open Brain Institute', url: 'https://www.openbraininstitute.org' }],
+  openGraph: {
+    title: 'Open Brain Institute',
+    description: 'Virtual labs to explore, build and simulate the brain',
+    authors: ['Open Brain Institute'],
+    images: [
+      {
+        url: `${basePath}/images/opengraph/OBP_OGImage.jpg`,
+        width: 800,
+        height: 500,
+      },
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: true,
+    },
+  },
+};
 
 export default function RootPage({
   searchParams,
