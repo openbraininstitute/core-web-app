@@ -31,6 +31,7 @@ import { getFieldEsConfig, getFieldLabel } from '@/api/explore-section/fields';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DataType } from '@/constants/explore-section/list-views';
 import ClearFilters from '@/components/explore-section/ExploreSectionListingView/ClearFilters';
+import { fieldTitleSentenceCase } from '@/util/utils';
 
 export type ControlPanelProps = {
   children?: ReactNode;
@@ -214,7 +215,7 @@ export default function ControlPanel({
           ? createFilterItemComponent(filter, aggregations, filterValues, setFilterValues)
           : undefined,
         display: activeColumns?.includes(filter.field),
-        label: getFieldLabel(filter.field),
+        label: fieldTitleSentenceCase(getFieldLabel(filter.field)),
         type: filter.type,
         toggleFunc: showDisplayTrigger
           ? () => onToggleActive && onToggleActive(filter.field)

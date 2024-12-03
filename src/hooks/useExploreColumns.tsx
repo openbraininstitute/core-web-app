@@ -17,7 +17,7 @@ import { SortState } from '@/types/explore-section/application';
 import { ValueArray } from '@/components/ListTable';
 import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
 import { DataType } from '@/constants/explore-section/list-views';
-import { classNames } from '@/util/utils';
+import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import styles from '@/app/explore/explore.module.scss';
@@ -166,7 +166,7 @@ export default function useExploreColumns(
             key,
             title: (
               <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-                <div className={styles.columnTitle}>{term.title}</div>
+                <div className={styles.columnTitle}>{fieldTitleSentenceCase(term.title)}</div>
                 {term.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
               </div>
             ),

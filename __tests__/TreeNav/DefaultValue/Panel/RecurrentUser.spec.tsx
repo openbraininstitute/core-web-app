@@ -47,12 +47,12 @@ const defaultRegion = 'Isocortex';
 
 async function checkTreeExpandedFromSaved() {
   const selector = `div[data-tree-id] button > ${regionContainerSelector}`;
-  await screen.findByText('Basic Cell Groups and Regions', { selector });
-  await screen.findByText('Brain Stem', { selector });
+  await screen.findByText('Basic cell groups and regions', { selector });
+  await screen.findByText('Brain stem', { selector });
   await screen.findByText('Cerebrum', { selector });
   await screen.findByText('Cerebellum', { selector });
-  await screen.findByText('Cerebral Cortex', { selector });
-  await screen.findByText('Cortical Plate', { selector });
+  await screen.findByText('Cerebral cortex', { selector });
+  await screen.findByText('Cortical plate', { selector });
   await screen.findByText(defaultRegion, { selector });
 }
 

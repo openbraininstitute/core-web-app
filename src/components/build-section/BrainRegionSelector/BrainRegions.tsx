@@ -9,7 +9,7 @@ import { unwrap, useResetAtom } from 'jotai/utils';
 import CollapsedBrainRegionsSidebar from './CollapsedBrainRegions';
 import { TitleComponentProps } from './types';
 import AlternateViewSelector from './AlternateViewSelector';
-import { classNames, brainRegionTitleCaseExceptConjunctions } from '@/util/utils';
+import { classNames } from '@/util/utils';
 import { BrainIcon } from '@/components/icons';
 import { Nav as BrainTreeNav, Search as BrainTreeSearch } from '@/components/BrainTree';
 import {
@@ -231,7 +231,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
                   colorCode={colorCode}
                   id={id}
                   onClick={() => setSelectedBrainRegion(id, title, leaves)}
-                  title={brainRegionTitleCaseExceptConjunctions(title)}
+                  title={title}
                   isExpanded={isExpanded}
                   trigger={trigger}
                   content={content}

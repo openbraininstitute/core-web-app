@@ -70,6 +70,11 @@ export function brainRegionTitleCaseExceptConjunctions(phrase: string) {
   return capitalizedWords.join(' ');
 }
 
+export function fieldTitleSentenceCase(title: string) {
+  const SKIP_LOWER = ['SEM', 'Mean ± STD'];
+  return SKIP_LOWER.includes(title) ? title : title.charAt(0) + title.slice(1).toLowerCase();
+}
+
 /* Creates an LRU (Least Recently Used) Map.
 When the size of the map exceeds maxKeys,
 the key that was accesed the least recently
