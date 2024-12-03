@@ -285,10 +285,20 @@ export default function ExploreSectionTable({
 
   const { displayLoadMoreBtn, toggleDisplayMore } = useShowMore();
 
+  const sortedCols = columns?.sort((a, b) => {
+    if (a.key === 'createdAt') return -1; // 'createdAt' goes first
+    if (b.key === 'createdAt') return 1;
+    if (a.key === 'registrationDate') return 1; // 'registrationDate' goes last
+    if (b.key === 'registrationDate') return -1;
+    if (a.key === 'creationDate') return 1; // 'creationDate' goes last
+    if (b.key === 'creationDate') return -1;
+    return 0; // Keep original order for everything else
+  });
+
   return (
     <>
       <BaseTable
-        columns={columns}
+        columns={sortedCols && [...sortedCols]}
         dataContext={dataContext}
         dataSource={dataSource}
         hasError={hasError}
