@@ -1,6 +1,5 @@
 import { atom } from 'jotai';
 import { atomWithDefault } from 'jotai/utils';
-import { virtualLabProjectUsersAtomFamily } from '../projects';
 import {
   selectedEModelIdAtom,
   selectedMModelIdAtom,
@@ -16,6 +15,7 @@ import { createResource, fetchResourceById, updateResource } from '@/api/nexus';
 import { composeUrl } from '@/util/nexus';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
+import { getAgentForUser } from '@/services/virtual-lab/users';
 
 type MEModelDetails = {
   description: string;
@@ -32,15 +32,9 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
     const selectedMModel = await get(selectedMModelAtom);
     const selectedEModel = await get(selectedEModelAtom);
     const meModelDetails = get(meModelDetailsAtom);
-    const contributors = await get(
-      virtualLabProjectUsersAtomFamily({
-        projectId: virtualLabInfo.projectId,
-        virtualLabId: virtualLabInfo.virtualLabId,
-      })
-    );
-    const realm = 'SBO'; // temporarily hardcoding it
-    if (!session || !meModelDetails || !selectedMModel || !selectedEModel || !contributors)
-      return null;
+    const contributerAgent = (await getAgentForUser()).data;
+
+    if (!session || !meModelDetails || !selectedMModel || !selectedEModel) return null;
 
     let brainLocation: BrainLocation | undefined;
     if (meModelDetails.brainRegion) {
@@ -80,16 +74,18 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
           name: selectedMModel.name,
         },
       ],
-      contribution: contributors.map((contributor) => ({
-        '@type': 'Contribution',
-        agent: {
-          '@id': `${nexus.url}/realms/${realm}/users/${contributor.username}`,
-          '@type': ['Agent', 'Person'],
-          familyName: contributor.last_name,
-          givenName: contributor.first_name,
-          name: `${contributor.first_name} ${contributor.last_name}`,
+      contribution: [
+        {
+          '@type': 'Contribution',
+          agent: {
+            '@id': contributerAgent.id,
+            '@type': contributerAgent.type,
+            familyName: contributerAgent.family_name,
+            givenName: contributerAgent.given_name,
+            name: contributerAgent.name,
+          },
         },
-      })),
+      ],
       annotation: annotationList,
       brainLocation,
       // 'image' will be added after me-model validation
