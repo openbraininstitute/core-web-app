@@ -16,6 +16,7 @@ import { composeUrl } from '@/util/nexus';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
 import { getAgentForUser } from '@/services/virtual-lab/users';
+import { ContributorRole } from '@/constants/nexus';
 
 type MEModelDetails = {
   description: string;
@@ -84,6 +85,7 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
             givenName: contributerAgent.given_name,
             name: contributerAgent.name,
           },
+          hadRole: { ...ContributorRole },
         },
       ],
       annotation: annotationList,

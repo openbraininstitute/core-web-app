@@ -15,3 +15,8 @@ export const metadataKeys = [
 ];
 
 export const revParamRegexp = /\?rev=\d+$/;
+
+export const ContributorRole = {
+  '@id': 'http://purl.obolibrary.org/obo/CRO_0000107',
+  label: 'creator role',
+};

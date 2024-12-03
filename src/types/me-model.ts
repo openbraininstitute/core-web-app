@@ -65,6 +65,10 @@ export type DefaultMEModelType = {
 
 type MEModelContribution = Type<'Contribution'> & {
   agent: IdWithType<string[]> & { name: string; givenName: string; familyName: string };
+  hadRole: {
+    '@id': string;
+    label: string;
+  };
 };
 
 export interface MEModel extends Entity {
