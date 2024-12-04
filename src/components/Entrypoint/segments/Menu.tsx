@@ -82,6 +82,7 @@ export default function EntrypointMenu({ callbackUrl = '' }: EntrypointMenuProps
           url="https://github.com/BlueBrain"
           hasIcon
           theme="dark"
+          openInNewTab
         />
         {/* TODO: Re-enable once the page on AWS is available */}
         {/* <PrimaryButtonHome
