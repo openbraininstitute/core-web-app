@@ -127,6 +127,17 @@ export default function buildFilters(
     if (dataConfig.curated) filtersQuery.must(esb.termQuery('curated', true));
   }
 
+  if (
+    dataType === DataType.SingleNeuronSimulation ||
+    dataType === DataType.SingleNeuronSynaptomeSimulation
+  ) {
+    const simulationKey =
+      dataType === DataType.SingleNeuronSimulation
+        ? 'singleNeuronSimulation'
+        : 'synaptomeSimulation';
+    filtersQuery.must(esb.termQuery(`${simulationKey}.isDraft`, false));
+  }
+
   filtersQuery.must(esb.termQuery('deprecated', false));
 
   if (descendantIds && descendantIds.length > 0) {
