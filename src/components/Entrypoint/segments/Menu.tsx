@@ -22,6 +22,9 @@ interface MenuButtonProps extends MenuItemProps {
 
 interface EntrypointMenuProps {
   callbackUrl?: string;
+  buttonBBGithub?: boolean;
+  buttonAbout?: boolean;
+  buttonLogin?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -52,7 +55,12 @@ function MenuItem({ title, bgcolor = defaultBgColor }: MenuItemProps) {
   );
 }
 
-export default function EntrypointMenu({ callbackUrl = '' }: EntrypointMenuProps) {
+export default function EntrypointMenu({
+  callbackUrl = '',
+  buttonBBGithub = true,
+  buttonAbout = true,
+  buttonLogin = true,
+}: EntrypointMenuProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   return (
@@ -77,13 +85,14 @@ export default function EntrypointMenu({ callbackUrl = '' }: EntrypointMenuProps
       <div className="relative hidden justify-between gap-1 md:flex ">
         {/* TODO: Re-enable hidden buttons after SfN */}
         {/* <MenuLink title="Getting Started" href="#" /> */}
-        <PrimaryButtonHome
-          label="BlueBrain Github"
-          url="https://github.com/BlueBrain"
-          hasIcon
-          theme="dark"
-          openInNewTab
-        />
+        {buttonBBGithub && (
+          <PrimaryButtonHome
+            label="BlueBrain Github"
+            url="https://github.com/BlueBrain"
+            hasIcon
+            theme="dark"
+          />
+        )}
         {/* TODO: Re-enable once the page on AWS is available */}
         {/* <PrimaryButtonHome
           label="BlueBrain Open data"
@@ -91,13 +100,17 @@ export default function EntrypointMenu({ callbackUrl = '' }: EntrypointMenuProps
           hasIcon
           theme="dark"
         /> */}
-        <PrimaryButtonHome label="About" url="/about" hasIcon={false} theme="dark" />
-        <PrimaryButtonHome
-          label="Log in"
-          url={`/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-          hasIcon={false}
-          theme="dark"
-        />
+        {buttonAbout && (
+          <PrimaryButtonHome label="About" url="/about" hasIcon={false} theme="dark" />
+        )}
+        {buttonLogin && (
+          <PrimaryButtonHome
+            label="Log in"
+            url={`/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            hasIcon={false}
+            theme="dark"
+          />
+        )}
       </div>
     </div>
   );
