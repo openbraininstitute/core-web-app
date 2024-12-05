@@ -22,7 +22,6 @@ export const MODEL_DATA_TYPES: { [key: string]: DataTypeConfig } = {
       Field.EModelMorphology,
       Field.EModelScore,
       Field.BrainRegion,
-      Field.CreatedAt,
       Field.Contributors,
     ],
 

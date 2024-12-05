@@ -48,7 +48,7 @@ export default function DefaultListView({
   style?: Record<'background', string>;
   dataKey?: string;
 }) {
-  const [sortState, setSortState] = useAtom(sortStateAtom);
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, dataScope, key: dataKey }));
 
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
