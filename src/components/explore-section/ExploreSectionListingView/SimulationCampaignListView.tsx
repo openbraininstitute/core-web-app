@@ -22,7 +22,7 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
   );
   const dataSource = useAtomValue(useMemo(() => unwrap(dataAtom({ dataType })), [dataType]));
 
-  const [sortState, setSortState] = useAtom(sortStateAtom);
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType }));
   const dimensionColumns = useAtomValue(
     useMemo(() => unwrap(dimensionColumnsAtom({ dataType })), [dataType])
   );

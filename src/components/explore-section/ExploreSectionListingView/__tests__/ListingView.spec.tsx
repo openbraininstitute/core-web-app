@@ -256,7 +256,7 @@ describe('Listing view table tests', () => {
     );
     const tableHeaders = screen.getAllByTestId('column-header');
     expect(tableHeaders.length).toEqual(
-      DATA_TYPES_TO_CONFIGS[DataType.ExperimentalNeuronMorphology].columns.length + 2 // Preview column has no header
+      DATA_TYPES_TO_CONFIGS[DataType.ExperimentalNeuronMorphology].columns.length + 1 // Preview column has no header
     );
   });
 });

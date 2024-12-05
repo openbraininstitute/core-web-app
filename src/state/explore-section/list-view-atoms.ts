@@ -63,7 +63,15 @@ export const searchStringAtom = atomFamily(
   isListAtomEqual
 );
 
-export const sortStateAtom = atom<SortState | undefined>({ field: 'createdAt', order: 'desc' });
+export const sortStateAtom = atomFamily(
+  (scope: DataAtomFamilyScopeType) =>
+    atom<SortState | undefined>(() => {
+      return scope.isBuildConfig
+        ? { field: Field.CreationDate, order: 'desc' }
+        : { field: Field.RegistrationDate, order: 'desc' };
+    }),
+  isListAtomEqual
+);
 
 export const activeColumnsAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
@@ -123,7 +131,7 @@ export const filtersAtom = atomFamily(
 export const totalByExperimentAndRegionsAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atom<Promise<number | undefined | null>>(async (get) => {
-      const sortState = get(sortStateAtom);
+      const sortState = get(sortStateAtom(scope));
       let descendantAndAncestorIds: string[] = [];
 
       if (scope.dataScope === ExploreDataScope.SelectedBrainRegion)
@@ -154,7 +162,7 @@ export const queryAtom = atomFamily(
 
       const pageNumber = get(pageNumberAtom(scope));
       const pageSize = get(pageSizeAtom);
-      const sortState = get(sortStateAtom);
+      const sortState = get(sortStateAtom(scope));
       const bookmarkResourceIds = (
         scope.dataScope === ExploreDataScope.BookmarkedResources && scope.virtualLabInfo
           ? (await get(bookmarksForProjectAtomFamily(scope.virtualLabInfo)))[scope.dataType]
