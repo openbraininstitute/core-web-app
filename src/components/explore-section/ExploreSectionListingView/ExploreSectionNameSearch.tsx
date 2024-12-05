@@ -11,10 +11,13 @@ import { useDebouncedCallback } from '@/hooks/hooks';
 type SearchProps = {
   dataType: DataType;
   dataScope?: ExploreDataScope;
+  dataKey?: string;
 };
 
-export default function ExploreSectionNameSearch({ dataType, dataScope }: SearchProps) {
-  const [searchString, setSearchString] = useAtom(searchStringAtom({ dataType, dataScope }));
+export default function ExploreSectionNameSearch({ dataType, dataScope, dataKey }: SearchProps) {
+  const [searchString, setSearchString] = useAtom(
+    searchStringAtom({ dataType, dataScope, key: dataKey })
+  );
 
   const searchInputRef: RefObject<HTMLInputElement> = useRef(null);
   useEffect(() => searchInputRef?.current?.focus(), []); // Auto-focus on render

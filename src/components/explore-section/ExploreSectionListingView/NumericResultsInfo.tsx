@@ -10,12 +10,14 @@ function NumericResultsInfo({
   dataType,
   dataScope,
   virtualLabInfo,
+  dataKey,
 }: {
   dataType: DataType;
   dataScope: ExploreDataScope;
   virtualLabInfo?: VirtualLabInfo;
+  dataKey?: string;
 }) {
-  const total = useLoadableValue(totalAtom({ dataType, dataScope, virtualLabInfo }));
+  const total = useLoadableValue(totalAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
 
   return (
     <div className="flex w-full justify-start">

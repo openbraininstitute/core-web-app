@@ -38,6 +38,7 @@ export type ControlPanelProps = {
   toggleDisplay: () => void;
   dataType: DataType;
   dataScope?: ExploreDataScope;
+  dataKey?: string;
   aggregations?: Aggregations;
   filters: Filter[];
   setFilters: any;
@@ -159,6 +160,7 @@ export default function ControlPanel({
   toggleDisplay,
   dataType,
   dataScope,
+  dataKey,
   aggregations,
   filters,
   setFilters,
@@ -166,12 +168,15 @@ export default function ControlPanel({
   resourceId,
 }: ControlPanelProps) {
   const [activeColumns, setActiveColumns] = useAtom(
-    useMemo(() => unwrap(activeColumnsAtom({ dataType, dataScope })), [dataType, dataScope])
+    useMemo(
+      () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey })),
+      [dataType, dataScope, dataKey]
+    )
   );
 
   const [filterValues, setFilterValues] = useState<FilterValues>({});
-  const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId }));
-  const setSearchString = useSetAtom(searchStringAtom({ dataType, dataScope }));
+  const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId, key: dataKey }));
+  const setSearchString = useSetAtom(searchStringAtom({ dataType, dataScope, key: dataKey }));
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;

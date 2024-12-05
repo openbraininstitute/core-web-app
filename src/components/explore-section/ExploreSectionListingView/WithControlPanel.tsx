@@ -20,6 +20,7 @@ export default function WithControlPanel({
   dataType,
   virtualLabInfo,
   dataScope,
+  dataKey,
   className,
 }: {
   children: (props: {
@@ -32,26 +33,30 @@ export default function WithControlPanel({
   dataScope: ExploreDataScope;
   virtualLabInfo?: VirtualLabInfo;
   className?: string;
+  dataKey?: string;
 }) {
   const path = usePathname();
   const isBuildConfig = useMemo(() => path?.includes('/new/configure'), [path]);
   const activeColumns = useAtomValue(
     useMemo(
-      () => unwrap(activeColumnsAtom({ dataType, dataScope, isBuildConfig })),
-      [dataType, dataScope, isBuildConfig]
+      () => unwrap(activeColumnsAtom({ dataType, dataScope, isBuildConfig, key: dataKey })),
+      [dataType, dataScope, isBuildConfig, dataKey]
     )
   );
 
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
   const [filters, setFilters] = useAtom(
-    useMemo(() => unwrap(filtersAtom({ dataType, dataScope })), [dataType, dataScope])
+    useMemo(
+      () => unwrap(filtersAtom({ dataType, dataScope, key: dataKey })),
+      [dataType, dataScope, dataKey]
+    )
   );
 
   const aggregations = useAtomValue(
     useMemo(
-      () => unwrap(aggregationsAtom({ dataType, dataScope, virtualLabInfo })),
-      [dataType, dataScope, virtualLabInfo]
+      () => unwrap(aggregationsAtom({ dataType, dataScope, virtualLabInfo, key: dataKey })),
+      [dataType, dataScope, virtualLabInfo, dataKey]
     )
   );
 
@@ -74,6 +79,7 @@ export default function WithControlPanel({
           toggleDisplay={() => setDisplayControlPanel(false)}
           dataType={dataType}
           dataScope={dataScope}
+          dataKey={dataKey}
         />
       )}
     </>
