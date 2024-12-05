@@ -32,6 +32,7 @@ export default function DefaultListView({
   style = { background: 'bg-[#d1d1d1]' },
   containerClass = 'h-full',
   tableClass = 'h-full overflow-y-hidden',
+  dataKey,
 }: {
   containerClass?: string;
   tableClass?: string;
@@ -45,6 +46,7 @@ export default function DefaultListView({
   tableScrollable?: boolean;
   controlsVisible?: boolean;
   style?: Record<'background', string>;
+  dataKey?: string;
 }) {
   const [sortState, setSortState] = useAtom(sortStateAtom);
 
@@ -56,6 +58,7 @@ export default function DefaultListView({
       dataType,
       dataScope,
       virtualLabInfo,
+      key: dataKey,
     })
   );
 
@@ -81,6 +84,7 @@ export default function DefaultListView({
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
+          dataKey={dataKey}
           className="relative"
         >
           {({ activeColumns, displayControlPanel, setDisplayControlPanel, filters }) => (
@@ -90,6 +94,7 @@ export default function DefaultListView({
                 displayControlPanel={displayControlPanel}
                 dataType={dataType}
                 dataScope={dataScope}
+                dataKey={dataKey}
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
               >
