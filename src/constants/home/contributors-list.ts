@@ -4939,7 +4939,7 @@ export const CONTRIBUTORS_LIST: ContributorProps[] = [
     full_name: 'Jeffrey Muller',
     last_name: 'Muller',
     ORCID: null,
-    google_scholar: 'kkb7ZYYAAAAJ',
+    google_scholar: 'IePXkukAAAAJ&hl=en&oi=ao',
     'bbp-member': true,
   },
   {
