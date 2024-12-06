@@ -9,7 +9,6 @@ import { Filter } from '@/components/Filter/types';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import usePathname from '@/hooks/pathname';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
 export default function WithControlPanel({
@@ -32,12 +31,10 @@ export default function WithControlPanel({
   className?: string;
   dataKey?: string;
 }) {
-  const path = usePathname();
-  const isBuildConfig = useMemo(() => path?.includes('/new/configure'), [path]);
   const activeColumns = useAtomValue(
     useMemo(
-      () => unwrap(activeColumnsAtom({ dataType, dataScope, isBuildConfig, key: dataKey })),
-      [dataType, dataScope, isBuildConfig, dataKey]
+      () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey })),
+      [dataType, dataScope, dataKey]
     )
   );
 

@@ -33,7 +33,6 @@ type DataAtomFamilyScopeType = {
   dataScope?: ExploreDataScope;
   resourceId?: string;
   virtualLabInfo?: VirtualLabInfo;
-  isBuildConfig?: boolean;
   key?: string;
 };
 
@@ -42,7 +41,6 @@ const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType)
   a.dataType === b.dataType &&
   a.dataScope === b.dataScope &&
   a.resourceId === b.resourceId &&
-  a.isBuildConfig === b.isBuildConfig &&
   a.key === b.key &&
   isEqual(a.virtualLabInfo, b.virtualLabInfo);
 
@@ -66,7 +64,7 @@ export const searchStringAtom = atomFamily(
 export const sortStateAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atom<SortState | undefined>(() => {
-      return scope.isBuildConfig
+      return scope.dataType.toLocaleLowerCase().startsWith('experimental')
         ? { field: Field.CreationDate, order: 'desc' }
         : { field: Field.RegistrationDate, order: 'desc' };
     }),
@@ -83,7 +81,9 @@ export const activeColumnsAtom = atomFamily(
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        scope.isBuildConfig ? Field.CreationDate : Field.RegistrationDate,
+        scope.dataType.toLocaleLowerCase().startsWith('experimental')
+          ? Field.RegistrationDate
+          : Field.CreationDate,
       ];
     }),
   isListAtomEqual
