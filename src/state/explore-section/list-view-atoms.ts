@@ -241,26 +241,3 @@ export const dataAtom = atomFamily<
     }),
   isListAtomEqual
 );
-
-export const totalAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
-    atom(async (get) => {
-      const response = await get(queryResponseAtom(scope));
-      const { total } = response ?? {
-        total: { value: 0 },
-      };
-      return total?.value;
-    }),
-  isListAtomEqual
-);
-
-export const aggregationsAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
-    atom<Promise<FlattenedExploreESResponse<ExploreSectionResource>['aggs'] | undefined>>(
-      async (get) => {
-        const response = await get(queryResponseAtom(scope));
-        return response?.aggs;
-      }
-    ),
-  isListAtomEqual
-);

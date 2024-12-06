@@ -1,8 +1,6 @@
-import { Skeleton } from 'antd';
-
-import { totalAtom } from '@/state/explore-section/list-view-atoms';
+import { queryResponseAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { useLoadableValue } from '@/hooks/hooks';
+import { useUnwrappedValue } from '@/hooks/hooks';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
@@ -17,7 +15,9 @@ function NumericResultsInfo({
   virtualLabInfo?: VirtualLabInfo;
   dataKey?: string;
 }) {
-  const total = useLoadableValue(totalAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
+  const res = useUnwrappedValue(
+    queryResponseAtom({ dataType, dataScope, virtualLabInfo, key: dataKey })
+  );
 
   return (
     <div className="flex w-full justify-start">
@@ -27,15 +27,8 @@ function NumericResultsInfo({
         aria-label="listing-view-title"
       >
         <span>Results </span>
-        {total.state === 'loading' && (
-          <Skeleton.Button
-            active
-            size="default"
-            shape="square"
-            className="!max-h-[1.74rem] !min-w-[2.7rem] !max-w-[2.7rem]"
-          />
-        )}
-        {total.state === 'hasData' && <strong>{total.data?.toLocaleString('en-US')}</strong>}
+
+        <strong>{res?.total.value.toLocaleString('en-US')}</strong>
       </div>
     </div>
   );

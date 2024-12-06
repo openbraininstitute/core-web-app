@@ -5,8 +5,8 @@ import { unwrap } from 'jotai/utils';
 import ControlPanel from '@/components/explore-section/ControlPanel';
 import {
   activeColumnsAtom,
-  aggregationsAtom,
   filtersAtom,
+  queryResponseAtom,
 } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { Filter } from '@/components/Filter/types';
@@ -14,6 +14,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import usePathname from '@/hooks/pathname';
+import { useUnwrappedValue } from '@/hooks/hooks';
 
 export default function WithControlPanel({
   children,
@@ -53,12 +54,11 @@ export default function WithControlPanel({
     )
   );
 
-  const aggregations = useAtomValue(
-    useMemo(
-      () => unwrap(aggregationsAtom({ dataType, dataScope, virtualLabInfo, key: dataKey })),
-      [dataType, dataScope, virtualLabInfo, dataKey]
-    )
+  const data = useUnwrappedValue(
+    queryResponseAtom({ dataType, dataScope, virtualLabInfo, key: dataKey })
   );
+
+  const aggregations = data?.aggs;
 
   return (
     <>
