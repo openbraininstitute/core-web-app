@@ -1,4 +1,4 @@
-import { Atom, atom } from 'jotai';
+import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEqual from 'lodash/isEqual';
@@ -18,7 +18,7 @@ import {
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
 import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import { ExploreESHit, FlattenedExploreESResponse } from '@/types/explore-section/es';
+import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
@@ -200,44 +200,39 @@ export const queryAtom = atomFamily(
   isListAtomEqual
 );
 
-export const queryResponseAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
-    atom<Promise<FlattenedExploreESResponse<ExploreSectionResource> | null>>(async (get) => {
-      const query = await get(queryAtom(scope));
-      const result =
-        query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
-
-      return result;
-    }),
-  isListAtomEqual
-);
-
-export const dataAtom = atomFamily<
-  DataAtomFamilyScopeType,
-  Atom<Promise<ExploreESHit<ExploreSectionResource>[]>>
->(
+export const dataAtom = atomFamily(
   (scope) =>
     atom(async (get) => {
-      const response = await get(queryResponseAtom(scope));
+      const query = await get(queryAtom(scope));
+      const response =
+        query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
 
       if (response?.hits) {
         if (scope.dataType === DataType.SingleNeuronSynaptome) {
-          return await fetchLinkedModel({
-            results: response.hits,
-            path: '_source.singleNeuronSynaptome.memodel.["@id"]',
-            linkedProperty: 'linkedMeModel',
-          });
+          return {
+            aggs: response.aggs,
+            total: response.total,
+            hits: await fetchLinkedModel({
+              results: response.hits,
+              path: '_source.singleNeuronSynaptome.memodel.["@id"]',
+              linkedProperty: 'linkedMeModel',
+            }),
+          };
         }
         if (scope.dataType === DataType.SingleNeuronSynaptomeSimulation) {
-          return await fetchLinkedModel({
-            results: response.hits,
-            path: '_source.synaptomeSimulation.synaptome.["@id"]',
-            linkedProperty: 'linkedSynaptomeModel',
-          });
+          return {
+            aggs: response.aggs,
+            total: response.total,
+            hits: await fetchLinkedModel({
+              results: response.hits,
+              path: '_source.synaptomeSimulation.synaptome.["@id"]',
+              linkedProperty: 'linkedSynaptomeModel',
+            }),
+          };
         }
-        return response.hits;
+        return response;
       }
-      return [];
+      return null;
     }),
   isListAtomEqual
 );

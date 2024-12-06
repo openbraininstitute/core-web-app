@@ -1,4 +1,4 @@
-import { queryResponseAtom } from '@/state/explore-section/list-view-atoms';
+import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -15,9 +15,7 @@ function NumericResultsInfo({
   virtualLabInfo?: VirtualLabInfo;
   dataKey?: string;
 }) {
-  const res = useUnwrappedValue(
-    queryResponseAtom({ dataType, dataScope, virtualLabInfo, key: dataKey })
-  );
+  const res = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
 
   return (
     <div className="flex w-full justify-start">

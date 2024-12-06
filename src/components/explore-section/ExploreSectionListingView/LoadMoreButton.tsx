@@ -1,6 +1,6 @@
 import { HTMLProps } from 'react';
 import { useAtom } from 'jotai';
-import { queryResponseAtom, pageSizeAtom } from '@/state/explore-section/list-view-atoms';
+import { pageSizeAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
 import { classNames } from '@/util/utils';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType, PAGE_SIZE } from '@/constants/explore-section/list-views';
@@ -32,7 +32,7 @@ export default function LoadMoreButton({
   };
   hide: () => void;
 }) {
-  const res = useUnwrappedValue(queryResponseAtom(dataContext));
+  const res = useUnwrappedValue(dataAtom(dataContext));
 
   const [contentSize, setContentSize] = useAtom(pageSizeAtom);
 

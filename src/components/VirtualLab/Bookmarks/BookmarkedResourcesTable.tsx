@@ -51,7 +51,7 @@ export default function BookmarkedResourcesTable({
     )
   );
 
-  const dataSource = data.state === 'hasData' ? data.data : [];
+  const dataSource = data.state === 'hasData' && data.data ? data.data.hits : [];
 
   const modelTypeToModelName = (type: DataType, tabName: BookmarkTabsName) => {
     switch (tabName) {

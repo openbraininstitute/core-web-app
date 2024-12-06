@@ -3,11 +3,7 @@ import { useAtomValue, useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
 import ControlPanel from '@/components/explore-section/ControlPanel';
-import {
-  activeColumnsAtom,
-  filtersAtom,
-  queryResponseAtom,
-} from '@/state/explore-section/list-view-atoms';
+import { activeColumnsAtom, dataAtom, filtersAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { Filter } from '@/components/Filter/types';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -54,9 +50,7 @@ export default function WithControlPanel({
     )
   );
 
-  const data = useUnwrappedValue(
-    queryResponseAtom({ dataType, dataScope, virtualLabInfo, key: dataKey })
-  );
+  const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
 
   const aggregations = data?.aggs;
 
