@@ -64,7 +64,7 @@ export const searchStringAtom = atomFamily(
 export const sortStateAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atom<SortState | undefined>(() => {
-      return scope.dataType.toLocaleLowerCase().startsWith('experimental')
+      return scope.dataType.toLocaleLowerCase().startsWith('experiment')
         ? { field: Field.CreationDate, order: 'desc' }
         : { field: Field.RegistrationDate, order: 'desc' };
     }),
@@ -81,7 +81,7 @@ export const activeColumnsAtom = atomFamily(
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        scope.dataType.toLocaleLowerCase().startsWith('experimental')
+        scope.dataType.toLocaleLowerCase().startsWith('experiment')
           ? Field.RegistrationDate
           : Field.CreationDate,
       ];
