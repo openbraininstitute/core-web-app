@@ -45,7 +45,7 @@ export default function AboutPageLayout({ children }: Props) {
           onClose={() => setWarning('')}
         />
       )}
-      <Menu buttonAbout={false} buttonBBGithub={false} />
+      <Menu displayAbout={false} displayBBGithub={false} />
       {/* <nav
         className={classNames(
           'fixed z-[200] flex w-full items-center justify-between px-6 py-6 backdrop-blur md:px-12 md:py-8',

@@ -22,9 +22,9 @@ interface MenuButtonProps extends MenuItemProps {
 
 interface EntrypointMenuProps {
   callbackUrl?: string;
-  buttonBBGithub?: boolean;
-  buttonAbout?: boolean;
-  buttonLogin?: boolean;
+  displayBBGithub?: boolean;
+  displayAbout?: boolean;
+  displayLogin?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -57,9 +57,9 @@ function MenuItem({ title, bgcolor = defaultBgColor }: MenuItemProps) {
 
 export default function EntrypointMenu({
   callbackUrl = '',
-  buttonBBGithub = true,
-  buttonAbout = true,
-  buttonLogin = true,
+  displayBBGithub = true,
+  displayAbout = true,
+  displayLogin = true,
 }: EntrypointMenuProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
@@ -85,7 +85,7 @@ export default function EntrypointMenu({
       <div className="relative hidden justify-between gap-1 md:flex ">
         {/* TODO: Re-enable hidden buttons after SfN */}
         {/* <MenuLink title="Getting Started" href="#" /> */}
-        {buttonBBGithub && (
+        {displayBBGithub && (
           <PrimaryButtonHome
             label="BlueBrain Github"
             url="https://github.com/BlueBrain"
@@ -100,10 +100,10 @@ export default function EntrypointMenu({
           hasIcon
           theme="dark"
         /> */}
-        {buttonAbout && (
+        {displayAbout && (
           <PrimaryButtonHome label="About" url="/about" hasIcon={false} theme="dark" />
         )}
-        {buttonLogin && (
+        {displayLogin && (
           <PrimaryButtonHome
             label="Log in"
             url={`/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
