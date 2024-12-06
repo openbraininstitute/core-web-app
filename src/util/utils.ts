@@ -71,7 +71,7 @@ export function brainRegionTitleCaseExceptConjunctions(phrase: string) {
 }
 
 export function fieldTitleSentenceCase(title: string) {
-  const SKIP_LOWER = ['SEM', 'Mean ± STD'];
+  const SKIP_LOWER = ['SEM', 'Mean ± STD', 'ME-model'];
   return SKIP_LOWER.includes(title) ? title : title.charAt(0) + title.slice(1).toLowerCase();
 }
 
