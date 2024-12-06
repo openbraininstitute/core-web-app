@@ -62,7 +62,7 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
                 <ListTable
                   {...{
                     columns,
-                    dataSource,
+                    dataSource: dataSource?.hits,
                     loading,
                   }}
                 />

@@ -63,8 +63,8 @@ export default function DefaultListView({
   );
 
   useEffect(() => {
-    if (data.state === 'hasData') {
-      setDataSource(data.data as ExploreESHit<ExploreSectionResource>[]);
+    if (data.state === 'hasData' && !!data.data) {
+      setDataSource(data.data.hits as ExploreESHit<ExploreSectionResource>[]);
     }
   }, [data, setDataSource]);
 
