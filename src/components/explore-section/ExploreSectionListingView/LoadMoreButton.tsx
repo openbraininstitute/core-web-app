@@ -1,10 +1,10 @@
 import { HTMLProps } from 'react';
 import { useAtom } from 'jotai';
-import { totalAtom, pageSizeAtom } from '@/state/explore-section/list-view-atoms';
+import { pageSizeAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
 import { classNames } from '@/util/utils';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import { useLoadableValue } from '@/hooks/hooks';
+import { useUnwrappedValue } from '@/hooks/hooks';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonElement>) {
@@ -32,7 +32,7 @@ export default function LoadMoreButton({
   };
   hide: () => void;
 }) {
-  const total = useLoadableValue(totalAtom(dataContext));
+  const res = useUnwrappedValue(dataAtom(dataContext));
 
   const [contentSize, setContentSize] = useAtom(pageSizeAtom);
 
@@ -41,16 +41,7 @@ export default function LoadMoreButton({
     hide();
   };
 
-  if (total.state === 'loading') return null;
-  if (total.state === 'hasError') {
-    return (
-      <Btn className="cursor-progress bg-primary-8 text-white" disabled>
-        <div>Data could not be fetched</div>
-      </Btn>
-    );
-  }
-
-  if (total.state === 'hasData' && contentSize > total.data) return null;
+  if (res?.total && contentSize > res.total.value) return null;
 
   return (
     <Btn className="bg-primary-8 text-white" onClick={onLoadMore}>

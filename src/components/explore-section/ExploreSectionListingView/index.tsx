@@ -32,6 +32,7 @@ export default function DefaultListView({
   style = { background: 'bg-[#d1d1d1]' },
   containerClass = 'h-full',
   tableClass = 'h-full overflow-y-hidden',
+  dataKey,
 }: {
   containerClass?: string;
   tableClass?: string;
@@ -45,8 +46,9 @@ export default function DefaultListView({
   tableScrollable?: boolean;
   controlsVisible?: boolean;
   style?: Record<'background', string>;
+  dataKey?: string;
 }) {
-  const [sortState, setSortState] = useAtom(sortStateAtom);
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, dataScope, key: dataKey }));
 
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
@@ -56,12 +58,13 @@ export default function DefaultListView({
       dataType,
       dataScope,
       virtualLabInfo,
+      key: dataKey,
     })
   );
 
   useEffect(() => {
-    if (data.state === 'hasData') {
-      setDataSource(data.data as ExploreESHit<ExploreSectionResource>[]);
+    if (data.state === 'hasData' && !!data.data) {
+      setDataSource(data.data.hits as ExploreESHit<ExploreSectionResource>[]);
     }
   }, [data, setDataSource]);
 
@@ -81,6 +84,7 @@ export default function DefaultListView({
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
+          dataKey={dataKey}
           className="relative"
         >
           {({ activeColumns, displayControlPanel, setDisplayControlPanel, filters }) => (
@@ -90,6 +94,7 @@ export default function DefaultListView({
                 displayControlPanel={displayControlPanel}
                 dataType={dataType}
                 dataScope={dataScope}
+                dataKey={dataKey}
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
               >

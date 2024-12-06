@@ -1,4 +1,4 @@
-import { Atom, atom } from 'jotai';
+import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEqual from 'lodash/isEqual';
@@ -18,7 +18,7 @@ import {
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
 import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import { ExploreESHit, FlattenedExploreESResponse } from '@/types/explore-section/es';
+import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
@@ -34,6 +34,7 @@ type DataAtomFamilyScopeType = {
   resourceId?: string;
   virtualLabInfo?: VirtualLabInfo;
   isBuildConfig?: boolean;
+  key?: string;
 };
 
 const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
@@ -42,6 +43,7 @@ const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType)
   a.dataScope === b.dataScope &&
   a.resourceId === b.resourceId &&
   a.isBuildConfig === b.isBuildConfig &&
+  a.key === b.key &&
   isEqual(a.virtualLabInfo, b.virtualLabInfo);
 
 export const pageSizeAtom = atom<number>(PAGE_SIZE);
@@ -61,48 +63,55 @@ export const searchStringAtom = atomFamily(
   isListAtomEqual
 );
 
-export const sortStateAtom = atom<SortState | undefined>({ field: 'createdAt', order: 'desc' });
+export const sortStateAtom = atomFamily(
+  (scope: DataAtomFamilyScopeType) =>
+    atom<SortState | undefined>(() => {
+      return scope.isBuildConfig
+        ? { field: Field.CreationDate, order: 'desc' }
+        : { field: Field.RegistrationDate, order: 'desc' };
+    }),
+  isListAtomEqual
+);
 
 export const activeColumnsAtom = atomFamily(
-  ({ dataType, isBuildConfig }: DataAtomFamilyScopeType) =>
+  (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<string[]> | string[]>(async (get) => {
-      const dimensionColumns = await get(dimensionColumnsAtom({ dataType }));
-      const { columns } = { ...DATA_TYPES_TO_CONFIGS[dataType] };
+      const dimensionColumns = await get(dimensionColumnsAtom(scope));
+      const { columns } = { ...DATA_TYPES_TO_CONFIGS[scope.dataType] };
 
       return [
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        isBuildConfig ? Field.CreationDate : Field.RegistrationDate,
+        scope.isBuildConfig ? Field.CreationDate : Field.RegistrationDate,
       ];
     }),
   isListAtomEqual
 );
 
-export const dimensionColumnsAtom = atomFamily(
-  ({ dataType, virtualLabInfo }: DataAtomFamilyScopeType) =>
-    atom<Promise<string[] | null>>(async () => {
-      // if the type is not simulation campaign, we dont fetch dimension columns
-      if (dataType !== DataType.SimulationCampaigns) {
-        return null;
+export const dimensionColumnsAtom = atomFamily((scope: DataAtomFamilyScopeType) =>
+  atom<Promise<string[] | null>>(async () => {
+    // if the type is not simulation campaign, we dont fetch dimension columns
+    if (scope.dataType !== DataType.SimulationCampaigns) {
+      return null;
+    }
+    const dimensionsResponse = await fetchDimensionAggs(scope.virtualLabInfo);
+    const dimensions: string[] = [];
+    dimensionsResponse.hits.forEach((response: any) => {
+      if (response._source.parameter?.coords) {
+        dimensions.push(...Object.keys(response._source.parameter?.coords));
       }
-      const dimensionsResponse = await fetchDimensionAggs(virtualLabInfo);
-      const dimensions: string[] = [];
-      dimensionsResponse.hits.forEach((response: any) => {
-        if (response._source.parameter?.coords) {
-          dimensions.push(...Object.keys(response._source.parameter?.coords));
-        }
-      });
+    });
 
-      return uniq(dimensions);
-    })
+    return uniq(dimensions);
+  })
 );
 
 export const filtersAtom = atomFamily(
-  ({ dataType }: DataAtomFamilyScopeType) =>
+  (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Filter[]>>(async (get) => {
-      const { columns } = DATA_TYPES_TO_CONFIGS[dataType];
-      const dimensionsColumns = await get(dimensionColumnsAtom({ dataType }));
+      const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
+      const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
         ...columns.map((colKey) => columnKeyToFilter(colKey)),
         ...(dimensionsColumns || []).map(
@@ -120,18 +129,26 @@ export const filtersAtom = atomFamily(
 );
 
 export const totalByExperimentAndRegionsAtom = atomFamily(
-  ({ dataType, dataScope, virtualLabInfo }: DataAtomFamilyScopeType) =>
+  (scope: DataAtomFamilyScopeType) =>
     atom<Promise<number | undefined | null>>(async (get) => {
-      const sortState = get(sortStateAtom);
+      const sortState = get(sortStateAtom(scope));
       let descendantAndAncestorIds: string[] = [];
 
-      if (dataScope === ExploreDataScope.SelectedBrainRegion)
+      if (scope.dataScope === ExploreDataScope.SelectedBrainRegion)
         descendantAndAncestorIds =
           (await get(selectedBrainRegionWithDescendantsAndAncestorsAtom)) || [];
 
-      const query = fetchDataQuery(0, 1, [], dataType, sortState, '', descendantAndAncestorIds);
+      const query = fetchDataQuery(
+        0,
+        1,
+        [],
+        scope.dataType,
+        sortState,
+        '',
+        descendantAndAncestorIds
+      );
       const result =
-        query && (await fetchTotalByExperimentAndRegions(query, undefined, virtualLabInfo));
+        query && (await fetchTotalByExperimentAndRegions(query, undefined, scope.virtualLabInfo));
 
       return result;
     }),
@@ -139,30 +156,30 @@ export const totalByExperimentAndRegionsAtom = atomFamily(
 );
 
 export const queryAtom = atomFamily(
-  ({ dataType, dataScope, virtualLabInfo }: DataAtomFamilyScopeType) =>
+  (scope: DataAtomFamilyScopeType) =>
     atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
-      const searchString = get(searchStringAtom({ dataType, dataScope }));
+      const searchString = get(searchStringAtom(scope));
 
-      const pageNumber = get(pageNumberAtom({ dataType }));
+      const pageNumber = get(pageNumberAtom(scope));
       const pageSize = get(pageSizeAtom);
-      const sortState = get(sortStateAtom);
+      const sortState = get(sortStateAtom(scope));
       const bookmarkResourceIds = (
-        dataScope === ExploreDataScope.BookmarkedResources && virtualLabInfo
-          ? (await get(bookmarksForProjectAtomFamily(virtualLabInfo)))[dataType]
+        scope.dataScope === ExploreDataScope.BookmarkedResources && scope.virtualLabInfo
+          ? (await get(bookmarksForProjectAtomFamily(scope.virtualLabInfo)))[scope.dataType]
           : []
       ).map((b) => b.resourceId);
 
       const descendantIds: string[] =
-        dataScope === ExploreDataScope.SelectedBrainRegion ||
+        scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
         ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
               selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
               )
             )) || []
           : [];
 
-      const filters = await get(filtersAtom({ dataType, dataScope }));
+      const filters = await get(filtersAtom(scope));
 
       if (!filters) {
         return null;
@@ -172,7 +189,7 @@ export const queryAtom = atomFamily(
         pageSize,
         pageNumber,
         filters,
-        dataType,
+        scope.dataType,
         sortState,
         searchString,
         descendantIds,
@@ -183,66 +200,39 @@ export const queryAtom = atomFamily(
   isListAtomEqual
 );
 
-export const queryResponseAtom = atomFamily(
-  ({ dataType, dataScope, virtualLabInfo }: DataAtomFamilyScopeType) =>
-    atom<Promise<FlattenedExploreESResponse<ExploreSectionResource> | null>>(async (get) => {
-      const query = await get(queryAtom({ dataType, dataScope, virtualLabInfo }));
-      const result = query && (await fetchEsResourcesByType(query, undefined, virtualLabInfo));
-
-      return result;
-    }),
-  isListAtomEqual
-);
-
-export const dataAtom = atomFamily<
-  DataAtomFamilyScopeType,
-  Atom<Promise<ExploreESHit<ExploreSectionResource>[]>>
->(
-  ({ dataType, dataScope, virtualLabInfo }) =>
+export const dataAtom = atomFamily(
+  (scope) =>
     atom(async (get) => {
-      const response = await get(queryResponseAtom({ dataType, dataScope, virtualLabInfo }));
+      const query = await get(queryAtom(scope));
+      const response =
+        query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
 
       if (response?.hits) {
-        if (dataType === DataType.SingleNeuronSynaptome) {
-          return await fetchLinkedModel({
-            results: response.hits,
-            path: '_source.singleNeuronSynaptome.memodel.["@id"]',
-            linkedProperty: 'linkedMeModel',
-          });
+        if (scope.dataType === DataType.SingleNeuronSynaptome) {
+          return {
+            aggs: response.aggs,
+            total: response.total,
+            hits: await fetchLinkedModel({
+              results: response.hits,
+              path: '_source.singleNeuronSynaptome.memodel.["@id"]',
+              linkedProperty: 'linkedMeModel',
+            }),
+          };
         }
-        if (dataType === DataType.SingleNeuronSynaptomeSimulation) {
-          return await fetchLinkedModel({
-            results: response.hits,
-            path: '_source.synaptomeSimulation.synaptome.["@id"]',
-            linkedProperty: 'linkedSynaptomeModel',
-          });
+        if (scope.dataType === DataType.SingleNeuronSynaptomeSimulation) {
+          return {
+            aggs: response.aggs,
+            total: response.total,
+            hits: await fetchLinkedModel({
+              results: response.hits,
+              path: '_source.synaptomeSimulation.synaptome.["@id"]',
+              linkedProperty: 'linkedSynaptomeModel',
+            }),
+          };
         }
-        return response.hits;
+        return response;
       }
-      return [];
+      return null;
     }),
-  isListAtomEqual
-);
-
-export const totalAtom = atomFamily(
-  ({ dataType, dataScope, virtualLabInfo }: DataAtomFamilyScopeType) =>
-    atom(async (get) => {
-      const response = await get(queryResponseAtom({ dataType, dataScope, virtualLabInfo }));
-      const { total } = response ?? {
-        total: { value: 0 },
-      };
-      return total?.value;
-    }),
-  isListAtomEqual
-);
-
-export const aggregationsAtom = atomFamily(
-  ({ dataType, dataScope, virtualLabInfo }: DataAtomFamilyScopeType) =>
-    atom<Promise<FlattenedExploreESResponse<ExploreSectionResource>['aggs'] | undefined>>(
-      async (get) => {
-        const response = await get(queryResponseAtom({ dataType, dataScope, virtualLabInfo }));
-        return response?.aggs;
-      }
-    ),
   isListAtomEqual
 );

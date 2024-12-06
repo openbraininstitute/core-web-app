@@ -37,7 +37,7 @@ export default function BookmarkedResourcesTable({
   projectId,
   bookmarkTabName,
 }: Props) {
-  const [sortState, setSortState] = useAtom(sortStateAtom);
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType }));
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
   const dataScope = ExploreDataScope.BookmarkedResources;
   const router = useRouter();
@@ -51,7 +51,7 @@ export default function BookmarkedResourcesTable({
     )
   );
 
-  const dataSource = data.state === 'hasData' ? data.data : [];
+  const dataSource = data.state === 'hasData' && data.data ? data.data.hits : [];
 
   const modelTypeToModelName = (type: DataType, tabName: BookmarkTabsName) => {
     switch (tabName) {

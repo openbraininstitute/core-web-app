@@ -1,7 +1,7 @@
 'use client';
 
 import { useAtom, useSetAtom } from 'jotai';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
@@ -76,6 +76,7 @@ export default function ReconstrucedMorphologyPage({ params }: Params) {
   return (
     <div className="h-full" id="explore-table-container-for-observable">
       <ExploreSectionListingView
+        dataKey={useId()}
         dataType={DataType.ExperimentalNeuronMorphology}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}
