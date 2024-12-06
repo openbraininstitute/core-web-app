@@ -71,7 +71,8 @@ export default function MEModelDetailView({ params, showViewMode = false }: Prop
         commonFields={MODEL_DATA_COMMON_FIELDS}
         showViewMode={showViewMode}
         extraHeaderAction={
-          id && (
+          id &&
+          !showViewMode && (
             <Link
               className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
               href={getSimulationId(id)}

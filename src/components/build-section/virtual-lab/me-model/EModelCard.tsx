@@ -9,7 +9,7 @@ import {
 } from '@/state/virtual-lab/build/me-model';
 import EModelTracePreview from '@/components/explore-section/ExploreSectionListingView/EModelTracePreview';
 import { EModel } from '@/types/e-model';
-import { detailUrlWithinLab } from '@/util/common';
+import { detailUrlWithinLab, to64 } from '@/util/common';
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
 import { BookmarkTabsName } from '@/types/virtual-lab/bookmark';
 import ModelCard from '@/components/build-section/virtual-lab/me-model/ModelCard';
@@ -30,10 +30,11 @@ export default function EModelCard({ exemplarMorphology, reselectLink = false }:
   }>();
 
   const generateDetailUrl = () => {
-    if (!selectedEModel || !selectedEModelOrg || !selectedEModelProject) return '';
-    if (!virtualLabId || !projectId) return selectedEModel['@id'];
-
     const orgProj = `${selectedEModelOrg}/${selectedEModelProject}`;
+
+    if (!selectedEModel || !selectedEModelOrg || !selectedEModelProject) return '';
+    if (!virtualLabId || !projectId)
+      return `/explore/interactive/model/e-model/${to64(`${orgProj}!/!${selectedEModel['@id']}`)}`;
 
     return detailUrlWithinLab(
       virtualLabId,

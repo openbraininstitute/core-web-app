@@ -17,13 +17,15 @@ import {
 } from '@/components/explore-section/EModel/DetailView';
 import If from '@/components/ConditionalRenderer/If';
 
-type Params = {
-  id: string;
-  projectId: string;
-  virtualLabId: string;
+type Props = {
+  params: {
+    id: string;
+    projectId: string;
+    virtualLabId: string;
+  };
 };
 
-export default function EModelDetailView({ params }: { params: Params }) {
+export default function EModelDetailView({ params }: Props) {
   const [activeTab] = useQueryState(
     'tab',
     parseAsString.withDefault(EMODEL_TABS.at(0)!.key)
