@@ -1,8 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
-import Image from 'next/image';
 import Link from 'next/link';
 
-import { basePath } from '@/config';
+import VectorBBOPLogo from '@/components/home/VectorBBOPLogo';
 import { classNames } from '@/util/utils';
 
 function HeroText() {
@@ -39,7 +38,7 @@ export function OBPLogo({
         className
       )}
     >
-      <Image priority width={192} height={61} alt="bbop" src={`${basePath}/images/logo.png`} />
+      <VectorBBOPLogo />
     </Link>
   );
 }
