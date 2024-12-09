@@ -17,7 +17,12 @@ import {
   fetchLinkedModel,
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
-import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
+import {
+  DataType,
+  EXPERIMENTAL_DATATYPES,
+  PAGE_NUMBER,
+  PAGE_SIZE,
+} from '@/constants/explore-section/list-views';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
@@ -64,7 +69,7 @@ export const searchStringAtom = atomFamily(
 export const sortStateAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atom<SortState | undefined>(() => {
-      return scope.dataType.toLocaleLowerCase().startsWith('experiment')
+      return isExperimentalData(scope.dataType)
         ? { field: Field.CreationDate, order: 'desc' }
         : { field: Field.RegistrationDate, order: 'desc' };
     }),
@@ -81,9 +86,7 @@ export const activeColumnsAtom = atomFamily(
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        scope.dataType.toLocaleLowerCase().startsWith('experiment')
-          ? Field.RegistrationDate
-          : Field.CreationDate,
+        isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
       ];
     }),
   isListAtomEqual
@@ -236,3 +239,7 @@ export const dataAtom = atomFamily(
     }),
   isListAtomEqual
 );
+
+function isExperimentalData(dataType: DataType) {
+  return EXPERIMENTAL_DATATYPES.includes(dataType);
+}
