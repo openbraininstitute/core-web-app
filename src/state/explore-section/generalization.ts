@@ -176,7 +176,7 @@ export const resourceBasedResponseRawAtom = atomFamily<
       const ids = map(resourceBasedResponseResults, 'id');
       if (!ids) return null;
 
-      const filters = await get(filtersAtom({ dataType, resourceId }));
+      const filters = await get(filtersAtom({ dataType, resourceId, key: dataType + resourceId }));
       const query = fetchDataQueryUsingIds(DEFAULT_CARDS_NUMBER, PAGE_NUMBER, filters, ids);
       const esResponse = query && (await fetchEsResourcesByType(query));
       if (!esResponse) return null; // Error

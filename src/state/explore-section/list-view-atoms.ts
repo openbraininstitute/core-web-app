@@ -1,7 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
-import isEqual from 'lodash/isEqual';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
@@ -38,16 +37,11 @@ type DataAtomFamilyScopeType = {
   dataScope?: ExploreDataScope;
   resourceId?: string;
   virtualLabInfo?: VirtualLabInfo;
-  key?: string;
+  key: string;
 };
 
 const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
-  // eslint-disable-next-line lodash/prefer-matches
-  a.dataType === b.dataType &&
-  a.dataScope === b.dataScope &&
-  a.resourceId === b.resourceId &&
-  a.key === b.key &&
-  isEqual(a.virtualLabInfo, b.virtualLabInfo);
+  a.key === b.key;
 
 export const pageSizeAtom = atom<number>(PAGE_SIZE);
 
@@ -56,15 +50,11 @@ export const pageNumberAtom = atomFamily(
   isListAtomEqual
 );
 
-export const selectedRowsAtom = atomFamily(
-  (_scope: DataAtomFamilyScopeType) => atom<ExploreESHit<ExploreSectionResource>[]>([]),
-  isListAtomEqual
+export const selectedRowsAtom = atomFamily((_key: string) =>
+  atom<ExploreESHit<ExploreSectionResource>[]>([])
 );
 
-export const searchStringAtom = atomFamily(
-  (_scope: DataAtomFamilyScopeType) => atom<string>(''),
-  isListAtomEqual
-);
+export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
@@ -161,8 +151,7 @@ export const totalByExperimentAndRegionsAtom = atomFamily(
 export const queryAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
-      const searchString = get(searchStringAtom(scope));
-
+      const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope));
       const pageSize = get(pageSizeAtom);
       const sortState = get(sortStateAtom(scope));

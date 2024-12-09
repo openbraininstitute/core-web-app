@@ -30,7 +30,12 @@ function MenuItemLabel({
   virtualLabInfo?: VirtualLabInfo;
 }) {
   const totalByExperimentAndRegions = useLoadableValue(
-    totalByExperimentAndRegionsAtom({ dataType, dataScope, virtualLabInfo })
+    totalByExperimentAndRegionsAtom({
+      dataType,
+      dataScope,
+      virtualLabInfo,
+      key: virtualLabInfo?.projectId ?? '' + dataType,
+    })
   );
   return `${label} ${
     totalByExperimentAndRegions.state === 'hasData' ? `(${totalByExperimentAndRegions.data})` : ''

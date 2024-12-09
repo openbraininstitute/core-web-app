@@ -77,9 +77,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
   const dataType = SimulationScopeToDataType[selectedSimType];
-  const selectedRows = useAtomValue(
-    selectedRowsAtom({ dataType: dataType ?? DataType.SingleNeuronSimulation })
-  );
+  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
 
   const generateDetailUrl = (selectedRow: ExploreESHit<ExploreResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
@@ -164,7 +162,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
     router.push(`${baseExploreUrl}/${pathId}`);
   };
 
-  const selectedRows = useAtomValue(selectedRowsAtom({ dataType: modelType }));
+  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
 
   return (
     <>

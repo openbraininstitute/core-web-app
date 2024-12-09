@@ -18,13 +18,15 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 
 export default function SimulationCampaignListView({ dataType }: { dataType: DataType }) {
   const activeColumns = useAtomValue(
-    useMemo(() => unwrap(activeColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(activeColumnsAtom({ dataType, key: dataType })), [dataType])
   );
-  const dataSource = useAtomValue(useMemo(() => unwrap(dataAtom({ dataType })), [dataType]));
+  const dataSource = useAtomValue(
+    useMemo(() => unwrap(dataAtom({ dataType, key: dataType })), [dataType])
+  );
 
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType }));
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataType }));
   const dimensionColumns = useAtomValue(
-    useMemo(() => unwrap(dimensionColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(dimensionColumnsAtom({ dataType, key: dataType })), [dataType])
   );
   const columns = useExploreColumns(setSortState, sortState, [], dimensionColumns).filter(
     ({ key }) => (activeColumns || []).includes(key as string)

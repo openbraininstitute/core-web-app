@@ -31,7 +31,10 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
   const [filters, setFilters] = useAtom(
-    useMemo(() => unwrap(filtersAtom({ dataType, resourceId })), [dataType, resourceId])
+    useMemo(
+      () => unwrap(filtersAtom({ dataType, resourceId, key: dataType + resourceId })),
+      [dataType, resourceId]
+    )
   );
 
   const aggregations = useAtomValue(

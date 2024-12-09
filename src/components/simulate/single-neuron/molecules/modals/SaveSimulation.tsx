@@ -52,6 +52,7 @@ export default function SaveSimulationModal({
       dataType,
       dataScope: ExploreDataScope.NoScope,
       virtualLabInfo: { virtualLabId: vLabId, projectId },
+      key: projectId + 'simulate' + dataType,
     })
   );
 

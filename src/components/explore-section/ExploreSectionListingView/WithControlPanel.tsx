@@ -16,7 +16,7 @@ export default function WithControlPanel({
   dataType,
   virtualLabInfo,
   dataScope,
-  dataKey,
+  dataKey = '',
   className,
 }: {
   children: (props: {

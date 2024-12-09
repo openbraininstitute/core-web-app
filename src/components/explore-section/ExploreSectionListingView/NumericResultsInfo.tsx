@@ -8,7 +8,7 @@ function NumericResultsInfo({
   dataType,
   dataScope,
   virtualLabInfo,
-  dataKey,
+  dataKey = '',
 }: {
   dataType: DataType;
   dataScope: ExploreDataScope;

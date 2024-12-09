@@ -19,7 +19,7 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
-export default function DefaultListView({
+export default function ExploreSectionListingView({
   dataType,
   dataScope,
   renderButton,
@@ -32,7 +32,7 @@ export default function DefaultListView({
   style = { background: 'bg-[#d1d1d1]' },
   containerClass = 'h-full',
   tableClass = 'h-full overflow-y-hidden',
-  dataKey,
+  dataKey = '',
 }: {
   containerClass?: string;
   tableClass?: string;

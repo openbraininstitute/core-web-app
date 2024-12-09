@@ -25,7 +25,14 @@ function DataTypeGroupTotal({
   const dataScope = ExploreDataScope.SelectedBrainRegion;
 
   const total = useAtomValue(
-    loadable(totalByExperimentAndRegionsAtom({ dataType, dataScope, virtualLabInfo }))
+    loadable(
+      totalByExperimentAndRegionsAtom({
+        dataType,
+        dataScope,
+        virtualLabInfo,
+        key: (virtualLabInfo?.projectId ?? '') + 'dataType',
+      })
+    )
   );
 
   const statValue = total.state === 'hasData' ? total?.data || 0 : 0;
