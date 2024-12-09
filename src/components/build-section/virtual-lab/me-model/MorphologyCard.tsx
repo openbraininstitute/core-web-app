@@ -7,7 +7,7 @@ import {
   selectedMModelProjectAtom,
 } from '@/state/virtual-lab/build/me-model';
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
-import { detailUrlWithinLab } from '@/util/common';
+import { detailUrlWithinLab, to64 } from '@/util/common';
 import { BookmarkTabsName } from '@/types/virtual-lab/bookmark';
 import ModelCard from '@/components/build-section/virtual-lab/me-model/ModelCard';
 import { mTypeSelectorFn } from '@/util/explore-section/selector-functions';
@@ -29,10 +29,12 @@ export default function MorphologyCard({ reselectLink = false }: Props) {
   }>();
 
   const generateDetailUrl = () => {
-    if (!selectedMModel || !selectedMModelOrg || !selectedMModelProject) return '';
-    if (!virtualLabId || !projectId) return selectedMModel['@id'];
-
     const orgProj = `${selectedMModelOrg}/${selectedMModelProject}`;
+
+    if (!selectedMModel || !selectedMModelOrg || !selectedMModelProject) return '';
+    if (!virtualLabId || !projectId)
+      return `/explore/interactive/experimental/morphology/${to64(`${orgProj}!/!${selectedMModel['@id']}`)}`;
+
     return detailUrlWithinLab(
       virtualLabId,
       projectId,

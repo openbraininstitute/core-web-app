@@ -21,8 +21,9 @@ export default function ExperimentDetailViewPage() {
   const params = useParams<{ experimentType: string }>();
 
   const currentExperiment = Object.keys(EXPERIMENT_DATA_TYPES).find(
-    (key) => EXPERIMENT_DATA_TYPES[key].name === params?.experimentType ?? ''
+    (key) => EXPERIMENT_DATA_TYPES[key].name === params?.experimentType
   );
+
   if (!currentExperiment) notFound();
   let content;
   // based on the experiment type, decide what kind of content will be rendered

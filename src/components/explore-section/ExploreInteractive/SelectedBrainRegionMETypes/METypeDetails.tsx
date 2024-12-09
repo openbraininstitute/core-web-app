@@ -65,7 +65,7 @@ export function METypeDetails({ composition, meTypesMetadata }: Props) {
           selectDensityOrCount={(v) => setDensityOrCount(v)}
         />
 
-        <div className="secondary-scrollbar h-full overflow-y-auto border border-gray-500 p-8">
+        <div className="secondary-scrollbar h-full overflow-y-auto rounded-md border border-gray-500 p-8">
           <h6 className="text-sm font-normal text-gray-400">M-TYPES</h6>
           <TreeNav items={neurons} onValueChange={onValueChange} value={meTypeNavValue}>
             {({ composition: renderedComposition, content, title, trigger, id, isExpanded }) => (
