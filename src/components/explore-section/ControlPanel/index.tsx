@@ -32,6 +32,7 @@ import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DataType } from '@/constants/explore-section/list-views';
 import ClearFilters from '@/components/explore-section/ExploreSectionListingView/ClearFilters';
 import { fieldTitleSentenceCase } from '@/util/utils';
+import usePathname from '@/hooks/pathname';
 
 export type ControlPanelProps = {
   children?: ReactNode;
@@ -167,10 +168,13 @@ export default function ControlPanel({
   showDisplayTrigger = true,
   resourceId,
 }: ControlPanelProps) {
+  const path = usePathname();
+  const isBuildConfig = useMemo(() => path?.includes('/new/configure'), [path]);
+
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
-      () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey })),
-      [dataType, dataScope, dataKey]
+      () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey, isBuildConfig })),
+      [dataType, dataScope, dataKey, isBuildConfig]
     )
   );
 
