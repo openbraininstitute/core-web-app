@@ -11,7 +11,7 @@ export default function VirtualLabExperimentListingView() {
   const params = useParams<{ experimentType: string; virtualLabId: string; projectId: string }>();
 
   const currentExperiment = Object.keys(EXPERIMENT_DATA_TYPES).find(
-    (key) => EXPERIMENT_DATA_TYPES[key].name === params?.experimentType ?? ''
+    (key) => EXPERIMENT_DATA_TYPES[key].name === params?.experimentType
   );
 
   const virtualLabInfo: VirtualLabInfo = {

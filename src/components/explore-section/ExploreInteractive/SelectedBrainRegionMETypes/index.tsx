@@ -45,7 +45,7 @@ export default function SelectedBrainRegionMETypes() {
   }
 
   return composition.data ? (
-    <div className="flex h-full w-full min-w-[300px] flex-col gap-5 bg-black p-8 pb-0 text-white">
+    <div className="flex h-full w-full min-w-[300px] flex-col gap-5 bg-black py-8 pb-0 text-white">
       <METypeDetails composition={composition.data} meTypesMetadata={meTypesMetadata} />
     </div>
   ) : (

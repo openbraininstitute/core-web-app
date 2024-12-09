@@ -1,13 +1,12 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { Alert } from 'antd';
 import { useQueryState } from 'nuqs';
+import { ReactNode } from 'react';
 
 import { Gabarito } from 'next/font/google';
 
-import LoginButton from '@/components/AboutSFN/Buttons/Login';
-import { OBPLogo } from '@/components/Entrypoint/segments/Splash';
+import { Menu } from '@/components/Entrypoint/segments';
 import { classNames } from '@/util/utils';
 
 type Props = {
@@ -46,15 +45,17 @@ export default function AboutPageLayout({ children }: Props) {
           onClose={() => setWarning('')}
         />
       )}
-      <nav
+      <Menu displayAbout={false} displayBBGithub={false} />
+      {/* <nav
         className={classNames(
           'fixed z-[200] flex w-full items-center justify-between px-6 py-6 backdrop-blur md:px-12 md:py-8',
           warning === 'yes' ? 'top-28 md:top-0' : 'top-0'
         )}
-      >
-        <OBPLogo color="text-white" />
-        <LoginButton label="Log in" link="/log-in" type="link" />
-      </nav>
+      > */}
+
+      {/* <OBPLogo color="text-white" />
+        <LoginButton label="Log in" link="/log-in" type="link" /> */}
+      {/* </nav> */}
       <div className="relative">{children}</div>
     </div>
   );
