@@ -43,7 +43,7 @@ export default function FilterControls({
   setDisplayControlPanel,
   dataType,
   dataScope,
-  dataKey = '',
+  dataKey,
   filters,
   resourceId,
   disabled,
@@ -54,7 +54,7 @@ export default function FilterControls({
   setDisplayControlPanel: Dispatch<SetStateAction<boolean>>;
   dataType: DataType;
   dataScope?: ExploreDataScope;
-  dataKey?: string;
+  dataKey: string;
   filters?: Filter[];
   resourceId?: string;
   disabled?: boolean;

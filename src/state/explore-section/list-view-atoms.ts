@@ -45,10 +45,7 @@ const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType)
 
 export const pageSizeAtom = atom<number>(PAGE_SIZE);
 
-export const pageNumberAtom = atomFamily(
-  (_scope: DataAtomFamilyScopeType) => atom<number>(PAGE_NUMBER),
-  isListAtomEqual
-);
+export const pageNumberAtom = atomFamily((_key: string) => atom<number>(PAGE_NUMBER));
 
 export const selectedRowsAtom = atomFamily((_key: string) =>
   atom<ExploreESHit<ExploreSectionResource>[]>([])
@@ -152,7 +149,7 @@ export const queryAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
       const searchString = get(searchStringAtom(scope.key));
-      const pageNumber = get(pageNumberAtom(scope));
+      const pageNumber = get(pageNumberAtom(scope.key));
       const pageSize = get(pageSizeAtom);
       const sortState = get(sortStateAtom(scope));
       const bookmarkResourceIds = (

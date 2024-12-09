@@ -76,6 +76,7 @@ export default function BookmarkedResourcesTable({
           dataType={dataType}
           dataScope={ExploreDataScope.BookmarkedResources}
           virtualLabInfo={{ virtualLabId: labId, projectId }}
+          dataKey={projectId + 'bookmarks' + dataType}
         >
           {({ activeColumns, displayControlPanel, setDisplayControlPanel, filters }) => (
             <>
@@ -86,6 +87,7 @@ export default function BookmarkedResourcesTable({
                 dataScope={dataScope}
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
+                dataKey={projectId + 'bookmarks' + dataType}
               />
 
               <ExploreSectionTable

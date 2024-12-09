@@ -49,15 +49,21 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
           dataType={dataType}
           dataScope={ExploreDataScope.NoScope}
           className="relative"
+          dataKey={dataType}
         >
           {({ displayControlPanel, setDisplayControlPanel }) => (
             <>
               <div className="sticky top-0 grid w-full grid-cols-[max-content_1fr_max-content] items-center justify-between gap-5 px-5">
-                <NumericResultsInfo dataType={dataType} dataScope={ExploreDataScope.NoScope} />
+                <NumericResultsInfo
+                  dataType={dataType}
+                  dataScope={ExploreDataScope.NoScope}
+                  dataKey={dataType}
+                />
                 <FilterControls
                   displayControlPanel={displayControlPanel}
                   setDisplayControlPanel={setDisplayControlPanel}
                   dataType={dataType}
+                  dataKey={dataType}
                 />
               </div>
               <div className="h-full w-full px-4">

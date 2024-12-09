@@ -8,12 +8,12 @@ function NumericResultsInfo({
   dataType,
   dataScope,
   virtualLabInfo,
-  dataKey = '',
+  dataKey,
 }: {
   dataType: DataType;
   dataScope: ExploreDataScope;
   virtualLabInfo?: VirtualLabInfo;
-  dataKey?: string;
+  dataKey: string;
 }) {
   const res = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
 

@@ -16,7 +16,7 @@ export default function WithControlPanel({
   dataType,
   virtualLabInfo,
   dataScope,
-  dataKey = '',
+  dataKey,
   className,
 }: {
   children: (props: {
@@ -29,7 +29,7 @@ export default function WithControlPanel({
   dataScope: ExploreDataScope;
   virtualLabInfo?: VirtualLabInfo;
   className?: string;
-  dataKey?: string;
+  dataKey: string;
 }) {
   const activeColumns = useAtomValue(
     useMemo(

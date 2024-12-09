@@ -42,6 +42,7 @@ export default function ExploreSynaptomeModelTable({
         onCellClick,
         virtualLabInfo,
         renderButton,
+        dataKey: (virtualLabInfo?.projectId ?? '') + 'explore' + dataType,
       }}
     />
   );

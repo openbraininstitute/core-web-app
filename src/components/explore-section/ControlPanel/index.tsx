@@ -38,7 +38,7 @@ export type ControlPanelProps = {
   toggleDisplay: () => void;
   dataType: DataType;
   dataScope?: ExploreDataScope;
-  dataKey?: string;
+  dataKey: string;
   aggregations?: Aggregations;
   filters: Filter[];
   setFilters: any;
@@ -160,7 +160,7 @@ export default function ControlPanel({
   toggleDisplay,
   dataType,
   dataScope,
-  dataKey = '',
+  dataKey,
   aggregations,
   filters,
   setFilters,

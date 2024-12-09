@@ -70,6 +70,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
               dataType={dataType}
               resourceId={resourceId}
               disabled={!filters}
+              dataKey={dataType}
             />
           </div>
         )}
@@ -85,6 +86,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
             dataType={dataType}
             showDisplayTrigger={false}
             resourceId={resourceId}
+            dataKey={dataType}
           />
         </div>
       )}

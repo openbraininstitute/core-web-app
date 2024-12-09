@@ -111,6 +111,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 style={{ background: 'bg-white' }}
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
+                dataKey={projectId + 'simulate' + dataType}
               />
             </div>
             {selectedRows.length > 0 && (
@@ -185,6 +186,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
               virtualLabInfo={{ virtualLabId, projectId }}
               selectionType="radio"
               renderButton={() => null}
+              dataKey={projectId + 'simulate' + modelType}
             />
             {selectedRows.length > 0 && (
               <div className="absolute bottom-6 right-4 flex items-center justify-end gap-2">

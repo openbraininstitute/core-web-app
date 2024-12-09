@@ -32,7 +32,7 @@ export default function ExploreSectionListingView({
   style = { background: 'bg-[#d1d1d1]' },
   containerClass = 'h-full',
   tableClass = 'h-full overflow-y-hidden',
-  dataKey = '',
+  dataKey,
 }: {
   containerClass?: string;
   tableClass?: string;
@@ -46,9 +46,9 @@ export default function ExploreSectionListingView({
   tableScrollable?: boolean;
   controlsVisible?: boolean;
   style?: Record<'background', string>;
-  dataKey?: string;
+  dataKey: string;
 }) {
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, dataScope, key: dataKey }));
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
 
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
@@ -102,6 +102,7 @@ export default function ExploreSectionListingView({
                   dataType={dataType}
                   dataScope={dataScope}
                   virtualLabInfo={virtualLabInfo}
+                  dataKey={dataKey}
                 />
               </FilterControls>
               <ExploreSectionTable

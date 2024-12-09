@@ -151,6 +151,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               style={{ background: 'bg-white' }}
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
+              dataKey={projectId + 'build' + selectedModelType ?? DataType.CircuitMEModel}
             />
 
             {selectedRows.length > 0 && (

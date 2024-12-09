@@ -37,6 +37,7 @@ export default function ExploreMEModelTable({
         onCellClick,
         virtualLabInfo,
         renderButton,
+        dataKey: (virtualLabInfo?.projectId ?? '') + 'explore' + dataType,
       }}
     />
   );
