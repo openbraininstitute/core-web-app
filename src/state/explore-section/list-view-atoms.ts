@@ -53,15 +53,17 @@ export const selectedRowsAtom = atomFamily((_key: string) =>
 
 export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
-export const sortStateAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
-    atom<SortState | undefined>(() => {
-      return isExperimentalData(scope.dataType)
-        ? { field: Field.CreationDate, order: 'desc' }
-        : { field: Field.RegistrationDate, order: 'desc' };
-    }),
-  isListAtomEqual
-);
+export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
+  const initialState: SortState = isExperimentalData(scope.dataType)
+    ? { field: Field.CreationDate, order: 'desc' }
+    : { field: Field.RegistrationDate, order: 'desc' };
+
+  const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
+    set(writableAtom, update); // Correctly updates the state
+  });
+
+  return writableAtom;
+}, isListAtomEqual);
 
 export const activeColumnsAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
