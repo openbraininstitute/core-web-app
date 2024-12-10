@@ -1,4 +1,4 @@
-import { MutableRefObject, use, useCallback, useEffect, useRef, useState } from 'react';
+import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 
 import useNeuronViewerEvents from './hooks/events-hook';

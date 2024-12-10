@@ -4,15 +4,16 @@ import { Group } from 'three';
 
 import { NeuronSegementInfo } from '../renderer-utils';
 
-import { buildCircularDendrogram } from './circular';
+import { buildClassicalDendrogram } from './classical';
 import { TreeNode } from './types';
 
 export function buildDendrogram(
   tree: TreeNode,
-  neuroSegmentInfo: Map<string, NeuronSegementInfo>
+  neuroSegmentInfo: Map<string, NeuronSegementInfo>,
+  spaceWidth: number
 ): Group {
   const group = new Group();
-  buildCircularDendrogram(tree, group, neuroSegmentInfo);
+  buildClassicalDendrogram(tree, group, neuroSegmentInfo, spaceWidth);
   return group;
 }
 

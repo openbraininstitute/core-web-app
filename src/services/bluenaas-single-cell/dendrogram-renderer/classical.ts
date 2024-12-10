@@ -5,28 +5,30 @@ import { NeuronSegementInfo } from '../renderer-utils';
 import { createLine, createSoma, createSegment } from './create';
 import { TreeNode } from './types';
 
-export function buildCircularDendrogram(
+export function buildClassicalDendrogram(
   tree: TreeNode,
   group: Group,
-  neuroSegmentInfo: Map<string, NeuronSegementInfo>
+  neuroSegmentInfo: Map<string, NeuronSegementInfo>,
+  spaceWidth: number
 ) {
-  const [parentX, parentY] = computeCoords(tree.value, tree.value.yMax);
+  const [parentX, parentY] = computeCoords(tree.value, tree.value.yMax, spaceWidth);
   if (tree.value.yMin <= 0) {
     // This is the soma.
-    const somaName = `${tree.value.name}_0`;
-    group.add(
-      createSoma(somaName, neuroSegmentInfo.get(somaName), tree.value.segments[0].diam / 2)
-    );
+    for (let segmentIndex = 0; segmentIndex < tree.value.segments.length; segmentIndex += 1) {
+      const { diam } = tree.value.segments[segmentIndex];
+      const somaName = `${tree.value.name}_${segmentIndex}`;
+      group.add(createSoma(somaName, neuroSegmentInfo.get(somaName), diam / 2));
+    }
   }
   for (const child of tree.children) {
-    let [headX, headY] = computeCoords(child.value, child.value.yMin);
+    let [headX, headY] = computeCoords(child.value, child.value.yMin, spaceWidth);
     group.add(createLine(parentX, parentY, headX, headY));
     let length = child.value.yMin;
     tree.value.segments.forEach((segment, segmentIndex) => {
       const name = `${child.value.name}_${segmentIndex}`;
       const userData = neuroSegmentInfo.get(name);
       length += segment.length;
-      const [tailX, tailY] = computeCoords(child.value, length);
+      const [tailX, tailY] = computeCoords(child.value, length, spaceWidth);
       const mesh = createSegment(headX, headY, tailX, tailY, getSegmentColor(name), segment.diam);
       mesh.name = name;
       if (userData) mesh.userData = userData;
@@ -34,14 +36,14 @@ export function buildCircularDendrogram(
       headX = tailX;
       headY = tailY;
     });
-    buildCircularDendrogram(child, group, neuroSegmentInfo);
+    buildClassicalDendrogram(child, group, neuroSegmentInfo, spaceWidth);
   }
 }
 
 function computeCoords(
   { xMin, xMax }: { xMin: number; xMax: number },
-  radius: number
+  y: number,
+  spaceWidth: number
 ): [x: number, y: number] {
-  const angle = (Math.PI * (xMin + xMax)) / 2;
-  return [radius * Math.sin(angle), radius * Math.cos(angle)];
+  return [(spaceWidth * (xMin + xMax)) / 4, y];
 }

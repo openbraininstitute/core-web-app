@@ -243,7 +243,7 @@ export default class NeuronViewerRenderer {
     console.log('Dendrogram:', dendrogram);
     const tree = computeSegmentsPositions(dendrogram);
     console.log('🚀 [renderer] tree = ', tree); // @FIXME: Remove this line written on 2024-09-25 at 17:44
-    const group = buildDendrogram(tree, this.neuroSegmentInfo);
+    const group = buildDendrogram(tree, this.neuroSegmentInfo, dendrogram.total_width);
     this.morphObj.clear().add(group);
     this.camera.setRotationFromQuaternion(new Quaternion());
   }

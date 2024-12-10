@@ -6,13 +6,15 @@ import {
   Vector3,
   BufferGeometry,
   MeshBasicMaterial,
-  LineBasicMaterial,
   Line,
   LineDashedMaterial,
 } from 'three';
 import { getSegmentColor } from '../colors';
 import { NeuronSegementInfo } from '../renderer-utils';
 
+/**
+ * Create a spherical soma in (0,0,0).
+ */
 export function createSoma(name: string, userData: NeuronSegementInfo | undefined, radius: number) {
   const geometry = new SphereGeometry(radius);
   const material = new MeshLambertMaterial({
