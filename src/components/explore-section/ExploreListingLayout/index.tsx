@@ -93,8 +93,6 @@ export default function ExploreListingLayout({
     [activePath, config, virtualLabInfo]
   );
 
-  console.log(items);
-
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
