@@ -34,7 +34,7 @@ function MenuItemLabel({
       dataType,
       dataScope,
       virtualLabInfo,
-      key: virtualLabInfo?.projectId ?? '' + dataType,
+      key: (virtualLabInfo?.projectId ?? '') + dataType,
     })
   );
   return `${label} ${
@@ -92,6 +92,8 @@ export default function ExploreListingLayout({
       }),
     [activePath, config, virtualLabInfo]
   );
+
+  console.log(items);
 
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;

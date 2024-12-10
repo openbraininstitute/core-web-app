@@ -30,7 +30,7 @@ function DataTypeGroupTotal({
         dataType,
         dataScope,
         virtualLabInfo,
-        key: (virtualLabInfo?.projectId ?? '') + 'dataType',
+        key: (virtualLabInfo?.projectId ?? '') + dataType,
       })
     )
   );
