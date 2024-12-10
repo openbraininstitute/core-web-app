@@ -54,7 +54,7 @@ export default function FilterControls({
   setDisplayControlPanel: Dispatch<SetStateAction<boolean>>;
   dataType: DataType;
   dataScope?: ExploreDataScope;
-  dataKey?: string;
+  dataKey: string;
   filters?: Filter[];
   resourceId?: string;
   disabled?: boolean;
@@ -87,9 +87,7 @@ export default function FilterControls({
       )}
     >
       <div className="w-max">{children}</div>
-      {!resourceId && (
-        <ExploreSectionNameSearch dataType={dataType} dataScope={dataScope} dataKey={dataKey} />
-      )}
+      {!resourceId && <ExploreSectionNameSearch dataKey={dataKey} />}
       <div className="inline-flex w-full place-content-end gap-2">
         {/* only show search input on listing views. resource id is present on detail views. */}
         <FilterBtn disabled={disabled} onClick={() => setDisplayControlPanel(!displayControlPanel)}>

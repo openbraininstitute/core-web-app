@@ -31,7 +31,10 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
   const [filters, setFilters] = useAtom(
-    useMemo(() => unwrap(filtersAtom({ dataType, resourceId })), [dataType, resourceId])
+    useMemo(
+      () => unwrap(filtersAtom({ dataType, resourceId, key: dataType + resourceId })),
+      [dataType, resourceId]
+    )
   );
 
   const aggregations = useAtomValue(
@@ -67,6 +70,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
               dataType={dataType}
               resourceId={resourceId}
               disabled={!filters}
+              dataKey={dataType}
             />
           </div>
         )}
@@ -82,6 +86,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
             dataType={dataType}
             showDisplayTrigger={false}
             resourceId={resourceId}
+            dataKey={dataType}
           />
         </div>
       )}

@@ -77,9 +77,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
   const dataType = SimulationScopeToDataType[selectedSimType];
-  const selectedRows = useAtomValue(
-    selectedRowsAtom({ dataType: dataType ?? DataType.SingleNeuronSimulation })
-  );
+  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
 
   const generateDetailUrl = (selectedRow: ExploreESHit<ExploreResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
@@ -113,6 +111,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 style={{ background: 'bg-white' }}
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
+                dataKey={projectId + 'simulate' + dataType}
               />
             </div>
             {selectedRows.length > 0 && (
@@ -164,7 +163,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
     router.push(`${baseExploreUrl}/${pathId}`);
   };
 
-  const selectedRows = useAtomValue(selectedRowsAtom({ dataType: modelType }));
+  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
 
   return (
     <>
@@ -187,6 +186,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
               virtualLabInfo={{ virtualLabId, projectId }}
               selectionType="radio"
               renderButton={() => null}
+              dataKey={projectId + 'simulate' + modelType}
             />
             {selectedRows.length > 0 && (
               <div className="absolute bottom-6 right-4 flex items-center justify-end gap-2">

@@ -1,7 +1,7 @@
 import { neuroShapesBaseUrl, ontologyBaseUrl } from '@/config';
 
 export enum DataType {
-  ExperimentalBoutonDensity = `ExperimentsBoutonDensity`,
+  ExperimentalBoutonDensity = `ExperimentalBoutonDensity`,
   ExperimentalNeuronDensity = `ExperimentalNeuronDensity`,
   ExperimentalElectroPhysiology = `ExperimentalElectroPhysiology`,
   ExperimentalSynapsePerConnection = `ExperimentalSynapsePerConnection`,
@@ -13,6 +13,14 @@ export enum DataType {
   SingleNeuronSynaptome = 'SingleNeuronSynaptome',
   SingleNeuronSynaptomeSimulation = 'SynaptomeSimulation',
 }
+
+export const EXPERIMENTAL_DATATYPES = [
+  DataType.ExperimentalBoutonDensity,
+  DataType.ExperimentalNeuronDensity,
+  DataType.ExperimentalElectroPhysiology,
+  DataType.ExperimentalSynapsePerConnection,
+  DataType.ExperimentalNeuronMorphology,
+];
 
 export const DataTypeToNexusType = {
   [DataType.ExperimentalBoutonDensity]: `${ontologyBaseUrl}/ExperimentalBoutonDensity`,

@@ -140,6 +140,7 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
       dataType: DataType.SingleNeuronSynaptome,
       dataScope: ExploreDataScope.NoScope,
       virtualLabInfo: { virtualLabId: org, projectId: project },
+      key: project + DataType,
     })
   );
 

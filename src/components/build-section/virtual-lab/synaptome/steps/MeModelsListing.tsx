@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Form } from 'antd';
 import { z } from 'zod';
 import { WarningOutlined } from '@ant-design/icons';
@@ -114,6 +114,7 @@ export default function MeModelsListing({
             setModelNotSelectedError(false);
           }}
           onCellClick={onNavigateToMeModel}
+          dataKey={useId()}
         />
       </div>
       <button

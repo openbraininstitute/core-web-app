@@ -71,6 +71,7 @@ export default function ExploreEModelTable({
         onCellClick,
         renderButton,
         virtualLabInfo,
+        dataKey: (virtualLabInfo?.projectId ?? '') + 'explore' + dataType,
       }}
     />
   );

@@ -37,7 +37,9 @@ export default function BookmarkedResourcesTable({
   projectId,
   bookmarkTabName,
 }: Props) {
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType }));
+  const [sortState, setSortState] = useAtom(
+    sortStateAtom({ dataType, key: projectId + 'bookmarks' + dataType })
+  );
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
   const dataScope = ExploreDataScope.BookmarkedResources;
   const router = useRouter();
@@ -47,6 +49,7 @@ export default function BookmarkedResourcesTable({
         dataType,
         dataScope,
         virtualLabInfo: { virtualLabId: labId, projectId },
+        key: projectId + 'bookmarks' + dataType,
       })
     )
   );
@@ -73,6 +76,7 @@ export default function BookmarkedResourcesTable({
           dataType={dataType}
           dataScope={ExploreDataScope.BookmarkedResources}
           virtualLabInfo={{ virtualLabId: labId, projectId }}
+          dataKey={projectId + 'bookmarks' + dataType}
         >
           {({ activeColumns, displayControlPanel, setDisplayControlPanel, filters }) => (
             <>
@@ -83,6 +87,7 @@ export default function BookmarkedResourcesTable({
                 dataScope={dataScope}
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
+                dataKey={projectId + 'bookmarks' + dataType}
               />
 
               <ExploreSectionTable
