@@ -68,6 +68,8 @@ export default function ExploreSectionListingView({
     }
   }, [data, setDataSource]);
 
+  console.log('index', dataKey);
+
   return (
     <div
       className={classNames(containerClass, style.background)}
