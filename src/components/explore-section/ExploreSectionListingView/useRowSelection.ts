@@ -5,7 +5,6 @@ import { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
-import { DataType } from '@/constants/explore-section/list-views';
 
 type RowSelection = Pick<
   TableRowSelection<ExploreESHit<ExploreSectionResource>>,
@@ -18,11 +17,11 @@ export type RenderButtonProps = {
 };
 
 export default function useRowSelection({
-  dataType,
+  dataKey,
   selectionType = 'checkbox',
   onRowsSelected,
 }: {
-  dataType: DataType;
+  dataKey: string;
   selectionType?: RowSelectionType;
   onRowsSelected?: (rows: ExploreESHit<ExploreSectionResource>[]) => void;
 }): {
@@ -30,7 +29,7 @@ export default function useRowSelection({
   selectedRows: ExploreESHit<ExploreSectionResource>[];
   clearSelectedRows: () => void;
 } {
-  const [selectedRows, setSelectedRows] = useAtom(selectedRowsAtom(dataType));
+  const [selectedRows, setSelectedRows] = useAtom(selectedRowsAtom(dataKey));
   const clearSelectedRows = () => setSelectedRows([]);
 
   return {

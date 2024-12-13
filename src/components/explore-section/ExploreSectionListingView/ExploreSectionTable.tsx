@@ -268,6 +268,7 @@ export default function ExploreSectionTable({
   scrollable = true,
   controlsVisible = true,
   autohideControls = false,
+  dataKey,
 }: TableProps<ExploreESHit<ExploreSectionResource>> &
   AdditionalTableProps & {
     renderButton?: (props: RenderButtonProps) => ReactNode;
@@ -276,9 +277,10 @@ export default function ExploreSectionTable({
     controlsVisible?: boolean;
     onRowsSelected?: (rows: ExploreESHit<ExploreSectionResource>[]) => void;
     autohideControls?: boolean;
+    dataKey: string;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
-    dataType: dataContext.dataType,
+    dataKey,
     selectionType,
     onRowsSelected,
   });
