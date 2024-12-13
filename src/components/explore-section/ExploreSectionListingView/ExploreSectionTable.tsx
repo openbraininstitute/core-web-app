@@ -279,14 +279,11 @@ export default function ExploreSectionTable({
     autohideControls?: boolean;
     dataKey: string;
   }) {
-  console.log('explore section table', dataKey);
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
     selectionType,
     onRowsSelected,
   });
-
-  console.log(rowSelection);
 
   const { displayLoadMoreBtn, toggleDisplayMore } = useShowMore();
 
