@@ -45,7 +45,7 @@ function Synaptome({ params: { virtualLabId, projectId } }: Props) {
   } | null>(`me-model/${virtualLabId}/${projectId}`, null);
   const scope = useAtomValue(selectedSimulationScopeAtom);
   const [configStep, setConfigStep] = useState<SynaptomeModelConfigSteps>('basic-config');
-  const setSelectedRows = useSetAtom(selectedRowsAtom(DataType.CircuitMEModel));
+  const setSelectedRows = useSetAtom(selectedRowsAtom({ dataType: DataType.CircuitMEModel }));
   const queryParams = useSearchParams();
   const onConfigStep = (value: SynaptomeModelConfigSteps) => setConfigStep(value);
 

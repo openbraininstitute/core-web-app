@@ -19,7 +19,7 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
-export default function ExploreSectionListingView({
+export default function DefaultListView({
   dataType,
   dataScope,
   renderButton,
@@ -46,9 +46,9 @@ export default function ExploreSectionListingView({
   tableScrollable?: boolean;
   controlsVisible?: boolean;
   style?: Record<'background', string>;
-  dataKey: string;
+  dataKey?: string;
 }) {
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, dataScope, key: dataKey }));
 
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
@@ -102,7 +102,6 @@ export default function ExploreSectionListingView({
                   dataType={dataType}
                   dataScope={dataScope}
                   virtualLabInfo={virtualLabInfo}
-                  dataKey={dataKey}
                 />
               </FilterControls>
               <ExploreSectionTable

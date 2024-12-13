@@ -1,7 +1,7 @@
 'use client';
 
 import { useSetAtom } from 'jotai';
-import { useEffect, useId } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
@@ -51,7 +51,6 @@ export default function ElectrophysiologyPage({ params }: Params) {
     <>
       <div className="h-full px-10" id="explore-table-container-for-observable">
         <ExploreSectionListingView
-          dataKey={useId()}
           dataType={DataType.CircuitEModel}
           dataScope={ExploreDataScope.BuildSelectedBrainRegion}
           onCellClick={onCellClick}

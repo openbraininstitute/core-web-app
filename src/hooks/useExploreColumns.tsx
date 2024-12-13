@@ -1,6 +1,14 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { ColumnProps } from 'antd/lib/table';
 import throttle from 'lodash/throttle';
 import { ExploreESHit } from '@/types/explore-section/es';
@@ -45,7 +53,7 @@ function getProvisionedWidth(title: string, unit?: ReactNode) {
 }
 
 export default function useExploreColumns(
-  setSortState: (sortState: SortState) => void,
+  setSortState: Dispatch<SetStateAction<SortState | undefined>>,
   sortState?: SortState,
   initialColumns: ColumnProps<ExploreESHit<ExploreSectionResource>>[] = [],
   dimensionColumns?: string[] | null,

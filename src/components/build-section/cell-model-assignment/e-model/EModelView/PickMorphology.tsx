@@ -63,7 +63,6 @@ export default function PickMorphology({ isOpen, onCancel, onOk }: Props) {
           dataType={DataType.ExperimentalNeuronMorphology}
           renderButton={pickMorphButtonFn}
           dataScope={ExploreDataScope.NoScope}
-          dataKey={DataType.ExperimentalNeuronMorphology}
         />
       </Modal>
     </div>

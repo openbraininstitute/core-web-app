@@ -2,7 +2,7 @@
 
 import { notFound, useParams } from 'next/navigation';
 import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import WithExploreExperiment from '@/components/explore-section/WithExploreExperiment';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -20,13 +20,11 @@ export default function VirtualLabExperimentListingView() {
   };
 
   if (!currentExperiment) notFound();
-
   return (
-    <ExploreSectionListingView
+    <WithExploreExperiment
       dataType={currentExperiment as DataType}
       dataScope={ExploreDataScope.SelectedBrainRegion}
       virtualLabInfo={virtualLabInfo}
-      dataKey={params.projectId + currentExperiment}
     />
   );
 }

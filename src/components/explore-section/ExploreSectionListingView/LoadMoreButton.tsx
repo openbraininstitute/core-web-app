@@ -32,12 +32,7 @@ export default function LoadMoreButton({
   };
   hide: () => void;
 }) {
-  const res = useUnwrappedValue(
-    dataAtom({
-      ...dataContext,
-      key: dataContext.virtualLabInfo?.projectId ?? '' + dataContext.dataType,
-    })
-  );
+  const res = useUnwrappedValue(dataAtom(dataContext));
 
   const [contentSize, setContentSize] = useAtom(pageSizeAtom);
 

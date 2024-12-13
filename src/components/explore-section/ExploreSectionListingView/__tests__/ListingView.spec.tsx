@@ -73,7 +73,6 @@ describe('Test main functionalities of interface', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
@@ -94,7 +93,6 @@ describe('Download button tests', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
@@ -111,7 +109,6 @@ describe('Download button tests', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
@@ -133,7 +130,6 @@ describe('Filters panel tests', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
@@ -186,7 +182,6 @@ describe('Header panel unit tests', () => {
         <NumericResultsInfo
           dataType={DataType.ExperimentalNeuronMorphology}
           dataScope={ExploreDataScope.NoScope}
-          dataKey="test"
         />
       </TestProvider>
     );
@@ -205,7 +200,6 @@ describe('Load more resources button unit tests', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
@@ -225,7 +219,6 @@ describe('Listing view table tests', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
@@ -242,7 +235,6 @@ describe('Listing view table tests', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
@@ -258,7 +250,6 @@ describe('Listing view table tests', () => {
           <ExploreSectionListingView
             dataScope={ExploreDataScope.NoScope}
             dataType={DataType.ExperimentalNeuronMorphology}
-            dataKey="test"
           />
         </TestProvider>
       )
