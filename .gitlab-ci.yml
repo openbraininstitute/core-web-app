@@ -149,6 +149,8 @@ deploy-aws-production:
       --build-arg=NODE_OPTIONS
       --build-arg=MAILCHIMP_API_KEY
       --build-arg=MAILCHIMP_AUDIENCE_ID
+  only:
+    - develop
 
 deploy-aws-staging:
   stage: deploy
