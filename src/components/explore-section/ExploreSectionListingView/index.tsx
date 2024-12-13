@@ -116,6 +116,7 @@ export default function ExploreSectionListingView({
                 scrollable={tableScrollable}
                 controlsVisible={controlsVisible}
                 onRowsSelected={onRowsSelected}
+                dataKey={dataKey}
               />
             </>
           )}
