@@ -30,7 +30,7 @@ export default function useRowSelection({
   selectedRows: ExploreESHit<ExploreSectionResource>[];
   clearSelectedRows: () => void;
 } {
-  const [selectedRows, setSelectedRows] = useAtom(selectedRowsAtom({ dataType }));
+  const [selectedRows, setSelectedRows] = useAtom(selectedRowsAtom(dataType));
   const clearSelectedRows = () => setSelectedRows([]);
 
   return {

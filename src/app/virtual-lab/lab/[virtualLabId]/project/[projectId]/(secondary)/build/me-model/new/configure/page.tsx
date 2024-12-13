@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { notification, Spin } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -108,6 +108,7 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
       dataType: DataType.CircuitMEModel,
       dataScope: ExploreDataScope.NoScope,
       virtualLabInfo: { virtualLabId, projectId },
+      key: useId(),
     })
   );
 

@@ -65,6 +65,7 @@ export default function PickTraces({ isOpen, onCancel, onOk }: Props) {
           dataType={DataType.ExperimentalElectroPhysiology}
           renderButton={pickTraceButtonFn}
           dataScope={ExploreDataScope.NoScope}
+          dataKey={DataType.ExperimentalElectroPhysiology}
         />
       </Modal>
     </div>
