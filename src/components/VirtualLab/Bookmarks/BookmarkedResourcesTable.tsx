@@ -99,6 +99,7 @@ export default function BookmarkedResourcesTable({
                   virtualLabInfo: { virtualLabId: labId, projectId },
                   dataType,
                 }}
+                dataKey={projectId + 'bookmarks' + dataType}
                 dataSource={dataSource}
                 loading={data.state === 'loading'}
                 renderButton={({ selectedRows, clearSelectedRows }) => (
