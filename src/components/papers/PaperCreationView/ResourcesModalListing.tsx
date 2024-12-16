@@ -49,6 +49,7 @@ function Body({ type, category, onRowClick }: BodyProps) {
       <ExploreSectionListingView
         dataType={type as DataType}
         dataScope={ExploreDataScope.NoScope}
+        dataKey={type as DataType}
         selectionType="checkbox"
         renderButton={(props) => (
           <Btn

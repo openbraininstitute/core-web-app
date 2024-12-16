@@ -18,13 +18,15 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 
 export default function SimulationCampaignListView({ dataType }: { dataType: DataType }) {
   const activeColumns = useAtomValue(
-    useMemo(() => unwrap(activeColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(activeColumnsAtom({ dataType, key: dataType })), [dataType])
   );
-  const dataSource = useAtomValue(useMemo(() => unwrap(dataAtom({ dataType })), [dataType]));
+  const dataSource = useAtomValue(
+    useMemo(() => unwrap(dataAtom({ dataType, key: dataType })), [dataType])
+  );
 
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType }));
+  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataType }));
   const dimensionColumns = useAtomValue(
-    useMemo(() => unwrap(dimensionColumnsAtom({ dataType })), [dataType])
+    useMemo(() => unwrap(dimensionColumnsAtom({ dataType, key: dataType })), [dataType])
   );
   const columns = useExploreColumns(setSortState, sortState, [], dimensionColumns).filter(
     ({ key }) => (activeColumns || []).includes(key as string)
@@ -47,15 +49,21 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
           dataType={dataType}
           dataScope={ExploreDataScope.NoScope}
           className="relative"
+          dataKey={dataType}
         >
           {({ displayControlPanel, setDisplayControlPanel }) => (
             <>
               <div className="sticky top-0 grid w-full grid-cols-[max-content_1fr_max-content] items-center justify-between gap-5 px-5">
-                <NumericResultsInfo dataType={dataType} dataScope={ExploreDataScope.NoScope} />
+                <NumericResultsInfo
+                  dataType={dataType}
+                  dataScope={ExploreDataScope.NoScope}
+                  dataKey={dataType}
+                />
                 <FilterControls
                   displayControlPanel={displayControlPanel}
                   setDisplayControlPanel={setDisplayControlPanel}
                   dataType={dataType}
+                  dataKey={dataType}
                 />
               </div>
               <div className="h-full w-full px-4">

@@ -33,6 +33,7 @@ export default function WithExploreExperiment({
         onCellClick,
         renderButton,
         virtualLabInfo,
+        dataKey: (virtualLabInfo?.projectId ?? '') + 'explore' + dataType,
       }}
     />
   );

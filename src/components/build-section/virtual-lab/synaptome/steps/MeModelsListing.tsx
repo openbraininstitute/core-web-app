@@ -46,7 +46,7 @@ export default function MeModelsListing({
   const form = Form.useFormInstance();
   const { push: navigate } = useRouter();
   const { setFieldValue, validateFields, getFieldValue } = Form.useFormInstance();
-  const { selectedRows } = useRowSelection({ dataType: DataType.CircuitMEModel });
+  const { selectedRows } = useRowSelection({ dataKey: DataType.CircuitMEModel });
   const [modelNotSelectedError, setModelNotSelectedError] = useState(false);
 
   const { setSessionValue } = useSessionStorage<{
@@ -114,6 +114,7 @@ export default function MeModelsListing({
             setModelNotSelectedError(false);
           }}
           onCellClick={onNavigateToMeModel}
+          dataKey={DataType.CircuitMEModel}
         />
       </div>
       <button

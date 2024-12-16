@@ -4,20 +4,14 @@ import { SearchOutlined } from '@ant-design/icons';
 
 import { searchStringAtom } from '@/state/explore-section/list-view-atoms';
 
-import { DataType } from '@/constants/explore-section/list-views';
-import { ExploreDataScope } from '@/types/explore-section/application';
 import { useDebouncedCallback } from '@/hooks/hooks';
 
 type SearchProps = {
-  dataType: DataType;
-  dataScope?: ExploreDataScope;
   dataKey?: string;
 };
 
-export default function ExploreSectionNameSearch({ dataType, dataScope, dataKey }: SearchProps) {
-  const [searchString, setSearchString] = useAtom(
-    searchStringAtom({ dataType, dataScope, key: dataKey })
-  );
+export default function ExploreSectionNameSearch({ dataKey }: SearchProps) {
+  const [searchString, setSearchString] = useAtom(searchStringAtom(dataKey ?? ''));
 
   const searchInputRef: RefObject<HTMLInputElement> = useRef(null);
   useEffect(() => searchInputRef?.current?.focus(), []); // Auto-focus on render

@@ -1,7 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
-import isEqual from 'lodash/isEqual';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
@@ -17,7 +16,12 @@ import {
   fetchLinkedModel,
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
-import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
+import {
+  DataType,
+  EXPERIMENTAL_DATATYPES,
+  PAGE_NUMBER,
+  PAGE_SIZE,
+} from '@/constants/explore-section/list-views';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
@@ -33,45 +37,33 @@ type DataAtomFamilyScopeType = {
   dataScope?: ExploreDataScope;
   resourceId?: string;
   virtualLabInfo?: VirtualLabInfo;
-  isBuildConfig?: boolean;
-  key?: string;
+  key: string;
 };
 
 const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
-  // eslint-disable-next-line lodash/prefer-matches
-  a.dataType === b.dataType &&
-  a.dataScope === b.dataScope &&
-  a.resourceId === b.resourceId &&
-  a.isBuildConfig === b.isBuildConfig &&
-  a.key === b.key &&
-  isEqual(a.virtualLabInfo, b.virtualLabInfo);
+  a.key === b.key;
 
 export const pageSizeAtom = atom<number>(PAGE_SIZE);
 
-export const pageNumberAtom = atomFamily(
-  (_scope: DataAtomFamilyScopeType) => atom<number>(PAGE_NUMBER),
-  isListAtomEqual
+export const pageNumberAtom = atomFamily((_key: string) => atom<number>(PAGE_NUMBER));
+
+export const selectedRowsAtom = atomFamily((_key: string) =>
+  atom<ExploreESHit<ExploreSectionResource>[]>([])
 );
 
-export const selectedRowsAtom = atomFamily(
-  (_scope: DataAtomFamilyScopeType) => atom<ExploreESHit<ExploreSectionResource>[]>([]),
-  isListAtomEqual
-);
+export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
-export const searchStringAtom = atomFamily(
-  (_scope: DataAtomFamilyScopeType) => atom<string>(''),
-  isListAtomEqual
-);
+export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
+  const initialState: SortState = isExperimentalData(scope.dataType)
+    ? { field: Field.CreationDate, order: 'desc' }
+    : { field: Field.RegistrationDate, order: 'desc' };
 
-export const sortStateAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
-    atom<SortState | undefined>(() => {
-      return scope.isBuildConfig
-        ? { field: Field.CreationDate, order: 'desc' }
-        : { field: Field.RegistrationDate, order: 'desc' };
-    }),
-  isListAtomEqual
-);
+  const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
+    set(writableAtom, update); // Correctly updates the state
+  });
+
+  return writableAtom;
+}, isListAtomEqual);
 
 export const activeColumnsAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
@@ -83,7 +75,7 @@ export const activeColumnsAtom = atomFamily(
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        scope.isBuildConfig ? Field.CreationDate : Field.RegistrationDate,
+        isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
       ];
     }),
   isListAtomEqual
@@ -158,9 +150,8 @@ export const totalByExperimentAndRegionsAtom = atomFamily(
 export const queryAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
-      const searchString = get(searchStringAtom(scope));
-
-      const pageNumber = get(pageNumberAtom(scope));
+      const searchString = get(searchStringAtom(scope.key));
+      const pageNumber = get(pageNumberAtom(scope.key));
       const pageSize = get(pageSizeAtom);
       const sortState = get(sortStateAtom(scope));
       const bookmarkResourceIds = (
@@ -236,3 +227,7 @@ export const dataAtom = atomFamily(
     }),
   isListAtomEqual
 );
+
+function isExperimentalData(dataType: DataType) {
+  return EXPERIMENTAL_DATATYPES.includes(dataType);
+}
