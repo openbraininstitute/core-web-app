@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 
-import Entrypoint from '@/components/Entrypoint';
+// import Entrypoint from '@/components/Entrypoint';
 import { basePath } from '@/config';
+import LandingPage from '@/components/LandingPage';
 
 export const metadata: Metadata = {
   title: 'Open Brain Platform',
@@ -55,9 +56,11 @@ export const metadata: Metadata = {
 };
 
 export default function RootPage({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   searchParams,
 }: {
   searchParams: { errorcode: string | undefined };
 }) {
-  return <Entrypoint errorCode={searchParams.errorcode} callbackUrl={`${basePath}/virtual-lab`} />;
+  return <LandingPage />;
+  // return <Entrypoint errorCode={searchParams.errorcode} />;
 }
