@@ -1,8 +1,7 @@
-import { getToken } from 'next-auth/jwt';
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
-const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*', '/dev'];
+const FREE_ACCESS_PAGES = ['/', '/log-in', '/getting-started', '/about*'];
 const ASSETS = [
   '/static*',
   '/images*',
@@ -31,8 +30,6 @@ function isFreeAccessRoute(requestUrl: string, paths: string[]) {
 }
 
 export async function middleware(request: NextRequest) {
-  const session = await getToken<false, { accessTokenExpires: number }>({ req: request });
-  const sessionValid = session && Date.now() < session.accessTokenExpires;
   const requestUrl = request.nextUrl.pathname;
   // const { device } = userAgent(request);
 
@@ -48,22 +45,6 @@ export async function middleware(request: NextRequest) {
   //   url.searchParams.set('warning', 'yes');
   //   return NextResponse.redirect(url);
   // }
-
-  // If the user is authenticated and wants to access the home page or log-in page
-  // then redirect to the explore home page
-  if (sessionValid && (requestUrl === '/' || requestUrl === '/log-in')) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/explore/interactive`;
-    return NextResponse.redirect(url);
-  }
-
-  // If the user is authenticated and wants to access the /dev page
-  // then redirect to the virtual lab main page
-  if (sessionValid && requestUrl === '/dev') {
-    const url = request.nextUrl.clone();
-    url.pathname = `/dev/virtual-lab`;
-    return NextResponse.redirect(url);
-  }
 
   // Let them through if they're trying to access a public page
   if (isFreeAccessRoute(requestUrl, FREE_ACCESS_PAGES)) {
