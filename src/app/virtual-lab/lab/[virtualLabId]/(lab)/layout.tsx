@@ -33,7 +33,7 @@ export default async function VirtualLabLayout({ children, params }: Props) {
               <VirtualLabSidebar virtualLabId={params.virtualLabId} />
             </div>
 
-            <div className="m-w-9/12 ml-3" style={{ width: '75%' }}>
+            <div className="m-w-9/12 ml-3 h-full flex flex-col" style={{ width: '75%' }}>
               <VirtualLabTopMenu />
 
               <Suspense
