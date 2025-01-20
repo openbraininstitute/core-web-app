@@ -33,6 +33,16 @@ export default function VirtualLabSidebarContent({
       href: 'projects',
     },
     {
+      key: 'notebooks',
+      content: (
+        <div className="flex justify-between">
+          <span>Notebooks</span>
+          <span className="font-normal text-primary-3">{projects?.results.length}</span>
+        </div>
+      ),
+      href: 'notebooks',
+    },
+    {
       key: LinkItemKey.Team,
       content: (
         <div className="flex justify-between">

@@ -19,9 +19,9 @@ export function usePrevious<T>(value: T) {
   return ref.current;
 }
 
-export function useLoadable<T>(loadableAtom: Atom<Loadable<Promise<T>>>, defaultValue: T) {
+export function useLoadable<T, DT>(loadableAtom: Atom<Loadable<Promise<T>>>, defaultValue: DT) {
   const loadableValue = useAtomValue(loadableAtom);
-  const [state, setState] = useState(defaultValue);
+  const [state, setState] = useState<T | DT>(defaultValue);
 
   useEffect(() => {
     if (loadableValue.state !== 'hasData' || !loadableValue.data) return;
