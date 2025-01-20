@@ -49,6 +49,7 @@ function NewMemberForm({
         { email: values.email, role: values.role },
       ],
     }));
+    form.resetFields();
   };
 
   return (
@@ -56,7 +57,6 @@ function NewMemberForm({
       form={form}
       // temporarily disabling this form for SfN. Invitation should be back afterwards
       // this prop disables it for all nested form elements
-      disabled
       className="my-5"
       name="member_form"
       onFinish={onFinish}
@@ -79,7 +79,7 @@ function NewMemberForm({
             <Form.Item
               name="email"
               className="mb-0"
-              label="Invitation to:"
+              label="Invitation to: "
               rules={[
                 {
                   type: 'email',
@@ -88,7 +88,10 @@ function NewMemberForm({
                 },
               ]}
             >
-              <Input className="border-transparent" placeholder="Enter email address" />
+              <Input
+                className="border-transparent outline-none"
+                placeholder="Enter email address"
+              />
             </Form.Item>
           </div>
           <Form.Item label="As:" name="role" className="mb-0 flex items-center">
@@ -112,11 +115,12 @@ function NewMemberForm({
   );
 }
 
-function NonInvitedMember({ label }: { label: string }) {
+function NonInvitedMember({ label, inviteAccepted }: { label: string; inviteAccepted?: boolean }) {
   return (
     <div className="flex flex-row items-center justify-between gap-4">
       <div className="flex flex-row items-center gap-4">
         <VirtualLabMemberIcon
+          inviteAccepted={inviteAccepted}
           firstName={label.split(' ')[0]}
           lastName={label.split(' ')[1]}
           memberRole="admin"
@@ -194,7 +198,7 @@ export default function MembersForm({
       }}
     >
       <div className="my-10 flex w-full flex-col gap-4 text-primary-8">
-        {data?.user.name && <NonInvitedMember label={data.user.name} />}
+        {data?.user.name && <NonInvitedMember label={data.user.name} inviteAccepted />}
         {currentVirtualLab.include_members?.map((member) => (
           <InvitedMember
             key={member.email}

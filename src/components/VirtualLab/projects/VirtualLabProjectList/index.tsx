@@ -99,7 +99,7 @@ export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
 
   return (
     <Modal
-      className="m-w-[600px]"
+      className="w-[700px] min-w-[700px]"
       footer={
         <NewProjectModalFooter
           close={() => {

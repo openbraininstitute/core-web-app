@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { Role } from '@/types/virtual-lab/members';
 import VirtualLabMemberIcon from '@/components/VirtualLab/VirtualLabMemberIcon';
 import colorDictionary from '@/components/VirtualLab/VirtualLabMemberIcon/availableColors';
@@ -11,6 +11,7 @@ describe('VirtualLabMemberIcon', () => {
     memberRole: 'member' as Role,
     firstName: 'John',
     lastName: 'Doe',
+    inviteAccepted: true,
   };
 
   it('should render initials based on the first name and last name', () => {
@@ -25,8 +26,8 @@ describe('VirtualLabMemberIcon', () => {
     // Calculate the expected index based on the code point
     const expectedIndex = firstChar ? firstChar % colorDictionary.length : 0;
 
-    const divElement = container.querySelector('div');
-    const spanElement = container.querySelector('span');
+    const divElement = screen.getByTestId('virtual-lab-member-icon');
+    const spanElement = screen.getByTestId('virtual-lab-member-initials');
 
     expect(divElement).toHaveStyle(
       `background-color: ${colorDictionary[expectedIndex].background}`
@@ -49,15 +50,15 @@ describe('VirtualLabMemberIcon', () => {
   });
 
   it('should use the correct color dictionary index for a different first name', () => {
-    const props = { ...defaultProps, firstName: 'Alice' };
+    const props = { ...defaultProps, firstName: 'Alice', inviteAccepted: true };
     const { container } = render(<VirtualLabMemberIcon {...props} />);
 
     const firstChar = 'Alice'.codePointAt(0);
     // Calculate the expected index based on the code point
     const expectedIndex = firstChar ? firstChar % colorDictionary.length : 0;
 
-    const divElement = container.querySelector('div');
-    const spanElement = container.querySelector('span');
+    const divElement = screen.getByTestId('virtual-lab-member-icon');
+    const spanElement = screen.getByTestId('virtual-lab-member-initials');
 
     expect(divElement).toHaveStyle(
       `background-color: ${colorDictionary[expectedIndex].background}`

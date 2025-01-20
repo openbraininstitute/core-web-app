@@ -1,22 +1,20 @@
 import { Modal } from 'antd';
 import { useState } from 'react';
 
-import { InviteProjectMember } from './InviteProjectMember';
 import { Member } from './types';
+import { InviteVlabMember } from './InviteVlabMember';
 
-export interface ModalInviteProjectMemberProps {
+export interface ModalInviteVlabMemberProps {
   open: boolean;
   onChange(open: boolean): void;
 }
 
-export function ModalInviteProjectMember({ open, onChange }: ModalInviteProjectMemberProps) {
+export function ModalInviteVlabMember({ open, onChange }: ModalInviteVlabMemberProps) {
   const close = () => onChange(false);
   const [members, setMembers] = useState<Member[]>([]);
-
   return (
     <Modal
       open={open}
-      title=""
       centered
       closable
       destroyOnClose
@@ -25,8 +23,10 @@ export function ModalInviteProjectMember({ open, onChange }: ModalInviteProjectM
       footer={null}
     >
       <div className="flex w-full flex-col">
-        <h2 className="text-xl font-bold uppercase text-primary-8">Invite new member to project</h2>
-        <InviteProjectMember onClose={close} members={members} onChange={setMembers} />
+        <h2 className="text-xl font-bold uppercase text-primary-8">
+          Invite new member to virtual lab
+        </h2>
+        <InviteVlabMember onClose={close} members={members} onChange={setMembers} />
       </div>
     </Modal>
   );
