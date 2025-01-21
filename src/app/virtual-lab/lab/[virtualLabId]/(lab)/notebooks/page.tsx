@@ -24,8 +24,8 @@ export default async function VirtualLab({
   return <NotebookTable files={fileList} />;
 }
 
-const repoOwner = 'Naereen';
-const repoName = 'notebooks';
+const repoOwner = 'g-bar';
+const repoName = 'webdev';
 const apiBaseUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
 
 interface GitHubFile {
@@ -37,12 +37,15 @@ interface GitHubFile {
 async function fetchFiles(path: string = '', page: number = 1): Promise<string[]> {
   const response = await fetch(apiBaseUrl + path + `?page=${page}&per_page=100`, {
     headers: {
-      Authorization: `Bearer: ${'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'}`,
+      Authorization: 'Bearer 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',
+      'X-GitHub-Api-Version': '2022-11-28',
     },
     next: {
       revalidate: 3600 * 24,
     },
   });
+
+  console.log(response);
 
   if (!response.ok) {
     throw new Error(`GitHub API request failed with status: ${response.status}`);
