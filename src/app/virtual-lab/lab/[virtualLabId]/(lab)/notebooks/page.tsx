@@ -15,60 +15,12 @@ import { useLoadable } from '@/hooks/hooks';
 import { loadable } from 'jotai/utils';
 import { LoadingOutlined } from '@ant-design/icons';
 import NotebookTable from './NotebookTable';
+import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 
 export default async function VirtualLab({
   params,
 }: ServerSideComponentProp<{ virtualLabId: string }>) {
   const { virtualLabId } = params;
-  const fileList = await fetchFiles('');
+  const fileList = await fetchNotebooks('');
   return <NotebookTable files={fileList} />;
-}
-
-const repoOwner = 'g-bar';
-const repoName = 'webdev';
-const apiBaseUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
-
-interface GitHubFile {
-  name: string;
-  path: string;
-  type: 'file' | 'dir';
-}
-
-async function fetchFiles(path: string = '', page: number = 1): Promise<string[]> {
-  const response = await fetch(apiBaseUrl + path + `?page=${page}&per_page=100`, {
-    headers: {
-      Authorization: 'Bearer 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',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    next: {
-      revalidate: 3600 * 24,
-    },
-  });
-
-  console.log(response);
-
-  if (!response.ok) {
-    throw new Error(`GitHub API request failed with status: ${response.status}`);
-  }
-
-  const items: GitHubFile[] = await response.json();
-  const allFiles: string[] = [];
-
-  for (const item of items) {
-    if (item.type === 'file' && item.path.endsWith('.ipynb')) {
-      allFiles.push(item.path);
-    } else if (item.type === 'dir') {
-      const nestedFiles = await fetchFiles(item.path);
-      allFiles.push(...nestedFiles);
-    }
-  }
-
-  // Check for next page in the Link header
-  const linkHeader = response.headers.get('link');
-  if (linkHeader && linkHeader.includes('rel="next"')) {
-    const nextPageFiles = await fetchFiles(path, page + 1);
-    allFiles.push(...nextPageFiles);
-  }
-
-  return allFiles;
 }

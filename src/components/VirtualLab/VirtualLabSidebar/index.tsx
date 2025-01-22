@@ -9,14 +9,12 @@ import { useUnwrappedValue } from '@/hooks/hooks';
 
 export default function VirtualLabSidebarContent({
   virtualLabId,
-  showTitle = false,
+  n_notebooks,
 }: {
   virtualLabId: string;
-  showTitle?: boolean;
+  n_notebooks: number;
 }) {
   const currentPage = usePathname().split('/').pop();
-
-  const vlab = useUnwrappedValue(virtualLabDetailAtomFamily(virtualLabId));
   const projects = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
   const users = useUnwrappedValue(virtualLabMembersAtomFamily(virtualLabId))?.length;
 
@@ -37,7 +35,7 @@ export default function VirtualLabSidebarContent({
       content: (
         <div className="flex justify-between">
           <span>Notebooks</span>
-          <span className="font-normal text-primary-3">{projects?.results.length}</span>
+          <span className="font-normal text-primary-3">{n_notebooks}</span>
         </div>
       ),
       href: 'notebooks',
@@ -59,11 +57,6 @@ export default function VirtualLabSidebarContent({
 
   return (
     <div className="mr-5 flex w-full flex-col gap-5">
-      {showTitle && vlab && (
-        <div className="text-5xl font-bold uppercase text-primary-5" style={{ minHeight: '84px' }}>
-          {vlab.name}
-        </div>
-      )}
       <VerticalLinks links={linkItems} currentPage={currentPage} />
     </div>
   );

@@ -13,23 +13,66 @@ const fileUrl = (path: string) => `${repoOwner}/${repoName}/blob/master/${path}`
 export default function NotebookTable({ files }: { files: string[] }) {
   const data = useMemo(
     () =>
-      files.map((f) => ({
-        key: f,
-        name: f,
-      })),
+      files.map((fileName) => {
+        const parts = fileName.split('/');
+        const objectOfInterest = parts[0];
+        const name = parts[1];
+
+        return {
+          objectOfInterest,
+          name,
+          fileName,
+          key: fileName,
+          description: '',
+          author: 'OBI',
+        } satisfies Notebook;
+      }),
     [files]
   );
 
-  const columns: ColumnType<{ name: string }>[] = [
+  const getSorter = (key: keyof Notebook) => {
+    const sorter = (a: Notebook, b: Notebook) => {
+      if (!(key in a && typeof a[key] === 'string')) return 0;
+      return a[key].localeCompare(b[key]);
+    };
+
+    return sorter;
+  };
+
+  const columns: ColumnType<Notebook>[] = [
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (text: string) => <strong>{text}</strong>,
+      sorter: getSorter('name'),
     },
+
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      sorter: getSorter('description'),
+    },
+
+    {
+      title: 'Object of interest',
+      dataIndex: 'objectOfInterest',
+      key: 'objectOfInterest',
+      sorter: getSorter('objectOfInterest'),
+    },
+
+    {
+      title: 'Author',
+      dataIndex: 'author',
+      key: 'author',
+      sorter: getSorter('author'),
+    },
+
     {
       title: 'view',
-      dataIndex: 'key',
+      dataIndex: 'fileName',
+      key: 'fileName',
       render: (uri: string) => (
         <Link href={`notebooks/${encodeURIComponent(fileUrl(uri))}`}>View</Link>
       ),
@@ -38,24 +81,19 @@ export default function NotebookTable({ files }: { files: string[] }) {
 
   const theme = {
     token: {
-      colorBgContainer: '#002766', // Background color for table container
-      colorBorderSecondary: 'transparent', // Border color
-      colorText: '#fff', // Text color
-      colorTextHeading: '#BAE7FF', // Header text color
-      tableSortIconColor: '#BAE7FF', // Customize sorting icon color
-      tableSortIconHoverColor: '#ff9800', // Hover color of sorting icon
+      colorBgContainer: '#002766',
+      colorBorderSecondary: 'transparent',
+      colorText: '#fff',
+      colorTextHeading: '#BAE7FF',
+      tableSortIconColor: '#BAE7FF',
+      tableSortIconHoverColor: '#ff9800',
     },
   };
 
   return (
     <ConfigProvider theme={theme}>
       <div id="table-container">
-        <Table
-          dataSource={data} // Data to display
-          columns={columns} // Column definitions
-          bordered // Adds borders to the table
-          pagination={false}
-        ></Table>
+        <Table dataSource={data} columns={columns} pagination={false}></Table>
       </div>
 
       <style jsx global>{`
@@ -77,4 +115,13 @@ export default function NotebookTable({ files }: { files: string[] }) {
       `}</style>
     </ConfigProvider>
   );
+}
+
+interface Notebook {
+  key: string;
+  name: string;
+  description: string;
+  objectOfInterest: string;
+  fileName: string;
+  author: string;
 }
