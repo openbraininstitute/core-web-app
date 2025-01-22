@@ -18,7 +18,7 @@ const fileUrl = (path: string) =>
   );
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
-  const [loadingZip, setLoadinZip] = useState(false);
+  const [loadingZip, setLoadingZip] = useState(false);
   const getSorter = (key: keyof Notebook) => {
     const sorter = (a: Notebook, b: Notebook) => {
       if (!(key in a && typeof a[key] === 'string' && key in b && typeof b[key] === 'string'))
@@ -97,14 +97,15 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                   <div className="flex gap-4">
                     <img src={`${basePath}/images/icons/download.svg`} width={12} />
                     <button
+                      className="hover:text-primary-4"
                       onClick={async () => {
                         if (loadingZip) return;
-                        setLoadinZip(true);
+                        setLoadingZip(true);
                         const res = await fetch(
                           `/api/downloadNotebook?folder=${encodeURIComponent(directory)}`
                         );
 
-                        setLoadinZip(false);
+                        setLoadingZip(false);
                         if (!res.ok) {
                           throw new Error('Failed to fetch the zip file');
                         }
