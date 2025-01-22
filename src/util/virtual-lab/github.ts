@@ -1,8 +1,9 @@
+import JSZip from 'jszip';
 import { notebookRepository } from '@/config';
 
 const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/`;
 
-const options = {
+export const options = {
   headers: {
     Authorization: 'Bearer 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',
     'X-GitHub-Api-Version': '2022-11-28',

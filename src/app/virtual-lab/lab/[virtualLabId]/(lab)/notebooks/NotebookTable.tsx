@@ -8,14 +8,17 @@ import Link from 'next/link';
 import { Notebook } from '@/util/virtual-lab/github';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
-import { PlusOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import dynamic from 'next/dynamic';
+import { useState } from 'react';
 
 const fileUrl = (path: string) =>
   encodeURIComponent(
     `${notebookRepository.user}/${notebookRepository.repository}/blob/master/${path}`
   );
 
-export default function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
+function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
+  const [loadingZip, setLoadinZip] = useState(false);
   const getSorter = (key: keyof Notebook) => {
     const sorter = (a: Notebook, b: Notebook) => {
       if (!(key in a && typeof a[key] === 'string' && key in b && typeof b[key] === 'string'))
@@ -79,18 +82,50 @@ export default function NotebookTable({ notebooks }: { notebooks: Notebook[] }) 
       dataIndex: 'fileName',
       key: 'fileName',
       render: (uri: string) => {
+        const directory = uri.slice(0, uri.lastIndexOf('/'));
+        const notebookName = directory.split('/').pop();
+
         return (
           <div id="popover">
             <Popover
               content={
-                <div className="flex flex-col gap-2 text-xs text-white">
+                <div className="flex min-w-[120px] flex-col gap-2 text-white">
                   <div className="flex gap-4">
                     <img src={`${basePath}/images/icons/eye.svg`} width={12} />
                     <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
                   </div>
                   <div className="flex gap-4">
                     <img src={`${basePath}/images/icons/download.svg`} width={12} />
-                    <span>Download</span>
+                    <button
+                      onClick={async () => {
+                        if (loadingZip) return;
+                        setLoadinZip(true);
+                        const res = await fetch(
+                          `/api/downloadNotebook?folder=${encodeURIComponent(directory)}`
+                        );
+
+                        setLoadinZip(false);
+                        if (!res.ok) {
+                          throw new Error('Failed to fetch the zip file');
+                        }
+
+                        const blob = await res.blob();
+
+                        // Create a temporary link element to trigger the download
+                        const link = document.createElement('a');
+                        const downloadUrl = window.URL.createObjectURL(blob);
+                        link.href = downloadUrl;
+                        link.download = `${notebookName}.zip`;
+                        document.body.appendChild(link);
+                        link.click(); // Trigger the download
+                        document.body.removeChild(link); // Clean up the DOM
+
+                        window.URL.revokeObjectURL(downloadUrl);
+                      }}
+                    >
+                      Download
+                    </button>
+                    {loadingZip && <LoadingOutlined />}
                   </div>
                 </div>
               }
@@ -149,3 +184,12 @@ export default function NotebookTable({ notebooks }: { notebooks: Notebook[] }) 
     </ConfigProvider>
   );
 }
+
+export default dynamic(() => Promise.resolve(NotebookTable), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-grow items-center justify-center text-3xl text-white">
+      <LoadingOutlined />
+    </div>
+  ),
+});

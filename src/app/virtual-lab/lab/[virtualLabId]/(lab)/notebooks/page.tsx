@@ -17,12 +17,10 @@ import { LoadingOutlined } from '@ant-design/icons';
 import NotebookTable from './NotebookTable';
 import fetchNotebooks from '@/util/virtual-lab/github';
 
-export default async function VirtualLab({
+export default async function Notebooks({
   params,
 }: ServerSideComponentProp<{ virtualLabId: string }>) {
   const { virtualLabId } = params;
   const notebooks = await fetchNotebooks('');
-
-  console.log(notebooks);
   return <NotebookTable notebooks={notebooks} />;
 }
