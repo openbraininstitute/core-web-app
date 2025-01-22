@@ -6,7 +6,7 @@ import VirtualLabSidebar from '@/components/VirtualLab/VirtualLabSidebar';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideMenu from '@/components/SideMenu';
 import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
+import fetchNotebooks from '@/util/virtual-lab/github';
 
 type Props = {
   children: ReactNode;

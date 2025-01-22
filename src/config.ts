@@ -103,3 +103,8 @@ export const autoSaveDebounceInterval = 10000;
 export const virtualLabApi = {
   url: env.NEXT_PUBLIC_VIRTUAL_LAB_API_URL,
 };
+
+export const notebookRepository = {
+  user: 'g-bar',
+  repository: 'obi_platform_analysis_notebooks',
+};

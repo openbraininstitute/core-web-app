@@ -2,37 +2,24 @@
 
 import { ConfigProvider } from 'antd';
 import { ColumnType } from 'antd/es/table';
-import { useMemo } from 'react';
+import { basePath, notebookRepository } from '@/config';
 import Table from 'antd/es/table';
 import Link from 'next/link';
+import { Notebook } from '@/util/virtual-lab/github';
+import { format, compareAsc } from 'date-fns';
+import { Popover } from 'antd/lib';
+import { PlusOutlined } from '@ant-design/icons';
 
-const repoOwner = 'Naereen';
-const repoName = 'notebooks';
-const fileUrl = (path: string) => `${repoOwner}/${repoName}/blob/master/${path}`;
-
-export default function NotebookTable({ files }: { files: string[] }) {
-  const data = useMemo(
-    () =>
-      files.map((fileName) => {
-        const parts = fileName.split('/');
-        const objectOfInterest = parts[0];
-        const name = parts[1];
-
-        return {
-          objectOfInterest,
-          name,
-          fileName,
-          key: fileName,
-          description: '',
-          author: 'OBI',
-        } satisfies Notebook;
-      }),
-    [files]
+const fileUrl = (path: string) =>
+  encodeURIComponent(
+    `${notebookRepository.user}/${notebookRepository.repository}/blob/master/${path}`
   );
 
+export default function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const getSorter = (key: keyof Notebook) => {
     const sorter = (a: Notebook, b: Notebook) => {
-      if (!(key in a && typeof a[key] === 'string')) return 0;
+      if (!(key in a && typeof a[key] === 'string' && key in b && typeof b[key] === 'string'))
+        return 0;
       return a[key].localeCompare(b[key]);
     };
 
@@ -44,7 +31,7 @@ export default function NotebookTable({ files }: { files: string[] }) {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => <strong>{text}</strong>,
+      render: (name: string) => <strong>{name}</strong>,
       sorter: getSorter('name'),
     },
 
@@ -70,12 +57,54 @@ export default function NotebookTable({ files }: { files: string[] }) {
     },
 
     {
-      title: 'view',
+      title: 'Creation date',
+      dataIndex: 'creationDate',
+      key: 'creationDate',
+      render: (date: string | null) => (!!date ? format(date, 'dd.MM.yyyy') : '-'),
+      sorter: (a, b) => {
+        if (a.creationDate === null && b.creationDate === null) {
+          return 0;
+        }
+        if (a.creationDate === null) {
+          return 1;
+        }
+        if (b.creationDate === null) {
+          return -1;
+        }
+        return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
+      },
+    },
+
+    {
       dataIndex: 'fileName',
       key: 'fileName',
-      render: (uri: string) => (
-        <Link href={`notebooks/${encodeURIComponent(fileUrl(uri))}`}>View</Link>
-      ),
+      render: (uri: string) => {
+        return (
+          <div id="popover">
+            <Popover
+              content={
+                <div className="flex flex-col gap-2 text-xs text-white">
+                  <div className="flex gap-4">
+                    <img src={`${basePath}/images/icons/eye.svg`} width={12} />
+                    <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
+                  </div>
+                  <div className="flex gap-4">
+                    <img src={`${basePath}/images/icons/download.svg`} width={12} />
+                    <span>Download</span>
+                  </div>
+                </div>
+              }
+              overlayStyle={{ border: '1px solid #096DD9' }}
+              color="#002766"
+              trigger="click"
+              placement="bottom"
+              arrow={false}
+            >
+              <PlusOutlined className="border border-[#096DD9] p-2 text-lg" />
+            </Popover>
+          </div>
+        );
+      },
     },
   ];
 
@@ -93,7 +122,7 @@ export default function NotebookTable({ files }: { files: string[] }) {
   return (
     <ConfigProvider theme={theme}>
       <div id="table-container">
-        <Table dataSource={data} columns={columns} pagination={false}></Table>
+        <Table dataSource={notebooks} columns={columns} pagination={false}></Table>
       </div>
 
       <style jsx global>{`
@@ -112,16 +141,11 @@ export default function NotebookTable({ files }: { files: string[] }) {
           background-color: #002766 !important; /* Matching header background color */
           font-weight: normal !important;
         }
+
+        #popover * {
+          background-color: #002766 !important;
+        }
       `}</style>
     </ConfigProvider>
   );
-}
-
-interface Notebook {
-  key: string;
-  name: string;
-  description: string;
-  objectOfInterest: string;
-  fileName: string;
-  author: string;
 }

@@ -15,12 +15,14 @@ import { useLoadable } from '@/hooks/hooks';
 import { loadable } from 'jotai/utils';
 import { LoadingOutlined } from '@ant-design/icons';
 import NotebookTable from './NotebookTable';
-import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
+import fetchNotebooks from '@/util/virtual-lab/github';
 
 export default async function VirtualLab({
   params,
 }: ServerSideComponentProp<{ virtualLabId: string }>) {
   const { virtualLabId } = params;
-  const fileList = await fetchNotebooks('');
-  return <NotebookTable files={fileList} />;
+  const notebooks = await fetchNotebooks('');
+
+  console.log(notebooks);
+  return <NotebookTable notebooks={notebooks} />;
 }
