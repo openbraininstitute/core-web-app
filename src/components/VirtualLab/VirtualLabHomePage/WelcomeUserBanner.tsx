@@ -1,19 +1,23 @@
 'use client';
 
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CloseOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
-import { useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { Button } from 'antd';
+
 import Realistic from 'react-canvas-confetti/dist/presets/realistic';
+
 import { basePath } from '@/config';
 import styles from '../VirtualLabBanner/virtual-lab-banner.module.css';
 
 export default function WelcomeUserBanner({ title }: { title?: string }) {
   const { data } = useSession();
+  const pathname = usePathname();
+  const router = useRouter();
   const params = useSearchParams();
   const userName = data?.user.name ?? data?.user.username ?? data?.user.email ?? '';
-  const [show, setShow] = useState<boolean>(!!params.get('invite_accepted'));
+  const [show, setShow] = useState<boolean>(() => !!params.get('invite_accepted'));
   const [explodeConfetti, setExplodeConfetti] = useState(false);
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function WelcomeUserBanner({ title }: { title?: string }) {
             />
           )}
         </div>
-        <div className="relative mt-10 flex bg-gradient-to-r from-[#345D36] to-[#6DC371] p-8">
+        <div className="relative mt-10 flex bg-gradient-to-r from-[#345D36] to-[#6DC371] p-8 z-10">
           <div
             className={styles.bannerImg}
             style={{
@@ -44,9 +48,12 @@ export default function WelcomeUserBanner({ title }: { title?: string }) {
           </div>
           <Button
             icon={<CloseOutlined className="text-primary-8" />}
-            onClick={() => setShow(false)}
+            onClick={() => {
+              router.push(`${pathname}`);
+              setShow(false)
+            }}
             ghost
-            className="absolute right-4 top-4 border-none"
+            className="absolute right-4 top-4 border-none cursor-pointer"
           />
         </div>
       </>
