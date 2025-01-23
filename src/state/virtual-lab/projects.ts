@@ -31,8 +31,9 @@ export const virtualLabProjectDetailsAtomFamily = atomFamily(
 );
 
 export const virtualLabProjectUsersAtomFamily = atomFamily(
-  ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-    atom<Promise<VirtualLabMember[] | undefined>>(async () => {
+  ({ virtualLabId, projectId }: { virtualLabId: string | null; projectId: string | null }) =>
+    atomWithRefresh<Promise<VirtualLabMember[] | null>>(async () => {
+      if (!virtualLabId || !projectId) return null;
       const response = await getVirtualLabProjectUsers(virtualLabId, projectId);
       return response.data.users;
     }),
