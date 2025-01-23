@@ -1,11 +1,17 @@
-import { useSession } from 'next-auth/react';
-import { Button, ConfigProvider, Form, Input, Select } from 'antd';
 import { useState, useEffect, useReducer } from 'react';
-import { useAtom } from 'jotai';
+import { Button, ConfigProvider, Form, Input, Select } from 'antd';
 import { MailOutlined } from '@ant-design/icons';
-import VirtualLabMemberIcon from '../../VirtualLabMemberIcon';
-import { InvitedMember, selectedMembersAtom, Form as FormT } from './shared';
-import NewProjectModalInputs from './NewProjectModalInputs';
+import { useSession } from 'next-auth/react';
+import { useAtom } from 'jotai';
+import sortBy from 'lodash/sortBy';
+
+import NewProjectModalInputs from '@/components/VirtualLab/projects/VirtualLabProjectList/NewProjectModalInputs';
+import VirtualLabMemberIcon from '@/components/VirtualLab/VirtualLabMemberIcon';
+import {
+  InvitedMember,
+  selectedMembersAtom,
+  Form as FormT,
+} from '@/components/VirtualLab/projects/VirtualLabProjectList/shared';
 import { VirtualLabMember } from '@/types/virtual-lab/members';
 
 const { Option } = Select;
@@ -17,7 +23,7 @@ export default function NewProjectModalForm({
 }: {
   vlabId: string;
   form: FormT;
-  members?: VirtualLabMember[];
+  members?: VirtualLabMember[] | null;
 }) {
   const session = useSession();
   const [showInvitation, setShowInvitation] = useState(false);
@@ -44,6 +50,7 @@ export default function NewProjectModalForm({
     <Form form={form} layout="vertical" style={{ paddingBlockStart: 40 }}>
       <ConfigProvider
         theme={{
+          hashed: false,
           components: {
             Input: {
               activeBg: 'transparent',
@@ -72,71 +79,81 @@ export default function NewProjectModalForm({
         }}
       >
         <NewProjectModalInputs vlabId={vlabId} />
-        {members?.map((member) => (
-          <div key={member.id} className="text-primary-8">
-            <VirtualLabMemberIcon
-              memberRole={member.role}
-              firstName={member.first_name}
-              lastName={member.last_name}
-            />
-            <div key={member.id} className="ml-5 inline-block font-bold">
-              {member.name}
+        <div className="flex w-full flex-col gap-2">
+          {sortBy(members, ['role'])
+            .filter((o) => o.invite_accepted)
+            ?.map((member) => (
+              <div key={member.id} className="flex items-center text-primary-8">
+                <VirtualLabMemberIcon
+                  inviteAccepted={member.invite_accepted}
+                  email={member.email}
+                  memberRole={member.role}
+                  firstName={member.first_name}
+                  lastName={member.last_name}
+                />
+                <div
+                  key={member.id}
+                  className="ml-5 inline-block h-8 text-center align-middle font-bold"
+                >
+                  {member.invite_accepted ? member.name : member.email}
+                </div>
+                <Select
+                  style={{ width: 200, marginLeft: 'auto' }}
+                  defaultValue={member.role}
+                  onChange={(v) => {
+                    const m = members?.find((m_) => m_.id === v);
+                    if (m) setSelectedMembers([...selectedMembers, { ...member, role: v }]);
+                  }}
+                  disabled={member.email === session.data?.user?.email}
+                  className="float-right inline-block"
+                >
+                  <Option value="admin">Admin</Option>
+                  <Option value="member">Member</Option>
+                </Select>
+              </div>
+            ))}
+        </div>
+        {!!invitedMembers.length && <div className="my-4 h-px w-full bg-gray-200" />}
+        <div className="flex w-full flex-col gap-2">
+          {invitedMembers.map((member) => (
+            <div key={member.email} className="mt-1 flex items-center gap-2 text-primary-8">
+              <div className="inline-flex h-12 w-12 items-center justify-center bg-primary-8">
+                <MailOutlined className="text-white" />
+              </div>
+              <div key={member.email} className="ml-5 inline-block font-bold">
+                {member.email}
+              </div>
+              <div className="flex-grow" />
+              <button
+                type="button"
+                className="float-right mr-3 inline-block"
+                onClick={() => {
+                  dispatch({ type: 'remove', payload: member });
+                }}
+              >
+                Cancel invitation
+              </button>
             </div>
-            <Select
-              style={{ width: 200, top: 7 }}
-              defaultValue={member.role}
-              onChange={(v) => {
-                const m = members.find((m_) => m_.id === v);
-                if (m) setSelectedMembers([...selectedMembers, { ...member, role: v }]);
-              }}
-              disabled={member.email === session.data?.user?.email}
-              className="float-right inline-block"
-            >
-              <Option value="admin">Admin</Option>
-              <Option value="member">Member</Option>
-            </Select>
-          </div>
-        ))}
-
-        {invitedMembers.map((member) => (
-          <div key={member.email} className="mt-1 flex items-center text-primary-8">
-            <div className="inline-flex h-12 w-12 items-center justify-center bg-primary-8">
-              <MailOutlined className="text-white" />
-            </div>
-            <div key={member.email} className="ml-5 inline-block font-bold">
-              {member.email}
-            </div>
-            <div className="flex-grow" />
-            <button
-              type="button"
-              className="float-right mr-3 inline-block"
-              onClick={() => {
-                dispatch({ type: 'remove', payload: member });
-              }}
-            >
-              Cancel invitation
-            </button>
-          </div>
-        ))}
-
+          ))}
+        </div>
         {showInvitation && (
-          <div className="mt-3 flex w-full items-center">
+          <div className="mt-5 flex w-full items-center gap-3">
             <div className="inline-flex h-12 w-12 items-center justify-center bg-gray-100">
               <MailOutlined />
             </div>
-            <div className="ml-5 inline-block">
-              <span className="mr-2 inline-block font-bold text-primary-8">Invitation to:</span>
-              <div className="inline-block">
+            <div className="flex items-center">
+              <span className="inline-block font-bold text-primary-8">Invitation to: </span>
+              <div className="ml-1 inline-block">
                 <Input
                   placeholder="Enter email address"
                   value={newInvite?.email}
                   onChange={(v) => setNewInvite({ ...newInvite, email: v.currentTarget.value })}
+                  className="px-2 py-1"
                 />
               </div>
             </div>
-            <div className="grow" />
             <div className="flex items-center">
-              <div>As</div>
+              <div className="mr-1">As</div>
               <Select
                 defaultValue="admin"
                 onChange={(v: 'admin' | 'member') => setNewInvite({ ...newInvite, role: v })}
@@ -145,7 +162,7 @@ export default function NewProjectModalForm({
                 <Option value="member">Member</Option>
               </Select>
             </div>
-            <div className="flex">
+            <div className="ml-auto mr-3 flex">
               {!!newInvite.email && (
                 <button
                   type="button"
@@ -176,8 +193,6 @@ export default function NewProjectModalForm({
         <Button
           className="mt-5 flex h-12 items-center rounded-none bg-white font-bold text-primary-8"
           onClick={() => setShowInvitation(true)}
-          // disabling it for SfN
-          disabled
         >
           <div className="relative -top-1">
             Add Member

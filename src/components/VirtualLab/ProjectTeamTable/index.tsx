@@ -4,19 +4,19 @@ import { useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table } from 'antd';
 import sortBy from 'lodash/sortBy';
-import get from 'lodash/get';
 import find from 'lodash/find';
+import get from 'lodash/get';
 
-import VirtualLabMemberIcon from '@/components/VirtualLab/VirtualLabMemberIcon';
+import VirtualLabMemberIcon from '../VirtualLabMemberIcon';
+import { ModalInviteProjectMember } from '../projects/ModalInviteProjectMember';
 import { MockRole, Role, VirtualLabMember } from '@/types/virtual-lab/members';
-import { ModalInviteVlabMember } from '@/components/VirtualLab/projects/ModalInviteProjectMember/ModalInviteVlabMember';
 
 type Props = {
   users: VirtualLabMember[];
 };
 
-export default function VirtualLabTeamTable({ users }: Props) {
-  const [openInviteVlabMemberModal, setOpenInviteVlabMemberModal] = useState(false);
+export default function ProjectTeamTable({ users }: Props) {
+  const [openInviteProjectMemberModal, setOpenInviteProjectMemberModal] = useState(false);
   const roleOptions: { value: Role; label: string }[] = [
     { value: 'admin', label: 'Administrator' },
     { value: 'member', label: 'Member' },
@@ -72,11 +72,11 @@ export default function VirtualLabTeamTable({ users }: Props) {
         //     },
         //   }}
         // >
-        //   <Select
+        //    <Select
         //     suffixIcon={<DownOutlined style={{ color: 'white' }} />}
         //     defaultValue={role}
         //     style={{ width: 200, marginLeft: 300, float: 'right' }}
-        //     onChange={() => { }}
+        //     onChange={() => {}}
         //     options={roleOptions}
         //   />
         // </ConfigProvider>
@@ -97,7 +97,7 @@ export default function VirtualLabTeamTable({ users }: Props) {
         <button
           type="button"
           className="flex w-[220px] justify-between border border-primary-7 bg-neutral-3 p-3"
-          onClick={() => setOpenInviteVlabMemberModal(true)}
+          onClick={() => setOpenInviteProjectMemberModal(true)}
         >
           <span className="font-bold">Invite member</span>
           <PlusOutlined />
@@ -123,9 +123,9 @@ export default function VirtualLabTeamTable({ users }: Props) {
           showHeader={false}
         />
       </ConfigProvider>
-      <ModalInviteVlabMember
-        open={openInviteVlabMemberModal}
-        onChange={() => setOpenInviteVlabMemberModal(false)}
+      <ModalInviteProjectMember
+        open={openInviteProjectMemberModal}
+        onChange={() => setOpenInviteProjectMemberModal(false)}
       />
     </div>
   );
