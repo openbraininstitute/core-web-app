@@ -2,7 +2,7 @@
 
 import { ConfigProvider } from 'antd';
 import { ColumnType } from 'antd/es/table';
-import { basePath, notebookRepository } from '@/config';
+import { basePath } from '@/config';
 import Table from 'antd/es/table';
 import Link from 'next/link';
 import { Notebook } from '@/util/virtual-lab/github';
@@ -10,24 +10,38 @@ import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
-
-const fileUrl = (path: string) =>
-  encodeURIComponent(
-    `${notebookRepository.user}/${notebookRepository.repository}/blob/master/${path}`
-  );
+import { useMemo, useState } from 'react';
+import Search from '@/components/VirtualLab/Search';
+import { getSorter, fileUrl } from './utils';
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
-  const getSorter = (key: keyof Notebook) => {
-    const sorter = (a: Notebook, b: Notebook) => {
-      if (!(key in a && typeof a[key] === 'string' && key in b && typeof b[key] === 'string'))
-        return 0;
-      return a[key].localeCompare(b[key]);
-    };
+  const [search, setSearch] = useState('');
 
-    return sorter;
-  };
+  type StringKeys = {
+    [K in keyof Notebook]: Notebook[K] extends string ? K : never;
+  }[keyof Notebook];
+
+  const filteredNotebooks = useMemo(() => {
+    if (!search) return notebooks;
+    return notebooks.filter((n) => {
+      const searchFields: StringKeys[] = [
+        'author',
+        'description',
+        'fileName',
+        'key',
+        'name',
+        'objectOfInterest',
+      ];
+
+      for (const field of searchFields) {
+        if (n[field].toLocaleLowerCase().includes(search.toLocaleLowerCase())) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }, [notebooks, search]);
 
   const columns: ColumnType<Notebook>[] = [
     {
@@ -144,21 +158,26 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     },
   ];
 
-  const theme = {
-    token: {
-      colorBgContainer: '#002766',
-      colorBorderSecondary: 'transparent',
-      colorText: '#fff',
-      colorTextHeading: '#BAE7FF',
-      tableSortIconColor: '#BAE7FF',
-      tableSortIconHoverColor: '#ff9800',
-    },
-  };
-
   return (
-    <ConfigProvider theme={theme}>
-      <div id="table-container">
-        <Table dataSource={notebooks} columns={columns} pagination={false}></Table>
+    <ConfigProvider
+      theme={{
+        token: {
+          colorBgContainer: '#002766',
+          colorBorderSecondary: 'transparent',
+          colorText: '#fff',
+          colorTextHeading: '#BAE7FF',
+        },
+      }}
+    >
+      <Search
+        placeholder="Search for notebooks"
+        containerClassName="ml-5 mt-10"
+        className="w-[200px]"
+        value={search}
+        onChange={(e) => setSearch(e.currentTarget.value)}
+      />
+      <div id="table-container" className="mt-5">
+        <Table dataSource={filteredNotebooks} columns={columns} pagination={false}></Table>
       </div>
 
       <style jsx global>{`
