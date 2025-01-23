@@ -11,12 +11,17 @@ import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
-import Search from '@/components/VirtualLab/Search';
+import useSearch from '@/components/VirtualLab/Search';
 import { getSorter, fileUrl } from './utils';
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
-  const [search, setSearch] = useState('');
+
+  const { search, Search } = useSearch({
+    placeholder: 'Search for notebooks',
+    containerClassName: 'ml-5 mt-10',
+    className: 'w-[200px]',
+  });
 
   type StringKeys = {
     [K in keyof Notebook]: Notebook[K] extends string ? K : never;
@@ -169,13 +174,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         },
       }}
     >
-      <Search
-        placeholder="Search for notebooks"
-        containerClassName="ml-5 mt-10"
-        className="w-[200px]"
-        value={search}
-        onChange={(e) => setSearch(e.currentTarget.value)}
-      />
+      {Search}
       <div id="table-container" className="mt-5">
         <Table dataSource={filteredNotebooks} columns={columns} pagination={false}></Table>
       </div>
