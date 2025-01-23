@@ -9,7 +9,7 @@ export default async function VirtualLabMainPage() {
   try {
     const virtualLabs = await getVirtualLabsOfUser();
     if (!virtualLabs.data.results || virtualLabs.data.results.length === 0) {
-      redirectPath = '/dev/virtual-lab/sandbox/home';
+      redirectPath = '/virtual-lab/sandbox/home';
     }
 
     toRender = <VirtualLabDashboard virtualLabs={virtualLabs.data.results} />;

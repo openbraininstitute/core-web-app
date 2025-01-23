@@ -16,7 +16,6 @@ export default function InviteLoader() {
   const session = useAtomValue(sessionAtom);
   const inviteToken = useSearchParams().get('token');
   const router = useRouter();
-
   useEffect(() => {
     if (!session?.accessToken) {
       return router.push(getErrorUrl(null, session?.accessToken, inviteToken));

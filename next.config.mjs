@@ -55,7 +55,6 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: '/virtual-lab/:path*', destination: '/dev/virtual-lab/:path*', permanent: false },
       {
         source: '/build',
         destination: '/build/cell-composition/interactive',
@@ -75,15 +74,6 @@ const nextConfig = {
         source: '/experiment-designer',
         destination: '/experiment-designer/experiment-setup',
         permanent: false,
-      },
-    ];
-  },
-
-  async rewrites() {
-    return [
-      {
-        source: '/dev/virtual-lab/:path*',
-        destination: '/virtual-lab/:path*',
       },
     ];
   },
