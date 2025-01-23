@@ -1,0 +1,39 @@
+.exploreCircuitsList {
+  background-color: #fff;
+  color: #002766;
+  padding: 1em;
+  height: 100%;
+  overflow: auto;
+}
+
+.exploreCircuitsList ul {
+  list-style: none;
+}
+
+.item {
+  padding: 1em;
+  margin: 1em;
+  background: rgb(245 245 245 / var(--tw-bg-opacity));
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0em 2em;
+  transition: box-shadow 0.3s;
+}
+
+.exploreCircuitsList ul > li:hover .item {
+  box-shadow: 0 -0.25em inset currentColor;
+}
+
+.item > div:last-child {
+  grid-column: 1/-1;
+}
+
+.name {
+  font-size: 120%;
+  font-weight: bolder;
+}
+
+.nodata {
+  font-size: 120%;
+  opacity: 0.5;
+}

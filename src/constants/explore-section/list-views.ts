@@ -12,6 +12,7 @@ export enum DataType {
   SingleNeuronSimulation = 'SingleNeuronSimulation',
   SingleNeuronSynaptome = 'SingleNeuronSynaptome',
   SingleNeuronSynaptomeSimulation = 'SynaptomeSimulation',
+  Circuits43 = 'Issue_43',
 }
 
 export const EXPERIMENTAL_DATATYPES = [

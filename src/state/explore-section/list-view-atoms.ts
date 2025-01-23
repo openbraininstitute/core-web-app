@@ -3,6 +3,7 @@ import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
+import { SelectedBrainRegion } from '../brain-regions/types';
 import columnKeyToFilter from './column-key-to-filter';
 import { Field } from '@/constants/explore-section/fields-config/enums';
 
@@ -25,6 +26,7 @@ import {
 import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
+  selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
 } from '@/state/brain-regions';
@@ -32,12 +34,18 @@ import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 
-type DataAtomFamilyScopeType = {
+export type DataAtomFamilyScopeType = {
   dataType: DataType;
   dataScope?: ExploreDataScope;
   resourceId?: string;
   virtualLabInfo?: VirtualLabInfo;
   key: string;
+  // Overwrite the default queries
+  custom?: Partial<{
+    totalByExperimentAndRegionsAtom?(
+      selectedBrainRegion: SelectedBrainRegion
+    ): Promise<number | undefined | null>;
+  }>;
 };
 
 const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
@@ -123,26 +131,39 @@ export const filtersAtom = atomFamily(
 export const totalByExperimentAndRegionsAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atom<Promise<number | undefined | null>>(async (get) => {
-      const sortState = get(sortStateAtom(scope));
-      let descendantAndAncestorIds: string[] = [];
+      try {
+        if (scope?.custom?.totalByExperimentAndRegionsAtom) {
+          const selectedBrainRegion = await get(selectedBrainRegionAtom);
+          if (!selectedBrainRegion) return 0;
 
-      if (scope.dataScope === ExploreDataScope.SelectedBrainRegion)
-        descendantAndAncestorIds =
-          (await get(selectedBrainRegionWithDescendantsAndAncestorsAtom)) || [];
+          console.log('🚀 [list-view-atoms] selectedBrainRegion = ', selectedBrainRegion); // @FIXME: Remove this line written on 2025-01-21 at 16:02
+          return await scope.custom.totalByExperimentAndRegionsAtom(selectedBrainRegion);
+        }
 
-      const query = fetchDataQuery(
-        0,
-        1,
-        [],
-        scope.dataType,
-        sortState,
-        '',
-        descendantAndAncestorIds
-      );
-      const result =
-        query && (await fetchTotalByExperimentAndRegions(query, undefined, scope.virtualLabInfo));
+        const sortState = get(sortStateAtom(scope));
+        let descendantAndAncestorIds: string[] = [];
 
-      return result;
+        if (scope.dataScope === ExploreDataScope.SelectedBrainRegion) {
+          descendantAndAncestorIds =
+            (await get(selectedBrainRegionWithDescendantsAndAncestorsAtom)) || [];
+        }
+
+        const query = fetchDataQuery(
+          0,
+          1,
+          [],
+          scope.dataType,
+          sortState,
+          '',
+          descendantAndAncestorIds
+        );
+        const result =
+          query && (await fetchTotalByExperimentAndRegions(query, undefined, scope.virtualLabInfo));
+        return result;
+      } catch (ex) {
+        console.error(scope, ex);
+        throw ex;
+      }
     }),
   isListAtomEqual
 );

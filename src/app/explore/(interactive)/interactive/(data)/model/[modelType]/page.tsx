@@ -23,6 +23,10 @@ const ExploreSynaptomeModelTable = dynamic(
   () => import('@/components/explore-section/Synaptome/ExploreSynaptomeModelTable')
 );
 
+const ExploreCircuitsList = dynamic(
+  () => import('@/components/explore-section/ExploreCircuitsList')
+);
+
 export default function VirtualLabModelListingView() {
   const params = useParams<{ modelType: string; virtualLabId: string; projectId: string }>();
   const currentModel = Object.keys(MODEL_DATA_TYPES).find(
@@ -67,6 +71,8 @@ export default function VirtualLabModelListingView() {
           dataScope={ExploreDataScope.SelectedBrainRegion}
         />
       );
+    case DataType.Circuits43:
+      return <ExploreCircuitsList />;
     default:
       notFound();
   }

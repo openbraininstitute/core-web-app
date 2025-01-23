@@ -8,7 +8,10 @@ import StatItem, { StatError, StatItemSkeleton } from './StatItem';
 import { DataType } from '@/constants/explore-section/list-views';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
 import { DATA_TYPE_GROUPS_CONFIG } from '@/constants/explore-section/data-type-groups';
-import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
+import {
+  DataAtomFamilyScopeType,
+  totalByExperimentAndRegionsAtom,
+} from '@/state/explore-section/list-view-atoms';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
@@ -17,10 +20,12 @@ function DataTypeGroupTotal({
   dataType,
   basePath,
   virtualLabInfo,
+  custom,
 }: {
   dataType: DataType;
   basePath: string;
   virtualLabInfo?: VirtualLabInfo;
+  custom?: DataAtomFamilyScopeType['custom'];
 }) {
   const dataScope = ExploreDataScope.SelectedBrainRegion;
 
@@ -31,6 +36,7 @@ function DataTypeGroupTotal({
         dataScope,
         virtualLabInfo,
         key: (virtualLabInfo?.projectId ?? '') + dataType,
+        custom,
       })
     )
   );
@@ -76,6 +82,7 @@ export default function DataTypeGroupTotals({
           dataType={dataType as DataType}
           basePath={`${pathName}/${extensionPath}`}
           virtualLabInfo={virtualLabInfo}
+          custom={config[dataType as DataType]?.custom}
         />
       ))}
     </>
