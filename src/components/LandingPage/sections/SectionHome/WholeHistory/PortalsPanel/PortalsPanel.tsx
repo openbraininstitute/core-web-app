@@ -93,13 +93,13 @@ const PORTALS: Array<{
     content:
       'Thalamic control of sensory processing and spindles in a biophysical somatosensory thalamoreticular circuit model of wakefulness and sleep.',
     image: ThalamusURL.src,
-    href: 'https://bbp.epfl.ch/nexus/web/studios/public/thalamus/studios/e9ceee28-b2c2-4c4d-bff9-d16f43c3eb0f',
+    href: 'https://bbp.epfl.ch/thalamus-studio',
   },
   {
     title: 'The topological sampling data studio',
     content:
       "Input data and analysis results of our manuscript 'Topology of synaptic connectivity constrains neuronal stimulus representation, predicting two complementary coding strategies'.",
     image: TopologicalURL.src,
-    href: 'https://bbp.epfl.ch/nexus/web/studios/public/topological-sampling/studios/data:a7cc7e9f-53c5-4940-929c-95f4c4f57728?workspaceId=https%3A%2F%2Fbbp.epfl.ch%2Fneurosciencegraph%2Fdata%2F165e54c5-e8f6-4d85-ac94-53bc3dfe5cd4&dashboardId=https%3A%2F%2Fbbp.epfl.ch%2Fneurosciencegraph%2Fdata%2Ff7f58b8a-fe14-4956-9c20-44a60729893a',
+    href: 'https://bbp.epfl.ch/topological-sampling-portal',
   },
 ];
