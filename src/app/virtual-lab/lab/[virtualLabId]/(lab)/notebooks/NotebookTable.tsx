@@ -52,131 +52,134 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     });
   }, [notebooks, search]);
 
-  const initialColumns: Column<Notebook>[] = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string) => <strong>{name}</strong>,
-      sorter: getSorter('name'),
-      hidden: false,
-    },
-
-    {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      sorter: getSorter('description'),
-      hidden: false,
-    },
-
-    {
-      title: 'Object of interest',
-      dataIndex: 'objectOfInterest',
-      key: 'objectOfInterest',
-      sorter: getSorter('objectOfInterest'),
-      hidden: false,
-    },
-
-    {
-      title: 'Author',
-      dataIndex: 'author',
-      key: 'author',
-      sorter: getSorter('author'),
-      hidden: false,
-    },
-
-    {
-      title: 'Creation date',
-      dataIndex: 'creationDate',
-      key: 'creationDate',
-      render: (date: string | null) => (!!date ? format(date, 'dd.MM.yyyy') : '-'),
-      sorter: (a, b) => {
-        if (a.creationDate === null && b.creationDate === null) {
-          return 0;
-        }
-        if (a.creationDate === null) {
-          return 1;
-        }
-        if (b.creationDate === null) {
-          return -1;
-        }
-        return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
+  const initialColumns: Column<Notebook>[] = useMemo(
+    () => [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        key: 'name',
+        render: (name: string) => <strong>{name}</strong>,
+        sorter: getSorter('name'),
+        hidden: false,
       },
-      hidden: false,
-    },
 
-    {
-      dataIndex: 'fileName',
-      key: 'fileName',
-      render: (uri: string) => {
-        const directory = uri.slice(0, uri.lastIndexOf('/'));
-        const notebookName = directory.split('/').pop();
-
-        return (
-          <div id="popover">
-            <Popover
-              content={
-                <div className="flex min-w-[120px] flex-col gap-2 text-white">
-                  <div className="flex gap-4">
-                    <img src={`${basePath}/images/icons/eye.svg`} width={12} />
-                    <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
-                  </div>
-                  <div className="flex gap-4">
-                    <img src={`${basePath}/images/icons/download.svg`} width={12} />
-                    <button
-                      className="hover:text-primary-4"
-                      onClick={async () => {
-                        if (loadingZip) return;
-                        setLoadingZip(true);
-                        const res = await fetch(
-                          `/api/downloadNotebook?folder=${encodeURIComponent(directory)}`
-                        );
-
-                        setLoadingZip(false);
-                        if (!res.ok) {
-                          throw new Error('Failed to fetch the zip file');
-                        }
-
-                        const blob = await res.blob();
-
-                        // Create a temporary link element to trigger the download
-                        const link = document.createElement('a');
-                        const downloadUrl = window.URL.createObjectURL(blob);
-                        link.href = downloadUrl;
-                        link.download = `${notebookName}.zip`;
-                        document.body.appendChild(link);
-                        link.click(); // Trigger the download
-                        document.body.removeChild(link); // Clean up the DOM
-
-                        window.URL.revokeObjectURL(downloadUrl);
-                      }}
-                    >
-                      Download
-                    </button>
-                    {loadingZip && <LoadingOutlined />}
-                  </div>
-                </div>
-              }
-              overlayStyle={{ border: '1px solid #096DD9' }}
-              color="#002766"
-              trigger="click"
-              placement="bottom"
-              arrow={false}
-            >
-              <PlusOutlined className="border border-[#096DD9] p-2 text-lg" />
-            </Popover>
-          </div>
-        );
+      {
+        title: 'Description',
+        dataIndex: 'description',
+        key: 'description',
+        sorter: getSorter('description'),
+        hidden: false,
       },
-      hidden: false,
-    },
-  ];
+
+      {
+        title: 'Object of interest',
+        dataIndex: 'objectOfInterest',
+        key: 'objectOfInterest',
+        sorter: getSorter('objectOfInterest'),
+        hidden: false,
+      },
+
+      {
+        title: 'Author',
+        dataIndex: 'author',
+        key: 'author',
+        sorter: getSorter('author'),
+        hidden: false,
+      },
+
+      {
+        title: 'Creation date',
+        dataIndex: 'creationDate',
+        key: 'creationDate',
+        render: (date: string | null) => (!!date ? format(date, 'dd.MM.yyyy') : '-'),
+        sorter: (a, b) => {
+          if (a.creationDate === null && b.creationDate === null) {
+            return 0;
+          }
+          if (a.creationDate === null) {
+            return 1;
+          }
+          if (b.creationDate === null) {
+            return -1;
+          }
+          return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
+        },
+        hidden: false,
+      },
+
+      {
+        dataIndex: 'fileName',
+        key: 'fileName',
+        render: (uri: string) => {
+          const directory = uri.slice(0, uri.lastIndexOf('/'));
+          const notebookName = directory.split('/').pop();
+
+          return (
+            <div id="popover">
+              <Popover
+                content={
+                  <div className="flex min-w-[120px] flex-col gap-2 text-white">
+                    <div className="flex gap-4">
+                      <img src={`${basePath}/images/icons/eye.svg`} width={12} />
+                      <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
+                    </div>
+                    <div className="flex gap-4">
+                      <img src={`${basePath}/images/icons/download.svg`} width={12} />
+                      <button
+                        className="hover:text-primary-4"
+                        onClick={async () => {
+                          if (loadingZip) return;
+                          setLoadingZip(true);
+                          const res = await fetch(
+                            `/api/downloadNotebook?folder=${encodeURIComponent(directory)}`
+                          );
+
+                          setLoadingZip(false);
+                          if (!res.ok) {
+                            throw new Error('Failed to fetch the zip file');
+                          }
+
+                          const blob = await res.blob();
+
+                          // Create a temporary link element to trigger the download
+                          const link = document.createElement('a');
+                          const downloadUrl = window.URL.createObjectURL(blob);
+                          link.href = downloadUrl;
+                          link.download = `${notebookName}.zip`;
+                          document.body.appendChild(link);
+                          link.click(); // Trigger the download
+                          document.body.removeChild(link); // Clean up the DOM
+
+                          window.URL.revokeObjectURL(downloadUrl);
+                        }}
+                      >
+                        Download
+                      </button>
+                      {loadingZip && <LoadingOutlined />}
+                    </div>
+                  </div>
+                }
+                overlayStyle={{ border: '1px solid #096DD9' }}
+                color="#002766"
+                trigger="click"
+                placement="bottom"
+                arrow={false}
+              >
+                <PlusOutlined className="border border-[#096DD9] p-2 text-lg" />
+              </Popover>
+            </div>
+          );
+        },
+        hidden: false,
+      },
+    ],
+    []
+  );
 
   const [activeColumns, setActiveColumns] = useState(initialColumns);
 
   const { filteredData, Filter, Apply } = useFilters(
-    activeColumns,
+    initialColumns,
     setActiveColumns,
     filteredNotebooks
   );
