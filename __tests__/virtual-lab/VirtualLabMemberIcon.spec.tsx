@@ -21,7 +21,7 @@ describe('VirtualLabMemberIcon', () => {
   });
 
   it('should apply background and text color from the colorDictionary based on the first letter of the first name', () => {
-    const { container } = render(<VirtualLabMemberIcon {...defaultProps} />);
+    render(<VirtualLabMemberIcon {...defaultProps} />);
     const firstChar = 'John'.codePointAt(0);
     // Calculate the expected index based on the code point
     const expectedIndex = firstChar ? firstChar % colorDictionary.length : 0;
@@ -51,7 +51,7 @@ describe('VirtualLabMemberIcon', () => {
 
   it('should use the correct color dictionary index for a different first name', () => {
     const props = { ...defaultProps, firstName: 'Alice', inviteAccepted: true };
-    const { container } = render(<VirtualLabMemberIcon {...props} />);
+    render(<VirtualLabMemberIcon {...props} />);
 
     const firstChar = 'Alice'.codePointAt(0);
     // Calculate the expected index based on the code point
