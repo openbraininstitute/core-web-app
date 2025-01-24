@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { ColumnType } from 'antd/lib/table';
 import { ConfigProvider, Table } from 'antd';
+import { ColumnType } from 'antd/lib/table';
 import sortBy from 'lodash/sortBy';
 import find from 'lodash/find';
 import get from 'lodash/get';
