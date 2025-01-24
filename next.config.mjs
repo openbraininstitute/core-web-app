@@ -38,6 +38,11 @@ const nextConfig = {
         test: /\.(txt)$/i,
         // More information here https://webpack.js.org/guides/asset-modules/
         type: 'asset/resource',
+      },
+      {
+        test: /\.(mp4|pdf)$/i,
+        // More information here https://webpack.js.org/guides/asset-modules/
+        type: 'asset',
       }
     );
     return config;
