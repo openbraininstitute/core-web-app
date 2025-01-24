@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table } from 'antd';
+import { ColumnType } from 'antd/es/table';
 import sortBy from 'lodash/sortBy';
 import get from 'lodash/get';
 import find from 'lodash/find';
@@ -22,7 +23,7 @@ export default function VirtualLabTeamTable({ users }: Props) {
     { value: 'member', label: 'Member' },
   ];
 
-  const columns = [
+  const columns: ColumnType<VirtualLabMember>[] = [
     {
       title: 'name',
       dataIndex: 'name',

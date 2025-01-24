@@ -35,7 +35,7 @@ export default function WelcomeUserBanner({ title }: { title?: string }) {
             />
           )}
         </div>
-        <div className="relative mt-10 flex bg-gradient-to-r from-[#345D36] to-[#6DC371] p-8 z-10">
+        <div className="relative z-10 mt-10 flex bg-gradient-to-r from-[#345D36] to-[#6DC371] p-8">
           <div
             className={styles.bannerImg}
             style={{
@@ -50,10 +50,10 @@ export default function WelcomeUserBanner({ title }: { title?: string }) {
             icon={<CloseOutlined className="text-primary-8" />}
             onClick={() => {
               router.push(`${pathname}`);
-              setShow(false)
+              setShow(false);
             }}
             ghost
-            className="absolute right-4 top-4 border-none cursor-pointer"
+            className="absolute right-4 top-4 cursor-pointer border-none"
           />
         </div>
       </>
