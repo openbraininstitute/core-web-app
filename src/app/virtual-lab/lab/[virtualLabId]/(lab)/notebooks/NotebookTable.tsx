@@ -208,7 +208,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       </div>
 
       <div id="table-container" className="mt-5">
-        <Table dataSource={filteredData} columns={activeColumns} pagination={false}></Table>
+        <Table dataSource={filteredNotebooks} columns={activeColumns} pagination={false}></Table>
       </div>
 
       <style jsx global>{`

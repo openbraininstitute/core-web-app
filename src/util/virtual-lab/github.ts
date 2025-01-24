@@ -29,10 +29,7 @@ export interface Notebook {
   creationDate: string | null;
 }
 
-export default async function fetchNotebooks(
-  path: string = '',
-  page: number = 1
-): Promise<Notebook[]> {
+export default async function fetchNotebooks(): Promise<Notebook[]> {
   const repoRes = await fetch(apiBaseUrl, options);
 
   if (!repoRes.ok) {
