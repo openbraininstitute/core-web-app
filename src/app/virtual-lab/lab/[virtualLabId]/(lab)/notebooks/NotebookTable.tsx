@@ -5,7 +5,7 @@ import { ColumnType } from 'antd/es/table';
 import { basePath } from '@/config';
 import Table from 'antd/es/table';
 import Link from 'next/link';
-import { Notebook } from '@/util/virtual-lab/github';
+import fetchNotebooks, { Notebook } from '@/util/virtual-lab/github';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';

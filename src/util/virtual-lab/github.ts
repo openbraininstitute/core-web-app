@@ -1,11 +1,11 @@
 import JSZip from 'jszip';
 import { notebookRepository } from '@/config';
 
-const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/`;
+const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
   headers: {
-    Authorization: 'Bearer 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',
+    Authorization: 'token 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',
     'X-GitHub-Api-Version': '2022-11-28',
   },
   next: {
@@ -33,17 +33,30 @@ export default async function fetchNotebooks(
   path: string = '',
   page: number = 1
 ): Promise<Notebook[]> {
-  const response = await fetch(apiBaseUrl + path + `?page=${page}&per_page=1000`, options);
+  const repoRes = await fetch(apiBaseUrl, options);
+
+  if (!repoRes.ok) {
+    throw new Error(`GitHub API request failed with status: ${repoRes.status}`);
+  }
+  const repo = await repoRes.json();
+
+  const defaultBranch = repo.default_branch;
+
+  if (!defaultBranch) throw new Error(`Failed to fetch the repository`);
+
+  const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
 
   if (!response.ok) {
     throw new Error(`GitHub API request failed with status: ${response.status}`);
   }
 
-  const items: GitHubFile[] = await response.json();
+  const tree = await response.json();
+  if (!tree.tree) throw new Error(`Failed to fetch the github repo`);
+
   const notebooks: Notebook[] = [];
 
-  for (const item of items) {
-    if (item.type === 'file' && item.path.endsWith('.ipynb')) {
+  for (const item of tree.tree) {
+    if (item.path.endsWith('.ipynb')) {
       const parts = item.path.split('/');
       const objectOfInterest = parts[0];
       const name = parts[1];
@@ -57,17 +70,7 @@ export default async function fetchNotebooks(
         author: 'OBI',
         creationDate: await getFileCreationDate(item.path),
       });
-    } else if (item.type === 'dir') {
-      const nestedFiles = await fetchNotebooks(item.path);
-      notebooks.push(...nestedFiles);
     }
-  }
-
-  // Check for next page in the Link header
-  const linkHeader = response.headers.get('link');
-  if (linkHeader && linkHeader.includes('rel="next"')) {
-    const nextPageFiles = await fetchNotebooks(path, page + 1);
-    notebooks.push(...nextPageFiles);
   }
 
   return notebooks;
