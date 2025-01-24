@@ -1,6 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { classNames } from '@/util/utils';
 
 export default function useSearch(
@@ -16,6 +16,13 @@ export default function useSearch(
 
 function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: string }) {
   const { containerClassName, className } = props;
+
+  const inputProps = useMemo(() => {
+    const newProps = { ...props };
+    delete newProps.containerClassName;
+    return newProps;
+  }, [props]);
+
   return (
     <ConfigProvider
       theme={{
@@ -37,7 +44,7 @@ function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: s
         )}
       >
         <input
-          {...props}
+          {...inputProps}
           className={classNames(
             'mr-2 bg-transparent text-primary-3 outline-none placeholder:text-primary-3',
             className

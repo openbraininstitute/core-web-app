@@ -1,6 +1,6 @@
 'use client';
 
-import { ConfigProvider } from 'antd';
+import { Col, ConfigProvider } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import { basePath } from '@/config';
 import Table from 'antd/es/table';
@@ -13,13 +13,16 @@ import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import useSearch from '@/components/VirtualLab/Search';
 import { getSorter, fileUrl } from './utils';
+import { FilterBtn } from '@/components/explore-section/ExploreSectionListingView/FilterControls';
+import FilterControls from '@/components/FilterControls/FilterControls';
+import { Column } from '@/components/FilterControls/FilterControls';
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',
-    containerClassName: 'ml-5 mt-10',
+    containerClassName: 'ml-5',
     className: 'w-[200px]',
   });
 
@@ -48,13 +51,14 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     });
   }, [notebooks, search]);
 
-  const columns: ColumnType<Notebook>[] = [
+  const initialColumns: Column<Notebook>[] = [
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
       render: (name: string) => <strong>{name}</strong>,
       sorter: getSorter('name'),
+      hidden: false,
     },
 
     {
@@ -62,6 +66,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       dataIndex: 'description',
       key: 'description',
       sorter: getSorter('description'),
+      hidden: false,
     },
 
     {
@@ -69,6 +74,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
       sorter: getSorter('objectOfInterest'),
+      hidden: false,
     },
 
     {
@@ -76,6 +82,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       dataIndex: 'author',
       key: 'author',
       sorter: getSorter('author'),
+      hidden: false,
     },
 
     {
@@ -95,6 +102,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         }
         return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
       },
+      hidden: false,
     },
 
     {
@@ -160,8 +168,13 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
           </div>
         );
       },
+      hidden: false,
     },
   ];
+
+  const [activeColumns, setActiveColumns] = useState(initialColumns);
+
+  console.log(activeColumns);
 
   return (
     <ConfigProvider
@@ -174,9 +187,13 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         },
       }}
     >
-      {Search}
+      <div className="mt-10 flex items-center justify-between">
+        {Search}
+        <FilterControls columns={activeColumns} setColumns={setActiveColumns} />
+      </div>
+
       <div id="table-container" className="mt-5">
-        <Table dataSource={filteredNotebooks} columns={columns} pagination={false}></Table>
+        <Table dataSource={filteredNotebooks} columns={activeColumns} pagination={false}></Table>
       </div>
 
       <style jsx global>{`
