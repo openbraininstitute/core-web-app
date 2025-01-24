@@ -1,6 +1,7 @@
 import {
   Dispatch,
   HTMLProps,
+  PropsWithChildren,
   ReactNode,
   SetStateAction,
   useEffect,
@@ -21,23 +22,28 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import ControlPanel from './ControlPanel';
 import { ColumnType } from 'antd/lib/table';
 
-export type Column<T> = ColumnType<T> & {
+export type Column<T extends { [key: string]: any }> = ColumnType<T> & {
   hidden: boolean;
 };
 
-export default function FilterControls<T>({
+export default function FilterControls<T extends { [key: string]: any }>({
   filters,
   disabled,
   className,
   columns,
   setColumns,
-}: {
+  dataSource,
+  Apply,
+  children,
+}: PropsWithChildren<{
   filters?: Filter[];
   disabled?: boolean;
   className?: HTMLProps<HTMLElement>['className'];
   columns: Column<T>[];
   setColumns: (c: Column<T>[]) => void;
-}) {
+  dataSource: T[];
+  Apply: React.ComponentType;
+}>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
   const selectedFiltersCount = filters
@@ -85,10 +91,14 @@ export default function FilterControls<T>({
       </div>
       {displayControlPanel && (
         <ControlPanel
+          dataSource={dataSource}
           onClose={() => setDisplayControlPanel(false)}
           columns={columns}
           setColumns={setColumns}
-        />
+          Apply={Apply}
+        >
+          {children}
+        </ControlPanel>
       )}
     </>
   );

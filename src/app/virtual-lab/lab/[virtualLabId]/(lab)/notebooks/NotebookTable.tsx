@@ -16,6 +16,7 @@ import { getSorter, fileUrl } from './utils';
 import { FilterBtn } from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import FilterControls from '@/components/FilterControls/FilterControls';
 import { Column } from '@/components/FilterControls/FilterControls';
+import useFilters from '@/components/FilterControls/Filter';
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
@@ -174,7 +175,11 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
 
   const [activeColumns, setActiveColumns] = useState(initialColumns);
 
-  console.log(activeColumns);
+  const { filteredData, Filter, Apply } = useFilters(
+    activeColumns,
+    setActiveColumns,
+    filteredNotebooks
+  );
 
   return (
     <ConfigProvider
@@ -189,11 +194,18 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     >
       <div className="mt-10 flex items-center justify-between">
         {Search}
-        <FilterControls columns={activeColumns} setColumns={setActiveColumns} />
+        <FilterControls
+          columns={activeColumns}
+          setColumns={setActiveColumns}
+          dataSource={notebooks}
+          Apply={Apply}
+        >
+          <Filter columnKey="name" />
+        </FilterControls>
       </div>
 
       <div id="table-container" className="mt-5">
-        <Table dataSource={filteredNotebooks} columns={activeColumns} pagination={false}></Table>
+        <Table dataSource={filteredData} columns={activeColumns} pagination={false}></Table>
       </div>
 
       <style jsx global>{`

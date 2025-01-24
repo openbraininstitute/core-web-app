@@ -1,30 +1,26 @@
-import { Filter } from '@/components/Filter/types';
 import { CloseOutlined } from '@ant-design/icons';
-import { ColumnType } from 'antd/lib/table';
 import { Column } from './FilterControls';
-import FilterGroup from '@/components/FilterControls/Filter';
 
-export type ControlPanelProps<T> = {
+export type ControlPanelProps<T extends { [key: string]: any }> = {
   children?: React.ReactNode;
   columns: Column<T>[];
   setColumns: (columns: Column<T>[]) => void;
   onClose: () => void;
+  dataSource: T[];
+  Apply: React.ComponentType;
 };
 
-import filter from '@/components/FilterControls/Filter';
-import useFilters from '@/components/FilterControls/Filter';
-
-export default function ControlPanel<T>({
-  children,
+export default function ControlPanel<T extends { [key: string]: any }>({
   onClose,
   columns,
   setColumns,
+  dataSource,
+  children,
+  Apply,
 }: ControlPanelProps<T>) {
   const activeColumnsText = `${columns.length} active ${
     columns.length === 1 ? 'column' : 'columns'
   }`;
-
-  const { filters, Filter } = useFilters(columns, setColumns);
 
   return (
     <div
@@ -52,29 +48,20 @@ export default function ControlPanel<T>({
           the option(s).
         </p>
 
-        <div className="mt-10 flex flex-col gap-12">
-          <Filter columnKey="name" />
-          <Filter columnKey="description" />
-          <Filter columnKey="objectOfInterest" />
-          {children}
-        </div>
+        <div className="mt-10 flex flex-col gap-12">{children}</div>
       </div>
 
       <div className="sticky bottom-0 left-0 flex w-full items-center justify-between bg-primary-8 px-4 py-6">
         {/* <ClearFilters onClick={clearFilters} /> */}
       </div>
 
-      <button
-        onClick={() => {
-          console.log('clicked');
-          for (const filter of filters) {
-            console.log('Applyting filter');
-            if (filter.function) filter.function();
-          }
-        }}
-      >
-        Apply
-      </button>
+      <Apply />
     </div>
   );
+}
+
+{
+  /* <Filter columnKey="name" />
+          <Filter columnKey="description" />
+          <Filter columnKey="objectOfInterest" /> */
 }
