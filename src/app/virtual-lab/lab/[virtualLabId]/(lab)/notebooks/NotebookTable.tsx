@@ -19,6 +19,9 @@ import { Column } from '@/components/FilterControls/FilterControls';
 import { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import ColumnToggle from '@/components/FilterControls/Filter';
 import Image from 'next/image';
+import { DatePicker } from 'antd';
+const { RangePicker } = DatePicker;
+import dayjs from 'dayjs';
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
@@ -184,7 +187,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   );
 
   const { columns, toggleColumn, isColumnHidden } = useToggleColumns(initialColumns);
-  const { filter, applyFilters } = useFilters(notebooks);
+  const { filter, dateRangeFilter, applyFilters } = useFilters<Notebook>();
 
   const filteredData = filteredNotebooks.filter(applyFilters);
 
@@ -206,13 +209,49 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
             hidden={isColumnHidden('name')}
             title="Name"
             onToggle={() => toggleColumn('name')}
+          />
+          <ColumnToggle
+            hidden={isColumnHidden('description')}
+            title="Description"
+            onToggle={() => toggleColumn('description')}
+          />
+          <ColumnToggle
+            hidden={isColumnHidden('objectOfInterest')}
+            title="Object of interest"
+            onToggle={() => toggleColumn('objectOfInterest')}
+          />
+          <ColumnToggle
+            hidden={isColumnHidden('author')}
+            title="Author"
+            onToggle={() => toggleColumn('author')}
+          />
+          <ColumnToggle
+            hidden={isColumnHidden('creationDate')}
+            title="Creation date"
+            onToggle={() => toggleColumn('creationDate')}
           >
-            <Input
-              onChange={filter('name', (v, input) => {
-                if (!v) return true;
-                return v.toLocaleLowerCase().includes(input);
-              })}
-              placeholder="Filter name"
+            <RangePicker
+              onChange={(values) => {
+                console.log('called');
+                filter('creationDate', (value) => {
+                  console.log('inner called');
+                  if (!value && values) return false;
+                  if (!values) return true;
+
+                  const date = dayjs(value);
+                  const [start, end] = values;
+
+                  if (start && date < start) {
+                    return false;
+                  }
+
+                  if (end && date > end) {
+                    return false;
+                  }
+
+                  return true;
+                })();
+              }}
             />
           </ColumnToggle>
         </FilterControls>

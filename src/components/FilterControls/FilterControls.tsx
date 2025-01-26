@@ -22,7 +22,7 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import ControlPanel from './ControlPanel';
 import { ColumnType } from 'antd/lib/table';
 
-export type Column<T extends { [key: string]: any }> = ColumnType<T> & {
+export type Column<T> = ColumnType<T> & {
   key: string;
   hidden: boolean;
 };
