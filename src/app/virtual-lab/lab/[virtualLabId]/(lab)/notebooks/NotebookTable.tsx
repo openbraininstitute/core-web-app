@@ -1,11 +1,10 @@
 'use client';
 
-import { Col, ConfigProvider, Input, DatePicker } from 'antd';
-import { ColumnType } from 'antd/es/table';
+import { ConfigProvider, DatePicker } from 'antd';
 import { basePath } from '@/config';
 import Table from 'antd/es/table';
 import Link from 'next/link';
-import fetchNotebooks, { Notebook } from '@/util/virtual-lab/github';
+import { Notebook } from '@/util/virtual-lab/github';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
@@ -13,9 +12,9 @@ import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import useSearch from '@/components/VirtualLab/Search';
 import { getSorter, fileUrl } from './utils';
-import { FilterBtn } from '@/components/explore-section/ExploreSectionListingView/FilterControls';
+
 import FilterControls from '@/components/FilterControls/FilterControls';
-import { Column } from '@/components/FilterControls/FilterControls';
+import { Column } from '@/components/FilterControls/ControlPanel';
 import { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import ColumnToggle from '@/components/FilterControls/Filter';
 import Image from 'next/image';
@@ -124,20 +123,25 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 content={
                   <div className="flex min-w-[120px] flex-col gap-2 text-white">
                     <div className="flex gap-4">
-                      <Image src={`${basePath}/images/icons/eye.svg`} width={12} alt="View" />
+                      <Image
+                        src={`${basePath}/images/icons/eye.svg`}
+                        width={12}
+                        height={12}
+                        alt="View"
+                      />
                       <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
                     </div>
                     <div className="flex gap-4">
                       <Image
                         src={`${basePath}/images/icons/download.svg`}
                         width={12}
+                        height={12}
                         alt="download"
                       />
                       <button
                         type="button"
                         className="hover:text-primary-4"
                         onClick={async () => {
-                          if (loadingZip) return;
                           setLoadingZip(true);
                           const res = await fetch(
                             `/api/downloadNotebook?folder=${encodeURIComponent(directory)}`
@@ -182,7 +186,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         hidden: false,
       },
     ],
-    []
+    [loadingZip]
   );
 
   const { columns, toggleColumn, isColumnHidden } = useToggleColumns(initialColumns);
@@ -240,9 +244,6 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
               }}
             >
               <RangePicker
-                style={{
-                  color: 'white',
-                }}
                 onChange={(values) => {
                   onDateChange('creationDate', values);
                 }}

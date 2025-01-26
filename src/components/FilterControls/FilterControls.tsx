@@ -1,31 +1,10 @@
-import {
-  Dispatch,
-  HTMLProps,
-  PropsWithChildren,
-  ReactNode,
-  SetStateAction,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
-import { Spin } from 'antd';
-import ExploreSectionNameSearch from '@/components/explore-section/ExploreSectionListingView/ExploreSectionNameSearch';
+import { HTMLProps, PropsWithChildren, useState } from 'react';
 import SettingsIcon from '@/components/icons/Settings';
 import { filterHasValue } from '@/components/Filter/util';
-import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { Filter } from '@/components/Filter/types';
-import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
-import { ExploreDataScope } from '@/types/explore-section/application';
 import ControlPanel from './ControlPanel';
-import { ColumnType } from 'antd/lib/table';
-
-export type Column<T> = ColumnType<T> & {
-  key: string;
-  hidden: boolean;
-};
+import { Column } from './ControlPanel';
 
 export default function FilterControls<T extends { [key: string]: any }>({
   filters,

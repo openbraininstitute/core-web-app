@@ -1,22 +1,7 @@
-import { Notebook } from '@/util/virtual-lab/github';
-import { Button, Input } from 'antd';
-import { ColumnType } from 'antd/lib/table';
-import {
-  useRef,
-  useCallback,
-  useState,
-  useMemo,
-  ReactNode,
-  SyntheticEvent,
-  ChangeEvent,
-} from 'react';
-import { EyeIconOutline } from '../icons/EyeIcon';
-import { EyeFilled, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
-
-import { Column } from './FilterControls';
-import { RangePickerProps } from 'antd/es/date-picker';
+import { useCallback, useState, useMemo, ReactNode } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
-import RangeValue from 'rc-picker';
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
+import { Column } from './ControlPanel';
 
 export function useToggleColumns<T>(initialColumns: Column<T>[]) {
   const [columns, setColumns] = useState(initialColumns);

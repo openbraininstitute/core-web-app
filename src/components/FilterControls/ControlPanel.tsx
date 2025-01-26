@@ -1,6 +1,11 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { Column } from './FilterControls';
+import { ColumnType } from 'antd/lib/table';
 import { classNames } from '@/util/utils';
+
+export type Column<T> = ColumnType<T> & {
+  key: string;
+  hidden: boolean;
+};
 
 export type ControlPanelProps<T extends { [key: string]: any }> = {
   children?: React.ReactNode;
