@@ -1,13 +1,16 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { Column } from './FilterControls';
+import { classNames } from '@/util/utils';
 
 export type ControlPanelProps<T extends { [key: string]: any }> = {
   children?: React.ReactNode;
   columns: Column<T>[];
   onClose: () => void;
+  visible: boolean;
 };
 
 export default function ControlPanel<T extends { [key: string]: any }>({
+  visible,
   onClose,
   columns,
   children,
@@ -18,8 +21,10 @@ export default function ControlPanel<T extends { [key: string]: any }>({
 
   return (
     <div
-      data-testid="listing-view-filter-panel"
-      className="fixed right-0 top-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 p-8"
+      className={classNames(
+        'fixed right-0 top-0 z-10 flex h-screen w-[480px] shrink-0 flex-col space-y-4 bg-primary-8 p-8',
+        !visible && 'invisible'
+      )}
     >
       <div>
         <button

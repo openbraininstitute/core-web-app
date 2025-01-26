@@ -84,11 +84,14 @@ export default function FilterControls<T extends { [key: string]: any }>({
           </button>
         </div>
       </div>
-      {displayControlPanel && (
-        <ControlPanel onClose={() => setDisplayControlPanel(false)} columns={columns}>
-          {children}
-        </ControlPanel>
-      )}
+
+      <ControlPanel
+        onClose={() => setDisplayControlPanel(false)}
+        columns={columns}
+        visible={displayControlPanel}
+      >
+        {children}
+      </ControlPanel>
     </>
   );
 }

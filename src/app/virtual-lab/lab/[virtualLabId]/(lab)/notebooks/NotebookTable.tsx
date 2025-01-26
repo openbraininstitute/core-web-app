@@ -1,6 +1,6 @@
 'use client';
 
-import { Col, ConfigProvider, Input } from 'antd';
+import { Col, ConfigProvider, Input, DatePicker } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import { basePath } from '@/config';
 import Table from 'antd/es/table';
@@ -19,9 +19,8 @@ import { Column } from '@/components/FilterControls/FilterControls';
 import { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import ColumnToggle from '@/components/FilterControls/Filter';
 import Image from 'next/image';
-import { DatePicker } from 'antd';
+
 const { RangePicker } = DatePicker;
-import dayjs from 'dayjs';
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
@@ -187,9 +186,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   );
 
   const { columns, toggleColumn, isColumnHidden } = useToggleColumns(initialColumns);
-  const { filter, dateRangeFilter, applyFilters } = useFilters<Notebook>();
-
-  const filteredData = filteredNotebooks.filter(applyFilters);
+  const { onFilterChange, filteredData, onDateChange } = useFilters(filteredNotebooks);
 
   return (
     <ConfigProvider
@@ -230,29 +227,27 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
             title="Creation date"
             onToggle={() => toggleColumn('creationDate')}
           >
-            <RangePicker
-              onChange={(values) => {
-                console.log('called');
-                filter('creationDate', (value) => {
-                  console.log('inner called');
-                  if (!value && values) return false;
-                  if (!values) return true;
-
-                  const date = dayjs(value);
-                  const [start, end] = values;
-
-                  if (start && date < start) {
-                    return false;
-                  }
-
-                  if (end && date > end) {
-                    return false;
-                  }
-
-                  return true;
-                })();
+            <ConfigProvider
+              theme={{
+                token: {
+                  colorBgBase: '#002766',
+                  colorPrimary: '#40a9ff',
+                  colorTextPlaceholder: '#8c8c8c',
+                  colorTextDisabled: '#8c8c8c',
+                  colorIcon: '#8c8c8c',
+                  colorIconHover: '#40a9ff',
+                },
               }}
-            />
+            >
+              <RangePicker
+                style={{
+                  color: 'white',
+                }}
+                onChange={(values) => {
+                  onDateChange('creationDate', values);
+                }}
+              />
+            </ConfigProvider>
           </ColumnToggle>
         </FilterControls>
       </div>
