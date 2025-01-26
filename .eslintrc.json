@@ -74,8 +74,11 @@
         "additionalHooks": "useDebouncedCallback"
       }
     ],
-    "react/jsx-props-no-spreading": {
-      "custom": "ignore"
-    }
+    "react/jsx-props-no-spreading": [
+      "error",
+      {
+        "custom": "ignore"
+      }
+    ]
   }
 }

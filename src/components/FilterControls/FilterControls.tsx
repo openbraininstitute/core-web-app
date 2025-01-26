@@ -23,6 +23,7 @@ import ControlPanel from './ControlPanel';
 import { ColumnType } from 'antd/lib/table';
 
 export type Column<T extends { [key: string]: any }> = ColumnType<T> & {
+  key: string;
   hidden: boolean;
 };
 
@@ -31,18 +32,12 @@ export default function FilterControls<T extends { [key: string]: any }>({
   disabled,
   className,
   columns,
-  setColumns,
-  dataSource,
-  Apply,
   children,
 }: PropsWithChildren<{
   filters?: Filter[];
   disabled?: boolean;
   className?: HTMLProps<HTMLElement>['className'];
   columns: Column<T>[];
-  setColumns: (c: Column<T>[]) => void;
-  dataSource: T[];
-  Apply: React.ComponentType;
 }>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
@@ -90,13 +85,7 @@ export default function FilterControls<T extends { [key: string]: any }>({
         </div>
       </div>
       {displayControlPanel && (
-        <ControlPanel
-          dataSource={dataSource}
-          onClose={() => setDisplayControlPanel(false)}
-          columns={columns}
-          setColumns={setColumns}
-          Apply={Apply}
-        >
+        <ControlPanel onClose={() => setDisplayControlPanel(false)} columns={columns}>
           {children}
         </ControlPanel>
       )}

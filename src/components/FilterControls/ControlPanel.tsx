@@ -4,19 +4,13 @@ import { Column } from './FilterControls';
 export type ControlPanelProps<T extends { [key: string]: any }> = {
   children?: React.ReactNode;
   columns: Column<T>[];
-  setColumns: (columns: Column<T>[]) => void;
   onClose: () => void;
-  dataSource: T[];
-  Apply: React.ComponentType;
 };
 
 export default function ControlPanel<T extends { [key: string]: any }>({
   onClose,
   columns,
-  setColumns,
-  dataSource,
   children,
-  Apply,
 }: ControlPanelProps<T>) {
   const activeColumnsText = `${columns.length} active ${
     columns.length === 1 ? 'column' : 'columns'
@@ -54,14 +48,6 @@ export default function ControlPanel<T extends { [key: string]: any }>({
       <div className="sticky bottom-0 left-0 flex w-full items-center justify-between bg-primary-8 px-4 py-6">
         {/* <ClearFilters onClick={clearFilters} /> */}
       </div>
-
-      <Apply />
     </div>
   );
-}
-
-{
-  /* <Filter columnKey="name" />
-          <Filter columnKey="description" />
-          <Filter columnKey="objectOfInterest" /> */
 }

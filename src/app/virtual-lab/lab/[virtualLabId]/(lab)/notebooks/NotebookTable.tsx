@@ -1,6 +1,6 @@
 'use client';
 
-import { Col, ConfigProvider } from 'antd';
+import { Col, ConfigProvider, Input } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import { basePath } from '@/config';
 import Table from 'antd/es/table';
@@ -16,7 +16,9 @@ import { getSorter, fileUrl } from './utils';
 import { FilterBtn } from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import FilterControls from '@/components/FilterControls/FilterControls';
 import { Column } from '@/components/FilterControls/FilterControls';
-import useFilters from '@/components/FilterControls/Filter';
+import { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
+import ColumnToggle from '@/components/FilterControls/Filter';
+import Image from 'next/image';
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
@@ -91,7 +93,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         title: 'Creation date',
         dataIndex: 'creationDate',
         key: 'creationDate',
-        render: (date: string | null) => (!!date ? format(date, 'dd.MM.yyyy') : '-'),
+        render: (date: string | null) => (date ? format(date, 'dd.MM.yyyy') : '-'),
         sorter: (a, b) => {
           if (a.creationDate === null && b.creationDate === null) {
             return 0;
@@ -120,12 +122,17 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 content={
                   <div className="flex min-w-[120px] flex-col gap-2 text-white">
                     <div className="flex gap-4">
-                      <img src={`${basePath}/images/icons/eye.svg`} width={12} />
+                      <Image src={`${basePath}/images/icons/eye.svg`} width={12} alt="View" />
                       <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
                     </div>
                     <div className="flex gap-4">
-                      <img src={`${basePath}/images/icons/download.svg`} width={12} />
+                      <Image
+                        src={`${basePath}/images/icons/download.svg`}
+                        width={12}
+                        alt="download"
+                      />
                       <button
+                        type="button"
                         className="hover:text-primary-4"
                         onClick={async () => {
                           if (loadingZip) return;
@@ -176,13 +183,10 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     []
   );
 
-  const [activeColumns, setActiveColumns] = useState(initialColumns);
+  const { columns, toggleColumn, isColumnHidden } = useToggleColumns(initialColumns);
+  const { filter, applyFilters } = useFilters(notebooks);
 
-  const { filteredData, Filter, Apply } = useFilters(
-    initialColumns,
-    setActiveColumns,
-    filteredNotebooks
-  );
+  const filteredData = filteredNotebooks.filter(applyFilters);
 
   return (
     <ConfigProvider
@@ -197,18 +201,25 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     >
       <div className="mt-10 flex items-center justify-between">
         {Search}
-        <FilterControls
-          columns={activeColumns}
-          setColumns={setActiveColumns}
-          dataSource={notebooks}
-          Apply={Apply}
-        >
-          <Filter columnKey="name" />
+        <FilterControls columns={columns}>
+          <ColumnToggle
+            hidden={isColumnHidden('name')}
+            title="Name"
+            onToggle={() => toggleColumn('name')}
+          >
+            <Input
+              onChange={filter('name', (v, input) => {
+                if (!v) return true;
+                return v.toLocaleLowerCase().includes(input);
+              })}
+              placeholder="Filter name"
+            />
+          </ColumnToggle>
         </FilterControls>
       </div>
 
       <div id="table-container" className="mt-5">
-        <Table dataSource={filteredNotebooks} columns={activeColumns} pagination={false}></Table>
+        <Table dataSource={filteredData} columns={columns} pagination={false} />
       </div>
 
       <style jsx global>{`
