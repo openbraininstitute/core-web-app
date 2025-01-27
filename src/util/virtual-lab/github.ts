@@ -4,7 +4,7 @@ const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${no
 
 export const options = {
   headers: {
-    // Authorization: 'token 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',
+    Authorization: 'token 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',
     'X-GitHub-Api-Version': '2022-11-28',
   },
   next: {

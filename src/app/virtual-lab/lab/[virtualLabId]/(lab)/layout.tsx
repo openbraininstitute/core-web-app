@@ -6,7 +6,6 @@ import VirtualLabSidebar from '@/components/VirtualLab/VirtualLabSidebar';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideMenu from '@/components/SideMenu';
 import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import fetchNotebooks from '@/util/virtual-lab/github';
 
 type Props = {
   children: ReactNode;
@@ -16,7 +15,6 @@ type Props = {
 };
 
 export default async function VirtualLabLayout({ children, params }: Props) {
-  const notebookFileList = await fetchNotebooks('');
   return (
     <div className="flex h-screen overflow-y-auto bg-primary-9 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
@@ -32,10 +30,7 @@ export default async function VirtualLabLayout({ children, params }: Props) {
         <div className="flex h-screen w-full overflow-y-scroll bg-primary-9 p-8 text-white">
           <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
             <div className="m-w-3/12 flex flex-row gap-4" style={{ width: '25%' }}>
-              <VirtualLabSidebar
-                virtualLabId={params.virtualLabId}
-                n_notebooks={notebookFileList.length}
-              />
+              <VirtualLabSidebar virtualLabId={params.virtualLabId} />
             </div>
 
             <div className="m-w-9/12 ml-3 flex h-full flex-col" style={{ width: '75%' }}>

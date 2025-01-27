@@ -1,3 +1,5 @@
+'use client';
+
 import { usePathname } from 'next/navigation';
 import { Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
@@ -16,9 +18,10 @@ import { useLoadableValue } from '@/hooks/hooks';
 type Props = {
   virtualLabId: string;
   projectId: string;
+  n_notebooks: number;
 };
 
-export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Props) {
+export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_notebooks }: Props) {
   const url = usePathname().split('/');
   const currentPage = url[url.length - 1] !== 'new' ? url[url.length - 1] : url[url.length - 2];
 
@@ -90,6 +93,16 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
       key: LinkItemKey.Activity,
       content: 'Activity',
       href: 'activity',
+    },
+    {
+      key: 'notebooks',
+      content: (
+        <div className="flex justify-between">
+          <span>Notebooks</span>
+          <span className="font-normal text-primary-3">{n_notebooks}</span>
+        </div>
+      ),
+      href: 'notebooks',
     },
     { key: LinkItemKey.Explore, content: 'Explore', href: 'explore/interactive' },
     { key: LinkItemKey.Build, content: 'Build', href: 'build' },

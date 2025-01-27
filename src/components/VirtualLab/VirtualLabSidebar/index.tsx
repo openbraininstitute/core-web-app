@@ -7,13 +7,7 @@ import VerticalLinks, { LinkItem } from '@/components/VerticalLinks';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
-export default function VirtualLabSidebarContent({
-  virtualLabId,
-  n_notebooks,
-}: {
-  virtualLabId: string;
-  n_notebooks: number;
-}) {
+export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabId: string }) {
   const currentPage = usePathname().split('/').pop();
   const projects = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
   const users = useUnwrappedValue(virtualLabMembersAtomFamily(virtualLabId))?.length;
@@ -29,16 +23,6 @@ export default function VirtualLabSidebarContent({
         </div>
       ),
       href: 'projects',
-    },
-    {
-      key: 'notebooks',
-      content: (
-        <div className="flex justify-between">
-          <span>Notebooks</span>
-          <span className="font-normal text-primary-3">{n_notebooks}</span>
-        </div>
-      ),
-      href: 'notebooks',
     },
     {
       key: LinkItemKey.Team,
