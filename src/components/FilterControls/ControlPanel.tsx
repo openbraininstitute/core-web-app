@@ -4,7 +4,6 @@ import { classNames } from '@/util/utils';
 
 export type Column<T> = ColumnType<T> & {
   key: string;
-  hidden: boolean;
 };
 
 export type ControlPanelProps<T extends { [key: string]: any }> = {
@@ -52,7 +51,7 @@ export default function ControlPanel<T extends { [key: string]: any }>({
           the option(s).
         </p>
 
-        <div className="mt-10 flex flex-col gap-12">{children}</div>
+        <div className="mt-10 flex flex-col gap-5">{children}</div>
       </div>
 
       <div className="sticky bottom-0 left-0 flex w-full items-center justify-between bg-primary-8 px-4 py-6">

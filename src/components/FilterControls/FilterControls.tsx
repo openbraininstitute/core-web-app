@@ -1,28 +1,21 @@
 import { HTMLProps, PropsWithChildren, useState } from 'react';
+import ControlPanel, { Column } from './ControlPanel';
 import SettingsIcon from '@/components/icons/Settings';
-import { filterHasValue } from '@/components/Filter/util';
-import { Filter } from '@/components/Filter/types';
 import { classNames } from '@/util/utils';
-import ControlPanel from './ControlPanel';
-import { Column } from './ControlPanel';
 
 export default function FilterControls<T extends { [key: string]: any }>({
-  filters,
+  filtersCount,
   disabled,
   className,
   columns,
   children,
 }: PropsWithChildren<{
-  filters?: Filter[];
   disabled?: boolean;
+  filtersCount: number;
   className?: HTMLProps<HTMLElement>['className'];
   columns: Column<T>[];
 }>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
-
-  const selectedFiltersCount = filters
-    ? filters.filter((filter) => filterHasValue(filter)).length
-    : 0;
 
   return (
     <>
@@ -40,7 +33,7 @@ export default function FilterControls<T extends { [key: string]: any }>({
           >
             <div className="flex items-center gap-1">
               <span className="rounded bg-primary-8 px-2.5 py-1 text-sm font-bold text-white">
-                {selectedFiltersCount}
+                {filtersCount}
               </span>
               <div className="flex items-center gap-2">
                 <span

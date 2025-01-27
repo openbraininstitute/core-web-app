@@ -55,142 +55,132 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     });
   }, [notebooks, search]);
 
-  const initialColumns: Column<Notebook>[] = useMemo(
-    () => [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-        render: (name: string) => <strong>{name}</strong>,
-        sorter: getSorter('name'),
-        hidden: false,
-      },
+  const handleEyeClick = async (directory: string, notebookName: string) => {
+    setLoadingZip(true);
+    const res = await fetch(`/api/downloadNotebook?folder=${encodeURIComponent(directory)}`);
 
-      {
-        title: 'Description',
-        dataIndex: 'description',
-        key: 'description',
-        sorter: getSorter('description'),
-        hidden: false,
-      },
+    setLoadingZip(false);
+    if (!res.ok) {
+      throw new Error('Failed to fetch the zip file');
+    }
 
-      {
-        title: 'Object of interest',
-        dataIndex: 'objectOfInterest',
-        key: 'objectOfInterest',
-        sorter: getSorter('objectOfInterest'),
-        hidden: false,
-      },
+    const blob = await res.blob();
 
-      {
-        title: 'Author',
-        dataIndex: 'author',
-        key: 'author',
-        sorter: getSorter('author'),
-        hidden: false,
-      },
+    // Create a temporary link element to trigger the download
+    const link = document.createElement('a');
+    const downloadUrl = window.URL.createObjectURL(blob);
+    link.href = downloadUrl;
+    link.download = `${notebookName}.zip`;
+    document.body.appendChild(link);
+    link.click(); // Trigger the download
+    document.body.removeChild(link); // Clean up the DOM
 
-      {
-        title: 'Creation date',
-        dataIndex: 'creationDate',
-        key: 'creationDate',
-        render: (date: string | null) => (date ? format(date, 'dd.MM.yyyy') : '-'),
-        sorter: (a, b) => {
-          if (a.creationDate === null && b.creationDate === null) {
-            return 0;
-          }
-          if (a.creationDate === null) {
-            return 1;
-          }
-          if (b.creationDate === null) {
-            return -1;
-          }
-          return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
-        },
-        hidden: false,
-      },
+    window.URL.revokeObjectURL(downloadUrl);
+  };
 
-      {
-        dataIndex: 'fileName',
-        key: 'fileName',
-        render: (uri: string) => {
-          const directory = uri.slice(0, uri.lastIndexOf('/'));
-          const notebookName = directory.split('/').pop();
+  const renderActionColumns = (uri: string) => {
+    const directory = uri.slice(0, uri.lastIndexOf('/'));
+    const notebookName = directory.split('/').pop();
+    if (!notebookName) throw new Error('An error occurred');
 
-          return (
-            <div id="popover">
-              <Popover
-                content={
-                  <div className="flex min-w-[120px] flex-col gap-2 text-white">
-                    <div className="flex gap-4">
-                      <Image
-                        src={`${basePath}/images/icons/eye.svg`}
-                        width={12}
-                        height={12}
-                        alt="View"
-                      />
-                      <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
-                    </div>
-                    <div className="flex gap-4">
-                      <Image
-                        src={`${basePath}/images/icons/download.svg`}
-                        width={12}
-                        height={12}
-                        alt="download"
-                      />
-                      <button
-                        type="button"
-                        className="hover:text-primary-4"
-                        onClick={async () => {
-                          setLoadingZip(true);
-                          const res = await fetch(
-                            `/api/downloadNotebook?folder=${encodeURIComponent(directory)}`
-                          );
-
-                          setLoadingZip(false);
-                          if (!res.ok) {
-                            throw new Error('Failed to fetch the zip file');
-                          }
-
-                          const blob = await res.blob();
-
-                          // Create a temporary link element to trigger the download
-                          const link = document.createElement('a');
-                          const downloadUrl = window.URL.createObjectURL(blob);
-                          link.href = downloadUrl;
-                          link.download = `${notebookName}.zip`;
-                          document.body.appendChild(link);
-                          link.click(); // Trigger the download
-                          document.body.removeChild(link); // Clean up the DOM
-
-                          window.URL.revokeObjectURL(downloadUrl);
-                        }}
-                      >
-                        Download
-                      </button>
-                      {loadingZip && <LoadingOutlined />}
-                    </div>
-                  </div>
-                }
-                overlayStyle={{ border: '1px solid #096DD9' }}
-                color="#002766"
-                trigger="click"
-                placement="bottom"
-                arrow={false}
-              >
-                <PlusOutlined className="border border-[#096DD9] p-2 text-lg" />
-              </Popover>
+    return (
+      <div id="popover">
+        <Popover
+          content={
+            <div className="flex min-w-[120px] flex-col gap-2 text-white">
+              <div className="flex gap-4">
+                <Image src={`${basePath}/images/icons/eye.svg`} width={12} height={12} alt="View" />
+                <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
+              </div>
+              <div className="flex gap-4">
+                <Image
+                  src={`${basePath}/images/icons/download.svg`}
+                  width={12}
+                  height={12}
+                  alt="download"
+                />
+                <button
+                  type="button"
+                  className="hover:text-primary-4"
+                  onClick={() => handleEyeClick(directory, notebookName)}
+                >
+                  Download
+                </button>
+                {loadingZip && <LoadingOutlined />}
+              </div>
             </div>
-          );
-        },
-        hidden: false,
-      },
-    ],
-    [loadingZip]
-  );
+          }
+          overlayStyle={{ border: '1px solid #096DD9' }}
+          color="#002766"
+          trigger="click"
+          placement="bottom"
+          arrow={false}
+        >
+          <PlusOutlined className="border border-[#096DD9] p-2 text-lg" />
+        </Popover>
+      </div>
+    );
+  };
 
-  const { columns, toggleColumn, isColumnHidden } = useToggleColumns(initialColumns);
-  const { onFilterChange, filteredData, onDateChange } = useFilters(filteredNotebooks);
+  const columns: Column<Notebook>[] = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name: string) => <strong>{name}</strong>,
+      sorter: getSorter('name'),
+    },
+
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      sorter: getSorter('description'),
+    },
+
+    {
+      title: 'Object of interest',
+      dataIndex: 'objectOfInterest',
+      key: 'objectOfInterest',
+      sorter: getSorter('objectOfInterest'),
+    },
+
+    {
+      title: 'Author',
+      dataIndex: 'author',
+      key: 'author',
+      sorter: getSorter('author'),
+    },
+
+    {
+      title: 'Creation date',
+      dataIndex: 'creationDate',
+      key: 'creationDate',
+      render: (date: string | null) => (date ? format(date, 'dd.MM.yyyy') : '-'),
+      sorter: (a, b) => {
+        if (a.creationDate === null && b.creationDate === null) {
+          return 0;
+        }
+        if (a.creationDate === null) {
+          return 1;
+        }
+        if (b.creationDate === null) {
+          return -1;
+        }
+        return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
+      },
+    },
+
+    {
+      dataIndex: 'fileName',
+      key: 'fileName',
+      render: renderActionColumns,
+    },
+  ];
+
+  const { filteredColumns, toggleColumn, isColumnHidden } = useToggleColumns(columns);
+
+  const { onFilterChange, filteredData, onDateChange, filterCount } = useFilters(filteredNotebooks);
 
   return (
     <ConfigProvider
@@ -205,7 +195,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     >
       <div className="mt-10 flex items-center justify-between">
         {Search}
-        <FilterControls columns={columns}>
+        <FilterControls columns={columns} filtersCount={filterCount}>
           <ColumnToggle
             hidden={isColumnHidden('name')}
             title="Name"
@@ -254,7 +244,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       </div>
 
       <div id="table-container" className="mt-5">
-        <Table dataSource={filteredData} columns={columns} pagination={false} />
+        <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
       </div>
 
       <style jsx global>{`
