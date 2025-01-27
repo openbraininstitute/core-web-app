@@ -1,4 +1,4 @@
-import { DependencyList, useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { DependencyList, useCallback, useEffect, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { Atom } from 'jotai/vanilla';

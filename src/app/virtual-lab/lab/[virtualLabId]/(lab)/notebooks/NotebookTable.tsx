@@ -1,23 +1,23 @@
 'use client';
 
 import { ConfigProvider, DatePicker } from 'antd';
-import { basePath } from '@/config';
+
 import Table from 'antd/es/table';
 import Link from 'next/link';
-import { Notebook } from '@/util/virtual-lab/github';
+import Image from 'next/image';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
-import useSearch from '@/components/VirtualLab/Search';
 import { getSorter, fileUrl } from './utils';
+import useSearch from '@/components/VirtualLab/Search';
+import { Notebook } from '@/util/virtual-lab/github';
+import { basePath } from '@/config';
 
 import FilterControls from '@/components/FilterControls/FilterControls';
 import { Column } from '@/components/FilterControls/ControlPanel';
-import { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
-import ColumnToggle from '@/components/FilterControls/Filter';
-import Image from 'next/image';
+import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 
 const { RangePicker } = DatePicker;
 
@@ -180,7 +180,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
 
   const { filteredColumns, toggleColumn, isColumnHidden } = useToggleColumns(columns);
 
-  const { onFilterChange, filteredData, onDateChange, filterCount } = useFilters(filteredNotebooks);
+  const { filteredData, onDateChange, filterCount } = useFilters(filteredNotebooks);
 
   return (
     <ConfigProvider

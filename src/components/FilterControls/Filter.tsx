@@ -50,7 +50,7 @@ export function useFilters<T>(data: T[]) {
           fun: (d: T[keyof T]) => boolean;
         };
 
-        if (!filterTyped.fun(item[dataIndex as keyof T])) {
+        if (filterTyped.isActive && !filterTyped.fun(item[dataIndex as keyof T])) {
           return false;
         }
       }
