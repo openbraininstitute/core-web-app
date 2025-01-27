@@ -12,6 +12,7 @@ export interface ModalInviteProjectMemberProps {
 export function ModalInviteProjectMember({ open, onChange }: ModalInviteProjectMemberProps) {
   const close = () => onChange(false);
   const [members, setMembers] = useState<Member[]>([]);
+
   return (
     <Modal
       open={open}
@@ -23,7 +24,10 @@ export function ModalInviteProjectMember({ open, onChange }: ModalInviteProjectM
       width="min(800px, 95vw)"
       footer={null}
     >
-      <InviteProjectMember onClose={close} members={members} onChange={setMembers} />
+      <div className="flex w-full flex-col">
+        <h2 className="text-xl font-bold uppercase text-primary-8">Invite new member to project</h2>
+        <InviteProjectMember onClose={close} members={members} onChange={setMembers} />
+      </div>
     </Modal>
   );
 }

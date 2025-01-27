@@ -1,23 +1,16 @@
-import JSZip from 'jszip';
 import { notebookRepository } from '@/config';
 
 const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
   headers: {
-    Authorization: 'token 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',
+    // Authorization: 'token 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',
     'X-GitHub-Api-Version': '2022-11-28',
   },
   next: {
     revalidate: 3600 * 24,
   },
 };
-
-interface GitHubFile {
-  name: string;
-  path: string;
-  type: 'file' | 'dir';
-}
 
 export interface Notebook {
   key: string;

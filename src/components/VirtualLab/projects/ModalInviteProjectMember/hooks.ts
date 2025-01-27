@@ -3,8 +3,10 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
 import { Member } from './types';
-import { virtualLabApi } from '@/config';
+
 import authFetch from '@/authFetch';
+import { notification as notify } from '@/api/notifications';
+import { virtualLabApi } from '@/config';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import {
   virtualLabProjectDetailsAtomFamily,
@@ -13,7 +15,6 @@ import {
 import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { Project } from '@/types/virtual-lab/projects';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
-import useNotification from '@/hooks/notifications';
 import { logError } from '@/util/logger';
 
 /**
@@ -44,45 +45,65 @@ export function useCurrentProjectUsers(): VirtualLabMember[] {
 }
 
 export function useInviteHandler(
+  scope: 'project' | 'lab',
   members: Member[],
   onClose: () => void
 ): {
   loading: boolean;
   handleInvite: () => void;
 } {
-  const notif = useNotification();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const [loading, setLoading] = useState(false);
   const handleInvite = useCallback(() => {
     const action = async () => {
       setLoading(true);
+      const url =
+        scope === 'project'
+          ? `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/invites`
+          : `${virtualLabApi.url}/virtual-labs/${virtualLabId}/invites`;
       try {
         for (const member of members) {
-          const response = await authFetch(
-            `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/invites`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: member.email,
-                role: member.role,
-              }),
-            }
-          );
+          const response = await authFetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: member.email,
+              role: member.role,
+            }),
+          });
           if (!response.ok) {
-            notif.error(`Unable to invite "${member.email}"!`);
+            notify.error(
+              `Unable to invite "${member.email}"`,
+              undefined,
+              'topRight',
+              undefined,
+              `${virtualLabId}/${projectId}`
+            );
             logError(await response.text());
           }
+          notify.success(
+            `Invitation sent to ${member.email}`,
+            undefined,
+            'topRight',
+            undefined,
+            `${virtualLabId}/${projectId}`
+          );
         }
       } catch (ex) {
-        notif.error('An error prevented us from inviting new members!');
+        notify.error(
+          'An error prevented us from inviting new members!',
+          undefined,
+          'topRight',
+          undefined,
+          `${virtualLabId}/${projectId}`
+        );
         logError(ex);
       } finally {
         setLoading(false);
       }
     };
     action().then(onClose).catch(onClose);
-  }, [members, notif, onClose, projectId, virtualLabId]);
+  }, [members, onClose, projectId, virtualLabId, scope]);
   return { loading, handleInvite };
 }

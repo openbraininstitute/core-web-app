@@ -20,9 +20,9 @@ export function NewMember({
   return (
     <div className="flex w-full flex-wrap items-center gap-4 whitespace-nowrap font-normal text-dark">
       <IconMail disabled />
-      <b>Invitation to:</b>
+      <b>Invitation to: </b>
       <input
-        className="flex-1"
+        className="flex-1 px-2 py-1"
         placeholder="Enter email address..."
         value={email}
         onChange={(evt) => setEmail(evt.target.value)}

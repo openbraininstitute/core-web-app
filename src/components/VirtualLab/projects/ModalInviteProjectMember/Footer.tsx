@@ -15,10 +15,12 @@ export function Footer({ members, onClose, onInvite, loading }: FooterProps) {
         Cancel
       </Button>
       <Button
+        type="primary"
         htmlType="submit"
         className="min-w-36 rounded-none border-primary-8 bg-primary-8 text-white"
         disabled={members.length === 0 || loading}
         onClick={onInvite}
+        loading={loading}
       >
         {loading ? 'Inviting...' : 'Invite'}
       </Button>

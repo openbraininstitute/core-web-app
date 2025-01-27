@@ -2,6 +2,7 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
+import sortBy from 'lodash/sortBy';
 
 import Member from '@/components/VirtualLab/VirtualLabHomePage/Member';
 import { ProjectDetailBanner, BudgetStatus } from '@/components/VirtualLab/VirtualLabBanner';
@@ -12,43 +13,45 @@ import {
 } from '@/state/virtual-lab/projects';
 import useNotification from '@/hooks/notifications';
 import { useLoadableValue, useUnwrappedValue } from '@/hooks/hooks';
+import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
 
-export type VirtualLabUsersHorizontalListProps = {
+export type UsersHorizontalListProps = {
   virtualLabId: string;
-  projectId: string;
+  projectId?: string;
 };
 
-export function VirtualLabUsersHorizontalList({
-  virtualLabId,
-  projectId,
-}: VirtualLabUsersHorizontalListProps) {
+export function UsersHorizontalList({ virtualLabId, projectId }: UsersHorizontalListProps) {
   const notification = useNotification();
 
-  const projectUsers = useLoadableValue(
-    virtualLabProjectUsersAtomFamily({ virtualLabId, projectId })
+  const users = useLoadableValue(
+    projectId
+      ? virtualLabProjectUsersAtomFamily({ virtualLabId, projectId })
+      : virtualLabMembersAtomFamily(virtualLabId)
   );
 
-  if (projectUsers.state === 'loading') {
+  if (users.state === 'loading') {
     return <Spin indicator={<LoadingOutlined />} />;
   }
 
-  if (projectUsers.state === 'hasData') {
+  if (users.state === 'hasData') {
     return (
-      <div className="flex-no-wrap flex overflow-x-auto overflow-y-hidden">
-        {projectUsers.data?.map((user) => (
-          <div key={user.id} className="mr-20">
+      <div className="flex-no-wrap flex items-center gap-4 overflow-x-auto overflow-y-hidden">
+        {users.data &&
+          sortBy(users.data, ['role']).map((user) => (
             <Member
+              key={user.id}
+              inviteAccepted={user.invite_accepted}
+              email={user.email}
               firstName={user.first_name}
               lastName={user.last_name}
               name={user.name}
-              memberRole="member"
+              memberRole={user.role}
             />
-          </div>
-        ))}
+          ))}
       </div>
     );
   }
-  if (projectUsers.state === 'hasError') {
+  if (users.state === 'hasError') {
     notification.error('Something went wrong when fetching users');
   }
 
@@ -58,9 +61,9 @@ export function VirtualLabUsersHorizontalList({
 export default function VirtualLabProjectHomePage({
   virtualLabId,
   projectId,
-}: VirtualLabUsersHorizontalListProps) {
+}: UsersHorizontalListProps) {
   const projectDetails = useUnwrappedValue(
-    virtualLabProjectDetailsAtomFamily({ virtualLabId, projectId })
+    virtualLabProjectDetailsAtomFamily({ virtualLabId, projectId: projectId! })
   );
 
   if (projectDetails) {
@@ -71,13 +74,13 @@ export default function VirtualLabProjectHomePage({
           createdAt={projectDetails.created_at}
           description={projectDetails.description}
           name={projectDetails.name}
-          projectId={projectId}
+          projectId={projectId!}
           virtualLabId={virtualLabId}
         />
         <BudgetStatus />
         <div>
           <div className="my-10 text-lg font-bold uppercase">Members</div>
-          <VirtualLabUsersHorizontalList virtualLabId={virtualLabId} projectId={projectId} />
+          <UsersHorizontalList virtualLabId={virtualLabId} projectId={projectId} />
         </div>
       </div>
     );
