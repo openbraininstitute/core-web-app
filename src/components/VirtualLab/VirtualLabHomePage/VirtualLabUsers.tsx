@@ -3,6 +3,7 @@ import { getVirtualLabUsers } from '@/services/virtual-lab/labs';
 
 export default async function VirtualLabUsers({ id }: { id?: string }) {
   const virtualLabUsers = id ? (await getVirtualLabUsers(id)).data.users : undefined;
+
   return (
     <div className="w-full">
       <div className="my-5 text-lg font-bold uppercase">Members</div>
@@ -11,6 +12,8 @@ export default async function VirtualLabUsers({ id }: { id?: string }) {
         {virtualLabUsers?.map((user) => (
           <div key={user.id} className="mr-20">
             <Member
+              inviteAccepted={user.invite_accepted}
+              email={user.email}
               name={user.name}
               memberRole={user.role}
               firstName={user.first_name}

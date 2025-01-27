@@ -1,0 +1,36 @@
+.sectionOurMission ul {
+  margin: 0;
+  margin-left: var(--margin);
+  padding: 0;
+  list-style: none;
+  --indentation: 64px;
+}
+
+.sectionOurMission ul big {
+  position: relative;
+  font-family: var(--font-serif);
+  font-size: var(--Sizes-Font-3xl, 32px);
+  margin: 0;
+  padding: 0;
+}
+
+.sectionOurMission ul big::before {
+  content: '';
+  position: absolute;
+  margin-left: calc(-1 * var(--indentation));
+  left: 0;
+  top: 0.75em;
+  width: calc(0.8 * var(--indentation));
+  height: 2px;
+  background-color: currentColor;
+}
+
+.sectionOurMission ul p {
+  padding: 0;
+  margin: 0;
+}
+
+.sectionOurMission ul > li {
+  margin-left: var(--indentation, 64px);
+  margin-bottom: var(--indentation, 64px);
+}

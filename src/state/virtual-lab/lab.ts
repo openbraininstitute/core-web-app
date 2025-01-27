@@ -31,8 +31,8 @@ export const virtualLabDetailAtomFamily = atomFamily<
 );
 
 export const virtualLabMembersAtomFamily = atomFamily((virtualLabId?: string) =>
-  atom<Promise<VirtualLabMember[] | undefined>>(async () => {
-    if (!virtualLabId) return;
+  atomWithRefresh<Promise<VirtualLabMember[] | null>>(async () => {
+    if (!virtualLabId) return null;
     const response = await getVirtualLabUsers(virtualLabId);
     return response.data.users;
   })

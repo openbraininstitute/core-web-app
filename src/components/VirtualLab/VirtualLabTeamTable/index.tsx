@@ -1,25 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { DownOutlined, PlusOutlined } from '@ant-design/icons';
-import { ConfigProvider, Select, Table } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { ConfigProvider, Table } from 'antd';
+import { ColumnType } from 'antd/es/table';
+import sortBy from 'lodash/sortBy';
+import get from 'lodash/get';
+import find from 'lodash/find';
 
-import { ModalInviteProjectMember } from '../projects/ModalInviteProjectMember';
-import VirtualLabMemberIcon from '../VirtualLabMemberIcon';
+import VirtualLabMemberIcon from '@/components/VirtualLab/VirtualLabMemberIcon';
 import { MockRole, Role, VirtualLabMember } from '@/types/virtual-lab/members';
+import { ModalInviteVlabMember } from '@/components/VirtualLab/projects/ModalInviteProjectMember/ModalInviteVlabMember';
 
 type Props = {
   users: VirtualLabMember[];
 };
 
 export default function VirtualLabTeamTable({ users }: Props) {
-  const [openInviteProjectMemberModal, setOpenInviteProjectMemberModal] = useState(false);
+  const [openInviteVlabMemberModal, setOpenInviteVlabMemberModal] = useState(false);
   const roleOptions: { value: Role; label: string }[] = [
     { value: 'admin', label: 'Administrator' },
     { value: 'member', label: 'Member' },
   ];
 
-  const columns = [
+  const columns: ColumnType<VirtualLabMember>[] = [
     {
       title: 'name',
       dataIndex: 'name',
@@ -28,12 +32,18 @@ export default function VirtualLabTeamTable({ users }: Props) {
         <div>
           <span>
             <VirtualLabMemberIcon
+              inviteAccepted={record.invite_accepted}
+              email={record.email}
               firstName={record.first_name}
               lastName={record.last_name}
               memberRole={record.role}
             />
           </span>
-          <span className="ml-4 inline-block font-bold">{`${record.first_name} ${record.last_name}`}</span>
+          {record.invite_accepted ? (
+            <span className="ml-4 inline-block font-bold">{`${record.first_name} ${record.last_name}`}</span>
+          ) : (
+            <span className="ml-4 inline-block font-bold">{`${record.email}`}</span>
+          )}
         </div>
       ),
     },
@@ -47,28 +57,33 @@ export default function VirtualLabTeamTable({ users }: Props) {
       title: 'Action',
       key: 'role',
       dataIndex: 'role',
+      align: 'left',
+      width: '200px',
       render: (role: MockRole) => (
-        <ConfigProvider
-          theme={{
-            components: {
-              Select: {
-                colorBgContainer: '#002766',
-                colorBgElevated: '#002766',
-                colorBorder: 'rgba(255, 255, 255, 0)',
-                colorText: 'rgb(255, 255, 255)',
-                optionSelectedBg: '#002766',
-              },
-            },
-          }}
-        >
-          <Select
-            suffixIcon={<DownOutlined style={{ color: 'white' }} />}
-            defaultValue={role}
-            style={{ width: 200, marginLeft: 300, float: 'right' }}
-            onChange={() => {}}
-            options={roleOptions}
-          />
-        </ConfigProvider>
+        // <ConfigProvider
+        //   theme={{
+        //     components: {
+        //       Select: {
+        //         colorBgContainer: '#002766',
+        //         colorBgElevated: '#002766',
+        //         colorBorder: 'rgba(255, 255, 255, 0)',
+        //         colorText: 'rgb(255, 255, 255)',
+        //         optionSelectedBg: '#002766',
+        //       },
+        //     },
+        //   }}
+        // >
+        //   <Select
+        //     suffixIcon={<DownOutlined style={{ color: 'white' }} />}
+        //     defaultValue={role}
+        //     style={{ width: 200, marginLeft: 300, float: 'right' }}
+        //     onChange={() => { }}
+        //     options={roleOptions}
+        //   />
+        // </ConfigProvider>
+        <div className="ml-auto text-base text-white">
+          {get(find(roleOptions, { value: role }), 'label', '')}
+        </div>
       ),
     },
   ];
@@ -82,10 +97,8 @@ export default function VirtualLabTeamTable({ users }: Props) {
         </div>
         <button
           type="button"
-          className="flex w-[220px] cursor-not-allowed justify-between border border-primary-7 bg-neutral-3 p-3"
-          onClick={() => setOpenInviteProjectMemberModal(true)}
-          // temporarily disabling it for SfN
-          disabled
+          className="flex w-[220px] justify-between border border-primary-7 bg-neutral-3 p-3"
+          onClick={() => setOpenInviteVlabMemberModal(true)}
         >
           <span className="font-bold">Invite member</span>
           <PlusOutlined />
@@ -105,15 +118,15 @@ export default function VirtualLabTeamTable({ users }: Props) {
       >
         <Table
           bordered={false}
-          dataSource={users}
+          dataSource={sortBy(users, ['role'])}
           pagination={false}
           columns={columns}
           showHeader={false}
         />
       </ConfigProvider>
-      <ModalInviteProjectMember
-        open={openInviteProjectMemberModal}
-        onChange={() => setOpenInviteProjectMemberModal(false)}
+      <ModalInviteVlabMember
+        open={openInviteVlabMemberModal}
+        onChange={() => setOpenInviteVlabMemberModal(false)}
       />
     </div>
   );

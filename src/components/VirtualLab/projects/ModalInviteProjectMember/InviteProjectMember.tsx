@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { Button, ConfigProvider } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { useSetAtom } from 'jotai';
 
-import { VirtualLabUsersHorizontalList } from '../VirtualLabProjectHomePage';
-import { Detail } from './Detail';
 import { Footer } from './Footer';
 import { addMember, removeMember } from './utils';
-import { useCurrentProject, useInviteHandler } from './hooks';
+import { useInviteHandler } from './hooks';
 import { Member } from './types';
 import { NewMember } from './NewMember';
 import { IconMail } from './IconMail';
 import { RoleCombo } from './RoleCombo';
+
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 
 interface InviteProjectMemberProps {
   members: Member[];
@@ -22,10 +23,21 @@ interface InviteProjectMemberProps {
 export function InviteProjectMember({ onClose, members, onChange }: InviteProjectMemberProps) {
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
-  const project = useCurrentProject();
-  const description = project?.description;
-  const [editMode, setEditMode] = useState(false);
-  const { loading, handleInvite } = useInviteHandler(members, onClose);
+  const [editMode, setEditMode] = useState(() => true);
+
+  const refreshProjectUsers = useSetAtom(
+    virtualLabProjectUsersAtomFamily({
+      virtualLabId: virtualLabId ?? null,
+      projectId: projectId ?? null,
+    })
+  );
+  const { loading, handleInvite } = useInviteHandler('project', members, () => {
+    refreshProjectUsers();
+    setEditMode(false);
+    onClose();
+    onChange([]);
+  });
+
   return (
     <ConfigProvider
       theme={{
@@ -43,32 +55,23 @@ export function InviteProjectMember({ onClose, members, onChange }: InviteProjec
         },
       }}
     >
-      <div>
-        <Detail title="PROJECT NAME" bold>
-          {project?.name}
-        </Detail>
-        {description && description.trim().length > 0 && (
-          <Detail title="DESCRIPTION">{description}</Detail>
-        )}
-        <div className="mb-8">
-          <VirtualLabUsersHorizontalList
-            virtualLabId={virtualLabId ?? ''}
-            projectId={projectId ?? ''}
-          />
-        </div>
+      <div className="mt-5">
         <PendingInvitations members={members} onChange={onChange} />
-        {editMode ? (
-          <NewMember
-            onCancel={() => setEditMode(false)}
-            onOK={(member: Member) => {
-              setEditMode(false);
-              onChange(addMember(members, member));
-            }}
-          />
-        ) : (
-          <AddMemberButton onClick={() => setEditMode(true)} />
+        {(editMode || !members.length) && (
+          <div className="mb-4">
+            <NewMember
+              onCancel={() => setEditMode(false)}
+              onOK={(member: Member) => {
+                setEditMode(false);
+                onChange(addMember(members, member));
+              }}
+            />
+          </div>
         )}
-        <Footer loading={loading} members={members} onClose={onClose} onInvite={handleInvite} />
+        <AddMemberButton onClick={() => setEditMode(true)} />
+        <div className="mt-8">
+          <Footer loading={loading} members={members} onClose={onClose} onInvite={handleInvite} />
+        </div>
       </div>
     </ConfigProvider>
   );

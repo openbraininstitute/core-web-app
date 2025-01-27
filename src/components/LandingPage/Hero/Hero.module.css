@@ -1,0 +1,66 @@
+.hero {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 0;
+  height: calc(100vh - 4rem);
+}
+
+.splash {
+  display: grid;
+  grid-template-columns: 1fr 4fr;
+  gap: 0;
+  margin: 0;
+}
+
+.splash > div:last-child {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-top: none;
+}
+
+.splash > div:last-child > video,
+.splash > div:last-child > img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top right;
+  z-index: 0;
+}
+
+.splash .text {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(128deg, var(--color-hero-background) 44.45%, transparent 83.92%);
+  z-index: 1;
+  font-size: clamp(2rem, 5vw, 3rem);
+  padding-left: 2em;
+  text-wrap: balance;
+}
+
+.splash.image .text {
+  color: #fff;
+  background: linear-gradient(128deg, var(--color-text) 44.45%, transparent 83.92%);
+}
+
+.splash > div:last-child > div > * {
+  max-width: 600px;
+}
+
+.splash > div:last-child > div > div.content {
+  font-size: 1rem;
+}
+
+@media (max-width: 800px) {
+  .splash {
+    grid-template-columns: 0px 1fr;
+  }
+}
