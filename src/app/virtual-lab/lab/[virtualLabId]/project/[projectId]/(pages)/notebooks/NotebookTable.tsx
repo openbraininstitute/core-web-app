@@ -18,11 +18,13 @@ import { basePath } from '@/config';
 import FilterControls from '@/components/FilterControls/FilterControls';
 import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
+import ReadmeModal from './ReadmeModal';
 
 const { RangePicker } = DatePicker;
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',
@@ -89,7 +91,24 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
           content={
             <div className="flex min-w-[120px] flex-col gap-2 text-white">
               <div className="flex gap-4">
-                <Image src={`${basePath}/images/icons/eye.svg`} width={12} height={12} alt="View" />
+                <Image
+                  src={`${basePath}/images/icons/eye-2.svg`}
+                  width={12}
+                  height={12}
+                  alt="View"
+                />
+                <button type="button" onClick={() => setOpenModal(true)}>
+                  Readme
+                </button>
+                {openModal && <ReadmeModal path={`${directory}/README.md`} />}
+              </div>
+              <div className="flex gap-4">
+                <Image
+                  src={`${basePath}/images/icons/eye.svg`}
+                  width={12}
+                  height={12}
+                  alt="Readme"
+                />
                 <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
               </div>
               <div className="flex gap-4">

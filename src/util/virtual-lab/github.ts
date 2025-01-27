@@ -96,3 +96,23 @@ async function getFileCreationDate(filePath: string): Promise<string | null> {
     return null;
   }
 }
+
+export async function fetchFile(filePath: string) {
+  const url = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/${filePath}`;
+
+  console.log(url);
+  try {
+    const response = await fetch(url, options);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        `GitHub API request failed with status: ${response.status} ${response.statusText}`
+      );
+    }
+
+    return atob(data.content);
+  } catch {
+    throw new Error(`Error fetching file ${filePath}`);
+  }
+}

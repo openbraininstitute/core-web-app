@@ -27,6 +27,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     for (const file of data) {
       if (file.type === 'file') {
+        console.log(file);
         const fileData = await fetch(file.download_url, options);
         const arrayBuffer = await fileData.arrayBuffer();
         zip.file(file.name, arrayBuffer);
