@@ -3,7 +3,7 @@ import React from 'react';
 import Hero from '../../Hero';
 import VerticalRuler from '../../VerticalRuler';
 import EmailButton from '../../EmailButton';
-import Subscriptions from './Subscriptions';
+// import Subscriptions from './Subscriptions';
 
 import HeroURL from './hero.jpg';
 import { classNames } from '@/util/utils';
@@ -28,7 +28,7 @@ export default function SectionPricing({ className }: SectionPricingProps) {
         Find the perfect plan for your research needs. From individual projects to large-scale
         initiatives, we offer flexible options to support your brain modeling and simulation goals.
       </p>
-      <Subscriptions />
+      {/* <Subscriptions /> */}
       <VerticalRuler />
       <h1>Need a special virtual lab?</h1>
       <p>
