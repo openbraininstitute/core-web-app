@@ -28,18 +28,11 @@ const nextConfig = {
     /**
      * Using WebGL shaders as modules.
      */
-    config.module.rules.push(
-      {
-        test: /\.(vert|frag)$/i,
-        // More information here https://webpack.js.org/guides/asset-modules/
-        type: 'asset/source',
-      },
-      {
-        test: /\.(mp4|pdf)$/i,
-        // More information here https://webpack.js.org/guides/asset-modules/
-        type: 'asset',
-      }
-    );
+    config.module.rules.push({
+      test: /\.(vert|frag)$/i,
+      // More information here https://webpack.js.org/guides/asset-modules/
+      type: 'asset/source',
+    });
     return config;
   },
   env: {
