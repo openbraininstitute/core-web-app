@@ -42,7 +42,7 @@ export const env = createEnv({
     NEXT_PUBLIC_BLUE_NAAS_URL: z.string().url(),
     NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL: z.string().url(),
     NEXT_PUBLIC_CELL_SVC_BASE_URL: z.string().url(),
-    NEXT_PUBLIC_FEEDBACK_URL: z.string().url(),
+    NEXT_PUBLIC_FEEDBACK_URL: z.string().url().optional(),
     NEXT_PUBLIC_KG_INFERENCE_BASE_URL: z.string().url(),
     NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: z.string().url(),
     NEXT_PUBLIC_SYNTHESIS_URL: z.string().url(),
