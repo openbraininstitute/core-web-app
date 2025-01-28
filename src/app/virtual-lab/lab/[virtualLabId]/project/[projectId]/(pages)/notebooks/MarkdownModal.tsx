@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
 import 'github-markdown-css';
@@ -13,13 +13,24 @@ export default function MarkdownModal({
 }) {
   const [content, setContent] = useState<string | null>(null);
 
+  const renderContent = useMemo(() => {
+    if (!content) return;
+    if (file?.type === 'text') return content;
+
+    try {
+      return JSON.parse(content);
+    } catch {
+      return 'Cannot display the contents';
+    }
+  }, [content, file]);
+
   useEffect(() => {
     async function fetchFile() {
       if (!file) return;
       const res = await fetch(`/api/github/fetchFile?path=${encodeURIComponent(file.path)}`);
 
       if (!res.ok) {
-        setContent('Cannot display the Readme');
+        setContent('Cannot display the contents');
       } else {
         setContent(await res.text());
       }
@@ -28,20 +39,18 @@ export default function MarkdownModal({
     fetchFile();
   }, [file]);
 
-  if (!file || !content) return;
-
   return (
-    <Modal open={!!file && !!content} onCancel={onCancel} footer={false} width="70%">
+    <Modal open={!!file && !!renderContent} onCancel={onCancel} footer={false} width="70%">
       <div>
         {file?.type === 'text' && (
           <div className="markdown-body">
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <ReactMarkdown>{renderContent}</ReactMarkdown>
           </div>
         )}
 
         {file?.type === 'json' && (
           <ReactJson
-            src={JSON.parse(content)}
+            src={renderContent}
             displayDataTypes={false}
             indentWidth={2}
             collapseStringsAfterLength={64}

@@ -5,7 +5,6 @@ const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${no
 
 export const options = {
   headers: {
-    Authorization: 'token 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',
     'X-GitHub-Api-Version': '2022-11-28',
   },
   next: {
@@ -120,7 +119,7 @@ export async function fetchFile(filePath: string) {
 export async function downloadZippedFolder(path: string) {
   try {
     const apiUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${path}`;
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, options);
     const data = await response.json();
 
     if (!response.ok) {
