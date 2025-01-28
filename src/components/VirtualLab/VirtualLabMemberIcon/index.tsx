@@ -21,7 +21,7 @@ export default function VirtualLabMemberIcon({
   email,
 }: Props) {
   const initials = useMemo(() => {
-    return inviteAccepted ? `${firstName[0]}${lastName[0]}` : email?.split('@')[0].slice(0, 2);
+    return inviteAccepted ? `${firstName[0]}${lastName[0]}` : email?.split('@')[0].slice(0, 1);
   }, [firstName, lastName, inviteAccepted, email]);
 
   const index = useMemo(() => {
