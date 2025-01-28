@@ -48,11 +48,12 @@ export default function SimulationDetail<T extends GenericSimulation>({
         if (!session) {
           throw new Error('No session was found');
         }
-        const jsonFile = await fetchJsonFileByUrl<SimulationPayload>(
-          configuration.contentUrl,
-          session
-        );
+        const jsonFile = await fetchJsonFileByUrl<any>(configuration.contentUrl, session);
         if (!jsonFile) return;
+
+        jsonFile.config.currentInjection = jsonFile.config.current_injection;
+        jsonFile.config.recordFrom = jsonFile.config.record_from;
+
         setDistributionJson(jsonFile);
         setSimulationPlot(Object.keys(jsonFile.simulation).at(0));
       } catch (error) {
@@ -84,13 +85,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
         <div className="flex w-full flex-col gap-2">
           <div className="text-lg font-bold text-primary-8">Injection location</div>
           <div className="mt-2 flex max-w-max items-center justify-center border border-gray-100 px-5 py-1 font-bold">
-            {distributionJson.config.current_injection.injectTo}
+            {distributionJson.config.currentInjection.injectTo}
           </div>
         </div>
         <div className="flex w-full flex-col gap-2">
           <div className="text-lg font-bold text-primary-8">Recording locations</div>
           <div className="mt-2 flex items-center gap-4">
-            {distributionJson.config.record_from.map((r, ind) => (
+            {distributionJson.config.recordFrom.map((r, ind) => (
               <div key={`${r.section}_${r.offset}`} className="flex flex-col gap-1">
                 <div className="uppercase text-gray-400">Recording {ind + 1}</div>
                 <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100 px-5 py-1">

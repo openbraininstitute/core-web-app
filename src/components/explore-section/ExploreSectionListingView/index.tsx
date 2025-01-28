@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { RowSelectionType } from 'antd/es/table/interface';
+import { useRouter } from 'next/navigation';
 
 import FilterControls from './FilterControls';
 import { RenderButtonProps } from './useRowSelection';
@@ -18,7 +19,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
-import { useRouter } from 'next/navigation';
+
 import { detailUrlBuilder } from '@/util/common';
 
 export default function ExploreSectionListingView({
@@ -57,10 +58,11 @@ export default function ExploreSectionListingView({
 
   const router = useRouter();
 
+  // TODO: Remove onCellClick prop
+  // eslint-disable-next-line
   onCellClick =
     onCellClick ??
     ((basePath, record) => {
-      console.log('here');
       router.push(detailUrlBuilder(basePath, record));
     });
 
