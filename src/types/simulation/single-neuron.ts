@@ -89,9 +89,9 @@ export type StimulusConfig = {
 };
 
 export interface SingleNeuronModelSimulationConfig {
-  recordFrom: RecordLocation[];
+  record_from: RecordLocation[];
   conditions: SimulationExperimentalSetup;
-  currentInjection: CurrentInjectionSimulationConfig;
+  current_injection: CurrentInjectionSimulationConfig;
   synaptome?: Array<SynapseConfig>;
 }
 

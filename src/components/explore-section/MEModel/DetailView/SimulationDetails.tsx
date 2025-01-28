@@ -74,6 +74,8 @@ export default function SimulationDetail<T extends GenericSimulation>({
     );
   }
 
+  if (!distributionJson) return null;
+
   return (
     <div className="flex items-start gap-8 border p-8">
       <div className="flex flex-[0_1_60%] flex-col gap-10 text-primary-8">
@@ -82,13 +84,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
         <div className="flex w-full flex-col gap-2">
           <div className="text-lg font-bold text-primary-8">Injection location</div>
           <div className="mt-2 flex max-w-max items-center justify-center border border-gray-100 px-5 py-1 font-bold">
-            {distributionJson?.config.currentInjection.injectTo}
+            {distributionJson.config.current_injection.injectTo}
           </div>
         </div>
         <div className="flex w-full flex-col gap-2">
           <div className="text-lg font-bold text-primary-8">Recording locations</div>
           <div className="mt-2 flex items-center gap-4">
-            {distributionJson?.config.recordFrom.map((r, ind) => (
+            {distributionJson.config.record_from.map((r, ind) => (
               <div key={`${r.section}_${r.offset}`} className="flex flex-col gap-1">
                 <div className="uppercase text-gray-400">Recording {ind + 1}</div>
                 <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100 px-5 py-1">
@@ -109,18 +111,18 @@ export default function SimulationDetail<T extends GenericSimulation>({
             ))}
           </div>
         </div>
-        {distributionJson?.config && children?.({ config: distributionJson.config })}
+        {children?.({ config: distributionJson.config })}
       </div>
 
       <div className="flex w-full flex-[1_1_40%] flex-col items-end justify-center gap-5">
-        {distributionJson?.stimulus && (
+        {distributionJson.stimulus && (
           <div className="flex w-full flex-col">
             <div className="mb-4 text-2xl font-bold text-primary-8">Stimulus</div>
             <SimulationPlotAsImage yTitle="Current [nA]" plotData={distributionJson.stimulus} />
           </div>
         )}
 
-        {distributionJson?.simulation && (
+        {distributionJson.simulation && (
           <div className="flex w-full flex-col">
             <div className="mb-4 text-2xl font-bold text-primary-8">Recording</div>
             <ConfigProvider theme={{ hashed: false }}>
