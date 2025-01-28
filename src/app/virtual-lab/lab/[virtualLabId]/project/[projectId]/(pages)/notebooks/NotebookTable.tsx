@@ -24,7 +24,7 @@ const { RangePicker } = DatePicker;
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
+  const [readMeDir, setReadmeDir] = useState<string | null>(null);
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',
@@ -59,7 +59,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
 
   const handleEyeClick = async (directory: string, notebookName: string) => {
     setLoadingZip(true);
-    const res = await fetch(`/api/downloadNotebook?folder=${encodeURIComponent(directory)}`);
+    const res = await fetch(`/api/github/downloadNotebook?folder=${encodeURIComponent(directory)}`);
 
     setLoadingZip(false);
     if (!res.ok) {
@@ -97,10 +97,9 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                   height={12}
                   alt="View"
                 />
-                <button type="button" onClick={() => setOpenModal(true)}>
+                <button type="button" onClick={() => setReadmeDir(directory)}>
                   Readme
                 </button>
-                {openModal && <ReadmeModal path={`${directory}/README.md`} />}
               </div>
               <div className="flex gap-4">
                 <Image
@@ -265,6 +264,8 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       <div id="table-container" className="mt-5">
         <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
       </div>
+
+      <ReadmeModal dir={readMeDir} onCancel={() => setReadmeDir(null)} />
 
       <style jsx global>{`
         /* Change color of sorting icons */

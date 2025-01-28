@@ -1,10 +1,11 @@
+import JSZip from 'jszip';
 import { notebookRepository } from '@/config';
 
 const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
   headers: {
-    Authorization: 'token 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',
+    Authorization: 'token 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',
     'X-GitHub-Api-Version': '2022-11-28',
   },
   next: {
@@ -98,12 +99,13 @@ async function getFileCreationDate(filePath: string): Promise<string | null> {
 }
 
 export async function fetchFile(filePath: string) {
-  const url = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/${filePath}`;
+  const url = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${filePath}`;
 
-  console.log(url);
   try {
     const response = await fetch(url, options);
     const data = await response.json();
+
+    console.log(filePath);
 
     if (!response.ok) {
       throw new Error(
@@ -114,5 +116,34 @@ export async function fetchFile(filePath: string) {
     return atob(data.content);
   } catch {
     throw new Error(`Error fetching file ${filePath}`);
+  }
+}
+
+export async function downloadZippedFolder(path: string) {
+  try {
+    const apiUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${path}`;
+    const response = await fetch(apiUrl, options);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        `GitHub API request failed with status: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const zip = new JSZip();
+
+    for (const file of data) {
+      if (file.type === 'file') {
+        const fileData = await fetch(file.download_url, options);
+        const arrayBuffer = await fileData.arrayBuffer();
+        zip.file(file.name, arrayBuffer);
+      }
+    }
+
+    const zipContent = await zip.generateAsync({ type: 'nodebuffer' });
+    return zipContent;
+  } catch {
+    throw new Error(`Failed to fetch the contents`);
   }
 }
