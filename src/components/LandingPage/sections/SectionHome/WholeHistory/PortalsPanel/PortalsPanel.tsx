@@ -13,6 +13,7 @@ import { classNames } from '@/util/utils';
 
 import CenteredColumn from '@/components/LandingPage/CenteredColumn';
 import styles from './PortalsPanel.module.css';
+import PortalCard from './card/PortalCard';
 
 export interface PortalsPanelProps {
   className?: string;
@@ -22,22 +23,11 @@ export default function PortalsPanel({ className }: PortalsPanelProps) {
   return (
     <>
       <h1>Browse through the portals built by the Blue Brain Project</h1>
-      <CenteredColumn>
         <div className={classNames(className, styles.portalsPanel)}>
           {PORTALS.map(({ title, content, image, href }) => (
-            <Link key={title} href={href} className={styles.center}>
-              <div className={styles.button}>
-                <div className={styles.text}>
-                  <div>Portal</div>
-                  <h2>{title}</h2>
-                  <div>{content}</div>
-                </div>
-                <div className={styles.image} style={{ backgroundImage: `url(${image})` }} />
-              </div>
-            </Link>
+            <PortalCard key={title} title={title} content={content} image={image} href={href} />
           ))}
         </div>
-      </CenteredColumn>
     </>
   );
 }

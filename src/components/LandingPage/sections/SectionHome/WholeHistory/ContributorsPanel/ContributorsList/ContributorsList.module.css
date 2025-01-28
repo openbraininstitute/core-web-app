@@ -1,7 +1,8 @@
 .contributorsList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1em;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4em 3.2em;
+  padding: 0 4rem;
 }
 
 .contributorsList > div {
@@ -10,8 +11,9 @@
 
 .contributorsList > div > .name {
   font-family: var(--font-serif);
+  font-size: 1.4rem;
   line-height: 2;
-  padding: 0 1em;
+  padding: 0.4em 1em;
   background-color: var(--color-hero-background);
 }
 
@@ -19,14 +21,13 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 2em;
 }
 
 .contributorsList > div > .links > a {
   all: unset;
   display: inline-block;
   cursor: pointer;
-  font-size: 0.6rem;
-  margin: 0;
-  margin-top: 0.25em;
+  font-size: 1rem;
+  border: solid 1px var(--color-hero-background);
+  padding: 6px 12px;
 }

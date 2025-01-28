@@ -1,24 +1,19 @@
-.contributorsNavigation {
-  display: grid;
-  grid-template-columns: 1fr repeat(2, minmax(100px, 400px)) 1fr;
-  max-width: calc(100vw - 2em);
-}
-
 .thanks {
-  grid-column: 2/3;
+  width: 50%;
   font-family: var(--font-serif);
   background-color: var(--color-hero-background);
   line-height: 0.8;
-  font-size: 150%;
-  padding: 1rem;
+  font-size: 2vw;
+  padding: 1.5rem;
   text-align: right;
 }
 
 .more {
-  grid-column: 3/4;
+  width: 50%;
   background-color: var(--color-text);
   color: #fff;
-  padding: 1rem;
+  padding: 1.5rem;
+  font-size: 18px;
 }
 
 .pages {

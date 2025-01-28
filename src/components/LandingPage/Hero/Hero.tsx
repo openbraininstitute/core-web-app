@@ -29,11 +29,11 @@ export default function Hero({
       <div className={classNames(styles.splash, backgroundType === 'image' && styles.image)}>
         <div />
         <div>
-          {backgroundType === 'video' && <video loop muted autoPlay src={backgroundURL} />}
+          {backgroundType === 'video' && <video loop muted autoPlay playsInline src={backgroundURL} />}
           {backgroundType === 'image' && <img src={backgroundURL} alt="Background" />}
           <div className={styles.text}>
-            <div className="font-dm">{title}</div>
-            {content && <div className={styles.content}>{content}</div>}
+            <div className={styles.largeTitle}>{title}</div>
+            {content && <h1 className={styles.content}>{content}</h1>}
           </div>
         </div>
       </div>

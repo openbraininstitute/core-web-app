@@ -25,15 +25,16 @@ export default function ContributorsNavigation({
   }, [page, pages, onPageChange]);
 
   return (
-    <div className={classNames(className, styles.contributorsNavigation)}>
-      <div className={styles.thanks}>
-        We thank the {humanFriendlyCount(contributors)}
-        <br />
-        contributors
-      </div>
-      <div className={styles.more}>
-        who advanced the Blue Brain Project scientifically over the years. We couldn&apos;t have
-        done this without you!
+    <div className="w-full px-[20vw]">
+      <div className="w-full h-[16vh] flex flex-row">
+        <div className={styles.thanks}>
+          We thank the {humanFriendlyCount(contributors)}
+          <br />
+          contributors
+        </div>
+        <div className={styles.more}>
+          who advanced the Blue Brain Project scientifically over the years. We couldn&apos;t have done this without you!
+        </div>
       </div>
       <div className={styles.pages}>
         <button

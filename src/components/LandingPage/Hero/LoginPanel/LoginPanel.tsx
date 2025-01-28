@@ -11,6 +11,7 @@ export default function LoginPanel() {
       onClick={`/log-in?callbackUrl=${basePath}/virtual-lab`}
       subTitle="Login to"
       title="The platform"
+      className="border-none"
     />
   );
 }
