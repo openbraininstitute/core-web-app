@@ -11,6 +11,7 @@ import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { getSorter, fileUrl } from './utils';
+import ReadmeModal from './ReadmeModal';
 import useSearch from '@/components/VirtualLab/Search';
 import { Notebook } from '@/util/virtual-lab/github';
 import { basePath } from '@/config';
@@ -18,7 +19,7 @@ import { basePath } from '@/config';
 import FilterControls from '@/components/FilterControls/FilterControls';
 import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
-import ReadmeModal from './ReadmeModal';
+import { notification } from '@/api/notifications';
 
 const { RangePicker } = DatePicker;
 
@@ -57,13 +58,14 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     });
   }, [notebooks, search]);
 
-  const handleEyeClick = async (directory: string, notebookName: string) => {
+  const handleDownloadClick = async (directory: string, notebookName: string) => {
     setLoadingZip(true);
     const res = await fetch(`/api/github/downloadNotebook?folder=${encodeURIComponent(directory)}`);
 
     setLoadingZip(false);
     if (!res.ok) {
-      throw new Error('Failed to fetch the zip file');
+      notification.error('Failed to download');
+      return;
     }
 
     const blob = await res.blob();
@@ -120,7 +122,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 <button
                   type="button"
                   className="hover:text-primary-4"
-                  onClick={() => handleEyeClick(directory, notebookName)}
+                  onClick={() => handleDownloadClick(directory, notebookName)}
                 >
                   Download
                 </button>

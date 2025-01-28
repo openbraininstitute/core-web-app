@@ -105,8 +105,6 @@ export async function fetchFile(filePath: string) {
     const response = await fetch(url, options);
     const data = await response.json();
 
-    console.log(filePath);
-
     if (!response.ok) {
       throw new Error(
         `GitHub API request failed with status: ${response.status} ${response.statusText}`
@@ -122,7 +120,7 @@ export async function fetchFile(filePath: string) {
 export async function downloadZippedFolder(path: string) {
   try {
     const apiUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${path}`;
-    const response = await fetch(apiUrl, options);
+    const response = await fetch(apiUrl);
     const data = await response.json();
 
     if (!response.ok) {
