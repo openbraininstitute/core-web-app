@@ -3,7 +3,6 @@ import { Button, ConfigProvider } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useSetAtom } from 'jotai';
 
-import { UsersHorizontalList } from '../VirtualLabProjectHomePage';
 import { Footer } from './Footer';
 import { addMember, removeMember } from './utils';
 import { useInviteHandler } from './hooks';
@@ -22,7 +21,7 @@ interface InviteVlabMemberProps {
 }
 
 export function InviteVlabMember({ onClose, members, onChange }: InviteVlabMemberProps) {
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(() => true);
   const virtualLabId = useParamVirtualLabId();
   const refreshVlabUsers = useSetAtom(virtualLabMembersAtomFamily(virtualLabId!));
 
@@ -51,21 +50,19 @@ export function InviteVlabMember({ onClose, members, onChange }: InviteVlabMembe
       }}
     >
       <div className="mt-5">
-        <div className="mb-8">
-          <UsersHorizontalList virtualLabId={virtualLabId ?? ''} />
-        </div>
         <PendingInvitations members={members} onChange={onChange} />
-        {editMode ? (
-          <NewMember
-            onCancel={() => setEditMode(false)}
-            onOK={(member: Member) => {
-              setEditMode(false);
-              onChange(addMember(members, member));
-            }}
-          />
-        ) : (
-          <AddMemberButton onClick={() => setEditMode(true)} />
+        {(editMode || !members.length) && (
+          <div className="mb-4">
+            <NewMember
+              onCancel={() => setEditMode(false)}
+              onOK={(member: Member) => {
+                setEditMode(false);
+                onChange(addMember(members, member));
+              }}
+            />
+          </div>
         )}
+        <AddMemberButton onClick={() => setEditMode(true)} />
         <div className="mt-8">
           <Footer loading={loading} members={members} onClose={onClose} onInvite={handleInvite} />
         </div>

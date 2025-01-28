@@ -23,7 +23,7 @@ export default function Home({ className }: HomeProps) {
       <VerticalRuler />
       {/* <h1>Dig through the timeline and keep an eye on the future</h1> */}
       {/* <TimeLine /> */}
-      <VerticalRuler />
+      {/* <VerticalRuler /> */}
       <ToolsAndData />
       <VerticalRuler />
       <PortalsPanel />
