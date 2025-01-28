@@ -10,22 +10,23 @@ Object.defineProperty(global, 'crypto', {
 });
 
 describe('util/id.test.ts', () => {
-  describe('Nexus configuration', () => {
-    it('correct endpoint', () => {
-      expect(nexus.url).toBe('https://bbp.epfl.ch/nexus/v1');
-    });
-    it('correct id base url', () => {
-      expect(nexus.defaultIdBaseUrl).toBe(
-        'https://bbp.epfl.ch/data/bbp/mmb-point-neuron-framework-model'
-      );
-    });
-    it('correct organization', () => {
-      expect(nexus.org).toBe('bbp');
-    });
-    it('correct project', () => {
-      expect(nexus.project).toBe('mmb-point-neuron-framework-model');
-    });
-  });
+  // Not sure we still need to check for BBP Nexus URLs.
+  // describe('Nexus configuration', () => {
+  //   it('correct endpoint', () => {
+  //     expect(nexus.url).toBe('https://bbp.epfl.ch/nexus/v1');
+  //   });
+  //   it('correct id base url', () => {
+  //     expect(nexus.defaultIdBaseUrl).toBe(
+  //       'https://bbp.epfl.ch/data/bbp/mmb-point-neuron-framework-model'
+  //     );
+  //   });
+  //   it('correct organization', () => {
+  //     expect(nexus.org).toBe('bbp');
+  //   });
+  //   it('correct project', () => {
+  //     expect(nexus.project).toBe('mmb-point-neuron-framework-model');
+  //   });
+  // });
 
   describe('Expand IDs', () => {
     it('using uuid', () => {

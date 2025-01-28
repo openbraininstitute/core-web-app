@@ -1,9 +1,11 @@
 .triBlocks {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* justify-content: center;
   align-items: stretch;
-  flex-wrap: wrap;
+  flex-wrap: wrap; */
   --size-block: min(calc(100vw - 1rem), 400px);
+  padding: 0 40px;
 }
 
 .triBlocks > .block {
@@ -22,8 +24,10 @@
 }
 
 .triBlocks h2 {
+  position: relative;
+  top: -4px;
   font-family: var(--font-serif);
-  font-size: 200%;
+  /* font-size: 250%; */
 }
 
 .triBlocks h3 {
@@ -49,7 +53,7 @@
   background-position: calc(0.2 * var(--size-block)) 0;
   background-repeat: no-repeat;
   filter: grayscale(1);
-  transition: all 600ms cubic-bezier(0.415, 0.13, 0.07, 0.4);
+  transition: all 400ms cubic-bezier(0.415, 0.13, 0.07, 0.4);
 }
 
 .block:hover > .background {

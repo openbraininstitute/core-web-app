@@ -14,6 +14,7 @@ export default async function VirtualLabMainPage() {
 
     toRender = <VirtualLabDashboard virtualLabs={virtualLabs.data.results} />;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('fetching virtual labs failed:', error);
     toRender = (
       <div className="flex h-[calc(100vh-6rem)] w-full flex-col items-center justify-center">

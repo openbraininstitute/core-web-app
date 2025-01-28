@@ -1,28 +1,22 @@
-.toolsAndData > div {
-  display: grid;
-  grid-template-columns: 1fr minmax(0, 300px);
-  align-items: stretch;
-  overflow: hidden;
-}
-
-.toolsAndData > div > img {
-  max-height: 60vh;
-}
-
-.toolsAndData > div > div {
-  background-color: var(--color-hero-background);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1em;
-  border: 1px solid var(--color-border);
-}
-
 .toolsAndData h2 {
+  width: 50%;
   font-family: var(--font-serif);
-  font-size: 3rem;
+  font-size: 4vw;
+  line-height: 1.1;
   margin: 0;
   margin-bottom: 2em;
+}
+
+.toolsAndData h3 {
+  font-size: 1.4em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.toolsAndData p {
+  font-size: 1.4em;
+  margin: 0;
+  padding: 0;
 }
 
 .toolsAndData > footer {
