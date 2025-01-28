@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { RowSelectionType } from 'antd/es/table/interface';
-import { useRouter } from 'next/navigation';
 
 import FilterControls from './FilterControls';
 import { RenderButtonProps } from './useRowSelection';
@@ -19,8 +18,6 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
-
-import { detailUrlBuilder } from '@/util/common';
 
 export default function ExploreSectionListingView({
   dataType,
@@ -55,16 +52,6 @@ export default function ExploreSectionListingView({
 
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
-
-  const router = useRouter();
-
-  // TODO: Remove onCellClick prop
-  // eslint-disable-next-line
-  onCellClick =
-    onCellClick ??
-    ((basePath, record) => {
-      router.push(detailUrlBuilder(basePath, record));
-    });
 
   const data = useLoadableValue(
     dataAtom({

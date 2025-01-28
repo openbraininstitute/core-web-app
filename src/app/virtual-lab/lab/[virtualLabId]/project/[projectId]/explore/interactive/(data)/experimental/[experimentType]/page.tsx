@@ -6,6 +6,7 @@ import ExploreSectionListingView from '@/components/explore-section/ExploreSecti
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { useExploreTableOnClickHandler } from '@/hooks/virtual-labs';
 
 export default function VirtualLabExperimentListingView() {
   const params = useParams<{ experimentType: string; virtualLabId: string; projectId: string }>();
@@ -19,6 +20,8 @@ export default function VirtualLabExperimentListingView() {
     projectId: params.projectId,
   };
 
+  const onCellClick = useExploreTableOnClickHandler();
+
   if (!currentExperiment) notFound();
 
   return (
@@ -27,6 +30,7 @@ export default function VirtualLabExperimentListingView() {
       dataScope={ExploreDataScope.SelectedBrainRegion}
       virtualLabInfo={virtualLabInfo}
       dataKey={params.projectId + currentExperiment}
+      onCellClick={onCellClick}
     />
   );
 }
