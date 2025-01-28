@@ -3,15 +3,14 @@
 import { ConfigProvider, DatePicker } from 'antd';
 
 import Table from 'antd/es/table';
-import Link from 'next/link';
 import Image from 'next/image';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
-import { getSorter, fileUrl } from './utils';
-import ReadmeModal from './ReadmeModal';
+import { getSorter } from './utils';
+import MarkdownModal from './MarkdownModal';
 import useSearch from '@/components/VirtualLab/Search';
 import { Notebook } from '@/util/virtual-lab/github';
 import { basePath } from '@/config';
@@ -25,7 +24,10 @@ const { RangePicker } = DatePicker;
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
-  const [readMeDir, setReadmeDir] = useState<string | null>(null);
+  const [file, setFile] = useState<{
+    path: string;
+    type: 'json' | 'text';
+  } | null>(null);
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',
@@ -99,7 +101,10 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                   height={12}
                   alt="View"
                 />
-                <button type="button" onClick={() => setReadmeDir(directory)}>
+                <button
+                  type="button"
+                  onClick={() => setFile({ path: `${directory}/README.md`, type: 'text' })}
+                >
                   Readme
                 </button>
               </div>
@@ -110,7 +115,14 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                   height={12}
                   alt="Readme"
                 />
-                <Link href={`notebooks/${fileUrl(uri)}`}>View</Link>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFile({ path: `${directory}/analysis_notebook.ipynb`, type: 'json' })
+                  }
+                >
+                  Preview
+                </button>
               </div>
               <div className="flex gap-4">
                 <Image
@@ -267,7 +279,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
       </div>
 
-      <ReadmeModal dir={readMeDir} onCancel={() => setReadmeDir(null)} />
+      <MarkdownModal file={file} onCancel={() => setFile(null)} />
 
       <style jsx global>{`
         /* Change color of sorting icons */
