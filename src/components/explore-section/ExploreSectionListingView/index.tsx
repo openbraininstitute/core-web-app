@@ -18,6 +18,8 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
+import { useRouter } from 'next/navigation';
+import { detailUrlBuilder } from '@/util/common';
 
 export default function ExploreSectionListingView({
   dataType,
@@ -52,6 +54,15 @@ export default function ExploreSectionListingView({
 
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
+
+  const router = useRouter();
+
+  onCellClick =
+    onCellClick ??
+    ((basePath, record) => {
+      console.log('here');
+      router.push(detailUrlBuilder(basePath, record));
+    });
 
   const data = useLoadableValue(
     dataAtom({
