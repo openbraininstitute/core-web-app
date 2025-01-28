@@ -9,10 +9,7 @@ export interface CenteredColumnProps {
   children: React.ReactNode;
 }
 
-export default function CenteredColumn({
-  className,
-  children,
-}: CenteredColumnProps) {
+export default function CenteredColumn({ className, children }: CenteredColumnProps) {
   return (
     <div className={classNames(className, styles.centeredColumn)}>
       <div className="w-4/5 px-12">{children}</div>

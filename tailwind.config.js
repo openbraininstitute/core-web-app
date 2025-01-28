@@ -120,7 +120,7 @@ module.exports = {
         'in-expo': 'cubic-bezier(0.95, 0.05, 0.795, 0.035)',
         'out-expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
         'out-back': 'cubic-bezier(0.680, -0.550, 0.265, 1.550);',
-        'smooth': 'cubic-bezier(0.245, 0.425, 0.345, 0.015);'
+        smooth: 'cubic-bezier(0.245, 0.425, 0.345, 0.015);',
       },
       animation: {
         'slide-out': 'slide-out 2s ease-in-out',

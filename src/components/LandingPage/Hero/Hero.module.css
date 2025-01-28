@@ -39,7 +39,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(113deg, #F0F0F0 29.85%, rgba(240, 240, 240, 0.00) 61.87%);
+  background: linear-gradient(113deg, #f0f0f0 29.85%, rgba(240, 240, 240, 0) 61.87%);
   z-index: 1;
   font-size: clamp(2rem, 5vw, 3rem);
   padding-left: 2em;
@@ -48,7 +48,7 @@
 
 .splash.image .text {
   color: #fff;
-  background: linear-gradient(113deg, #F0F0F0 29.85%, rgba(240, 240, 240, 0.00) 61.87%);
+  background: linear-gradient(113deg, #f0f0f0 29.85%, rgba(240, 240, 240, 0) 61.87%);
 }
 
 .splash > div:last-child > div > * {
@@ -65,7 +65,6 @@
   font-size: 4vw;
   line-height: 1.25;
 }
-
 
 @media (max-width: 800px) {
   .splash {

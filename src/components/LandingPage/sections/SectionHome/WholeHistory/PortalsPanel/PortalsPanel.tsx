@@ -1,6 +1,5 @@
 import React from 'react';
 
-import Link from 'next/link';
 import AtlasURL from './atlas.jpg';
 import ChannelURL from './channel.jpg';
 import HippocampusURL from './hippocampus.jpg';
@@ -9,11 +8,10 @@ import NgvURL from './ngv.jpg';
 import SscxURL from './sscx.jpg';
 import ThalamusURL from './thalamus.jpg';
 import TopologicalURL from './topological.jpg';
+import PortalCard from './card/PortalCard';
 import { classNames } from '@/util/utils';
 
-import CenteredColumn from '@/components/LandingPage/CenteredColumn';
 import styles from './PortalsPanel.module.css';
-import PortalCard from './card/PortalCard';
 
 export interface PortalsPanelProps {
   className?: string;
@@ -23,11 +21,11 @@ export default function PortalsPanel({ className }: PortalsPanelProps) {
   return (
     <>
       <h1>Browse through the portals built by the Blue Brain Project</h1>
-        <div className={classNames(className, styles.portalsPanel)}>
-          {PORTALS.map(({ title, content, image, href }) => (
-            <PortalCard key={title} title={title} content={content} image={image} href={href} />
-          ))}
-        </div>
+      <div className={classNames(className, styles.portalsPanel)}>
+        {PORTALS.map(({ title, content, image, href }) => (
+          <PortalCard key={title} title={title} content={content} image={image} href={href} />
+        ))}
+      </div>
     </>
   );
 }

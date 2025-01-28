@@ -35,7 +35,6 @@
   overflow: hidden;
 }
 
-
 .menu > button.logo {
   all: unset;
   background-color: var(--color-hero-background);
@@ -53,7 +52,6 @@
 .menu.stuck > button.logo {
   font-size: 1.4rem;
   padding: 12px;
-
 }
 
 .menu > button.logo > div {

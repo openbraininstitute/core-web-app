@@ -46,10 +46,17 @@ export default function FooterPanel({ className }: FooterPanelProps) {
           </Section>
           <div>
             {/* <a>Discord</a> */}
-            <a href="https://www.linkedin.com/company/openbraininstitute/"><IconLinkedin iconColor="#003381" className="w-6 h-auto mr-2" /> Linkedin</a>
-            <a href="https://x.com/OpenBrainInst"><IconTwitter iconColor="#003381" className="w-6 h-auto mr-2" /> X</a>
+            <a href="https://www.linkedin.com/company/openbraininstitute/">
+              <IconLinkedin iconColor="#003381" className="mr-2 h-auto w-6" /> Linkedin
+            </a>
+            <a href="https://x.com/OpenBrainInst">
+              <IconTwitter iconColor="#003381" className="mr-2 h-auto w-6" /> X
+            </a>
             {/* <a>Youtube</a> */}
-            <a href="https://bsky.app/profile/openbraininst.bsky.social"><IconBlueSky iconColor="#003381"  className="w-6 h-auto mr-2"/>BlueSky</a>
+            <a href="https://bsky.app/profile/openbraininst.bsky.social">
+              <IconBlueSky iconColor="#003381" className="mr-2 h-auto w-6" />
+              BlueSky
+            </a>
           </div>
         </div>
         {/* <div className={styles.subscribe}>

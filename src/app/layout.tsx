@@ -18,7 +18,7 @@ const gabarito = Gabarito({
 });
 
 const DMSerifText = DM_Serif_Text({
-  weight: "400",
+  weight: '400',
   subsets: ['latin'],
   variable: '--font-DMSerifText',
 });
