@@ -15,7 +15,7 @@ import {
 import { ensureArray } from '@/util/nexus';
 import { SIMULATION_CONFIG_FILE_NAME_BASE } from '@/state/simulate/single-neuron-setter';
 import { getSession } from '@/authFetch';
-import { classNames } from '@/util/utils';
+import { classNames, createPascalToUnderscoreProxy } from '@/util/utils';
 
 const subtitleStyle = 'font-thin text-neutral-4';
 type GenericSimulation = SingleNeuronSimulation | SynaptomeSimulation;
@@ -48,13 +48,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
         if (!session) {
           throw new Error('No session was found');
         }
-        const jsonFile = await fetchJsonFileByUrl<any>(configuration.contentUrl, session);
+        const jsonFile = await fetchJsonFileByUrl<SimulationPayload>(
+          configuration.contentUrl,
+          session
+        );
         if (!jsonFile) return;
 
-        jsonFile.config.currentInjection = jsonFile.config.current_injection;
-        jsonFile.config.recordFrom = jsonFile.config.record_from;
-
-        setDistributionJson(jsonFile);
+        setDistributionJson(createPascalToUnderscoreProxy(jsonFile));
         setSimulationPlot(Object.keys(jsonFile.simulation).at(0));
       } catch (error) {
         //
