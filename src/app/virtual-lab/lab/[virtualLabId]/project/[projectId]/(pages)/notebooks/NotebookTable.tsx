@@ -10,7 +10,7 @@ import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { getSorter } from './utils';
-import MarkdownModal from './MarkdownModal';
+import ContentModal from './ContentModal';
 import useSearch from '@/components/VirtualLab/Search';
 import { Notebook } from '@/util/virtual-lab/github';
 import { basePath } from '@/config';
@@ -279,7 +279,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
       </div>
 
-      <MarkdownModal file={file} onCancel={() => setFile(null)} />
+      <ContentModal file={file} onCancel={() => setFile(null)} />
 
       <style jsx global>{`
         /* Change color of sorting icons */
