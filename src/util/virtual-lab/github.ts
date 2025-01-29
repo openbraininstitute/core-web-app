@@ -4,10 +4,6 @@ import { notebookRepository } from '@/config';
 const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
-  headers: {
-    Authorization: 'token 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',
-    'X-GitHub-Api-Version': '2022-11-28',
-  },
   next: {
     revalidate: 3600 * 24,
   },
@@ -46,11 +42,15 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
 
   const notebooks: Notebook[] = [];
 
+  const datePromises: Promise<string | null>[] = [];
+
   for (const item of tree.tree) {
     if (item.path.endsWith('.ipynb')) {
       const parts = item.path.split('/');
       const objectOfInterest = parts[0];
       const name = parts[1];
+
+      datePromises.push(getFileCreationDate(item.path));
 
       notebooks.push({
         objectOfInterest,
@@ -59,12 +59,18 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
         key: item.path,
         description: '',
         author: 'OBI',
-        creationDate: await getFileCreationDate(item.path),
+        creationDate: '',
       });
     }
   }
 
-  return notebooks;
+  const dates = await Promise.all(datePromises);
+
+  return notebooks.map((n, i) => {
+    // eslint-disable-next-line
+    n.creationDate = dates[i];
+    return n;
+  });
 }
 
 async function getFileCreationDate(filePath: string): Promise<string | null> {

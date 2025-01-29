@@ -105,6 +105,6 @@ export const virtualLabApi = {
 };
 
 export const notebookRepository = {
-  user: 'g-bar',
+  user: 'openbraininstitute',
   repository: 'obi_platform_analysis_notebooks',
 };
