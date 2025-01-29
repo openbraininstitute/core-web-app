@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"
-      className={`${titilliumWeb.variable} font-sans, ${gabarito.variable} font-geometric, ${DMSerifText.variable} font-serif`}
+      className={`${titilliumWeb.variable} ${gabarito.variable} ${DMSerifText.variable}`}
     >
       <body>
         <Providers session={session}>
