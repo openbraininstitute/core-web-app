@@ -7,12 +7,10 @@ import VirtualLabProjectSidebar from '@/components/VirtualLab/projects/VirtualLa
 import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
-import fetchNotebooks from '@/util/virtual-lab/github';
 
 export default async function VirtualLabProjectLayout({ children, params }: LabProjectLayoutProps) {
   const labUrl = generateLabUrl(params.virtualLabId);
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;
-  const notebooks = await fetchNotebooks();
 
   return (
     <div className="grid h-screen grid-cols-[1fr_3fr] grid-rows-1 bg-primary-9 pr-5 text-white">
@@ -38,7 +36,6 @@ export default async function VirtualLabProjectLayout({ children, params }: LabP
           <VirtualLabProjectSidebar
             virtualLabId={params.virtualLabId}
             projectId={params.projectId}
-            n_notebooks={notebooks.length}
           />
         </div>
       </ErrorBoundary>

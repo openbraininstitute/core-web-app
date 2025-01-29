@@ -19,7 +19,7 @@ export function usePrevious<T>(value: T) {
   return ref.current;
 }
 
-export function useLoadable<T, DT>(loadableAtom: Atom<Loadable<Promise<T>>>, defaultValue: DT) {
+export function useLoadable<T, DT = T>(loadableAtom: Atom<Loadable<Promise<T>>>, defaultValue: DT) {
   const loadableValue = useAtomValue(loadableAtom);
   const [state, setState] = useState<T | DT>(defaultValue);
 
