@@ -1,10 +1,9 @@
-import { Suspense } from 'react';
 import DiscoverObpPanel from '@/components/VirtualLab/DiscoverObpPanel';
 
 import VirtualLabHome from '@/components/VirtualLab/VirtualLabHomePage';
-import VirtualLabUsers from '@/components/VirtualLab/VirtualLabHomePage/VirtualLabUsers';
 import { ServerSideComponentProp } from '@/types/common';
 import NewProjectCTABanner from '@/components/VirtualLab/VirtualLabCTABanner/NewProjectCTABanner';
+import { UsersHorizontalList } from '@/components/VirtualLab/projects/VirtualLabProjectHomePage';
 
 export default function VirtualLab({ params }: ServerSideComponentProp<{ virtualLabId: string }>) {
   const { virtualLabId } = params;
@@ -19,9 +18,10 @@ export default function VirtualLab({ params }: ServerSideComponentProp<{ virtual
       />
 
       <DiscoverObpPanel withTitle />
-      <Suspense fallback={null}>
-        <VirtualLabUsers id={virtualLabId} />
-      </Suspense>
+      <div className="flex flex-col">
+        <div className="my-10 text-lg font-bold uppercase">Members</div>
+        <UsersHorizontalList virtualLabId={virtualLabId} />
+      </div>
       {/* Temporarily removing the display of highlighted projects */}
       {/* <Suspense> */}
       {/* <VirtualLabProjects id={virtualLabId} /> */}

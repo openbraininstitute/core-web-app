@@ -122,6 +122,7 @@ export default function ProjectTeamTable({ users }: Props) {
           pagination={false}
           columns={columns}
           showHeader={false}
+          rowKey={(record) => record.id ?? record.email}
         />
       </ConfigProvider>
       <ModalInviteProjectMember

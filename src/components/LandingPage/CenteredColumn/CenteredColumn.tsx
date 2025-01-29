@@ -6,18 +6,13 @@ import styles from './CenteredColumn.module.css';
 
 export interface CenteredColumnProps {
   className?: string;
-  maxWidth?: string;
   children: React.ReactNode;
 }
 
-export default function CenteredColumn({
-  className,
-  maxWidth = '800px',
-  children,
-}: CenteredColumnProps) {
+export default function CenteredColumn({ className, children }: CenteredColumnProps) {
   return (
     <div className={classNames(className, styles.centeredColumn)}>
-      <div style={{ maxWidth }}>{children}</div>
+      <div className="w-4/5 px-12">{children}</div>
     </div>
   );
 }

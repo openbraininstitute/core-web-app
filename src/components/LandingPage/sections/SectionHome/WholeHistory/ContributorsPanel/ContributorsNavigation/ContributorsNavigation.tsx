@@ -2,21 +2,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Contributor, useContributors } from '../data';
-import { classNames } from '@/util/utils';
 import { IconChevronLeft } from '@/components/LandingPage/icons/IconChevronLeft';
 import { IconChevronRight } from '@/components/LandingPage/icons/IconChevronRight';
 
 import styles from './ContributorsNavigation.module.css';
 
 export interface ContributorsNavigationProps {
-  className?: string;
   onPageChange(contributors: Contributor[]): void;
 }
 
-export default function ContributorsNavigation({
-  className,
-  onPageChange,
-}: ContributorsNavigationProps) {
+export default function ContributorsNavigation({ onPageChange }: ContributorsNavigationProps) {
   const contributors = useContributors();
   const pages = useMemo(() => splitByCapitalLetterOfLastName(contributors), [contributors]);
   const [page, setPage] = useState(0);
@@ -25,15 +20,17 @@ export default function ContributorsNavigation({
   }, [page, pages, onPageChange]);
 
   return (
-    <div className={classNames(className, styles.contributorsNavigation)}>
-      <div className={styles.thanks}>
-        We thank the {humanFriendlyCount(contributors)}
-        <br />
-        contributors
-      </div>
-      <div className={styles.more}>
-        who advanced the Blue Brain Project scientifically over the years. We couldn&apos;t have
-        done this without you!
+    <div className="w-full px-[20vw]">
+      <div className="flex h-[16vh] w-full flex-row">
+        <div className={styles.thanks}>
+          We thank the {humanFriendlyCount(contributors)}
+          <br />
+          contributors
+        </div>
+        <div className={styles.more}>
+          who advanced the Blue Brain Project scientifically over the years. We couldn&apos;t have
+          done this without you!
+        </div>
       </div>
       <div className={styles.pages}>
         <button

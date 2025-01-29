@@ -72,6 +72,27 @@ input[type='number'] {
       @apply bg-primary-8;
     }
 
+    .horizontal-thin-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: theme('colors.primary.4') theme('colors.primary.7');
+    }
+    .horizontal-thin-scrollbar::-webkit-scrollbar {
+      width: 2px;
+      margin-right: 5px;
+      border-radius: 5px;
+    }
+    .horizontal-thin-scrollbar::-webkit-scrollbar-track {
+      @apply rounded bg-[rgba(0_0_0_0.9)];
+    }
+    .horizontal-thin-scrollbar::-webkit-scrollbar-thumb {
+      @apply bg-primary-4;
+      background-clip: padding-box;
+      border-radius: 5px;
+    }
+    .horizontal-thin-scrollbar::-webkit-scrollbar-thumb:hover {
+      @apply bg-primary-8;
+    }
+
     .secondary-scrollbar {
       scrollbar-color: theme('colors.gray.200') theme('colors.gray.800');
     }

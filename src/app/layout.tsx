@@ -1,4 +1,4 @@
-import { Gabarito, Titillium_Web } from 'next/font/google';
+import { Gabarito, Titillium_Web, DM_Serif_Text } from 'next/font/google';
 import { ReactNode, Suspense } from 'react';
 import Providers from './providers';
 
@@ -17,6 +17,12 @@ const gabarito = Gabarito({
   variable: '--font-gabarito',
 });
 
+const DMSerifText = DM_Serif_Text({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-DMSerifText',
+});
+
 type RootLayoutProps = {
   children: ReactNode;
 };
@@ -26,7 +32,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"
-      className={`${titilliumWeb.variable} font-sans, ${gabarito.variable} font-geometric`}
+      className={`${titilliumWeb.variable} ${gabarito.variable} ${DMSerifText.variable}`}
     >
       <body>
         <Providers session={session}>

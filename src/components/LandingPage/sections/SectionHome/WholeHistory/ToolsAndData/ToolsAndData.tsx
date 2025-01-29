@@ -14,19 +14,27 @@ export interface ToolsAndDataProps {
 export default function ToolsAndData({ className }: ToolsAndDataProps) {
   return (
     <div className={classNames(className, styles.toolsAndData)}>
-      <div>
-        <div>
+      <div className="flex h-[60vh] w-full flex-row">
+        <div className="flex w-2/3 flex-col justify-between bg-neutral-1 p-6">
           <h2>Blue Brain Tools & Data</h2>
-          <div>
-            FOSTERING TRANSPARENCY
-            <br />
-            <br />
-            The Open Brain Platform is built on the Blue Brain Project’s legacy. All Blue Brain’s
-            tools and services are open source with a permissive license on the Blue Brain Project’s
-            Github repository.
+          <div className="flex flex-col">
+            <h3>fostering transparency</h3>
+            <p>
+              The Open Brain Platform is built on the Blue Brain Project’s legacy. All Blue Brain’s
+              tools and services are open source with a permissive license on the Blue Brain
+              Project’s Github repository.
+            </p>
           </div>
         </div>
-        <Image src={PictureURL} alt="Prefer to go it alone?" />
+        <div className="w-1/3 overflow-hidden bg-black">
+          <Image
+            src={PictureURL}
+            alt="Prefer to go it alone?"
+            className="h-full w-full object-cover"
+            width="1200"
+            height="800"
+          />
+        </div>
       </div>
       <footer>
         <Button subTitle="View on" title="Github" onClick="https://github.com/BlueBrain" />

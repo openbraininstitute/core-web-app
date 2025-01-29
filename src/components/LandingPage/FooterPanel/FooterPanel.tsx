@@ -3,6 +3,9 @@ import React from 'react';
 import { useSetAtom } from 'jotai';
 import VerticalRuler from '../VerticalRuler';
 import { atomSection, EnumSection } from '../sections/sections';
+import IconLinkedin from './icons/iconLinkedin';
+import IconTwitter from './icons/iconTwitter';
+import IconBlueSky from './icons/iconBlueSky';
 import { classNames } from '@/util/utils';
 
 import styles from './FooterPanel.module.css';
@@ -33,7 +36,7 @@ export default function FooterPanel({ className }: FooterPanelProps) {
             Pricing
           </Section>
           <Section section={EnumSection.OurTeam} setSection={setSection}>
-            Our Team
+            Our team
           </Section>
           <Section section={EnumSection.TermsAndConditions} setSection={setSection}>
             Terms and conditions
@@ -43,10 +46,17 @@ export default function FooterPanel({ className }: FooterPanelProps) {
           </Section>
           <div>
             {/* <a>Discord</a> */}
-            <a href="https://www.linkedin.com/company/openbraininstitute/">Linkedin</a>
-            <a href="https://x.com/OpenBrainInst">X</a>
+            <a href="https://www.linkedin.com/company/openbraininstitute/">
+              <IconLinkedin iconColor="#003381" className="mr-2 h-auto w-6" /> Linkedin
+            </a>
+            <a href="https://x.com/OpenBrainInst">
+              <IconTwitter iconColor="#003381" className="mr-2 h-auto w-6" /> X
+            </a>
             {/* <a>Youtube</a> */}
-            <a href="https://bsky.app/profile/openbraininst.bsky.social">BlueSky</a>
+            <a href="https://bsky.app/profile/openbraininst.bsky.social">
+              <IconBlueSky iconColor="#003381" className="mr-2 h-auto w-6" />
+              BlueSky
+            </a>
           </div>
         </div>
         {/* <div className={styles.subscribe}>

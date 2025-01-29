@@ -280,3 +280,38 @@ export function getRandomIntInclusive(min: number, max: number) {
   const maxFloored = Math.floor(max);
   return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
 }
+
+const pascalToUnderscore = (str: string): string =>
+  str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`).replace(/^_/, '');
+
+export const createPascalToUnderscoreProxy = <T extends object>(obj: T): T => {
+  const recursiveProxy = (innerTarget: any): any => {
+    return new Proxy(innerTarget, {
+      get(target, prop: string | symbol, receiver) {
+        if (typeof prop === 'string') {
+          const underscoreProp = pascalToUnderscore(prop);
+          if (underscoreProp in target) {
+            const value = Reflect.get(target, underscoreProp, receiver);
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+              return recursiveProxy(value);
+            }
+            return value;
+          }
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+      set(target, prop: string | symbol, value: any, receiver) {
+        if (typeof prop === 'string') {
+          const underscoreProp = pascalToUnderscore(prop);
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            // eslint-disable-next-line
+            value = recursiveProxy(value);
+          }
+          return Reflect.set(target, underscoreProp, value, receiver);
+        }
+        return Reflect.set(target, prop, value, receiver);
+      },
+    });
+  };
+  return recursiveProxy(obj);
+};
