@@ -1,5 +1,13 @@
+.contributorsPanel {
+  max-width: 740px;
+}
+
+.contributorsPanel header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
 .thanks {
-  width: 50%;
   font-family: var(--font-serif);
   background-color: var(--color-hero-background);
   line-height: 0.8;
@@ -9,7 +17,6 @@
 }
 
 .more {
-  width: 50%;
   background-color: var(--color-text);
   color: #fff;
   padding: 1.5rem;
@@ -63,9 +70,12 @@
   filter: grayscale(1);
 }
 
-@media (max-width: 640px) {
-  .thanks,
-  .more {
-    grid-column: 2/4;
+@media (max-width: 720px) {
+  .contributorsPanel header {
+    grid-template-columns: 1fr;
+  }
+
+  .contributorsPanel .thanks {
+    font-size: 2em;
   }
 }

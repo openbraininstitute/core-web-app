@@ -35,9 +35,9 @@ export default function SectionPricing({ className }: SectionPricingProps) {
         Have unique requirements? Contact us to discuss custom pricing tailored to your special
         usage of the Open Brain Platform. We are here to create solutions that fit your goals.
       </p>
-      <p>
+      <div>
         <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
-      </p>
+      </div>
     </div>
   );
 }

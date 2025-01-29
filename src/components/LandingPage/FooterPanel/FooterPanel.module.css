@@ -127,4 +127,8 @@
   .title {
     grid-column: 1/-1;
   }
+
+  .links > div > a > span {
+    display: none;
+  }
 }

@@ -85,3 +85,19 @@
   font-size: var(--Sizes-Font-2xl, 24px);
   margin-left: var(--margin);
 }
+
+@media (max-width: 480px) {
+  .landingPage {
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+}
+
+@media (max-width: 640px) {
+  .landingPage h1 {
+    padding-left: 0.5em;
+  }
+  .landingPage h1:after {
+    display: none;
+  }
+}

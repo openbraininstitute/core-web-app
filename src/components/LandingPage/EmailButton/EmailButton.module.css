@@ -7,6 +7,7 @@
   border: 1px solid var(--color-border);
   padding: 48px;
   cursor: pointer;
+  width: min(calc(100vw - 2px), 500px);
 }
 
 .emailButton > big {

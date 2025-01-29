@@ -20,18 +20,16 @@ export default function ContributorsNavigation({ onPageChange }: ContributorsNav
   }, [page, pages, onPageChange]);
 
   return (
-    <div className="w-full px-[20vw]">
-      <div className="flex h-[16vh] w-full flex-row">
+    <div className={styles.contributorsPanel}>
+      <header>
         <div className={styles.thanks}>
-          We thank the {humanFriendlyCount(contributors)}
-          <br />
-          contributors
+          We thank the {humanFriendlyCount(contributors)} contributors
         </div>
         <div className={styles.more}>
           who advanced the Blue Brain Project scientifically over the years. We couldn&apos;t have
           done this without you!
         </div>
-      </div>
+      </header>
       <div className={styles.pages}>
         <button
           type="button"

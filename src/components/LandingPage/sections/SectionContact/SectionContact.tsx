@@ -23,8 +23,10 @@ export default function SectionContact({ className }: SectionContactProps) {
         backgroundURL={HeroURL.src}
         next="How to get in contact"
       />
-      <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
-      <EmailButton email="info@openbraininstitute.org">You have a general inquiry?</EmailButton>
+      <div className={styles.emails}>
+        <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
+        <EmailButton email="info@openbraininstitute.org">You have a general inquiry?</EmailButton>
+      </div>
       <VerticalRuler />
       <h1>Do you want to collaborate with us?</h1>
       <p>

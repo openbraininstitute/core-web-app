@@ -37,47 +37,55 @@ export default function Menu({ className }: MenuProps) {
   const [section, setSection] = useAtom(atomSection);
 
   return (
-    <div ref={ref} className={classNames(className, styles.menu, stuck && styles.stuck)}>
-      <button type="button" className={styles.logo} onClick={() => setSection(EnumSection.Home)}>
-        <div>{`Open Brain\nInstitute`}</div>
-      </button>
-      <div className={styles.items}>
-        {HEAD_LINKS.map(({ caption, index }) => {
-          return (
+    <>
+      <div ref={ref} className={classNames(className, styles.menu, stuck && styles.stuck)}>
+        <button type="button" className={styles.logo} onClick={() => setSection(EnumSection.Home)}>
+          <div>Open Brain Institute</div>
+        </button>
+        <div className={styles.items}>
+          {HEAD_LINKS.map(({ caption, index }) => {
+            return (
+              <button
+                type="button"
+                className={classNames(index === section && styles.selected)}
+                key={caption}
+                onClick={() => setSection(index)}
+              >
+                <div>{caption}</div>
+                <IconPlus />
+              </button>
+            );
+          })}
+        </div>
+        <div className={styles.hamburger}>
+          <button type="button" onClick={() => setShowMenu(!showMenu)}>
+            <div>Menu</div>
+            <IconMenu />
+          </button>
+        </div>
+      </div>
+      <button
+        type="button"
+        className={classNames(styles.popupMenu, showMenu && styles.show)}
+        onClick={() => setShowMenu(false)}
+      >
+        <menu>
+          {HEAD_LINKS.map(({ caption, index }) => (
             <button
               type="button"
               className={classNames(index === section && styles.selected)}
               key={caption}
-              onClick={() => setSection(index)}
+              onClick={() => {
+                setSection(index);
+                setShowMenu(false);
+              }}
             >
               <div>{caption}</div>
               <IconPlus />
             </button>
-          );
-        })}
-      </div>
-      <div className={styles.hamburger}>
-        <button type="button" onClick={() => setShowMenu(!showMenu)}>
-          <div>Menu</div>
-          <IconMenu />
-        </button>
-      </div>
-      <menu className={classNames(showMenu && styles.showMenu)}>
-        {HEAD_LINKS.map(({ caption, index }) => (
-          <button
-            type="button"
-            className={classNames(index === section && styles.selected)}
-            key={caption}
-            onClick={() => {
-              setSection(index);
-              setShowMenu(false);
-            }}
-          >
-            <div>{caption}</div>
-            <IconPlus />
-          </button>
-        ))}
-      </menu>
-    </div>
+          ))}
+        </menu>
+      </button>
+    </>
   );
 }
