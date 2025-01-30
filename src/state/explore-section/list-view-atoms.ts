@@ -31,6 +31,7 @@ import {
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
+import * as entitycoreApi from '@/http/entitycore/queries';
 
 type DataAtomFamilyScopeType = {
   dataType: DataType;
@@ -55,7 +56,7 @@ export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
   const initialState: SortState = isExperimentalData(scope.dataType)
-    ? { field: Field.CreationDate, order: 'desc' }
+    ? { field: Field.CreationDate, order: 'desc', }
     : { field: Field.RegistrationDate, order: 'desc' };
 
   const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
@@ -75,7 +76,7 @@ export const activeColumnsAtom = atomFamily(
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
+        // isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
       ];
     }),
   isListAtomEqual
@@ -105,7 +106,9 @@ export const filtersAtom = atomFamily(
       const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
-        ...columns.map((colKey) => columnKeyToFilter(colKey)),
+        ...columns.map((colKey) => {
+          return columnKeyToFilter(colKey)
+        }),
         ...(dimensionsColumns || []).map(
           (dimension) =>
             ({
@@ -162,12 +165,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+          ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
+            selectedBrainRegionWithDescendantsAndAncestorsFamily(
+              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+            )
+          )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -191,38 +194,62 @@ export const queryAtom = atomFamily(
   isListAtomEqual
 );
 
+
 export const dataAtom = atomFamily(
   (scope) =>
     atom(async (get) => {
       const query = await get(queryAtom(scope));
-      const response =
-        query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
+      const searchString = get(searchStringAtom(scope.key));
+      const pageNumber = get(pageNumberAtom(scope.key));
+      const pageSize = get(pageSizeAtom);
+      const sortState = get(sortStateAtom(scope));
+      const filters = await get(filtersAtom(scope));
 
-      if (response?.hits) {
-        if (scope.dataType === DataType.SingleNeuronSynaptome) {
-          return {
-            aggs: response.aggs,
-            total: response.total,
-            hits: await fetchLinkedModel({
-              results: response.hits,
-              path: '_source.singleNeuronSynaptome.memodel.["@id"]',
-              linkedProperty: 'linkedMeModel',
-            }),
-          };
-        }
-        if (scope.dataType === DataType.SingleNeuronSynaptomeSimulation) {
-          return {
-            aggs: response.aggs,
-            total: response.total,
-            hits: await fetchLinkedModel({
-              results: response.hits,
-              path: '_source.synaptomeSimulation.synaptome.["@id"]',
-              linkedProperty: 'linkedSynaptomeModel',
-            }),
-          };
-        }
+      console.log('@@query', {
+        searchString,
+        pageNumber,
+        pageSize,
+        sortState,
+        filters,
+      })
+      if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
+        const response = await entitycoreApi.getReconstructionMorphologies({
+          filters: {
+            page_size: pageSize,
+            page: pageNumber - 1,
+            name__ilike: searchString,
+          }
+        });
         return response;
       }
+      // const response =
+      //   query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
+
+      // if (response?.hits) {
+      //   if (scope.dataType === DataType.SingleNeuronSynaptome) {
+      //     return {
+      //       aggs: response.aggs,
+      //       total: response.total,
+      //       hits: await fetchLinkedModel({
+      //         results: response.hits,
+      //         path: '_source.singleNeuronSynaptome.memodel.["@id"]',
+      //         linkedProperty: 'linkedMeModel',
+      //       }),
+      //     };
+      //   }
+      //   if (scope.dataType === DataType.SingleNeuronSynaptomeSimulation) {
+      //     return {
+      //       aggs: response.aggs,
+      //       total: response.total,
+      //       hits: await fetchLinkedModel({
+      //         results: response.hits,
+      //         path: '_source.synaptomeSimulation.synaptome.["@id"]',
+      //         linkedProperty: 'linkedSynaptomeModel',
+      //       }),
+      //     };
+      //   }
+      //   return response;
+      // }
       return null;
     }),
   isListAtomEqual
