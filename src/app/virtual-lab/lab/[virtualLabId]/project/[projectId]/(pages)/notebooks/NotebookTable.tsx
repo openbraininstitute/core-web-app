@@ -10,6 +10,8 @@ import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
+import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
+import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
 import { getSorter } from './utils';
 import ContentModal from './ContentModal';
 import useSearch from '@/components/VirtualLab/Search';
@@ -21,7 +23,7 @@ import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import { notification } from '@/api/notifications';
 
-const { RangePicker } = DatePicker;
+const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
@@ -257,7 +259,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
               }}
             >
               <RangePicker
-                onChange={(values) => {
+                onChange={(values: RangeValue<Date>) => {
                   onDateChange('creationDate', values);
                 }}
               />

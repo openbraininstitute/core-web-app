@@ -1,5 +1,4 @@
 import { useCallback, useState, useMemo, ReactNode } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import { Column } from './ControlPanel';
 
@@ -78,12 +77,12 @@ export function useFilters<T>(data: T[]) {
 
   const onDateChange = useCallback(
     // eslint-disable-next-line
-    function <K extends keyof T>(dataIndex: K, values: [Dayjs | null, Dayjs | null] | null) {
+    function <K extends keyof T>(dataIndex: K, values: [Date | null, Date | null] | null) {
       onFilterChange(dataIndex, values !== null, (value) => {
         if (!value && values) return false;
         if (!values) return true;
 
-        const date = dayjs(value as string);
+        const date = new Date(value as string);
         const [start, end] = values;
 
         if (start && date < start) {
