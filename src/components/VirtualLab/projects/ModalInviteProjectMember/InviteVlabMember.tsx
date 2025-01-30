@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button, ConfigProvider } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, ConfigProvider, Select } from 'antd';
+import { MailOutlined, PlusOutlined } from '@ant-design/icons';
 import { useSetAtom } from 'jotai';
 
 import { Footer } from './Footer';
@@ -8,11 +8,9 @@ import { addMember, removeMember } from './utils';
 import { useInviteHandler } from './hooks';
 import { Member } from './types';
 import { NewMember } from './NewMember';
-import { IconMail } from './IconMail';
-import { RoleCombo } from './RoleCombo';
-
 import { useParamVirtualLabId } from '@/util/params';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import { Role } from '@/types/virtual-lab/members';
 
 interface InviteVlabMemberProps {
   members: Member[];
@@ -62,7 +60,9 @@ export function InviteVlabMember({ onClose, members, onChange }: InviteVlabMembe
             />
           </div>
         )}
-        <AddMemberButton onClick={() => setEditMode(true)} />
+        <div className="mt-8">
+          <AddMemberButton onClick={() => setEditMode(true)} />
+        </div>
         <div className="mt-8">
           <Footer loading={loading} members={members} onClose={onClose} onInvite={handleInvite} />
         </div>
@@ -99,11 +99,16 @@ function PendingInvitations({
           key={member.email}
           className="mb-4 flex w-full flex-wrap items-center gap-4 whitespace-nowrap font-normal text-dark"
         >
-          <IconMail />
+          <div className="back-black flex h-12 w-12 items-center justify-center bg-primary-8 text-white">
+            <MailOutlined />
+          </div>
           <b className="flex-1">{member.email}</b>
-          <RoleCombo
-            role={member.role}
-            onChange={(role) =>
+          <Select
+            defaultValue={member.role}
+            value={member.role}
+            placeholder="Choose role..."
+            className="w-40 rounded-none border border-gray-400 shadow-none focus:shadow-none [&_.ant-select-selector]:!border-none"
+            onChange={(role: Role) =>
               onChange(
                 addMember(members, {
                   email: member.email,
@@ -111,14 +116,19 @@ function PendingInvitations({
                 })
               )
             }
-          />
-          <button
-            type="button"
+          >
+            <Select.Option value="admin">Administrator</Select.Option>
+            <Select.Option value="member">Member</Select.Option>
+          </Select>
+          <Button
+            htmlType="button"
+            type="text"
             onClick={() => onChange(removeMember(members, member))}
             aria-label="Cancel Invitation"
+            className="ml-2 rounded-none"
           >
-            Cancel Invitation
-          </button>
+            Cancel
+          </Button>
         </div>
       ))}
     </div>

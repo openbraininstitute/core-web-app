@@ -25,7 +25,8 @@ export default function openNotification(
   duration: number = 5,
   placement: Placement = 'bottomRight',
   closeIcon: boolean = true,
-  key?: Key
+  key?: Key,
+  description?: string
 ) {
   let icon;
   let backgroundColor;
@@ -50,6 +51,7 @@ export default function openNotification(
 
   antd_notification[type]({
     message: <div className="text-neutral-1">{message}</div>,
+    description: <div className="text-neutral-1">{description}</div>,
     style: { backgroundColor },
     closeIcon: closeIcon && <CloseOutlined style={{ fontSize: '1.5em', color: 'white' }} />,
     duration,
@@ -70,9 +72,10 @@ const error = (
   duration: number = 5,
   placement: Placement = 'bottomRight',
   closeIcon: boolean = true,
-  key?: Key
+  key?: Key,
+  description?: string
 ) => {
-  openNotification('error', message, duration, placement, closeIcon, key);
+  openNotification('error', message, duration, placement, closeIcon, key, description);
 };
 
 /**
@@ -86,9 +89,10 @@ const warning = (
   duration: number = 5,
   placement: Placement = 'bottomRight',
   closeIcon: boolean = true,
-  key?: Key
+  key?: Key,
+  description?: string
 ) => {
-  openNotification('warning', message, duration, placement, closeIcon, key);
+  openNotification('warning', message, duration, placement, closeIcon, key, description);
 };
 
 /**
@@ -102,9 +106,10 @@ const success = (
   duration: number = 5,
   placement: Placement = 'bottomRight',
   closeIcon: boolean = true,
-  key?: Key
+  key?: Key,
+  description?: string
 ) => {
-  openNotification('success', message, duration, placement, closeIcon, key);
+  openNotification('success', message, duration, placement, closeIcon, key, description);
 };
 
 /**
@@ -118,9 +123,10 @@ const info = (
   duration: number = 5,
   placement: Placement = 'bottomRight',
   closeIcon: boolean = true,
-  key?: Key
+  key?: Key,
+  description?: string
 ) => {
-  openNotification('info', message, duration, placement, closeIcon, key);
+  openNotification('info', message, duration, placement, closeIcon, key, description);
 };
 
 export const notification = { error, warning, success, info };

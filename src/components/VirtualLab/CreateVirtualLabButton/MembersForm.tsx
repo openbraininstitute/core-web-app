@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import { Button, ConfigProvider, Form, Input, Select } from 'antd';
-import { MailOutlined, PlusOutlined } from '@ant-design/icons';
+import { MailOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 
 import VirtualLabMemberIcon from '../VirtualLabMemberIcon';
@@ -53,65 +53,79 @@ function NewMemberForm({
   };
 
   return (
-    <Form
-      form={form}
-      // temporarily disabling this form for SfN. Invitation should be back afterwards
-      // this prop disables it for all nested form elements
-      className="my-5"
-      name="member_form"
-      onFinish={onFinish}
-      onValuesChange={onValuesChange}
-      initialValues={{
-        email: '',
-        role: 'member',
-      }}
-      requiredMark={false}
-    >
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-row justify-between">
-          <div className="flex flex-row items-center gap-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center bg-neutral-2">
-              <span className="text-2xl font-bold text-neutral-4">
-                <MailOutlined />
-              </span>
-            </div>
-
-            <Form.Item
-              name="email"
-              className="mb-0"
-              label="Invitation to: "
-              rules={[
-                {
-                  type: 'email',
-                  required: true,
-                  message: 'Please enter a valid email address',
-                },
-              ]}
-            >
-              <Input
-                className="border-transparent outline-none"
-                placeholder="Enter email address"
-              />
-            </Form.Item>
+    <ConfigProvider theme={{ hashed: false }}>
+      <Form
+        form={form}
+        className="my-5"
+        name="member_form"
+        onFinish={onFinish}
+        onValuesChange={onValuesChange}
+        initialValues={{
+          email: '',
+          role: 'member',
+        }}
+        requiredMark={false}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="inline-flex h-12 w-12 items-center justify-center bg-gray-100"
+            style={{ animationFillMode: 'forwards' }}
+          >
+            <MailOutlined />
           </div>
-          <Form.Item label="As:" name="role" className="mb-0 flex items-center">
-            <Select placeholder="Choose role...">
+          <Form.Item
+            name="email"
+            className="mb-0 [&.ant-form-item-has-error>.ant-form-item-row]:pt-6"
+            rules={[
+              {
+                type: 'email',
+                required: true,
+                message: 'Please enter a valid email address',
+              },
+            ]}
+          >
+            <Input
+              allowClear
+              className="rounded-none border border-gray-400 shadow-none outline-none focus:shadow-none"
+              placeholder="Enter email address"
+            />
+          </Form.Item>
+          <div className="mx-2 uppercase">as</div>
+          <Form.Item name="role" className="mb-0 flex items-center">
+            <Select
+              defaultValue="member"
+              placeholder="Choose role..."
+              className="!w-40 rounded-none border border-gray-400 shadow-none focus:shadow-none [&_.ant-select-selector]:!border-none"
+            >
               <Select.Option value="admin">Administrator</Select.Option>
               <Select.Option value="member">Member</Select.Option>
             </Select>
           </Form.Item>
+          <Form.Item className="mb-0 ml-auto items-end">
+            <Button
+              htmlType="submit"
+              type="default"
+              className="rounded-none"
+              aria-label="Cancel Invitation"
+              disabled={!isFormValid}
+            >
+              Confirm
+            </Button>
+            <Button
+              htmlType="button"
+              className="ml-2 rounded-none"
+              onClick={() => {
+                form.resetFields();
+              }}
+              type="text"
+              aria-label="Cancel Invitation"
+            >
+              Cancel
+            </Button>
+          </Form.Item>
         </div>
-        <Button
-          type="primary"
-          htmlType="submit"
-          disabled={!isFormValid}
-          className="flex w-[200px] flex-row items-center justify-between rounded-none border-neutral-2 bg-transparent py-6 text-primary-8"
-        >
-          <span>Add member</span>
-          <PlusOutlined />
-        </Button>
-      </div>
-    </Form>
+      </Form>
+    </ConfigProvider>
   );
 }
 
@@ -162,8 +176,8 @@ function InvitedMember({
       </div>
       <div className="flex flex-row items-center gap-4">
         <span className="font-bold">{role === 'admin' ? 'Administrator' : 'Member'}</span>
-        <Button className="text-primary-8" ghost type="text" onClick={removeMember}>
-          cancel invitation
+        <Button htmlType="button" type="text" onClick={removeMember} aria-label="Cancel Invitation">
+          Cancel
         </Button>
       </div>
     </div>
@@ -199,6 +213,9 @@ export default function MembersForm({
     >
       <div className="my-10 flex w-full flex-col gap-4 text-primary-8">
         {data?.user.name && <NonInvitedMember label={data.user.name} inviteAccepted />}
+        {!!currentVirtualLab.include_members?.length && (
+          <div className="my-4 h-px w-full bg-gray-200" />
+        )}
         {currentVirtualLab.include_members?.map((member) => (
           <InvitedMember
             key={member.email}
@@ -210,19 +227,31 @@ export default function MembersForm({
         <NewMemberForm setVirtualLabFn={setVirtualLabFn} />
       </div>
       <div className="flex flex-row justify-end gap-2">
-        <Button type="dashed" className="min-w-36 border text-primary-8" onClick={handleBackClick}>
+        <Button
+          title="Cancel"
+          htmlType="button"
+          onClick={handleBackClick}
+          className="h-14 w-40 rounded-none bg-transparent font-light text-primary-8 hover:bg-neutral-1"
+        >
           Back
         </Button>
-        <Button type="dashed" className="min-w-36 text-primary-8" onClick={closeModalFn}>
+        <Button
+          title="Cancel"
+          htmlType="button"
+          onClick={closeModalFn}
+          className="h-14 w-40 rounded-none bg-transparent font-light text-primary-8 hover:bg-neutral-1"
+        >
           Cancel
         </Button>
         <Button
+          type="primary"
+          title="Save Changes"
           htmlType="submit"
-          className="min-w-36 rounded-none border-primary-8 bg-primary-8 text-white"
-          disabled={loading}
           onClick={createVirtualLabFn}
+          className="ml-3 h-14 w-40 rounded-none bg-primary-8 font-semibold"
+          disabled={loading}
         >
-          {loading ? 'Creating...' : 'Create'}
+          Save
         </Button>
       </div>
     </ConfigProvider>

@@ -26,11 +26,9 @@ function NewProjectModalFooter({
   onSubmit: () => void;
   submitDisabled: boolean;
 }) {
-  return loading ? (
-    <Spin />
-  ) : (
+  return (
     <Form.Item>
-      <div className="flex items-center justify-end">
+      <div className="mx-10 flex items-center justify-end">
         <Button
           title="Cancel"
           htmlType="submit"
@@ -49,6 +47,7 @@ function NewProjectModalFooter({
             submitDisabled ? 'hover:bg-gray-100' : 'hover:bg-primary-7'
           )}
           disabled={!!submitDisabled}
+          loading={loading}
         >
           Save
         </Button>
@@ -80,11 +79,18 @@ export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
       refreshProjectsList();
       form.resetFields();
       setOpen(false);
-      notification.success(`${res.data.project.name} has been created.`);
+      notification.success(`${res.data.project.name} has been created.`, undefined, 'topRight');
       router.push(redirectUrl(res.data.project.id));
     } catch (e: any) {
       if ('errorFields' in e) return; // Input errors.
-      notification.error(`Project creation failed: ${assertErrorMessage(e)}`); // Request Errors
+      notification.error(
+        `Project creation failed`,
+        undefined,
+        'topRight',
+        undefined,
+        undefined,
+        assertErrorMessage(e)
+      ); // Request Errors
     } finally {
       setLoading(false);
     }
@@ -101,7 +107,7 @@ export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
 
   return (
     <Modal
-      className="w-[700px] min-w-[700px]"
+      destroyOnClose
       footer={
         <NewProjectModalFooter
           close={() => {
@@ -114,10 +120,13 @@ export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
           submitDisabled={!isFormValid}
         />
       }
+      width={800}
       open={!!open}
-      styles={{ mask: { backgroundColor: '#0050B3D9' } }}
+      onCancel={() => setOpen(false)}
     >
-      <NewProjectModalForm form={form} members={members} vlabId={virtualLabId} />
+      <div className="m-10">
+        <NewProjectModalForm form={form} members={members} vlabId={virtualLabId} />
+      </div>
     </Modal>
   );
 }

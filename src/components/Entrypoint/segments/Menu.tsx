@@ -1,14 +1,12 @@
-import { useSearchParams } from 'next/navigation';
-
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 import { OBPLogo } from './Splash';
-
 import MobileMenu from './MobileMenu';
-
 import PrimaryButtonHome from '@/components/home/PrimaryButtonHome';
-import { CloseIcon } from '@/components/icons';
 import MenuMobileIcon from '@/components/icons/MenuMobileIcon';
+import { CloseIcon } from '@/components/icons';
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
 
@@ -62,7 +60,7 @@ export default function EntrypointMenu({
   displayLogin = true,
 }: EntrypointMenuProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-
+  const { status } = useSession();
   return (
     <div className="fixed z-50 flex w-full flex-row items-start justify-between px-6 pt-6 md:items-center">
       <OBPLogo />
@@ -103,14 +101,22 @@ export default function EntrypointMenu({
         {displayAbout && (
           <PrimaryButtonHome label="About" url="/about" hasIcon={false} theme="dark" />
         )}
-        {displayLogin && (
-          <PrimaryButtonHome
-            label="Log in"
-            url={`/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-            hasIcon={false}
-            theme="dark"
-          />
-        )}
+        {displayLogin &&
+          (status === 'authenticated' ? (
+            <PrimaryButtonHome
+              label="Log in"
+              url={`/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+              hasIcon={false}
+              theme="dark"
+            />
+          ) : (
+            <PrimaryButtonHome
+              label="Go to the platform"
+              url="/virtual-lab"
+              hasIcon={false}
+              theme="dark"
+            />
+          ))}
       </div>
     </div>
   );

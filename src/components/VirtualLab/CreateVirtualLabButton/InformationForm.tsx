@@ -192,8 +192,9 @@ export default function InformationForm({
         </div>
         <div className="flex flex-row justify-end gap-2">
           <Button
-            type="text"
-            className="min-w-36 text-primary-8"
+            title="Cancel"
+            htmlType="button"
+            className="h-14 w-40 rounded-none bg-transparent font-light text-primary-8 hover:bg-neutral-1"
             onClick={() => {
               form.resetFields();
               closeModalFn();
@@ -202,8 +203,9 @@ export default function InformationForm({
             Cancel
           </Button>
           <Button
+            type="primary"
             htmlType="submit"
-            className="min-w-36 rounded-none border-primary-8 text-primary-8"
+            className="ml-3 h-14 w-40 rounded-none bg-primary-8 font-semibold"
             disabled={!isFormValid}
           >
             Next

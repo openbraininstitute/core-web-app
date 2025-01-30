@@ -2,7 +2,7 @@ import React from 'react';
 
 import { HEAD_LINKS } from '../data';
 import { EnumSection } from '../../sections/sections';
-import { LoginButton } from '../../buttons/LoginButton';
+import LoginButton from '../../buttons/LoginButton/LoginButton';
 import { IconClose } from '../../icons/IconClose';
 import { classNames } from '@/util/utils';
 

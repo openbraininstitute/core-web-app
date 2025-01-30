@@ -61,6 +61,6 @@ export default function RootPage({
 }: {
   searchParams: { errorcode: string | undefined };
 }) {
-  return <LandingPage />;
+  return <LandingPage errorCode={searchParams.errorcode} />;
   // return <Entrypoint errorCode={searchParams.errorcode} />;
 }
