@@ -23,8 +23,6 @@ export interface Notebook {
 export default async function fetchNotebooks(): Promise<Notebook[]> {
   const repoRes = await fetch(apiBaseUrl, options);
 
-  console.log(repoRes);
-
   if (!repoRes.ok) {
     throw new Error(`GitHub API request failed with status: ${repoRes.status}`);
   }
