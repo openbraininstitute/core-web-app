@@ -4,6 +4,7 @@ import { ConfigProvider, DatePicker } from 'antd';
 
 import Table from 'antd/es/table';
 import Image from 'next/image';
+import { saveAs } from 'file-saver';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
@@ -71,17 +72,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     }
 
     const blob = await res.blob();
-
-    // Create a temporary link element to trigger the download
-    const link = document.createElement('a');
-    const downloadUrl = window.URL.createObjectURL(blob);
-    link.href = downloadUrl;
-    link.download = `${notebookName}.zip`;
-    document.body.appendChild(link);
-    link.click(); // Trigger the download
-    document.body.removeChild(link); // Clean up the DOM
-
-    window.URL.revokeObjectURL(downloadUrl);
+    saveAs(blob, `${notebookName}.zip`);
   };
 
   const renderActionColumns = (uri: string) => {
