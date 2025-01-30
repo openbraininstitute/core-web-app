@@ -1,6 +1,6 @@
 import { Button, ConfigProvider, Modal, Spin, Form } from 'antd';
 import { useState, useEffect } from 'react';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { PlusOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
@@ -61,6 +61,7 @@ export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
   const [open, setOpen] = useAtom<boolean>('new-project-modal-open');
   const [loading, setLoading] = useState(false);
   const members = useUnwrappedValue(virtualLabMembersAtomFamily(virtualLabId));
+  const refreshProjectsList = useSetAtom(virtualLabProjectsAtomFamily(virtualLabId));
   const includeMembers = useAtomValue(selectedMembersAtom);
   const redirectUrl = (projectId: string) =>
     `/virtual-lab/lab/${virtualLabId}/project/${projectId}/home`;
@@ -76,6 +77,7 @@ export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
       const { name, description } = await form.validateFields();
       setLoading(true);
       const res = await createProject({ name, description, includeMembers }, virtualLabId);
+      refreshProjectsList();
       form.resetFields();
       setOpen(false);
       notification.success(`${res.data.project.name} has been created.`);
