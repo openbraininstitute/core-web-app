@@ -1,5 +1,5 @@
 import VirtualLabProjectSidebar from './VirtualLabProjectSidebar';
-import fetchNotebooks from '@/util/virtual-lab/github';
+import { fetchNotebooksCatchError } from '@/util/virtual-lab/github';
 
 type Props = {
   virtualLabId: string;
@@ -7,7 +7,7 @@ type Props = {
 };
 
 export default async function VirtualLabProjectSidebarServer({ virtualLabId, projectId }: Props) {
-  const notebooks = await fetchNotebooks();
+  const notebooks = await fetchNotebooksCatchError();
   return (
     <VirtualLabProjectSidebar
       virtualLabId={virtualLabId}

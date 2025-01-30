@@ -18,7 +18,7 @@ import { useLoadableValue } from '@/hooks/hooks';
 type Props = {
   virtualLabId: string;
   projectId: string;
-  n_notebooks: number;
+  n_notebooks?: number;
 };
 
 export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_notebooks }: Props) {
@@ -99,7 +99,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_no
       content: (
         <div className="flex justify-between">
           <span>Notebooks</span>
-          <span className="font-normal text-primary-3">{n_notebooks}</span>
+          {!!n_notebooks && <span className="font-normal text-primary-3">{n_notebooks}</span>}
         </div>
       ),
       href: 'notebooks',

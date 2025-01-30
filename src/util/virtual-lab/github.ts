@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { assertErrorMessage } from '../utils';
 import { notebookRepository } from '@/config';
 
 const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
@@ -71,6 +72,15 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
     n.creationDate = dates[i];
     return n;
   });
+}
+
+export async function fetchNotebooksCatchError(): Promise<Notebook[]> {
+  try {
+    return await fetchNotebooks();
+  } catch (e) {
+    console.error(assertErrorMessage(e));
+    return [];
+  }
 }
 
 async function getFileCreationDate(filePath: string): Promise<string | null> {
