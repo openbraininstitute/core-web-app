@@ -1,16 +1,17 @@
+"use client";
+
 import { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+
+import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
 import { RenderButtonProps } from './ExploreSectionListingView/useRowSelection';
-import { OnCellClick } from './ExploreSectionListingView/ExploreSectionTable';
-import { detailUrlBuilder } from '@/util/common';
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { useExploreTableOnClickHandler } from '@/hooks/virtual-labs';
 
-// TODO: Delete this component, use useExploreTableOnClickHandler hook (src/hooks/virtual-labs) for shared logic
-export default function WithExploreExperiment({
+export default function WithExploreExperiment<T extends EntityCoreBase>({
   dataType,
   dataScope,
   renderButton,
@@ -18,16 +19,12 @@ export default function WithExploreExperiment({
 }: {
   dataType: DataType;
   dataScope: ExploreDataScope;
-  renderButton?: (props: RenderButtonProps) => ReactNode;
+  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
   virtualLabInfo?: VirtualLabInfo;
 }) {
-  const router = useRouter();
-  const onCellClick: OnCellClick = (basePath, record) => {
-    router.push(detailUrlBuilder(basePath, record));
-  };
-
+  const onCellClick = useExploreTableOnClickHandler<T>();
   return (
-    <ExploreSectionListingView
+    <ExploreSectionListingView<T>
       {...{
         dataType,
         dataScope,

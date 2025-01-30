@@ -11,38 +11,39 @@ import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import type { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { classNames } from '@/util/utils';
+import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 
-export type OnCellClick = (
+export type OnCellClick<T> = (
   basePath: string,
-  record: ExploreESHit<ExploreSectionResource>,
+  record: T,
   type: DataType
 ) => void;
 
-export function useOnCellRouteHandler({
+export function useOnCellRouteHandler<T extends EntityCoreBase>({
   dataType,
   onCellClick,
 }: {
   dataType: DataType;
-  onCellClick?: OnCellClick;
+  onCellClick?: OnCellClick<T>;
 }) {
   const pathname = usePathname();
   const setBackToListPath = useSetAtom(backToListPathAtom);
 
   const onCellRouteHandler = (
     col:
-      | ColumnGroupType<ExploreESHit<ExploreSectionResource>>
-      | ColumnType<ExploreESHit<ExploreSectionResource>>
+      | ColumnGroupType<T>
+      | ColumnType<T>
   ) => {
     return {
-      onCell: (record: ExploreESHit<ExploreSectionResource>) =>
+      onCell: (record: T) =>
         col.key !== Field.Preview
           ? {
-              onClick: (e: MouseEvent<HTMLInputElement>) => {
-                e.preventDefault();
-                setBackToListPath(pathname);
-                onCellClick?.(pathname, record, dataType);
-              },
-            }
+            onClick: (e: MouseEvent<HTMLInputElement>) => {
+              e.preventDefault();
+              setBackToListPath(pathname);
+              onCellClick?.(pathname, record, dataType);
+            },
+          }
           : {},
     };
   };

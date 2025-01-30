@@ -5,7 +5,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import { BrainRegionsSidebar } from '@/components/build-section/BrainRegionSelector';
+import BrainRegionsTree from '@/features/brain-region-tree';
 import { sectionAtom } from '@/state/application';
 
 type GenericLayoutProps = {
@@ -20,7 +20,7 @@ export default function BuildMEModelLayout({ children }: GenericLayoutProps) {
   return (
     <div className="grid grid-cols-[min-content_auto] bg-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <BrainRegionsSidebar scope="build" />
+        <BrainRegionsTree scope="build" />
       </ErrorBoundary>
 
       <div className="flex flex-col">

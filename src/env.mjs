@@ -97,6 +97,9 @@ export const env = createEnv({
     NEXT_PUBLIC_MATOMO_SITE_ID: z.string().optional(),
     // There is only one Sanity server, but with two datasets.
     NEXT_PUBLIC_SANITY_DATASET: z.enum(["staging", "production"]).optional(),
+    NEXT_PUBLIC_ENTITY_CORE_URL: z.string().url(),
+    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: z.string().nonempty(),
+    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID: z.string().nonempty(),
   },
 
   experimental__runtimeEnv: {
@@ -175,5 +178,8 @@ export const env = createEnv({
     NEXT_PUBLIC_MATOMO_URL: process.env.NEXT_PUBLIC_MATOMO_URL,
     NEXT_PUBLIC_MATOMO_CDN_URL: process.env.NEXT_PUBLIC_MATOMO_CDN_URL,
     NEXT_PUBLIC_MATOMO_SITE_ID: process.env.NEXT_PUBLIC_MATOMO_SITE_ID,
+    NEXT_PUBLIC_ENTITY_CORE_URL: process.env.NEXT_PUBLIC_ENTITY_CORE_URL,
+    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: process.env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID,
+    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID,
   },
 });

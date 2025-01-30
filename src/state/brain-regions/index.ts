@@ -35,6 +35,11 @@ import {
   brainRegionIdQueryParamKey,
   defaultHierarchyTree,
 } from '@/constants/explore-section/default-brain-region';
+import { getTemporaryBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+import {
+  ITemporaryBrainRegionHierarchy,
+  TemporaryFlatBrainRegionHierarchy,
+} from '@/api/entitycore/types/entities/brain-region';
 
 /*
   Atom dependency graph

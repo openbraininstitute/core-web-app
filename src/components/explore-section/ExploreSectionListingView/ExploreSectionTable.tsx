@@ -7,21 +7,16 @@ import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 import LoadMoreButton from './LoadMoreButton';
 import useRowSelection, { RenderButtonProps } from './useRowSelection';
 import { useOnCellRouteHandler, useShowMore, useScrollNav } from './hooks';
-
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
 import { DataType } from '@/constants/explore-section/list-views';
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import type { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
-import { classNames } from '@/util/utils';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.scss';
+import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 
-export type OnCellClick = (
+export type OnCellClick<T> = (
   basePath: string,
-  record: ExploreESHit<ExploreSectionResource>,
+  record: T,
   type: DataType
 ) => void;
 
@@ -91,17 +86,19 @@ function CustomCell({ children, style, ...props }: { children: ReactNode; style:
   );
 }
 
-type AdditionalTableProps = {
+type AdditionalTableProps<T> = {
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
     dataScope: ExploreDataScope;
     dataType: DataType;
   };
   hasError?: boolean;
-  onCellClick?: OnCellClick;
+  onCellClick?: OnCellClick<T>;
 };
 
-export function BaseTable({
+
+
+export function BaseTable<T extends EntityCoreBase>({
   columns,
   dataContext,
   dataSource,
@@ -112,8 +109,8 @@ export function BaseTable({
   showLoadMore,
   scrollable = true,
   sticky,
-}: TableProps<ExploreESHit<ExploreSectionResource>> &
-  AdditionalTableProps & {
+}: TableProps<T> &
+  AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
   }) {
@@ -127,8 +124,8 @@ export function BaseTable({
   const parentElement =
     typeof document !== 'undefined'
       ? document.getElementById('interactive-data-layout') ||
-        document.getElementById('explore-table-container-for-observable') ||
-        document.getElementById('bookmark-list-container')
+      document.getElementById('explore-table-container-for-observable') ||
+      document.getElementById('bookmark-list-container')
       : undefined;
   const headerHeight =
     (tableElement?.getBoundingClientRect()?.y ?? 0) -
@@ -150,7 +147,7 @@ export function BaseTable({
     callback: showLoadMore,
   });
 
-  const onCellRouteHandler = useOnCellRouteHandler({ dataType: dataContext.dataType, onCellClick });
+  const onCellRouteHandler = useOnCellRouteHandler<T>({ dataType: dataContext.dataType, onCellClick });
 
   if (hasError) return <div>Something went wrong</div>;
 
@@ -186,9 +183,9 @@ export function BaseTable({
         scroll={
           scrollable
             ? {
-                x: 'fit-content',
-                y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
-              }
+              x: 'fit-content',
+              y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
+            }
             : { x: 'fit-content' }
         }
       />
@@ -196,12 +193,12 @@ export function BaseTable({
   );
 }
 
-function DefaultRenderButton({
+function DefaultRenderButton<T>({
   children,
   clearSelectedRows,
   selectedRows,
-}: RenderButtonProps & {
-  children?: (props: RenderButtonProps) => ReactNode;
+}: RenderButtonProps<T> & {
+  children?: (props: RenderButtonProps<T>) => ReactNode;
 }) {
   return children ? (
     children({ selectedRows, clearSelectedRows })
@@ -211,24 +208,23 @@ function DefaultRenderButton({
       clearSelectedRows={clearSelectedRows}
       data-testid="listing-view-download-button"
     >
-      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${
-        selectedRows.length
-      })`}</span>
+      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${selectedRows.length
+        })`}</span>
     </ExploreDownloadButton>
   );
 }
 
-function TableControls({
+function TableControls<T>({
   clearSelectedRows,
   children,
   renderButton,
   selectedRows,
   visible,
 }: {
-  clearSelectedRows: RenderButtonProps['clearSelectedRows'];
+  clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
-  renderButton?: (props: RenderButtonProps) => ReactNode;
-  selectedRows: RenderButtonProps['selectedRows'];
+  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
+  selectedRows: RenderButtonProps<T>['selectedRows'];
   visible: boolean;
 }) {
   const { left, right } = useScrollNav(
@@ -255,7 +251,7 @@ function TableControls({
   );
 }
 
-export default function ExploreSectionTable({
+export default function ExploreSectionTable<T extends EntityCoreBase>({
   columns,
   dataContext,
   dataSource,
@@ -269,13 +265,13 @@ export default function ExploreSectionTable({
   controlsVisible = true,
   autohideControls = false,
   dataKey,
-}: TableProps<ExploreESHit<ExploreSectionResource>> &
-  AdditionalTableProps & {
-    renderButton?: (props: RenderButtonProps) => ReactNode;
+}: TableProps<T> &
+  AdditionalTableProps<T> & {
+    renderButton?: (props: RenderButtonProps<T>) => ReactNode;
     selectionType?: RowSelectionType;
     scrollable?: boolean;
     controlsVisible?: boolean;
-    onRowsSelected?: (rows: ExploreESHit<ExploreSectionResource>[]) => void;
+    onRowsSelected?: (rows: Array<T>) => void;
     autohideControls?: boolean;
     dataKey: string;
   }) {
@@ -299,7 +295,7 @@ export default function ExploreSectionTable({
 
   return (
     <>
-      <BaseTable
+      <BaseTable<T>
         columns={sortedCols && [...sortedCols]}
         dataContext={dataContext}
         dataSource={dataSource}

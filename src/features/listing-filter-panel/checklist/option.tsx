@@ -1,0 +1,65 @@
+import * as Checkbox from '@radix-ui/react-checkbox';
+import { format } from 'date-fns';
+import { CheckIcon } from '@/components/icons';
+import { tryCatch } from '@/api/utils';
+import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
+import { ReactNode, Suspense } from 'react';
+import { Spin } from 'antd';
+
+const DisplayLabel = (filterField: string, key: string): string | null => {
+  switch (filterField) {
+    case 'updatedAt':
+      return format(new Date(Number(key)), 'dd.MM.yyyy');
+    case 'createdBy':
+      return key.substring(key.lastIndexOf('/') + 1);
+    default:
+      return key;
+  }
+};
+
+export function CheckListOption({
+  checked,
+  value,
+  handleCheckedChange,
+  id,
+  filterField,
+  label,
+  children,
+}: {
+  children: ReactNode;
+  checked: string | boolean;
+  value: string | number | null;
+  handleCheckedChange: (key: string) => void;
+  id: string;
+  filterField: string;
+  label: string;
+}) {
+  return (
+    <li className="flex flex-col gap-2" key={id}>
+      <div className="flex items-center justify-between pt-3">
+        <span className="font-bold text-white">{DisplayLabel(filterField, label)}</span>
+        <span className="flex items-center justify-between gap-2">
+          {!!value && <span className="text-primary-5">{`${value} datasets`}</span>}
+          <Checkbox.Root
+            className="h-[14px] w-[14px] rounded border border-white bg-transparent"
+            checked={!!checked}
+            onCheckedChange={() => handleCheckedChange(id)}
+          >
+            <Checkbox.Indicator className="flex w-full items-center justify-center">
+              <CheckIcon className="check" fill="#fff" />
+            </Checkbox.Indicator>
+          </Checkbox.Root>
+        </span>
+      </div>
+      {children}
+    </li>
+  );
+}
+
+export async function CheckListDescription({ id }: { id: string }) {
+  const { data, error } = await tryCatch(getMtype({ id }));
+  if (error) return null;
+  return (
+    <span className="text-primary-1 text-justify text-balance">{data.definition}</span>
+  )
+}

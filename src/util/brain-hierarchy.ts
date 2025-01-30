@@ -11,7 +11,7 @@ import {
   BASIC_CELL_GROUPS_AND_REGIONS_ID,
   ROOT_BRAIN_REGION_URI,
 } from '@/constants/brain-hierarchy';
-import { getAncestors } from '@/components/BrainTree/util';
+import { getAncestors } from '@/features/brain-region-tree/util';
 
 export const BRAIN_REGION_URI_BASE = 'http://api.brain-map.org/api/v2/data/Structure';
 

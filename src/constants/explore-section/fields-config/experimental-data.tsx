@@ -40,6 +40,8 @@ import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DisplayMessages } from '@/constants/display-messages';
 import { getEtypeFromEModel, getMtypeFromMModel } from '@/util/modelMEtypes';
 import { EModel, NeuronMorphology } from '@/types/e-model';
+import { ensureArray } from '@/util/nexus';
+import { renderEmptyOrValue, renderArray } from './renderer';
 
 export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExperiment> = {
   [Field.License]: {
@@ -165,9 +167,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         semSelectorFn(
           resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalSynapsesPerConnection
+          | ExperimentalBoutonDensity
+          | ExperimentalLayerThickness
+          | ExperimentalSynapsesPerConnection
         ),
     },
     vocabulary: {
@@ -225,9 +227,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalSynapsesPerConnection,
+          | ExperimentalBoutonDensity
+          | ExperimentalLayerThickness
+          | ExperimentalSynapsesPerConnection,
           'mean',
           true
         ),
@@ -266,10 +268,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
         <LayerThicknessField
           detail={
             resource as
-              | ExperimentalBoutonDensity
-              | ExperimentalLayerThickness
-              | ExperimentalNeuronDensity
-              | ExperimentalSynapsesPerConnection
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalNeuronDensity
+            | ExperimentalSynapsesPerConnection
           }
         />
       ),
@@ -325,10 +327,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
         <MeanStdField
           detail={
             resource as
-              | ExperimentalBoutonDensity
-              | ExperimentalLayerThickness
-              | ExperimentalNeuronDensity
-              | ExperimentalSynapsesPerConnection
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalNeuronDensity
+            | ExperimentalSynapsesPerConnection
           }
         />
       ),
@@ -355,9 +357,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalSynapsesPerConnection,
+          | ExperimentalBoutonDensity
+          | ExperimentalLayerThickness
+          | ExperimentalSynapsesPerConnection,
           'N'
         ),
     },
@@ -383,9 +385,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalSynapsesPerConnection,
+          | ExperimentalBoutonDensity
+          | ExperimentalLayerThickness
+          | ExperimentalSynapsesPerConnection,
           'N synapses'
         ),
     },
@@ -788,6 +790,46 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
     render: {
       esResourceViewFn: (_text, r) =>
         selectorFnMorphologyFeature(r._source, 'Soma', 'Soma Radius', 'raw', true),
+    },
+  },
+};
+
+export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
+  [EntityCoreFields.License]: {
+    title: 'License',
+    filter: FilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(r.license?.name),
+    vocabulary: {
+      plural: 'Licenses',
+      singular: 'License',
+    },
+  },
+  [EntityCoreFields.BrainRegion]: {
+    title: 'Brain Region',
+    filter: null,
+    render: (r) => renderEmptyOrValue(r.brain_region.name),
+    vocabulary: {
+      plural: 'Brain Regions',
+      singular: 'Brain Region',
+    },
+  },
+  [EntityCoreFields.Species]: {
+    title: 'Species',
+    filter: FilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(renderArray(ensureArray(r.species).map((s) => s.name))),
+    vocabulary: {
+      plural: 'Species',
+      singular: 'Species',
+    },
+  },
+  [EntityCoreFields.MType]: {
+    fieldType: FieldType.CellType,
+    title: 'M-Type',
+    filter: FilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(renderArray(r.mtypes?.map((m) => m.pref_label) || [])),
+    vocabulary: {
+      plural: 'M-Types',
+      singular: 'M-Type',
     },
   },
 };

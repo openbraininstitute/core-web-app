@@ -14,6 +14,9 @@ export const cellSvcBaseUrl = env.NEXT_PUBLIC_CELL_SVC_BASE_URL;
 export const kgInferenceBaseUrl = env.NEXT_PUBLIC_KG_INFERENCE_BASE_URL;
 export const thumbnailGenerationBaseUrl = env.NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL;
 export const synthesisUrl = env.NEXT_PUBLIC_SYNTHESIS_URL;
+export const entityCoreUrl = env.NEXT_PUBLIC_ENTITY_CORE_URL;
+export const entityCorePublicVirtualLabId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID;
+export const entityCorePublicProjectId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID;
 
 export const blueNaasUrl = env.NEXT_PUBLIC_BLUE_NAAS_URL;
 

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { arrayToTree } from 'performant-array-to-tree';
 import { DensityOrCountToggle } from './DensityOrCountToggle';
-import { handleNavValueChange } from '@/components/BrainTree/util';
+import { handleNavValueChange } from '@/features/brain-region-tree/util';
 import { NavValue } from '@/state/brain-regions/types';
 import { AnalysedComposition } from '@/types/composition/calculation';
 import TreeNav from '@/components/TreeNavItem';

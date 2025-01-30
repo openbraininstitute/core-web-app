@@ -5,7 +5,7 @@ import { Provider } from 'jotai';
 import data from './brain-regions.min.json';
 import TreeNav from '@/components/TreeNavItem';
 import { NavValue } from '@/state/brain-regions/types';
-import { handleNavValueChange } from '@/components/BrainTree/util';
+import { handleNavValueChange } from '@/features/brain-region-tree/util';
 import { sectionAtom } from '@/state/application';
 
 /*

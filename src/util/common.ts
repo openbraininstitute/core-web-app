@@ -7,6 +7,7 @@ import {
 } from '@/constants/explore-section/paths';
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
 import { BookmarkTabsName, BookmarksSupportedTypes } from '@/types/virtual-lab/bookmark';
+import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 
 export const switchStateType = {
   COUNT: 'count',
@@ -47,10 +48,10 @@ export const isValidBase64 = (str: string): boolean => {
   }
 };
 
-export const detailUrlBuilder = (
+export const detailUrlBuilder = <T extends EntityCoreBase>(
   basePath: string,
-  resource: ExploreESHit<ExploreSectionResource>
-) => `${basePath}/${to64(`${resource._source.project.label}!/!${resource._id}`)}`;
+  resource: T
+) => `${basePath}/${resource.id}`;
 
 export const detailUrlWithinLab = (
   labId: string,
