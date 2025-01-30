@@ -1,7 +1,7 @@
 import esb, { boolQuery, TermsQuery } from 'elastic-builder';
 import buildESSort from './sorters';
 import { DataQuery } from '@/api/explore-section/resources';
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import { SortState } from '@/types/explore-section/application';
 import buildFilters from '@/queries/explore-section/filters';
 import buildAggs from '@/queries/explore-section/aggs';

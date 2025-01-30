@@ -2,19 +2,18 @@ import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 import { useAtomValue } from 'jotai';
 
-import { detailUrlBuilder } from '@/util/common';
-import { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
 import sessionAtom from '@/state/session';
-import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
-import { useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import { detailUrlBuilder } from '@/util/common';
+import { useUnwrappedValue } from '@/hooks/hooks';
 
-export function useExploreTableOnClickHandler() {
+export function useExploreTableOnClickHandler<T extends EntityCoreBase>() {
   const router = useRouter();
 
   return useCallback(
-    (basePath: string, record: ExploreESHit<ExploreSectionResource>) => {
+    (basePath: string, record: T) => {
       router.push(detailUrlBuilder(basePath, record));
     },
     [router]

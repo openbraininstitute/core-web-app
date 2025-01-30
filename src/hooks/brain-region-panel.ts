@@ -17,7 +17,7 @@ import {
   defaultExploreRegion,
   defaultHierarchyTree,
 } from '@/constants/explore-section/default-brain-region';
-import { generateHierarchyPathTree, getAncestors } from '@/components/BrainTree/util';
+import { generateHierarchyPathTree, getAncestors } from '@/features/brain-region-tree/util';
 import { DefaultBrainRegionType } from '@/state/brain-regions/types';
 import {
   DEFAULT_BRAIN_REGION_STORAGE_KEY,

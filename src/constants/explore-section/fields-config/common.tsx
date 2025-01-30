@@ -29,6 +29,8 @@ import {
   ExperimentalTracesDataType as ExperimentalTracesEModel,
 } from '@/types/e-model';
 import { DisplayMessages } from '@/constants/display-messages';
+import { transformAgentToNames } from '@/api/entitycore/transformers';
+import { renderDate, renderEmptyOrValue, renderPreview, renderTimestamp } from '@/constants/explore-section/fields-config/renderer';
 
 export const previewRender = ({
   distribution,
@@ -218,6 +220,74 @@ export const COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<
     vocabulary: {
       plural: 'Descriptions',
       singular: 'Description',
+    },
+  },
+};
+
+export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
+  [Field.Preview]: {
+    className: 'text-center',
+    title: 'Preview',
+    filter: null,
+    render: (resource) => renderPreview(resource),
+    vocabulary: {
+      plural: 'previews',
+      singular: 'preview',
+    },
+    style: { width: 184 },
+  },
+  [EntityCoreFields.Name]: {
+    title: 'Name',
+    filter: FilterTypeEnum.Text,
+    render: (r) => renderEmptyOrValue(r.name),
+    vocabulary: {
+      plural: 'Names',
+      singular: 'Name',
+    },
+  },
+  [EntityCoreFields.CreationDate]: {
+    title: 'Creation date',
+    filter: FilterTypeEnum.DateRange,
+    render: (r) => renderDate(r.creation_date),
+    vocabulary: {
+      plural: 'Dates',
+      singular: 'Date',
+    },
+  },
+  [EntityCoreFields.RegistrationDate]: {
+    title: 'Registration date',
+    filter: FilterTypeEnum.DateRange,
+    render: (r) => renderDate(r.creation_date),
+    vocabulary: {
+      plural: 'Dates',
+      singular: 'Date',
+    },
+  },
+  [EntityCoreFields.UpdateDate]: {
+    title: 'Update date',
+    filter: FilterTypeEnum.DateRange,
+    render: (r) => renderTimestamp(r.update_date),
+    vocabulary: {
+      plural: 'Dates',
+      singular: 'Date',
+    },
+  },
+  [EntityCoreFields.Description]: {
+    title: 'Description',
+    filter: FilterTypeEnum.Text,
+    render: (r) => renderEmptyOrValue(r.description),
+    vocabulary: {
+      plural: 'Descriptions',
+      singular: 'Description',
+    },
+  },
+  [EntityCoreFields.Contributors]: {
+    title: 'Contributors',
+    filter: FilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(transformAgentToNames(r.contributors)),
+    vocabulary: {
+      plural: 'Contributors',
+      singular: 'Contributor',
     },
   },
 };

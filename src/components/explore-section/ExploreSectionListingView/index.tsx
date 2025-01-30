@@ -2,25 +2,23 @@ import { ReactNode } from 'react';
 import { useAtom } from 'jotai';
 import { RowSelectionType } from 'antd/es/table/interface';
 
-import FilterControls from './FilterControls';
-import { RenderButtonProps } from './useRowSelection';
-import { useData } from './LoadMoreButton';
-import { ExploreESHit } from '@/types/explore-section/es';
-import ExploreSectionTable, {
-  OnCellClick,
-} from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
+import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
+import ExploreSectionTable, { OnCellClick } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
+import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import NumericResultsInfo from '@/components/explore-section/ExploreSectionListingView/NumericResultsInfo';
 import useExploreColumns from '@/hooks/useExploreColumns';
+
+import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { sortStateAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
+import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
+import { useData } from './LoadMoreButton';
 
-export default function ExploreSectionListingView({
+export default function ExploreSectionListingView<T extends EntityCoreBase>({
   dataType,
   dataScope,
   renderButton,
@@ -40,9 +38,9 @@ export default function ExploreSectionListingView({
   tableClass?: string;
   dataType: DataType;
   dataScope: ExploreDataScope;
-  renderButton?: (props: RenderButtonProps) => ReactNode;
-  onRowsSelected?: (rows: ExploreESHit<ExploreSectionResource>[]) => void;
-  onCellClick?: OnCellClick;
+  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
+  onRowsSelected?: (rows: Array<T>) => void;
+  onCellClick?: OnCellClick<T>;
   selectionType?: RowSelectionType;
   virtualLabInfo?: VirtualLabInfo;
   tableScrollable?: boolean;
@@ -85,7 +83,7 @@ export default function ExploreSectionListingView({
           tableScrollable && 'max-h-[calc(100vh-3.3rem)]'
         )}
       >
-        <WithControlPanel
+        <WithListingFilterPanel
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
@@ -110,7 +108,7 @@ export default function ExploreSectionListingView({
                   dataKey={dataKey}
                 />
               </FilterControls>
-              <ExploreSectionTable
+              <ExploreSectionTable<T>
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{ virtualLabInfo, dataScope, dataType }}
                 dataSource={hits}
@@ -125,7 +123,7 @@ export default function ExploreSectionListingView({
               />
             </>
           )}
-        </WithControlPanel>
+        </WithListingFilterPanel>
       </div>
     </div>
   );

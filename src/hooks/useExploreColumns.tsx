@@ -3,8 +3,6 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
 import throttle from 'lodash/throttle';
-import { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { SortState } from '@/types/explore-section/application';
 import { ValueArray } from '@/components/ListTable';
 import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
@@ -44,14 +42,14 @@ function getProvisionedWidth(title: string, unit?: ReactNode) {
   return width;
 }
 
-export default function useExploreColumns(
+export default function useExploreColumns<T>(
   setSortState: (sortState: SortState) => void,
   sortState?: SortState,
-  initialColumns: ColumnProps<ExploreESHit<ExploreSectionResource>>[] = [],
+  initialColumns: ColumnProps<T>[] = [],
   dimensionColumns?: string[] | null,
   dataType?: DataType
-): ColumnProps<ExploreESHit<ExploreSectionResource>>[] {
-  const keys = useMemo(() => Object.keys(EXPLORE_FIELDS_CONFIG), []);
+): ColumnProps<T>[] {
+  const keys = useMemo(() => Object.keys(ENTITY_CORE_FIELDS_CONFIG), []);
   const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
     [...keys, ...(dimensionColumns || [])].map((key) => ({
       key,
@@ -147,7 +145,7 @@ export default function useExploreColumns(
     [sortState?.field, sortState?.order]
   );
 
-  const main: ColumnProps<ExploreESHit<ExploreSectionResource>>[] = useMemo(
+  const main: ColumnProps<T>[] = useMemo(
     () =>
       keys.reduce((acc, key) => {
         const term = EXPLORE_FIELDS_CONFIG[key];
@@ -185,7 +183,7 @@ export default function useExploreColumns(
     [columnWidths, getSortOrder, initialColumns, keys, onMouseDown, sorterES]
   );
 
-  const dimensions: ColumnProps<ExploreESHit<ExploreSectionResource>>[] = useMemo(
+  const dimensions: ColumnProps<T>[] = useMemo(
     () =>
       (dimensionColumns || []).map((dimColumn) => ({
         key: dimColumn,
@@ -204,7 +202,7 @@ export default function useExploreColumns(
           }),
         onHeaderCell: () => ({
           handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, dimColumn),
-          onClick: () => {},
+          onClick: () => { },
         }),
         sortOrder: getSortOrder(dimColumn),
       })),
@@ -217,7 +215,7 @@ export default function useExploreColumns(
     return columns.sort((a, b) =>
       a.key && b.key
         ? DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(a.key as Field) -
-          DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(b.key as Field)
+        DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(b.key as Field)
         : -1
     );
   }
