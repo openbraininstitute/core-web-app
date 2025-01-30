@@ -88,7 +88,8 @@ export const env = createEnv({
 
     NEXT_PUBLIC_VIRTUAL_LAB_API_URL: z.string().url(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
-    NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL: z.string().url().optional()
+    NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL: z.string().url().optional(),
+    NEXT_PUBLIC_ENTITY_CORE: z.string().url()
   },
 
   experimental__runtimeEnv: {
@@ -163,5 +164,6 @@ export const env = createEnv({
 
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL: process.env.NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL,
+    NEXT_PUBLIC_ENTITY_CORE: process.env.NEXT_PUBLIC_ENTITY_CORE,
   },
 });
