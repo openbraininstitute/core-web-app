@@ -27,6 +27,7 @@ div.core {
   flex-direction: column;
   justify-content: space-between;
   align-items: stretch;
+  max-width: calc(100vw - 3rem);
 }
 
 div.core > div:first-child {

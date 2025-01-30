@@ -2,6 +2,7 @@ import React from 'react';
 
 import Hero from '../../Hero';
 import VerticalRuler from '../../VerticalRuler';
+import VerticalSpace from '../../VerticalSpace';
 import MissionStatement from './MissionStatement';
 import HeroURL from './hero.jpg';
 import { classNames } from '@/util/utils';
@@ -29,6 +30,7 @@ export default function SectionOurMission({ className }: SectionOurMissionProps)
         goal of creating a biologically detailed model of the brain to deepen our understanding of
         its structure and function.{' '}
       </p>
+      <VerticalSpace height="4rem" />
       <ul>
         <li>
           <big>Advance Neuroscience Understanding</big>

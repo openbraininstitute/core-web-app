@@ -28,12 +28,14 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
       </p>
       <ol>
         <li>
+          <small>01</small>
           <h2>Introduction</h2>
           The Open Brain Platform provides tools and services for neuroscience research, including
           brain model building, model simulations, literature search, and AI-driven support. These
           terms govern your access and use of the platform’s features and services.
         </li>
         <li>
+          <small>02</small>
           <h2>Eligibility</h2>
           By using the Open Brain Platform, you represent that you:
           <ul>
@@ -46,6 +48,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>03</small>
           <h2>Account registration and security</h2>
           By using the Open Brain Platform, you represent that you:
           <ul>
@@ -58,6 +61,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>04</small>
           <h2>Use of service</h2>
           When using our platform, you agree to:
           <ul>
@@ -71,6 +75,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>05</small>
           <h2>Intellectual property</h2>
           <ul>
             <li>
@@ -84,6 +89,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>06</small>
           <h2>User-Generated Content</h2>
           By submitting data, models, or other content to the platform, you agree that:
           <ul>
@@ -99,6 +105,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>07</small>
           <h2>Privacy and Data Protection</h2>
           <ul>
             <li>

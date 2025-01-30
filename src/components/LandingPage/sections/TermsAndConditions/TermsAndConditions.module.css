@@ -9,13 +9,15 @@
 }
 
 .termsAndConditions ol > li {
-  list-style: decimal-leading-zero;
+  list-style: none;
   margin-top: 3em;
+  max-width: 900px;
 }
 
 .termsAndConditions ol > li > h2 {
   font-size: 150%;
   font-weight: bolder;
+  margin-top: -0.5em;
 }
 
 .termsAndConditions ol > li ul {

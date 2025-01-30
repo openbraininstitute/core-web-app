@@ -44,7 +44,7 @@
 
 .sectionOurMission ul > li {
   margin-left: var(--indentation, 64px);
-  margin-bottom: var(--indentation, 64px);
+  margin-bottom: 2em;
 }
 
 @media (max-width: 640px) {
