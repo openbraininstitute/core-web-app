@@ -1,7 +1,3 @@
-.termsAndConditions {
-  font-size: var(--Sizes-Font-2xl, 24px);
-}
-
 .termsAndConditions p {
   max-width: 1000px;
   margin-top: 1em;

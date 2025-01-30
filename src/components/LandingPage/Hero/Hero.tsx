@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
 
-import LoginPanel from './LoginPanel';
+import { LoginButton } from '../buttons/LoginButton';
 import NextPanel from './NextPanel';
 import { classNames } from '@/util/utils';
 
@@ -39,7 +39,7 @@ export default function Hero({
           </div>
         </div>
       </div>
-      <LoginPanel />
+      <LoginButton />
       <NextPanel>{next}</NextPanel>
     </div>
   );

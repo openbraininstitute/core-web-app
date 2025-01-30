@@ -1,11 +1,9 @@
 import React from 'react';
 
-import Button from '../../Button';
+import Button from '../Button';
 import { basePath } from '@/config';
 
-export interface LoginPanelProps {}
-
-export default function LoginPanel() {
+export function LoginButton() {
   return (
     <Button
       onClick={`/log-in?callbackUrl=${basePath}/virtual-lab`}

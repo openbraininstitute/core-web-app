@@ -81,7 +81,7 @@ function Section({
   children: string;
 }) {
   return (
-    <div>
+    <div className={styles.section}>
       <button type="button" onClick={() => setSection(section)}>
         {children}
       </button>

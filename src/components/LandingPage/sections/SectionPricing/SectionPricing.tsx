@@ -2,7 +2,7 @@ import React from 'react';
 
 import Hero from '../../Hero';
 import VerticalRuler from '../../VerticalRuler';
-import EmailButton from '../../EmailButton';
+import EmailButton from '../../buttons/EmailButton';
 // import Subscriptions from './Subscriptions';
 
 import HeroURL from './hero.jpg';

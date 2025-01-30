@@ -4,6 +4,8 @@ import { useAtom } from 'jotai';
 import { IconPlus } from '../icons/IconPlus';
 import { IconMenu } from '../icons/IconMenu';
 import { atomSection, EnumSection } from '../sections/sections';
+import { HEAD_LINKS } from './data';
+import PopupMenu from './PopupMenu';
 import { classNames } from '@/util/utils';
 
 import styles from './Menu.module.css';
@@ -11,14 +13,6 @@ import styles from './Menu.module.css';
 export interface MenuProps {
   className?: string;
 }
-
-const HEAD_LINKS: Array<{ caption: string; index: EnumSection }> = [
-  // { caption: 'The institute', index: EnumSection.Institute },
-  { caption: 'Our mission', index: EnumSection.OurMission },
-  { caption: 'Pricing', index: EnumSection.Pricing },
-  { caption: 'Our team', index: EnumSection.OurTeam },
-  { caption: 'Contact', index: EnumSection.Contact },
-];
 
 export default function Menu({ className }: MenuProps) {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -64,28 +58,7 @@ export default function Menu({ className }: MenuProps) {
           </button>
         </div>
       </div>
-      <button
-        type="button"
-        className={classNames(styles.popupMenu, showMenu && styles.show)}
-        onClick={() => setShowMenu(false)}
-      >
-        <menu>
-          {HEAD_LINKS.map(({ caption, index }) => (
-            <button
-              type="button"
-              className={classNames(index === section && styles.selected)}
-              key={caption}
-              onClick={() => {
-                setSection(index);
-                setShowMenu(false);
-              }}
-            >
-              <div>{caption}</div>
-              <IconPlus />
-            </button>
-          ))}
-        </menu>
-      </button>
+      <PopupMenu visible={showMenu} onChange={setShowMenu} onClick={setSection} />
     </>
   );
 }

@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 import PictureURL from './picture.webp';
 import { classNames } from '@/util/utils';
-import Button from '@/components/LandingPage/Button';
+import Button from '@/components/LandingPage/buttons/Button';
 
 import styles from './ToolsAndData.module.css';
 

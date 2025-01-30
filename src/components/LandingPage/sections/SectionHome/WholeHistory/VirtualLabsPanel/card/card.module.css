@@ -4,6 +4,7 @@ button.card {
   position: relative;
   border: 1px solid var(--color-hero-background);
   padding: 1em;
+  margin: 0 -1px -1px 0;
   display: grid;
   grid-template-rows: auto 1fr auto;
   width: var(--size-block, 256px);
