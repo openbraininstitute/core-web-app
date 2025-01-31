@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 import PictureURL from './picture.webp';
 import { classNames } from '@/util/utils';
-import Button from '@/components/LandingPage/Button';
+import Button from '@/components/LandingPage/buttons/Button';
 
 import styles from './ToolsAndData.module.css';
 
@@ -14,10 +14,10 @@ export interface ToolsAndDataProps {
 export default function ToolsAndData({ className }: ToolsAndDataProps) {
   return (
     <div className={classNames(className, styles.toolsAndData)}>
-      <div className="flex h-[60vh] w-full flex-row">
-        <div className="flex w-2/3 flex-col justify-between bg-neutral-1 p-6">
+      <div className={styles.section}>
+        <div>
           <h2>Blue Brain Tools & Data</h2>
-          <div className="flex flex-col">
+          <div>
             <h3>fostering transparency</h3>
             <p>
               The Open Brain Platform is built on the Blue Brain Project’s legacy. All Blue Brain’s
@@ -26,15 +26,13 @@ export default function ToolsAndData({ className }: ToolsAndDataProps) {
             </p>
           </div>
         </div>
-        <div className="w-1/3 overflow-hidden bg-black">
-          <Image
-            src={PictureURL}
-            alt="Prefer to go it alone?"
-            className="h-full w-full object-cover"
-            width="1200"
-            height="800"
-          />
-        </div>
+        <Image
+          src={PictureURL}
+          alt="Prefer to go it alone?"
+          className={styles.picture}
+          width="1200"
+          height="800"
+        />
       </div>
       <footer>
         <Button subTitle="View on" title="Github" onClick="https://github.com/BlueBrain" />

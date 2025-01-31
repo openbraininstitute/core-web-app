@@ -1,11 +1,20 @@
 .contributorsList {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
   gap: 4em 3.2em;
   padding: 0 4rem;
 }
 
+@media (max-width: 640px) {
+  .contributorsList {
+    padding: 0;
+  }
+}
+
 .contributorsList > div {
+  width: min(calc(100vw - 2px), 360px);
   height: 4em;
 }
 

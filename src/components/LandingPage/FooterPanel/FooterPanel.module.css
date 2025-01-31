@@ -38,22 +38,15 @@
   font-size: 18px;
 }
 
-.links > div {
-  border-top: 1px solid var(--color-border);
-}
-
-.links > div:first-child {
-  border-top: none;
-}
-
 .links a {
   all: unset;
-  display: inline-block;
+  border: none;
+  display: inline-flex;
   cursor: pointer;
-  padding: 0.5em 0.25em;
+  padding: 0.5em 0.5em;
 }
 
-.links > div {
+.links > div.section {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
@@ -61,13 +54,23 @@
   gap: 2em;
   padding: 0;
   margin: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.links > div > a {
+.links > div.section:first-child {
+  border-top: none;
+}
+
+.links > div.section > a {
   display: flex;
   flex-direction: row;
   margin: 0;
   padding: 0;
+}
+
+.links > div.section > button {
+  all: unset;
+  cursor: pointer;
 }
 
 .links > * {
@@ -126,5 +129,9 @@
 
   .title {
     grid-column: 1/-1;
+  }
+
+  .links > div > a > span {
+    display: none;
   }
 }

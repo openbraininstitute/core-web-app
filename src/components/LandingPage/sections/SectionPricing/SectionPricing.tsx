@@ -2,9 +2,10 @@ import React from 'react';
 
 import Hero from '../../Hero';
 import VerticalRuler from '../../VerticalRuler';
-import EmailButton from '../../EmailButton';
+import EmailButton from '../../buttons/EmailButton';
 // import Subscriptions from './Subscriptions';
 
+import VerticalSpace from '../../VerticalSpace';
 import HeroURL from './hero.jpg';
 import { classNames } from '@/util/utils';
 import styles from './SectionPricing.module.css';
@@ -35,6 +36,7 @@ export default function SectionPricing({ className }: SectionPricingProps) {
         Have unique requirements? Contact us to discuss custom pricing tailored to your special
         usage of the Open Brain Platform. We are here to create solutions that fit your goals.
       </p>
+      <VerticalSpace />
       <p>
         <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
       </p>

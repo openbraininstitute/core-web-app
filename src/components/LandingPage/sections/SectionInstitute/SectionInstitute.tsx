@@ -2,7 +2,7 @@ import React from 'react';
 
 import VerticalRuler from '../../VerticalRuler';
 import Hero from '../../Hero';
-import Button from '../../Button';
+import Button from '../../buttons/Button';
 import Milestones from './Milestones';
 import HeroURL from './hero.jpg';
 import { classNames } from '@/util/utils';

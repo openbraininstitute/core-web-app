@@ -1,14 +1,14 @@
 export default function IconTwitter({
-  iconColor,
+  iconColor = 'currentColor',
   className,
 }: {
-  iconColor: string;
+  iconColor?: string;
   className?: string;
 }) {
   return (
     <svg
-      width="72"
-      height="72"
+      width="1.5em"
+      height="1.5em"
       viewBox="0 0 72 72"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

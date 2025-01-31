@@ -1,14 +1,14 @@
 export default function IconBlueSky({
-  iconColor,
+  iconColor = 'currentColor',
   className,
 }: {
-  iconColor: string;
+  iconColor?: string;
   className?: string;
 }) {
   return (
     <svg
-      width="82"
-      height="72"
+      width="1.5em"
+      height="1.5em"
       viewBox="0 0 82 72"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

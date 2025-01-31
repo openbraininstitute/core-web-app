@@ -5498,8 +5498,8 @@ export const CONTRIBUTORS_LIST: ContributorProps[] = [
   {
     full_name: 'Fabien Petitjean',
     last_name: 'Petitjean',
-    ORCID: null,
-    google_scholar: 'MGnd_BcAAAAJ',
+    ORCID: '0000-0002-1321-4433',
+    google_scholar: null,
     'bbp-member': true,
   },
   {

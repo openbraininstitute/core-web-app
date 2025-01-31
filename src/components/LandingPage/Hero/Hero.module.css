@@ -2,7 +2,12 @@
   display: grid;
   grid-template-rows: 1fr auto auto;
   gap: 0;
-  height: calc(100vh - 4rem);
+  height: max(640px, calc(100vh - 4rem));
+  --color-bg: #f0f0f0;
+}
+
+.splash.image {
+  --color-bg: var(--color-text);
 }
 
 .splash {
@@ -39,7 +44,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(113deg, #f0f0f0 29.85%, rgba(240, 240, 240, 0) 61.87%);
+  background: linear-gradient(113deg, var(--color-bg) 29.85%, rgba(240, 240, 240, 0) 61.87%);
   z-index: 1;
   font-size: clamp(2rem, 5vw, 3rem);
   padding-left: 2em;
@@ -48,7 +53,7 @@
 
 .splash.image .text {
   color: #fff;
-  background: linear-gradient(113deg, #f0f0f0 29.85%, rgba(240, 240, 240, 0) 61.87%);
+  background: linear-gradient(113deg, var(--color-bg) 29.85%, rgba(240, 240, 240, 0) 61.87%);
 }
 
 .splash > div:last-child > div > * {
@@ -57,17 +62,34 @@
 }
 
 .splash > div:last-child > div > div.content {
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 
-.largeTitle {
+h1.largeTitle {
   font-family: var(--font-serif);
   font-size: 4vw;
   line-height: 1.25;
+  margin: 0;
+  padding: 0;
+}
+
+h1.largeTitle::after {
+  display: none;
 }
 
 @media (max-width: 800px) {
   .splash {
     grid-template-columns: 0px 1fr;
+  }
+
+  h1.largeTitle {
+    font-size: 7.5vw;
+    text-shadow:
+      0 0 0.5em var(--color-bg),
+      0 0 0.125em var(--color-bg);
+  }
+
+  .splash > div:last-child > div > div.content {
+    font-size: 1.2rem;
   }
 }

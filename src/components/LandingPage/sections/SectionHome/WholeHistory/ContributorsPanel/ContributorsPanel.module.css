@@ -1,5 +1,7 @@
 .contributorsPanel {
   display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
   flex-direction: column;
   gap: 3rem;
 }

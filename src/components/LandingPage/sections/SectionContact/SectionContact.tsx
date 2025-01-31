@@ -3,7 +3,7 @@ import React from 'react';
 import Hero from '../../Hero';
 
 import VerticalRuler from '../../VerticalRuler';
-import EmailButton from '../../EmailButton';
+import EmailButton from '../../buttons/EmailButton';
 import HeroURL from './hero.jpg';
 import Cards from './Cards';
 import { classNames } from '@/util/utils';
@@ -23,8 +23,10 @@ export default function SectionContact({ className }: SectionContactProps) {
         backgroundURL={HeroURL.src}
         next="How to get in contact"
       />
-      <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
-      <EmailButton email="info@openbraininstitute.org">You have a general inquiry?</EmailButton>
+      <div className={styles.emails}>
+        <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
+        <EmailButton email="info@openbraininstitute.org">You have a general inquiry?</EmailButton>
+      </div>
       <VerticalRuler />
       <h1>Do you want to collaborate with us?</h1>
       <p>

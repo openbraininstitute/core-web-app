@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
 
-import LoginPanel from './LoginPanel';
+import { LoginButton } from '../buttons/LoginButton';
 import NextPanel from './NextPanel';
 import { classNames } from '@/util/utils';
 
@@ -34,12 +34,12 @@ export default function Hero({
           )}
           {backgroundType === 'image' && <img src={backgroundURL} alt="Background" />}
           <div className={styles.text}>
-            <div className={styles.largeTitle}>{title}</div>
-            {content && <h1 className={styles.content}>{content}</h1>}
+            <h1 className={styles.largeTitle}>{title}</h1>
+            {content && <div className={styles.content}>{content}</div>}
           </div>
         </div>
       </div>
-      <LoginPanel />
+      <LoginButton />
       <NextPanel>{next}</NextPanel>
     </div>
   );

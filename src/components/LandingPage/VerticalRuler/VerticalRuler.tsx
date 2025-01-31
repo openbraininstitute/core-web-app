@@ -13,7 +13,7 @@ export interface VerticalRulerProps {
 export default function VerticalRuler({
   className,
   height = '7rem',
-  margin = '150px',
+  margin = 'min(150px, 20vmin)',
 }: VerticalRulerProps) {
   return (
     <div

@@ -1,4 +1,28 @@
-.toolsAndData h2 {
+.section {
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0;
+  background-color: var(--color-hero-background);
+}
+
+.section > div {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 1em;
+}
+
+.section > .picture {
+  flex: 0 0 auto;
+  object-fit: cover;
+  max-width: 400px;
+}
+
+.section h2 {
   width: 50%;
   font-family: var(--font-serif);
   font-size: 4vw;
@@ -7,13 +31,13 @@
   margin-bottom: 2em;
 }
 
-.toolsAndData h3 {
+.section h3 {
   font-size: 1.4em;
   text-transform: uppercase;
   margin-bottom: 10px;
 }
 
-.toolsAndData p {
+.section p {
   font-size: 1.4em;
   margin: 0;
   padding: 0;
@@ -26,24 +50,40 @@
   flex-wrap: wrap;
 }
 
-@media (max-width: 640px) {
-  .toolsAndData h2 {
+@media (max-width: 800px) {
+  .section h2 {
     font-size: 7vw;
   }
 
-  .toolsAndData > div > img {
+  .section > div > img {
     display: none;
   }
 
-  .toolsAndData > div > div {
+  .section > div > div {
     grid-column: 1/-1;
     color: #fff;
-    background-image: url(./picture.webp);
-    background-size: cover;
     text-shadow:
       0 2px 2px #002865,
       0 -2px 2px #002865,
       2px 0 2px #002865,
       -2px 0 2px #002865;
+  }
+
+  .section .picture {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    max-width: 100vw;
+  }
+
+  .section > div {
+    z-index: 1;
+  }
+
+  .section > div h2 {
+    color: #fff;
   }
 }

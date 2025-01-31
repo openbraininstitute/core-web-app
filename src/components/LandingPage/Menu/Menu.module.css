@@ -33,6 +33,7 @@
 .menu.stuck {
   max-height: 4rem;
   overflow: hidden;
+  z-index: 999;
 }
 
 .menu > button.logo {
@@ -116,6 +117,33 @@
   display: none;
 }
 
+@media (max-width: 480px) {
+  .menu > button.logo {
+    font-size: 2rem;
+    padding: 12px;
+  }
+
+  .menu.stuck > button.logo {
+    font-size: 1.5rem;
+    padding: 0.5em;
+  }
+
+  .menu.stuck .hamburger > button {
+    display: grid;
+    place-items: center;
+    width: 4em;
+  }
+
+  .menu.stuck .hamburger > button > svg {
+    font-size: 1.8rem;
+    place-self: center;
+  }
+
+  .menu.stuck .hamburger > button > div {
+    display: none;
+  }
+}
+
 @media (max-width: 800px) {
   .menu > div.items {
     display: none;
@@ -123,33 +151,4 @@
   .menu > div.hamburger {
     display: block;
   }
-}
-
-.menu menu {
-  display: grid;
-  grid-template-rows: repeat(5, 1fr);
-  gap: 0;
-  position: absolute;
-  top: var(--size-button);
-  right: 0;
-  background-color: #fff;
-  border: 1px solid var(--color-border);
-  padding: 0;
-  margin: 0;
-  opacity: 0;
-  transition: 0.3s opacity;
-  pointer-events: none;
-}
-
-.menu menu.showMenu {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.menu menu.showMenu > button {
-  width: auto;
-  height: 2rem;
-  font-size: 1rem;
-  flex-direction: row;
-  gap: 1em;
 }

@@ -19,12 +19,15 @@
   padding: 1em;
   color: var(--color-text);
   background-color: #fff;
-  overflow: auto;
+  max-width: 100vw;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: 'Gabarito', serif;
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
   text-wrap: balance;
+  font-size: 16px;
   scroll-behavior: smooth;
 }
 
@@ -57,7 +60,7 @@
   text-wrap: balance;
   position: relative;
   font-family: var(--font-serif);
-  font-size: var(--Sizes-Font-5xl, 42px);
+  font-size: 42px;
   padding-left: var(--margin);
   margin: 1em 0;
   box-sizing: content-box;
@@ -77,11 +80,45 @@
 
 .landingPage h1 > big {
   display: block;
-  font-size: var(--Sizes-Font-11xl, 100px);
+  font-size: 100px;
   margin: 0;
 }
 
 .landingPage p {
-  font-size: var(--Sizes-Font-2xl, 24px);
+  font-size: 24px;
   margin-left: var(--margin);
+}
+
+@media (max-width: 640px) {
+  .landingPage {
+    --margin: 48px;
+    font-size: 12px;
+  }
+  .landingPage h1 {
+    padding-left: 0.5em;
+    font-size: 36px;
+  }
+  .landingPage h1:after {
+    display: none;
+  }
+  .landingPage p {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landingPage {
+    --margin: 16px;
+    font-size: 14px;
+  }
+  .landingPage {
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+  .landingPage h1 {
+    font-size: 30px;
+  }
+  .landingPage p {
+    font-size: 16px;
+  }
 }
