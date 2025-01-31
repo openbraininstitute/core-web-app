@@ -19,7 +19,7 @@ export default function SectionPricing({ className }: SectionPricingProps) {
     <div className={classNames(className, styles.sectionPricing)}>
       <Hero
         title="Pricing"
-        content="The Open Brain Platform offers flexible pricing tailored to your needs, whether you’re an individual researcher, a lab, or an institution. Explore our plans to find the perfect fit for advancing your neuroscience projects."
+        content="The Open Brain Platform offers flexible pricing tailored to your needs, whether you’re an individual researcher, a lab, or an institution."
         backgroundType="image"
         backgroundURL={HeroURL.src}
         next="Discover our plans"

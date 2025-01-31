@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Hero from '../../Hero';
-import VideoURL from './Header_HOME.mp4';
+import VideoURL from './home.mp4';
 
 import WholeHistory from './WholeHistory';
 import { classNames } from '@/util/utils';

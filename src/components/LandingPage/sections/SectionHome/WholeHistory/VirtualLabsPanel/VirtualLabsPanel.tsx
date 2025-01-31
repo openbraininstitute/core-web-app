@@ -1,8 +1,8 @@
 import React from 'react';
 
-import exploreImgUrl from './explore.webp';
-import buildImgUrl from './build.webp';
-import simulateImgUrl from './simulate.webp';
+import exploreUrl from './explore.mp4';
+import buildUrl from './build.mp4';
+import experimentUrl from './experiment.mp4';
 import { SingleSectionCard, SingleSectionCardProps } from './card/card';
 
 import styles from './VirtualLabsPanel.module.css';
@@ -10,18 +10,18 @@ import styles from './VirtualLabsPanel.module.css';
 const SECTION_CONTENT: Omit<SingleSectionCardProps, 'index'>[] = [
   {
     title: 'Explore',
-    description: 'Configure and build digital brain models',
-    image: exploreImgUrl,
+    description: 'Browse Search and Query Data and Models',
+    video: exploreUrl,
   },
   {
     title: 'Build',
-    description: 'Configure and build multiscale models',
-    image: buildImgUrl,
+    description: 'Use, configure and build digital brain models',
+    video: buildUrl,
   },
   {
-    title: 'Simulate',
-    description: 'Set up virtual experiments and run simulations ',
-    image: simulateImgUrl,
+    title: 'Experiment',
+    description: 'Design, run and analyse virtual simulation experiments',
+    video: experimentUrl,
   },
 ];
 
@@ -30,13 +30,13 @@ export default function VirtualLabsPanel() {
     <>
       <h1>Virtual labs to explore, build, and simulate the brain</h1>
       <div className={styles.triBlocks}>
-        {SECTION_CONTENT.map(({ title, description, image }, index) => (
+        {SECTION_CONTENT.map(({ title, description, video }, index) => (
           <SingleSectionCard
             key={`card_${title}_${index + 1}}`}
             index={index}
             title={title}
             description={description}
-            image={image}
+            video={video}
           />
         ))}
       </div>
