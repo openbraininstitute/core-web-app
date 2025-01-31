@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
 
-import { LoginButton } from '../buttons/LoginButton';
+import LoginButton from '../buttons/LoginButton/LoginButton';
 import NextPanel from './NextPanel';
 import { classNames } from '@/util/utils';
 

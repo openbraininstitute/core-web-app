@@ -19,4 +19,5 @@ export enum InviteErrorCodes {
   TOKEN_EXPIRED = 3,
   INVITE_ALREADY_ACCEPTED = 4,
   UNKNOWN = 5,
+  DATA_CONFLICT = 6,
 }

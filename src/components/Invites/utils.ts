@@ -51,6 +51,10 @@ export const getErrorUrl = (
     if (response.error_code === 'INVALID_REQUEST') {
       return `${errorPath}?errorcode=${InviteErrorCodes.INVALID_LINK}`;
     }
+    if (response.error_code === 'DATA_CONFLICT') {
+      return `${errorPath}?errorcode=${InviteErrorCodes.DATA_CONFLICT}`;
+    }
+
     return `${errorPath}?errorcode=${InviteErrorCodes.UNKNOWN}`;
   }
 
