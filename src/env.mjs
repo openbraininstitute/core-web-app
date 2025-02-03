@@ -89,11 +89,7 @@ export const env = createEnv({
     NEXT_PUBLIC_VIRTUAL_LAB_API_URL: z.string().url(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
     NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL: z.string().url().optional(),
-<<<<<<< HEAD
     NEXT_PUBLIC_ENTITY_CORE_URL: z.string().url()
-=======
-    NEXT_PUBLIC_ENTITY_CORE: z.string().url()
->>>>>>> b1aee6b3 (feat: add apiclient, and morpho query)
   },
 
   experimental__runtimeEnv: {

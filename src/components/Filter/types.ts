@@ -8,6 +8,7 @@ export interface GteLteValue {
 }
 
 interface BaseFilter {
+  title: string;
   field: string;
   aggregationType: AggregationType;
   type: null;

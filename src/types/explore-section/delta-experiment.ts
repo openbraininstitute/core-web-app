@@ -12,6 +12,7 @@ import {
   Synapse,
 } from './delta-properties';
 import { Distribution, EntityResource } from '@/types/nexus/common';
+import { IReconstructionMorphology } from '@/http/entitycore/types/reconstruction-morphology';
 
 type ExperimentResource = EntityResource & {
   brainLocation: BrainLocation;
@@ -82,3 +83,5 @@ export type Experiment =
   | ExperimentalSynapsesPerConnection
   | ExperimentalTrace
   | ReconstructedNeuronMorphology;
+
+export type EntityCore = IReconstructionMorphology;

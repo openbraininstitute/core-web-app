@@ -1,12 +1,14 @@
 import { Filter } from '@/components/Filter/types';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
+import { NEW_EXPLORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 
 export default function columnKeyToFilter(key: string): Filter {
-  const fieldConfig = EXPLORE_FIELDS_CONFIG[key];
-  switch (fieldConfig.filter) {
+  const fieldConfig = NEW_EXPLORE_FIELDS_CONFIG[key];
+  console.log('@@fieldConfig', fieldConfig);
+  switch (fieldConfig?.filter) {
     case FilterTypeEnum.CheckList:
       return {
+        title: fieldConfig?.title,
         field: key,
         type: FilterTypeEnum.CheckList,
         value: [],
@@ -14,6 +16,7 @@ export default function columnKeyToFilter(key: string): Filter {
       };
     case FilterTypeEnum.DateRange:
       return {
+        title: fieldConfig?.title,
         field: key,
         type: FilterTypeEnum.DateRange,
         value: { gte: null, lte: null },
@@ -21,6 +24,7 @@ export default function columnKeyToFilter(key: string): Filter {
       };
     case FilterTypeEnum.ValueRange:
       return {
+        title: fieldConfig?.title,
         field: key,
         type: FilterTypeEnum.ValueRange,
         value: { gte: null, lte: null },
@@ -28,6 +32,7 @@ export default function columnKeyToFilter(key: string): Filter {
       };
     case FilterTypeEnum.ValueOrRange:
       return {
+        title: fieldConfig?.title,
         field: key,
         type: FilterTypeEnum.ValueOrRange,
         value: null,
@@ -35,6 +40,7 @@ export default function columnKeyToFilter(key: string): Filter {
       };
     case FilterTypeEnum.Text:
       return {
+        title: fieldConfig?.title,
         field: key,
         type: FilterTypeEnum.Text,
         value: '',
@@ -42,6 +48,7 @@ export default function columnKeyToFilter(key: string): Filter {
       };
     default:
       return {
+        title: fieldConfig?.title,
         field: key,
         aggregationType: null,
         type: null,

@@ -1,3 +1,6 @@
+// should be in global shared type file
+export type Nullish = null | undefined;
+
 export interface IAuditMetadata {
   id: number;
   creation_date: string; // ISO format
@@ -9,7 +12,7 @@ type BrainRegion = {
   name: string;
 };
 
-export interface IBrainRegion extends BrainRegion, IAuditMetadata { }
+export interface IBrainRegion extends BrainRegion, IAuditMetadata {}
 
 type Strain = {
   name: string;
@@ -17,14 +20,14 @@ type Strain = {
   species_id: number;
 };
 
-export interface IStrain extends Strain, IAuditMetadata { }
+export interface IStrain extends Strain, IAuditMetadata {}
 
 type Species = {
   name: string;
   taxonomy_id: string;
 };
 
-export interface ISpecies extends Species, IAuditMetadata { }
+export interface ISpecies extends Species, IAuditMetadata {}
 
 interface License {
   name: string;
@@ -32,10 +35,20 @@ interface License {
   label: string;
 }
 
-export interface ILicense extends License, IAuditMetadata { }
+export interface ILicense extends License, IAuditMetadata {}
 
 export interface IBrainLocation {
   x: number;
   y: number;
   z: number;
 }
+
+export type MorphologyMeasurementSerie = {
+  name: string;
+  value: number;
+};
+
+export type Measurement = {
+  measurement_of: string;
+  measurement_serie: MorphologyMeasurementSerie[];
+};

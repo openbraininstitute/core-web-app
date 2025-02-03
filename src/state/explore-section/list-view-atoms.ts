@@ -1,6 +1,9 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
+import isEmpty from 'lodash/isEmpty';
+import find from 'lodash/find';
+import lget from 'lodash/get';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
@@ -56,7 +59,7 @@ export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
   const initialState: SortState = isExperimentalData(scope.dataType)
-    ? { field: Field.CreationDate, order: 'desc', }
+    ? { field: Field.CreationDate, order: 'desc' }
     : { field: Field.RegistrationDate, order: 'desc' };
 
   const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
@@ -107,7 +110,7 @@ export const filtersAtom = atomFamily(
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
         ...columns.map((colKey) => {
-          return columnKeyToFilter(colKey)
+          return columnKeyToFilter(colKey);
         }),
         ...(dimensionsColumns || []).map(
           (dimension) =>
@@ -165,12 +168,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-          ExploreDataScope.BuildSelectedBrainRegion
+        ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-            selectedBrainRegionWithDescendantsAndAncestorsFamily(
-              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-            )
-          )) || []
+              selectedBrainRegionWithDescendantsAndAncestorsFamily(
+                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+              )
+            )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -194,7 +197,6 @@ export const queryAtom = atomFamily(
   isListAtomEqual
 );
 
-
 export const dataAtom = atomFamily(
   (scope) =>
     atom(async (get) => {
@@ -202,8 +204,9 @@ export const dataAtom = atomFamily(
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const pageSize = get(pageSizeAtom);
-      const sortState = get(sortStateAtom(scope));
       const filters = await get(filtersAtom(scope));
+      // TODO: sorting should be fixed at the end, it's related to too many changes that break things
+      const sortState = get(sortStateAtom(scope));
 
       console.log('@@query', {
         searchString,
@@ -211,14 +214,15 @@ export const dataAtom = atomFamily(
         pageSize,
         sortState,
         filters,
-      })
+      });
       if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
         const response = await entitycoreApi.getReconstructionMorphologies({
           filters: {
             page_size: pageSize,
             page: pageNumber - 1,
-            name__ilike: searchString,
-          }
+            search: isEmpty(searchString) ? null : searchString,
+            name__ilike: lget(find(filters, ['field', 'name']), 'value', undefined)?.toString(),
+          },
         });
         return response;
       }
