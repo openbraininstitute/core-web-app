@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
+import { notebookRepository } from '@/config';
+
 import 'github-markdown-css';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
 export default function ContentModal({
   file,
   onCancel,
 }: {
-  file: { path: string; type: 'json' | 'text' } | null;
+  file: { path: string; type: 'notebook' | 'text' } | null;
   onCancel: () => void;
 }) {
   const [content, setContent] = useState<string | null>(null);
@@ -19,7 +20,7 @@ export default function ContentModal({
       const res = await fetch(`/api/github/fetchFile?path=${encodeURIComponent(file.path)}`);
 
       if (!res.ok) {
-        setContent('Cannot display the contents');
+        setContent('Cannot display the contents, ensure the repository is public');
       } else {
         setContent(await res.text());
       }
@@ -37,8 +38,15 @@ export default function ContentModal({
           </div>
         )}
 
-        {file?.type === 'json' && content && (
-          <SyntaxHighlighter language="json">{content}</SyntaxHighlighter>
+        {file?.type === 'notebook' && content && (
+          <div className="h-[80vh] w-full">
+            <iframe
+              title={file.path}
+              src={`https://nbviewer.org/github/${notebookRepository.repository}/${notebookRepository.user}/${encodeURIComponent(file.path)}`}
+              width="100%"
+              height="100%"
+            />
+          </div>
         )}
       </div>
     </Modal>

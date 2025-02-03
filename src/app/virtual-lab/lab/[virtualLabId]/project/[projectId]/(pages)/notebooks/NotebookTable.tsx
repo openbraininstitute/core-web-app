@@ -29,7 +29,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [file, setFile] = useState<{
     path: string;
-    type: 'json' | 'text';
+    type: 'notebook' | 'text';
   } | null>(null);
 
   const { search, Search } = useSearch({
@@ -111,7 +111,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 <button
                   type="button"
                   onClick={() =>
-                    setFile({ path: `${directory}/analysis_notebook.ipynb`, type: 'json' })
+                    setFile({ path: `${directory}/analysis_notebook.ipynb`, type: 'notebook' })
                   }
                 >
                   Preview
