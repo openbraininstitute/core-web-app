@@ -39,7 +39,9 @@ export default function Hero({
           </div>
         </div>
       </div>
-      <LoginButton />
+      <div className={styles.showOnlyForMobile}>
+        <LoginButton />
+      </div>
       <NextPanel>{next}</NextPanel>
     </div>
   );

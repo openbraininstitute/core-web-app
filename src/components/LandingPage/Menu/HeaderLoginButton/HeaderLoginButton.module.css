@@ -1,0 +1,36 @@
+.headerLoginButton {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.headerLoginButton span {
+  display: inline-block;
+  max-width: 6em;
+}
+
+.headerLoginButton .large {
+  display: inline-block;
+}
+
+.headerLoginButton .small {
+  display: none;
+}
+
+.headerLoginButton.stuck .large {
+  display: none;
+}
+
+.headerLoginButton.stuck .small {
+  display: inline-block;
+}
+
+.headerLoginButton .arrow {
+  align-self: flex-end;
+}
+
+.headerLoginButton.stuck .arrow {
+  display: none;
+}

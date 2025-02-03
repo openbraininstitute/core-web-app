@@ -16,30 +16,62 @@ export default function ToolsAndData({ className }: ToolsAndDataProps) {
     <div className={classNames(className, styles.toolsAndData)}>
       <div className={styles.section}>
         <div>
-          <h2>Blue Brain Tools & Data</h2>
+          <h2>Our Foundations: Blue Brain</h2>
           <div>
             <h3>fostering transparency</h3>
             <p>
               The Open Brain Platform is built on the Blue Brain Project’s legacy. All Blue Brain’s
               tools and services are open source with a permissive license on the Blue Brain
-              Project’s Github repository.
+              Project’s Github repository.{' '}
             </p>
           </div>
         </div>
+      </div>
+      <div className={styles.picture}>
         <Image
           src={PictureURL}
-          alt="Prefer to go it alone?"
+          alt="fostering transparency"
           className={styles.picture}
           width="1200"
           height="800"
         />
       </div>
       <footer>
-        <Button subTitle="View on" title="Github" onClick="https://github.com/BlueBrain" />
         <Button
-          subTitle="Discover"
-          title="Blue Brain Open Data"
+          className={styles.link}
+          subTitle="View on"
+          title="Github"
+          onClick="https://github.com/BlueBrain"
+        />
+        <Button
+          className={styles.link}
+          subTitle="Discover the"
+          title="BBP data"
           onClick="https://registry.opendata.aws/bluebrain_opendata/"
+        />
+        <Button
+          className={styles.link}
+          subTitle="Discover the"
+          title="BBP publications"
+          onClick="https://portal.bluebrain.epfl.ch/resources/publications/"
+        />
+        <Button
+          className={styles.link}
+          subTitle="Discover the"
+          title="BBP gallery"
+          onClick="https://portal.bluebrain.epfl.ch/gallery/"
+        />
+        <Button
+          className={styles.link}
+          subTitle="Discover the"
+          title="BBP resources"
+          onClick="https://portal.bluebrain.epfl.ch/resources/"
+        />
+        <Button
+          className={styles.link}
+          subTitle="Discover the"
+          title="BBP Youtube"
+          onClick="https://www.youtube.com/@Bluebrainpjt"
         />
       </footer>
     </div>

@@ -40,3 +40,13 @@
   border: solid 1px var(--color-hero-background);
   padding: 6px 12px;
 }
+
+button.loadMore {
+  all: unset;
+  display: inline-block;
+  padding: 0.5em 2em;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  border-radius: 99vmax;
+  margin-top: 3rem;
+}

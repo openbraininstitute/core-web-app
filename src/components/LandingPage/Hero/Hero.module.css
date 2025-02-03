@@ -93,3 +93,9 @@ h1.largeTitle::after {
     font-size: 1.2rem;
   }
 }
+
+@media (min-width: 640px) {
+  .showOnlyForMobile {
+    display: none;
+  }
+}

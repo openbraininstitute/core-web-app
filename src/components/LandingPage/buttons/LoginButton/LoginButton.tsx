@@ -10,13 +10,12 @@ export default function LoginPanel() {
   const { status } = useSession();
 
   return status === 'authenticated' ? (
-    <Button onClick="/virtual-lab" subTitle="Go to" title="The platform" className="border-none" />
+    <Button onClick="/virtual-lab" subTitle="Go to" title="The platform" />
   ) : (
     <Button
       onClick={`/log-in?callbackUrl=${basePath}/virtual-lab`}
-      subTitle="Login to"
+      subTitle="Log in to"
       title="The platform"
-      className="border-none"
     />
   );
 }

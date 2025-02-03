@@ -1,11 +1,11 @@
 import React from 'react';
 
 import { useAtom } from 'jotai';
-import { IconPlus } from '../icons/IconPlus';
 import { IconMenu } from '../icons/IconMenu';
 import { atomSection, EnumSection } from '../sections/sections';
 import { HEAD_LINKS } from './data';
 import PopupMenu from './PopupMenu';
+import HeaderLoginButton from './HeaderLoginButton';
 import { classNames } from '@/util/utils';
 
 import styles from './Menu.module.css';
@@ -46,10 +46,12 @@ export default function Menu({ className }: MenuProps) {
                 onClick={() => setSection(index)}
               >
                 <div>{caption}</div>
-                <IconPlus />
               </button>
             );
           })}
+          <button type="button" aria-label="Log in">
+            <HeaderLoginButton stuck={stuck} />
+          </button>
         </div>
         <div className={styles.hamburger}>
           <button type="button" onClick={() => setShowMenu(!showMenu)}>
