@@ -40,7 +40,7 @@ export default async function VirtualLabProjectLayout({ children, params }: LabP
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="mt-8 flex w-full flex-col gap-10 overflow-y-auto overflow-x-hidden">
+        <div className="mt-8 flex w-full flex-col gap-10 overflow-y-auto overflow-x-hidden pr-3">
           <VirtualLabTopMenu />
           {children}
         </div>
