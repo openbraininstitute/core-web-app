@@ -24,7 +24,10 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
   const repoRes = await fetch(apiBaseUrl, options);
 
   if (!repoRes.ok) {
-    throw new Error(`GitHub API request failed with status: ${repoRes.status}`);
+    if (repoRes.headers.get('x-ratelimit-remaining') === '0') {
+      throw new Error('GitHub API Rate limit reached');
+    }
+    throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
   }
   const repo = await repoRes.json();
 
@@ -35,7 +38,7 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
   const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
 
   if (!response.ok) {
-    throw new Error(`GitHub API request failed with status: ${response.status}`);
+    throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
   }
 
   const tree = await response.json();
