@@ -1,9 +1,13 @@
-.headerLoginButton {
+a.headerLoginButton,
+a.headerLoginButton:hover,
+a.headerLoginButton:active {
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: stretch;
+  padding: 0;
 }
 
 .headerLoginButton span {

@@ -5,10 +5,15 @@
   --color-border: var(--Colors-Gray-4, #bfbfbf);
   --color-text: var(--Colors-Blue-8, #003a8c);
   --font-serif: 'DM Serif Text', serif;
+  --font-sans-serif: 'Gabarito', sans-serif;
+  --font-size-M: 19px;
+  --font-size-L: calc(1.5 * var(--font-size-M));
+  --font-size-XL: calc(2 * var(--font-size-M));
 
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --margin: 20vw;
 
   position: absolute;
   left: 0;
@@ -27,12 +32,19 @@
   font-weight: normal;
   font-style: normal;
   text-wrap: balance;
-  font-size: 16px;
+  font-size: vr(--font-size-M);
   scroll-behavior: smooth;
 }
 
+.landingPage a,
+.landingPage button {
+  all: unset;
+  cursor: pointer;
+  font-size: var(--font-size-M);
+}
+
 .landingPage :global(.font-gabarito) {
-  font-family: 'Gabarito', serif;
+  font-family: var(--font-sans-serif);
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
@@ -50,21 +62,12 @@
   font-style: italic;
 }
 
-.landingPage {
-  --margin: 20vw;
-
-  color: var(--color-text);
-}
-
 .landingPage h1 {
-  text-wrap: balance;
-  position: relative;
-  font-family: var(--font-serif);
-  font-size: 42px;
+  font-size: var(--font-size-XL);
   padding-left: var(--margin);
   margin: 1em 0;
   box-sizing: content-box;
-  max-width: 640px;
+  max-width: 18em;
   line-height: 1;
 }
 
@@ -80,45 +83,54 @@
 
 .landingPage h1 > big {
   display: block;
-  font-size: 100px;
+  font-weight: bolder;
   margin: 0;
 }
 
+.landingPage h2 {
+  font-size: var(--font-size-L);
+}
+
+.landingPage h3 {
+  font-size: var(--font-size-M);
+}
+
+.landingPage h1,
+.landingPage h2,
+.landingPage h3 {
+  text-wrap: balance;
+  position: relative;
+  font-family: var(--font-serif);
+}
+
 .landingPage p {
-  font-size: 24px;
+  font-size: var(--font-size-M);
   margin-left: var(--margin);
+  max-width: min(100%, min(1000px, calc(100vw - 2 * var(--margin))));
+  hyphens: auto;
+  text-align: justify;
+  line-height: 1.2;
+}
+.landingPage ul {
+  max-width: min(1000px, calc(100vw - 2 * var(--margin)));
 }
 
 @media (max-width: 640px) {
   .landingPage {
     --margin: 48px;
-    font-size: 12px;
-  }
-  .landingPage h1 {
-    padding-left: 0.5em;
-    font-size: 36px;
+    --font-size-M: 16px;
   }
   .landingPage h1:after {
     display: none;
-  }
-  .landingPage p {
-    font-size: 20px;
   }
 }
 
 @media (max-width: 480px) {
   .landingPage {
-    --margin: 16px;
-    font-size: 14px;
+    --margin: 0;
+    --font-size-M: 13px;
   }
   .landingPage {
-    padding-left: 1px;
-    padding-right: 1px;
-  }
-  .landingPage h1 {
-    font-size: 30px;
-  }
-  .landingPage p {
-    font-size: 16px;
+    padding: 0 4px;
   }
 }

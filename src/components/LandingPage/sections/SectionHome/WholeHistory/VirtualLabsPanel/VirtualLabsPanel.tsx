@@ -28,7 +28,7 @@ const SECTION_CONTENT: Omit<SingleSectionCardProps, 'index'>[] = [
 export default function VirtualLabsPanel() {
   return (
     <>
-      <h1>Virtual labs to explore, build, and simulate the brain</h1>
+      <h1>Virtual labs to explore, build, and experiment digital brain models</h1>
       <div className={styles.triBlocks}>
         {SECTION_CONTENT.map(({ title, description, video }, index) => (
           <SingleSectionCard

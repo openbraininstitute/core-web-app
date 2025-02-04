@@ -31,10 +31,10 @@ export default function SectionPricing({ className }: SectionPricingProps) {
       </p>
       {/* <Subscriptions /> */}
       <VerticalRuler />
-      <h1>Need a special virtual lab?</h1>
+      <h1>Need a premium account?</h1>
       <p>
-        Have unique requirements? Contact us to discuss custom pricing tailored to your special
-        usage of the Open Brain Platform. We are here to create solutions that fit your goals.
+        Contact us to discuss custom pricing tailored to your special usage of the Open Brain
+        Platform. We’re here to create solutions that fit your goals.
       </p>
       <VerticalSpace />
       <p>

@@ -26,7 +26,7 @@ export default function Hero({
 }: HeroProps) {
   return (
     <div className={classNames(className, styles.hero)}>
-      <div className={classNames(styles.splash, backgroundType === 'image' && styles.image)}>
+      <div className={classNames(styles.splash, styles.image)}>
         <div />
         <div>
           {backgroundType === 'video' && (

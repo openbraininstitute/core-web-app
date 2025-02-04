@@ -2,6 +2,7 @@ import React from 'react';
 
 import Link from 'next/link';
 import { IconArrowRight } from '../../icons/IconArrowRight';
+import { styleHoverableButton } from '../../styles';
 import { classNames } from '@/util/utils';
 
 import styles from './Button.module.css';
@@ -33,7 +34,7 @@ export default function Button({
       <div className="font-dm">{title}</div>
     </div>
   );
-  const cls = classNames(className, styles.button, styles[align]);
+  const cls = classNames(className, styles.button, styles[align], styleHoverableButton);
   return typeof onClick === 'string' ? (
     <Link href={onClick} className={cls}>
       {core}

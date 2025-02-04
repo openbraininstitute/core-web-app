@@ -4,6 +4,7 @@ import { Contributor } from '../data';
 import { classNames } from '@/util/utils';
 
 import CenteredColumn from '@/components/LandingPage/CenteredColumn';
+import { styleHoverableButton } from '@/components/LandingPage/styles';
 import styles from './ContributorsList.module.css';
 
 export interface ContributorsListProps {
@@ -26,11 +27,18 @@ export default function ContributorsList({ className, list }: ContributorsListPr
             <div className={styles.name}>{contributor.full_name}</div>
             <div className={styles.links}>
               {contributor.google_scholar && (
-                <a href={`https://scholar.google.com/citations?user=${contributor.google_scholar}`}>
+                <a
+                  className={styleHoverableButton}
+                  href={`https://scholar.google.com/citations?user=${contributor.google_scholar}`}
+                >
                   Google Scholar
                 </a>
               )}
-              {contributor.ORCID && <a href={`https://orcid.org/${contributor.ORCID}`}>Orcid</a>}
+              {contributor.ORCID && (
+                <a className={styleHoverableButton} href={`https://orcid.org/${contributor.ORCID}`}>
+                  Orcid
+                </a>
+              )}
             </div>
           </div>
         ))}
@@ -38,7 +46,7 @@ export default function ContributorsList({ className, list }: ContributorsListPr
       {pagesToDisplay * contributorsPerPage < list.length && (
         <CenteredColumn>
           <button
-            className={styles.loadMore}
+            className={classNames(styles.loadMore, styleHoverableButton)}
             type="button"
             onClick={() => setPagesToDisplay(pagesToDisplay + 1)}
           >

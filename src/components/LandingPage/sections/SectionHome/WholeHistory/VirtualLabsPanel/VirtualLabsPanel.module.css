@@ -4,6 +4,12 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0;
-  --size-block: min(calc(100vw - 1rem), 400px);
+  --size-block: clamp(min(calc(100vw - 1rem), 400px), 30%, 600px);
   padding: 0 40px;
+}
+
+@media (max-width: 480px) {
+  .triBlocks {
+    padding: 0;
+  }
 }

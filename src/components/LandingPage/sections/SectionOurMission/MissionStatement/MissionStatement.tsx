@@ -21,11 +21,11 @@ export default function MissionStatement({ className }: MissionStatementProps) {
       onClick={handleDownload}
     >
       <div className={styles.text}>
-        <div>Download our</div>
-        <h2>Mission statement</h2>
+        <h2>Download our mission</h2>
         <div>
-          Download the PDF to explore how we’re advancing neuroscience through innovation,
-          collaboration, and open science.
+          Through this integrated approach to digital brain modeling and collaborative virtual
+          laboratories, the Open Brain Institute aims to accelerate scientific discovery,
+          democratize access to advanced research tools
         </div>
       </div>
       <div className={styles.image}>

@@ -23,15 +23,19 @@ export default function HeaderLoginButton({ className, stuck }: HeaderLoginButto
   const isAuthenticated = status === 'authenticated';
   const link = isAuthenticated ? '/virtual-lab' : `/log-in?callbackUrl=${basePath}/virtual-lab`;
   const captionLarge = isAuthenticated ? 'Go to' : 'Log in to';
-  const captionSmall = isAuthenticated ? 'Enter' : 'Log in';
+  const captionSmall = isAuthenticated ? 'Go to' : 'Log in to';
   return (
     <Link
       className={classNames(className, styles.headerLoginButton, stuck && styles.stuck)}
       href={link}
     >
       <div className={styles.label}>
-        <span className={styles.small}>{captionSmall}</span>
-        <span className={styles.large}>{captionLarge} the Platform</span>
+        <span className={styles.small}>
+          {captionSmall} the <b>Platform</b>
+        </span>
+        <span className={styles.large}>
+          {captionLarge} the <b>Platform</b>
+        </span>
       </div>
       <div className={classNames(styles.arrow, styles.large)}>
         <IconArrowRight />

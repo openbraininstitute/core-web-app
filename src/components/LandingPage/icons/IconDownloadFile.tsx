@@ -1,11 +1,14 @@
 export function IconDownloadFile() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.5em" height="1.5em">
-      <title>file-download-outline</title>
-      <path
-        fill="currentColor"
-        d="M14,2L20,8V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V4A2,2 0 0,1 6,2H14M18,20V9H13V4H6V20H18M12,19L8,15H10.5V12H13.5V15H16L12,19Z"
-      />
+    <svg
+      width="1.5em"
+      height="1.5em"
+      viewBox="0 0 91 101"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M78.6127 45.9524L72.545 39.8963L49.795 62.7451V0H41.2045V62.7451L18.4545 39.8963L12.3868 45.9524L45.4994 79.1575L78.6127 45.9524Z" />
+      <path d="M82.404 68.8062V92.4137H8.59546V68.8062H0V101H91V68.8062H82.404Z" />
     </svg>
   );
 }

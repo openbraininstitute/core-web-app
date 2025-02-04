@@ -20,7 +20,9 @@ export default function PortalCard({ title, content, image, href }: PortalCardPr
         </div>
         <div>{content}</div>
       </div>
-      <Image src={image} alt={title} width="800" height="800" className={styles.picture} />
+      <div className={styles.pictureContainer}>
+        <Image src={image} alt={title} width="800" height="800" className={styles.picture} />
+      </div>
     </Link>
   );
 }
