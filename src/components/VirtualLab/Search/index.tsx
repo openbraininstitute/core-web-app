@@ -1,6 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { classNames } from '@/util/utils';
 
 export default function useSearch(
@@ -15,13 +15,7 @@ export default function useSearch(
 }
 
 function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: string }) {
-  const { containerClassName, className } = props;
-
-  const inputProps = useMemo(() => {
-    const newProps = { ...props };
-    delete newProps.containerClassName;
-    return newProps;
-  }, [props]);
+  const { containerClassName, className, ...rest } = props;
 
   return (
     <ConfigProvider
@@ -44,7 +38,7 @@ function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: s
         )}
       >
         <input
-          {...inputProps}
+          {...rest} // eslint-disable-line react/jsx-props-no-spreading
           className={classNames(
             'mr-2 bg-transparent text-primary-3 outline-none placeholder:text-primary-3',
             className
