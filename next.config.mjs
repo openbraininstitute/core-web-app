@@ -30,7 +30,7 @@ const nextConfig = {
      */
     config.module.rules.push(
       {
-        test: /\.(vert|frag)$/i,
+        test: /\.(vert|frag|groq)$/i,
         // More information here https://webpack.js.org/guides/asset-modules/
         type: 'asset/source',
       },

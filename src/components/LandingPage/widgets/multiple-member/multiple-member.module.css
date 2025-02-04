@@ -1,0 +1,9 @@
+.multipleMember {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: stretch;
+  gap: 1em;
+  margin: 1em 0;
+}

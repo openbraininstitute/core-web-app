@@ -15,6 +15,10 @@ import { WidgetContributorsPanel } from '../../../widgets/ContributorsPanel';
 import { WidgetCompanyMembers } from '@/components/LandingPage/widgets/CompanyMembers';
 import { WidgetEmail } from '@/components/LandingPage/widgets/Email';
 import WidgetPriceList from '@/components/LandingPage/widgets/PriceList';
+import { WidgetSwipeableList } from '@/components/LandingPage/widgets/swipeable-list';
+import WidgetMultipleMember from '@/components/LandingPage/widgets/multiple-member/multiple-member';
+import WidgetPriceList2 from '@/components/LandingPage/widgets/price-list-2/price-list-2';
+import WidgetRepositories from '@/components/LandingPage/widgets/repositories';
 
 export interface SanityContentWidgetProps {
   value: ContentForRichTextWidget;
@@ -44,8 +48,16 @@ export default function SanityContentWidget({ value }: SanityContentWidgetProps)
       return <WidgetEmail type={value.name} />;
     case 'itemPriceList':
       return <WidgetPriceList />;
+    case 'plansList':
+      return <WidgetPriceList2 />;
     case 'heroContent':
       return <WidgetHero />;
+    case 'swipeableList':
+      return <WidgetSwipeableList />;
+    case 'multipleMember':
+      return <WidgetMultipleMember />;
+    case 'repositories':
+      return <WidgetRepositories />;
     default:
       return (
         <Error>

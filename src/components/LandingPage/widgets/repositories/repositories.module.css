@@ -1,0 +1,9 @@
+.repositories {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: 32px;
+  margin: 1em 0;
+}

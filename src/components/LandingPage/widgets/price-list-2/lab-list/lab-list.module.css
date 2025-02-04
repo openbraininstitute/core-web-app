@@ -1,0 +1,25 @@
+.fullWidth {
+  grid-column: 1/-1;
+}
+
+h3.fullWidth {
+  font-size: var(--font-size-section);
+}
+
+hr.fullWidth {
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-neutral);
+  margin: 64px 0;
+}
+
+.creditType {
+  color: var(--color-neutral);
+  font-size: var(--font-size-S);
+}
+
+h3.bloc {
+  color: var(--color-neutral);
+  text-transform: uppercase;
+  font-family: var(--font-sans-serif);
+}

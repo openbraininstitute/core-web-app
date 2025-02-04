@@ -18,8 +18,15 @@ a.hoverableButton:active,
 
 button.hoverableButton[disabled] {
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.5;
   filter: grayscale(100%);
+}
+
+button.squareButton {
+  color: var(--color-primary);
+  border: 1px solid currentColor;
+  line-height: 3;
+  padding: 0 2em;
 }
 
 .layout {

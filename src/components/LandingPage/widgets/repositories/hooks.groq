@@ -1,0 +1,9 @@
+*[_type=="repositories"] {
+  title,
+  author,
+  description,
+  url,
+  "imageURL": image.asset->url,
+  "imageWidth": image.asset->metadata.dimensions.width,
+  "imageHeight": image.asset->metadata.dimensions.height
+}

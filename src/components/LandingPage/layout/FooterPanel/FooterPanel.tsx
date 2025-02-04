@@ -14,12 +14,13 @@ import styles from './FooterPanel.module.css';
 
 export interface FooterPanelProps {
   className?: string;
+  section: EnumSection;
 }
 
-export default function FooterPanel({ className }: FooterPanelProps) {
+export default function FooterPanel({ className, section }: FooterPanelProps) {
   return (
     <>
-      <VerticalRuler />
+      {section !== EnumSection.ComingSoon && <VerticalRuler />}
       <div className={classNames(className, styles.footerPanel)}>
         <div className={styles.title}>
           <h2>Open Brain Institute</h2>

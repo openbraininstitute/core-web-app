@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React from 'react';
 import { createClient } from 'next-sanity';
 import imageUrlBuilder from '@sanity/image-url';
@@ -37,8 +38,9 @@ export function useSanity<T>(
 
     if (typeGuard(data)) return data;
 
-    logError('This Sanity query', query);
-    logError('returned a data of an unexpected type:', data);
+    console.log('The following Sanity GROQ query returned a data of unexpected type:');
+    console.log(`%s${query}`, 'font-family: monospace; color: #0f0; bakground: #000');
+    console.log(data);
     return null;
   } catch (ex) {
     logError('There was an exception in this Sanity query:', query);

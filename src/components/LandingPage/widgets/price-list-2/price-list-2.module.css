@@ -1,0 +1,20 @@
+.priceList2 {
+  display: grid;
+  grid-template-columns: 280px repeat(var(--custom-plans-count), 280px);
+  gap: 16px;
+  width: auto;
+  overflow-x: auto;
+  scroll-snap-points-y: repeat(296px);
+  scroll-snap-type: x mandatory;
+  margin: 1em 0;
+
+  --font-size-section: calc(1.4 * var(--font-size-M));
+}
+
+.priceList2 .fullWidth {
+  grid-column: 1/-1;
+}
+
+.priceList2 * {
+  line-height: 1 !important;
+}

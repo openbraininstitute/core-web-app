@@ -39,7 +39,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
         <PaddedBlock>{renderSection(section)}</PaddedBlock>
-        <FooterPanel />
+        <FooterPanel section={section} />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
       {/* <MatomoAnalytics /> */}
@@ -57,14 +57,15 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.Repositories:
     case EnumSection.TermsAndConditions:
     case EnumSection.PrivacyPolicy:
+    case EnumSection.ComingSoon:
       return <SectionGeneric section={section} />;
     case EnumSection.Contact:
       return <SectionContact />;
     case EnumSection.News:
       return <SectionNews />;
     default:
-      logError('This slug has been implemented yet!', getSection(section));
-      return <SectionGeneric section={EnumSection.Home} />;
+      logError('This slug has NOT been implemented yet!', getSection(section));
+      return null;
   }
 }
 

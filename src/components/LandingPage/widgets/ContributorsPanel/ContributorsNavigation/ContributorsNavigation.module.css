@@ -17,7 +17,7 @@
 
 .thanks {
   font-family: var(--font-serif);
-  background-color: var(--color-neutral);
+  background-color: var(--color-neutral-light);
   line-height: 0.8;
   font-size: var(--font-size-L);
   padding: 1.5rem;

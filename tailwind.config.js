@@ -67,7 +67,7 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-titillium-web)', ...fontFamily.sans],
         title: ['var(--font-gabarito)', ...fontFamily.sans],
-        serif: ['var(--DMSerifText)', ...fontFamily.serif],
+        serif: ['var(--font-DMSerifText)', ...fontFamily.serif],
       },
       transitionProperty: {
         padding: 'padding',
