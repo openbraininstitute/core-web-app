@@ -4,7 +4,7 @@ import Hero from '../../Hero';
 
 // import VerticalRuler from '../../VerticalRuler';
 import EmailButton from '../../buttons/EmailButton';
-import HeroURL from './hero.jpg';
+import { EnumSection } from '../sections';
 // import Cards from './Cards';
 import { classNames } from '@/util/utils';
 import styles from './SectionContact.module.css';
@@ -16,13 +16,7 @@ export interface SectionContactProps {
 export default function SectionContact({ className }: SectionContactProps) {
   return (
     <div className={classNames(className, styles.sectionContact)}>
-      <Hero
-        title="Contact"
-        content="Discover the passionate scientists, developers, and innovators driving the Open Brain Platform."
-        backgroundType="image"
-        backgroundURL={HeroURL.src}
-        next="How to get in contact"
-      />
+      <Hero section={EnumSection.Contact} />
       <div className={styles.emails}>
         <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
         <EmailButton email="info@openbraininstitute.org">You have a general inquiry?</EmailButton>

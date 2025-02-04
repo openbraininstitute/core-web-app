@@ -207,7 +207,7 @@ class ThreeContext {
   resize(aspectRatio?: number) {
     const canvas = this.renderer.domElement;
     const width = canvas.parentElement?.clientWidth ?? 600;
-    const height = aspectRatio ? width / aspectRatio : canvas.parentElement?.clientHeight ?? 600;
+    const height = aspectRatio ? width / aspectRatio : (canvas.parentElement?.clientHeight ?? 600);
     this.renderer.setSize(width, height, true);
     if (this.activeCamera?.type === 'PerspectiveCamera') {
       (this.activeCamera as ThreePerspectiveCamera).aspect = aspectRatio ?? width / height;

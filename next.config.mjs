@@ -98,6 +98,12 @@ const nextConfig = {
         port: '',
         pathname: '/v1/files/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.sanity.io',
+        port: '',
+        pathname: '/images/**',
+      },
     ],
   },
 };

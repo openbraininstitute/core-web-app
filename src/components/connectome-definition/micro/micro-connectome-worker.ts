@@ -762,13 +762,13 @@ function createAggregatedVariantView(
           const srcDstBrainRegionKey = createKey(srcNotation, dstNotation);
 
           const srcMtypes = (
-            srcSelection.mtype ? [srcSelection.mtype] : brainRegionMtypeMap.get(srcNotation) ?? []
+            srcSelection.mtype ? [srcSelection.mtype] : (brainRegionMtypeMap.get(srcNotation) ?? [])
           ).filter(
             (mtype) => !srcSelection.mtypeFilterSet || srcSelection.mtypeFilterSet.has(mtype)
           );
 
           const dstMtypes = (
-            dstSelection.mtype ? [dstSelection.mtype] : brainRegionMtypeMap.get(dstNotation) ?? []
+            dstSelection.mtype ? [dstSelection.mtype] : (brainRegionMtypeMap.get(dstNotation) ?? [])
           ).filter(
             (mtype) => !dstSelection.mtypeFilterSet || dstSelection.mtypeFilterSet.has(mtype)
           );
@@ -865,13 +865,13 @@ export function createAggregatedParamView(
           const srcDstBrainRegionKey = createKey(srcNotation, dstNotation);
 
           const srcMtypes = (
-            srcSelection.mtype ? [srcSelection.mtype] : brainRegionMtypeMap.get(srcNotation) ?? []
+            srcSelection.mtype ? [srcSelection.mtype] : (brainRegionMtypeMap.get(srcNotation) ?? [])
           ).filter(
             (mtype) => !srcSelection.mtypeFilterSet || srcSelection.mtypeFilterSet.has(mtype)
           );
 
           const dstMtypes = (
-            dstSelection.mtype ? [dstSelection.mtype] : brainRegionMtypeMap.get(dstNotation) ?? []
+            dstSelection.mtype ? [dstSelection.mtype] : (brainRegionMtypeMap.get(dstNotation) ?? [])
           ).filter(
             (mtype) => !srcSelection.mtypeFilterSet || srcSelection.mtypeFilterSet.has(mtype)
           );
@@ -906,7 +906,7 @@ export function createAggregatedParamView(
       });
 
       const [paramValMin, paramValMax] = extent(paramValues);
-      const min = paramValMin === paramValMax ? 0 : paramValMin ?? 0;
+      const min = paramValMin === paramValMax ? 0 : (paramValMin ?? 0);
       const max = paramValMax ?? 1;
 
       const nBins = 10;
