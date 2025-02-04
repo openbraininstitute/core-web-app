@@ -3,7 +3,6 @@ import React from 'react';
 import { useSetAtom } from 'jotai';
 import VerticalRuler from '../VerticalRuler';
 import { atomSection, EnumSection } from '../sections/sections';
-import { styleHoverableButton } from '../styles';
 import IconLinkedin from './icons/iconLinkedin';
 import IconTwitter from './icons/iconTwitter';
 import IconBlueSky from './icons/iconBlueSky';
