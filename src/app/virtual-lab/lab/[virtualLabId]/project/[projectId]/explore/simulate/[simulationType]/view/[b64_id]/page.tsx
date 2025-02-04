@@ -100,7 +100,7 @@ export default function SimulationDetailPage({ params }: Props) {
                   type={params.simulationType}
                   name={
                     params.simulationType === 'synaptome-simulation'
-                      ? synaptomeModel?.name ?? ''
+                      ? (synaptomeModel?.name ?? '')
                       : data.linkedMeModel.name
                   }
                   meModel={data.linkedMeModel}
