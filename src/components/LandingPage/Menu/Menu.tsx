@@ -32,32 +32,38 @@ export default function Menu({ className }: MenuProps) {
 
   return (
     <>
-      <div ref={ref} className={classNames(className, styles.menu, stuck && styles.stuck)}>
-        <button type="button" className={styles.logo} onClick={() => setSection(EnumSection.Home)}>
-          <div>Open Brain Institute</div>
-        </button>
-        <div className={styles.items}>
-          {HEAD_LINKS.map(({ caption, index }) => {
-            return (
-              <button
-                type="button"
-                className={classNames(index === section && styles.selected)}
-                key={caption}
-                onClick={() => setSection(index)}
-              >
-                <div>{caption}</div>
-              </button>
-            );
-          })}
-          <button type="button" aria-label="Log in">
-            <HeaderLoginButton stuck={stuck} />
+      <div className={styles.menuContainer} ref={ref}>
+        <div className={classNames(className, styles.menu, stuck && styles.stuck)}>
+          <button
+            type="button"
+            className={classNames(styles.logo, section === EnumSection.Home && styles.selected)}
+            onClick={() => setSection(EnumSection.Home)}
+          >
+            <div>Open Brain Institute</div>
           </button>
-        </div>
-        <div className={styles.hamburger}>
-          <button type="button" onClick={() => setShowMenu(!showMenu)}>
-            <div>Menu</div>
-            <IconMenu />
-          </button>
+          <div className={styles.items}>
+            {HEAD_LINKS.map(({ caption, index }) => {
+              return (
+                <button
+                  type="button"
+                  className={classNames(index === section && styles.selected)}
+                  key={caption}
+                  onClick={() => setSection(index)}
+                >
+                  <div>{caption}</div>
+                </button>
+              );
+            })}
+            <button type="button" aria-label="Log in" className={styles.loginButton}>
+              <HeaderLoginButton stuck={stuck} />
+            </button>
+          </div>
+          <div className={styles.hamburger}>
+            <button type="button" onClick={() => setShowMenu(!showMenu)}>
+              <div>Menu</div>
+              <IconMenu />
+            </button>
+          </div>
         </div>
       </div>
       <PopupMenu visible={showMenu} onChange={setShowMenu} onClick={setSection} />

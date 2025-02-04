@@ -11,6 +11,7 @@ import ThalamusURL from './thalamus.jpg';
 import TopologicalURL from './topological.jpg';
 import PortalCard from './card/PortalCard';
 import { classNames } from '@/util/utils';
+import CenteredColumn from '@/components/LandingPage/CenteredColumn';
 
 import styles from './PortalsPanel.module.css';
 
@@ -22,11 +23,13 @@ export default function PortalsPanel({ className }: PortalsPanelProps) {
   return (
     <>
       <h1>Browse through the portals built by the Blue Brain Project</h1>
-      <div className={classNames(className, styles.portalsPanel)}>
-        {PORTALS.map(({ title, content, image, href }) => (
-          <PortalCard key={title} title={title} content={content} image={image} href={href} />
-        ))}
-      </div>
+      <CenteredColumn>
+        <div className={classNames(className, styles.portalsPanel)}>
+          {PORTALS.map(({ title, content, image, href }) => (
+            <PortalCard key={title} title={title} content={content} image={image} href={href} />
+          ))}
+        </div>
+      </CenteredColumn>
     </>
   );
 }
@@ -40,7 +43,7 @@ const PORTALS: Array<{
   {
     title: 'The Neocortical Microcircuit Collaboration Portal',
     content:
-      "An online public resource of the Blue Brain Project's first release of a digital reconstruction of the microcircuitry of juvenile Rat somatosensory cortex",
+      "An online public resource of the Blue Brain Project's first release of a digital reconstruction of the microcircuitry of juvenile Rat somatosensory cortex.",
     image: NeocorticalURL,
     href: 'https://bbp.epfl.ch/nmc-portal/welcome.html',
   },
@@ -73,7 +76,7 @@ const PORTALS: Array<{
   },
   {
     title: 'The SSCx portal',
-    content: "Discover a tissue-level model of the rodent somatosensory cortex 'in silico'",
+    content: "Discover a tissue-level model of the rodent somatosensory cortex 'in silico'.",
     image: SscxURL,
     href: 'https://bbp.epfl.ch/sscx-portal/',
   },

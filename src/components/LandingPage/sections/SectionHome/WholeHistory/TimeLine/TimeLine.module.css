@@ -40,7 +40,6 @@
 }
 
 .timeLine > div > header > button {
-  all: unset;
   display: inline-block;
   border: 1px solid #fff;
   width: 1rem;
@@ -107,7 +106,6 @@
 }
 
 .timeLine > footer button {
-  all: unset;
   display: inline grid;
   align-items: center;
   padding: 0 1em;

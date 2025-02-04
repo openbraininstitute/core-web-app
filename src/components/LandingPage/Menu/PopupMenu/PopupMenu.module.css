@@ -1,5 +1,4 @@
 button.popupMenu {
-  all: unset;
   cursor: pointer;
   position: fixed;
   left: 0;
@@ -48,7 +47,6 @@ button.popupMenu.show {
 }
 
 button.popupMenu.show section > button {
-  all: unset;
   cursor: pointer;
   padding: 0.2em 0.5em;
   margin: 0;

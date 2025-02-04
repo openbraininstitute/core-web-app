@@ -1,0 +1,17 @@
+button.hoverableButton,
+a.hoverableButton,
+.hoverableButton {
+  background: #fff;
+  color: var(--color-text);
+  transition: all 0.5s;
+}
+
+button.hoverableButton:hover,
+a.hoverableButton:hover,
+.hoverableButton:hover,
+button.hoverableButton:active,
+a.hoverableButton:active,
+.hoverableButton:active {
+  color: #fff;
+  background: var(--color-text);
+}

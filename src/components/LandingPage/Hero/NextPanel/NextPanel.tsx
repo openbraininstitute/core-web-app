@@ -14,7 +14,7 @@ export default function NextPanel({ className, children }: NextPanelProps) {
   return (
     <div className={classNames(className, styles.nextPanel)}>
       <div>{children}</div>
-      <VerticalRuler margin=".15rem" />
+      <VerticalRuler height="100%" margin="0" />
     </div>
   );
 }

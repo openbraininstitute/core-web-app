@@ -22,7 +22,7 @@ export default function FooterPanel({ className }: FooterPanelProps) {
       <VerticalRuler />
       <div className={classNames(className, styles.footerPanel)}>
         <div className={styles.title}>
-          <div>Open Brain Institute</div>
+          <h2>Open Brain Institute</h2>
           <div>Open Brain Institute – Copyright 2025</div>
         </div>
         <div className={styles.links}>

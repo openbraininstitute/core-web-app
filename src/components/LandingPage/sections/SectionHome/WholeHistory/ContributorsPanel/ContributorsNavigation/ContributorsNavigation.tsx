@@ -5,6 +5,7 @@ import { Contributor, useContributors } from '../data';
 import { IconChevronLeft } from '@/components/LandingPage/icons/IconChevronLeft';
 import { IconChevronRight } from '@/components/LandingPage/icons/IconChevronRight';
 
+import { styleHoverableButton } from '@/components/LandingPage/styles';
 import styles from './ContributorsNavigation.module.css';
 
 export interface ContributorsNavigationProps {
@@ -60,7 +61,12 @@ export default function ContributorsNavigation({ onPageChange }: ContributorsNav
               }
               return (
                 <div className={styles.letter} key={`page-${i}`} style={style}>
-                  <button type="button" disabled={page === i} onClick={() => setPage(i)}>
+                  <button
+                    className={styleHoverableButton}
+                    type="button"
+                    disabled={page === i}
+                    onClick={() => setPage(i)}
+                  >
                     {group[0].last_name.trim().charAt(0).toUpperCase()}
                   </button>
                 </div>

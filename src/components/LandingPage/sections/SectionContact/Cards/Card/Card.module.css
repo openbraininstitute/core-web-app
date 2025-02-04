@@ -40,7 +40,7 @@
 .card > div > h1 {
   all: unset;
   font-family: var(--font-serif);
-  font-size: var(--Sizes-Font-4xl, 36px);
+  font-size: var(--font-size-XL);
   flex: 1 1 auto;
   line-height: 1;
 }

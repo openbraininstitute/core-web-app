@@ -1,5 +1,4 @@
 button.toolButton {
-  all: unset;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -18,7 +17,5 @@ button.toolButton > div {
 }
 
 button.toolButton > h2 {
-  font-family: var(--font-serif);
-  font-size: 150%;
   margin: 0;
 }

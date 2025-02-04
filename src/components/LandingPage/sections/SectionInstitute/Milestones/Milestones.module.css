@@ -21,7 +21,6 @@
 }
 
 .step > div > h2 {
-  all: unset;
   font-family: var(--font-serif);
   font-size: var(--Sizes-Font-7xl, 60px);
 }
@@ -36,7 +35,6 @@
 }
 
 .milestones > header > button {
-  all: unset;
   margin: 0;
   position: 0;
   cursor: pointer;

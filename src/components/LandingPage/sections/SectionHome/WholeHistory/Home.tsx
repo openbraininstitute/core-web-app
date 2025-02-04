@@ -3,7 +3,7 @@ import React from 'react';
 import VerticalRuler from '../../../VerticalRuler';
 // import FooterPanel from "../../../FooterPanel"
 // import CommunityPanel from "./CommunityPanel"
-import ToolsAndData from './ToolsAndData';
+import ToolsAndData from './OurFoundations';
 // import TimeLine from './TimeLine';
 import ContributorsPanel from './ContributorsPanel';
 import VirtualLabsPanel from './VirtualLabsPanel';
