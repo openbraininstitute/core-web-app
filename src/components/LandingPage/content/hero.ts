@@ -1,16 +1,7 @@
 import { EnumSection } from '../sections/sections';
-import { useSanityContent } from './content';
-import { assertType } from '@/util/type-guards';
-
-const TYPES: Record<EnumSection, string> = {
-  [EnumSection.Home]: 'home',
-  [EnumSection.OurMission]: 'our-mission',
-  [EnumSection.Contact]: 'contact',
-  [EnumSection.OurTeam]: 'our-team',
-  [EnumSection.Pricing]: 'pricing',
-  [EnumSection.TermsAndConditions]: 'terms-and-conditions',
-  [EnumSection.Institute]: 'not implemented yet!',
-};
+import { getSection } from '../utils';
+import { tryType } from './_common';
+import { useSanity } from './content';
 
 interface ContentForHero {
   title: string;
@@ -18,27 +9,24 @@ interface ContentForHero {
   backgroundType: 'video' | 'image';
   imageURL: string | null;
   videoURL: string | null;
-  next: string;
+  next: string | null;
+  posterURL: string | null;
+  posterWidth: number | null;
+  posterHeight: number | null;
 }
 
 function isContentForHero(data: unknown): data is ContentForHero {
-  try {
-    assertType(data, {
-      title: 'string',
-      content: ['|', 'string', 'null'],
-      backgroundType: 'string',
-      imageURL: ['|', 'string', 'null'],
-      videoURL: ['|', 'string', 'null'],
-      next: 'string',
-    });
-    return true;
-  } catch (ex) {
-    // eslint-disable-next-line no-console
-    console.debug(data);
-    // eslint-disable-next-line no-console
-    console.error(`Invalid ContentForHero data!`, ex);
-    return false;
-  }
+  return tryType('ContentForHero', data, {
+    title: 'string',
+    content: ['|', 'string', 'null'],
+    backgroundType: 'string',
+    imageURL: ['|', 'string', 'null'],
+    videoURL: ['|', 'string', 'null'],
+    next: ['|', 'string', 'null'],
+    posterURL: ['|', 'string', 'null'],
+    posterWidth: ['|', 'number', 'null'],
+    posterHeight: ['|', 'number', 'null'],
+  });
 }
 
 const DEFAULT_CONTENT_FOR_HERO: ContentForHero = {
@@ -48,19 +36,31 @@ const DEFAULT_CONTENT_FOR_HERO: ContentForHero = {
   imageURL: '',
   videoURL: '',
   next: '',
+  posterURL: '',
+  posterWidth: 0,
+  posterHeight: 0,
 };
 
-export function useSanityContentForHero(section: EnumSection) {
-  const content = useSanityContent(`*[_type=="pages"][slug.current==${JSON.stringify(
-    TYPES[section]
-  )}][0]{
+export function useSanityContentForHero(sectionIndex: EnumSection): ContentForHero {
+  const section = getSection(sectionIndex);
+  // Sanity onl uses th last pat of the slug.
+  // `/welcome/news` becomes `news`.
+  const slug = section.slug.split('/').pop();
+  return (
+    useSanity(
+      `*[_type=="pages"][slug.current==${JSON.stringify(slug)}][0]{
   title,
   "content": introduction,
   "backgroundType": mediaType,
   "imageURL": headerImage.asset->url,
   "videoURL": headerVideo,
   "content": introduction,
-  "next": scrollCatcher
-}`);
-  return isContentForHero(content) ? content : DEFAULT_CONTENT_FOR_HERO;
+  "next": scrollCatcher,
+  "posterURL": posterImage.asset->url,
+  "posterWidth": posterImage.asset->metadata.dimensions.width,
+  "posterHeight": posterImage.asset->metadata.dimensions.height,
+}`,
+      isContentForHero
+    ) ?? DEFAULT_CONTENT_FOR_HERO
+  );
 }

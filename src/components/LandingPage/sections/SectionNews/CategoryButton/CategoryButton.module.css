@@ -1,0 +1,27 @@
+button.categoryButton {
+  all: unset;
+  white-space: nowrap;
+  font-size: var(--font-size-M);
+  text-transform: uppercase;
+  border-radius: 99vmax;
+  line-height: 2;
+  padding: 0 1em;
+  border: 1px solid currentColor;
+  cursor: pointer;
+  background: #fff;
+  color: var(--color-primary);
+  transition: all 0.5s;
+}
+
+button.categoryButton.selected {
+  color: #fffe;
+  background-color: var(--color-primary);
+}
+
+button.categoryButton[disabled] {
+  font-size: calc(0.5 * var(--font-size-M));
+  pointer-events: none;
+  cursor: default;
+  filter: grayscale(100%);
+  opacity: 0.6;
+}

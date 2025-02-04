@@ -1,0 +1,14 @@
+.featureCell {
+  color: #0a0;
+  fill: currentColor;
+}
+
+.featureCell.unavailable {
+  color: var(--color-neutral);
+  fill: currentColor;
+}
+
+svg.featureCell {
+  width: 1.5em;
+  height: 1.5em;
+}

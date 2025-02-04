@@ -1,0 +1,17 @@
+.sanityContentVerticalSpace {
+  content: '';
+  margin: 0;
+  display: block;
+}
+
+.small {
+  height: 12px;
+}
+
+.medium {
+  height: 36px;
+}
+
+.large {
+  height: 108px;
+}

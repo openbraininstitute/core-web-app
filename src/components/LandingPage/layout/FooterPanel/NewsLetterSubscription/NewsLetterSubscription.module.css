@@ -1,0 +1,58 @@
+.newsLetterSubscription {
+  border: 1px solid var(--color-neutral);
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.newsLetterSubscription > button {
+  display: inline-block;
+  padding: 0.5em 2em;
+  cursor: pointer;
+  border: 1px solid var(--color-neutral);
+  border-radius: 99vmax;
+  margin-top: 3rem;
+}
+
+.newsLetterSubscription > input {
+  width: min(90%, 400px);
+  border: none;
+  border-bottom: 1px solid var(--color-primary);
+}
+
+.newsLetterSubscription > h2 {
+  line-height: 0.8;
+}
+
+.accepted > svg {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+}
+
+.newsLetterSubscription.accepted {
+  justify-content: space-around;
+  align-items: center;
+  gap: 0;
+}
+
+.newsLetterSubscription.accepted > h2 {
+  text-align: center;
+}
+
+.checkbox {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  color: var(--color-primary);
+}
+
+.checkbox label button {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor, transparent);
+  text-decoration-thickness: 1px;
+}

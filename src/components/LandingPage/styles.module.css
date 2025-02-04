@@ -2,7 +2,7 @@ button.hoverableButton,
 a.hoverableButton,
 .hoverableButton {
   background: #fff;
-  color: var(--color-text);
+  color: var(--color-primary);
   transition: all 0.5s;
 }
 
@@ -13,5 +13,54 @@ button.hoverableButton:active,
 a.hoverableButton:active,
 .hoverableButton:active {
   color: #fff;
-  background: var(--color-text);
+  background: var(--color-primary);
+}
+
+button.hoverableButton[disabled] {
+  pointer-events: none;
+  opacity: 0.6;
+  filter: grayscale(100%);
+}
+
+.layout {
+  --padding: 8px;
+  --width-max: calc(100vw - (2 * var(--padding)));
+  --S: min(800px, var(--width-max));
+  --M: min(1200px, var(--width-max));
+  --L: min(1600px, var(--width-max));
+  --colM: calc(0.5 * (var(--M) - var(--S)));
+  --colL: calc(0.5 * (var(--L) - var(--M)));
+
+  grid-column: 1/-1;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns:
+    var(--padding) 1fr var(--colL) var(--colM) var(--S) var(--colM) var(--colL)
+    1fr var(--padding);
+  place-items: center stretch;
+}
+
+.layout .blockFullWidth {
+  grid-column: 1/-1;
+  max-width: calc(100vw - var(--padding) - var(--padding));
+}
+
+.layout .blockSmall {
+  grid-column: 5/6;
+  max-width: var(--S);
+}
+
+.layout .blockMedium {
+  grid-column: 4/7;
+  max-width: var(--M);
+}
+
+.layout .blockLarge {
+  grid-column: 3/8;
+  max-width: var(--L);
+}
+
+.layout .blockSmallMarginLeft {
+  grid-column: 1/5;
 }
