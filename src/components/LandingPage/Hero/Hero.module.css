@@ -25,6 +25,7 @@
   position: relative;
   border: 1px solid var(--color-border);
   border-top: none;
+  background: var(--color-text);
 }
 
 .splash > div:last-child > video,

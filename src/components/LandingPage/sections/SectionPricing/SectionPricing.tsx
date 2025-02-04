@@ -5,7 +5,7 @@ import VerticalRuler from '../../VerticalRuler';
 import EmailButton from '../../buttons/EmailButton';
 // import Subscriptions from './Subscriptions';
 import VerticalSpace from '../../VerticalSpace';
-import HeroURL from './hero.jpg';
+import { EnumSection } from '../sections';
 import { classNames } from '@/util/utils';
 
 import styles from './SectionPricing.module.css';
@@ -17,13 +17,7 @@ export interface SectionPricingProps {
 export default function SectionPricing({ className }: SectionPricingProps) {
   return (
     <div className={classNames(className, styles.sectionPricing)}>
-      <Hero
-        title="Pricing"
-        content="The Open Brain Platform offers flexible subscription plan and different pricing tailored to your needs."
-        backgroundType="image"
-        backgroundURL={HeroURL.src}
-        next="Discover our plans"
-      />
+      <Hero section={EnumSection.Pricing} />
       <h1>Discover our different lab subscription</h1>
       <p>
         Find the perfect plan for your research needs. From individual projects to large-scale

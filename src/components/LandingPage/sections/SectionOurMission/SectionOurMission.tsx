@@ -5,7 +5,7 @@ import VerticalRuler from '../../VerticalRuler';
 import VerticalSpace from '../../VerticalSpace';
 // import MissionStatement from './MissionStatement';
 import CenteredColumn from '../../CenteredColumn';
-import HeroURL from './hero.jpg';
+import { EnumSection } from '../sections';
 import MissionStatement from './MissionStatement';
 import { classNames } from '@/util/utils';
 import styles from './SectionOurMission.module.css';
@@ -17,13 +17,7 @@ export interface SectionOurMissionProps {
 export default function SectionOurMission({ className }: SectionOurMissionProps) {
   return (
     <div className={classNames(className, styles.sectionOurMission)}>
-      <Hero
-        title="Our Mission"
-        content="The Open Brain Institute is a non-profit organization whose mission is to empower researchers and organizations with advanced digital brain building technology to perform neuroscience “at the speed of thought”."
-        backgroundType="image"
-        backgroundURL={HeroURL.src}
-        next="Discover our mission"
-      />
+      <Hero section={EnumSection.OurMission} />
       <h1>
         The Open Brain Institute’s core objective is to build a comprehensive repository of
         high-fidelity digital brain models.

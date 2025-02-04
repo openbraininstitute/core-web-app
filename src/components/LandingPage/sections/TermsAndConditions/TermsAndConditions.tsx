@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Hero from '../../Hero';
-import BackgroundURL from './background.jpg';
+import { EnumSection } from '../sections';
 import { classNames } from '@/util/utils';
 
 import styles from './TermsAndConditions.module.css';
@@ -13,13 +13,7 @@ export interface TermsAndConditionsProps {
 export default function TermsAndConditions({ className }: TermsAndConditionsProps) {
   return (
     <div className={classNames(className, styles.termsAndConditions)}>
-      <Hero
-        backgroundType="image"
-        backgroundURL={BackgroundURL.src}
-        title="Terms & conditions"
-        content="By using the Open Brain Platform, you agree to our terms and privacy policies, which outline data usage and your responsibilities. Please review them carefully."
-        next="Browse through our documents"
-      />
+      <Hero section={EnumSection.TermsAndConditions} />
       <h1>Terms & conditions</h1>
       <p>
         Welcome to the Open Brain Platform. By accessing and using our platform, you agree to comply

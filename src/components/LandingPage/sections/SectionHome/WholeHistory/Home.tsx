@@ -8,6 +8,7 @@ import ToolsAndData from './OurFoundations';
 import ContributorsPanel from './ContributorsPanel';
 import VirtualLabsPanel from './VirtualLabsPanel';
 import PortalsPanel from './PortalsPanel';
+import News from './News';
 import { classNames } from '@/util/utils';
 
 import styles from './Home.module.css';
@@ -19,6 +20,8 @@ export interface HomeProps {
 export default function Home({ className }: HomeProps) {
   return (
     <div className={classNames(className, styles.Home)}>
+      <News />
+      <VerticalRuler />
       <VirtualLabsPanel />
       <VerticalRuler />
       {/* <h1>Dig through the timeline and keep an eye on the future</h1> */}
