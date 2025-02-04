@@ -8,7 +8,7 @@
 }
 
 .menu {
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-size: var(--font-size-M);
   position: sticky;
   top: calc(-1px - 1em);
   z-index: 9;
@@ -16,7 +16,6 @@
   grid-template-columns: 1fr auto;
   gap: 0;
   background-color: #fff;
-  transition: height 0.3s;
   height: var(--size-button);
   border: none;
   overflow: hidden;
@@ -54,6 +53,7 @@
 
 .menuContainer .menu > button {
   height: var(--size-header);
+  font-size: var(--font-size-M);
 }
 
 .menu > button.logo {
@@ -68,7 +68,7 @@
   cursor: pointer;
   font-family: var(--font-serif);
   width: 100%;
-  transition: all ease-in-out 0.3s;
+  transition: none;
 }
 
 .menu > button.logo.selected {
@@ -112,7 +112,6 @@
   height: var(--size-button);
   box-sizing: border-box;
   box-shadow: 0 0 currentColor inset;
-  font-size: 90%;
 }
 
 .menu.stuck div.hamburger > button {

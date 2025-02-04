@@ -19,20 +19,19 @@ export default function SectionOurMission({ className }: SectionOurMissionProps)
     <div className={classNames(className, styles.sectionOurMission)}>
       <Hero
         title="Our Mission"
-        content="The Open Brain Institute is a non-profit organization whose mission is to empower researchers and organizations with advanced digital brain building technology to perform neuroscience \“at the speed of thought\”."
+        content="The Open Brain Institute is a non-profit organization whose mission is to empower researchers and organizations with advanced digital brain building technology to perform neuroscience “at the speed of thought”."
         backgroundType="image"
         backgroundURL={HeroURL.src}
         next="Discover our mission"
       />
       <h1>
+        The Open Brain Institute’s core objective is to build a comprehensive repository of
+        high-fidelity digital brain models.
+      </h1>
+      <p>
         The Open Brain Institute is a non-profit organization whose mission is to empower
         researchers and organizations with advanced digital brain building technology to perform
         neuroscience “at the speed of thought”.
-      </h1>
-      <p>
-        The Open Brain Institute is a non-profit organization whose mission is to accelerate
-        neuroscience research through the creation and dissemination of advanced digital brain
-        models.
       </p>
       <p>
         Central to our mission is the establishment of a collaborative virtual laboratory
@@ -63,7 +62,7 @@ export default function SectionOurMission({ className }: SectionOurMissionProps)
             experimental data, model data, digital brain models, and simulations. This structured
             and systematic exploration is further enhanced by powerful literature mining tools
             ensuring that their investigations are grounded in the most current and relevant
-            scientific information.{' '}
+            scientific information.
           </p>
         </li>
         <li>
