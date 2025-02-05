@@ -5,6 +5,9 @@ import { notebookRepository } from '@/config';
 const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
+  headers: {
+    Authorization: 'token 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',
+  },
   next: {
     revalidate: 3600 * 24,
   },
@@ -15,8 +18,10 @@ export interface Notebook {
   name: string;
   description: string;
   objectOfInterest: string;
+  path: string;
   notebookUrl: string;
   metadataUrl: string;
+  readmeUrl: string;
   author: string;
   creationDate: string | null;
 }
@@ -28,6 +33,8 @@ type Item = {
 
 export default async function fetchNotebooks(): Promise<Notebook[]> {
   const repoRes = await fetch(apiBaseUrl, options);
+
+  console.log('\n\n\n', repoRes);
 
   if (!repoRes.ok) {
     if (repoRes.headers.get('x-ratelimit-remaining') === '0') {
@@ -71,10 +78,12 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
       try {
         notebooks.push({
           objectOfInterest,
+          path: item.path,
           name,
           notebookUrl: item.url,
           metadataUrl:
             items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url,
+          readmeUrl: items[item.path.substring(0, item.path.lastIndexOf('/')) + '/README.md'].url,
           key: item.path,
           description: '',
           author: 'OBI',
@@ -135,9 +144,7 @@ async function getFileCreationDate(filePath: string): Promise<string | null> {
   }
 }
 
-export async function fetchFile(filePath: string) {
-  const url = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${filePath}`;
-
+export async function fetchGithubFile(url: string) {
   try {
     const response = await fetch(url, options);
     const data = await response.json();
@@ -150,7 +157,7 @@ export async function fetchFile(filePath: string) {
 
     return atob(data.content);
   } catch {
-    throw new Error(`Error fetching file ${filePath}`);
+    throw new Error(`Error fetching file.`);
   }
 }
 

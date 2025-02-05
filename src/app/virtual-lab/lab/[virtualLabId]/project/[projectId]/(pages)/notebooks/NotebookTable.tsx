@@ -28,7 +28,7 @@ const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [file, setFile] = useState<{
-    path: string;
+    url: string;
     type: 'notebook' | 'text';
   } | null>(null);
 
@@ -77,8 +77,8 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     saveAs(blob, `${notebookName}.zip`);
   };
 
-  const renderActionColumns = (uri: string) => {
-    const directory = uri.slice(0, uri.lastIndexOf('/'));
+  const renderActionColumns = (path: string, notebook: Notebook) => {
+    const directory = path.slice(0, path.lastIndexOf('/'));
     const notebookName = directory.split('/').pop();
     if (!notebookName) throw new Error('An error occurred');
 
@@ -96,7 +96,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 />
                 <button
                   type="button"
-                  onClick={() => setFile({ path: `${directory}/README.md`, type: 'text' })}
+                  onClick={() => setFile({ url: notebook.readmeUrl, type: 'text' })}
                 >
                   Readme
                 </button>
@@ -111,7 +111,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 <button
                   type="button"
                   onClick={() =>
-                    setFile({ path: `${directory}/analysis_notebook.ipynb`, type: 'notebook' })
+                    setFile({ url: `${directory}/analysis_notebook.ipynb`, type: 'notebook' })
                   }
                 >
                   Preview

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
 import { notebookRepository } from '@/config';
+import { fetchGithubFile } from '@/util/virtual-lab/github';
 
 import 'github-markdown-css';
 
@@ -9,7 +10,7 @@ export default function ContentModal({
   file,
   onCancel,
 }: {
-  file: { path: string; type: 'notebook' | 'text' } | null;
+  file: { url: string; type: 'notebook' | 'text' } | null;
   onCancel: () => void;
 }) {
   const [content, setContent] = useState<string | null>(null);
@@ -17,12 +18,12 @@ export default function ContentModal({
   useEffect(() => {
     async function fetchFile() {
       if (!file) return;
-      const res = await fetch(`/api/github/fetchFile?path=${encodeURIComponent(file.path)}`);
-
-      if (!res.ok) {
+      try {
+        const fileContents = await fetchGithubFile(file.url);
+        console.log('\n\n\n\n', fileContents);
+        setContent(fileContents);
+      } catch {
         setContent('Cannot display the contents, ensure the repository is public');
-      } else {
-        setContent(await res.text());
       }
     }
 
@@ -38,7 +39,7 @@ export default function ContentModal({
           </div>
         )}
 
-        {file?.type === 'notebook' && content && (
+        {/* {file?.type === 'notebook' && content && (
           <div className="h-[80vh] w-full">
             <iframe
               title={file.path}
@@ -47,7 +48,7 @@ export default function ContentModal({
               height="100%"
             />
           </div>
-        )}
+        )} */}
       </div>
     </Modal>
   );
