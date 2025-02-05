@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Hero from '../../Hero';
-import BackgroundURL from './background.jpg';
+import { EnumSection } from '../sections';
 import { classNames } from '@/util/utils';
 
 import styles from './TermsAndConditions.module.css';
@@ -13,13 +13,7 @@ export interface TermsAndConditionsProps {
 export default function TermsAndConditions({ className }: TermsAndConditionsProps) {
   return (
     <div className={classNames(className, styles.termsAndConditions)}>
-      <Hero
-        backgroundType="image"
-        backgroundURL={BackgroundURL.src}
-        title="Terms & conditions"
-        content="By using the Open Brain Platform, you agree to our terms and privacy policies, which outline data usage and your responsibilities. Please review them carefully."
-        next="Browse through our documents"
-      />
+      <Hero section={EnumSection.TermsAndConditions} />
       <h1>Terms & conditions</h1>
       <p>
         Welcome to the Open Brain Platform. By accessing and using our platform, you agree to comply
@@ -28,12 +22,14 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
       </p>
       <ol>
         <li>
+          <small>01</small>
           <h2>Introduction</h2>
           The Open Brain Platform provides tools and services for neuroscience research, including
           brain model building, model simulations, literature search, and AI-driven support. These
           terms govern your access and use of the platform’s features and services.
         </li>
         <li>
+          <small>02</small>
           <h2>Eligibility</h2>
           By using the Open Brain Platform, you represent that you:
           <ul>
@@ -46,6 +42,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>03</small>
           <h2>Account registration and security</h2>
           By using the Open Brain Platform, you represent that you:
           <ul>
@@ -58,6 +55,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>04</small>
           <h2>Use of service</h2>
           When using our platform, you agree to:
           <ul>
@@ -71,6 +69,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>05</small>
           <h2>Intellectual property</h2>
           <ul>
             <li>
@@ -84,6 +83,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>06</small>
           <h2>User-Generated Content</h2>
           By submitting data, models, or other content to the platform, you agree that:
           <ul>
@@ -99,6 +99,7 @@ export default function TermsAndConditions({ className }: TermsAndConditionsProp
           </ul>
         </li>
         <li>
+          <small>07</small>
           <h2>Privacy and Data Protection</h2>
           <ul>
             <li>

@@ -1,9 +1,11 @@
 import React from 'react';
 
 import { useAtom } from 'jotai';
-import { IconPlus } from '../icons/IconPlus';
 import { IconMenu } from '../icons/IconMenu';
 import { atomSection, EnumSection } from '../sections/sections';
+import { HEAD_LINKS } from './data';
+import PopupMenu from './PopupMenu';
+import HeaderLoginButton from './HeaderLoginButton';
 import { classNames } from '@/util/utils';
 
 import styles from './Menu.module.css';
@@ -11,14 +13,6 @@ import styles from './Menu.module.css';
 export interface MenuProps {
   className?: string;
 }
-
-const HEAD_LINKS: Array<{ caption: string; index: EnumSection }> = [
-  // { caption: 'The institute', index: EnumSection.Institute },
-  { caption: 'Our mission', index: EnumSection.OurMission },
-  { caption: 'Pricing', index: EnumSection.Pricing },
-  { caption: 'Our team', index: EnumSection.OurTeam },
-  { caption: 'Contact', index: EnumSection.Contact },
-];
 
 export default function Menu({ className }: MenuProps) {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -37,47 +31,42 @@ export default function Menu({ className }: MenuProps) {
   const [section, setSection] = useAtom(atomSection);
 
   return (
-    <div ref={ref} className={classNames(className, styles.menu, stuck && styles.stuck)}>
-      <button type="button" className={styles.logo} onClick={() => setSection(EnumSection.Home)}>
-        <div>{`Open Brain\nInstitute`}</div>
-      </button>
-      <div className={styles.items}>
-        {HEAD_LINKS.map(({ caption, index }) => {
-          return (
-            <button
-              type="button"
-              className={classNames(index === section && styles.selected)}
-              key={caption}
-              onClick={() => setSection(index)}
-            >
-              <div>{caption}</div>
-              <IconPlus />
-            </button>
-          );
-        })}
-      </div>
-      <div className={styles.hamburger}>
-        <button type="button" onClick={() => setShowMenu(!showMenu)}>
-          <div>Menu</div>
-          <IconMenu />
-        </button>
-      </div>
-      <menu className={classNames(showMenu && styles.showMenu)}>
-        {HEAD_LINKS.map(({ caption, index }) => (
+    <>
+      <div className={styles.menuContainer} ref={ref}>
+        <div className={classNames(className, styles.menu, stuck && styles.stuck)}>
           <button
             type="button"
-            className={classNames(index === section && styles.selected)}
-            key={caption}
-            onClick={() => {
-              setSection(index);
-              setShowMenu(false);
-            }}
+            className={classNames(styles.logo, section === EnumSection.Home && styles.selected)}
+            onClick={() => setSection(EnumSection.Home)}
           >
-            <div>{caption}</div>
-            <IconPlus />
+            <div>Open Brain Institute</div>
           </button>
-        ))}
-      </menu>
-    </div>
+          <div className={styles.items}>
+            {HEAD_LINKS.map(({ caption, index }) => {
+              return (
+                <button
+                  type="button"
+                  className={classNames(index === section && styles.selected)}
+                  key={caption}
+                  onClick={() => setSection(index)}
+                >
+                  <div>{caption}</div>
+                </button>
+              );
+            })}
+            <button type="button" aria-label="Log in" className={styles.loginButton}>
+              <HeaderLoginButton stuck={stuck} />
+            </button>
+          </div>
+          <div className={styles.hamburger}>
+            <button type="button" onClick={() => setShowMenu(!showMenu)}>
+              <div>Menu</div>
+              <IconMenu />
+            </button>
+          </div>
+        </div>
+      </div>
+      <PopupMenu visible={showMenu} onChange={setShowMenu} onClick={setSection} />
+    </>
   );
 }

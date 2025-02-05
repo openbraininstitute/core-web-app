@@ -22,7 +22,7 @@ export default function FooterPanel({ className }: FooterPanelProps) {
       <VerticalRuler />
       <div className={classNames(className, styles.footerPanel)}>
         <div className={styles.title}>
-          <div>Open Brain Institute</div>
+          <h2>Open Brain Institute</h2>
           <div>Open Brain Institute – Copyright 2025</div>
         </div>
         <div className={styles.links}>
@@ -47,15 +47,15 @@ export default function FooterPanel({ className }: FooterPanelProps) {
           <div>
             {/* <a>Discord</a> */}
             <a href="https://www.linkedin.com/company/openbraininstitute/">
-              <IconLinkedin iconColor="#003381" className="mr-2 h-auto w-6" /> Linkedin
+              <IconLinkedin className="mr-2 h-auto w-6" /> <span>Linkedin</span>
             </a>
             <a href="https://x.com/OpenBrainInst">
-              <IconTwitter iconColor="#003381" className="mr-2 h-auto w-6" /> X
+              <IconTwitter className="mr-2 h-auto w-6" /> <span>X</span>
             </a>
             {/* <a>Youtube</a> */}
             <a href="https://bsky.app/profile/openbraininst.bsky.social">
-              <IconBlueSky iconColor="#003381" className="mr-2 h-auto w-6" />
-              BlueSky
+              <IconBlueSky className="mr-2 h-auto w-6" />
+              <span>BlueSky</span>
             </a>
           </div>
         </div>
@@ -81,7 +81,7 @@ function Section({
   children: string;
 }) {
   return (
-    <div>
+    <div className={styles.section}>
       <button type="button" onClick={() => setSection(section)}>
         {children}
       </button>

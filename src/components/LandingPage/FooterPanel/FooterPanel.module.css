@@ -2,10 +2,6 @@
   width: 100%;
   display: flex;
   flex-direction: row;
-  /* display: grid;
-  grid-template-columns: minmax(auto, 300px) 1fr minmax(300px, 400px);
-  grid-template-columns: minmax(auto, 300px) 1fr;
-  gap: 1em; */
 }
 
 .title {
@@ -18,9 +14,14 @@
   align-items: flex-end;
 }
 
+.title > h2 {
+  text-align: right;
+  line-height: 0.8;
+}
+
 .title > div:first-child {
   font-family: var(--font-serif);
-  font-size: clamp(1rem, 3vw, 2.5rem);
+  font-size: 1rem;
   line-height: 0.8;
   text-align: right;
 }
@@ -38,22 +39,15 @@
   font-size: 18px;
 }
 
-.links > div {
-  border-top: 1px solid var(--color-border);
-}
-
-.links > div:first-child {
-  border-top: none;
-}
-
 .links a {
-  all: unset;
-  display: inline-block;
+  border: none;
+  display: inline-flex;
   cursor: pointer;
-  padding: 0.5em 0.25em;
+  padding: 0.5em 0.5em;
+  font-size: 1rem;
 }
 
-.links > div {
+.links > div.section {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
@@ -61,13 +55,31 @@
   gap: 2em;
   padding: 0;
   margin: 0;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 0 inset var(--color-text);
+  transition: 0.5s box-shadow;
 }
 
-.links > div > a {
+.links > div.section:hover {
+  box-shadow: 0 -4px inset var(--color-text);
+  border-bottom: 1px solid var(--color-text);
+}
+
+.links > div.section:first-child {
+  border-top: none;
+}
+
+.links > div.section > a {
   display: flex;
   flex-direction: row;
   margin: 0;
   padding: 0;
+}
+
+.links > div.section > button {
+  cursor: pointer;
+  border-radius: 999vmax;
+  padding: 0 0.3em;
 }
 
 .links > * {
@@ -100,7 +112,6 @@
 }
 
 .subscribe > div > button {
-  all: unset;
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -127,4 +138,13 @@
   .title {
     grid-column: 1/-1;
   }
+
+  .links > div > a > span {
+    display: none;
+  }
+}
+
+/* For now, Goerges does not want us to display the social media names */
+.links > div > a > span {
+  display: none;
 }

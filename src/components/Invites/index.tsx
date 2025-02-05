@@ -9,8 +9,8 @@ import { captureException } from '@sentry/nextjs';
 
 import { processInvite } from './api';
 import { getErrorUrl, getLabUrl, getProjectUrl } from './utils';
-import sessionAtom from '@/state/session';
 import { isVlmInviteResponse } from '@/types/virtual-lab/invites';
+import sessionAtom from '@/state/session';
 
 export default function InviteLoader() {
   const session = useAtomValue(sessionAtom);

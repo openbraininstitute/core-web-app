@@ -2,7 +2,8 @@ import React from 'react';
 
 import VerticalRuler from '../../VerticalRuler';
 import Hero from '../../Hero';
-import Button from '../../Button';
+import Button from '../../buttons/Button';
+import { EnumSection } from '../sections';
 import Milestones from './Milestones';
 import HeroURL from './hero.jpg';
 import { classNames } from '@/util/utils';
@@ -18,8 +19,7 @@ export default function SectionInstitute({ className, onNext }: SectionInstitute
   return (
     <div className={classNames(className, styles.sectionInstitute)}>
       <Hero
-        title="The Institute"
-        content="Working toward a future of neuroscience model building and simulation open to the whole world"
+        section={EnumSection.Home}
         backgroundType="image"
         backgroundURL={HeroURL.src}
         next="Discover the whole story"

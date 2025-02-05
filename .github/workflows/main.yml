@@ -60,7 +60,7 @@ jobs:
       - name: Run linter
         run: npm run lint
   test:
-    needs: [prettier, linter]
+    needs: install_packages
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -78,7 +78,7 @@ jobs:
       - name: Run tests
         run: npm run test:ci
   build:
-    needs: [prettier, linter]
+    needs: [test, prettier, linter]
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: --max-old-space-size=7168

@@ -4,10 +4,10 @@ import Hero from '../../Hero';
 import VerticalRuler from '../../VerticalRuler';
 // import Button from '../../Button';
 // import VerticalSpace from '../../VerticalSpace';
+import { EnumSection } from '../sections';
 import TeamMember from './TeamMember';
 import employeesList from './employees-list';
 
-import HeroURL from './images/hero.jpg';
 import BoardHenryURL from './images/board/henry-markram.jpg';
 import BoardKamilaURL from './images/board/kamila-markram.jpg';
 import BoardJavierURL from './images/board/javier-peroquieta.jpg';
@@ -45,13 +45,7 @@ export default function SectionOurTeam({ className }: SectionOurTeamProps) {
   );
   return (
     <div className={classNames(className, styles.sectionOurTeam)}>
-      <Hero
-        title="Our Team"
-        content="Discover the passionate scientists, developers, and innovators driving the Open Brain Platform."
-        backgroundType="image"
-        backgroundURL={HeroURL.src}
-        next="Discover our members"
-      />
+      <Hero section={EnumSection.OurTeam} />
       <h1>Board</h1>
       <div className={styles.people}>
         <div className={styles.board}>
@@ -76,6 +70,7 @@ export default function SectionOurTeam({ className }: SectionOurTeamProps) {
           <TeamMember big name="Segev Idan" profile="Member" image={BoardSegevURL.src} />
         </div>
       </div>
+      <VerticalRuler />
       <h1>Executive board</h1>
       <div className={styles.people}>
         <TeamMember
@@ -97,6 +92,7 @@ export default function SectionOurTeam({ className }: SectionOurTeamProps) {
           image={ChiefScientistOfficerURL.src}
         />
       </div>
+      <VerticalRuler />
       <h1>The team</h1>
       <div className={styles.people}>
         {employees
@@ -110,7 +106,7 @@ export default function SectionOurTeam({ className }: SectionOurTeamProps) {
             />
           ))}
       </div>
-      <VerticalRuler />
+      {/* <VerticalRuler /> */}
       {/* <h1>Wish to join our team?</h1>
       <p>
         Are you passionate about neuroscience, technology, or data science? Be part of a dynamic

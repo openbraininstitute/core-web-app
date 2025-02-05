@@ -36,9 +36,9 @@
 
 .teamMember > div.name {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: var(--font-size-L);
   background-color: var(--color-hero-background);
-  padding: 0 18px;
+  padding: 0 1em;
   margin: 0;
   line-height: 1;
   display: grid;
@@ -47,9 +47,10 @@
 }
 
 .teamMember.big > div.name {
-  font-size: var(--Sizes-Font-2xl, 24px);
+  font-size: var(--font-size-L);
 }
 
 .teamMember > div.profile {
   text-align: right;
+  font-size: var(--font-size-M);
 }

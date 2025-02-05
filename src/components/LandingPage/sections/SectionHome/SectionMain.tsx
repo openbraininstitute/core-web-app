@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Hero from '../../Hero';
-import VideoURL from './Header_HOME.mp4';
+import { EnumSection } from '../sections';
 
 import WholeHistory from './WholeHistory';
 import { classNames } from '@/util/utils';
@@ -15,12 +15,7 @@ export interface MainSectionProps {
 export default function SectionMain({ className }: MainSectionProps) {
   return (
     <div className={classNames(className, styles.sectionMain)}>
-      <Hero
-        title="Launch your virtual lab and perform neuroscience at the speed of thought"
-        backgroundType="video"
-        backgroundURL={VideoURL}
-        next="Discover the whole story"
-      />
+      <Hero section={EnumSection.Home} />
       <WholeHistory />
     </div>
   );

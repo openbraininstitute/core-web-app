@@ -25,7 +25,7 @@ export function ModalInviteProjectMember({ open, onChange }: ModalInviteProjectM
       footer={null}
     >
       <div className="flex w-full flex-col">
-        <h2 className="text-xl font-bold uppercase text-primary-8">Invite new member to project</h2>
+        <h2 className="text-xl font-bold text-primary-8">Invite new member to project</h2>
         <InviteProjectMember onClose={close} members={members} onChange={setMembers} />
       </div>
     </Modal>

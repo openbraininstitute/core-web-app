@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useAtom } from 'jotai';
 import SectionMain from './sections/SectionHome';
@@ -11,20 +11,22 @@ import SectionOurMission from './sections/SectionOurMission';
 import SectionPricing from './sections/SectionPricing';
 import SectionOurTeam from './sections/SectionOurTeam';
 import SectionContact from './sections/SectionContact';
-import { atomSection, EnumSection } from './sections/sections';
 import TermsAndConditions from './sections/TermsAndConditions';
+import { atomSection, EnumSection } from './sections/sections';
 import { classNames } from '@/util/utils';
-
+import AcceptInviteErrorDialog from '@/components/Entrypoint/segments/AcceptInviteErrorDialog';
 import styles from './LandingPage.module.css';
 
 export interface LandingPageProps {
   className?: string;
+  errorCode: string | undefined;
 }
 
-export default function LandingPage({ className }: LandingPageProps) {
-  const ref = React.useRef<HTMLDivElement | null>(null);
+export default function LandingPage({ className, errorCode }: LandingPageProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
   const [section, setSection] = useAtom(atomSection);
-  React.useEffect(() => {
+
+  useEffect(() => {
     const div = ref.current;
     if (!div) return;
 
@@ -39,6 +41,7 @@ export default function LandingPage({ className }: LandingPageProps) {
       <Menu />
       {renderSection(section, setSection)}
       <FooterPanel />
+      {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
     </div>
   );
 }

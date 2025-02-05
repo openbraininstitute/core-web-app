@@ -1,19 +1,28 @@
 .contributorsList {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
   gap: 4em 3.2em;
   padding: 0 4rem;
 }
 
+@media (max-width: 640px) {
+  .contributorsList {
+    padding: 0;
+  }
+}
+
 .contributorsList > div {
-  height: 4em;
+  width: min(calc(100vw - 2px), 360px);
+  max-height: calc(4 * var(--font-size-L));
 }
 
 .contributorsList > div > .name {
   font-family: var(--font-serif);
-  font-size: 1.4rem;
-  line-height: 2;
-  padding: 0.4em 1em;
+  font-size: var(--font-size-L);
+  line-height: 1;
+  padding: 0.4em 0.5em;
   background-color: var(--color-hero-background);
 }
 
@@ -24,10 +33,22 @@
 }
 
 .contributorsList > div > .links > a {
-  all: unset;
+  font-size: var(--font-size-M);
+}
+
+.links a {
   display: inline-block;
   cursor: pointer;
   font-size: 1rem;
   border: solid 1px var(--color-hero-background);
   padding: 6px 12px;
+}
+
+button.loadMore {
+  display: inline-block;
+  padding: 0.5em 2em;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  border-radius: 99vmax;
+  margin-top: 3rem;
 }

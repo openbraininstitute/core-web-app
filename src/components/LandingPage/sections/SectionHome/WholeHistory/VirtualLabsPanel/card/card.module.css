@@ -1,0 +1,71 @@
+button.card {
+  position: relative;
+  border: 1px solid var(--color-hero-background);
+  padding: 1em;
+  margin: 0 -1px -1px 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: var(--size-block, 256px);
+  aspect-ratio: 1/1;
+  overflow: hidden;
+}
+
+.comingSoon {
+  display: inline-block;
+  padding: 0.25em 1em;
+  color: #fffa;
+  border: 1px solid currentColor;
+  border-radius: 99vmax;
+  backdrop-filter: blur(4px);
+}
+
+button.card .content {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  color: #fffe;
+  z-index: 2;
+}
+
+.card h2,
+.card h3 {
+  margin: 0;
+  color: #fffe;
+}
+
+.card h2 {
+  position: relative;
+  top: -4px;
+  font-family: var(--font-serif);
+}
+
+.card h3 {
+  font-weight: lighter;
+}
+
+.background {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.curtain {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: linear-gradient(115deg, #fff 20%, #fff0);
+}

@@ -26,7 +26,7 @@ export default function NewProjectModalForm({
   members?: VirtualLabMember[] | null;
 }) {
   const session = useSession();
-  const [showInvitation, setShowInvitation] = useState(false);
+  const [showInvitation, setShowInvitation] = useState(true);
   const [newInvite, setNewInvite] = useState<InvitedMember>({ email: '', role: 'admin' });
 
   const [invitedMembers, dispatch] = useReducer(
@@ -47,7 +47,7 @@ export default function NewProjectModalForm({
   }, [invitedMembers, setSelectedMembers]);
 
   return (
-    <Form form={form} layout="vertical" style={{ paddingBlockStart: 40 }}>
+    <Form form={form} layout="vertical">
       <ConfigProvider
         theme={{
           hashed: false,
@@ -107,8 +107,8 @@ export default function NewProjectModalForm({
                   disabled={member.email === session.data?.user?.email}
                   className="float-right inline-block"
                 >
-                  <Option value="admin">Admin</Option>
-                  <Option value="member">Member</Option>
+                  <Select.Option value="admin">Administrator</Select.Option>
+                  <Select.Option value="member">Member</Select.Option>
                 </Select>
               </div>
             ))}
@@ -120,87 +120,84 @@ export default function NewProjectModalForm({
               <div className="inline-flex h-12 w-12 items-center justify-center bg-primary-8">
                 <MailOutlined className="text-white" />
               </div>
-              <div key={member.email} className="ml-5 inline-block font-bold">
-                {member.email}
-              </div>
+              <div className="ml-5 inline-block font-bold">{member.email}</div>
               <div className="flex-grow" />
-              <button
-                type="button"
-                className="float-right mr-3 inline-block"
-                onClick={() => {
-                  dispatch({ type: 'remove', payload: member });
-                }}
-              >
-                Cancel invitation
-              </button>
+              <div className="flex flex-row items-center justify-end gap-4">
+                <div className="ml-5 inline-block font-bold">
+                  <span className="font-bold">
+                    {member.role === 'admin' ? 'Administrator' : 'Member'}
+                  </span>
+                </div>
+                <Button
+                  htmlType="button"
+                  type="text"
+                  onClick={() => {
+                    dispatch({ type: 'remove', payload: member });
+                  }}
+                  aria-label="Cancel Invitation"
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           ))}
         </div>
         {showInvitation && (
-          <div className="mt-5 flex w-full items-center gap-3">
+          <div className="my-10 flex w-full items-center gap-3">
             <div className="inline-flex h-12 w-12 items-center justify-center bg-gray-100">
               <MailOutlined />
             </div>
             <div className="flex items-center">
-              <span className="inline-block font-bold text-primary-8">Invitation to: </span>
-              <div className="ml-1 inline-block">
-                <Input
-                  placeholder="Enter email address"
-                  value={newInvite?.email}
-                  onChange={(v) => setNewInvite({ ...newInvite, email: v.currentTarget.value })}
-                  className="px-2 py-1"
-                />
-              </div>
+              <Input
+                allowClear
+                type="email"
+                placeholder="Enter email address"
+                value={newInvite?.email}
+                onChange={(v) => setNewInvite({ ...newInvite, email: v.currentTarget.value })}
+                className="rounded-none border border-gray-400 px-2 py-1 shadow-none focus:shadow-none"
+              />
             </div>
             <div className="flex items-center">
-              <div className="mr-1">As</div>
+              <div className="ml-2 mr-4 uppercase">As</div>
               <Select
                 defaultValue="admin"
+                placeholder="Choose role..."
+                className="w-40 rounded-none border border-gray-400 shadow-none focus:shadow-none [&_.ant-select-selector]:!border-none"
                 onChange={(v: 'admin' | 'member') => setNewInvite({ ...newInvite, role: v })}
               >
-                <Option value="admin">Admin</Option>
+                <Option value="admin">Administrator</Option>
                 <Option value="member">Member</Option>
               </Select>
             </div>
             <div className="ml-auto mr-3 flex">
-              {!!newInvite.email && (
-                <button
-                  type="button"
-                  className="text-sm text-primary-7"
-                  onClick={() => {
-                    dispatch({ type: 'add', payload: newInvite });
-                    setNewInvite({ email: '', role: 'admin' });
-                    setShowInvitation(false);
-                  }}
-                >
-                  Confirm
-                </button>
-              )}
-              <button
-                type="button"
-                className="ml-3 text-sm text-primary-7"
+              <Button
+                htmlType="button"
+                type="default"
+                onClick={() => {
+                  dispatch({ type: 'add', payload: newInvite });
+                  setNewInvite({ email: '', role: 'admin' });
+                  setShowInvitation(true);
+                }}
+                aria-label="confirm invitation"
+                className="rounded-none"
+                disabled={!newInvite.email}
+              >
+                Confirm
+              </Button>
+              <Button
+                htmlType="button"
+                type="text"
                 onClick={() => {
                   setNewInvite({ email: '', role: 'admin' });
-                  setShowInvitation(false);
                 }}
+                aria-label="Cancel Invitation"
+                className="ml-2 rounded-none"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         )}
-
-        <Button
-          className="mt-5 flex h-12 items-center rounded-none bg-white font-bold text-primary-8"
-          onClick={() => setShowInvitation(true)}
-        >
-          <div className="relative -top-1">
-            Add Member
-            <span className="relative top-0.5 ml-3 inline-block text-3xl font-normal text-gray-400 ">
-              +
-            </span>
-          </div>
-        </Button>
       </ConfigProvider>
     </Form>
   );

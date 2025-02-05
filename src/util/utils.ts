@@ -264,7 +264,11 @@ export async function assertVLApiResponse(res: Response) {
 
   if (!res.ok) {
     const { message } = data;
-    throw new Error(message || 'An error occurred while processing your request...');
+    throw new Error(message || 'An error occurred while processing your request...', {
+      cause: {
+        ...data,
+      },
+    });
   }
 
   return data;

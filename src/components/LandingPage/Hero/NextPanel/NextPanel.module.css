@@ -1,16 +1,16 @@
 .nextPanel {
   color: #bbb;
   text-transform: uppercase;
-  /* padding: 0.5em 0; */
-  display: grid;
-  grid-template-rows: 1fr 3fr;
-  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 2em 0;
+  gap: 1em;
+  height: 240px;
+  margin-left: var(--margin);
 }
 
 .nextPanel > div {
   text-align: center;
-}
-
-.nextPanel > div:first-child {
-  margin-bottom: -1em;
 }

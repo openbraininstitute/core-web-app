@@ -1,2 +1,8 @@
-.sectionContact {
+.emails {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-left: var(--margin);
 }

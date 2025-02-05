@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { ConfigProvider, Table } from 'antd';
+import { ConfigProvider, Table, Button } from 'antd';
 import { ColumnType } from 'antd/lib/table';
 import sortBy from 'lodash/sortBy';
 import find from 'lodash/find';
@@ -92,17 +92,20 @@ export default function ProjectTeamTable({ users }: Props) {
     <div className="my-10">
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          <span>Total members</span>
+          <span className="mr-2">Total members</span>
           <span className="font-bold">{users.length}</span>
         </div>
-        <button
-          type="button"
-          className="flex w-[220px] justify-between border border-primary-7 bg-neutral-3 p-3"
+        <Button
+          htmlType="button"
+          size="large"
+          className="flex items-center justify-between rounded-none"
           onClick={() => setOpenInviteProjectMemberModal(true)}
+          color="white"
+          type="default"
         >
-          <span className="font-bold">Invite member</span>
-          <PlusOutlined />
-        </button>
+          <span className="mr-4 text-lg font-medium text-primary-8">Invite member</span>
+          <PlusOutlined className="text-lg text-primary-8" />
+        </Button>
       </div>
       <ConfigProvider
         theme={{

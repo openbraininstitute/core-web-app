@@ -1,0 +1,21 @@
+button.toolButton {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: stretch;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  height: 5rem;
+  padding: 0 1em;
+}
+
+button.toolButton > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button.toolButton > h2 {
+  margin: 0;
+}

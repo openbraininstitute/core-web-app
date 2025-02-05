@@ -1,64 +1,11 @@
 .portalsPanel {
   width: 100%;
-  padding: 0 10vw;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.portalsPanel .center {
-  grid-column: 2/3;
-}
-
-.portalsPanel .button {
-  width: 100%;
+  padding: 0;
+  margin: 0;
   display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: stretch;
-  width: min(800px, calc(100vw - 1rem));
-}
-
-.portalsPanel .button .text {
-  flex: 1 1 auto;
-  border: 1px solid var(--color-border);
-  padding: 1em;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  box-shadow: 0 0 0 currentColor inset;
-  transition: box-shadow 0.3s;
-}
-
-.portalsPanel .button:hover .text {
-  box-shadow: 0 -0.5em 0 currentColor inset;
-}
-
-.portalsPanel .button .text h2 {
-  font-family: var(--font-serif);
-  font-size: var(--Font3xl, 2rem);
-  font-weight: 400;
-  line-height: 37.5px;
-  text-align: left;
-  text-underline-position: from-font;
-  text-decoration-skip-ink: none;
-  margin-bottom: 0.5em;
-}
-
-.portalsPanel .button .image {
-  flex: 0 0 auto;
-  content: '';
-  background-size: cover;
-  width: 250px;
-  height: 250px;
-}
-
-@media (max-width: 640px) {
-  .portalsPanel .button {
-    flex-direction: column;
-  }
-
-  .portalsPanel .button .image {
-    width: auto;
-    height: 200px;
-  }
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1800px;
 }

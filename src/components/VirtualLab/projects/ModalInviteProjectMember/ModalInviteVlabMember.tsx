@@ -12,6 +12,7 @@ export interface ModalInviteVlabMemberProps {
 export function ModalInviteVlabMember({ open, onChange }: ModalInviteVlabMemberProps) {
   const close = () => onChange(false);
   const [members, setMembers] = useState<Member[]>([]);
+
   return (
     <Modal
       open={open}
@@ -23,9 +24,7 @@ export function ModalInviteVlabMember({ open, onChange }: ModalInviteVlabMemberP
       footer={null}
     >
       <div className="flex w-full flex-col">
-        <h2 className="text-xl font-bold uppercase text-primary-8">
-          Invite new member to virtual lab
-        </h2>
+        <h2 className="text-xl font-bold text-primary-8">Invite new member to virtual lab</h2>
         <InviteVlabMember onClose={close} members={members} onChange={setMembers} />
       </div>
     </Modal>
