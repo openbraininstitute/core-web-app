@@ -25,7 +25,7 @@ import { notification } from '@/api/notifications';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 
-function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
+function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: string[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
@@ -34,6 +34,15 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     setCurrentNotebook(null);
     setDisplay(null);
   };
+
+  if (failed && failed.length)
+    notification.warning(
+      "Failed to fetch some repositories, ensure they're public and contain valid metadate for each notebook",
+      undefined,
+      undefined,
+      undefined,
+      'failed-repo-warning'
+    );
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',

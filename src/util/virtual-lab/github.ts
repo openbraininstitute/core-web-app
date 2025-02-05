@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { z } from 'zod';
 import { assertErrorMessage } from '../utils';
 
 export const options = {
@@ -21,6 +22,7 @@ export interface Notebook {
   githubRepo: string;
   creationDate: string | null;
   defaultBranch: string;
+  inputs: string[];
 }
 
 type Item = {
@@ -74,6 +76,11 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
 
       datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
 
+      const metadataUrl =
+        items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url;
+
+      const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
+
       try {
         notebooks.push({
           objectOfInterest,
@@ -90,6 +97,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
           githubUser: repoDetails.user,
           githubRepo: repoDetails.repo,
           defaultBranch,
+          inputs: metadata.input.flatMap((i) => i.data_type.artefact),
         });
       } catch {
         throw new Error(`Metadata file missing for notebook ${item.path}`);
@@ -106,12 +114,12 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
   });
 }
 
-export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[]> {
+export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[] | string> {
   try {
     return await fetchNotebooks(repoUrl);
   } catch (e) {
     console.error(assertErrorMessage(e));
-    return [];
+    return repoUrl;
   }
 }
 
@@ -215,5 +223,42 @@ function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
     return { user, repo };
   } catch (error) {
     throw new Error('Invalid GitHub URL');
+  }
+}
+
+export async function fetchMultipleRepos(githubUrl: string[]) {
+  const promises = githubUrl.map((u) => fetchNotebooksCatchError(u));
+
+  const results = await Promise.all(promises);
+
+  return results.flat();
+}
+
+function validateMetadata(input: string) {
+  const json = JSON.parse(input);
+
+  try {
+    const dataTypeSchema = z
+      .object({
+        artefact: z.union([z.string().transform((val) => [val]), z.array(z.string())]),
+        required_properties: z.array(z.string()),
+      })
+      .strip();
+
+    const inputItemSchema = z
+      .object({
+        data_type: dataTypeSchema,
+        class: z.string(),
+      })
+      .strip();
+
+    const inputSchema = z
+      .object({
+        input: z.array(inputItemSchema),
+      })
+      .strip();
+    return inputSchema.parse(json);
+  } catch (e) {
+    throw new Error('One or more notebooks contain invalid metadata');
   }
 }
