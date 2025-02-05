@@ -23,6 +23,8 @@ export interface Notebook {
   metadataUrl: string;
   readmeUrl: string;
   author: string;
+  githubUser: string;
+  githubRepo: string;
   creationDate: string | null;
 }
 
@@ -33,8 +35,6 @@ type Item = {
 
 export default async function fetchNotebooks(): Promise<Notebook[]> {
   const repoRes = await fetch(apiBaseUrl, options);
-
-  console.log('\n\n\n', repoRes);
 
   if (!repoRes.ok) {
     if (repoRes.headers.get('x-ratelimit-remaining') === '0') {
@@ -88,6 +88,8 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
           description: '',
           author: 'OBI',
           creationDate: '',
+          githubUser: notebookRepository.user,
+          githubRepo: notebookRepository.repository,
         });
       } catch {
         throw new Error(`Metadata file missing for notebook ${item.path}`);

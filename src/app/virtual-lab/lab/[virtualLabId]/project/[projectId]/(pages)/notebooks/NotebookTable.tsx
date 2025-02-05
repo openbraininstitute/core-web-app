@@ -27,10 +27,13 @@ const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 
 function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
   const [loadingZip, setLoadingZip] = useState(false);
-  const [file, setFile] = useState<{
-    url: string;
-    type: 'notebook' | 'text';
-  } | null>(null);
+  const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
+  const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
+
+  const resetModal = () => {
+    setCurrentNotebook(null);
+    setDisplay(null);
+  };
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',
@@ -96,7 +99,10 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 />
                 <button
                   type="button"
-                  onClick={() => setFile({ url: notebook.readmeUrl, type: 'text' })}
+                  onClick={() => {
+                    setDisplay('readme');
+                    setCurrentNotebook(notebook);
+                  }}
                 >
                   Readme
                 </button>
@@ -110,9 +116,10 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    setFile({ url: `${directory}/analysis_notebook.ipynb`, type: 'notebook' })
-                  }
+                  onClick={() => {
+                    setDisplay('notebook');
+                    setCurrentNotebook(notebook);
+                  }}
                 >
                   Preview
                 </button>
@@ -272,7 +279,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
       </div>
 
-      <ContentModal file={file} onCancel={() => setFile(null)} />
+      <ContentModal notebook={currentNotebook} display={display} onCancel={resetModal} />
 
       <style jsx global>{`
         /* Change color of sorting icons */

@@ -1,54 +1,62 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
-import { notebookRepository } from '@/config';
-import { fetchGithubFile } from '@/util/virtual-lab/github';
+import { fetchGithubFile, Notebook } from '@/util/virtual-lab/github';
 
 import 'github-markdown-css';
+import { notification } from '@/api/notifications';
 
 export default function ContentModal({
-  file,
+  notebook,
   onCancel,
+  display,
 }: {
-  file: { url: string; type: 'notebook' | 'text' } | null;
+  notebook: Notebook | null;
+  display: 'notebook' | 'readme' | null;
   onCancel: () => void;
 }) {
   const [content, setContent] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchFile() {
-      if (!file) return;
+      if (!notebook || !display) return;
       try {
-        const fileContents = await fetchGithubFile(file.url);
-        console.log('\n\n\n\n', fileContents);
-        setContent(fileContents);
+        const fileContents = await fetchGithubFile(
+          display === 'notebook' ? notebook.notebookUrl : notebook.readmeUrl
+        );
+        if (fileContents) setContent(fileContents);
+        else {
+          notification.error('Cannot display the contents, ensure the repository is public');
+        }
       } catch {
-        setContent('Cannot display the contents, ensure the repository is public');
+        notification.error('Cannot display the contents, ensure the repository is public');
       }
     }
 
     fetchFile();
-  }, [file]);
+  }, [notebook, display]);
+
+  console.log(notebook?.path);
 
   return (
-    <Modal open={!!file && !!content} onCancel={onCancel} footer={false} width="70%">
+    <Modal open={!!notebook && !!content} onCancel={onCancel} footer={false} width="70%">
       <div>
-        {file?.type === 'text' && (
+        {display === 'readme' && (
           <div className="markdown-body">
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         )}
 
-        {/* {file?.type === 'notebook' && content && (
+        {display === 'notebook' && !!notebook && (
           <div className="h-[80vh] w-full">
             <iframe
-              title={file.path}
-              src={`https://nbviewer.org/github/${notebookRepository.repository}/${notebookRepository.user}/${encodeURIComponent(file.path)}`}
+              title={notebook?.path}
+              src={`https://nbviewer.org/github/${notebook.githubRepo}/${notebook.githubUser}/${notebook.path}`}
               width="100%"
               height="100%"
             />
           </div>
-        )} */}
+        )}
       </div>
     </Modal>
   );
