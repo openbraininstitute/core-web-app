@@ -165,29 +165,33 @@ export async function fetchGithubFile(url: string) {
   }
 }
 
-export async function downloadZippedFolder(path: string) {
+export async function downloadZippedNotebook(notebook: Notebook) {
   try {
-    const apiUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${path}`;
-    const response = await fetch(apiUrl, options);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        `GitHub API request failed with status: ${response.status} ${response.statusText}`
-      );
-    }
-
     const zip = new JSZip();
 
-    for (const file of data) {
-      if (file.type === 'file') {
-        const fileData = await fetch(file.download_url, options);
-        const arrayBuffer = await fileData.arrayBuffer();
-        zip.file(file.name, arrayBuffer);
-      }
-    }
+    const files = [notebook.metadataUrl, notebook.notebookUrl, notebook.readmeUrl];
+    const names = ['analysis_info.json', 'analysis_notebook.ipynb', 'readme.md'];
 
-    const zipContent = await zip.generateAsync({ type: 'nodebuffer' });
+    const promises = files.map(async (f) => {
+      const response = await fetch(f);
+      const data = await response.json();
+
+      
+        const decodedContent = atob(data.content); // Decode base64 content
+        const arrayBuffer = new Uint8Array(decodedContent.length);
+        for (let i = 0; i < decodedContent.length; i++) {
+          arrayBuffer[i] = decodedContent.charCodeAt(i);
+        }
+        zip.file(names[i], arrayBuffer); // Add decoded content to zip
+      } else {
+        const arrayBuffer = await response.arrayBuffer();
+        zip.file(f.name, arrayBuffer); // Add file content to zip if not base64
+      }
+    });
+
+    await Promise.all(promises);
+
+    const zipContent = await zip.generateAsync({ type: 'blob' });
     return zipContent;
   } catch {
     throw new Error(`Failed to fetch the contents`);

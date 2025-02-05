@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchFile } from '@/util/virtual-lab/github';
+import { fetchGithubFile } from '@/util/virtual-lab/github';
 
 export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
@@ -9,7 +9,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
   }
 
-  const file = await fetchFile(path);
+  const file = await fetchGithubFile(path);
 
   return new NextResponse(file, {
     headers: {

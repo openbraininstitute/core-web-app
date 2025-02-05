@@ -15,7 +15,7 @@ import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line imp
 import { getSorter } from './utils';
 import ContentModal from './ContentModal';
 import useSearch from '@/components/VirtualLab/Search';
-import { Notebook } from '@/util/virtual-lab/github';
+import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
 import { basePath } from '@/config';
 
 import FilterControls from '@/components/FilterControls/FilterControls';
@@ -66,25 +66,20 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     });
   }, [notebooks, search]);
 
-  const handleDownloadClick = async (directory: string, notebookName: string) => {
+  const handleDownloadClick = async (notebook: Notebook) => {
     setLoadingZip(true);
-    const res = await fetch(`/api/github/downloadNotebook?folder=${encodeURIComponent(directory)}`);
 
-    setLoadingZip(false);
-    if (!res.ok) {
-      notification.error('Failed to download');
-      return;
+    try {
+      const blob = await downloadZippedNotebook(notebook);
+
+      saveAs(blob, `${notebook.name}.zip`);
+      setLoadingZip(false);
+    } catch {
+      notification.error('Failed to download the contents, ensure the repo is public');
     }
-
-    const blob = await res.blob();
-    saveAs(blob, `${notebookName}.zip`);
   };
 
   const renderActionColumns = (path: string, notebook: Notebook) => {
-    const directory = path.slice(0, path.lastIndexOf('/'));
-    const notebookName = directory.split('/').pop();
-    if (!notebookName) throw new Error('An error occurred');
-
     return (
       <div id="popover">
         <Popover
@@ -134,7 +129,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 <button
                   type="button"
                   className="hover:text-primary-4"
-                  onClick={() => handleDownloadClick(directory, notebookName)}
+                  onClick={() => handleDownloadClick(notebook)}
                 >
                   Download
                 </button>
