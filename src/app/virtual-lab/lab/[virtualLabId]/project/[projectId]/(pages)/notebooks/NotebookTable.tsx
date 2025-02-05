@@ -48,7 +48,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       const searchFields: StringKeys[] = [
         'author',
         'description',
-        'fileName',
+        'notebookUrl',
         'key',
         'name',
         'objectOfInterest',
@@ -197,8 +197,8 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     },
 
     {
-      dataIndex: 'fileName',
-      key: 'fileName',
+      dataIndex: 'notebookUrl',
+      key: 'notebookUrl',
       render: renderActionColumns,
     },
   ];

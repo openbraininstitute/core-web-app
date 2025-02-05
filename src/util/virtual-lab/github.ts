@@ -15,10 +15,16 @@ export interface Notebook {
   name: string;
   description: string;
   objectOfInterest: string;
-  fileName: string;
+  notebookUrl: string;
+  metadataUrl: string;
   author: string;
   creationDate: string | null;
 }
+
+type Item = {
+  url: string;
+  path: string;
+};
 
 export default async function fetchNotebooks(): Promise<Notebook[]> {
   const repoRes = await fetch(apiBaseUrl, options);
@@ -41,14 +47,20 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
     throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
   }
 
-  const tree = await response.json();
+  const tree: { tree: Item[] } = await response.json();
+
   if (!tree.tree) throw new Error(`Failed to fetch the github repo`);
 
   const notebooks: Notebook[] = [];
 
   const datePromises: Promise<string | null>[] = [];
 
-  for (const item of tree.tree) {
+  const items = tree.tree.reduce<Record<string, Item>>((acc, item) => {
+    acc[item.path] = item;
+    return acc;
+  }, {});
+
+  for (const item of Object.values(items)) {
     if (item.path.endsWith('.ipynb')) {
       const parts = item.path.split('/');
       const objectOfInterest = parts[0];
@@ -56,15 +68,21 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
 
       datePromises.push(getFileCreationDate(item.path));
 
-      notebooks.push({
-        objectOfInterest,
-        name,
-        fileName: item.path,
-        key: item.path,
-        description: '',
-        author: 'OBI',
-        creationDate: '',
-      });
+      try {
+        notebooks.push({
+          objectOfInterest,
+          name,
+          notebookUrl: item.url,
+          metadataUrl:
+            items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url,
+          key: item.path,
+          description: '',
+          author: 'OBI',
+          creationDate: '',
+        });
+      } catch {
+        throw new Error(`Metadata file missing for notebook ${item.path}`);
+      }
     }
   }
 
