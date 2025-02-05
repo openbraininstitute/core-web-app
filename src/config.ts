@@ -104,7 +104,5 @@ export const virtualLabApi = {
   url: env.NEXT_PUBLIC_VIRTUAL_LAB_API_URL,
 };
 
-export const notebookRepository = {
-  user: 'openbraininstitute',
-  repository: 'obi_platform_analysis_notebooks',
-};
+export const notebookRepoUrl =
+  'https://github.com/openbraininstitute/obi_platform_analysis_notebooks';

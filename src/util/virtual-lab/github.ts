@@ -1,8 +1,5 @@
 import JSZip from 'jszip';
 import { assertErrorMessage } from '../utils';
-import { notebookRepository } from '@/config';
-
-const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
   next: {
@@ -31,7 +28,11 @@ type Item = {
   path: string;
 };
 
-export default async function fetchNotebooks(): Promise<Notebook[]> {
+export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[]> {
+  const repoDetails = extractUserAndRepo(repoUrl);
+
+  const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
+
   const repoRes = await fetch(apiBaseUrl, options);
 
   if (!repoRes.ok) {
@@ -40,9 +41,9 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
     }
     throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
   }
-  const repo = await repoRes.json();
+  const repository = await repoRes.json();
 
-  const defaultBranch = repo.default_branch;
+  const defaultBranch = repository.default_branch;
 
   if (!defaultBranch) throw new Error(`Failed to fetch the repository`);
 
@@ -71,7 +72,7 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
       const objectOfInterest = parts[0];
       const name = parts[1];
 
-      datePromises.push(getFileCreationDate(item.path));
+      datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
 
       try {
         notebooks.push({
@@ -86,8 +87,8 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
           description: '',
           author: 'OBI',
           creationDate: '',
-          githubUser: notebookRepository.user,
-          githubRepo: notebookRepository.repository,
+          githubUser: repoDetails.user,
+          githubRepo: repoDetails.repo,
           defaultBranch,
         });
       } catch {
@@ -105,17 +106,21 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
   });
 }
 
-export async function fetchNotebooksCatchError(): Promise<Notebook[]> {
+export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[]> {
   try {
-    return await fetchNotebooks();
+    return await fetchNotebooks(repoUrl);
   } catch (e) {
     console.error(assertErrorMessage(e));
     return [];
   }
 }
 
-async function getFileCreationDate(filePath: string): Promise<string | null> {
-  const url = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/commits?path=${encodeURIComponent(
+async function getFileCreationDate(
+  user: string,
+  repo: string,
+  filePath: string
+): Promise<string | null> {
+  const url = `https://api.github.com/repos/${user}/${repo}/commits?path=${encodeURIComponent(
     filePath
   )}&per_page=1`;
 
@@ -187,5 +192,28 @@ export async function downloadZippedNotebook(notebook: Notebook) {
     return zipContent;
   } catch {
     throw new Error(`Failed to fetch the contents`);
+  }
+}
+
+function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
+  try {
+    const url = new URL(githubUrl);
+
+    if (url.hostname !== 'github.com') {
+      throw new Error('Not a GitHub URL');
+    }
+
+    const pathParts = url.pathname.split('/').filter((part) => part.length > 0);
+
+    if (pathParts.length < 2) {
+      throw new Error('Invalid GitHub URL: Missing user or repository');
+    }
+
+    const user = pathParts[0];
+    const repo = pathParts[1];
+
+    return { user, repo };
+  } catch (error) {
+    throw new Error('Invalid GitHub URL');
   }
 }
