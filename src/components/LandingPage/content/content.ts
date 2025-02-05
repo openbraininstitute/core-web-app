@@ -1,9 +1,6 @@
 import React from 'react';
-// @ts-ignore
 import { createClient } from 'next-sanity';
-// @ts-ignore
 import imageUrlBuilder from '@sanity/image-url';
-// @ts-ignore
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
 
 export const client = createClient({
