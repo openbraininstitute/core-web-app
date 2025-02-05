@@ -6,7 +6,7 @@ export const env = createEnv({
   // Validating environment variables only in runtime.
   // TODO Add validation of client env vars during the build,
   // requires: https://github.com/t3-oss/t3-env/issues/85.
-  skipValidation: ['lint', 'test', 'test:ci', 'build'].includes(process.env.npm_lifecycle_event),
+  skipValidation: ['lint', 'test', 'test:ci', 'build', 'lint:fix'].includes(process.env.npm_lifecycle_event),
 
   server: {
     KEYCLOAK_ISSUER: z.string().url(),

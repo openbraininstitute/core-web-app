@@ -1,22 +1,14 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { virtualLabDetailAtomFamily, virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import VerticalLinks, { LinkItem } from '@/components/VerticalLinks';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
-export default function VirtualLabSidebarContent({
-  virtualLabId,
-  showTitle = false,
-}: {
-  virtualLabId: string;
-  showTitle?: boolean;
-}) {
+export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabId: string }) {
   const currentPage = usePathname().split('/').pop();
-
-  const vlab = useUnwrappedValue(virtualLabDetailAtomFamily(virtualLabId));
   const projects = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
   const users = useUnwrappedValue(virtualLabMembersAtomFamily(virtualLabId))?.length;
 
@@ -49,11 +41,6 @@ export default function VirtualLabSidebarContent({
 
   return (
     <div className="mr-5 flex w-full flex-col gap-5">
-      {showTitle && vlab && (
-        <div className="text-5xl font-bold uppercase text-primary-5" style={{ minHeight: '84px' }}>
-          {vlab.name}
-        </div>
-      )}
       <VerticalLinks links={linkItems} currentPage={currentPage} />
     </div>
   );

@@ -1,5 +1,3 @@
-'use client';
-
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
@@ -10,10 +8,10 @@ import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 
-export default function VirtualLabProjectLayout({ children, params }: LabProjectLayoutProps) {
+export default async function VirtualLabProjectLayout({ children, params }: LabProjectLayoutProps) {
   const labUrl = generateLabUrl(params.virtualLabId);
-
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;
+
   return (
     <div className="grid h-screen grid-cols-[1fr_3fr] grid-rows-1 bg-primary-9 pr-5 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
@@ -42,7 +40,7 @@ export default function VirtualLabProjectLayout({ children, params }: LabProject
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="mt-8 flex w-full flex-col gap-10 overflow-y-auto overflow-x-hidden">
+        <div className="mt-8 flex w-full flex-col gap-10 overflow-y-auto overflow-x-hidden pr-3">
           <VirtualLabTopMenu />
           {children}
         </div>

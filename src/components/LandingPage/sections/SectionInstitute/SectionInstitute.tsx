@@ -20,6 +20,7 @@ export default function SectionInstitute({ className, onNext }: SectionInstitute
     <div className={classNames(className, styles.sectionInstitute)}>
       <Hero
         section={EnumSection.Home}
+        // @ts-ignore
         backgroundType="image"
         backgroundURL={HeroURL.src}
         next="Discover the whole story"
