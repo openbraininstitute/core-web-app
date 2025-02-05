@@ -172,21 +172,16 @@ export async function downloadZippedNotebook(notebook: Notebook) {
     const files = [notebook.metadataUrl, notebook.notebookUrl, notebook.readmeUrl];
     const names = ['analysis_info.json', 'analysis_notebook.ipynb', 'readme.md'];
 
-    const promises = files.map(async (f) => {
+    const promises = files.map(async (f, i) => {
       const response = await fetch(f);
       const data = await response.json();
 
-      
-        const decodedContent = atob(data.content); // Decode base64 content
-        const arrayBuffer = new Uint8Array(decodedContent.length);
-        for (let i = 0; i < decodedContent.length; i++) {
-          arrayBuffer[i] = decodedContent.charCodeAt(i);
-        }
-        zip.file(names[i], arrayBuffer); // Add decoded content to zip
-      } else {
-        const arrayBuffer = await response.arrayBuffer();
-        zip.file(f.name, arrayBuffer); // Add file content to zip if not base64
+      const decodedContent = atob(data.content); // Decode base64 content
+      const arrayBuffer = new Uint8Array(decodedContent.length);
+      for (let i = 0; i < decodedContent.length; i++) {
+        arrayBuffer[i] = decodedContent.charCodeAt(i);
       }
+      zip.file(names[i], arrayBuffer); // Add decoded content to zip
     });
 
     await Promise.all(promises);
