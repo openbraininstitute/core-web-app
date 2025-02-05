@@ -10,6 +10,7 @@ export default function useSearch(
 
   return {
     search,
+    // eslint-disable-next-line react/jsx-props-no-spreading
     Search: <Search {...props} value={search} onChange={(e) => setSearch(e.currentTarget.value)} />,
   };
 }
