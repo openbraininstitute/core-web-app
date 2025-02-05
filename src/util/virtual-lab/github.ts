@@ -26,6 +26,7 @@ export interface Notebook {
   githubUser: string;
   githubRepo: string;
   creationDate: string | null;
+  defaultBranch: string;
 }
 
 type Item = {
@@ -90,6 +91,7 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
           creationDate: '',
           githubUser: notebookRepository.user,
           githubRepo: notebookRepository.repository,
+          defaultBranch,
         });
       } catch {
         throw new Error(`Metadata file missing for notebook ${item.path}`);

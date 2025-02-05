@@ -36,8 +36,6 @@ export default function ContentModal({
     fetchFile();
   }, [notebook, display]);
 
-  console.log(notebook?.path);
-
   return (
     <Modal open={!!notebook && !!content} onCancel={onCancel} footer={false} width="70%">
       <div>
@@ -51,7 +49,7 @@ export default function ContentModal({
           <div className="h-[80vh] w-full">
             <iframe
               title={notebook?.path}
-              src={`https://nbviewer.org/github/${notebook.githubRepo}/${notebook.githubUser}/${notebook.path}`}
+              src={`https://nbviewer.org/github/${notebook.githubUser}/${notebook.githubRepo}/blob/${notebook.defaultBranch}/${notebook.path}`}
               width="100%"
               height="100%"
             />
