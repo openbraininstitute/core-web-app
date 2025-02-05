@@ -176,12 +176,12 @@ export async function downloadZippedNotebook(notebook: Notebook) {
       const response = await fetch(f);
       const data = await response.json();
 
-      const decodedContent = atob(data.content); // Decode base64 content
+      const decodedContent = atob(data.content);
       const arrayBuffer = new Uint8Array(decodedContent.length);
-      for (let i = 0; i < decodedContent.length; i++) {
+      for (let j = 0; j < decodedContent.length; j++) {
         arrayBuffer[i] = decodedContent.charCodeAt(i);
       }
-      zip.file(names[i], arrayBuffer); // Add decoded content to zip
+      zip.file(names[i], arrayBuffer);
     });
 
     await Promise.all(promises);
