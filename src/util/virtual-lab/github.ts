@@ -5,9 +5,6 @@ import { notebookRepository } from '@/config';
 const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
-  headers: {
-    Authorization: 'token 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',
-  },
   next: {
     revalidate: 3600 * 24,
   },
