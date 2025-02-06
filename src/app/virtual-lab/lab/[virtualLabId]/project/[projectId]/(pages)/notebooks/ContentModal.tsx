@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
-import { fetchGithubFile, Notebook } from '@/util/virtual-lab/github';
+import { Notebook } from '@/util/virtual-lab/github';
+import { basePath } from '@/config';
 
 import 'github-markdown-css';
 import { notification } from '@/api/notifications';
@@ -20,16 +21,14 @@ export default function ContentModal({
   useEffect(() => {
     async function fetchFile() {
       if (!notebook || !display) return;
-      try {
-        const fileContents = await fetchGithubFile(
-          display === 'notebook' ? notebook.notebookUrl : notebook.readmeUrl
-        );
-        if (fileContents) setContent(fileContents);
-        else {
-          notification.error('Cannot display the contents, ensure the repository is public');
-        }
-      } catch {
+      const res = await fetch(
+        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(file.path)}`
+      );
+
+      if (!res.ok) {
         notification.error('Cannot display the contents, ensure the repository is public');
+      } else {
+        setContent(await res.text());
       }
     }
 
