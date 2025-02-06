@@ -18,7 +18,7 @@ export default function ContentModal({
     async function fetchFile() {
       if (!file) return;
       const res = await fetch(
-        `${basePath}/api/github/fetchFile?path=${encodeURIComponent(file.path)}`
+        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(file.path)}`
       );
 
       if (!res.ok) {
