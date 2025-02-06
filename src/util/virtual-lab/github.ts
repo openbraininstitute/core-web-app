@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import { z } from 'zod';
 import { assertErrorMessage } from '../utils';
+import { capitalize } from 'lodash';
 
 export const options = {
   next: {
@@ -12,7 +13,7 @@ export interface Notebook {
   key: string;
   name: string;
   description: string;
-  objectOfInterest: string;
+  scale: string;
   path: string;
   notebookUrl: string;
   metadataUrl: string;
@@ -22,7 +23,7 @@ export interface Notebook {
   githubRepo: string;
   creationDate: string | null;
   defaultBranch: string;
-  inputs: string[];
+  objectOfInterest: string;
 }
 
 type Item = {
@@ -71,8 +72,10 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
   for (const item of Object.values(items)) {
     if (item.path.endsWith('.ipynb')) {
       const parts = item.path.split('/');
-      const objectOfInterest = parts[0];
-      const name = parts[1];
+      const scale = parts[parts.length - 3] ?? '';
+      const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
+
+      console.log(name);
 
       datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
       try {
@@ -82,7 +85,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
         const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
 
         notebooks.push({
-          objectOfInterest,
+          scale,
           path: item.path,
           name,
           notebookUrl: item.url,
@@ -95,7 +98,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
           githubUser: repoDetails.user,
           githubRepo: repoDetails.repo,
           defaultBranch,
-          inputs: metadata.input.flatMap((i) => i.data_type.artefact),
+          objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
         });
       } catch {
         throw new Error(

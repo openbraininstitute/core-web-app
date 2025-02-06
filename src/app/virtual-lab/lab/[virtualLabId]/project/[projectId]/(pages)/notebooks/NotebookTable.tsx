@@ -61,7 +61,6 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
         'author',
         'description',
         'notebookUrl',
-        'key',
         'name',
         'objectOfInterest',
       ];
@@ -178,7 +177,13 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
       title: 'Object of interest',
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
-      sorter: getSorter('objectOfInterest'),
+    },
+
+    {
+      title: 'Scale',
+      dataIndex: 'scale',
+      key: 'scale',
+      sorter: getSorter('scale'),
     },
 
     {
