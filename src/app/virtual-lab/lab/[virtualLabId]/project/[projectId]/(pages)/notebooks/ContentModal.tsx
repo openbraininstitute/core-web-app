@@ -22,7 +22,7 @@ export default function ContentModal({
     async function fetchFile() {
       if (!notebook || !display) return;
       const res = await fetch(
-        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(file.path)}`
+        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(notebook.path)}`
       );
 
       if (!res.ok) {
