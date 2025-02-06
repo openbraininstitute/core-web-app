@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
-import { notebookRepository } from '@/config';
+import { basePath, notebookRepository } from '@/config';
 
 import 'github-markdown-css';
 
@@ -17,7 +17,9 @@ export default function ContentModal({
   useEffect(() => {
     async function fetchFile() {
       if (!file) return;
-      const res = await fetch(`/api/github/fetchFile?path=${encodeURIComponent(file.path)}`);
+      const res = await fetch(
+        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(file.path)}`
+      );
 
       if (!res.ok) {
         setContent('Cannot display the contents, ensure the repository is public');
@@ -42,7 +44,7 @@ export default function ContentModal({
           <div className="h-[80vh] w-full">
             <iframe
               title={file.path}
-              src={`https://nbviewer.org/github/${notebookRepository.repository}/${notebookRepository.user}/${encodeURIComponent(file.path)}`}
+              src={`https://nbviewer.org/github/${notebookRepository.user}/${notebookRepository.repository}/blob/main/${encodeURIComponent(file.path)}`}
               width="100%"
               height="100%"
             />
