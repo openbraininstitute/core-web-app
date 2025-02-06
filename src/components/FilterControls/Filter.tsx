@@ -4,29 +4,25 @@ import { Column } from './ControlPanel';
 
 export function useToggleColumns<T>(columns: Column<T>[]) {
   const [columnHidden, setColumnHidden] = useState(() => {
-    const cols: { [key: string]: boolean } = {};
-    columns.forEach((c) => {
-      cols[c.key] = false;
-    });
-    return cols;
+    return Object.fromEntries(columns.map((c) => [c.key, false])) as Record<keyof T, boolean>;
   });
 
   const toggleColumn = useCallback(
     (key: keyof T) => {
-      setColumnHidden({ ...columnHidden, [key]: !columnHidden[key as string] });
+      setColumnHidden({ ...columnHidden, [key]: !columnHidden[key] });
     },
     [columnHidden]
   );
 
   const isColumnHidden = useCallback(
     (key: keyof T) => {
-      return columnHidden[key as string];
+      return columnHidden[key];
     },
     [columnHidden]
   );
 
   return {
-    filteredColumns: columns.filter((c) => columnHidden[c.key] === false),
+    filteredColumns: columns.filter((c) => columnHidden[c.key as keyof T] === false),
     toggleColumn,
     isColumnHidden,
   };
