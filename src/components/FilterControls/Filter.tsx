@@ -20,10 +20,9 @@ export function useToggleColumns<T>(columns: Column<T>[]) {
 
   const isColumnHidden = useCallback(
     (key: keyof T) => {
-      const column = columns.find((col) => col.key === key);
-      return !!column?.hidden;
+      return columnHidden[key as string];
     },
-    [columns]
+    [columnHidden]
   );
 
   return {
