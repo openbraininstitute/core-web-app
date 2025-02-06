@@ -1,19 +1,19 @@
 import { HTMLProps, PropsWithChildren, useState } from 'react';
-import ControlPanel, { Column } from './ControlPanel';
+import ControlPanel from './ControlPanel';
 import SettingsIcon from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
 
-export default function FilterControls<T extends { [key: string]: any }>({
+export default function FilterControls({
   filtersCount,
   disabled,
   className,
-  columns,
+  numberOfColumns,
   children,
 }: PropsWithChildren<{
   disabled?: boolean;
   filtersCount: number;
   className?: HTMLProps<HTMLElement>['className'];
-  columns: Column<T>[];
+  numberOfColumns: number;
 }>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
@@ -46,8 +46,8 @@ export default function FilterControls<T extends { [key: string]: any }>({
                 </span>
                 <span className="text-xs font-semibold leading-5 text-neutral-4">
                   <>
-                    {columns.length} active
-                    {columns.length === 1 ? ' column' : ' columns'}
+                    {numberOfColumns} active
+                    {numberOfColumns === 1 ? ' column' : ' columns'}
                   </>
                 </span>
               </div>
@@ -59,7 +59,7 @@ export default function FilterControls<T extends { [key: string]: any }>({
 
       <ControlPanel
         onClose={() => setDisplayControlPanel(false)}
-        columns={columns}
+        numberOfColumns={numberOfColumns}
         visible={displayControlPanel}
       >
         {children}

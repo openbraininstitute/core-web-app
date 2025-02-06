@@ -113,24 +113,15 @@ export default function ColumnToggle({
   title: string;
   children?: ReactNode;
 }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div>
       <div className="mb-3 flex cursor-pointer items-center gap-3">
         {!hidden && <EyeOutlined className="text-white" onClick={onToggle} />}
         {hidden && <EyeInvisibleOutlined className="text-[#69C0FF]" onClick={onToggle} />}
-        <button
-          type="button"
-          onClick={() => {
-            setExpanded(!expanded);
-          }}
-        >
-          {title}
-        </button>
+        {title}
       </div>
 
-      {expanded && children}
+      {children}
     </div>
   );
 }

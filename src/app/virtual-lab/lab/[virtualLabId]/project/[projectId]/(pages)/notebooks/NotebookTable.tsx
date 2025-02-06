@@ -166,12 +166,12 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
       sorter: getSorter('name'),
     },
 
-    {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      sorter: getSorter('description'),
-    },
+    // {
+    //   title: 'Description',
+    //   dataIndex: 'description',
+    //   key: 'description',
+    //   sorter: getSorter('description'),
+    // },
 
     {
       title: 'Object of interest',
@@ -236,17 +236,17 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
     >
       <div className="mt-10 flex items-center justify-between">
         {Search}
-        <FilterControls columns={columns} filtersCount={filterCount}>
+        <FilterControls numberOfColumns={filteredColumns.length - 1} filtersCount={filterCount}>
           <ColumnToggle
-            hidden={isColumnHidden('name')}
-            title="Name"
-            onToggle={() => toggleColumn('name')}
+            hidden={isColumnHidden('scale')}
+            title="Scale"
+            onToggle={() => toggleColumn('scale')}
           />
-          <ColumnToggle
+          {/* <ColumnToggle
             hidden={isColumnHidden('description')}
             title="Description"
             onToggle={() => toggleColumn('description')}
-          />
+          /> */}
           <ColumnToggle
             hidden={isColumnHidden('objectOfInterest')}
             title="Object of interest"

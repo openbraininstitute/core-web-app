@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { z } from 'zod';
+import capitalize from 'lodash/capitalize';
 import { assertErrorMessage } from '../utils';
-import { capitalize } from 'lodash';
 
 export const options = {
   next: {
