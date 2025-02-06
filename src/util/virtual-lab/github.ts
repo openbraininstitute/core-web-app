@@ -41,23 +41,23 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
     if (repoRes.headers.get('x-ratelimit-remaining') === '0') {
       throw new Error('GitHub API Rate limit reached');
     }
-    throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
+    throw new Error(`Cannot fetch the repository ${repoUrl}`);
   }
   const repository = await repoRes.json();
 
   const defaultBranch = repository.default_branch;
 
-  if (!defaultBranch) throw new Error(`Failed to fetch the repository`);
+  if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
 
   const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
 
   if (!response.ok) {
-    throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
+    throw new Error(`Cannot fetch the repository ${repoUrl} , ensure the repository is public`);
   }
 
   const tree: { tree: Item[] } = await response.json();
 
-  if (!tree.tree) throw new Error(`Failed to fetch the github repo`);
+  if (!tree.tree) throw new Error(`Cannot fetch the repository ${repoUrl}`);
 
   const notebooks: Notebook[] = [];
 
@@ -75,20 +75,18 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
       const name = parts[1];
 
       datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
-
-      const metadataUrl =
-        items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url;
-
-      const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
-
       try {
+        const metadataUrl =
+          items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url;
+
+        const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
+
         notebooks.push({
           objectOfInterest,
           path: item.path,
           name,
           notebookUrl: item.url,
-          metadataUrl:
-            items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url,
+          metadataUrl,
           readmeUrl: items[item.path.substring(0, item.path.lastIndexOf('/')) + '/README.md'].url,
           key: item.path,
           description: '',
@@ -100,7 +98,9 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
           inputs: metadata.input.flatMap((i) => i.data_type.artefact),
         });
       } catch {
-        throw new Error(`Metadata file missing for notebook ${item.path}`);
+        throw new Error(
+          `Error fetching or validating metafata for notebook ${repoUrl} ${item.path}`
+        );
       }
     }
   }
@@ -164,14 +164,12 @@ export async function fetchGithubFile(url: string) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        `GitHub API request failed with status: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to file ${url}`);
     }
 
     return atob(data.content);
   } catch {
-    throw new Error(`Error fetching file.`);
+    throw new Error(`Failed to file ${url}`);
   }
 }
 
@@ -227,7 +225,7 @@ function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
 }
 
 export async function fetchMultipleRepos(githubUrl: string[]) {
-  const promises = githubUrl.map((u) => fetchNotebooksCatchError(u));
+  const promises = githubUrl.map((u) => fetchNotebooks(u));
 
   const results = await Promise.all(promises);
 
@@ -259,6 +257,6 @@ function validateMetadata(input: string) {
       .strip();
     return inputSchema.parse(json);
   } catch (e) {
-    throw new Error('One or more notebooks contain invalid metadata');
+    throw new Error('Invalid metadata');
   }
 }
