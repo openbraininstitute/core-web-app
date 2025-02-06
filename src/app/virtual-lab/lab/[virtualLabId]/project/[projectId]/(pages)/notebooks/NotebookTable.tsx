@@ -65,7 +65,9 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
 
   const handleDownloadClick = async (directory: string, notebookName: string) => {
     setLoadingZip(true);
-    const res = await fetch(`/api/github/downloadNotebook?folder=${encodeURIComponent(directory)}`);
+    const res = await fetch(
+      `${basePath}/api/github/downloadNotebook?folder=${encodeURIComponent(directory)}`
+    );
 
     setLoadingZip(false);
     if (!res.ok) {
