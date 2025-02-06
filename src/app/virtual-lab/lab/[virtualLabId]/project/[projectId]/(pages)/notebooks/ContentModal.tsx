@@ -44,7 +44,7 @@ export default function ContentModal({
           <div className="h-[80vh] w-full">
             <iframe
               title={file.path}
-              src={`https://nbviewer.org/github/${notebookRepository.repository}/${notebookRepository.user}/${encodeURIComponent(file.path)}`}
+              src={`https://nbviewer.org/github/${notebookRepository.user}/${notebookRepository.repository}/blob/main/${encodeURIComponent(file.path)}`}
               width="100%"
               height="100%"
             />
