@@ -35,13 +35,19 @@
         "pathGroups": [
           {
             "pattern": "**/*.+(css|scss|less)",
-            "patternOptions": { "dot": true, "nocomment": true },
+            "patternOptions": {
+              "dot": true,
+              "nocomment": true
+            },
             "group": "unknown",
             "position": "after"
           },
           {
             "pattern": "{.,..}/**/*.+(css|scss|less)",
-            "patternOptions": { "dot": true, "nocomment": true },
+            "patternOptions": {
+              "dot": true,
+              "nocomment": true
+            },
             "group": "unknown",
             "position": "after"
           }
@@ -62,9 +68,14 @@
     "no-restricted-exports": "off",
     "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
     "no-underscore-dangle": "off",
+    "no-promise-executor-return": "off",
     "padding-line-between-statements": [
       "error",
-      { "blankLine": "always", "prev": "*", "next": "function" }
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": "function"
+      }
     ],
     "prefer-regex-literals": "off",
     "react/require-default-props": "off",

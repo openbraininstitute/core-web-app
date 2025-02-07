@@ -17,12 +17,15 @@ import Contributors from '@/components/explore-section/Contributors';
 import PreviewThumbnail from '@/components/explore-section/ExploreSectionListingView/PreviewThumbnail';
 import timeElapsedFromToday from '@/util/date';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import {
   ExperimentalTrace,
   ReconstructedNeuronMorphology,
 } from '@/types/explore-section/es-experiment';
-import { Experiment as DeltaExperiment } from '@/types/explore-section/delta-experiment';
+import {
+  Experiment as DeltaExperiment,
+  EntityCore,
+} from '@/types/explore-section/delta-experiment';
 import { SimulationCampaign as DeltaSimulationCampaign } from '@/types/explore-section/delta-simulation-campaigns';
 import {
   ExemplarMorphologyDataType as ExemplarMorphologyEModel,
@@ -218,6 +221,76 @@ export const COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<
     vocabulary: {
       plural: 'Descriptions',
       singular: 'Description',
+    },
+  },
+};
+
+export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
+  [Field.Preview]: {
+    className: 'text-center',
+    title: 'Preview',
+    filter: null,
+    render: () => (
+      <span className="bg-red-400 px-2 py-1 text-white">waiting for entitycore support</span>
+    ),
+    vocabulary: {
+      plural: 'previews',
+      singular: 'preview',
+    },
+    style: { width: 184 },
+  },
+  [EntityCoreFields.Name]: {
+    title: 'Name',
+    filter: FilterTypeEnum.Text,
+    render: (r) => r.name,
+    vocabulary: {
+      plural: 'Names',
+      singular: 'Name',
+    },
+  },
+  [EntityCoreFields.CreationDate]: {
+    title: 'Creation date',
+    filter: FilterTypeEnum.DateRange,
+    render: (r) => format(parseISO(r.creation_date), 'dd.MM.yyyy'),
+    vocabulary: {
+      plural: 'Dates',
+      singular: 'Date',
+    },
+  },
+  [EntityCoreFields.RegistrationDate]: {
+    title: 'Registration date',
+    filter: FilterTypeEnum.DateRange,
+    render: (r) => format(parseISO(r.creation_date), 'dd.MM.yyyy'),
+    vocabulary: {
+      plural: 'Dates',
+      singular: 'Date',
+    },
+  },
+  [EntityCoreFields.UpdateDate]: {
+    title: 'Update date',
+    filter: FilterTypeEnum.DateRange,
+    render: (r) => timeElapsedFromToday(r.update_date),
+    vocabulary: {
+      plural: 'Dates',
+      singular: 'Date',
+    },
+  },
+  [EntityCoreFields.Description]: {
+    title: 'Description',
+    filter: FilterTypeEnum.Text,
+    render: (r) => r.description || DisplayMessages.NO_DATA_STRING,
+    vocabulary: {
+      plural: 'Descriptions',
+      singular: 'Description',
+    },
+  },
+  [EntityCoreFields.Contributors]: {
+    title: 'Contributors',
+    filter: FilterTypeEnum.CheckList,
+    render: () => DisplayMessages.NO_DATA_STRING, // TODO: update when Contributors included into entitycore service
+    vocabulary: {
+      plural: 'Contributors',
+      singular: 'Contributor',
     },
   },
 };

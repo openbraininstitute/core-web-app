@@ -1,4 +1,4 @@
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import buildAggs, { getAggESBuilder } from '@/queries/explore-section/aggs';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 

@@ -2,16 +2,15 @@ import { Dispatch, ReactNode, SetStateAction, useMemo, useState } from 'react';
 import { useAtomValue, useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
-import ControlPanel from '@/components/explore-section/ControlPanel';
-import { activeColumnsAtom, dataAtom, filtersAtom } from '@/state/explore-section/list-view-atoms';
+import ListingFilterPanel from '@/features/listing-filter-panel';
+import { activeColumnsAtom, filtersAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { useUnwrappedValue } from '@/hooks/hooks';
 
-export default function WithControlPanel({
+export default function WithListingFilterPanel({
   children,
   dataType,
   virtualLabInfo,
@@ -47,10 +46,6 @@ export default function WithControlPanel({
     )
   );
 
-  const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
-
-  const aggregations = data?.aggs;
-
   return (
     <>
       <section
@@ -62,15 +57,15 @@ export default function WithControlPanel({
         {children({ activeColumns, displayControlPanel, setDisplayControlPanel, filters })}
       </section>
       {displayControlPanel && filters && (
-        <ControlPanel
+        <ListingFilterPanel
           data-testid="listing-view-control-panel"
-          aggregations={aggregations}
           filters={filters}
           setFilters={setFilters}
           toggleDisplay={() => setDisplayControlPanel(false)}
           dataType={dataType}
           dataScope={dataScope}
           dataKey={dataKey}
+          virtualLabInfo={virtualLabInfo}
         />
       )}
     </>

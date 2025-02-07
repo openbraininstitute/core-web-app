@@ -7,7 +7,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import AutoCompleteSearch from './AutoCompleteSearch';
-import { DateRange } from '@/components/Filter';
+import { DateRange } from '@/features/listing-filter-panel/filter-group';
 import { classNames, normalizeString } from '@/util/utils';
 import { Suggestion } from '@/types/literature';
 import {

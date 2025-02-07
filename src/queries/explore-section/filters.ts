@@ -1,7 +1,7 @@
 import esb, { Query } from 'elastic-builder';
 import { format } from 'date-fns';
-import { Filter, ValueFilter } from '@/components/Filter/types';
-import { filterHasValue } from '@/components/Filter/util';
+import { Filter, ValueFilter } from '@/features/listing-filter-panel/types';
+import { filterHasValue } from '@/features/listing-filter-panel/util';
 import { getFieldEsConfig } from '@/api/explore-section/fields';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DataType, DataTypeToNexusType } from '@/constants/explore-section/list-views';

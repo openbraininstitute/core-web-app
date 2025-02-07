@@ -1,5 +1,5 @@
 import { DataType } from '@/constants/explore-section/list-views';
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import { DataTypeConfig, DataTypeGroup } from '@/types/explore-section/data-types';
 
 export enum ExperimentTypeNames {
@@ -16,12 +16,13 @@ export const EXPERIMENT_DATA_TYPES: { [key: string]: DataTypeConfig } = {
     group: DataTypeGroup.ExperimentalData,
     name: ExperimentTypeNames.MORPHOLOGY,
     columns: [
-      Field.Preview,
-      Field.BrainRegion,
-      Field.MType,
-      Field.Name,
-      Field.SubjectSpecies,
-      Field.Contributors,
+      EntityCoreFields.Preview,
+      EntityCoreFields.BrainRegion,
+      EntityCoreFields.MType,
+      EntityCoreFields.Name,
+      EntityCoreFields.Species,
+      EntityCoreFields.Contributors,
+      EntityCoreFields.RegistrationDate,
     ],
     curated: true,
     cardViewFields: [

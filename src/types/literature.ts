@@ -1,4 +1,4 @@
-import { Filter, GteLteValue } from '@/components/Filter/types';
+import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
 import { SelectedBrainRegion } from '@/state/brain-regions/types';
 
 export type HighlightHit = {

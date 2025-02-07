@@ -1,5 +1,5 @@
 import data from './tree-data.min.json';
-import { findTitleAndCollectParentBrainRegions } from '@/components/Filter/util';
+import { findTitleAndCollectParentBrainRegions } from '@/features/listing-filter-panel/util';
 import { BrainRegion } from '@/types/ontologies';
 
 const expectedFindForD: BrainRegion[] = [

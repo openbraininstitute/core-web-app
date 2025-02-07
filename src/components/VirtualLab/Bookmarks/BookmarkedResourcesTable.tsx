@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import BookmarkFooter from './BookmarkFooter';
 import ExploreSectionTable from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
-import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
+import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import { DataType } from '@/constants/explore-section/list-views';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import { dataAtom, sortStateAtom } from '@/state/explore-section/list-view-atoms';
@@ -72,7 +72,7 @@ export default function BookmarkedResourcesTable({
   return (
     <div id="bookmark-list-container" data-testid={`${dataType}-tab-panel`}>
       <div className="overflow-x-hidden">
-        <WithControlPanel
+        <WithListingFilterPanel
           dataType={dataType}
           dataScope={ExploreDataScope.BookmarkedResources}
           virtualLabInfo={{ virtualLabId: labId, projectId }}
@@ -126,7 +126,7 @@ export default function BookmarkedResourcesTable({
               />
             </>
           )}
-        </WithControlPanel>
+        </WithListingFilterPanel>
       </div>
     </div>
   );

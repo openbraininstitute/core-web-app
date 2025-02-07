@@ -8,7 +8,7 @@ import { ExploreESHit } from '@/types/explore-section/es';
 import ExploreSectionTable, {
   OnCellClick,
 } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
+import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import NumericResultsInfo from '@/components/explore-section/ExploreSectionListingView/NumericResultsInfo';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import { sortStateAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
@@ -53,7 +53,7 @@ export default function ExploreSectionListingView({
   const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
 
-  const data = useLoadableValue(
+  const result = useLoadableValue(
     dataAtom({
       dataType,
       dataScope,
@@ -63,10 +63,10 @@ export default function ExploreSectionListingView({
   );
 
   useEffect(() => {
-    if (data.state === 'hasData' && !!data.data) {
-      setDataSource(data.data.hits as ExploreESHit<ExploreSectionResource>[]);
+    if (result.state === 'hasData' && !!result.data) {
+      setDataSource(result.data.data as ExploreESHit<ExploreSectionResource>[]);
     }
-  }, [data, setDataSource]);
+  }, [result, setDataSource]);
 
   return (
     <div
@@ -80,7 +80,7 @@ export default function ExploreSectionListingView({
           tableScrollable && 'max-h-[calc(100vh-3.3rem)]'
         )}
       >
-        <WithControlPanel
+        <WithListingFilterPanel
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
@@ -109,7 +109,7 @@ export default function ExploreSectionListingView({
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{ virtualLabInfo, dataScope, dataType }}
                 dataSource={dataSource}
-                loading={data.state === 'loading'}
+                loading={result.state === 'loading'}
                 onCellClick={onCellClick}
                 renderButton={renderButton}
                 selectionType={selectionType}
@@ -120,7 +120,7 @@ export default function ExploreSectionListingView({
               />
             </>
           )}
-        </WithControlPanel>
+        </WithListingFilterPanel>
       </div>
     </div>
   );

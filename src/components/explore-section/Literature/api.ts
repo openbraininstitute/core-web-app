@@ -15,7 +15,7 @@ import {
   ArticleListingResponse,
   ExperimentDatasetCountPerBrainRegion,
 } from '@/api/explore-section/resources';
-import { GteLteValue } from '@/components/Filter/types';
+import { GteLteValue } from '@/features/listing-filter-panel/types';
 import authFetch from '@/authFetch';
 
 const normalizeBrainRegionQueryParam = (region: string) =>

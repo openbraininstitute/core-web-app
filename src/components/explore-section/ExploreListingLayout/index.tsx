@@ -82,7 +82,7 @@ export default function ExploreListingLayout({
               virtualLabInfo={virtualLabInfo}
             />
           ),
-          className: 'text-center font-semibold',
+          className: 'text-center font-semibold flex items-center justify-center',
           style: {
             backgroundColor: active ? 'white' : '#002766',
             color: active ? '#002766' : 'white',
@@ -107,7 +107,7 @@ export default function ExploreListingLayout({
             mode="horizontal"
             theme="dark"
             style={{ backgroundColor: '#002766' }}
-            className="flex w-full justify-start"
+            className="flex h-14 w-full justify-start"
             items={items}
           />
           <div className="h-full w-full bg-primary-9 text-white">{children}</div>
