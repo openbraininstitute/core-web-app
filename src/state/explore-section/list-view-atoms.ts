@@ -26,7 +26,7 @@ import {
   PAGE_SIZE,
 } from '@/constants/explore-section/list-views';
 import { ExploreESHit } from '@/types/explore-section/es';
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import {
   selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
@@ -210,19 +210,14 @@ export const dataAtom = atomFamily(
       const filters = await get(filtersAtom(scope));
       const selectedBrainRegion = get(selectedBrainRegionAtom);
 
-      console.log("ᦨ #  list-view-atoms.ts:212 #  atom #  selectedBrainRegion:", selectedBrainRegion);
-
+      console.log(
+        'ᦨ #  list-view-atoms.ts:212 #  atom #  selectedBrainRegion:',
+        selectedBrainRegion
+      );
 
       // TODO: sorting should be fixed at the end, it's related to too many changes that break things
       const sortState = get(sortStateAtom(scope));
 
-      console.log('@@query', {
-        searchString,
-        pageNumber,
-        pageSize,
-        sortState,
-        filters,
-      });
       if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
         const response = await entitycoreApi.getReconstructionMorphologies({
           filters: {
@@ -230,8 +225,20 @@ export const dataAtom = atomFamily(
             page: pageNumber - 1,
             search: isEmpty(searchString) ? null : searchString,
             name__ilike: lget(find(filters, ['field', 'name']), 'value', undefined)?.toString(),
-            creation_date__gte: toDate(lget(find(filters, ["field", "registration_date"]), "value.gte", undefined)?.toString()),
-            creation_date__lte: toDate(lget(find(filters, ["field", "registration_date"]), "value.lte", undefined)?.toString()),
+            creation_date__gte: toDate(
+              lget(
+                find(filters, ['field', 'registration_date']),
+                'value.gte',
+                undefined
+              )?.toString()
+            ),
+            creation_date__lte: toDate(
+              lget(
+                find(filters, ['field', 'registration_date']),
+                'value.lte',
+                undefined
+              )?.toString()
+            ),
             // brain_region_id: selectedBrainRegion?.id ? Number(selectedBrainRegion?.id.split('/').pop()) : undefined,
           },
         });

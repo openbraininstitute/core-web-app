@@ -3,7 +3,7 @@ import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { IndexDataValue } from '@/types/explore-section/misc';
 import { FlattenedExploreESResponse, ExploreResource } from '@/types/explore-section/es';
 
-import { Filter, GteLteValue } from '@/components/Filter/types';
+import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
 import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DataType } from '@/constants/explore-section/list-views';
 

@@ -24,9 +24,9 @@ export type ReconstructionMorphologyExpand = ReconstructionMorphologyExpandField
 
 export interface IMorphologyFilter
   extends DateFilter,
-  BrainLocationFilter,
-  BrainRegionFilter,
-  PaginationFilter {
+    BrainLocationFilter,
+    BrainRegionFilter,
+    PaginationFilter {
   name__ilike?: string | null;
   species_id__in?: number[] | null;
   order_by?: string;

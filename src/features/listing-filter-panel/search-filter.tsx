@@ -3,7 +3,7 @@ import { ConfigProvider, Tag } from 'antd';
 import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
 
 import { Filter } from './types';
-import { useOptions } from './useOptions';
+import { useOptions } from './use-options';
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 
 import Search from '@/components/Search';
@@ -14,7 +14,7 @@ export default function SearchFilter({
   values,
   onChange,
 }: {
-  data: Array<{ label: string, value: number }>;
+  data: Array<{ label: string; value: number }>;
   filter: Filter;
   values: string[];
   onChange: (newValues: string[]) => void;

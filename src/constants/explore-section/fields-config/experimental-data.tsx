@@ -167,9 +167,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         semSelectorFn(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection
         ),
     },
     vocabulary: {
@@ -227,9 +227,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection,
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection,
           'mean',
           true
         ),
@@ -268,10 +268,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
         <LayerThicknessField
           detail={
             resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalNeuronDensity
-            | ExperimentalSynapsesPerConnection
+              | ExperimentalBoutonDensity
+              | ExperimentalLayerThickness
+              | ExperimentalNeuronDensity
+              | ExperimentalSynapsesPerConnection
           }
         />
       ),
@@ -327,10 +327,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
         <MeanStdField
           detail={
             resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalNeuronDensity
-            | ExperimentalSynapsesPerConnection
+              | ExperimentalBoutonDensity
+              | ExperimentalLayerThickness
+              | ExperimentalNeuronDensity
+              | ExperimentalSynapsesPerConnection
           }
         />
       ),
@@ -357,9 +357,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection,
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection,
           'N'
         ),
     },
@@ -385,9 +385,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection,
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection,
           'N synapses'
         ),
     },

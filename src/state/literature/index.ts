@@ -12,7 +12,7 @@ import {
   QuestionParameters,
   Suggestion,
 } from '@/types/literature';
-import { Filter, GteLteValue } from '@/components/Filter/types';
+import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
 
 export type BrainRegion = { id: string; title: string };
 

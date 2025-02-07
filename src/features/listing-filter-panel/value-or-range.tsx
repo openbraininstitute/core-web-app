@@ -1,6 +1,7 @@
 import { ChangeEvent, HTMLProps, useState } from 'react';
+
 import { RangeIcon } from '@/components/icons';
-import { GteLteValue, ValueOrRangeFilter } from '@/components/Filter/types';
+import { GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
 import { getFieldUnit } from '@/api/explore-section/fields';
 
 function Radio({

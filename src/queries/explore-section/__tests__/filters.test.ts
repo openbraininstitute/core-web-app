@@ -1,5 +1,5 @@
 import buildFilters, { getFilterESBuilder } from '@/queries/explore-section/filters';
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import { DataType, DataTypeToNexusType } from '@/constants/explore-section/list-views';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 

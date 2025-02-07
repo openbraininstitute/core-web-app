@@ -32,7 +32,6 @@ function validDate(stringDate?: DateISOString) {
   return date;
 }
 
-
 export const toDate = (dateString: string | null | undefined): Date | null => {
   if (!dateString) return null;
   const parsedDate = parseISO(dateString);

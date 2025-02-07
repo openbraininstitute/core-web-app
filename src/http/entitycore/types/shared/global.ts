@@ -12,7 +12,7 @@ type BrainRegion = {
   name: string;
 };
 
-export interface IBrainRegion extends BrainRegion, IAuditMetadata { };
+export interface IBrainRegion extends BrainRegion, IAuditMetadata {}
 
 type Strain = {
   name: string;
@@ -20,14 +20,14 @@ type Strain = {
   species_id: number;
 };
 
-export interface IStrain extends Strain, IAuditMetadata { };
+export interface IStrain extends Strain, IAuditMetadata {}
 
 type Species = {
   name: string;
   taxonomy_id: string;
 };
 
-export interface ISpecies extends Species, IAuditMetadata { };
+export interface ISpecies extends Species, IAuditMetadata {}
 
 interface License {
   name: string;
@@ -35,7 +35,7 @@ interface License {
   label: string;
 }
 
-export interface ILicense extends License, IAuditMetadata { };
+export interface ILicense extends License, IAuditMetadata {}
 
 export interface IBrainLocation {
   x: number;
@@ -53,11 +53,10 @@ export type Measurement = {
   measurement_serie: MorphologyMeasurementSerie[];
 };
 
-
 export type MTypeBase = {
   pref_label: string;
   alt_label: string;
   definition: string;
-}
+};
 
-export interface IMType extends MTypeBase, IAuditMetadata { };
+export interface IMType extends MTypeBase, IAuditMetadata {}

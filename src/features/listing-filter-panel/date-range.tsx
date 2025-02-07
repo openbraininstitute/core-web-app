@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { ConfigProvider, DatePicker } from 'antd';
-import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
 import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
-import { GteLteValue, DateRangeFilter } from './types';
+import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
+
+import { GteLteValue, DateRangeFilter } from '@/features/listing-filter-panel/types';
 
 const DateRangePicker = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 

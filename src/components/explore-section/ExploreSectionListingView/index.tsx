@@ -8,7 +8,7 @@ import { ExploreESHit } from '@/types/explore-section/es';
 import ExploreSectionTable, {
   OnCellClick,
 } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
+import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import NumericResultsInfo from '@/components/explore-section/ExploreSectionListingView/NumericResultsInfo';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import { sortStateAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
@@ -80,7 +80,7 @@ export default function ExploreSectionListingView({
           tableScrollable && 'max-h-[calc(100vh-3.3rem)]'
         )}
       >
-        <WithControlPanel
+        <WithListingFilterPanel
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
@@ -120,7 +120,7 @@ export default function ExploreSectionListingView({
               />
             </>
           )}
-        </WithControlPanel>
+        </WithListingFilterPanel>
       </div>
     </div>
   );

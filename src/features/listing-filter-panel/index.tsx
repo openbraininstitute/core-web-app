@@ -12,19 +12,19 @@ import { CloseOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
+import map from 'lodash/map';
 
-import ClearFilters from '@/components/explore-section/ExploreSectionListingView/ClearFilters';
-import ValueRange from '@/components/Filter/ValueRange';
-import ValueOrRange from '@/components/Filter/ValueOrRange';
+import ClearFilters from '@/features/listing-filter-panel/clear-filters';
+import ValueRange from '@/features/listing-filter-panel/value-range';
+import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 
-import Aggregations, {
-  BucketAggregation,
-  NestedBucketAggregation,
-  NestedStatsAggregation,
-  Statistics,
-} from '@/types/explore-section/es-aggs';
-import { Filter, GteLteValue, ValueOrRangeFilter } from '@/components/Filter/types';
-import { CheckList, DateRange, defaultList, FilterGroup } from '@/components/Filter';
+import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
+import {
+  CheckList,
+  DateRange,
+  defaultList,
+  FilterGroup,
+} from '@/features/listing-filter-panel/filter-group';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import {
   activeColumnsAtom,
@@ -32,16 +32,15 @@ import {
   filtersAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { getFieldEsConfig, getFieldLabel } from '@/api/explore-section/fields';
+import { getFieldLabel } from '@/api/explore-section/fields';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DataType } from '@/constants/explore-section/list-views';
 import { fieldTitleSentenceCase } from '@/util/utils';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { Facets } from '@/http/entitycore/types/shared/response';
-import map from 'lodash/map';
 
-export type ControlPanelProps = {
+export type ListingFilterPanelProps = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: DataType;
@@ -60,8 +59,6 @@ function createFilterItemComponent(
   filterValues: FilterValues,
   setFilterValues: Dispatch<SetStateAction<FilterValues>>
 ) {
-  console.log("ᦨ #  index.tsx:94 #  FilterItemComponent #  facets:", facets);
-
   return function FilterItemComponent() {
     const { type } = filter;
 
@@ -104,11 +101,10 @@ function createFilterItemComponent(
             onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
           />
         );
-        return null;
 
       case FilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
-        const facetItems = map(facets[filter.field], (value, label) => ({ label, value, }));
+        const facetItems = map(facets[filter.field], (value, label) => ({ label, value }));
 
         return (
           <CheckList
@@ -157,7 +153,7 @@ function createFilterItemComponent(
   };
 }
 
-export default function ControlPanel({
+export default function ListingFilterPanel({
   children,
   toggleDisplay,
   dataType,
@@ -168,7 +164,7 @@ export default function ControlPanel({
   showDisplayTrigger = true,
   resourceId,
   virtualLabInfo,
-}: ControlPanelProps) {
+}: ListingFilterPanelProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   const [filterValues, setFilterValues] = useState<FilterValues>({});

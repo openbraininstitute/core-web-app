@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { FilterType } from '@/components/Filter/types';
+import { FilterType } from '@/features/listing-filter-panel/types';
 import { DeltaResource } from '@/types/explore-section/resources';
 import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
 import { EntityCore } from '@/types/explore-section/delta-experiment';

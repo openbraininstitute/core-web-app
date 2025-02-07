@@ -5,7 +5,7 @@ import { axesAtom } from '../Simulations/state';
 import NumericResultsInfo from './NumericResultsInfo';
 import FilterControls from './FilterControls';
 import ListTable from '@/components/ListTable';
-import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
+import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import {
   activeColumnsAtom,
@@ -45,7 +45,7 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
   return (
     <div className="flex h-full max-h-screen min-h-screen w-full bg-[#d1d1d1]">
       <div className="relative grid h-full w-full grid-cols-[auto_max-content] grid-rows-1 overflow-x-auto overflow-y-hidden">
-        <WithControlPanel
+        <WithListingFilterPanel
           dataType={dataType}
           dataScope={ExploreDataScope.NoScope}
           className="relative"
@@ -77,7 +77,7 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
               </div>
             </>
           )}
-        </WithControlPanel>
+        </WithListingFilterPanel>
       </div>
     </div>
   );

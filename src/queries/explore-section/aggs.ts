@@ -1,5 +1,5 @@
 import esb, { Aggregation } from 'elastic-builder';
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import { getFieldEsConfig } from '@/api/explore-section/fields';
 
 export function getAggESBuilder(filter: Filter): Aggregation | undefined {

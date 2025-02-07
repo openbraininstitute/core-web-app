@@ -1,7 +1,7 @@
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { format } from 'date-fns';
 import { CheckIcon } from '@/components/icons';
-import { CheckListDescription } from '@/components/Filter/CheckList/Description';
+import { CheckListDescription } from '@/features/listing-filter-panel/checklist/description';
 
 const DisplayLabel = (filterField: string, key: string): string | null => {
   switch (filterField) {

@@ -4,7 +4,7 @@ import { useHydrateAtoms } from 'jotai/utils';
 
 import { sectionAtom } from '@/state/application';
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
-import BrainRegions from '@/components/build-section/BrainRegionSelector/BrainRegions';
+import BrainRegionsTree from '@/features/brain-region-tree';
 import sessionAtom from '@/state/session';
 import {
   defaultIncreasedTimeout,
@@ -106,7 +106,7 @@ describe('Using query param region in explore', () => {
         ]}
       >
         <ExploreContext />
-        <BrainRegions />
+        <BrainRegionsTree />
       </TestProvider>
     );
   }
@@ -145,7 +145,7 @@ describe('Using query param region in build', () => {
           [sectionAtom, 'build'],
         ]}
       >
-        <BrainRegions />
+        <BrainRegionsTree />
       </TestProvider>
     );
   }

@@ -5,7 +5,7 @@ import { ReactNode, useEffect } from 'react';
 import { useSetAtom } from 'jotai';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import { BrainRegionsSidebar } from '@/components/build-section/BrainRegionSelector';
+import BrainRegionsTree from '@/features/brain-region-tree';
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { defaultModelRelease } from '@/config';
 import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
@@ -29,7 +29,7 @@ export default function ExploreInteractiveLayout({ children }: { children: React
         <VirtualLabNavigationSidebar link="/virtual-lab/sandbox/explore" />
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <BrainRegionsSidebar />
+        <BrainRegionsTree />
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>
     </div>

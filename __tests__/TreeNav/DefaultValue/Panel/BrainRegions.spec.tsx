@@ -4,7 +4,7 @@ import { useHydrateAtoms } from 'jotai/utils';
 
 import { sectionAtom } from '@/state/application';
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
-import BrainRegions from '@/components/build-section/BrainRegionSelector/BrainRegions';
+import BrainRegionsTree from '@/features/brain-region-tree';
 import sessionAtom from '@/state/session';
 import {
   defaultIncreasedTimeout,
@@ -73,7 +73,7 @@ describe('Default brain region panel in explore', () => {
           [brainModelConfigIdAtom, '123'],
         ]}
       >
-        <BrainRegions />
+        <BrainRegionsTree />
       </TestProvider>
     );
   }
@@ -98,7 +98,7 @@ describe('Default brain region panel with no atoms', () => {
           [sectionAtom, 'test'],
         ]}
       >
-        <BrainRegions />
+        <BrainRegionsTree />
       </TestProvider>
     );
   }
@@ -123,7 +123,7 @@ describe('Default brain region panel in buid', () => {
           [sectionAtom, 'build'],
         ]}
       >
-        <BrainRegions />
+        <BrainRegionsTree />
       </TestProvider>
     );
   }

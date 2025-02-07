@@ -1,6 +1,7 @@
 import omit from 'lodash/omit';
 import isNumber from 'lodash/isNumber';
-import { Filter } from './types';
+
+import { Filter } from '@/features/listing-filter-panel/types';
 import { BrainRegion } from '@/types/ontologies';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 

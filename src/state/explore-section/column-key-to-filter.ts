@@ -1,4 +1,4 @@
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 

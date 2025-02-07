@@ -35,7 +35,7 @@ function searchOptionsReducer(
  */
 export default function BrainTreeSearch({
   setValue,
-  onClear = () => {},
+  onClear = () => { },
 }: {
   setValue?: Dispatch<SetStateAction<NavValue>>;
   onClear?: () => void;
@@ -90,9 +90,9 @@ export default function BrainTreeSearch({
         setSearchOptions(
           brainRegionsOptions?.length
             ? filterAndSortBasedOnPosition<SearchOption>(
-                value.trim().toLowerCase(),
-                brainRegionsOptions.reduce<SearchOption[]>(searchOptionsReducer, [])
-              )
+              value.trim().toLowerCase(),
+              brainRegionsOptions.reduce<SearchOption[]>(searchOptionsReducer, [])
+            )
             : null
         );
       }

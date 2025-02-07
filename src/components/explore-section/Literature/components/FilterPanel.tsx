@@ -17,9 +17,9 @@ import {
   GenerativeQA,
   MLFilter,
 } from '@/types/literature';
-import { Filter, GteLteValue } from '@/components/Filter/types';
-import SearchFilter from '@/components/Filter/SearchFilter';
-import { FilterGroup } from '@/components/Filter';
+import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
+import SearchFilter from '@/features/listing-filter-panel/search-filter';
+import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import ReloadIcon from '@/components/icons/Reload';
 import {
   literatureAtom,
