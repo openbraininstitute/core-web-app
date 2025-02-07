@@ -28,13 +28,16 @@ import {
 import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
+  selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
+  setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import * as entitycoreApi from '@/http/entitycore/queries';
+import { toDate } from '@/util/date';
 
 type DataAtomFamilyScopeType = {
   dataType: DataType;
@@ -168,12 +171,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+          ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
+            selectedBrainRegionWithDescendantsAndAncestorsFamily(
+              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+            )
+          )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -205,6 +208,11 @@ export const dataAtom = atomFamily(
       const pageNumber = get(pageNumberAtom(scope.key));
       const pageSize = get(pageSizeAtom);
       const filters = await get(filtersAtom(scope));
+      const selectedBrainRegion = get(selectedBrainRegionAtom);
+
+      console.log("ᦨ #  list-view-atoms.ts:212 #  atom #  selectedBrainRegion:", selectedBrainRegion);
+
+
       // TODO: sorting should be fixed at the end, it's related to too many changes that break things
       const sortState = get(sortStateAtom(scope));
 
@@ -222,6 +230,9 @@ export const dataAtom = atomFamily(
             page: pageNumber - 1,
             search: isEmpty(searchString) ? null : searchString,
             name__ilike: lget(find(filters, ['field', 'name']), 'value', undefined)?.toString(),
+            creation_date__gte: toDate(lget(find(filters, ["field", "registration_date"]), "value.gte", undefined)?.toString()),
+            creation_date__lte: toDate(lget(find(filters, ["field", "registration_date"]), "value.lte", undefined)?.toString()),
+            // brain_region_id: selectedBrainRegion?.id ? Number(selectedBrainRegion?.id.split('/').pop()) : undefined,
           },
         });
         return response;

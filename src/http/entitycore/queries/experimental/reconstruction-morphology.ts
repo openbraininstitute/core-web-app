@@ -4,12 +4,12 @@ import {
   IMorphologyFilter,
   IReconstructionMorphology,
   IReconstructionMorphologyExpanded,
-} from '@/http/entitycore/types/reconstruction-morphology';
-import { EntityCoreResponse } from '@/http/entitycore/types/request-shared-type';
+} from '@/http/entitycore/types/entities/reconstruction-morphology';
+import { EntityCoreResponse } from '@/http/entitycore/types/shared/response';
 import { entityCoreUrl } from '@/config';
 
 /**
- * Retrieves a list of reconstruction morphologies from the Entity Core API.
+ * Retrieves a list of reconstruction morphologies from the EntityCoreAPI.
  *
  * @param {Object} options - The options object
  * @param {IMorphologyFilter} [options.filters] - Optional filters to apply to the query
@@ -28,7 +28,7 @@ export async function getReconstructionMorphologies({ filters }: { filters?: IMo
 }
 
 /**
- * Retrieves a specific reconstruction morphology by its ID from the Entity Core API.
+ * Retrieves a specific reconstruction morphology by its ID from the EntityCoreAPI.
  *
  * @param {Object} params - The parameters object
  * @param {string} params.id - The unique identifier of the reconstruction morphology to retrieve

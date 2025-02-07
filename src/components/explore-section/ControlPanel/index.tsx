@@ -38,6 +38,8 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { fieldTitleSentenceCase } from '@/util/utils';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
+import { Facets } from '@/http/entitycore/types/shared/response';
+import map from 'lodash/map';
 
 export type ControlPanelProps = {
   children?: ReactNode;
@@ -54,14 +56,14 @@ export type ControlPanelProps = {
 
 function createFilterItemComponent(
   filter: Filter,
-  aggregations: Aggregations | undefined,
+  facets: Facets | undefined,
   filterValues: FilterValues,
   setFilterValues: Dispatch<SetStateAction<FilterValues>>
 ) {
+  console.log("ᦨ #  index.tsx:94 #  FilterItemComponent #  facets:", facets);
+
   return function FilterItemComponent() {
     const { type } = filter;
-    const esConfig = getFieldEsConfig(filter.field);
-    let agg;
 
     const updateFilterValues = (field: string, values: Filter['value']) => {
       setFilterValues((prevState) => ({
@@ -86,34 +88,31 @@ function createFilterItemComponent(
         );
 
       case FilterTypeEnum.ValueRange:
-        if (!aggregations) return emptyFilter;
-        if (esConfig?.nested) {
-          const nestedAgg = aggregations[filter.field] as NestedStatsAggregation;
-          agg = nestedAgg[filter.field][esConfig?.nested.aggregationName];
-        } else {
-          agg = aggregations[filter.field] as Statistics;
-        }
+        if (!facets) return emptyFilter;
+
+        // if (esConfig?.nested) {
+        //   const nestedAgg = facets[filter.field] as NestedStatsAggregation;
+        //   facet = nestedAgg[filter.field][esConfig?.nested.aggregationName];
+        // } else {
+        //   facet = facets[filter.field] as Statistics;
+        // }
 
         return (
           <ValueRange
             filter={filter}
-            aggregation={agg}
+            aggregation={facet}
             onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
           />
         );
+        return null;
 
       case FilterTypeEnum.CheckList:
-        if (!aggregations) return emptyFilter;
-        if (esConfig?.nested) {
-          const nestedAgg = aggregations[filter.field] as NestedBucketAggregation;
-          agg = nestedAgg[filter.field][filter.field];
-        } else {
-          agg = aggregations[filter.field] as BucketAggregation;
-        }
+        if (!facets || !facets[filter.field]) return emptyFilter;
+        const facetItems = map(facets[filter.field], (value, label) => ({ label, value, }));
 
         return (
           <CheckList
-            data={agg}
+            data={facetItems}
             filter={filter}
             values={filterValues[filter.field] as string[]}
             onChange={(values: string[]) => updateFilterValues(filter.field, values)}
@@ -184,7 +183,7 @@ export default function ControlPanel({
   );
 
   const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
-  const aggregations = data?.facets;
+  const facets = data?.facets;
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;
@@ -217,15 +216,14 @@ export default function ControlPanel({
   if (!activeColumns) return null;
 
   const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${
-    activeColumnsLength === 1 ? 'column' : 'columns'
-  }`;
+  const activeColumnsText = `${activeColumnsLength} active ${activeColumnsLength === 1 ? 'column' : 'columns'
+    }`;
 
   const filterItems = filters
     ?.map((filter) => {
       return {
         content: filter.type
-          ? createFilterItemComponent(filter, aggregations, filterValues, setFilterValues)
+          ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
           : undefined,
         display: activeColumns?.includes(filter.field),
         label: fieldTitleSentenceCase(getFieldLabel(filter.field)),

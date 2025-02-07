@@ -1,5 +1,5 @@
 import EXPLORE_FIELDS_CONFIG, {
-  NEW_EXPLORE_FIELDS_CONFIG,
+  ENTITY_CORE_FIELDS_CONFIG,
 } from '@/constants/explore-section/fields-config';
 
 export function getFieldEsConfig(field: string) {
@@ -7,7 +7,7 @@ export function getFieldEsConfig(field: string) {
 }
 
 export function getFieldLabel(field: string) {
-  return field in NEW_EXPLORE_FIELDS_CONFIG ? NEW_EXPLORE_FIELDS_CONFIG[field].title : field;
+  return field in ENTITY_CORE_FIELDS_CONFIG ? ENTITY_CORE_FIELDS_CONFIG[field].title : field;
 }
 
 export function getFieldUnit(field: string) {

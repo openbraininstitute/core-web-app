@@ -10,7 +10,7 @@ import {
 } from '@/state/explore-section/generalization';
 import { filtersAtom } from '@/state/explore-section/list-view-atoms';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import ControlPanel from '@/components/explore-section/ControlPanel';
+import ControlPanel from '@/features/listing-filter-panel';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import { DataType } from '@/constants/explore-section/list-views';
 import styles from './styles.module.scss';
