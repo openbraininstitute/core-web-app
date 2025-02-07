@@ -13,7 +13,6 @@ import {
   Mesh,
 } from '@/types/ontologies';
 import { getBrainRegionOntology, getDistributions } from '@/api/ontologies';
-import { buildAlternateChildren, buildAlternateTree } from '@/state/brain-regions/alternate-view';
 import { DefaultBrainRegionType, NavValue, SelectedBrainRegion } from '@/state/brain-regions/types';
 import {
   compositionHistoryAtom,
@@ -38,7 +37,7 @@ import { getTemporaryBrainRegionHierarchy } from '@/http/entitycore/queries/gene
 import {
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
-} from '@/http/entitycore/types/brain-region';
+} from '@/http/entitycore/types/shared/brain-region';
 
 /*
   Atom dependency graph

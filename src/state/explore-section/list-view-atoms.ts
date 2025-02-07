@@ -2,8 +2,6 @@ import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEmpty from 'lodash/isEmpty';
-import find from 'lodash/find';
-import lget from 'lodash/get';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
@@ -28,13 +26,16 @@ import {
 import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
+  selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
+  setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import * as entitycoreApi from '@/http/entitycore/queries';
+import { transformFiltersToQuery } from '@/http/entitycore/utils';
 
 type DataAtomFamilyScopeType = {
   dataType: DataType;
@@ -168,12 +169,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+          ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
+            selectedBrainRegionWithDescendantsAndAncestorsFamily(
+              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+            )
+          )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -205,23 +206,20 @@ export const dataAtom = atomFamily(
       const pageNumber = get(pageNumberAtom(scope.key));
       const pageSize = get(pageSizeAtom);
       const filters = await get(filtersAtom(scope));
+      const selectedBrainRegion = get(selectedBrainRegionAtom);
+
       // TODO: sorting should be fixed at the end, it's related to too many changes that break things
       const sortState = get(sortStateAtom(scope));
+      const queryParams = transformFiltersToQuery(filters);
 
-      console.log('@@query', {
-        searchString,
-        pageNumber,
-        pageSize,
-        sortState,
-        filters,
-      });
       if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
         const response = await entitycoreApi.getReconstructionMorphologies({
           filters: {
             page_size: pageSize,
             page: pageNumber - 1,
             search: isEmpty(searchString) ? null : searchString,
-            name__ilike: lget(find(filters, ['field', 'name']), 'value', undefined)?.toString(),
+            ...queryParams,
+            // brain_region_id: selectedBrainRegion?.id ? Number(selectedBrainRegion?.id.split('/').pop()) : undefined,
           },
         });
         return response;

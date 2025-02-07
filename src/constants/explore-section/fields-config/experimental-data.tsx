@@ -794,7 +794,7 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
   },
 };
 
-export const NEW_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
+export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
   [EntityCoreFields.License]: {
     title: 'License',
     filter: FilterTypeEnum.CheckList,
@@ -829,7 +829,7 @@ export const NEW_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<Entit
     fieldType: FieldType.CellType,
     title: 'M-Type',
     filter: FilterTypeEnum.CheckList,
-    render: () => DisplayMessages.NO_DATA_STRING, // TODO: update when mtype included into entitycore service
+    render: (r) => r.mtype?.pref_label || DisplayMessages.NO_DATA_STRING,
     vocabulary: {
       plural: 'M-Types',
       singular: 'M-Type',

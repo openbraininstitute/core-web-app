@@ -4,7 +4,7 @@ import {
   IBrainRegionHierarchy,
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
-} from '@/http/entitycore/types/brain-region';
+} from '@/http/entitycore/types/shared/brain-region';
 
 /**
  * Retrieves the brain region hierarchy from the Entity Core API.

@@ -99,5 +99,5 @@ export enum EntityCoreFields {
   Contributors = 'contributors',
   License = 'license',
   BrainRegion = 'brain_region',
-  MType = 'mType',
+  MType = 'mtype',
 }

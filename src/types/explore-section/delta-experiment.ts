@@ -12,7 +12,7 @@ import {
   Synapse,
 } from './delta-properties';
 import { Distribution, EntityResource } from '@/types/nexus/common';
-import { IReconstructionMorphology } from '@/http/entitycore/types/reconstruction-morphology';
+import { IReconstructionMorphology } from '@/http/entitycore/types/entities/reconstruction-morphology';
 
 type ExperimentResource = EntityResource & {
   brainLocation: BrainLocation;

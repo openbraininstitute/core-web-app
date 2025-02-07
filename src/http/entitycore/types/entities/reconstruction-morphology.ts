@@ -3,7 +3,7 @@ import {
   BrainRegionFilter,
   DateFilter,
   PaginationFilter,
-} from '@/http/entitycore/types/request-shared-type';
+} from '@/http/entitycore/types/shared/request';
 import {
   IBrainLocation,
   IBrainRegion,
@@ -12,7 +12,8 @@ import {
   IStrain,
   IAuditMetadata,
   Measurement,
-} from '@/http/entitycore/types/shared';
+  IMType,
+} from '@/http/entitycore/types/shared/global';
 
 export type ReconstructionMorphologyExpandFields =
   | 'brain_location'
@@ -23,9 +24,9 @@ export type ReconstructionMorphologyExpand = ReconstructionMorphologyExpandField
 
 export interface IMorphologyFilter
   extends DateFilter,
-    BrainLocationFilter,
-    BrainRegionFilter,
-    PaginationFilter {
+  BrainLocationFilter,
+  BrainRegionFilter,
+  PaginationFilter {
   name__ilike?: string | null;
   species_id__in?: number[] | null;
   order_by?: string;
@@ -45,6 +46,7 @@ export interface IReconstructionMorphology extends IAuditMetadata {
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: IBrainRegion;
+  mtype?: IMType;
 }
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {
   morphology_feature_annotation: MorphologyFeatureAnnotation;

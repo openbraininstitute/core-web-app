@@ -225,7 +225,7 @@ export const COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<
   },
 };
 
-export const NEW_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
+export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
   [Field.Preview]: {
     className: 'text-center',
     title: 'Preview',

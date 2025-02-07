@@ -1,4 +1,4 @@
-import { formatDistanceToNow, isValid, format } from 'date-fns';
+import { formatDistanceToNow, isValid, format, parseISO } from 'date-fns';
 import { DateISOString } from '@/types/nexus';
 
 /**
@@ -31,3 +31,10 @@ function validDate(stringDate?: DateISOString) {
   if (!isValid(date)) return;
   return date;
 }
+
+
+export const toDate = (dateString: string | null | undefined): Date | null => {
+  if (!dateString) return null;
+  const parsedDate = parseISO(dateString);
+  return isValid(parsedDate) ? parsedDate : null;
+};

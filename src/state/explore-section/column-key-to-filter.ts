@@ -1,10 +1,10 @@
 import { Filter } from '@/components/Filter/types';
-import { NEW_EXPLORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
+import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 
 export default function columnKeyToFilter(key: string): Filter {
-  const fieldConfig = NEW_EXPLORE_FIELDS_CONFIG[key];
-  console.log('@@fieldConfig', fieldConfig);
+  const fieldConfig = ENTITY_CORE_FIELDS_CONFIG[key];
+
   switch (fieldConfig?.filter) {
     case FilterTypeEnum.CheckList:
       return {
