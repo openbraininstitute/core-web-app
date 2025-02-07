@@ -194,6 +194,7 @@ function TreeNav(
 ) {
   return (
     <Accordion.Root
+      data-testid="brain-region-tree"
       className={classNames('relative -ml-4', className)}
       onValueChange={(newValue) => onValueChange(newValue, [])} // Empty path for root
       ref={ref}

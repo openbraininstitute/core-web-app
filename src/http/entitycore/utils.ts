@@ -1,11 +1,5 @@
-import map from 'lodash/map';
-import sortBy from 'lodash/sortBy';
-
-import { isOrganization, isPerson } from '@/http/entitycore/guards';
 import { Filter } from '@/features/listing-filter-panel/types';
 import { toDate } from '@/util/date';
-
-import type { IContributor } from '@/http/entitycore/types/shared/global';
 
 const DATE_FIELDS = new Set(['creation_date', 'update_date', 'registration_date']);
 
@@ -39,23 +33,3 @@ export const transformFiltersToQuery = (filters: Filter[]): TransformFiltersToQu
     return acc;
   }, {} as TransformFiltersToQueryReturnValue);
 };
-
-export function transformAgentToNames(
-  agentsWithRoles: Array<IContributor> | undefined | null
-): string {
-  if (!agentsWithRoles) {
-    return '';
-  }
-  const agents = map(agentsWithRoles, 'agent');
-  const processedAgents = map(agents, (agent) => ({
-    // eslint-disable-next-line no-nested-ternary
-    name: isPerson(agent)
-      ? `${agent.givenName} ${agent.familyName}`
-      : isOrganization(agent)
-        ? agent.pref_label
-        : '',
-    type: isOrganization(agent) ? 0 : 1, // 0 for Org, 1 for Person
-  }));
-
-  return map(sortBy(processedAgents, ['type', 'name']), 'name').join(', ');
-}

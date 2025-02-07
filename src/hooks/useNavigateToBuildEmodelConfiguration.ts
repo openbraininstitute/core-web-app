@@ -9,7 +9,7 @@ import {
   brainRegionHierarchyStateAtom,
   brainRegionsAtom,
 } from '@/state/brain-regions';
-import { generateHierarchyPathTree, getAncestors } from '@/components/BrainTree/util';
+import { generateHierarchyPathTree, getAncestors } from '@/features/brain-region-tree/util';
 import { setInitializationValue } from '@/util/utils';
 import { DEFAULT_E_MODEL_STORAGE_KEY } from '@/constants/cell-model-assignment/e-model';
 

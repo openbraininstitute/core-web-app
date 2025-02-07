@@ -5,7 +5,6 @@ import {
   SetStateAction,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { CloseOutlined } from '@ant-design/icons';
@@ -14,11 +13,15 @@ import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import map from 'lodash/map';
 
-import ClearFilters from '@/components/explore-section/ExploreSectionListingView/ClearFilters';
-import ValueRange from '@/components/Filter/ValueRange';
-import ValueOrRange from '@/components/Filter/ValueOrRange';
-import { Filter, GteLteValue, ValueOrRangeFilter } from '@/components/Filter/types';
-import { CheckList, DateRange, defaultList, FilterGroup } from '@/components/Filter';
+import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
+import {
+  CheckList,
+  DateRange,
+  defaultList,
+  FilterGroup,
+} from '@/features/listing-filter-panel/filter-group';
+import ValueRange from '@/features/listing-filter-panel/value-range';
+import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import {
   activeColumnsAtom,
@@ -30,8 +33,9 @@ import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DataType } from '@/constants/explore-section/list-views';
 import { fieldTitleSentenceCase } from '@/util/utils';
 import { Facets } from '@/http/entitycore/types/shared/response';
+import ClearFilters from '@/features/listing-filter-panel/clear-filters';
 
-export type ControlPanelProps = {
+export type ListingFilterPanelProps = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: DataType;
@@ -85,13 +89,13 @@ function createFilterItemComponent(
         //   facet = facets[filter.field] as Statistics;
         // }
 
-        return (
-          <ValueRange
-            filter={filter}
-            aggregation={facet}
-            onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
-          />
-        );
+        // return (
+        //   <ValueRange
+        //     filter={filter}
+        //     aggregation={facet}
+        //     onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
+        //   />
+        // );
         return null;
 
       case FilterTypeEnum.CheckList:
@@ -145,7 +149,7 @@ function createFilterItemComponent(
   };
 }
 
-export default function ControlPanel({
+export default function ListingFilterPanel({
   children,
   toggleDisplay,
   dataType,
@@ -156,9 +160,7 @@ export default function ControlPanel({
   facets,
   showDisplayTrigger = true,
   resourceId,
-}: ControlPanelProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
+}: ListingFilterPanelProps) {
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId, key: dataKey }));
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
@@ -201,8 +203,9 @@ export default function ControlPanel({
   if (!activeColumns) return null;
 
   const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${activeColumnsLength === 1 ? 'column' : 'columns'
-    }`;
+  const activeColumnsText = `${activeColumnsLength} active ${
+    activeColumnsLength === 1 ? 'column' : 'columns'
+  }`;
 
   const filterItems = filters
     ?.map((filter) => {
@@ -231,7 +234,6 @@ export default function ControlPanel({
     <div
       data-testid="listing-view-filter-panel"
       className="fixed right-0 top-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 px-8 pt-6"
-      ref={ref}
     >
       <div className="mb-auto">
         <div className="mb-2 flex items-center justify-between gap-4">

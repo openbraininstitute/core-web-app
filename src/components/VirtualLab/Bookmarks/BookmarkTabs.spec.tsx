@@ -9,7 +9,7 @@ import sessionAtom from '@/state/session';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { mockBrainRegions } from '__tests__/__utils__/SelectedBrainRegions';
 import { SelectedBrainRegion } from '@/state/brain-regions/types';
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import { DataType } from '@/constants/explore-section/list-views';
 import { DataQuery } from '@/api/explore-section/resources';
 import {

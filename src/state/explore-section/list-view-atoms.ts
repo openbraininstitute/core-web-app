@@ -24,7 +24,7 @@ import {
   PAGE_SIZE,
 } from '@/constants/explore-section/list-views';
 import { ExploreESHit } from '@/types/explore-section/es';
-import { Filter } from '@/components/Filter/types';
+import { Filter } from '@/features/listing-filter-panel/types';
 import {
   selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,

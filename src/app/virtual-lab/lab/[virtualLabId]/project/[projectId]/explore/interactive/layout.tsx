@@ -6,10 +6,11 @@ import { useSetAtom } from 'jotai';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideMenu from '@/components/SideMenu';
+import BrainRegionsTree from '@/features/brain-region-tree';
+
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { defaultModelRelease } from '@/config';
 import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
-import { BrainRegionsSidebar } from '@/components/build-section/BrainRegionSelector';
 import { Label, Content, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
@@ -57,7 +58,7 @@ export default function VirtualLabProjectInteractiveExploreLayout({
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <BrainRegionsSidebar />
+        <BrainRegionsTree />
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>
     </div>

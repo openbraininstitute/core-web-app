@@ -11,7 +11,7 @@ import {
   initialAuthorSuggestionsAtom,
   initialJournalSuggestionsAtom,
 } from '@/state/explore-section/literature-filters';
-import { DateRange } from '@/components/Filter';
+import { DateRange } from '@/features/listing-filter-panel/filter-group';
 import { Suggestion } from '@/types/literature';
 import ReloadIcon from '@/components/icons/Reload';
 import {

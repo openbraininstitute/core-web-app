@@ -18,7 +18,8 @@ import {
 } from '@/state/brain-regions';
 import BrainAreaSwitch from '@/components/ConnectomeEditorSidebar/BrainAreaSwitch';
 import { NavValue } from '@/state/brain-regions/types';
-import { Nav as BrainTreeNav, Search as BrainTreeSearch } from '@/components/BrainTree';
+import BrainTreeSearch from '@/features/brain-region-tree/search';
+import BrainRegionExplorer from '@/features/brain-region-tree/explorer';
 import { BASIC_CELL_GROUPS_AND_REGIONS_ID } from '@/constants/brain-hierarchy';
 
 function NavTitle({
@@ -230,7 +231,7 @@ export default function ConnectomeEditorSidebar() {
             <BrainAreaSwitch />
 
             <BrainTreeSearch setValue={setNavValue} />
-            <BrainTreeNav ref={brainTreeNavRef} setValue={setNavValue} value={navValue}>
+            <BrainRegionExplorer ref={brainTreeNavRef} setValue={setNavValue} value={navValue}>
               {({
                 colorCode,
                 id,
@@ -305,7 +306,7 @@ export default function ConnectomeEditorSidebar() {
                   </NavTitle>
                 );
               }}
-            </BrainTreeNav>
+            </BrainRegionExplorer>
           </div>
         </div>
       )}

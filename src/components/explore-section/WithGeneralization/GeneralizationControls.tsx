@@ -12,7 +12,7 @@ import { filtersAtom } from '@/state/explore-section/list-view-atoms';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import { DataType } from '@/constants/explore-section/list-views';
-import ControlPanel from '@/components/explore-section/ControlPanel';
+import ListingFilterPanel from '@/features/listing-filter-panel';
 import styles from './styles.module.scss';
 
 export const theme: ThemeConfig = {
@@ -77,7 +77,8 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
       </div>
       {displayControlPanel && filters && (
         <div className="fixed right-0 top-0 z-50 h-screen">
-          <ControlPanel
+          <ListingFilterPanel
+            // TODO: fix this
             facets={facets}
             filters={filters}
             setFilters={setFilters}

@@ -5,7 +5,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import Sidebar from '@/components/explore-section/Sidebar';
-import { BrainRegionsSidebar } from '@/components/build-section/BrainRegionSelector';
+import BrainRegionsTree from '@/features/brain-region-tree';
 import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
 
 type LiteratureLayoutProps = {
@@ -21,7 +21,7 @@ export default function GenericLayout({ children }: LiteratureLayoutProps) {
         <Sidebar />
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <BrainRegionsSidebar />
+        <BrainRegionsTree />
       </ErrorBoundary>
       {children}
     </div>

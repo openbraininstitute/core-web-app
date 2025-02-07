@@ -5,7 +5,7 @@ import { useSetAtom } from 'jotai';
 import { usePathname } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import { BrainRegionsSidebar } from '@/components/build-section/BrainRegionSelector';
+import BrainRegionsTree from '@/features/brain-region-tree';
 import BuildSideBar from '@/components/BrainConfigPanel/BuildSideBar';
 import useBrainModelConfigState from '@/hooks/brain-model-config';
 import TopTabs from '@/components/TopTabs';
@@ -45,7 +45,7 @@ export default function BuildSectionLayout({ children }: BuildSectionLayoutProps
         {!isConnectomeEditor && !isSynapseEditor && (
           <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
             <DefaultLoadingSuspense>
-              <BrainRegionsSidebar />
+              <BrainRegionsTree />
             </DefaultLoadingSuspense>
           </ErrorBoundary>
         )}

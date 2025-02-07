@@ -7,7 +7,7 @@ import { arrayToTree } from 'performant-array-to-tree';
 import { unwrap } from 'jotai/utils';
 
 import { getMetric } from './util';
-import { handleNavValueChange } from '@/components/BrainTree/util';
+import { handleNavValueChange } from '@/features/brain-region-tree/util';
 import TreeNav from '@/components/TreeNavItem';
 import { NavValue } from '@/state/brain-regions/types';
 import { densityOrCountAtom, selectedBrainRegionAtom } from '@/state/brain-regions';

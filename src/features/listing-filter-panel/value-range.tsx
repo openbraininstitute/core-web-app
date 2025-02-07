@@ -1,10 +1,12 @@
 import { useForm } from 'antd/lib/form/Form';
 import { ConfigProvider, Form, InputNumber } from 'antd';
-import { GteLteValue, ValueFilter } from '@/components/Filter/types';
+
+import { GteLteValue, ValueFilter } from '@/features/listing-filter-panel/types';
 import { Statistics } from '@/types/explore-section/es-aggs';
-import ArrowLeftRightIcon from '@/components/icons/ArrowLeftRight';
 import { formatNumber } from '@/util/common';
 import { getFieldUnit } from '@/api/explore-section/fields';
+
+import ArrowLeftRightIcon from '@/components/icons/ArrowLeftRight';
 
 export default function ValueRange({
   filter,

@@ -1,57 +1,36 @@
 'use client';
 
 import { RefObject, useRef, useState, useMemo, useEffect } from 'react';
-import { useAtomValue, useSetAtom, useAtom } from 'jotai';
-import { Button } from 'antd';
 import { MinusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { useAtomValue, useSetAtom, useAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
+import { Button } from 'antd';
 
-import CollapsedBrainRegionsSidebar from './CollapsedBrainRegions';
-import { TitleComponentProps } from './types';
-import AlternateViewSelector from './AlternateViewSelector';
-import { classNames } from '@/util/utils';
+import CollapsedBrainRegionsSidebar from '@/components/build-section/BrainRegionSelector/CollapsedBrainRegions';
+import AlternateViewSelector from '@/components/build-section/BrainRegionSelector/AlternateViewSelector';
+import BrainTreeSearch from '@/features/brain-region-tree/search';
+import BrainTreeExplorer from '@/features/brain-region-tree/explorer';
+import TreeIndentationLine from '@/features/brain-region-tree/tree-indentation-line';
+
+import { TitleComponentProps } from '@/components/build-section/BrainRegionSelector/types';
 import { BrainIcon } from '@/components/icons';
-import { Nav as BrainTreeNav, Search as BrainTreeSearch } from '@/components/BrainTree';
+import { classNames } from '@/util/utils';
 import {
-  brainRegionOntologyViewsAtom,
-  brainRegionsAtom,
-  brainRegionsAlternateTreeAtom,
   brainRegionSidebarIsCollapsedAtom,
-  resetSelectedBrainRegionAtom,
-  selectedBrainRegionFamily,
   setSelectedBrainRegionAtomGetter,
   brainRegionHierarchyStateFamily,
+  brainRegionsAlternateTreeAtom,
+  resetSelectedBrainRegionAtom,
+  brainRegionOntologyViewsAtom,
+  selectedBrainRegionFamily,
+  brainRegionsAtom,
 } from '@/state/brain-regions';
-import { NavValue } from '@/state/brain-regions/types';
-import { BrainRegion } from '@/types/ontologies';
+import { useExpandRegionTree, useSetBrainRegionToQuery } from '@/hooks/brain-region-panel';
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { atlasVisualizationAtom } from '@/state/atlas/atlas';
+import { NavValue } from '@/state/brain-regions/types';
 import { sectionAtom } from '@/state/application';
-import { useExpandRegionTree, useSetBrainRegionToQuery } from '@/hooks/brain-region-panel';
-
-/**
- * the line component is added for each NavTitle with absolute position
- * the height is calculated based on the container "NavTitle" height and the bottom padding of the title
- * we added some space to the top to not be too close to the title
- * @param TreeLineBar.height is the height of the title component
- * @returns absolute postionned dashed line
- */
-function TreeLineBar({ show, height }: { show: boolean; height?: number }) {
-  if (!show) return null;
-  return (
-    <div
-      className="absolute left-px w-px border-l border-dashed border-primary-4"
-      style={
-        height
-          ? {
-              top: `calc(${height}px - 0.75rem + .25rem)`,
-              height: `calc(100% - ${height}px - 0.75rem + .25rem)`,
-            }
-          : {}
-      }
-    />
-  );
-}
+import { BrainRegion } from '@/types/ontologies';
 
 function NavTitle({
   className,
@@ -164,7 +143,7 @@ function NavTitle({
           </div>
         </div>
       </div>
-      <TreeLineBar show={isExpanded} height={height} />
+      <TreeIndentationLine show={isExpanded} height={height} />
       {content?.({ className: '-mt-3 divide-y divide-primary-6' })}
     </>
   );
@@ -175,6 +154,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
   const selectedBrainRegion = useAtomValue(selectedBrainRegionFamily(scope));
   const setSelectedBrainRegion = useSetAtom(setSelectedBrainRegionAtomGetter(scope));
   const [isCollapsed, setIsCollapsed] = useAtom(brainRegionSidebarIsCollapsedAtom);
+
   const [brainRegionHierarchyState, setBrainRegionHierarchyState] = useAtom<NavValue>(
     brainRegionHierarchyStateFamily(scope)
   );
@@ -220,7 +200,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
             onClear={resetSelectedBrainRegion}
           />
           <div className="no-scrollbar overflow-y-auto">
-            <BrainTreeNav
+            <BrainTreeExplorer
               ref={brainTreeNavRef}
               setValue={setBrainRegionHierarchyState}
               value={brainRegionHierarchyState}
@@ -240,7 +220,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
                   scope={scope}
                 />
               )}
-            </BrainTreeNav>
+            </BrainTreeExplorer>
           </div>
         </div>
       )}

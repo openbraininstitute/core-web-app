@@ -2,8 +2,8 @@ import { CloseOutlined } from '@ant-design/icons';
 import { ConfigProvider, Tag } from 'antd';
 import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
 
-import { Filter } from './types';
-import { useOptions } from './useOptions';
+import { Filter } from '@/features/listing-filter-panel/types';
+import { useOptions } from '@/features/listing-filter-panel/use-options';
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 
 import Search from '@/components/Search';

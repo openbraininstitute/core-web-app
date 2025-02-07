@@ -15,7 +15,7 @@ type BrainRegion = {
   name: string;
 };
 
-export interface IBrainRegion extends BrainRegion, AuditMetadata { }
+export interface IBrainRegion extends BrainRegion, AuditMetadata {}
 
 type Strain = {
   name: string;
@@ -23,14 +23,14 @@ type Strain = {
   species_id: number;
 };
 
-export interface IStrain extends Strain, AuditMetadata { }
+export interface IStrain extends Strain, AuditMetadata {}
 
 type Species = {
   name: string;
   taxonomy_id: string;
 };
 
-export interface ISpecies extends Species, AuditMetadata { }
+export interface ISpecies extends Species, AuditMetadata {}
 
 interface License {
   name: string;
@@ -38,7 +38,7 @@ interface License {
   label: string;
 }
 
-export interface ILicense extends License, AuditMetadata { }
+export interface ILicense extends License, AuditMetadata {}
 
 export interface IBrainLocation {
   x: number;
@@ -62,21 +62,21 @@ export type MTypeBase = {
   definition: string;
 };
 
-export interface IMType extends MTypeBase, AuditMetadata { }
+export interface IMType extends MTypeBase, AuditMetadata {}
 
 type RoleBase = {
   name: string;
   role_id: string;
 };
 
-export interface IRole extends RoleBase, AuditMetadata { }
+export interface IRole extends RoleBase, AuditMetadata {}
 
 type OrganizationBase = {
   pref_label: string;
   alternative_name?: string | null;
 };
 
-export interface IOrganization extends OrganizationBase, AuditMetadata { }
+export interface IOrganization extends OrganizationBase, AuditMetadata {}
 
 type PersonBase = {
   givenName: string;
@@ -84,7 +84,7 @@ type PersonBase = {
   pref_label: string;
 };
 
-export interface IPerson extends PersonBase, AuditMetadata { }
+export interface IPerson extends PersonBase, AuditMetadata {}
 export type Agent = IPerson | IOrganization;
 
 export interface IContributor {

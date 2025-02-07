@@ -1,13 +1,15 @@
 import { ReactElement } from 'react';
 import * as Accordion from '@radix-ui/react-accordion';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
-import DateRange from './DateRange';
-import SearchFilter from './SearchFilter';
-import { Filter } from './types';
+
 import { ChevronIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
-import CheckList, { defaultList } from '@/components/Filter/CheckList/index';
-import styles from './filters.module.scss';
+import { Filter } from '@/features/listing-filter-panel/types';
+
+import CheckList, { defaultList } from '@/features/listing-filter-panel/checklist/index';
+import DateRange from '@/features/listing-filter-panel/date-range';
+import SearchFilter from '@/features/listing-filter-panel/search-filter';
+import styles from '@/features/listing-filter-panel/filters.module.scss';
 
 type ContentProps = {
   filters: Filter[];

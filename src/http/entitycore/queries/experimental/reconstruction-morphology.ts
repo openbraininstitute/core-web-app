@@ -1,3 +1,4 @@
+import { entityCoreUrl } from '@/config';
 import authApiClient from '@/http/apiClient';
 import {
   ExpandReconstructionMorphologyParm,
@@ -6,7 +7,6 @@ import {
   IReconstructionMorphologyExpanded,
 } from '@/http/entitycore/types/entities/reconstruction-morphology';
 import { EntityCoreResponse } from '@/http/entitycore/types/shared/response';
-import { entityCoreUrl } from '@/config';
 
 /**
  * Retrieves a list of reconstruction morphologies from the EntityCoreAPI.

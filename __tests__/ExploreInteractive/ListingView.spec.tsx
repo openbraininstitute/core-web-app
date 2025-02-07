@@ -2,10 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { setupServer } from 'msw/node';
 import { Provider } from 'jotai';
 import { useHydrateAtoms } from 'jotai/utils';
-import {
-  mockEmptyESResponse,
-  mockMorphologyResponse,
-} from '../../../../../__tests__/__server__/handlers';
+import { mockEmptyESResponse, mockMorphologyResponse } from '../__server__/handlers';
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import { DataType } from '@/constants/explore-section/list-views';
 import sessionAtom from '@/state/session';

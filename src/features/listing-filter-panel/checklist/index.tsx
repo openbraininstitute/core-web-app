@@ -1,17 +1,15 @@
-import { ReactNode } from 'react';
-import { useAtom } from 'jotai';
+import { ReactNode, useState } from 'react';
 import { InfoCircleFilled } from '@ant-design/icons';
 
 import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants/explore-section/list-views';
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
-import { CheckListOption } from '@/components/Filter/CheckList/Option';
+import { CheckListOption } from '@/features/listing-filter-panel/checklist/option';
 import { CheckListProps } from '@/types/explore-section/application';
-import { FiltersRenderLengthAtom } from '@/components/Filter/state';
-import { useOptions } from '@/components/Filter/useOptions';
-import { Filter } from '@/components/Filter/types';
+import { useOptions } from '@/features/listing-filter-panel/use-options';
+import { Filter } from '@/features/listing-filter-panel/types';
 
+import SearchFilter from '@/features/listing-filter-panel/search-filter';
 import CenteredMessage from '@/components/CenteredMessage';
-import SearchFilter from '@/components/Filter/SearchFilter';
 
 type FacetLabelValuePair = { label: string; value: number };
 
@@ -28,7 +26,9 @@ export default function CheckList({
   values: string[];
   onChange: (value: string[]) => void;
 }) {
+  const [filtersRenderLength, setFiltersRenderLength] = useState(() => 5);
   const options = useOptions(values, data);
+
   const handleCheckedChange = (value: string) => {
     let newValues = [...values];
     if (values.includes(value)) {
@@ -39,19 +39,8 @@ export default function CheckList({
     onChange(newValues);
   };
 
-  const [filtersRenderLength, setFiltersRenderLength] = useAtom(FiltersRenderLengthAtom);
-
-  const renderLength = filtersRenderLength[filter.field];
-
-  const updateRenderLength = () => {
-    setFiltersRenderLength((prevFiltersRenderLength) => ({
-      ...prevFiltersRenderLength,
-      [filter.field]: renderLength + adjustedLoadMoreLength,
-    }));
-  };
-
   const loadMoreLength = 5;
-  const remainingLength = (data?.length ?? 0) - renderLength;
+  const remainingLength = (data?.length || 0) - filtersRenderLength;
   const adjustedLoadMoreLength =
     remainingLength >= loadMoreLength ? loadMoreLength : remainingLength;
 
@@ -60,6 +49,7 @@ export default function CheckList({
       ? ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.singular
       : ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.plural;
 
+  const updateRenderLength = () => setFiltersRenderLength((prev) => prev + adjustedLoadMoreLength);
   const loadMoreBtn = () =>
     !!remainingLength &&
     remainingLength > 0 && (
@@ -83,11 +73,11 @@ export default function CheckList({
       {options && options.length > 0 ? (
         children({
           options,
-          renderLength,
-          handleCheckedChange,
-          filterField: filter.field,
           search, // Pass the search function to the ListComponent
           loadMoreBtn, // Pass the loadMoreBtn function to the ListComponent
+          handleCheckedChange,
+          filterField: filter.field,
+          renderLength: filtersRenderLength,
           defaultRenderLength: DEFAULT_CHECKLIST_RENDER_LENGTH, // Pass the defaultRenderLength as a prop
         })
       ) : (
