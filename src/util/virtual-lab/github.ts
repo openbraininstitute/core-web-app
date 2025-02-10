@@ -217,9 +217,10 @@ export async function downloadZippedNotebook(notebook: Notebook) {
       const data = await response.json();
 
       const decodedContent = atob(data.content);
+
       const arrayBuffer = new Uint8Array(decodedContent.length);
       for (let j = 0; j < decodedContent.length; j++) {
-        arrayBuffer[i] = decodedContent.charCodeAt(i);
+        arrayBuffer[j] = decodedContent.charCodeAt(j);
       }
       zip.file(names[i], arrayBuffer);
     });
