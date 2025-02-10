@@ -1,44 +1,76 @@
 import map from 'lodash/map';
 import sortBy from 'lodash/sortBy';
+import find from 'lodash/find';
+import identity from 'lodash/identity';
+import isEmpty from 'lodash/isEmpty';
 
-import { isOrganization, isPerson } from '@/http/entitycore/guards';
 import { Filter } from '@/components/Filter/types';
 import { toDate } from '@/util/date';
 
 import type { IContributor } from '@/http/entitycore/types/shared/global';
-
-const DATE_FIELDS = new Set(['creation_date', 'update_date', 'registration_date']);
-
-const SPECIAL_FIELDS: Record<string, string> = {
-  name: 'name__ilike',
-};
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
   string | Array<string> | number | Array<number> | Date | null
 >;
 
-export const transformFiltersToQuery = (filters: Filter[]): TransformFiltersToQueryReturnValue => {
+/**
+ * Transforms a user-provided search pattern using `*` as a wildcard
+ * into a PostgreSQL `ILIKE`-compatible pattern.
+ *
+ * - Escapes existing `%` characters to prevent unintended matches.
+ * - Converts `*` into `%` for wildcard searches.
+ * - Returns `null` if the input is empty or falsy.
+ *
+ * @param {string} str - The input string containing the search pattern.
+ * @returns {string | null} The transformed pattern for PostgreSQL `ILIKE`, or `null` if input is empty.
+ *
+ * @example
+ * transformToIlikePattern("foo*bar") // "foo%bar"
+ * transformToIlikePattern("%special%") // "\\%special\\%"
+ */
+export function transformToIlikePattern(str: string) {
+  if (isEmpty(str)) return null;
+  return str
+    .replace(/%/g, '\\%') // Escape existing `%`
+    .replace(/\*/g, '%'); // Convert `*` to `%`
+}
+
+const QUERY_FIELDS_MODIFIERS: Array<{
+  field: string;
+  operator?: string;
+  modifier: (input: any) => any;
+}> = [
+    { field: 'name', operator: 'ilike', modifier: transformToIlikePattern },
+    { field: 'creation_date', modifier: toDate },
+    { field: 'update_date', modifier: toDate },
+    { field: 'registration_date', modifier: toDate },
+  ];
+
+export function transformFiltersToQuery(
+  filters: Array<Filter>
+): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
-    const fieldKey = SPECIAL_FIELDS[filter.field] || filter.field;
+    const fieldModifier = find(QUERY_FIELDS_MODIFIERS, { field: filter.field });
+    const modifier = fieldModifier?.modifier ?? identity;
+    const operator = fieldModifier?.operator;
 
     if (filter.value !== null && typeof filter.value === 'object' && !Array.isArray(filter.value)) {
-      Object.entries(filter.value).forEach(([operator, val]) => {
+      // Case: filter.value is an object (e.g., { gte: "...", lte: "..." })
+      Object.entries(filter.value).forEach(([op, val]) => {
         if (val !== null) {
-          acc[`${fieldKey}__${operator}`] = DATE_FIELDS.has(filter.field)
-            ? toDate(val.toString())
-            : val;
+          acc[`${filter.field}__${operator ?? op}`] = modifier(val);
         }
       });
-    } else if (filter.value !== null) {
-      acc[fieldKey] = DATE_FIELDS.has(filter.field)
-        ? toDate(filter.value.toString())
-        : filter.value;
+    } else {
+      // Case: Primitive or Array
+      const fieldKey = operator ? `${filter.field}__${operator}` : filter.field;
+      acc[fieldKey] = modifier(filter.value);
     }
 
     return acc;
   }, {} as TransformFiltersToQueryReturnValue);
-};
+}
 
 export function transformAgentToNames(
   agentsWithRoles: Array<IContributor> | undefined | null
@@ -49,12 +81,12 @@ export function transformAgentToNames(
   const agents = map(agentsWithRoles, 'agent');
   const processedAgents = map(agents, (agent) => ({
     // eslint-disable-next-line no-nested-ternary
-    name: isPerson(agent)
+    name: agent.type === 'person'
       ? `${agent.givenName} ${agent.familyName}`
-      : isOrganization(agent)
+      : agent.type === "organization"
         ? agent.pref_label
         : '',
-    type: isOrganization(agent) ? 0 : 1, // 0 for Org, 1 for Person
+    type: agent.type === "organization" ? 0 : 1, // 0 for Org, 1 for Person
   }));
 
   return map(sortBy(processedAgents, ['type', 'name']), 'name').join(', ');

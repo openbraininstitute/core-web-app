@@ -72,6 +72,7 @@ type RoleBase = {
 export interface IRole extends RoleBase, AuditMetadata { }
 
 type OrganizationBase = {
+  type: "organization";
   pref_label: string;
   alternative_name?: string | null;
 };
@@ -79,6 +80,7 @@ type OrganizationBase = {
 export interface IOrganization extends OrganizationBase, AuditMetadata { }
 
 type PersonBase = {
+  type: "person";
   givenName: string;
   familyName: string;
   pref_label: string;

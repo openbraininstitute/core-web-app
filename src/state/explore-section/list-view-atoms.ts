@@ -169,12 +169,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+          ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
+            selectedBrainRegionWithDescendantsAndAncestorsFamily(
+              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+            )
+          )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -219,7 +219,10 @@ export const dataAtom = atomFamily(
             page: pageNumber - 1,
             search: isEmpty(searchString) ? null : searchString,
             ...queryParams,
-            // brain_region_id: selectedBrainRegion?.id ? Number(selectedBrainRegion?.id.split('/').pop()) : undefined,
+            // TODO: ask backend team to extend the brain region filter to support the children of the selected one
+            // brain_region_id: selectedBrainRegion?.id
+            //   ? Number(selectedBrainRegion?.id.split('/').pop())
+            //   : undefined,
           },
         });
 
