@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
+import { IpynbRenderer } from 'react-ipynb-renderer';
 import { Notebook } from '@/util/virtual-lab/github';
 import { basePath } from '@/config';
+
+import 'react-ipynb-renderer/dist/styles/monokai.css';
 
 import 'github-markdown-css';
 import { notification } from '@/api/notifications';
@@ -21,8 +24,9 @@ export default function ContentModal({
   useEffect(() => {
     async function fetchFile() {
       if (!notebook || !display) return;
+
       const res = await fetch(
-        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(notebook.path)}`
+        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(display === 'notebook' ? notebook.notebookUrl : notebook.readmeUrl)}`
       );
 
       if (!res.ok) {
@@ -36,22 +40,31 @@ export default function ContentModal({
   }, [notebook, display]);
 
   return (
-    <Modal open={!!notebook && !!content} onCancel={onCancel} footer={false} width="70%">
+    <Modal
+      open={!!notebook && !!content}
+      onCancel={() => {
+        setContent(null);
+        onCancel();
+      }}
+      footer={false}
+      width="70%"
+    >
       <div>
-        {display === 'readme' && (
+        {display === 'readme' && !!content && (
           <div className="markdown-body">
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         )}
 
-        {display === 'notebook' && !!notebook && (
-          <div className="h-[80vh] w-full">
-            <iframe
+        {display === 'notebook' && !!notebook && !!content && (
+          <div className="h-[80vh] w-full overflow-y-scroll">
+            {/* <iframe
               title={notebook?.path}
               src={`https://nbviewer.org/github/${notebook.githubUser}/${notebook.githubRepo}/blob/${notebook.defaultBranch}/${notebook.path}`}
               width="100%"
               height="100%"
-            />
+            /> */}
+            <IpynbRenderer ipynb={JSON.parse(content)} />
           </div>
         )}
       </div>

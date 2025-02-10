@@ -4,6 +4,10 @@ import capitalize from 'lodash/capitalize';
 import { assertErrorMessage } from '../utils';
 
 export const options = {
+  headers: {
+    Authorization: 'token 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',
+  },
+
   next: {
     revalidate: 3600 * 24,
   },
@@ -162,8 +166,11 @@ async function getFileCreationDate(
 }
 
 export async function fetchGithubFile(url: string) {
+  console.log(url);
   try {
     const response = await fetch(url, options);
+
+    console.log(response);
     const data = await response.json();
 
     if (!response.ok) {
@@ -171,7 +178,8 @@ export async function fetchGithubFile(url: string) {
     }
 
     return atob(data.content);
-  } catch {
+  } catch (e) {
+    console.log('\n\n error', e);
     throw new Error(`Failed to file ${url}`);
   }
 }

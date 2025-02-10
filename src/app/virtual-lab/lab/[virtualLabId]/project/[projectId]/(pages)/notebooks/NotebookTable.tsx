@@ -117,15 +117,12 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
                   height={12}
                   alt="Readme"
                 />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDisplay('notebook');
-                    setCurrentNotebook(notebook);
-                  }}
+                <a
+                  href={`https://nbviewer.org/github/${notebook.githubUser}/${notebook.githubRepo}/blob/${notebook.defaultBranch}/${notebook.path}`}
+                  target="_blank"
                 >
                   Preview
-                </button>
+                </a>
               </div>
               <div className="flex gap-4">
                 <Image
@@ -162,16 +159,21 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string) => <strong>{name}</strong>,
+      render: (name: string, notebook: Notebook) => (
+        <button
+          className="cursor-pointer"
+          aria-label="preview"
+          type="button"
+          onClick={() => {
+            setDisplay('notebook');
+            setCurrentNotebook(notebook);
+          }}
+        >
+          {name}
+        </button>
+      ),
       sorter: getSorter('name'),
     },
-
-    // {
-    //   title: 'Description',
-    //   dataIndex: 'description',
-    //   key: 'description',
-    //   sorter: getSorter('description'),
-    // },
 
     {
       title: 'Object of interest',
@@ -242,11 +244,6 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
             title="Scale"
             onToggle={() => toggleColumn('scale')}
           />
-          {/* <ColumnToggle
-            hidden={isColumnHidden('description')}
-            title="Description"
-            onToggle={() => toggleColumn('description')}
-          /> */}
           <ColumnToggle
             hidden={isColumnHidden('objectOfInterest')}
             title="Object of interest"
