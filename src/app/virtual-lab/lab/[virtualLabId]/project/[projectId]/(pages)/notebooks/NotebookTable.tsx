@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { saveAs } from 'file-saver';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
@@ -25,7 +25,15 @@ import { notification } from '@/api/notifications';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 
-function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: string[] }) {
+function NotebookTable({
+  notebooks,
+  failed,
+  onDelete,
+}: {
+  notebooks: Notebook[];
+  failed?: string[];
+  onDelete?: (id: string) => void;
+}) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
@@ -140,6 +148,19 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
                 </button>
                 {loadingZip && <LoadingOutlined />}
               </div>
+
+              {onDelete && (
+                <div className="flex gap-4 text-error">
+                  <DeleteOutlined className="text-error" />
+                  <button
+                    type="button"
+                    className="hover:text-primary-4"
+                    onClick={() => onDelete(notebook.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           }
           overlayStyle={{ border: '1px solid #096DD9' }}

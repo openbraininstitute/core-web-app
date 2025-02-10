@@ -53,8 +53,9 @@ export default function UserNotebookPage({
   const [openModal, setOpenModal] = useState(false);
   const [step, setStep] = useState(0);
   const [notebookUrl, setNotebookUrl] = useState('');
-  const [notebook, setNotebook] = useState<Notebook | null>(null);
+  const [notebook, setNotebook] = useState<Omit<Notebook, 'id' | 'creationDate'> | null>(null);
   const [loading, setLoading] = useDelayedLoading(false);
+  const [deleteNotebookId, setDeleteNotebookId] = useState('');
 
   const resetModal = () => {
     setOpenModal(false);
@@ -64,9 +65,31 @@ export default function UserNotebookPage({
     setLoading(false);
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await authFetch(`${virtualLabApi.url}/projects/${projectId}/notebooks/${id}/`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) {
+        notification.error('There was an error deregistering the notebook, please try again');
+        setDeleteNotebookId('');
+        return;
+      }
+    } catch {
+      notification.error('There was an error deregistering the notebook, please try again');
+      setDeleteNotebookId('');
+      return;
+    }
+
+    setNotebooks(notebooks.filter((n) => n.id === id));
+    setDeleteNotebookId('');
+  };
+
   return (
     <>
-      <NotebookTable notebooks={notebooks} />
+      <NotebookTable notebooks={notebooks} onDelete={(id: string) => setDeleteNotebookId(id)} />
       <Modal open={openModal} onCancel={resetModal} footer={false} width="40vw">
         {step === 0 && (
           <>
@@ -165,14 +188,20 @@ export default function UserNotebookPage({
                     );
 
                     const newNotebook = await assertVLApiResponse(notebookRes);
-                    NotebookSchema.parse(newNotebook);
+                    const newValidatedNotebook = NotebookSchema.parse(newNotebook);
+                    setNotebooks([
+                      ...notebooks,
+                      {
+                        ...notebook,
+                        id: newValidatedNotebook.id,
+                        creationDate: newValidatedNotebook.created_at,
+                      },
+                    ]);
                   } catch (e) {
                     notification.error('Unknown error, please try again.');
                     resetModal();
                     return;
                   }
-
-                  setNotebooks([...notebooks, notebook]);
 
                   resetModal();
                 }}
@@ -187,6 +216,15 @@ export default function UserNotebookPage({
             </div>
           </div>
         )}
+      </Modal>
+      <Modal
+        open={!!deleteNotebookId}
+        onCancel={() => setDeleteNotebookId('')}
+        onOk={() => handleDelete(deleteNotebookId)}
+      >
+        <div>
+          This will deresgister the notebook for all project members. Do you wish to proceed?
+        </div>
       </Modal>
       <button
         type="button"

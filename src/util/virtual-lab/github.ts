@@ -14,6 +14,7 @@ export const options = {
 };
 
 export interface Notebook {
+  id: string;
   key: string;
   name: string;
   description: string;
@@ -91,6 +92,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
         const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
 
         notebooks.push({
+          id: '', // OBI notebooks have no id in the database
           scale,
           path: item.path,
           name,
@@ -289,7 +291,9 @@ function validateMetadata(input: string) {
 
 const validScales = ['cellular', 'circuit', 'system'];
 
-export async function fetchNotebook(githubUrl: string): Promise<Notebook> {
+export async function fetchNotebook(
+  githubUrl: string
+): Promise<Omit<Notebook, 'id' | 'creationDate'>> {
   const regex = /github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)/;
   const match = githubUrl.match(regex);
 
@@ -387,6 +391,5 @@ export async function fetchNotebook(githubUrl: string): Promise<Notebook> {
     githubRepo: repo,
     defaultBranch: branch,
     objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
-    creationDate: '',
   };
 }

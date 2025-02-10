@@ -43,9 +43,9 @@ export default async function Notebooks({
 
   const notebooksPromises = notebooks.map((n) => fetchNotebook(n.github_file_url));
   const validatedNotebooks = await Promise.all(notebooksPromises);
-  validatedNotebooks.forEach((n, i) => {
-    n.creationDate = notebooks[i].created_at; // eslint-disable-line no-param-reassign
+  const initialNotebooks = validatedNotebooks.map((n, i) => {
+    return { ...n, id: notebooks[i].id, creationDate: notebooks[i].created_at };
   });
 
-  return <UserNotebookPage initialNotebooks={validatedNotebooks} projectId={projectId} />;
+  return <UserNotebookPage initialNotebooks={initialNotebooks} projectId={projectId} />;
 }
