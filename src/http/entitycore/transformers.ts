@@ -4,7 +4,6 @@ import find from 'lodash/find';
 import identity from 'lodash/identity';
 import isEmpty from 'lodash/isEmpty';
 
-import { isOrganization, isPerson } from '@/http/entitycore/guards';
 import { Filter } from '@/features/listing-filter-panel/types';
 import { toDate } from '@/util/date';
 
@@ -44,11 +43,11 @@ const QUERY_FIELDS_MODIFIERS: Array<{
   operator?: string;
   modifier: (input: any) => any;
 }> = [
-  { field: 'name', operator: 'ilike', modifier: transformToIlikePattern },
-  { field: 'creation_date', modifier: toDate },
-  { field: 'update_date', modifier: toDate },
-  { field: 'registration_date', modifier: toDate },
-];
+    { field: 'name', operator: 'ilike', modifier: transformToIlikePattern },
+    { field: 'creation_date', modifier: toDate },
+    { field: 'update_date', modifier: toDate },
+    { field: 'registration_date', modifier: toDate },
+  ];
 
 export function transformFiltersToQuery(
   filters: Array<Filter>
@@ -84,12 +83,12 @@ export function transformAgentToNames(
   const agents = map(agentsWithRoles, 'agent');
   const processedAgents = map(agents, (agent) => ({
     // eslint-disable-next-line no-nested-ternary
-    name: isPerson(agent)
+    name: agent.type === 'person'
       ? `${agent.givenName} ${agent.familyName}`
-      : isOrganization(agent)
+      : agent.type === "organization"
         ? agent.pref_label
         : '',
-    type: isOrganization(agent) ? 0 : 1, // 0 for Org, 1 for Person
+    type: agent.type === "organization" ? 0 : 1, // 0 for Org, 1 for Person
   }));
 
   return map(sortBy(processedAgents, ['type', 'name']), 'name').join(', ');
