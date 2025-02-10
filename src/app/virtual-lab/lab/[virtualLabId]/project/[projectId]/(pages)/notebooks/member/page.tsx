@@ -1,10 +1,14 @@
 import { z } from 'zod';
-import NotebookTable from '../NotebookTable';
+import UserNotebookPage from './UserNotebookPage';
 import { ServerSideComponentProp } from '@/types/common';
 import { fetchNotebook } from '@/util/virtual-lab/github';
 import { virtualLabApi } from '@/config';
 import { assertVLApiResponse } from '@/util/utils';
-import UserNotebookPage from './UserNotebookPage';
+import authFetch, { getSession } from '@/authFetch';
+import { headers } from 'next/headers';
+import { access } from 'fs';
+import { head } from 'lodash';
+import { assert } from 'console';
 
 const NotebookSchema = z.object({
   id: z.string().uuid(),
@@ -21,35 +25,25 @@ export default async function Notebooks({
 }: ServerSideComponentProp<{ projectId: string }>) {
   const { projectId } = params;
 
-  // let userNotebookData: any;
+  let userNotebookData: any;
 
-  // try {
-  //   const userNotebooksRes = await fetch(
-  //     `${virtualLabApi.url}/projects/${projectId}/notebooks?page_size=100`
-  //   );
+  try {
+    const userNotebooksRes = await authFetch(
+      `${virtualLabApi.url}/projects/${projectId}/notebooks/?page_size=100`
+    );
 
-  //   userNotebookData = await assertVLApiResponse(userNotebooksRes);
-  // } catch {
-  //   throw new Error(`Failed to fetch notebooks for project ${projectId}`);
-  // }
+    userNotebookData = await assertVLApiResponse(userNotebooksRes);
+  } catch {
+    throw new Error(`Failed to fetch notebooks for project ${projectId}`);
+  }
 
-  // let notebooks: ReturnType<typeof NotebooksArraySchema.parse>;
+  let notebooks: ReturnType<typeof NotebooksArraySchema.parse>;
 
-  // try {
-  //   notebooks = NotebooksArraySchema.parse(userNotebookData);
-  // } catch {
-  //   throw new Error(`Failed to validate data for notebooks`);
-  // }
-
-  // const githubFolderUrl =
-  //   'https://github.com/openbraininstitute/obi_platform_analysis_notebooks/tree/main/Cellular/display_morphology_population_features';
-
-  const notebooks = [
-    {
-      github_file_url:
-        'https://github.com/openbraininstitute/obi_platform_analysis_notebooks/tree/main/Cellular/display_morphology_population_features',
-    },
-  ];
+  try {
+    notebooks = NotebooksArraySchema.parse(userNotebookData.data.results);
+  } catch {
+    throw new Error(`Failed to validate data for notebooks`);
+  }
 
   const notebooksPromises = notebooks.map((n) => fetchNotebook(n.github_file_url));
   const validatedNotebooks = await Promise.all(notebooksPromises);
