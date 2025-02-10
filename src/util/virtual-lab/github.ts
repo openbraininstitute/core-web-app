@@ -321,7 +321,7 @@ export async function fetchNotebook(githubUrl: string): Promise<Notebook> {
 
   if (!response.ok) {
     assertGithubApiResponse(response);
-    throw new Error('Failed to fetch the notebook');
+    throw new Error('Failed to fetch the notebook. Ensure notebook is public');
   }
 
   const data: {
