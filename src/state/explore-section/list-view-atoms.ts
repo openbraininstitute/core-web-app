@@ -218,8 +218,11 @@ export const dataAtom = atomFamily(
             page_size: pageSize,
             page: pageNumber - 1,
             search: isEmpty(searchString) ? null : searchString,
+            // TODO: ask backend team to extend the brain region filter to support the children of the selected one
+            brain_region_id: selectedBrainRegion?.id
+              ? Number(selectedBrainRegion?.id.split('/').pop())
+              : undefined,
             ...queryParams,
-            // brain_region_id: selectedBrainRegion?.id ? Number(selectedBrainRegion?.id.split('/').pop()) : undefined,
           },
         });
 
