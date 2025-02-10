@@ -2,10 +2,11 @@ import JSZip from 'jszip';
 import { z } from 'zod';
 import capitalize from 'lodash/capitalize';
 import { assertErrorMessage } from '../utils';
+import Item from 'antd/es/list/Item';
 
 export const options = {
   headers: {
-    Authorization: 'token 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',
+    Accept: 'application/vnd.github.v3+json',
   },
 
   next: {
@@ -35,6 +36,12 @@ type Item = {
   path: string;
 };
 
+function assertGithubApiResponse(res: Response) {
+  if (res.headers.get('x-ratelimit-remaining') === '0') {
+    throw new Error('GitHub API Rate limit reached');
+  }
+}
+
 export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[]> {
   const repoDetails = extractUserAndRepo(repoUrl);
 
@@ -43,9 +50,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
   const repoRes = await fetch(apiBaseUrl, options);
 
   if (!repoRes.ok) {
-    if (repoRes.headers.get('x-ratelimit-remaining') === '0') {
-      throw new Error('GitHub API Rate limit reached');
-    }
+    assertGithubApiResponse(repoRes);
     throw new Error(`Cannot fetch the repository ${repoUrl}`);
   }
   const repository = await repoRes.json();
@@ -78,8 +83,6 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
       const parts = item.path.split('/');
       const scale = parts[parts.length - 3] ?? '';
       const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
-
-      console.log(name);
 
       datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
       try {
@@ -152,7 +155,7 @@ async function getFileCreationDate(
     const commits = await response.json();
 
     if (commits.length === 0) {
-      console.log(`No commits found for file: ${filePath}`);
+      console.error(`No commits found for file: ${filePath}`);
       return null;
     }
 
@@ -166,21 +169,34 @@ async function getFileCreationDate(
 }
 
 export async function fetchGithubFile(url: string) {
-  console.log(url);
+  const response = await fetch(url, options);
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`Failed to file ${url}`);
+  }
+
   try {
-    const response = await fetch(url, options);
-
-    console.log(response);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Failed to file ${url}`);
-    }
-
     return atob(data.content);
   } catch (e) {
-    console.log('\n\n error', e);
+    throw new Error(`Failed to parse contents of ${url}`);
+  }
+}
+
+export async function fetchRawGithubFile(url: string) {
+  const response = await fetch(url, options);
+
+  const data = await response.text();
+
+  if (!response.ok) {
     throw new Error(`Failed to file ${url}`);
+  }
+
+  try {
+    return data;
+  } catch (e) {
+    throw new Error(`Failed to parse contents of ${url}`);
   }
 }
 
@@ -270,4 +286,97 @@ function validateMetadata(input: string) {
   } catch (e) {
     throw new Error('Invalid metadata');
   }
+}
+
+export async function fetchNotebook(githubUrl: string): Promise<Notebook> {
+  const regex = /github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)/;
+  const match = githubUrl.match(regex);
+
+  if (!match) {
+    throw new Error(
+      'Github URL should point to a folder with a notebook including Readme.md, analysis_notebook.ipynb and metadata.json'
+    );
+  }
+
+  const [, owner, repo, branch, path] = match;
+
+  // Extract top-level and last folder
+  const pathParts = githubUrl.split('/');
+  const scale = pathParts[pathParts.length - 2];
+  const name = pathParts[pathParts.length - 3];
+
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+
+  const response = await fetch(apiUrl, options);
+
+  if (!response.ok) {
+    assertGithubApiResponse(response);
+    throw new Error('Failed to fetch the notebook');
+  }
+
+  const data: {
+    name: string;
+    sha: string;
+    path: string;
+  }[] = await response.json();
+
+  const notebookFiles = ['analysis_info.json', 'analysis_notebook.ipynb', 'README.md'];
+
+  type Files = Record<
+    string,
+    {
+      fileUrl: string;
+      path: string;
+      name: string;
+    }
+  >;
+
+  const files: Files = data.reduce((acc, item) => {
+    if (notebookFiles.includes(item.name) && item.sha && item.name) {
+      acc[item.name] = {
+        fileUrl: `https://api.github.com/repos/${owner}/${repo}/git/blobs/${item.sha}`,
+        path: `${owner}/${repo}/${item.path}`,
+        name: item.name,
+      };
+    }
+    return acc;
+  }, {} as Files);
+
+  notebookFiles.forEach((k) => {
+    if (files[k] === undefined)
+      throw new Error(`Cannot find ${k} for notebook ${owner}/${repo}/${path}`);
+  });
+
+  let metadataContent = '';
+
+  try {
+    metadataContent = await fetchGithubFile(files['analysis_info.json'].fileUrl);
+  } catch {
+    throw new Error(`Failed to download metadata file for notebook ${owner}/${repo}/${path}`);
+  }
+
+  let metadata: ReturnType<typeof validateMetadata>;
+
+  try {
+    metadata = validateMetadata(metadataContent);
+  } catch {
+    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${path}`);
+  }
+
+  return {
+    key: `${owner}/${repo}/${path}`,
+    name,
+    description: '',
+    notebookUrl: files['analysis_notebook.ipynb'].fileUrl,
+    readmeUrl: files['README.md'].fileUrl,
+    metadataUrl: files['analysis_info.json'].fileUrl,
+    scale,
+    path: `${path}/${files['analysis_notebook.ipynb'].name}`,
+    author: owner,
+    githubUser: owner,
+    githubRepo: repo,
+    defaultBranch: branch,
+    objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
+    creationDate: await getFileCreationDate(owner, repo, path),
+  };
 }

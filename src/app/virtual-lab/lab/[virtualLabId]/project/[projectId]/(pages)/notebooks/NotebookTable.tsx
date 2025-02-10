@@ -87,7 +87,8 @@ function NotebookTable({ notebooks, failed }: { notebooks: Notebook[]; failed?: 
     }
   };
 
-  const renderActionColumns = (path: string, notebook: Notebook) => {
+  const renderActionColumns = (_: string, notebook: Notebook) => {
+    console.log(notebook.path);
     return (
       <div id="popover">
         <Popover

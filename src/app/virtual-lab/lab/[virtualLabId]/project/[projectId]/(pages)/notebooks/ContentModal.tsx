@@ -58,12 +58,6 @@ export default function ContentModal({
 
         {display === 'notebook' && !!notebook && !!content && (
           <div className="h-[80vh] w-full overflow-y-scroll">
-            {/* <iframe
-              title={notebook?.path}
-              src={`https://nbviewer.org/github/${notebook.githubUser}/${notebook.githubRepo}/blob/${notebook.defaultBranch}/${notebook.path}`}
-              width="100%"
-              height="100%"
-            /> */}
             <IpynbRenderer ipynb={JSON.parse(content)} />
           </div>
         )}
