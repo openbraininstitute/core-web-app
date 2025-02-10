@@ -5,9 +5,8 @@ import fetchNotebooks from '@/util/virtual-lab/github';
 
 export default async function Notebooks({
   params,
-}: ServerSideComponentProp<{ projectId: string }>) {
-  // eslint-disable-next-line
-  const { projectId } = params;
+}: ServerSideComponentProp<{ projectId: string; virtualLabId: string }>) {
+  const { projectId, virtualLabId } = params;
   const notebooks = await fetchNotebooks(notebookRepoUrl);
-  return <NotebookTable notebooks={notebooks} />;
+  return <NotebookTable notebooks={notebooks} projectId={projectId} vlabId={virtualLabId} />;
 }

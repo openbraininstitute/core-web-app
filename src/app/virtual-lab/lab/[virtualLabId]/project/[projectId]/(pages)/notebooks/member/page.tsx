@@ -18,8 +18,8 @@ const NotebooksArraySchema = z.array(NotebookSchema);
 
 export default async function Notebooks({
   params,
-}: ServerSideComponentProp<{ projectId: string }>) {
-  const { projectId } = params;
+}: ServerSideComponentProp<{ projectId: string; virtualLabId: string }>) {
+  const { projectId, virtualLabId } = params;
 
   let userNotebookData: any;
 
@@ -47,5 +47,11 @@ export default async function Notebooks({
     return { ...n, id: notebooks[i].id, creationDate: notebooks[i].created_at };
   });
 
-  return <UserNotebookPage initialNotebooks={initialNotebooks} projectId={projectId} />;
+  return (
+    <UserNotebookPage
+      initialNotebooks={initialNotebooks}
+      projectId={projectId}
+      vlabId={virtualLabId}
+    />
+  );
 }

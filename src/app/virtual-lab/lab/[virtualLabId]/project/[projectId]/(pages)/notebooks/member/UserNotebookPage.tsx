@@ -45,9 +45,11 @@ function useDelayedLoading(initialValue = false, delay = 200) {
 export default function UserNotebookPage({
   initialNotebooks,
   projectId,
+  vlabId,
 }: {
   initialNotebooks: Notebook[];
   projectId: string;
+  vlabId: string;
 }) {
   const [notebooks, setNotebooks] = useState(initialNotebooks);
   const [openModal, setOpenModal] = useState(false);
@@ -89,7 +91,12 @@ export default function UserNotebookPage({
 
   return (
     <>
-      <NotebookTable notebooks={notebooks} onDelete={(id: string) => setDeleteNotebookId(id)} />
+      <NotebookTable
+        notebooks={notebooks}
+        onDelete={(id: string) => setDeleteNotebookId(id)}
+        projectId={projectId}
+        vlabId={vlabId}
+      />
       <Modal open={openModal} onCancel={resetModal} footer={false} width="40vw">
         {step === 0 && (
           <>

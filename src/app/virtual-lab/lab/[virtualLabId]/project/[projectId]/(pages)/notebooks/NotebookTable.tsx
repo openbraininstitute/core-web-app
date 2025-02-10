@@ -14,6 +14,7 @@ import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-di
 import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
 import { getSorter } from './utils';
 import ContentModal from './ContentModal';
+import NotebookTabs from './NotebookTabs';
 import useSearch from '@/components/VirtualLab/Search';
 import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
 import { basePath } from '@/config';
@@ -29,7 +30,11 @@ function NotebookTable({
   notebooks,
   failed,
   onDelete,
+  vlabId,
+  projectId,
 }: {
+  vlabId: string;
+  projectId: string;
   notebooks: Notebook[];
   failed?: string[];
   onDelete?: (id: string) => void;
@@ -257,50 +262,53 @@ function NotebookTable({
         },
       }}
     >
-      <div className="mt-10 flex items-center justify-between">
-        {Search}
-        <FilterControls numberOfColumns={filteredColumns.length - 1} filtersCount={filterCount}>
-          <ColumnToggle
-            hidden={isColumnHidden('scale')}
-            title="Scale"
-            onToggle={() => toggleColumn('scale')}
-          />
-          <ColumnToggle
-            hidden={isColumnHidden('objectOfInterest')}
-            title="Object of interest"
-            onToggle={() => toggleColumn('objectOfInterest')}
-          />
-          <ColumnToggle
-            hidden={isColumnHidden('author')}
-            title="Author"
-            onToggle={() => toggleColumn('author')}
-          />
-          <ColumnToggle
-            hidden={isColumnHidden('creationDate')}
-            title="Creation date"
-            onToggle={() => toggleColumn('creationDate')}
-          >
-            <ConfigProvider
-              theme={{
-                token: {
-                  colorBgBase: '#002766',
-                  colorPrimary: '#40a9ff',
-                  colorTextPlaceholder: '#8c8c8c',
-                  colorTextDisabled: '#8c8c8c',
-                  colorIcon: '#8c8c8c',
-                  colorIconHover: '#40a9ff',
-                },
-              }}
+      <>
+        <NotebookTabs vlabId={vlabId} projectId={projectId} />
+        <div className="mt-10 flex items-center justify-between">
+          {Search}
+          <FilterControls numberOfColumns={filteredColumns.length - 1} filtersCount={filterCount}>
+            <ColumnToggle
+              hidden={isColumnHidden('scale')}
+              title="Scale"
+              onToggle={() => toggleColumn('scale')}
+            />
+            <ColumnToggle
+              hidden={isColumnHidden('objectOfInterest')}
+              title="Object of interest"
+              onToggle={() => toggleColumn('objectOfInterest')}
+            />
+            <ColumnToggle
+              hidden={isColumnHidden('author')}
+              title="Author"
+              onToggle={() => toggleColumn('author')}
+            />
+            <ColumnToggle
+              hidden={isColumnHidden('creationDate')}
+              title="Creation date"
+              onToggle={() => toggleColumn('creationDate')}
             >
-              <RangePicker
-                onChange={(values: RangeValue<Date>) => {
-                  onDateChange('creationDate', values);
+              <ConfigProvider
+                theme={{
+                  token: {
+                    colorBgBase: '#002766',
+                    colorPrimary: '#40a9ff',
+                    colorTextPlaceholder: '#8c8c8c',
+                    colorTextDisabled: '#8c8c8c',
+                    colorIcon: '#8c8c8c',
+                    colorIconHover: '#40a9ff',
+                  },
                 }}
-              />
-            </ConfigProvider>
-          </ColumnToggle>
-        </FilterControls>
-      </div>
+              >
+                <RangePicker
+                  onChange={(values: RangeValue<Date>) => {
+                    onDateChange('creationDate', values);
+                  }}
+                />
+              </ConfigProvider>
+            </ColumnToggle>
+          </FilterControls>
+        </div>
+      </>
 
       <div id="table-container" className="mt-5">
         <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
