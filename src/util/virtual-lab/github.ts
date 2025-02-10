@@ -129,6 +129,7 @@ export async function fetchNotebooksCatchError(repoUrl: string): Promise<Noteboo
   try {
     return await fetchNotebooks(repoUrl);
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(assertErrorMessage(e));
     return repoUrl;
   }
@@ -147,6 +148,7 @@ async function getFileCreationDate(
     const response = await fetch(url, options);
 
     if (!response.ok) {
+      // eslint-disable-next-line no-console
       console.error(
         `GitHub API request failed with status: ${response.status} ${response.statusText}`
       );
@@ -156,6 +158,7 @@ async function getFileCreationDate(
     const commits = await response.json();
 
     if (commits.length === 0) {
+      // eslint-disable-next-line no-console
       console.error(`No commits found for file: ${filePath}`);
       return null;
     }
@@ -164,6 +167,7 @@ async function getFileCreationDate(
     const creationDate = firstCommit.commit.committer.date;
     return creationDate;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching commit history:', error);
     return null;
   }
