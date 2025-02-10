@@ -96,21 +96,21 @@ export function TreeNavItem({
     () =>
       items?.length && renderedItems?.some((item) => item !== null) // Any non-hidden children?
         ? (triggerProps: {}) => (
-          <Accordion.Trigger
-            className={classNames(
-              'accordion-trigger',
-              styles.accordionTrigger,
-              section ? styles[section] : ''
-            )}
-            data-disabled={!items || items.length === 0}
-            {...triggerProps} /* eslint-disable-line react/jsx-props-no-spreading */
-          >
-            <CaretRightOutlined
-              style={{ color: colorCode }}
-              className={classNames(styles.accordionChevron, 'h-[13px] mix-blend-difference')}
-            />
-          </Accordion.Trigger>
-        )
+            <Accordion.Trigger
+              className={classNames(
+                'accordion-trigger',
+                styles.accordionTrigger,
+                section ? styles[section] : ''
+              )}
+              data-disabled={!items || items.length === 0}
+              {...triggerProps} /* eslint-disable-line react/jsx-props-no-spreading */
+            >
+              <CaretRightOutlined
+                style={{ color: colorCode }}
+                className={classNames(styles.accordionChevron, 'h-[13px] mix-blend-difference')}
+              />
+            </Accordion.Trigger>
+          )
         : null,
     [items, renderedItems, section, colorCode]
   );
@@ -118,28 +118,28 @@ export function TreeNavItem({
   const content =
     items?.length && renderedItems?.filter((item) => item)?.length
       ? (contentProps: { renderBefore?: ReactNode; renderAfter?: ReactNode } = {}) => {
-        const { renderBefore, renderAfter, ...contentPropsRest } = contentProps;
+          const { renderBefore, renderAfter, ...contentPropsRest } = contentProps;
 
-        return (
-          <Accordion.Content
-            {...contentPropsRest} /* eslint-disable-line react/jsx-props-no-spreading */
-          >
-            {renderBefore}
-            <Accordion.Root
-              onValueChange={(newValue) => onValueChange(newValue, path)}
-              type="multiple"
-              value={itemValue ? Object.keys(itemValue) : []}
-              asChild
+          return (
+            <Accordion.Content
+              {...contentPropsRest} /* eslint-disable-line react/jsx-props-no-spreading */
             >
-              <>
-                {/* eslint-disable-line react/jsx-no-useless-fragment */}
-                {renderedItems}
-              </>
-            </Accordion.Root>
-            {renderAfter}
-          </Accordion.Content>
-        );
-      }
+              {renderBefore}
+              <Accordion.Root
+                onValueChange={(newValue) => onValueChange(newValue, path)}
+                type="multiple"
+                value={itemValue ? Object.keys(itemValue) : []}
+                asChild
+              >
+                <>
+                  {/* eslint-disable-line react/jsx-no-useless-fragment */}
+                  {renderedItems}
+                </>
+              </Accordion.Root>
+              {renderAfter}
+            </Accordion.Content>
+          );
+        }
       : null;
 
   const render =

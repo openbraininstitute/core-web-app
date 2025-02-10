@@ -35,7 +35,7 @@ import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import * as entitycoreApi from '@/http/entitycore/queries';
-import { transformFiltersToQuery } from '@/http/entitycore/utils';
+import { transformFiltersToQuery } from '@/http/entitycore/transformers';
 
 type DataAtomFamilyScopeType = {
   dataType: DataType;
@@ -169,12 +169,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-          ExploreDataScope.BuildSelectedBrainRegion
+        ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-            selectedBrainRegionWithDescendantsAndAncestorsFamily(
-              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-            )
-          )) || []
+              selectedBrainRegionWithDescendantsAndAncestorsFamily(
+                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+              )
+            )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -222,6 +222,9 @@ export const dataAtom = atomFamily(
             // brain_region_id: selectedBrainRegion?.id ? Number(selectedBrainRegion?.id.split('/').pop()) : undefined,
           },
         });
+
+        console.log('ᦨ #  list-view-atoms.ts:226 #  atom #  response:', response);
+
         return response;
       }
       // const response =

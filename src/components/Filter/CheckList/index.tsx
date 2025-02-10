@@ -13,7 +13,7 @@ import { Filter } from '@/components/Filter/types';
 import CenteredMessage from '@/components/CenteredMessage';
 import SearchFilter from '@/components/Filter/SearchFilter';
 
-type FacetLabelValuePair = { label: string, value: number };
+type FacetLabelValuePair = { label: string; value: number };
 
 export default function CheckList({
   children,
@@ -101,9 +101,6 @@ export default function CheckList({
     </div>
   );
 }
-
-
-
 
 export const defaultList = ({
   options,

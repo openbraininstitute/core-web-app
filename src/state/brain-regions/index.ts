@@ -37,7 +37,7 @@ import { getTemporaryBrainRegionHierarchy } from '@/http/entitycore/queries/gene
 import {
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
-} from '@/http/entitycore/types/shared/brain-region';
+} from '@/http/entitycore/types/entities/brain-region';
 
 /*
   Atom dependency graph

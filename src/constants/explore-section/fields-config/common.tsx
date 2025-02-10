@@ -32,6 +32,7 @@ import {
   ExperimentalTracesDataType as ExperimentalTracesEModel,
 } from '@/types/e-model';
 import { DisplayMessages } from '@/constants/display-messages';
+import { transformAgentToNames } from '@/http/entitycore/transformers';
 
 export const previewRender = ({
   distribution,
@@ -287,7 +288,7 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
   [EntityCoreFields.Contributors]: {
     title: 'Contributors',
     filter: FilterTypeEnum.CheckList,
-    render: () => DisplayMessages.NO_DATA_STRING, // TODO: update when Contributors included into entitycore service
+    render: (r) => transformAgentToNames(r.contributors) || DisplayMessages.NO_DATA_STRING,
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',

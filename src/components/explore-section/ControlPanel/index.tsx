@@ -22,7 +22,6 @@ import { CheckList, DateRange, defaultList, FilterGroup } from '@/components/Fil
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import {
   activeColumnsAtom,
-  dataAtom,
   filtersAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
@@ -30,8 +29,6 @@ import { getFieldLabel } from '@/api/explore-section/fields';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DataType } from '@/constants/explore-section/list-views';
 import { fieldTitleSentenceCase } from '@/util/utils';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { useUnwrappedValue } from '@/hooks/hooks';
 import { Facets } from '@/http/entitycore/types/shared/response';
 
 export type ControlPanelProps = {
@@ -45,7 +42,6 @@ export type ControlPanelProps = {
   setFilters: any;
   showDisplayTrigger?: boolean;
   resourceId?: string;
-  virtualLabInfo: VirtualLabInfo | undefined;
 };
 
 function createFilterItemComponent(
@@ -54,8 +50,6 @@ function createFilterItemComponent(
   filterValues: FilterValues,
   setFilterValues: Dispatch<SetStateAction<FilterValues>>
 ) {
-  console.log("ᦨ #  index.tsx:94 #  FilterItemComponent #  facets:", facets);
-
   return function FilterItemComponent() {
     const { type } = filter;
 
@@ -102,7 +96,7 @@ function createFilterItemComponent(
 
       case FilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
-        const facetItems = map(facets[filter.field], (value, label) => ({ label, value, }));
+        const facetItems = map(facets[filter.field], (value, label) => ({ label, value }));
 
         return (
           <CheckList
@@ -162,7 +156,6 @@ export default function ControlPanel({
   facets,
   showDisplayTrigger = true,
   resourceId,
-  virtualLabInfo,
 }: ControlPanelProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -176,8 +169,6 @@ export default function ControlPanel({
       [dataType, dataScope, dataKey]
     )
   );
-
-
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;
@@ -210,8 +201,9 @@ export default function ControlPanel({
   if (!activeColumns) return null;
 
   const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${activeColumnsLength === 1 ? 'column' : 'columns'
-    }`;
+  const activeColumnsText = `${activeColumnsLength} active ${
+    activeColumnsLength === 1 ? 'column' : 'columns'
+  }`;
 
   const filterItems = filters
     ?.map((filter) => {

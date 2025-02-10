@@ -10,9 +10,10 @@ import {
   ILicense,
   ISpecies,
   IStrain,
-  IAuditMetadata,
+  AuditMetadata,
   Measurement,
   IMType,
+  IContributor,
 } from '@/http/entitycore/types/shared/global';
 
 export type ReconstructionMorphologyExpandFields =
@@ -24,9 +25,9 @@ export type ReconstructionMorphologyExpand = ReconstructionMorphologyExpandField
 
 export interface IMorphologyFilter
   extends DateFilter,
-  BrainLocationFilter,
-  BrainRegionFilter,
-  PaginationFilter {
+    BrainLocationFilter,
+    BrainRegionFilter,
+    PaginationFilter {
   name__ilike?: string | null;
   species_id__in?: number[] | null;
   order_by?: string;
@@ -38,7 +39,7 @@ export type MorphologyFeatureAnnotation = {
   measurements: Array<Measurement>;
 };
 
-export interface IReconstructionMorphology extends IAuditMetadata {
+export interface IReconstructionMorphology extends AuditMetadata {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
@@ -46,8 +47,10 @@ export interface IReconstructionMorphology extends IAuditMetadata {
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: IBrainRegion;
-  mtype?: IMType;
+  mtype?: IMType | null;
+  contributors?: Array<IContributor> | null;
 }
+
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {
   morphology_feature_annotation: MorphologyFeatureAnnotation;
 }

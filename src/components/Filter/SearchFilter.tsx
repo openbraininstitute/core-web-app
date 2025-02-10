@@ -14,7 +14,7 @@ export default function SearchFilter({
   values,
   onChange,
 }: {
-  data: Array<{ label: string, value: number }>;
+  data: Array<{ label: string; value: number }>;
   filter: Filter;
   values: string[];
   onChange: (newValues: string[]) => void;

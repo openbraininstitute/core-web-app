@@ -1,4 +1,4 @@
-import { IAuditMetadata } from '@/http/entitycore/types/shared/global';
+import { AuditMetadata } from '@/http/entitycore/types/shared/global';
 
 type BrainRegionHierarchy = {
   name: string;
@@ -6,7 +6,7 @@ type BrainRegionHierarchy = {
   children: number[];
 };
 
-export interface IBrainRegionHierarchy extends BrainRegionHierarchy, IAuditMetadata { }
+export interface IBrainRegionHierarchy extends BrainRegionHierarchy, AuditMetadata {}
 
 // order of values: id: number, name: string, acronym: string, children: Array, level: number
 export type TemporaryFlatBrainRegionHierarchy = Array<
