@@ -1,17 +1,17 @@
 'use client';
 
-import { fetchNotebook, Notebook } from '@/util/virtual-lab/github';
+import { Tag } from 'antd/lib';
 import { z } from 'zod';
-import NotebookTable from '../NotebookTable';
 
 import { Input, Modal } from 'antd';
 import { useState, useEffect, useRef } from 'react';
+import { LoadingOutlined } from '@ant-design/icons';
+import NotebookTable from '../NotebookTable';
+import { fetchNotebook, Notebook } from '@/util/virtual-lab/github';
+import authFetch from '@/authFetch';
 import { notification } from '@/api/notifications';
 import { assertErrorMessage, assertVLApiResponse } from '@/util/utils';
-import { LoadingOutlined } from '@ant-design/icons';
 import { virtualLabApi } from '@/config';
-import { projection } from '@math.gl/core/dist/gl-matrix/mat3';
-import { Tag } from 'antd/lib';
 
 function useDelayedLoading(initialValue = false, delay = 200) {
   const [loading, setLoading] = useState<boolean>(initialValue);
@@ -103,8 +103,7 @@ export default function UserNotebookPage({
                   onClick={async () => {
                     try {
                       setLoading(true);
-                      const notebook = await fetchNotebook(notebookUrl.trim());
-                      setNotebook(notebook);
+                      setNotebook(await fetchNotebook(notebookUrl.trim()));
                       setStep(1);
                     } catch (e) {
                       notification.error(assertErrorMessage(e));
@@ -140,8 +139,8 @@ export default function UserNotebookPage({
 
               <div className="flex flex-col gap-2">
                 <span className="text-primary-8">Inputs</span>
-                {notebook?.objectOfInterest.split(',').map((t, i) => (
-                  <Tag className="max-w-fit" key={notebook.path + i}>
+                {notebook?.objectOfInterest.split(',').map((t) => (
+                  <Tag className="max-w-fit" key={notebook.path + t}>
                     {t}
                   </Tag>
                 ))}
@@ -155,26 +154,19 @@ export default function UserNotebookPage({
                   if (!notebook) return;
                   setLoading(true);
 
-                  let newNotebook: any;
-
                   try {
-                    const notebookRes = await fetch(
-                      `virtualLabApi.url/projects/${projectId}/notebooks`,
-                      { method: 'POST' }
+                    const notebookRes = await authFetch(
+                      `${virtualLabApi.url}/projects/${projectId}/notebooks/`,
+                      {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ github_file_url: notebookUrl }),
+                      }
                     );
 
-                    newNotebook = await assertVLApiResponse(notebookRes);
+                    const newNotebook = await assertVLApiResponse(notebookRes);
+                    NotebookSchema.parse(newNotebook);
                   } catch (e) {
-                    notification.error('Unknown error, please try again.');
-                    resetModal();
-                    return;
-                  }
-
-                  let validatedNotebook: ReturnType<typeof NotebookSchema.parse>;
-
-                  try {
-                    validatedNotebook = NotebookSchema.parse(newNotebook);
-                  } catch {
                     notification.error('Unknown error, please try again.');
                     resetModal();
                     return;

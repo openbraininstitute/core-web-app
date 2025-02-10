@@ -4,11 +4,7 @@ import { ServerSideComponentProp } from '@/types/common';
 import { fetchNotebook } from '@/util/virtual-lab/github';
 import { virtualLabApi } from '@/config';
 import { assertVLApiResponse } from '@/util/utils';
-import authFetch, { getSession } from '@/authFetch';
-import { headers } from 'next/headers';
-import { access } from 'fs';
-import { head } from 'lodash';
-import { assert } from 'console';
+import authFetch from '@/authFetch';
 
 const NotebookSchema = z.object({
   id: z.string().uuid(),
