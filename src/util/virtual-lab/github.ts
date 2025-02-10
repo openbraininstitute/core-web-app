@@ -2,7 +2,6 @@ import JSZip from 'jszip';
 import { z } from 'zod';
 import capitalize from 'lodash/capitalize';
 import { assertErrorMessage } from '../utils';
-import Item from 'antd/es/list/Item';
 
 export const options = {
   headers: {
@@ -288,6 +287,8 @@ function validateMetadata(input: string) {
   }
 }
 
+const validScales = ['cellular', 'circuit', 'system'];
+
 export async function fetchNotebook(githubUrl: string): Promise<Notebook> {
   const regex = /github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)/;
   const match = githubUrl.match(regex);
@@ -300,10 +301,19 @@ export async function fetchNotebook(githubUrl: string): Promise<Notebook> {
 
   const [, owner, repo, branch, path] = match;
 
-  // Extract top-level and last folder
   const pathParts = githubUrl.split('/');
-  const scale = pathParts[pathParts.length - 2];
-  const name = pathParts[pathParts.length - 3];
+  const scale = pathParts[pathParts.length - 2] ?? '';
+  const name = capitalize(pathParts[pathParts.length - 1].replaceAll('_', ' ')) ?? '';
+
+  if (!scale) {
+    throw new Error(
+      'Cannot parse scale from path. Ensure folder path follows  .../scale/name/analysis_info.json'
+    );
+  }
+
+  if (!validScales.includes(scale.toLocaleLowerCase())) {
+    throw new Error(`Invalid scale: should be one of ${validScales.join(', ')}.\n Found: ${scale}`);
+  }
 
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
 
@@ -377,6 +387,6 @@ export async function fetchNotebook(githubUrl: string): Promise<Notebook> {
     githubRepo: repo,
     defaultBranch: branch,
     objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
-    creationDate: await getFileCreationDate(owner, repo, path),
+    creationDate: '',
   };
 }
