@@ -68,6 +68,10 @@ export default function UserNotebookPage({
   };
 
   const handleDelete = async (id: string) => {
+    if (loading) return;
+
+    setLoading(true);
+
     try {
       const res = await authFetch(`${virtualLabApi.url}/projects/${projectId}/notebooks/${id}/`, {
         method: 'DELETE',
@@ -87,6 +91,7 @@ export default function UserNotebookPage({
 
     setNotebooks(notebooks.filter((n) => n.id === id));
     setDeleteNotebookId('');
+    setLoading(false);
   };
 
   return (
@@ -228,6 +233,7 @@ export default function UserNotebookPage({
         open={!!deleteNotebookId}
         onCancel={() => setDeleteNotebookId('')}
         onOk={() => handleDelete(deleteNotebookId)}
+        confirmLoading={loading}
       >
         <div>
           This will deresgister the notebook for all project members. Do you wish to proceed?
