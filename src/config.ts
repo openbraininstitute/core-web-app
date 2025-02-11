@@ -13,6 +13,7 @@ export const feedbackUrl = env.NEXT_PUBLIC_FEEDBACK_URL;
 export const kgInferenceBaseUrl = env.NEXT_PUBLIC_KG_INFERENCE_BASE_URL;
 export const thumbnailGenerationBaseUrl = env.NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL;
 export const synthesisUrl = env.NEXT_PUBLIC_SYNTHESIS_URL;
+export const entityCoreUrl = env.NEXT_PUBLIC_ENTITY_CORE_URL;
 
 export const blueNaasUrl = env.NEXT_PUBLIC_BLUE_NAAS_URL;
 
