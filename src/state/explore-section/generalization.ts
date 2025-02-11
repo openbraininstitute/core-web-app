@@ -19,11 +19,12 @@ import {
 
 import { FlattenedExploreESResponse } from '@/types/explore-section/es';
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
-import { DEFAULT_CARDS_NUMBER } from '@/constants/explore-section/generalization';
 import { fetchDataQueryUsingIds, fetchMorphoMetricsUsingIds } from '@/queries/explore-section/data';
 import { fetchEsResourcesByType } from '@/api/explore-section/resources';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { isNeuronMorphologyFeatureAnnotation } from '@/util/explore-section/typeUnionTargetting';
+
+const DEFAULT_CARDS_NUMBER: number = 12;
 
 export const inferredResourcesAtom = atomFamily(() => atom(new Array<InferredResource>()));
 export const expandedRowKeysAtom = atomFamily(() => atom<readonly Key[]>([]));

@@ -1,6 +1,6 @@
 'use client';
 
-import Detail from '@/components/explore-section/Detail';
+import Summary from '@/components/explore-section/details-view/summary';
 import SimulationReports from '@/components/explore-section/Simulations/SimulationReports';
 import { DetailProps } from '@/types/explore-section/application';
 import { Field } from '@/constants/explore-section/fields-config/enums';
@@ -25,13 +25,13 @@ const fields: DetailProps[] = [
 
 export default function SimulationDetailPage() {
   return (
-    <Detail fields={fields}>
+    <Summary fields={fields}>
       {() => (
         <div>
           <hr />
           <SimulationReports />
         </div>
       )}
-    </Detail>
+    </Summary>
   );
 }

@@ -1,9 +1,3 @@
-// should be in global shared type file
-export type Nullish = null | undefined;
-export type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
 export type AuditMetadata = {
   id: number;
   creation_date: string; // ISO format
@@ -72,7 +66,7 @@ type RoleBase = {
 export interface IRole extends RoleBase, AuditMetadata {}
 
 type OrganizationBase = {
-  type: "organization";
+  type: 'organization';
   pref_label: string;
   alternative_name?: string | null;
 };
@@ -80,7 +74,7 @@ type OrganizationBase = {
 export interface IOrganization extends OrganizationBase, AuditMetadata {}
 
 type PersonBase = {
-  type: "person";
+  type: 'person';
   givenName: string;
   familyName: string;
   pref_label: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import MorphologyDetailView from '@/components/explore-section/MorphologyDetailView';
+import MorphologyDetailView from '@/components/explore-section/reconstruction-morphology/detail-view';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 
 export default function MorphologyDetailPage() {

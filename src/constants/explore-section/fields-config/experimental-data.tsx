@@ -797,6 +797,7 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
 export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
   [EntityCoreFields.License]: {
     title: 'License',
+    className: 'break-words',
     filter: FilterTypeEnum.CheckList,
     render: (r) => r.license?.name || DisplayMessages.NO_DATA_STRING,
     vocabulary: {

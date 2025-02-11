@@ -21,7 +21,6 @@ export default function VirtualLabExperimentListingView() {
   };
 
   const onCellClick = useExploreTableOnClickHandler();
-
   if (!currentExperiment) notFound();
 
   return (

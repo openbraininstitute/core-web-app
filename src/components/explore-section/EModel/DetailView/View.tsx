@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { UseQueryStateReturn, parseAsString, useQueryState, Options } from 'nuqs';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Detail from '@/components/explore-section/Detail';
+import Summary from '@/components/explore-section/details-view/summary';
 import { E_MODEL_FIELDS } from '@/constants/explore-section/detail-views-fields';
 import SectionTabs, {
   EMODEL_TABS,
@@ -33,7 +33,7 @@ export default function EModelDetailView({ params }: Props) {
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Detail fields={E_MODEL_FIELDS}>
+      <Summary fields={E_MODEL_FIELDS}>
         {() => (
           <>
             <SectionTabs />
@@ -52,7 +52,7 @@ export default function EModelDetailView({ params }: Props) {
             </div>
           </>
         )}
-      </Detail>
+      </Summary>
     </Suspense>
   );
 }

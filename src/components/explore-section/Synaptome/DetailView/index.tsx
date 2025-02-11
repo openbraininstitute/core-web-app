@@ -18,7 +18,7 @@ import SynapseGroupList from '@/components/build-section/virtual-lab/synaptome/v
 import useSynaptomeModel from '@/components/simulate/single-neuron/hooks/useSynaptomeModel';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import Detail from '@/components/explore-section/Detail';
+import Summary from '@/components/explore-section/details-view/summary';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import {
   DataTypeToNewSimulationPage,
@@ -75,7 +75,7 @@ export default function SynaptomeModelDetailPage({ params: { virtualLabId, proje
   return (
     <div className="secondary-scrollbar h-screen w-full overflow-y-auto">
       <Suspense fallback={<CentralLoadingSpinner />}>
-        <Detail
+        <Summary
           showViewMode
           fields={SYNATOME_MODEL_FIELDS}
           commonFields={MODEL_DATA_COMMON_FIELDS}
@@ -140,7 +140,7 @@ export default function SynaptomeModelDetailPage({ params: { virtualLabId, proje
               </div>
             );
           }}
-        </Detail>
+        </Summary>
       </Suspense>
     </div>
   );

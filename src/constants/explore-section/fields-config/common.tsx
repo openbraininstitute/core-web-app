@@ -279,6 +279,7 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
   [EntityCoreFields.Description]: {
     title: 'Description',
     filter: FilterTypeEnum.Text,
+    className: 'text-justify',
     render: (r) => r.description || DisplayMessages.NO_DATA_STRING,
     vocabulary: {
       plural: 'Descriptions',

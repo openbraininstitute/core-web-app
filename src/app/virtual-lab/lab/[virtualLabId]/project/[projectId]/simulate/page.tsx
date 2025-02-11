@@ -15,7 +15,7 @@ import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64, detailUrlBuilder } from '@/util/common';
 import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
-import BookmarkButton from '@/components/explore-section/BookmarkButton';
+import BookmarkButton from '@/components/buttons/bookmark';
 import { SIMULATION_DATA_TYPES } from '@/constants/explore-section/data-types/simulation-data-types';
 import { isSimulation } from '@/types/virtual-lab/bookmark';
 import { Btn } from '@/components/Btn';
