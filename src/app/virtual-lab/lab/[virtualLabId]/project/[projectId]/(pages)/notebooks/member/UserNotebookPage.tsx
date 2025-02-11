@@ -1,12 +1,12 @@
 'use client';
 
 import { Tag } from 'antd/lib';
-import { z } from 'zod';
 
 import { Input, Modal } from 'antd';
 import { useState, useEffect, useRef } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import NotebookTable from '../NotebookTable';
+import { NotebookSchema } from '../schemas';
 import { fetchNotebook, Notebook } from '@/util/virtual-lab/github';
 import authFetch from '@/authFetch';
 import { notification } from '@/api/notifications';
@@ -243,11 +243,3 @@ export default function UserNotebookPage({
     </>
   );
 }
-
-const NotebookSchema = z.object({
-  id: z.string().uuid(),
-  project_id: z.string().uuid(),
-  github_file_url: z.string().url(),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime(),
-});
