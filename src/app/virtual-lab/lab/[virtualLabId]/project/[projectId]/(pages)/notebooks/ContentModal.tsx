@@ -22,21 +22,32 @@ export default function ContentModal({
   const [content, setContent] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchFile() {
       if (!notebook || !display) return;
 
-      const res = await fetch(
-        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(display === 'notebook' ? notebook.notebookUrl : notebook.readmeUrl)}`
-      );
+      try {
+        const res = await fetch(
+          `${basePath}/api/github/fetch-file?path=${encodeURIComponent(display === 'notebook' ? notebook.notebookUrl : notebook.readmeUrl)}`,
+          { signal: controller.signal }
+        );
 
-      if (!res.ok) {
-        notification.error('Cannot display the contents, ensure the repository is public');
-      } else {
-        setContent(await res.text());
+        if (!res.ok) {
+          notification.error('Cannot display the contents, ensure the repository is public');
+        } else {
+          setContent(await res.text());
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          notification.error('An error occurred while fetching the file');
+        }
       }
     }
 
     fetchFile();
+
+    return () => controller.abort();
   }, [notebook, display]);
 
   return (
