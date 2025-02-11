@@ -9,14 +9,15 @@ import useRowSelection, { RenderButtonProps } from './useRowSelection';
 import { useOnCellRouteHandler, useShowMore, useScrollNav } from './hooks';
 
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
+import { ExploreSectionResource } from '@/types/explore-section/resources';
+import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { classNames } from '@/util/utils';
+import type { ExploreESHit } from '@/types/explore-section/es';
+
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import type { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
-import { classNames } from '@/util/utils';
 import styles from '@/app/explore/explore.module.scss';
 
 export type OnCellClick = (
@@ -181,7 +182,7 @@ export function BaseTable({
         loading={loading}
         pagination={false}
         rowClassName={styles.tableRow}
-        rowKey={(row) => row._source._self}
+        rowKey={(row) => row.id}
         rowSelection={rowSelection}
         scroll={
           scrollable
@@ -306,7 +307,7 @@ export default function ExploreSectionTable({
         hasError={hasError}
         loading={loading}
         onCellClick={onCellClick}
-        rowKey={(row) => row._source._self}
+        rowKey={(row) => row.id}
         rowSelection={rowSelection}
         showLoadMore={toggleDisplayMore}
         scrollable={scrollable}

@@ -30,7 +30,7 @@ import { sectionAtom } from '@/state/application';
 import { useExpandRegionTree, useSetBrainRegionToQuery } from '@/hooks/brain-region-panel';
 
 /**
- * the line component is added for each NavTitle with absolue position
+ * the line component is added for each NavTitle with absolute position
  * the height is calculated based on the container "NavTitle" height and the bottom padding of the title
  * we added some space to the top to not be too close to the title
  * @param TreeLineBar.height is the height of the title component

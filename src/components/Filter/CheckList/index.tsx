@@ -1,16 +1,19 @@
 import { ReactNode } from 'react';
 import { useAtom } from 'jotai';
 import { InfoCircleFilled } from '@ant-design/icons';
-import { useOptions } from '../hooks';
-import { CheckListProps } from '@/types/explore-section/application';
-import { BucketAggregation } from '@/types/explore-section/es-aggs';
-import { Filter } from '@/components/Filter/types';
-import { FiltersRenderLengthAtom } from '@/components/Filter/state';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
-import SearchFilter from '@/components/Filter/SearchFilter';
+
 import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants/explore-section/list-views';
-import CenteredMessage from '@/components/CenteredMessage';
+import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 import { CheckListOption } from '@/components/Filter/CheckList/Option';
+import { CheckListProps } from '@/types/explore-section/application';
+import { FiltersRenderLengthAtom } from '@/components/Filter/state';
+import { useOptions } from '@/components/Filter/useOptions';
+import { Filter } from '@/components/Filter/types';
+
+import CenteredMessage from '@/components/CenteredMessage';
+import SearchFilter from '@/components/Filter/SearchFilter';
+
+type FacetLabelValuePair = { label: string; value: number };
 
 export default function CheckList({
   children,
@@ -20,14 +23,12 @@ export default function CheckList({
   onChange,
 }: {
   children: (props: CheckListProps) => ReactNode;
-  data: BucketAggregation;
+  data: Array<FacetLabelValuePair>;
   filter: Filter;
   values: string[];
   onChange: (value: string[]) => void;
 }) {
-  const buckets = data.buckets ?? data?.excludeOwnFilter?.buckets;
-  const options = useOptions(values, buckets);
-
+  const options = useOptions(values, data);
   const handleCheckedChange = (value: string) => {
     let newValues = [...values];
     if (values.includes(value)) {
@@ -50,14 +51,14 @@ export default function CheckList({
   };
 
   const loadMoreLength = 5;
-  const remainingLength = (options?.length ?? 0) - renderLength;
+  const remainingLength = (data?.length ?? 0) - renderLength;
   const adjustedLoadMoreLength =
     remainingLength >= loadMoreLength ? loadMoreLength : remainingLength;
 
   const fieldLabel =
     remainingLength === 1
-      ? EXPLORE_FIELDS_CONFIG[filter.field].vocabulary.singular
-      : EXPLORE_FIELDS_CONFIG[filter.field].vocabulary.plural;
+      ? ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.singular
+      : ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.plural;
 
   const loadMoreBtn = () =>
     !!remainingLength &&
@@ -100,6 +101,7 @@ export default function CheckList({
     </div>
   );
 }
+
 export const defaultList = ({
   options,
   renderLength,
@@ -116,11 +118,11 @@ export const defaultList = ({
         ?.slice(0, renderLength)
         ?.map(({ checked, count, id, label }) => (
           <CheckListOption
+            key={id}
+            id={id}
             checked={checked}
             count={count}
-            key={id}
             handleCheckedChange={handleCheckedChange}
-            id={id}
             filterField={filterField}
             label={label}
           />

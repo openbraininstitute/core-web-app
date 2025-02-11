@@ -1,7 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, selectAtom } from 'jotai/utils';
 import { arrayToTree } from 'performant-array-to-tree';
-import cloneDeep from 'lodash/cloneDeep';
 import uniqBy from 'lodash/uniqBy';
 import { findDeep, reduceDeep } from 'deepdash-es/standalone';
 import sessionAtom from '@/state/session';
@@ -14,7 +13,6 @@ import {
   Mesh,
 } from '@/types/ontologies';
 import { getBrainRegionOntology, getDistributions } from '@/api/ontologies';
-import { buildAlternateChildren, buildAlternateTree } from '@/state/brain-regions/alternate-view';
 import { DefaultBrainRegionType, NavValue, SelectedBrainRegion } from '@/state/brain-regions/types';
 import {
   compositionHistoryAtom,
@@ -35,6 +33,11 @@ import {
   brainRegionIdQueryParamKey,
   defaultHierarchyTree,
 } from '@/constants/explore-section/default-brain-region';
+import { getTemporaryBrainRegionHierarchy } from '@/http/entitycore/queries/general/brain-region';
+import {
+  ITemporaryBrainRegionHierarchy,
+  TemporaryFlatBrainRegionHierarchy,
+} from '@/http/entitycore/types/entities/brain-region';
 
 /*
   Atom dependency graph
@@ -200,34 +203,12 @@ export const brainRegionsFilteredTreeAtom = atom<Promise<BrainRegion[] | null>>(
 
 export const selectedAlternateViews = atom<Record<string, BrainViewId>>({});
 
-export const brainRegionsAlternateTreeAtom = atom<Promise<BrainRegion[] | null | undefined>>(
-  async (get) => {
-    const brainRegions = await get(brainRegionsWithRepresentationAtom);
-    const defaultTree = await get(brainRegionsFilteredTreeAtom);
-    const views = await get(brainRegionOntologyViewsAtom);
-    const selectedViews = get(selectedAlternateViews);
-
-    const alternateTree = cloneDeep(defaultTree);
-
-    // iterate over the currently modified views and apply the alternative children
-    Object.entries(selectedViews).forEach(([brainRegionId, viewId]) => {
-      const view = views?.find((v) => v.id === viewId);
-      if (view && brainRegions && alternateTree) {
-        // first get the children of the brain region id based on the applied view
-        const alternateChildren = buildAlternateChildren(
-          brainRegionId,
-          view.parentProperty,
-          brainRegions,
-          viewId
-        );
-
-        // then replace the children of the changed node with the new ones
-        buildAlternateTree(alternateTree[0], brainRegionId, alternateChildren, viewId);
-      }
-    });
-    return alternateTree;
-  }
-);
+export const brainRegionsAlternateTreeAtom = atom<
+  Promise<(ITemporaryBrainRegionHierarchy | TemporaryFlatBrainRegionHierarchy)[]>
+>(async () => {
+  const alternateTree = await getTemporaryBrainRegionHierarchy();
+  return [alternateTree];
+});
 
 export const addOrRemoveSelectedAlternateView = atom(
   null,

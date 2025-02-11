@@ -1,11 +1,12 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { ConfigProvider, Tag } from 'antd';
 import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
+
 import { Filter } from './types';
-import { useOptions } from './hooks';
+import { useOptions } from './useOptions';
+import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
+
 import Search from '@/components/Search';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
-import { BucketAggregation } from '@/types/explore-section/es-aggs';
 
 export default function SearchFilter({
   data,
@@ -13,13 +14,12 @@ export default function SearchFilter({
   values,
   onChange,
 }: {
-  data: BucketAggregation;
+  data: Array<{ label: string; value: number }>;
   filter: Filter;
   values: string[];
   onChange: (newValues: string[]) => void;
 }) {
-  const buckets = data?.buckets ?? data?.excludeOwnFilter?.buckets;
-  const options = useOptions(values, buckets);
+  const options = useOptions(values, data);
   const handleCheckedChange = (value: string) => {
     let newValues = [...values];
     if (values.includes(value)) {
@@ -64,12 +64,9 @@ export default function SearchFilter({
         colorBgContainer="#002766"
         onClear={() => onChange([])}
         handleSelect={handleCheckedChange}
-        options={options.map(({ id, label }) => ({
-          label,
-          value: id,
-        }))}
+        options={options}
         mode="multiple"
-        placeholder={`Search for ${EXPLORE_FIELDS_CONFIG[filter.field].vocabulary.plural}`}
+        placeholder={`Search for ${ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.plural}`}
         tagRender={tagRender}
         value={options.reduce(
           (acc: string[], { checked, id }) => (checked ? [...acc, id] : acc),

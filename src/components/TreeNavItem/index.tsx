@@ -199,6 +199,7 @@ function TreeNav(
       ref={ref}
       type="multiple"
       value={value ? Object.keys(value) : []}
+      id="brain-regions-tree"
     >
       {navItems.map(({ id, items, ...rest }) => (
         <TreeNavItem

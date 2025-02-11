@@ -18,7 +18,10 @@ type RequestConfiguration = {
 
 type RequestOptions = {
   headers?: Record<string, string>;
-  queryParams?: Record<string, string | number | string[] | null | undefined>;
+  queryParams?: Record<
+    string,
+    string | number | string[] | number[] | null | undefined | boolean | Date
+  >;
   body?: any;
   signal?: AbortSignal;
 };
@@ -65,6 +68,17 @@ class ApiClient {
     this._retryOnException = config.retryOnException;
   }
 
+  /**
+   * Makes an HTTP request.
+   *
+   * @template T
+   * @param {string} method - The HTTP method (GET, POST, etc.)
+   * @param {string} endpoint - The endpoint to send the request to
+   * @param {RequestOptions} [options] - The options for the request
+   * @param {RequestConfiguration} [config] - The configuration for the request
+   * @param {() => void} [onAbort] - Callback function to execute if the request is aborted
+   * @returns {Promise<T>} A promise that resolves to the response data
+   */
   private async _request<T>(
     method: string,
     endpoint: string,
@@ -78,7 +92,7 @@ class ApiClient {
     const url = new URL(endpoint, this._rootUrl);
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach((v) => url.searchParams.append(`${key}[]`, v));
+        value.forEach((v) => url.searchParams.append(`${key}[]`, `${v}`));
       } else {
         url.searchParams.append(key, String(value));
       }
@@ -160,6 +174,13 @@ class ApiClient {
     }
   }
 
+  /**
+   * Calculates the backoff delay based on the attempt number and strategy.
+   *
+   * @param {number} attempt - The current attempt number
+   * @param {BackoffStrategy} [backoff] - The backoff strategy
+   * @returns {number} The calculated delay in milliseconds
+   */
   private calculateBackoff(attempt: number, backoff?: BackoffStrategy): number {
     if (!backoff) return 0;
     if (backoff.type === 'custom' && backoff.fn) {
@@ -185,8 +206,12 @@ class ApiClient {
   }
 }
 
-export { ApiClient };
-
+/**
+ * Creates an authenticated API client.
+ *
+ * @param {string} rootUri - The root URI for the API client
+ * @returns {Promise<ApiClient>} A promise that resolves to an instance of ApiClient
+ */
 export default async function authApiClient(rootUri: string) {
   const session = await getSession();
 

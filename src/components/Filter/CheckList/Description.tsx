@@ -4,7 +4,7 @@ import { unwrap } from 'jotai/utils';
 import { Spin } from 'antd';
 import { cellTypesByLabelAtom } from '@/state/build-section/cell-types';
 import { FieldType } from '@/constants/explore-section/fields-config/types';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
+import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 
 export function CheckListDescription({
   label,
@@ -13,7 +13,7 @@ export function CheckListDescription({
   label: string;
   filterField: string;
 }) {
-  const { fieldType } = EXPLORE_FIELDS_CONFIG[filterField];
+  const { fieldType } = ENTITY_CORE_FIELDS_CONFIG[filterField];
   if (fieldType === FieldType.CellType) {
     return <ClassDescription label={label} />;
   }

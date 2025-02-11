@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { FilterType } from '@/components/Filter/types';
 import { DeltaResource } from '@/types/explore-section/resources';
 import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
+import { EntityCore } from '@/types/explore-section/delta-experiment';
 
 type TableCellAlign = 'left' | 'right' | 'center';
 
@@ -14,7 +15,7 @@ type ExploreFieldConfigStyle = {
   width?: number;
 };
 
-export type ExploreFieldConfig<T> = {
+export type ExploreFieldConfig<T = EntityCore> = {
   fieldType?: FieldType;
   className?: string;
   esTerms?: EsTermsConfig;
@@ -23,10 +24,7 @@ export type ExploreFieldConfig<T> = {
   filter: FilterType;
   unit?: ReactNode;
   group?: MorphoMetricCompartment;
-  render?: {
-    esResourceViewFn?: (value: any, record: any, index?: number) => ReactNode | any;
-    deltaResourceViewFn?: (resource: T) => ReactNode | any;
-  };
+  render?: (resource: T) => ReactNode;
   vocabulary: {
     plural: string;
     singular: string;

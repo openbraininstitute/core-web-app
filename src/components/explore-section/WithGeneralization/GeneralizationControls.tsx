@@ -10,9 +10,9 @@ import {
 } from '@/state/explore-section/generalization';
 import { filtersAtom } from '@/state/explore-section/list-view-atoms';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import ControlPanel from '@/components/explore-section/ControlPanel';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import { DataType } from '@/constants/explore-section/list-views';
+import ControlPanel from '@/components/explore-section/ControlPanel';
 import styles from './styles.module.scss';
 
 export const theme: ThemeConfig = {
@@ -37,7 +37,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
     )
   );
 
-  const aggregations = useAtomValue(
+  const facets = useAtomValue(
     useMemo(
       () => unwrap(resourceBasedResponseAggregationsAtom({ resourceId, dataType })),
       [dataType, resourceId]
@@ -78,8 +78,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
       {displayControlPanel && filters && (
         <div className="fixed right-0 top-0 z-50 h-screen">
           <ControlPanel
-            data-testid="detail-view-control-panel"
-            aggregations={aggregations}
+            facets={facets}
             filters={filters}
             setFilters={setFilters}
             toggleDisplay={() => setDisplayControlPanel(false)}

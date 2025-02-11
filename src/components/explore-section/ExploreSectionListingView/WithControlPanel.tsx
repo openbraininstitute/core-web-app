@@ -40,16 +40,15 @@ export default function WithControlPanel({
 
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
+  const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
+  const facets = data?.facets;
+
   const [filters, setFilters] = useAtom(
     useMemo(
       () => unwrap(filtersAtom({ dataType, dataScope, key: dataKey })),
       [dataType, dataScope, dataKey]
     )
   );
-
-  const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
-
-  const aggregations = data?.aggs;
 
   return (
     <>
@@ -63,14 +62,14 @@ export default function WithControlPanel({
       </section>
       {displayControlPanel && filters && (
         <ControlPanel
-          data-testid="listing-view-control-panel"
-          aggregations={aggregations}
           filters={filters}
           setFilters={setFilters}
           toggleDisplay={() => setDisplayControlPanel(false)}
           dataType={dataType}
           dataScope={dataScope}
           dataKey={dataKey}
+          facets={facets}
+          virtualLabInfo={virtualLabInfo}
         />
       )}
     </>

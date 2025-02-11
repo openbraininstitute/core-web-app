@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
+import isEmpty from 'lodash/isEmpty';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
@@ -25,12 +26,16 @@ import {
 import { ExploreESHit } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
+  selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
+  setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
+import * as entitycoreApi from '@/http/entitycore/queries';
+import { transformFiltersToQuery } from '@/http/entitycore/transformers';
 
 type DataAtomFamilyScopeType = {
   dataType: DataType;
@@ -75,7 +80,7 @@ export const activeColumnsAtom = atomFamily(
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
+        // isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
       ];
     }),
   isListAtomEqual
@@ -105,7 +110,9 @@ export const filtersAtom = atomFamily(
       const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
-        ...columns.map((colKey) => columnKeyToFilter(colKey)),
+        ...columns.map((colKey) => {
+          return columnKeyToFilter(colKey);
+        }),
         ...(dimensionsColumns || []).map(
           (dimension) =>
             ({
@@ -162,12 +169,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+          ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
+            selectedBrainRegionWithDescendantsAndAncestorsFamily(
+              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+            )
+          )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -195,34 +202,62 @@ export const dataAtom = atomFamily(
   (scope) =>
     atom(async (get) => {
       const query = await get(queryAtom(scope));
-      const response =
-        query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
+      const searchString = get(searchStringAtom(scope.key));
+      const pageNumber = get(pageNumberAtom(scope.key));
+      const pageSize = get(pageSizeAtom);
+      const filters = await get(filtersAtom(scope));
+      const selectedBrainRegion = get(selectedBrainRegionAtom);
 
-      if (response?.hits) {
-        if (scope.dataType === DataType.SingleNeuronSynaptome) {
-          return {
-            aggs: response.aggs,
-            total: response.total,
-            hits: await fetchLinkedModel({
-              results: response.hits,
-              path: '_source.singleNeuronSynaptome.memodel.["@id"]',
-              linkedProperty: 'linkedMeModel',
-            }),
-          };
-        }
-        if (scope.dataType === DataType.SingleNeuronSynaptomeSimulation) {
-          return {
-            aggs: response.aggs,
-            total: response.total,
-            hits: await fetchLinkedModel({
-              results: response.hits,
-              path: '_source.synaptomeSimulation.synaptome.["@id"]',
-              linkedProperty: 'linkedSynaptomeModel',
-            }),
-          };
-        }
+      // TODO: sorting should be fixed at the end, it's related to too many changes that break things
+      const sortState = get(sortStateAtom(scope));
+      const queryParams = transformFiltersToQuery(filters);
+
+      if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
+        const response = await entitycoreApi.getReconstructionMorphologies({
+          filters: {
+            page_size: pageSize,
+            page: pageNumber - 1,
+            search: isEmpty(searchString) ? null : searchString,
+            ...queryParams,
+            // TODO: ask backend team to extend the brain region filter to support the children of the selected one
+            // brain_region_id: selectedBrainRegion?.id
+            //   ? Number(selectedBrainRegion?.id.split('/').pop())
+            //   : undefined,
+          },
+        });
+
+        console.log('ᦨ #  list-view-atoms.ts:226 #  atom #  response:', response);
+
         return response;
       }
+      // const response =
+      //   query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
+
+      // if (response?.hits) {
+      //   if (scope.dataType === DataType.SingleNeuronSynaptome) {
+      //     return {
+      //       aggs: response.aggs,
+      //       total: response.total,
+      //       hits: await fetchLinkedModel({
+      //         results: response.hits,
+      //         path: '_source.singleNeuronSynaptome.memodel.["@id"]',
+      //         linkedProperty: 'linkedMeModel',
+      //       }),
+      //     };
+      //   }
+      //   if (scope.dataType === DataType.SingleNeuronSynaptomeSimulation) {
+      //     return {
+      //       aggs: response.aggs,
+      //       total: response.total,
+      //       hits: await fetchLinkedModel({
+      //         results: response.hits,
+      //         path: '_source.synaptomeSimulation.synaptome.["@id"]',
+      //         linkedProperty: 'linkedSynaptomeModel',
+      //       }),
+      //     };
+      //   }
+      //   return response;
+      // }
       return null;
     }),
   isListAtomEqual
