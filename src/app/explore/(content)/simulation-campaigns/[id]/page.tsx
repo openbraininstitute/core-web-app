@@ -1,6 +1,6 @@
 'use client';
 
-import Detail from '@/components/explore-section/Detail';
+import Summary from '@/components/explore-section/details-view/summary';
 import Simulations from '@/components/explore-section/Simulations';
 import { DetailProps } from '@/types/explore-section/application';
 import { SimulationCampaign } from '@/types/explore-section/delta-simulation-campaigns';
@@ -35,13 +35,13 @@ const fields: DetailProps[] = [
 
 export default function SimulationCampaignDetailPage() {
   return (
-    <Detail fields={fields}>
+    <Summary fields={fields}>
       {(detail) => (
         <div>
           <hr />
           <Simulations resource={detail as SimulationCampaign} />
         </div>
       )}
-    </Detail>
+    </Summary>
   );
 }

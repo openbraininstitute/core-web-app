@@ -15,7 +15,7 @@ import { SimulationScopeToModelType, SimulationType } from '@/types/virtual-lab/
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
-import BookmarkButton from '@/components/explore-section/BookmarkButton';
+import BookmarkButton from '@/components/buttons/bookmark';
 
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
 import { ExploreSectionResource } from '@/types/explore-section/resources';

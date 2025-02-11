@@ -13,7 +13,7 @@ import {
 } from '@/constants/explore-section/list-views';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Detail from '@/components/explore-section/Detail';
+import Summary from '@/components/explore-section/details-view/summary';
 import {
   ME_MODEL_FIELDS,
   MODEL_DATA_COMMON_FIELDS,
@@ -66,7 +66,7 @@ export default function MEModelDetailView({ params, showViewMode = false }: Prop
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Detail
+      <Summary
         fields={ME_MODEL_FIELDS}
         commonFields={MODEL_DATA_COMMON_FIELDS}
         showViewMode={showViewMode}
@@ -106,7 +106,7 @@ export default function MEModelDetailView({ params, showViewMode = false }: Prop
             /> */}
           </>
         )}
-      </Detail>
+      </Summary>
     </Suspense>
   );
 }

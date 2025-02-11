@@ -5,8 +5,8 @@ import { notFound, useParams } from 'next/navigation';
 
 import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DataType } from '@/constants/explore-section/list-views';
-import MorphologyDetailView from '@/components/explore-section/MorphologyDetailView';
-import Detail from '@/components/explore-section/Detail';
+import MorphologyDetailView from '@/components/explore-section/reconstruction-morphology/detail-view';
+import Summary from '@/components/explore-section/details-view/summary';
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
 import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
 import {
@@ -32,19 +32,19 @@ export default function ExperimentDetailViewPage() {
       break;
     case DataType.ExperimentalElectroPhysiology:
       content = (
-        <Detail<ExperimentalTrace> fields={ELECTRO_PHYSIOLOGY_FIELDS}>
+        <Summary<ExperimentalTrace> fields={ELECTRO_PHYSIOLOGY_FIELDS}>
           {(detail) => <EphysViewerContainer resource={detail} />}
-        </Detail>
+        </Summary>
       );
       break;
     case DataType.ExperimentalBoutonDensity:
-      content = <Detail fields={BOUTON_DENSITY_FIELDS} />;
+      content = <Summary fields={BOUTON_DENSITY_FIELDS} />;
       break;
     case DataType.ExperimentalNeuronDensity:
-      content = <Detail fields={NEURON_DENSITY_FIELDS} />;
+      content = <Summary fields={NEURON_DENSITY_FIELDS} />;
       break;
     case DataType.ExperimentalSynapsePerConnection:
-      content = <Detail fields={SYNAPSE_PER_CONNECTION_FIELDS} />;
+      content = <Summary fields={SYNAPSE_PER_CONNECTION_FIELDS} />;
       break;
     default:
       content = null;

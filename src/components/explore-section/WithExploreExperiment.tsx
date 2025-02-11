@@ -22,6 +22,7 @@ export default function WithExploreExperiment({
   virtualLabInfo?: VirtualLabInfo;
 }) {
   const router = useRouter();
+
   const onCellClick: OnCellClick = (basePath, record) => {
     router.push(detailUrlBuilder(basePath, record));
   };

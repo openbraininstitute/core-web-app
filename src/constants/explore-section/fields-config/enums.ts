@@ -100,4 +100,5 @@ export enum EntityCoreFields {
   License = 'license',
   BrainRegion = 'brain_region',
   MType = 'mtype',
+  Age = 'age',
 }

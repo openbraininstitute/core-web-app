@@ -7,7 +7,7 @@ import { Spin } from 'antd';
 
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import Detail from '@/components/explore-section/Detail';
+import Summary from '@/components/explore-section/details-view/summary';
 import ModelDetails from '@/components/simulate/SimulationDetails/MEModelDetails';
 import ExperimentSetup from '@/components/simulate/SimulationDetails/ExperimentSetup';
 
@@ -75,7 +75,7 @@ export default function SimulationDetailPage({ params }: Props) {
           },
         ]}
       />
-      <Detail
+      <Summary
         fields={[]}
         commonFields={MODEL_DATA_COMMON_FIELDS}
         // extraHeaderAction={
@@ -100,7 +100,7 @@ export default function SimulationDetailPage({ params }: Props) {
                   type={params.simulationType}
                   name={
                     params.simulationType === 'synaptome-simulation'
-                      ? synaptomeModel?.name ?? ''
+                      ? (synaptomeModel?.name ?? '')
                       : data.linkedMeModel.name
                   }
                   meModel={data.linkedMeModel}
@@ -127,7 +127,7 @@ export default function SimulationDetailPage({ params }: Props) {
             </>
           );
         }}
-      </Detail>
+      </Summary>
     </div>
   );
 }

@@ -40,7 +40,7 @@ export async function getReconstructionMorphology({
   expand,
 }: {
   id: string;
-  expand: ExpandReconstructionMorphologyParm;
+  expand?: ExpandReconstructionMorphologyParm;
 }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<IReconstructionMorphology | IReconstructionMorphologyExpanded>(

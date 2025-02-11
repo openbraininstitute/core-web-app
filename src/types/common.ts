@@ -38,3 +38,8 @@ export type ApplicationSection = 'explore' | 'build' | 'simulate';
 export interface ServerSideComponentProp<Params> {
   params: Params;
 }
+
+export type Nullish = null | undefined;
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
