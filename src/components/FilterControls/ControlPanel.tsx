@@ -6,21 +6,21 @@ export type Column<T> = ColumnType<T> & {
   key: string;
 };
 
-export type ControlPanelProps<T extends { [key: string]: any }> = {
+export type ControlPanelProps = {
   children?: React.ReactNode;
-  columns: Column<T>[];
+  numberOfColumns: number;
   onClose: () => void;
   visible: boolean;
 };
 
-export default function ControlPanel<T extends { [key: string]: any }>({
+export default function ControlPanel({
   visible,
   onClose,
-  columns,
+  numberOfColumns,
   children,
-}: ControlPanelProps<T>) {
-  const activeColumnsText = `${columns.length} active ${
-    columns.length === 1 ? 'column' : 'columns'
+}: ControlPanelProps) {
+  const activeColumnsText = `${numberOfColumns} active ${
+    numberOfColumns === 1 ? 'column' : 'columns'
   }`;
 
   return (

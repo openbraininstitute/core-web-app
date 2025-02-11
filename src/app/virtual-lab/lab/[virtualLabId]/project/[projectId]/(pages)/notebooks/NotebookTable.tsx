@@ -7,15 +7,16 @@ import Image from 'next/image';
 import { saveAs } from 'file-saver';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
 import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
 import { getSorter } from './utils';
 import ContentModal from './ContentModal';
+import NotebookTabs from './NotebookTabs';
 import useSearch from '@/components/VirtualLab/Search';
-import { Notebook } from '@/util/virtual-lab/github';
+import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
 import { basePath } from '@/config';
 
 import FilterControls from '@/components/FilterControls/FilterControls';
@@ -25,12 +26,36 @@ import { notification } from '@/api/notifications';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 
-function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
+function NotebookTable({
+  notebooks,
+  failed,
+  onDelete,
+  vlabId,
+  projectId,
+}: {
+  vlabId: string;
+  projectId: string;
+  notebooks: Notebook[];
+  failed?: string[];
+  onDelete?: (id: string) => void;
+}) {
   const [loadingZip, setLoadingZip] = useState(false);
-  const [file, setFile] = useState<{
-    path: string;
-    type: 'notebook' | 'text';
-  } | null>(null);
+  const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
+  const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
+
+  const resetModal = () => {
+    setCurrentNotebook(null);
+    setDisplay(null);
+  };
+
+  if (failed && failed.length)
+    notification.warning(
+      "Failed to fetch some repositories, ensure they're public and contain valid metadate for each notebook",
+      undefined,
+      undefined,
+      undefined,
+      'failed-repo-warning'
+    );
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',
@@ -48,8 +73,7 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       const searchFields: StringKeys[] = [
         'author',
         'description',
-        'fileName',
-        'key',
+        'notebookUrl',
         'name',
         'objectOfInterest',
       ];
@@ -63,27 +87,20 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     });
   }, [notebooks, search]);
 
-  const handleDownloadClick = async (directory: string, notebookName: string) => {
+  const handleDownloadClick = async (notebook: Notebook) => {
     setLoadingZip(true);
-    const res = await fetch(
-      `${basePath}/api/github/download-notebook?folder=${encodeURIComponent(directory)}`
-    );
 
-    setLoadingZip(false);
-    if (!res.ok) {
-      notification.error('Failed to download');
-      return;
+    try {
+      const blob = await downloadZippedNotebook(notebook);
+
+      saveAs(blob, `${notebook.name}.zip`);
+      setLoadingZip(false);
+    } catch {
+      notification.error('Failed to download the contents, ensure the repo is public');
     }
-
-    const blob = await res.blob();
-    saveAs(blob, `${notebookName}.zip`);
   };
 
-  const renderActionColumns = (uri: string) => {
-    const directory = uri.slice(0, uri.lastIndexOf('/'));
-    const notebookName = directory.split('/').pop();
-    if (!notebookName) throw new Error('An error occurred');
-
+  const renderActionColumns = (_: string, notebook: Notebook) => {
     return (
       <div id="popover">
         <Popover
@@ -98,7 +115,10 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 />
                 <button
                   type="button"
-                  onClick={() => setFile({ path: `${directory}/README.md`, type: 'text' })}
+                  onClick={() => {
+                    setDisplay('readme');
+                    setCurrentNotebook(notebook);
+                  }}
                 >
                   Readme
                 </button>
@@ -110,14 +130,12 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                   height={12}
                   alt="Readme"
                 />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFile({ path: `${directory}/analysis_notebook.ipynb`, type: 'notebook' })
-                  }
+                <a
+                  href={`https://nbviewer.org/github/${notebook.githubUser}/${notebook.githubRepo}/blob/${notebook.defaultBranch}/${notebook.path}`}
+                  target="_blank"
                 >
                   Preview
-                </button>
+                </a>
               </div>
               <div className="flex gap-4">
                 <Image
@@ -129,12 +147,25 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
                 <button
                   type="button"
                   className="hover:text-primary-4"
-                  onClick={() => handleDownloadClick(directory, notebookName)}
+                  onClick={() => handleDownloadClick(notebook)}
                 >
                   Download
                 </button>
                 {loadingZip && <LoadingOutlined />}
               </div>
+
+              {onDelete && (
+                <div className="flex gap-4 text-error">
+                  <DeleteOutlined className="text-error" />
+                  <button
+                    type="button"
+                    className="hover:text-primary-4"
+                    onClick={() => onDelete(notebook.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           }
           overlayStyle={{ border: '1px solid #096DD9' }}
@@ -154,22 +185,33 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string) => <strong>{name}</strong>,
+      render: (name: string, notebook: Notebook) => (
+        <button
+          className="cursor-pointer"
+          aria-label="preview"
+          type="button"
+          onClick={() => {
+            setDisplay('notebook');
+            setCurrentNotebook(notebook);
+          }}
+        >
+          {name}
+        </button>
+      ),
       sorter: getSorter('name'),
-    },
-
-    {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      sorter: getSorter('description'),
     },
 
     {
       title: 'Object of interest',
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
-      sorter: getSorter('objectOfInterest'),
+    },
+
+    {
+      title: 'Scale',
+      dataIndex: 'scale',
+      key: 'scale',
+      sorter: getSorter('scale'),
     },
 
     {
@@ -199,8 +241,8 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
     },
 
     {
-      dataIndex: 'fileName',
-      key: 'fileName',
+      dataIndex: 'notebookUrl',
+      key: 'notebookUrl',
       render: renderActionColumns,
     },
   ];
@@ -220,61 +262,59 @@ function NotebookTable({ notebooks }: { notebooks: Notebook[] }) {
         },
       }}
     >
-      <div className="mt-10 flex items-center justify-between">
-        {Search}
-        <FilterControls columns={columns} filtersCount={filterCount}>
-          <ColumnToggle
-            hidden={isColumnHidden('name')}
-            title="Name"
-            onToggle={() => toggleColumn('name')}
-          />
-          <ColumnToggle
-            hidden={isColumnHidden('description')}
-            title="Description"
-            onToggle={() => toggleColumn('description')}
-          />
-          <ColumnToggle
-            hidden={isColumnHidden('objectOfInterest')}
-            title="Object of interest"
-            onToggle={() => toggleColumn('objectOfInterest')}
-          />
-          <ColumnToggle
-            hidden={isColumnHidden('author')}
-            title="Author"
-            onToggle={() => toggleColumn('author')}
-          />
-          <ColumnToggle
-            hidden={isColumnHidden('creationDate')}
-            title="Creation date"
-            onToggle={() => toggleColumn('creationDate')}
-          >
-            <ConfigProvider
-              theme={{
-                token: {
-                  colorBgBase: '#002766',
-                  colorPrimary: '#40a9ff',
-                  colorTextPlaceholder: '#8c8c8c',
-                  colorTextDisabled: '#8c8c8c',
-                  colorIcon: '#8c8c8c',
-                  colorIconHover: '#40a9ff',
-                },
-              }}
+      <>
+        <NotebookTabs vlabId={vlabId} projectId={projectId} />
+        <div className="mt-10 flex items-center justify-between">
+          {Search}
+          <FilterControls numberOfColumns={filteredColumns.length - 1} filtersCount={filterCount}>
+            <ColumnToggle
+              hidden={isColumnHidden('scale')}
+              title="Scale"
+              onToggle={() => toggleColumn('scale')}
+            />
+            <ColumnToggle
+              hidden={isColumnHidden('objectOfInterest')}
+              title="Object of interest"
+              onToggle={() => toggleColumn('objectOfInterest')}
+            />
+            <ColumnToggle
+              hidden={isColumnHidden('author')}
+              title="Author"
+              onToggle={() => toggleColumn('author')}
+            />
+            <ColumnToggle
+              hidden={isColumnHidden('creationDate')}
+              title="Creation date"
+              onToggle={() => toggleColumn('creationDate')}
             >
-              <RangePicker
-                onChange={(values: RangeValue<Date>) => {
-                  onDateChange('creationDate', values);
+              <ConfigProvider
+                theme={{
+                  token: {
+                    colorBgBase: '#002766',
+                    colorPrimary: '#40a9ff',
+                    colorTextPlaceholder: '#8c8c8c',
+                    colorTextDisabled: '#8c8c8c',
+                    colorIcon: '#8c8c8c',
+                    colorIconHover: '#40a9ff',
+                  },
                 }}
-              />
-            </ConfigProvider>
-          </ColumnToggle>
-        </FilterControls>
-      </div>
+              >
+                <RangePicker
+                  onChange={(values: RangeValue<Date>) => {
+                    onDateChange('creationDate', values);
+                  }}
+                />
+              </ConfigProvider>
+            </ColumnToggle>
+          </FilterControls>
+        </div>
+      </>
 
       <div id="table-container" className="mt-5">
         <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
       </div>
 
-      <ContentModal file={file} onCancel={() => setFile(null)} />
+      <ContentModal notebook={currentNotebook} display={display} onCancel={resetModal} />
 
       <style jsx global>{`
         /* Change color of sorting icons */

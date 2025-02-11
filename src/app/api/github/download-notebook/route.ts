@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { downloadZippedFolder } from '@/util/virtual-lab/github';
+// import { downloadZippedNotebook } from '@/util/virtual-lab/github';
 import { assertErrorMessage } from '@/util/utils';
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -11,9 +11,9 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const zipContent = await downloadZippedFolder(folder);
+    // const zipContent = await downloadZippedFolder(folder);
 
-    return new NextResponse(zipContent, {
+    return new NextResponse(null, {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${folder}.zip"`,

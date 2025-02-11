@@ -1,53 +1,75 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
-import { basePath, notebookRepository } from '@/config';
+import { IpynbRenderer } from 'react-ipynb-renderer';
+import { Notebook } from '@/util/virtual-lab/github';
+import { basePath } from '@/config';
+
+import 'react-ipynb-renderer/dist/styles/monokai.css';
 
 import 'github-markdown-css';
+import { notification } from '@/api/notifications';
 
 export default function ContentModal({
-  file,
+  notebook,
   onCancel,
+  display,
 }: {
-  file: { path: string; type: 'notebook' | 'text' } | null;
+  notebook: Notebook | null;
+  display: 'notebook' | 'readme' | null;
   onCancel: () => void;
 }) {
   const [content, setContent] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchFile() {
-      if (!file) return;
-      const res = await fetch(
-        `${basePath}/api/github/fetch-file?path=${encodeURIComponent(file.path)}`
-      );
+    const controller = new AbortController();
 
-      if (!res.ok) {
-        setContent('Cannot display the contents, ensure the repository is public');
-      } else {
-        setContent(await res.text());
+    async function fetchFile() {
+      if (!notebook || !display) return;
+
+      try {
+        const res = await fetch(
+          `${basePath}/api/github/fetch-file?path=${encodeURIComponent(display === 'notebook' ? notebook.notebookUrl : notebook.readmeUrl)}`,
+          { signal: controller.signal }
+        );
+
+        if (!res.ok) {
+          notification.error('Cannot display the contents, ensure the repository is public');
+        } else {
+          setContent(await res.text());
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          notification.error('An error occurred while fetching the file');
+        }
       }
     }
 
     fetchFile();
-  }, [file]);
+
+    return () => controller.abort();
+  }, [notebook, display]);
 
   return (
-    <Modal open={!!file && !!content} onCancel={onCancel} footer={false} width="70%">
+    <Modal
+      open={!!notebook && !!content}
+      onCancel={() => {
+        setContent(null);
+        onCancel();
+      }}
+      footer={false}
+      width="70%"
+    >
       <div>
-        {file?.type === 'text' && (
+        {display === 'readme' && !!content && (
           <div className="markdown-body">
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
         )}
 
-        {file?.type === 'notebook' && content && (
-          <div className="h-[80vh] w-full">
-            <iframe
-              title={file.path}
-              src={`https://nbviewer.org/github/${notebookRepository.user}/${notebookRepository.repository}/blob/main/${encodeURIComponent(file.path)}`}
-              width="100%"
-              height="100%"
-            />
+        {display === 'notebook' && !!notebook && !!content && (
+          <div className="h-[80vh] w-full overflow-y-scroll">
+            <IpynbRenderer ipynb={JSON.parse(content)} />
           </div>
         )}
       </div>

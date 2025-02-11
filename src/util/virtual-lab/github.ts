@@ -1,70 +1,118 @@
 import JSZip from 'jszip';
+import { z } from 'zod';
+import capitalize from 'lodash/capitalize';
 import { assertErrorMessage } from '../utils';
-import { notebookRepository } from '@/config';
-
-const apiBaseUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}`;
 
 export const options = {
+  headers: {
+    Accept: 'application/vnd.github.v3+json',
+  },
+
   next: {
     revalidate: 3600 * 24,
   },
 };
 
 export interface Notebook {
+  id: string;
   key: string;
   name: string;
   description: string;
-  objectOfInterest: string;
-  fileName: string;
+  scale: string;
+  path: string;
+  notebookUrl: string;
+  metadataUrl: string;
+  readmeUrl: string;
   author: string;
+  githubUser: string;
+  githubRepo: string;
   creationDate: string | null;
+  defaultBranch: string;
+  objectOfInterest: string;
 }
 
-export default async function fetchNotebooks(): Promise<Notebook[]> {
+type Item = {
+  url: string;
+  path: string;
+};
+
+function assertGithubApiResponse(res: Response) {
+  if (res.headers.get('x-ratelimit-remaining') === '0') {
+    throw new Error('GitHub API Rate limit reached');
+  }
+}
+
+export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[]> {
+  const repoDetails = extractUserAndRepo(repoUrl);
+
+  const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
+
   const repoRes = await fetch(apiBaseUrl, options);
 
   if (!repoRes.ok) {
-    if (repoRes.headers.get('x-ratelimit-remaining') === '0') {
-      throw new Error('GitHub API Rate limit reached');
-    }
-    throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
+    assertGithubApiResponse(repoRes);
+    throw new Error(`Cannot fetch the repository ${repoUrl}`);
   }
-  const repo = await repoRes.json();
+  const repository = await repoRes.json();
 
-  const defaultBranch = repo.default_branch;
+  const defaultBranch = repository.default_branch;
 
-  if (!defaultBranch) throw new Error(`Failed to fetch the repository`);
+  if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
 
   const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
 
   if (!response.ok) {
-    throw new Error('Cannot fetch the notebooks, ensure the notebook is public');
+    throw new Error(`Cannot fetch the repository ${repoUrl} , ensure the repository is public`);
   }
 
-  const tree = await response.json();
-  if (!tree.tree) throw new Error(`Failed to fetch the github repo`);
+  const tree: { tree: Item[] } = await response.json();
+
+  if (!tree.tree) throw new Error(`Cannot fetch the repository ${repoUrl}`);
 
   const notebooks: Notebook[] = [];
 
   const datePromises: Promise<string | null>[] = [];
 
-  for (const item of tree.tree) {
+  const items = tree.tree.reduce<Record<string, Item>>((acc, item) => {
+    acc[item.path] = item;
+    return acc;
+  }, {});
+
+  for (const item of Object.values(items)) {
     if (item.path.endsWith('.ipynb')) {
       const parts = item.path.split('/');
-      const objectOfInterest = parts[0];
-      const name = parts[1];
+      const scale = parts[parts.length - 3] ?? '';
+      const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
 
-      datePromises.push(getFileCreationDate(item.path));
+      datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
+      try {
+        const metadataUrl =
+          items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url;
 
-      notebooks.push({
-        objectOfInterest,
-        name,
-        fileName: item.path,
-        key: item.path,
-        description: '',
-        author: 'OBI',
-        creationDate: '',
-      });
+        const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
+
+        notebooks.push({
+          id: '', // OBI notebooks have no id in the database
+          scale,
+          path: item.path,
+          name,
+          notebookUrl: item.url,
+          metadataUrl,
+          readmeUrl: items[item.path.substring(0, item.path.lastIndexOf('/')) + '/README.md'].url,
+          key: item.path,
+          description: '',
+          author: 'OBI',
+          creationDate: '',
+          githubUser: repoDetails.user,
+          githubRepo: repoDetails.repo,
+          defaultBranch,
+          objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
+        });
+      } catch {
+        throw new Error(
+          `Error fetching or validating metafata for notebook ${repoUrl} ${item.path}`
+        );
+      }
     }
   }
 
@@ -77,17 +125,22 @@ export default async function fetchNotebooks(): Promise<Notebook[]> {
   });
 }
 
-export async function fetchNotebooksCatchError(): Promise<Notebook[]> {
+export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[] | string> {
   try {
-    return await fetchNotebooks();
+    return await fetchNotebooks(repoUrl);
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(assertErrorMessage(e));
-    return [];
+    return repoUrl;
   }
 }
 
-async function getFileCreationDate(filePath: string): Promise<string | null> {
-  const url = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/commits?path=${encodeURIComponent(
+async function getFileCreationDate(
+  user: string,
+  repo: string,
+  filePath: string
+): Promise<string | null> {
+  const url = `https://api.github.com/repos/${user}/${repo}/commits?path=${encodeURIComponent(
     filePath
   )}&per_page=1`;
 
@@ -95,6 +148,7 @@ async function getFileCreationDate(filePath: string): Promise<string | null> {
     const response = await fetch(url, options);
 
     if (!response.ok) {
+      // eslint-disable-next-line no-console
       console.error(
         `GitHub API request failed with status: ${response.status} ${response.statusText}`
       );
@@ -104,7 +158,8 @@ async function getFileCreationDate(filePath: string): Promise<string | null> {
     const commits = await response.json();
 
     if (commits.length === 0) {
-      console.log(`No commits found for file: ${filePath}`);
+      // eslint-disable-next-line no-console
+      console.error(`No commits found for file: ${filePath}`);
       return null;
     }
 
@@ -112,55 +167,234 @@ async function getFileCreationDate(filePath: string): Promise<string | null> {
     const creationDate = firstCommit.commit.committer.date;
     return creationDate;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching commit history:', error);
     return null;
   }
 }
 
-export async function fetchFile(filePath: string) {
-  const url = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${filePath}`;
+export async function fetchGithubFile(url: string) {
+  const response = await fetch(url, options);
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`Failed to file ${url}`);
+  }
 
   try {
-    const response = await fetch(url, options);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        `GitHub API request failed with status: ${response.status} ${response.statusText}`
-      );
-    }
-
     return atob(data.content);
-  } catch {
-    throw new Error(`Error fetching file ${filePath}`);
+  } catch (e) {
+    throw new Error(`Failed to parse contents of ${url}`);
   }
 }
 
-export async function downloadZippedFolder(path: string) {
+export async function fetchRawGithubFile(url: string) {
+  const response = await fetch(url, options);
+
+  const data = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`Failed to file ${url}`);
+  }
+
   try {
-    const apiUrl = `https://api.github.com/repos/${notebookRepository.user}/${notebookRepository.repository}/contents/${path}`;
-    const response = await fetch(apiUrl, options);
-    const data = await response.json();
+    return data;
+  } catch (e) {
+    throw new Error(`Failed to parse contents of ${url}`);
+  }
+}
 
-    if (!response.ok) {
-      throw new Error(
-        `GitHub API request failed with status: ${response.status} ${response.statusText}`
-      );
-    }
-
+export async function downloadZippedNotebook(notebook: Notebook) {
+  try {
     const zip = new JSZip();
 
-    for (const file of data) {
-      if (file.type === 'file') {
-        const fileData = await fetch(file.download_url, options);
-        const arrayBuffer = await fileData.arrayBuffer();
-        zip.file(file.name, arrayBuffer);
-      }
-    }
+    const files = [notebook.metadataUrl, notebook.notebookUrl, notebook.readmeUrl];
+    const names = ['analysis_info.json', 'analysis_notebook.ipynb', 'readme.md'];
 
-    const zipContent = await zip.generateAsync({ type: 'nodebuffer' });
+    const promises = files.map(async (f, i) => {
+      const response = await fetch(f);
+      const data = await response.json();
+
+      const decodedContent = atob(data.content);
+
+      const arrayBuffer = new Uint8Array(decodedContent.length);
+      for (let j = 0; j < decodedContent.length; j++) {
+        arrayBuffer[j] = decodedContent.charCodeAt(j);
+      }
+      zip.file(names[i], arrayBuffer);
+    });
+
+    await Promise.all(promises);
+
+    const zipContent = await zip.generateAsync({ type: 'blob' });
     return zipContent;
   } catch {
     throw new Error(`Failed to fetch the contents`);
   }
+}
+
+function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
+  try {
+    const url = new URL(githubUrl);
+
+    if (url.hostname !== 'github.com') {
+      throw new Error('Not a GitHub URL');
+    }
+
+    const pathParts = url.pathname.split('/').filter((part) => part.length > 0);
+
+    if (pathParts.length < 2) {
+      throw new Error('Invalid GitHub URL: Missing user or repository');
+    }
+
+    const user = pathParts[0];
+    const repo = pathParts[1];
+
+    return { user, repo };
+  } catch (error) {
+    throw new Error('Invalid GitHub URL');
+  }
+}
+
+export async function fetchMultipleRepos(githubUrl: string[]) {
+  const promises = githubUrl.map((u) => fetchNotebooks(u));
+
+  const results = await Promise.all(promises);
+
+  return results.flat();
+}
+
+function validateMetadata(input: string) {
+  const json = JSON.parse(input);
+
+  try {
+    const dataTypeSchema = z
+      .object({
+        artefact: z.union([z.string().transform((val) => [val]), z.array(z.string())]),
+        required_properties: z.array(z.string()),
+      })
+      .strip();
+
+    const inputItemSchema = z
+      .object({
+        data_type: dataTypeSchema,
+        class: z.string(),
+      })
+      .strip();
+
+    const inputSchema = z
+      .object({
+        input: z.array(inputItemSchema),
+      })
+      .strip();
+    return inputSchema.parse(json);
+  } catch (e) {
+    throw new Error('Invalid metadata');
+  }
+}
+
+const validScales = ['cellular', 'circuit', 'system'];
+
+export async function fetchNotebook(
+  githubUrl: string
+): Promise<Omit<Notebook, 'id' | 'creationDate'>> {
+  const regex = /github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)/;
+  const match = githubUrl.match(regex);
+
+  if (!match) {
+    throw new Error(
+      'Github URL should point to a folder with a notebook including Readme.md, analysis_notebook.ipynb and metadata.json'
+    );
+  }
+
+  const [, owner, repo, branch, path] = match;
+
+  const pathParts = githubUrl.split('/');
+  const scale = pathParts[pathParts.length - 2] ?? '';
+  const name = capitalize(pathParts[pathParts.length - 1].replaceAll('_', ' ')) ?? '';
+
+  if (!scale) {
+    throw new Error(
+      'Cannot parse scale from path. Ensure folder path follows  .../scale/name/analysis_info.json'
+    );
+  }
+
+  if (!validScales.includes(scale.toLocaleLowerCase())) {
+    throw new Error(`Invalid scale: should be one of ${validScales.join(', ')}.\n Found: ${scale}`);
+  }
+
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+
+  const response = await fetch(apiUrl, options);
+
+  if (!response.ok) {
+    assertGithubApiResponse(response);
+    throw new Error('Failed to fetch the notebook. Ensure notebook is public');
+  }
+
+  const data: {
+    name: string;
+    sha: string;
+    path: string;
+  }[] = await response.json();
+
+  const notebookFiles = ['analysis_info.json', 'analysis_notebook.ipynb', 'README.md'];
+
+  type Files = Record<
+    string,
+    {
+      fileUrl: string;
+      path: string;
+      name: string;
+    }
+  >;
+
+  const files: Files = data.reduce((acc, item) => {
+    if (notebookFiles.includes(item.name) && item.sha && item.name) {
+      acc[item.name] = {
+        fileUrl: `https://api.github.com/repos/${owner}/${repo}/git/blobs/${item.sha}`,
+        path: `${owner}/${repo}/${item.path}`,
+        name: item.name,
+      };
+    }
+    return acc;
+  }, {} as Files);
+
+  notebookFiles.forEach((k) => {
+    if (files[k] === undefined)
+      throw new Error(`Cannot find ${k} for notebook ${owner}/${repo}/${path}`);
+  });
+
+  let metadataContent = '';
+
+  try {
+    metadataContent = await fetchGithubFile(files['analysis_info.json'].fileUrl);
+  } catch {
+    throw new Error(`Failed to download metadata file for notebook ${owner}/${repo}/${path}`);
+  }
+
+  let metadata: ReturnType<typeof validateMetadata>;
+
+  try {
+    metadata = validateMetadata(metadataContent);
+  } catch {
+    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${path}`);
+  }
+
+  return {
+    key: `${owner}/${repo}/${path}`,
+    name,
+    description: '',
+    notebookUrl: files['analysis_notebook.ipynb'].fileUrl,
+    readmeUrl: files['README.md'].fileUrl,
+    metadataUrl: files['analysis_info.json'].fileUrl,
+    scale,
+    path: `${path}/${files['analysis_notebook.ipynb'].name}`,
+    author: owner,
+    githubUser: owner,
+    githubRepo: repo,
+    defaultBranch: branch,
+    objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
+  };
 }

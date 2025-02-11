@@ -4,30 +4,25 @@ import { Column } from './ControlPanel';
 
 export function useToggleColumns<T>(columns: Column<T>[]) {
   const [columnHidden, setColumnHidden] = useState(() => {
-    const cols: { [key: string]: boolean } = {};
-    columns.forEach((c) => {
-      cols[c.key] = false;
-    });
-    return cols;
+    return Object.fromEntries(columns.map((c) => [c.key, false])) as Record<keyof T, boolean>;
   });
 
   const toggleColumn = useCallback(
     (key: keyof T) => {
-      setColumnHidden({ ...columnHidden, [key]: !columnHidden[key as string] });
+      setColumnHidden({ ...columnHidden, [key]: !columnHidden[key] });
     },
     [columnHidden]
   );
 
   const isColumnHidden = useCallback(
     (key: keyof T) => {
-      const column = columns.find((col) => col.key === key);
-      return !!column?.hidden;
+      return columnHidden[key];
     },
-    [columns]
+    [columnHidden]
   );
 
   return {
-    filteredColumns: columns.filter((c) => columnHidden[c.key] === false),
+    filteredColumns: columns.filter((c) => columnHidden[c.key as keyof T] === false),
     toggleColumn,
     isColumnHidden,
   };
@@ -118,24 +113,15 @@ export default function ColumnToggle({
   title: string;
   children?: ReactNode;
 }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div>
       <div className="mb-3 flex cursor-pointer items-center gap-3">
         {!hidden && <EyeOutlined className="text-white" onClick={onToggle} />}
         {hidden && <EyeInvisibleOutlined className="text-[#69C0FF]" onClick={onToggle} />}
-        <button
-          type="button"
-          onClick={() => {
-            setExpanded(!expanded);
-          }}
-        >
-          {title}
-        </button>
+        {title}
       </div>
 
-      {expanded && children}
+      {children}
     </div>
   );
 }
