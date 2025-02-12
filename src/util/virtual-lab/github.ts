@@ -64,10 +64,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
 
   if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
 
-  const response = await fetch(
-    apiBaseUrl + `/git/trees/${'620a5c364764554e8ea572b59c65bb2846d4a0f7'}?recursive=1`,
-    options
-  );
+  const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
 
   if (!response.ok) {
     throw new Error(`Cannot fetch the repository ${repoUrl} , ensure the repository is public`);
@@ -191,22 +188,13 @@ export async function fetchGithubFile(url: string) {
   const data = await response.json();
 
   try {
-    // Decode Base64 to Uint8Array
     const binaryString = atob(data.content);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    // Try decoding as UTF-8 first
-    let text = new TextDecoder('utf-8').decode(bytes);
-
-    // If UTF-8 decoding resulted in misinterpretation, try ISO-8859-1
-    if (text.includes('Ã')) {
-      text = new TextDecoder('iso-8859-1').decode(bytes);
-    }
-
-    return text;
+    return new TextDecoder('utf-8').decode(bytes);
   } catch (e) {
     throw new Error(`Failed to parse contents of ${url}`);
   }
