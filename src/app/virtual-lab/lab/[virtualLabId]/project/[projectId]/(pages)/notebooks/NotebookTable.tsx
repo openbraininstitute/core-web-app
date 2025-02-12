@@ -71,7 +71,7 @@ function NotebookTable({
     if (!search) return notebooks;
     return notebooks.filter((n) => {
       const searchFields: StringKeys[] = [
-        'author',
+        'authors',
         'description',
         'notebookUrl',
         'name',
@@ -202,6 +202,12 @@ function NotebookTable({
     },
 
     {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+
+    {
       title: 'Object of interest',
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
@@ -215,10 +221,9 @@ function NotebookTable({
     },
 
     {
-      title: 'Author',
-      dataIndex: 'author',
-      key: 'author',
-      sorter: getSorter('author'),
+      title: 'Authors',
+      dataIndex: 'authors',
+      key: 'authors',
     },
 
     {
@@ -278,9 +283,9 @@ function NotebookTable({
               onToggle={() => toggleColumn('objectOfInterest')}
             />
             <ColumnToggle
-              hidden={isColumnHidden('author')}
+              hidden={isColumnHidden('authors')}
               title="Author"
-              onToggle={() => toggleColumn('author')}
+              onToggle={() => toggleColumn('authors')}
             />
             <ColumnToggle
               hidden={isColumnHidden('creationDate')}

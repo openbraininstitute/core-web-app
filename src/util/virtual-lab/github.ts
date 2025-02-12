@@ -6,6 +6,7 @@ import { assertErrorMessage } from '../utils';
 export const options = {
   headers: {
     Accept: 'application/vnd.github.v3+json',
+    Authorization: 'token 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',
   },
 
   next: {
@@ -23,7 +24,7 @@ export interface Notebook {
   notebookUrl: string;
   metadataUrl: string;
   readmeUrl: string;
-  author: string;
+  authors: string;
   githubUser: string;
   githubRepo: string;
   creationDate: string | null;
@@ -47,7 +48,11 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
 
   const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
 
+  console.log(apiBaseUrl);
+
   const repoRes = await fetch(apiBaseUrl, options);
+
+  console.log(repoRes);
 
   if (!repoRes.ok) {
     assertGithubApiResponse(repoRes);
@@ -59,7 +64,10 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
 
   if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
 
-  const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
+  const response = await fetch(
+    apiBaseUrl + `/git/trees/${'620a5c364764554e8ea572b59c65bb2846d4a0f7'}?recursive=1`,
+    options
+  );
 
   if (!response.ok) {
     throw new Error(`Cannot fetch the repository ${repoUrl} , ensure the repository is public`);
@@ -81,7 +89,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
   for (const item of Object.values(items)) {
     if (item.path.endsWith('.ipynb')) {
       const parts = item.path.split('/');
-      const scale = parts[parts.length - 3] ?? '';
+      // const scale = parts[parts.length - 3] ?? '';
       const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
 
       datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
@@ -93,15 +101,15 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
 
         notebooks.push({
           id: '', // OBI notebooks have no id in the database
-          scale,
+          scale: metadata.scale,
           path: item.path,
           name,
           notebookUrl: item.url,
           metadataUrl,
           readmeUrl: items[item.path.substring(0, item.path.lastIndexOf('/')) + '/README.md'].url,
           key: item.path,
-          description: '',
-          author: 'OBI',
+          description: metadata.description,
+          authors: metadata.authors.join(', '),
           creationDate: '',
           githubUser: repoDetails.user,
           githubRepo: repoDetails.repo,
@@ -176,14 +184,29 @@ async function getFileCreationDate(
 export async function fetchGithubFile(url: string) {
   const response = await fetch(url, options);
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(`Failed to file ${url}`);
+    throw new Error(`Failed to fetch file ${url}`);
   }
 
+  const data = await response.json();
+
   try {
-    return atob(data.content);
+    // Decode Base64 to Uint8Array
+    const binaryString = atob(data.content);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Try decoding as UTF-8 first
+    let text = new TextDecoder('utf-8').decode(bytes);
+
+    // If UTF-8 decoding resulted in misinterpretation, try ISO-8859-1
+    if (text.includes('Ã')) {
+      text = new TextDecoder('iso-8859-1').decode(bytes);
+    }
+
+    return text;
   } catch (e) {
     throw new Error(`Failed to parse contents of ${url}`);
   }
@@ -285,6 +308,10 @@ function validateMetadata(input: string) {
 
     const inputSchema = z
       .object({
+        name: z.string(),
+        description: z.string(),
+        authors: z.array(z.string()),
+        scale: z.string(),
         input: z.array(inputItemSchema),
       })
       .strip();
@@ -391,7 +418,7 @@ export async function fetchNotebook(
     metadataUrl: files['analysis_info.json'].fileUrl,
     scale,
     path: `${path}/${files['analysis_notebook.ipynb'].name}`,
-    author: owner,
+    authors: owner,
     githubUser: owner,
     githubRepo: repo,
     defaultBranch: branch,
