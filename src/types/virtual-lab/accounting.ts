@@ -45,6 +45,7 @@ export enum ServiceType {
 export enum ServiceSubtype {
   Storage = 'storage',
   SingleCellSim = 'single-cell-sim',
+  SynaptomeSim = 'synaptome-sim',
   MlRetrieval = 'ml-retrieval',
   MlLlm = 'ml-llm',
   MlRag = 'ml-rag',

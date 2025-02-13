@@ -135,12 +135,23 @@ const tableTheme = {
   },
 };
 
+const activityLabel: Record<ServiceSubtype, string> = {
+  [ServiceSubtype.SingleCellSim]: 'Simulate',
+  [ServiceSubtype.SynaptomeSim]: 'Simulate',
+  [ServiceSubtype.Storage]: 'Storage',
+  // TODO: check if the following subtypes are still relevant and find better labels for them
+  [ServiceSubtype.MlRetrieval]: 'ML',
+  [ServiceSubtype.MlLlm]: 'ML',
+  [ServiceSubtype.MlRag]: 'ML',
+};
+
 function activityRenderFn(subtype: ServiceSubtype) {
-  return subtype === 'single-cell-sim' ? 'Simulate' : subtype;
+  return activityLabel[subtype] ?? subtype;
 }
 
 const scaleLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.SingleCellSim]: 'Single cell',
+  [ServiceSubtype.SynaptomeSim]: 'Synaptome',
   [ServiceSubtype.Storage]: 'Storage',
   // TODO: check if the following subtypes are still relevant and find better labels for them
   [ServiceSubtype.MlRetrieval]: 'ML',
