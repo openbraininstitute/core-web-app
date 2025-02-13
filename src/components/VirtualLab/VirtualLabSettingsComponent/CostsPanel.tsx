@@ -17,14 +17,28 @@ import {
   getProjectJobReports,
   reverseProjectBudget,
 } from '@/services/virtual-lab/projects';
-import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
+import { getVirtualLabAccountBalance, topUpVirtualLabAccount } from '@/services/virtual-lab/labs';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import EditIcon from '@/components/icons/Edit';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 
 const { Column } = Table;
 
-function VirtualLabBlock({ balance }: { balance: string }) {
+function VirtualLabBlock({
+  virtualLabId,
+  balance,
+  onBalanceChange,
+}: {
+  virtualLabId: string;
+  balance: string;
+  onBalanceChange: () => Promise<void>;
+}) {
+  const { createModal, contextHolder } = useVirtualLabTopUpModal();
+
+  const openTopUpModal = () => {
+    createModal({ virtualLabId, onSuccess: onBalanceChange });
+  };
+
   return (
     <div className="flex w-full justify-between border-2 border-primary-3 p-6 text-white">
       <h2 className="text-2xl font-bold">Virtual Lab</h2>
@@ -38,11 +52,14 @@ function VirtualLabBlock({ balance }: { balance: string }) {
         <button
           type="button"
           className="px-4 py-2 hover:bg-primary-5 focus:outline-none"
-          aria-label="Transfer credits"
+          aria-label="Top-up Virtual lab account"
+          onClick={openTopUpModal}
         >
           <EditIcon />
         </button>
       </div>
+
+      {contextHolder}
     </div>
   );
 }
@@ -185,7 +202,7 @@ function useJobReports({ virtualLabId, projectId }: { virtualLabId: string; proj
   };
 }
 
-function useVirtualLabBalance({ virtualLabId }: { virtualLabId: string }) {
+export function useVirtualLabBalance({ virtualLabId }: { virtualLabId: string }) {
   const balanceAtom = useMemo(
     () =>
       atomWithRefresh(async () =>
@@ -265,6 +282,69 @@ function useGetProjectUserById({
   return useCallback(
     (userId: string) => projectUsers?.find((user) => user.id === userId),
     [projectUsers]
+  );
+}
+
+function VirtualLabTopUpForm({
+  virtualLabId,
+  onClose,
+  onSuccess,
+}: {
+  virtualLabId: string;
+  onClose: () => void;
+  onSuccess: () => Promise<void>;
+}) {
+  const [amount, setAmount] = useState<number | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+
+  const topUp = async () => {
+    if (!amount) {
+      return;
+    }
+
+    setLoading(true);
+    await topUpVirtualLabAccount({ virtualLabId, amount });
+    await onSuccess();
+    onClose();
+  };
+
+  return (
+    <>
+      <span className="text-2xl font-bold">Virtual Lab account top-up</span>
+      <span className="text-warning">
+        This is for demo purposes only. Will be replaced with payment provider integration
+      </span>
+
+      <div className="mt-8">
+        <span className="text-xl font-bold">Amount, credits</span> <br />
+        <InputNumber
+          className="my-2 block w-full"
+          placeholder="0"
+          value={amount}
+          min={0.01}
+          max={1000}
+          onChange={(value) => setAmount(value ?? 0)}
+        />
+      </div>
+
+      <div className="mr-[-34px] mt-8 text-right">
+        <Button
+          onClick={onClose}
+          className="inline-flex items-center justify-center rounded-none border-none px-5 py-6 shadow-none"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="primary"
+          className="ml-2 inline-flex items-center justify-center rounded-none bg-primary-8 px-8 py-6"
+          disabled={!amount}
+          onClick={topUp}
+          loading={loading}
+        >
+          Top-up
+        </Button>
+      </div>
+    </>
   );
 }
 
@@ -466,6 +546,49 @@ function useBalanceTransferModal() {
   };
 }
 
+function useVirtualLabTopUpModal() {
+  const [modal, contextHolder] = Modal.useModal();
+  const destroyRef = useRef<() => void>();
+  const onClose = () => destroyRef?.current?.();
+
+  const createModal = ({
+    virtualLabId,
+    onSuccess,
+  }: {
+    virtualLabId: string;
+    onSuccess: () => Promise<void>;
+  }) => {
+    const { destroy } = modal.confirm({
+      title: null,
+      icon: null,
+      closable: true,
+      maskClosable: true,
+      footer: null,
+      width: 680,
+      centered: true,
+      mask: true,
+      styles: {
+        mask: { background: '#002766' },
+        body: { padding: '60px 40px 20px' },
+      },
+      closeIcon: <CloseOutlined className="text-2xl text-primary-8" />,
+      className: '![&>.ant-modal-content]:bg-red-500',
+      content: (
+        <VirtualLabTopUpForm virtualLabId={virtualLabId} onClose={onClose} onSuccess={onSuccess} />
+      ),
+    });
+
+    destroyRef.current = destroy;
+
+    return destroy;
+  };
+
+  return {
+    createModal,
+    contextHolder: <ConfigProvider theme={modalTheme}>{contextHolder}</ConfigProvider>,
+  };
+}
+
 export default function CostsPanel({ virtualLabId }: { virtualLabId: string }) {
   const projectsObj = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
   const [virtualLabBalance, refreshBalance] = useVirtualLabBalance({ virtualLabId });
@@ -478,7 +601,11 @@ export default function CostsPanel({ virtualLabId }: { virtualLabId: string }) {
 
   return (
     <>
-      <VirtualLabBlock balance={virtualLabBalance?.data.balance ?? ''} />
+      <VirtualLabBlock
+        virtualLabId={virtualLabId}
+        balance={virtualLabBalance?.data.balance ?? ''}
+        onBalanceChange={onBalanceChange}
+      />
 
       {projectsObj.results.map((project) => (
         <div key={project.id}>
