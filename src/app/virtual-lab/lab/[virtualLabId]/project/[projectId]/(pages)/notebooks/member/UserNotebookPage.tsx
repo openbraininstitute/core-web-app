@@ -108,25 +108,6 @@ export default function UserNotebookPage({
       <Modal open={openModal} onCancel={resetModal} footer={false} width="40vw">
         {step === 0 && (
           <>
-            <div className="mb-2 text-lg font-bold text-primary-8">Add a notebook</div>
-            <div className="text-sm text-gray-500">
-              <div>
-                Ensure the url points to a github folder containing{' '}
-                <code className="ml-1 mr-1 text-xs">analysis_notebook.ipynb</code> and{' '}
-                <code className="ml-1 mr-1 text-xs">analys_info.json</code>
-              </div>
-
-              <div className="mt-2">
-                Ensure the folder path contains the scale and notebook name e.g
-                <code className="ml-1 text-xs">
-                  <span>
-                    https://github.com/openbraininstitute/obi_platform_analysis_notebooks/tree/main/
-                  </span>
-                  <strong>Cellular</strong>
-                  <strong>/display_morphology_population_features</strong>
-                </code>
-              </div>
-            </div>
             <div className="mb-5 mt-5">
               <div className="mb-3 font-bold text-primary-8">Github url</div>
               <Input
@@ -152,7 +133,7 @@ export default function UserNotebookPage({
                     }
                   }}
                 >
-                  Add notebok
+                  Register notebooks
                 </button>
                 {loading && <LoadingOutlined />}
                 <button type="button" onClick={resetModal}>
@@ -165,11 +146,13 @@ export default function UserNotebookPage({
 
         {step === 1 && (
           <div className="mb-5 mt-5">
-            <div className="mb-3 font-bold text-primary-8">Register notebook</div>
+            <div className="mb-3 overflow-y-scroll font-bold text-primary-8">
+              Register notebooks
+            </div>
             {newNotebooks?.map((notebook) => {
               return (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
+                <div key={notebook.key} className="mb-5 mt-5">
+                  <div className="mb-5 grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
                       <span className="text-primary-8">Name</span>
                       <Tag className="h-[30px] max-w-fit p-1">{notebook?.name}</Tag>
@@ -184,7 +167,11 @@ export default function UserNotebookPage({
                       ))}
                     </div>
                   </div>
-                </>
+                  <div className="flex flex-col">
+                    <div className="mb-2 text-primary-8">Description</div>
+                    <code className="text-sm">{notebook.description}</code>
+                  </div>
+                </div>
               );
             })}
             <div className="-mb-6 mt-5 flex justify-end gap-3">
@@ -233,7 +220,7 @@ export default function UserNotebookPage({
                   resetModal();
                 }}
               >
-                Register notebook
+                Register notebooks
                 {loading && <LoadingOutlined />}
               </button>
 
@@ -259,7 +246,7 @@ export default function UserNotebookPage({
         className="fixed bottom-10 right-10 h-[50px] w-[200px] bg-white text-primary-8"
         onClick={() => setOpenModal(true)}
       >
-        Add a notebook
+        Register notebooks
       </button>
     </>
   );
