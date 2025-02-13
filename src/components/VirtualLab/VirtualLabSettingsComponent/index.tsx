@@ -321,11 +321,11 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
   const collapseItems: CollapseProps['items'] = useMemo(
     () =>
       // [header, costs, settings, plan, budget, billing, dangerZone].filter(
-      [costs, settings, plan, budget, billing, dangerZone].filter(
+      [costs, settings].filter(
         (item) => Object.keys(item).length !== 0 // Filter-out any "empty" panels (ex. DangerZone when not admin).
       ),
     // [header, costs, settings, plan, budget, billing, dangerZone]
-    [costs, settings, plan, budget, billing, dangerZone]
+    [costs, settings]
   );
 
   if (virtualLabDetail.state === 'loading') {
