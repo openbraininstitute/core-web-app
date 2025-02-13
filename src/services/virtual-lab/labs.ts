@@ -168,7 +168,7 @@ export async function topUpVirtualLabAccount({
   amount: number;
 }): Promise<VirtualLabJobReportsResponse> {
   const response = await authFetch(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/top-up`,
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/budget/top-up`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
