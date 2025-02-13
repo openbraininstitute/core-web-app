@@ -42,10 +42,16 @@ export async function POST(req: Request) {
   }
 
   const url = `https://${API_SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members`;
+  const tags = ['newsletter', 'website'];
+
+  if (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging') {
+    tags.push('test');
+  }
+
   const data = {
     email_address: emailValidation.data,
     status: 'subscribed',
-    tags: ['newsletter'],
+    tags,
   };
 
   try {
@@ -77,6 +83,7 @@ export async function POST(req: Request) {
       { status: result.status ?? 400 }
     );
   } catch (error) {
+    console.error('error sending newsletter email', error);
     captureException(error, {
       tags: { section: 'landing-page', feature: 'newsletter' },
       extra: {
