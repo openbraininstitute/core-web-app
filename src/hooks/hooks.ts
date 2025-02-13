@@ -40,6 +40,26 @@ export function useUnwrappedValue<T>(atom: Atom<T>) {
   return useAtomValue(unwrap(atom));
 }
 
+/**
+  Returns the last truthy value from a Jotai atom, persisting it even when the atom's
+  current value becomes falsy. Useful for maintaining the last valid state.
+
+  @param atom - The Jotai atom to track
+  @returns The last truthy value from the atom
+*/
+export function useLastTruthyValue<T>(atom: Atom<T>) {
+  const currentValue = useAtomValue(unwrap(atom));
+  const [lastTruthyValue, setLastTruthyValue] = useState(currentValue);
+
+  useEffect(() => {
+    if (!currentValue) return;
+
+    setLastTruthyValue(currentValue);
+  }, [currentValue]);
+
+  return lastTruthyValue;
+}
+
 export function useLoadableValue<T>(atom: Atom<T>) {
   return useAtomValue(loadable(atom));
 }
@@ -55,12 +75,12 @@ type RestParameters<T> = T extends (first: any, ...rest: infer R) => any ? R : n
 type DebounceParams = RestParameters<typeof debounce>;
 
 /**
-  Creates a debounced callback that delays invoking func until after 
-  wait milliseconds have elapsed since the last time the debounced function was invoked. 
+  Creates a debounced callback that delays invoking func until after
+  wait milliseconds have elapsed since the last time the debounced function was invoked.
   See: https://lodash.com/docs/4.17.15#debounce
- 
+
   The callback will be memoized so that it only changes if one of the deps has changed.
-   
+
   @param func The function to debounce.
   @param deps The dependency array.
   @param wait The number of milliseconds to delay.

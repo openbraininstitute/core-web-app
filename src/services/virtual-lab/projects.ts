@@ -1,6 +1,7 @@
 import { createApiHeaders } from './common';
 import { virtualLabApi } from '@/config';
 import { Project, ProjectResponse } from '@/types/virtual-lab/projects';
+import { ProjectBalanceResponse, ProjectJobReportsResponse } from '@/types/virtual-lab/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { UsersResponse } from '@/types/virtual-lab/members';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
@@ -136,4 +137,104 @@ export async function patchProject(
 
     return response.json();
   });
+}
+
+export async function getProjectAccountBalance({
+  virtualLabId,
+  projectId,
+}: {
+  virtualLabId: string;
+  projectId: string;
+}): Promise<ProjectBalanceResponse> {
+  const response = await authFetch(
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/balance`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function getProjectJobReports({
+  virtualLabId,
+  projectId,
+  page = 1,
+  pageSize = 10,
+  signal,
+}: {
+  virtualLabId: string;
+  projectId: string;
+  page?: number;
+  pageSize?: number;
+  signal?: AbortSignal;
+}): Promise<ProjectJobReportsResponse> {
+  const searchParams = new URLSearchParams();
+
+  searchParams.set('page', page.toString());
+  searchParams.set('page_size', pageSize.toString());
+
+  const url = new URL(
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/reports`
+  );
+  url.search = searchParams.toString();
+
+  const response = await authFetch(url.toString(), { signal });
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function assignProjectBudget({
+  virtualLabId,
+  projectId,
+  amount,
+}: {
+  virtualLabId: string;
+  projectId: string;
+  amount: number;
+}): Promise<any> {
+  const response = await authFetch(
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/assign`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function reverseProjectBudget({
+  virtualLabId,
+  projectId,
+  amount,
+}: {
+  virtualLabId: string;
+  projectId: string;
+  amount: number;
+}): Promise<any> {
+  const response = await authFetch(
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/reverse`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
 }

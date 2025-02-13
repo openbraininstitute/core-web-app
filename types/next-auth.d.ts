@@ -3,10 +3,10 @@ import { GetTokenParams } from 'next-auth/jwt';
 
 declare module 'next-auth' {
   interface Session {
-    user: {
+    user: DefaultSession['user'] & {
       username: string;
       id: string;
-    } & DefaultSession['user'];
+    };
     accessToken: string;
     idToken: string;
     error?: string;
