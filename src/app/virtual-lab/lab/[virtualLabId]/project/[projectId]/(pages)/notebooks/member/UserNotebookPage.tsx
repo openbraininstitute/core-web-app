@@ -6,7 +6,7 @@ import { Input, Modal } from 'antd';
 import { useState, useEffect, useRef } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import NotebookTable from '../NotebookTable';
-import { NotebookSchema } from '../schemas';
+import { NotebooksArraySchema } from '../schemas';
 import { Notebook } from '@/util/virtual-lab/github';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import authFetch from '@/authFetch';
@@ -184,55 +184,63 @@ export default function UserNotebookPage({
                       ))}
                     </div>
                   </div>
-                  <div className="-mb-6 mt-5 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      className="rounded bg-primary-8 p-2 text-white"
-                      onClick={async () => {
-                        if (!notebook) return;
-                        setLoading(true);
-
-                        try {
-                          const notebookRes = await authFetch(
-                            `${virtualLabApi.url}/projects/${projectId}/notebooks/`,
-                            {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ github_file_url: notebook.notebookUrl }),
-                            }
-                          );
-
-                          const newNotebook = await assertVLApiResponse(notebookRes);
-
-                          const newValidatedNotebook = NotebookSchema.parse(newNotebook.data);
-                          setNotebooks([
-                            ...notebooks,
-                            {
-                              ...notebook,
-                              id: newValidatedNotebook.id,
-                              creationDate: newValidatedNotebook.created_at,
-                            },
-                          ]);
-                        } catch (e) {
-                          notification.error('Unknown error, please try again.');
-                          resetModal();
-                          return;
-                        }
-
-                        resetModal();
-                      }}
-                    >
-                      Register notebook
-                      {loading && <LoadingOutlined />}
-                    </button>
-
-                    <button type="button" onClick={resetModal}>
-                      Cancel
-                    </button>
-                  </div>
                 </>
               );
             })}
+            <div className="-mb-6 mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded bg-primary-8 p-2 text-white"
+                onClick={async () => {
+                  if (!newNotebooks) return;
+                  setLoading(true);
+
+                  try {
+                    const notebookRes = await authFetch(
+                      `${virtualLabApi.url}/projects/${projectId}/notebooks/bulk_create/`,
+                      {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          notebooks: newNotebooks.map((n) => {
+                            return {
+                              github_file_url: n.notebookUrl,
+                            };
+                          }),
+                        }),
+                      }
+                    );
+
+                    const newNotebook = await assertVLApiResponse(notebookRes);
+
+                    const newValidatedNotebooks = NotebooksArraySchema.parse(newNotebook.data);
+                    setNotebooks([
+                      ...notebooks,
+                      ...newNotebooks.map((n, i) => {
+                        return {
+                          ...n,
+                          id: newValidatedNotebooks[i].id,
+                          creationDate: newValidatedNotebooks[i].created_at,
+                        };
+                      }),
+                    ]);
+                  } catch (e) {
+                    notification.error('Unknown error, please try again.');
+                    resetModal();
+                    return;
+                  }
+
+                  resetModal();
+                }}
+              >
+                Register notebook
+                {loading && <LoadingOutlined />}
+              </button>
+
+              <button type="button" onClick={resetModal}>
+                Cancel
+              </button>
+            </div>
           </div>
         )}
       </Modal>
