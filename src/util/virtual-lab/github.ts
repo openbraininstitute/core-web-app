@@ -48,11 +48,7 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
 
   const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
 
-  console.log(apiBaseUrl);
-
   const repoRes = await fetch(apiBaseUrl, options);
-
-  console.log(repoRes);
 
   if (!repoRes.ok) {
     assertGithubApiResponse(repoRes);
@@ -64,7 +60,10 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
 
   if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
 
-  const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
+  const response = await fetch(
+    apiBaseUrl + `/git/trees/624feb8a461c93110564cd2e2d2e753be0676ee2?recursive=1`,
+    options
+  );
 
   if (!response.ok) {
     throw new Error(`Cannot fetch the repository ${repoUrl} , ensure the repository is public`);
@@ -113,9 +112,9 @@ export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[
           defaultBranch,
           objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
         });
-      } catch {
+      } catch (e) {
         throw new Error(
-          `Error fetching or validating metafata for notebook ${repoUrl} ${item.path}`
+          `Error fetching or validating metadata for notebook ${repoUrl} ${item.path} \n ${e}`
         );
       }
     }
@@ -279,37 +278,36 @@ export async function fetchMultipleRepos(githubUrl: string[]) {
 function validateMetadata(input: string) {
   const json = JSON.parse(input);
 
-  try {
-    const dataTypeSchema = z
-      .object({
-        artefact: z.union([z.string().transform((val) => [val]), z.array(z.string())]),
-        required_properties: z.array(z.string()),
-      })
-      .strip();
+  const dataTypeSchema = z
+    .object({
+      artefact: z.union([z.string().transform((val) => [val]), z.array(z.string())]),
+      required_properties: z.array(z.string()),
+    })
+    .strip();
 
-    const inputItemSchema = z
-      .object({
-        data_type: dataTypeSchema,
-        class: z.string(),
-      })
-      .strip();
+  const inputItemSchema = z
+    .object({
+      data_type: dataTypeSchema,
+      class: z.string(),
+    })
+    .strip();
 
-    const inputSchema = z
-      .object({
-        name: z.string(),
-        description: z.string(),
-        authors: z.array(z.string()),
-        scale: z.string(),
-        input: z.array(inputItemSchema),
-      })
-      .strip();
-    return inputSchema.parse(json);
-  } catch (e) {
-    throw new Error('Invalid metadata');
-  }
+  const inputSchema = z
+    .object({
+      name: z.string(),
+      description: z.string(),
+      authors: z.array(z.string()),
+      scale: z
+        .string()
+        .transform((val) => val.toLowerCase())
+        .pipe(z.enum(['cellular', 'system', 'circuit', 'metabolism']))
+        .default('cellular'),
+      input: z.array(inputItemSchema),
+    })
+    .strip();
+
+  return inputSchema.parse(json);
 }
-
-const validScales = ['cellular', 'circuit', 'system'];
 
 export async function fetchNotebook(
   githubUrl: string
@@ -324,20 +322,6 @@ export async function fetchNotebook(
   }
 
   const [, owner, repo, branch, path] = match;
-
-  const pathParts = githubUrl.split('/');
-  const scale = pathParts[pathParts.length - 2] ?? '';
-  const name = capitalize(pathParts[pathParts.length - 1].replaceAll('_', ' ')) ?? '';
-
-  if (!scale) {
-    throw new Error(
-      'Cannot parse scale from path. Ensure folder path follows  .../scale/name/analysis_info.json'
-    );
-  }
-
-  if (!validScales.includes(scale.toLocaleLowerCase())) {
-    throw new Error(`Invalid scale: should be one of ${validScales.join(', ')}.\n Found: ${scale}`);
-  }
 
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
 
@@ -393,20 +377,20 @@ export async function fetchNotebook(
 
   try {
     metadata = validateMetadata(metadataContent);
-  } catch {
-    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${path}`);
+  } catch (e) {
+    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${path}` + e);
   }
 
   return {
     key: `${owner}/${repo}/${path}`,
-    name,
-    description: '',
+    name: metadata.name,
+    description: metadata.description,
     notebookUrl: files['analysis_notebook.ipynb'].fileUrl,
     readmeUrl: files['README.md'].fileUrl,
     metadataUrl: files['analysis_info.json'].fileUrl,
-    scale,
+    scale: metadata.scale,
     path: `${path}/${files['analysis_notebook.ipynb'].name}`,
-    authors: owner,
+    authors: metadata.authors.join(', '),
     githubUser: owner,
     githubRepo: repo,
     defaultBranch: branch,
