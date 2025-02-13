@@ -1,135 +1,12 @@
-import { Button, ConfigProvider, Modal, Spin, Form } from 'antd';
-import { useState, useEffect } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { unwrap } from 'jotai/utils';
 import { PlusOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import { Button, ConfigProvider, Spin } from 'antd';
+import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import { useState } from 'react';
+
 import VirtualLabProjectItem from './VirtualLabProjectItem';
-import NewProjectModalForm from './NewProjectModalForm';
-import { selectedMembersAtom } from './shared';
+import CreationModal from '@/components/VirtualLab/create-entity-flows/project/in-lab';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
-import { notification } from '@/api/notifications';
-import { createProject } from '@/services/virtual-lab/projects';
-import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
-import { useUnwrappedValue } from '@/hooks/hooks';
-import { useAtom } from '@/state/state';
-import { assertErrorMessage, classNames } from '@/util/utils';
-
-function NewProjectModalFooter({
-  close,
-  loading,
-  onSubmit,
-  submitDisabled,
-}: {
-  close: () => void;
-  loading: boolean;
-  onSubmit: () => void;
-  submitDisabled: boolean;
-}) {
-  return (
-    <Form.Item>
-      <div className="mx-10 flex items-center justify-end">
-        <Button
-          title="Cancel"
-          htmlType="submit"
-          onClick={close}
-          className="h-14 w-40 rounded-none bg-transparent font-light text-primary-8 hover:bg-neutral-1"
-        >
-          Cancel
-        </Button>
-        <Button
-          type="primary"
-          title="Save Changes"
-          htmlType="submit"
-          onClick={onSubmit}
-          className={classNames(
-            'ml-3 h-14 w-40 rounded-none bg-primary-8 font-semibold',
-            submitDisabled ? 'hover:bg-gray-100' : 'hover:bg-primary-7'
-          )}
-          disabled={!!submitDisabled}
-          loading={loading}
-        >
-          Save
-        </Button>
-      </div>
-    </Form.Item>
-  );
-}
-
-export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
-  const [open, setOpen] = useAtom<boolean>('new-project-modal-open');
-  const [loading, setLoading] = useState(false);
-  const members = useUnwrappedValue(virtualLabMembersAtomFamily(virtualLabId));
-  const refreshProjectsList = useSetAtom(virtualLabProjectsAtomFamily(virtualLabId));
-  const includeMembers = useAtomValue(selectedMembersAtom);
-  const redirectUrl = (projectId: string) =>
-    `/virtual-lab/lab/${virtualLabId}/project/${projectId}/home`;
-
-  const router = useRouter();
-
-  const [isFormValid, setIsFormValid] = useState(false);
-
-  const [form] = Form.useForm<{ name: string; description: string }>();
-
-  const onSubmit = async () => {
-    try {
-      const { name, description } = await form.validateFields();
-      setLoading(true);
-      const res = await createProject({ name, description, includeMembers }, virtualLabId);
-      refreshProjectsList();
-      form.resetFields();
-      setOpen(false);
-      notification.success(`${res.data.project.name} has been created.`, undefined, 'topRight');
-      router.push(redirectUrl(res.data.project.id));
-    } catch (e: any) {
-      if ('errorFields' in e) return; // Input errors.
-      notification.error(
-        `Project creation failed`,
-        undefined,
-        'topRight',
-        undefined,
-        undefined,
-        assertErrorMessage(e)
-      ); // Request Errors
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const values = Form.useWatch([], form);
-
-  useEffect(() => {
-    form
-      .validateFields({ validateOnly: true })
-      .then(() => setIsFormValid(true))
-      .catch(() => setIsFormValid(false));
-  }, [form, values]);
-
-  return (
-    <Modal
-      destroyOnClose
-      footer={
-        <NewProjectModalFooter
-          close={() => {
-            form.resetFields();
-            setIsFormValid(false);
-            setOpen(false);
-          }}
-          loading={loading}
-          onSubmit={onSubmit}
-          submitDisabled={!isFormValid}
-        />
-      }
-      width={800}
-      open={!!open}
-      onCancel={() => setOpen(false)}
-    >
-      <div className="m-10">
-        <NewProjectModalForm form={form} members={members} vlabId={virtualLabId} />
-      </div>
-    </Modal>
-  );
-}
 
 function SearchProjects() {
   return (
@@ -159,8 +36,9 @@ function SearchProjects() {
 
 export default function VirtualLabProjectList({ id }: { id: string }) {
   const virtualLabProjects = useAtomValue(unwrap(virtualLabProjectsAtomFamily(id)));
-  const [, setNewProjectModalOpen] = useAtom<boolean>('new-project-modal-open');
-
+  const [isOpen, setOpen] = useState(false);
+  const onOpen = () => setOpen(true);
+  const onClose = () => setOpen(false);
   if (!virtualLabProjects) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -181,7 +59,6 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
               </div>
               <SearchProjects />
             </div>
-            <NewProjectModal virtualLabId={id} />
           </div>
           <div className="flex flex-col gap-4">
             {virtualLabProjects.results.map((project) => (
@@ -193,13 +70,13 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
       <div className="fixed bottom-5 right-7">
         <Button
           className="mr-5 h-12 w-52 rounded-none border-none text-sm font-bold"
-          onClick={() => setNewProjectModalOpen(true)}
+          onClick={onOpen}
         >
-          <span className="relative text-primary-8">
-            Create project <PlusOutlined className="relative left-3 top-[0.1rem]" />
-          </span>
+          <span className="relative text-primary-8">Create project</span>
+          <PlusOutlined className="relative left-3 top-[0.1rem]" />
         </Button>
       </div>
+      <CreationModal isOpen={isOpen} virtualLabId={id} onClose={onClose} />
     </>
   );
 }

@@ -3,8 +3,7 @@ import { PrimitiveAtom, atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh, atomWithReset } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
 
-import sessionAtom from '../session';
-
+import sessionAtom from '@/state/session';
 import {
   getVirtualLabDetail,
   getVirtualLabUsers,
