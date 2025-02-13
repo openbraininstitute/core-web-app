@@ -8,16 +8,21 @@ import sortBy from 'lodash/sortBy';
 import get from 'lodash/get';
 import find from 'lodash/find';
 
+import { useParams } from 'next/navigation';
 import VirtualLabMemberIcon from '@/components/VirtualLab/VirtualLabMemberIcon';
+import InviteModal from '@/components/VirtualLab/create-entity/invite';
 import { MockRole, Role, VirtualLabMember } from '@/types/virtual-lab/members';
-import { ModalInviteVlabMember } from '@/components/VirtualLab/projects/ModalInviteProjectMember/ModalInviteVlabMember';
 
 type Props = {
   users: VirtualLabMember[];
 };
 
 export default function VirtualLabTeamTable({ users }: Props) {
-  const [openInviteVlabMemberModal, setOpenInviteVlabMemberModal] = useState(false);
+  const context = useParams<{ virtualLabId: string }>();
+  const [isOpen, setOpen] = useState(false);
+  const onClose = () => setOpen(false);
+  const onOpen = () => setOpen(true);
+
   const roleOptions: { value: Role; label: string }[] = [
     { value: 'admin', label: 'Administrator' },
     { value: 'member', label: 'Member' },
@@ -60,27 +65,6 @@ export default function VirtualLabTeamTable({ users }: Props) {
       align: 'left',
       width: '200px',
       render: (role: MockRole) => (
-        // <ConfigProvider
-        //   theme={{
-        //     components: {
-        //       Select: {
-        //         colorBgContainer: '#002766',
-        //         colorBgElevated: '#002766',
-        //         colorBorder: 'rgba(255, 255, 255, 0)',
-        //         colorText: 'rgb(255, 255, 255)',
-        //         optionSelectedBg: '#002766',
-        //       },
-        //     },
-        //   }}
-        // >
-        //   <Select
-        //     suffixIcon={<DownOutlined style={{ color: 'white' }} />}
-        //     defaultValue={role}
-        //     style={{ width: 200, marginLeft: 300, float: 'right' }}
-        //     onChange={() => { }}
-        //     options={roleOptions}
-        //   />
-        // </ConfigProvider>
         <div className="ml-auto text-base text-white">
           {get(find(roleOptions, { value: role }), 'label', '')}
         </div>
@@ -99,7 +83,7 @@ export default function VirtualLabTeamTable({ users }: Props) {
           htmlType="button"
           size="large"
           className="flex items-center justify-between rounded-none"
-          onClick={() => setOpenInviteVlabMemberModal(true)}
+          onClick={onOpen}
           color="white"
           type="default"
         >
@@ -128,9 +112,13 @@ export default function VirtualLabTeamTable({ users }: Props) {
           rowKey={(record) => record.id ?? record.email}
         />
       </ConfigProvider>
-      <ModalInviteVlabMember
-        open={openInviteVlabMemberModal}
-        onChange={() => setOpenInviteVlabMemberModal(false)}
+      <InviteModal
+        key="invite-member-to-vlab"
+        type="vlab"
+        isOpen={isOpen}
+        onClose={onClose}
+        context={context}
+        title="Invite new members to virtual lab"
       />
     </div>
   );

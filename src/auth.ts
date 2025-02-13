@@ -1,4 +1,4 @@
-import { getServerSession, type NextAuthOptions, type TokenSet } from 'next-auth';
+import { getServerSession, Session, type NextAuthOptions, type TokenSet } from 'next-auth';
 import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
 import { env } from '@/env.mjs';
@@ -85,7 +85,7 @@ export const authOptions: NextAuthOptions = {
     },
   ],
   callbacks: {
-    async jwt({ token, account, user }) {
+    async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
         return {
@@ -93,8 +93,11 @@ export const authOptions: NextAuthOptions = {
           accessToken: account.access_token,
           accessTokenExpires: account.expires_at ? account.expires_at * 1000 : null,
           refreshToken: account.refresh_token,
-          user,
           idToken: account.id_token,
+          user: {
+            ...user,
+            id: profile?.sub,
+          },
         };
       }
 
@@ -113,6 +116,7 @@ export const authOptions: NextAuthOptions = {
       return {
         user: {
           ...session.user,
+          ...(token.user as Session['user']),
           username: token.sub as string,
         },
         accessToken: token.accessToken as string,

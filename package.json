@@ -66,6 +66,7 @@
     "elastic-builder": "^2.20.0",
     "file-saver": "^2.0.5",
     "github-markdown-css": "^5.8.1",
+    "input-otp": "^1.4.2",
     "jotai": "^2.7.2",
     "jotai-devtools": "^0.10.0",
     "jotai-optics": "^0.3.0",

@@ -1,24 +1,21 @@
 'use client';
 
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Modal, Select, Switch } from 'antd';
+import { Button, Switch } from 'antd';
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 
-import CreateVirtualLabButton from '../CreateVirtualLabButton';
-import { NewProjectModal } from '../projects/VirtualLabProjectList';
-import VirtualLabAndProject from './VirtualLabAndProject';
-import DashboardTotals from './DashboardTotals';
-
+import CreateVirtualLabButton from '@/components/VirtualLab/CreateVirtualLabButton';
+import VirtualLabAndProject from '@/components/VirtualLab/VirtualLabDashboard/VirtualLabAndProject';
+import DashboardTotals from '@/components/VirtualLab/VirtualLabDashboard/DashboardTotals';
+import CreationModal from '@/components/VirtualLab/create-entity/project/in-home';
 import { VirtualLab } from '@/types/virtual-lab/lab';
-import { useAtom } from '@/state/state';
 
 function VirtualLabDashboard({ virtualLabs }: { virtualLabs: VirtualLab[] }) {
   const [showOnlyLabs, setShowOnlyLabs] = useState<boolean>(false);
-
-  const [, setNewProjectModalOpen] = useAtom<boolean>('new-project-modal-open');
-  const [projectLocationModalOpen, setProjectLocationModalOpen] = useState(false);
-  const [virtualLabId, setVirtualLabId] = useState('');
+  const [isOpen, setOpen] = useState(false);
+  const onOpen = () => setOpen(true);
+  const onClose = () => setOpen(false);
 
   return (
     <>
@@ -50,7 +47,7 @@ function VirtualLabDashboard({ virtualLabs }: { virtualLabs: VirtualLab[] }) {
           <div className="fixed bottom-5 right-5">
             <Button
               className="mr-5 h-12 w-52 rounded-none border-none text-sm font-bold"
-              onClick={() => setProjectLocationModalOpen(true)}
+              onClick={onOpen}
             >
               <span className="relative text-primary-8">
                 Create project <PlusOutlined className="relative left-3 top-[0.1rem]" />
@@ -60,42 +57,11 @@ function VirtualLabDashboard({ virtualLabs }: { virtualLabs: VirtualLab[] }) {
           </div>
         </div>
       </div>
-
-      <Modal
-        title={null}
-        open={projectLocationModalOpen}
-        footer={
-          <div>
-            <Button key="back" onClick={() => setProjectLocationModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              key="submit"
-              type="primary"
-              onClick={() => {
-                setProjectLocationModalOpen(false);
-                setVirtualLabId(virtualLabId);
-                setNewProjectModalOpen(true);
-              }}
-              disabled={!virtualLabId}
-            >
-              OK
-            </Button>
-          </div>
-        }
-        width={500}
-        onCancel={() => setProjectLocationModalOpen(false)}
-      >
-        <span className="my-3 block font-bold text-primary-8">
-          Please select a Virtual lab for this project
-        </span>
-        <Select
-          style={{ width: 200 }}
-          options={virtualLabs.map((vl) => ({ label: vl.name, value: vl.id }))}
-          onChange={(v) => setVirtualLabId(v)}
-        />
-      </Modal>
-      {!!virtualLabId && <NewProjectModal virtualLabId={virtualLabId} />}
+      <CreationModal
+        vlabsList={virtualLabs.map((vl) => ({ label: vl.name, value: vl.id }))}
+        isOpen={isOpen}
+        onClose={onClose}
+      />
     </>
   );
 }
