@@ -43,10 +43,13 @@ input[type='number'] {
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
+
     /* Hide scrollbar for IE, Edge and Firefox */
     .no-scrollbar {
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none;
+      /* IE and Edge */
+      scrollbar-width: none;
+      /* Firefox */
     }
 
     .scrollbar-size {
@@ -58,16 +61,20 @@ input[type='number'] {
     .primary-scrollbar {
       scrollbar-color: theme('colors.primary.4') rgba(#000, 0.2);
     }
+
     .primary-scrollbar::-webkit-scrollbar {
       @apply scrollbar-size;
     }
+
     .primary-scrollbar::-webkit-scrollbar-track {
       @apply rounded bg-[rgba(0_0_0_0.2)];
     }
+
     .primary-scrollbar::-webkit-scrollbar-thumb {
       @apply bg-primary-4;
       border-radius: 5px;
     }
+
     .primary-scrollbar::-webkit-scrollbar-thumb:hover {
       @apply bg-primary-8;
     }
@@ -76,36 +83,44 @@ input[type='number'] {
       scrollbar-width: thin;
       scrollbar-color: theme('colors.primary.4') theme('colors.primary.7');
     }
+
     .horizontal-thin-scrollbar::-webkit-scrollbar {
       width: 2px;
       margin-right: 5px;
       border-radius: 5px;
     }
+
     .horizontal-thin-scrollbar::-webkit-scrollbar-track {
       @apply rounded bg-[rgba(0_0_0_0.9)];
     }
+
     .horizontal-thin-scrollbar::-webkit-scrollbar-thumb {
       @apply bg-primary-4;
       background-clip: padding-box;
       border-radius: 5px;
     }
+
     .horizontal-thin-scrollbar::-webkit-scrollbar-thumb:hover {
       @apply bg-primary-8;
     }
 
     .secondary-scrollbar {
-      scrollbar-color: theme('colors.gray.200') theme('colors.gray.800');
+      scrollbar-color: theme('colors.gray.200');
     }
+
     .secondary-scrollbar::-webkit-scrollbar {
       @apply scrollbar-size;
     }
+
     .secondary-scrollbar::-webkit-scrollbar-track {
       @apply rounded bg-gray-800;
     }
+
     .secondary-scrollbar::-webkit-scrollbar-thumb {
       @apply scrollbar-size bg-gray-200;
       border-radius: 5px;
     }
+
     .secondary-scrollbar::-webkit-scrollbar-thumb:hover {
       @apply bg-gray-400;
     }

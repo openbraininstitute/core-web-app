@@ -8,16 +8,20 @@ import sortBy from 'lodash/sortBy';
 import find from 'lodash/find';
 import get from 'lodash/get';
 
+import { useParams } from 'next/navigation';
 import VirtualLabMemberIcon from '../VirtualLabMemberIcon';
-import { ModalInviteProjectMember } from '../projects/ModalInviteProjectMember';
 import { MockRole, Role, VirtualLabMember } from '@/types/virtual-lab/members';
+import InviteModal from '@/components/VirtualLab/create-entity-flows/invite';
 
 type Props = {
   users: VirtualLabMember[];
 };
 
 export default function ProjectTeamTable({ users }: Props) {
-  const [openInviteProjectMemberModal, setOpenInviteProjectMemberModal] = useState(false);
+  const [isOpen, setOpen] = useState(false);
+  const onClose = () => setOpen(false);
+  const onOpen = () => setOpen(true);
+  const context = useParams<{ virtualLabId: string; projectId: string }>();
   const roleOptions: { value: Role; label: string }[] = [
     { value: 'admin', label: 'Administrator' },
     { value: 'member', label: 'Member' },
@@ -48,39 +52,12 @@ export default function ProjectTeamTable({ users }: Props) {
       ),
     },
     {
-      title: 'Last active',
-      dataIndex: 'last_active',
-      key: 'last_active',
-      render: () => <span className="text-primary-3" />, // Empty element for now, to be included when 'active' info is available
-    },
-    {
       title: 'Action',
       key: 'role',
       dataIndex: 'role',
       align: 'left',
       width: '200px',
       render: (role: MockRole) => (
-        // <ConfigProvider
-        //   theme={{
-        //     components: {
-        //       Select: {
-        //         colorBgContainer: '#002766',
-        //         colorBgElevated: '#002766',
-        //         colorBorder: 'rgba(255, 255, 255, 0)',
-        //         colorText: 'rgb(255, 255, 255)',
-        //         optionSelectedBg: '#002766',
-        //       },
-        //     },
-        //   }}
-        // >
-        //    <Select
-        //     suffixIcon={<DownOutlined style={{ color: 'white' }} />}
-        //     defaultValue={role}
-        //     style={{ width: 200, marginLeft: 300, float: 'right' }}
-        //     onChange={() => {}}
-        //     options={roleOptions}
-        //   />
-        // </ConfigProvider>
         <div className="ml-auto text-base text-white">
           {get(find(roleOptions, { value: role }), 'label', '')}
         </div>
@@ -99,7 +76,7 @@ export default function ProjectTeamTable({ users }: Props) {
           htmlType="button"
           size="large"
           className="flex items-center justify-between rounded-none"
-          onClick={() => setOpenInviteProjectMemberModal(true)}
+          onClick={onOpen}
           color="white"
           type="default"
         >
@@ -128,9 +105,13 @@ export default function ProjectTeamTable({ users }: Props) {
           rowKey={(record) => record.id ?? record.email}
         />
       </ConfigProvider>
-      <ModalInviteProjectMember
-        open={openInviteProjectMemberModal}
-        onChange={() => setOpenInviteProjectMemberModal(false)}
+      <InviteModal
+        type="project"
+        key="invite-member-to-project"
+        title="Invite new members to project"
+        isOpen={isOpen}
+        onClose={onClose}
+        context={context}
       />
     </div>
   );
