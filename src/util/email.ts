@@ -1,20 +1,3 @@
-import { Member } from './types';
-
-export function removeMember(members: Member[], member: Member) {
-  return members.filter((item) => item.email !== member.email);
-}
-
-export function addMember(members: Member[], member: Member) {
-  const index = members.findIndex(
-    (item) => item.email.toLocaleLowerCase() === member.email.toLocaleLowerCase()
-  );
-  if (index < 0) return [...members, member];
-
-  const newMembers = [...members];
-  newMembers[index] = member;
-  return newMembers;
-}
-
 const RX_EMAIL = /^[^@]+@[^@]+\.[^@.]+$/gi;
 
 /**

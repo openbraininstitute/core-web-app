@@ -1,22 +1,24 @@
-import { PlusOutlined } from '@ant-design/icons';
+import { useState } from 'react';
 import { Button } from 'antd';
-import CreateVirtualLabModal from './CreateVirtualLabModal';
-import { useAtom } from '@/state/state';
+import { PlusOutlined } from '@ant-design/icons';
+
+import CreationSteps from '@/components/VirtualLab/create-entity-flows/virtual-lab';
 
 export default function CreateVirtualLabButton() {
-  const [, setIsModalVisible] = useAtom<boolean>('new-vlab-modal-open');
+  const [openModal, setOpenModal] = useState(false);
+  const onClose = () => setOpenModal(false);
+  const onOpen = () => setOpenModal(true);
+
   return (
     <>
       <Button
         className="mr-5 h-12 w-52 rounded-none border-none text-sm font-bold"
-        onClick={() => setIsModalVisible(true)}
+        onClick={onOpen}
       >
-        <span className="relative text-primary-8">
-          Create virtual lab <PlusOutlined className="relative left-3 top-[0.1rem]" />
-        </span>
+        <span className="relative text-primary-8">Create virtual lab</span>
+        <PlusOutlined className="relative left-3" />
       </Button>
-
-      <CreateVirtualLabModal />
+      <CreationSteps isOpen={openModal} onClose={onClose} />
     </>
   );
 }
