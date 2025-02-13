@@ -7,7 +7,8 @@ import { useState, useEffect, useRef } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import NotebookTable from '../NotebookTable';
 import { NotebookSchema } from '../schemas';
-import { fetchNotebook, Notebook } from '@/util/virtual-lab/github';
+import { Notebook } from '@/util/virtual-lab/github';
+import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import authFetch from '@/authFetch';
 import { notification } from '@/api/notifications';
 import { assertErrorMessage, assertVLApiResponse } from '@/util/utils';
@@ -54,16 +55,18 @@ export default function UserNotebookPage({
   const [notebooks, setNotebooks] = useState(initialNotebooks);
   const [openModal, setOpenModal] = useState(false);
   const [step, setStep] = useState(0);
-  const [notebookUrl, setNotebookUrl] = useState('');
-  const [notebook, setNotebook] = useState<Omit<Notebook, 'id' | 'creationDate'> | null>(null);
+  const [repoUrl, setRepoUrl] = useState('');
+  const [newNotebooks, setNewNotebooks] = useState<Omit<Notebook, 'id' | 'creationDate'>[] | null>(
+    null
+  );
   const [loading, setLoading] = useDelayedLoading(false);
   const [deleteNotebookId, setDeleteNotebookId] = useState('');
 
   const resetModal = () => {
     setOpenModal(false);
     setStep(0);
-    setNotebookUrl('');
-    setNotebook(null);
+    setRepoUrl('');
+    setNewNotebooks(null);
     setLoading(false);
   };
 
@@ -127,8 +130,8 @@ export default function UserNotebookPage({
             <div className="mb-5 mt-5">
               <div className="mb-3 font-bold text-primary-8">Github url</div>
               <Input
-                onChange={(e) => setNotebookUrl(e.currentTarget.value)}
-                onInput={(e) => setNotebookUrl(e.currentTarget.value)}
+                onChange={(e) => setRepoUrl(e.currentTarget.value)}
+                onInput={(e) => setRepoUrl(e.currentTarget.value)}
                 placeholder="Paste your url here"
               />
               <div className="-mb-6 mt-5 flex justify-end gap-3">
@@ -138,7 +141,9 @@ export default function UserNotebookPage({
                   onClick={async () => {
                     try {
                       setLoading(true);
-                      setNotebook(await fetchNotebook(notebookUrl.trim()));
+
+                      const fetchedNotebooks = await fetchNotebooks(repoUrl.trim());
+                      setNewNotebooks(fetchedNotebooks);
                       setStep(1);
                     } catch (e) {
                       notification.error(assertErrorMessage(e));
@@ -161,72 +166,73 @@ export default function UserNotebookPage({
         {step === 1 && (
           <div className="mb-5 mt-5">
             <div className="mb-3 font-bold text-primary-8">Register notebook</div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <span className="text-primary-8">Name</span>
-                <Tag className="h-[30px] max-w-fit p-1">{notebook?.name}</Tag>
-              </div>
+            {newNotebooks?.map((notebook) => {
+              return (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-primary-8">Name</span>
+                      <Tag className="h-[30px] max-w-fit p-1">{notebook?.name}</Tag>
+                    </div>
 
-              <div className="flex flex-col gap-2">
-                <span className="text-primary-8">Github folder url</span>
-                <Tag className="h-[40px] max-w-fit overflow-x-scroll p-1">{notebookUrl}</Tag>
-              </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-primary-8">Inputs</span>
+                      {notebook?.objectOfInterest.split(',').map((t) => (
+                        <Tag className="max-w-fit" key={notebook.path + t}>
+                          {t}
+                        </Tag>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="-mb-6 mt-5 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      className="rounded bg-primary-8 p-2 text-white"
+                      onClick={async () => {
+                        if (!notebook) return;
+                        setLoading(true);
 
-              <div className="flex flex-col gap-2">
-                <span className="text-primary-8">Inputs</span>
-                {notebook?.objectOfInterest.split(',').map((t) => (
-                  <Tag className="max-w-fit" key={notebook.path + t}>
-                    {t}
-                  </Tag>
-                ))}
-              </div>
-            </div>
-            <div className="-mb-6 mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                className="rounded bg-primary-8 p-2 text-white"
-                onClick={async () => {
-                  if (!notebook) return;
-                  setLoading(true);
+                        try {
+                          const notebookRes = await authFetch(
+                            `${virtualLabApi.url}/projects/${projectId}/notebooks/`,
+                            {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ github_file_url: notebook.notebookUrl }),
+                            }
+                          );
 
-                  try {
-                    const notebookRes = await authFetch(
-                      `${virtualLabApi.url}/projects/${projectId}/notebooks/`,
-                      {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ github_file_url: notebookUrl }),
-                      }
-                    );
+                          const newNotebook = await assertVLApiResponse(notebookRes);
 
-                    const newNotebook = await assertVLApiResponse(notebookRes);
+                          const newValidatedNotebook = NotebookSchema.parse(newNotebook.data);
+                          setNotebooks([
+                            ...notebooks,
+                            {
+                              ...notebook,
+                              id: newValidatedNotebook.id,
+                              creationDate: newValidatedNotebook.created_at,
+                            },
+                          ]);
+                        } catch (e) {
+                          notification.error('Unknown error, please try again.');
+                          resetModal();
+                          return;
+                        }
 
-                    const newValidatedNotebook = NotebookSchema.parse(newNotebook.data);
-                    setNotebooks([
-                      ...notebooks,
-                      {
-                        ...notebook,
-                        id: newValidatedNotebook.id,
-                        creationDate: newValidatedNotebook.created_at,
-                      },
-                    ]);
-                  } catch (e) {
-                    notification.error('Unknown error, please try again.');
-                    resetModal();
-                    return;
-                  }
+                        resetModal();
+                      }}
+                    >
+                      Register notebook
+                      {loading && <LoadingOutlined />}
+                    </button>
 
-                  resetModal();
-                }}
-              >
-                Register notebook
-                {loading && <LoadingOutlined />}
-              </button>
-
-              <button type="button" onClick={resetModal}>
-                Cancel
-              </button>
-            </div>
+                    <button type="button" onClick={resetModal}>
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              );
+            })}
           </div>
         )}
       </Modal>

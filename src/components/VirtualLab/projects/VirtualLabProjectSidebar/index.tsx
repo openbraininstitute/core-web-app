@@ -1,6 +1,6 @@
 import VirtualLabProjectSidebar from './VirtualLabProjectSidebar';
+import { fetchNotebooksCatchError } from '@/util/virtual-lab/fetchNotebooks';
 import { notebookRepoUrl } from '@/config';
-import { fetchNotebooksCatchError } from '@/util/virtual-lab/github';
 
 type Props = {
   virtualLabId: string;
