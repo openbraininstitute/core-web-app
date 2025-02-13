@@ -73,7 +73,7 @@ export default function UserNotebookPage({
     setLoading(true);
 
     try {
-      const res = await authFetch(`${virtualLabApi.url}/projects/${projectId}/notebooks/${id}/`, {
+      const res = await authFetch(`${virtualLabApi.url}/projects/${projectId}/notebooks/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -89,7 +89,7 @@ export default function UserNotebookPage({
       return;
     }
 
-    setNotebooks(notebooks.filter((n) => n.id === id));
+    setNotebooks(notebooks.filter((n) => n.id !== id));
     setDeleteNotebookId('');
     setLoading(false);
   };
@@ -200,7 +200,8 @@ export default function UserNotebookPage({
                     );
 
                     const newNotebook = await assertVLApiResponse(notebookRes);
-                    const newValidatedNotebook = NotebookSchema.parse(newNotebook);
+
+                    const newValidatedNotebook = NotebookSchema.parse(newNotebook.data);
                     setNotebooks([
                       ...notebooks,
                       {
