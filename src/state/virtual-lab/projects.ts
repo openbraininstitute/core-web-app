@@ -1,11 +1,13 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithRefresh, atomWithDefault } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
+import fastDeepEqual from 'fast-deep-equal';
 
 import sessionAtom from '../session';
 import { Project } from '@/types/virtual-lab/projects';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
 import {
+  getProjectJobReports,
   getUsersProjects,
   getVirtualLabProjectDetails,
   getVirtualLabProjectUsers,
@@ -13,6 +15,7 @@ import {
 } from '@/services/virtual-lab/projects';
 import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { retrievePapersListCount } from '@/services/paper-ai/retrievePapersList';
+import { atomFamilyWithExpiration } from '@/util/atoms';
 
 export const virtualLabProjectsAtomFamily = atomFamily((virtualLabId: string) =>
   atomWithRefresh<Promise<VirtualLabAPIListData<Project> | undefined>>(async () => {
@@ -67,3 +70,9 @@ export const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (ge
   const projects = await get(userProjectsAtom);
   return projects?.total || 0;
 });
+
+export const ProjectJobReportsAtomFamily = atomFamilyWithExpiration(
+  ({ virtualLabId, projectId, page }: { virtualLabId: string; projectId: string; page: number }) =>
+    atomWithRefresh(async () => getProjectJobReports({ virtualLabId, projectId, page })),
+  { ttl: 20_000, areEqual: fastDeepEqual }
+);

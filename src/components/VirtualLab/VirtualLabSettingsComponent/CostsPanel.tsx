@@ -1,42 +1,31 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Table, ConfigProvider, Divider, Modal, Button, InputNumber } from 'antd';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { useAtomValue, useSetAtom } from 'jotai';
 
 import { CloseOutlined, SwapOutlined } from '@ant-design/icons';
-import { atomWithRefresh, loadable } from 'jotai/utils';
-import { JobReport, ProjectBalance, ServiceSubtype } from '@/types/virtual-lab/accounting';
+import { loadable } from 'jotai/utils';
+import { JobReport, ServiceSubtype } from '@/types/virtual-lab/accounting';
 import {
+  ProjectJobReportsAtomFamily,
   virtualLabProjectsAtomFamily,
   virtualLabProjectUsersAtomFamily,
 } from '@/state/virtual-lab/projects';
 import { useLastTruthyValue, useLoadable, useUnwrappedValue } from '@/hooks/hooks';
 import { Project } from '@/types/virtual-lab/projects';
-import {
-  assignProjectBudget,
-  getProjectJobReports,
-  reverseProjectBudget,
-} from '@/services/virtual-lab/projects';
-import { getVirtualLabAccountBalance, topUpVirtualLabAccount } from '@/services/virtual-lab/labs';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
+import { topUpVirtualLabAccount } from '@/services/virtual-lab/labs';
 import EditIcon from '@/components/icons/Edit';
-import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
+import { virtualLabBalanceAtomFamily, virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 
 const { Column } = Table;
 
-function VirtualLabBlock({
-  virtualLabId,
-  balance,
-  onBalanceChange,
-}: {
-  virtualLabId: string;
-  balance: string;
-  onBalanceChange: () => Promise<void>;
-}) {
+function VirtualLabBlock({ virtualLabId }: { virtualLabId: string }) {
+  const [virtualLabBalance, refreshBalance] = useVirtualLabBalance({ virtualLabId });
+
   const { createModal, contextHolder } = useVirtualLabTopUpModal();
 
   const openTopUpModal = () => {
-    createModal({ virtualLabId, onSuccess: onBalanceChange });
+    createModal({ virtualLabId, onSuccess: refreshBalance });
   };
 
   return (
@@ -46,7 +35,7 @@ function VirtualLabBlock({
       <div className="flex items-stretch border border-primary-3">
         <div className="flex flex-col justify-center border-r border-primary-3 px-4 py-2 text-right">
           <p className="text-sm text-primary-2">Credit balance</p>
-          <p className="text-lg font-semibold">{balance}</p>
+          <p className="text-lg font-semibold">{virtualLabBalance?.data.balance ?? ''}</p>
         </div>
 
         <button
@@ -64,17 +53,11 @@ function VirtualLabBlock({
   );
 }
 
-function ProjectCard({
-  virtualLabId,
-  project,
-  balance,
-  onBalanceChange,
-}: {
-  virtualLabId: string;
-  project: Project;
-  balance: ProjectBalance | undefined;
-  onBalanceChange: () => Promise<void>;
-}) {
+function ProjectCard({ virtualLabId, project }: { virtualLabId: string; project: Project }) {
+  const [virtualLabBalance, refreshBalance] = useVirtualLabBalance({ virtualLabId });
+
+  const balance = virtualLabBalance?.data.projects?.find((p) => p.proj_id === project.id);
+
   const {
     createModal: createBalanceTransferModal,
     contextHolder: balanceTransferModalContextHolder,
@@ -84,9 +67,9 @@ function ProjectCard({
     createBalanceTransferModal({
       virtualLabId,
       projectId: project.id,
-      onTransferSuccess: onBalanceChange,
+      onTransferSuccess: refreshBalance,
     });
-  }, [createBalanceTransferModal, virtualLabId, project.id, onBalanceChange]);
+  }, [createBalanceTransferModal, virtualLabId, project.id, refreshBalance]);
 
   return (
     <div className="flex w-full items-center justify-between rounded-lg py-6 text-white">
@@ -178,35 +161,18 @@ function dateRenderFn(date: string) {
 }
 
 function useJobReports({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) {
-  const pageAtom = useMemo(() => atom<number>(1), []);
+  const [page, setPage] = useState<number>(1);
 
-  const jobReportsDataLoadableAtom = useMemo(
-    () =>
-      loadable(
-        atom(async (get) => {
-          const page = get(pageAtom);
-
-          const jobReportsResponse = await getProjectJobReports({
-            virtualLabId,
-            projectId,
-            page,
-            // TODO: add signal to cancel stale requests
-          });
-
-          return jobReportsResponse.data;
-        })
-      ),
-    [virtualLabId, projectId, pageAtom]
+  const jobReportsDataLoadableAtom = loadable(
+    ProjectJobReportsAtomFamily({ virtualLabId, projectId, page })
   );
-
-  const [page, setPage] = useAtom(pageAtom);
   const isLoading = useAtomValue(jobReportsDataLoadableAtom).state === 'loading';
 
   const jobReportsData = useLoadable(jobReportsDataLoadableAtom, null);
 
   return {
-    jobReports: jobReportsData?.items ?? [],
-    totalReports: jobReportsData?.meta.total_items,
+    jobReports: jobReportsData?.data.items ?? [],
+    totalReports: jobReportsData?.data.meta.total_items,
     isLoading,
     page,
     setPage,
@@ -214,16 +180,7 @@ function useJobReports({ virtualLabId, projectId }: { virtualLabId: string; proj
 }
 
 export function useVirtualLabBalance({ virtualLabId }: { virtualLabId: string }) {
-  const balanceAtom = useMemo(
-    () =>
-      atomWithRefresh(async () =>
-        getVirtualLabAccountBalance({
-          virtualLabId,
-          includeProjects: true,
-        })
-      ),
-    [virtualLabId]
-  );
+  const balanceAtom = virtualLabBalanceAtomFamily(virtualLabId);
 
   return [useLastTruthyValue(balanceAtom), useSetAtom(balanceAtom)] as const;
 }
@@ -303,7 +260,7 @@ function VirtualLabTopUpForm({
 }: {
   virtualLabId: string;
   onClose: () => void;
-  onSuccess: () => Promise<void>;
+  onSuccess: () => void;
 }) {
   const [amount, setAmount] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState(false);
@@ -373,7 +330,7 @@ function BalanceTransferForm({
   virtualLabId: string;
   projectId: string;
   onClose: () => void;
-  onTransferSuccess: () => Promise<void>;
+  onTransferSuccess: () => void;
 }) {
   const projectsObj = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
   const virtualLabDetails = useUnwrappedValue(virtualLabDetailAtomFamily(virtualLabId));
@@ -519,7 +476,7 @@ function useBalanceTransferModal() {
   }: {
     virtualLabId: string;
     projectId: string;
-    onTransferSuccess: () => Promise<void>;
+    onTransferSuccess: () => void;
   }) => {
     const { destroy } = modal.confirm({
       title: null,
@@ -567,7 +524,7 @@ function useVirtualLabTopUpModal() {
     onSuccess,
   }: {
     virtualLabId: string;
-    onSuccess: () => Promise<void>;
+    onSuccess: () => void;
   }) => {
     const { destroy } = modal.confirm({
       title: null,
@@ -602,9 +559,6 @@ function useVirtualLabTopUpModal() {
 
 export default function CostsPanel({ virtualLabId }: { virtualLabId: string }) {
   const projectsObj = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
-  const [virtualLabBalance, refreshBalance] = useVirtualLabBalance({ virtualLabId });
-
-  const onBalanceChange = async () => refreshBalance();
 
   if (!projectsObj) {
     return <div>Loading...</div>;
@@ -612,25 +566,13 @@ export default function CostsPanel({ virtualLabId }: { virtualLabId: string }) {
 
   return (
     <>
-      <VirtualLabBlock
-        virtualLabId={virtualLabId}
-        balance={virtualLabBalance?.data.balance ?? ''}
-        onBalanceChange={onBalanceChange}
-      />
+      <VirtualLabBlock virtualLabId={virtualLabId} />
 
       {projectsObj.results.map((project) => (
         <div key={project.id}>
           <Divider />
-          <ProjectCard
-            virtualLabId={virtualLabId}
-            project={project}
-            balance={virtualLabBalance?.data.projects?.find((p) => p.proj_id === project.id)}
-            onBalanceChange={onBalanceChange}
-          />
-
-          <ErrorBoundary fallback={SimpleErrorComponent}>
-            <JobReportList virtualLabId={virtualLabId} projectId={project.id} />
-          </ErrorBoundary>
+          <ProjectCard virtualLabId={virtualLabId} project={project} />
+          <JobReportList virtualLabId={virtualLabId} projectId={project.id} />
         </div>
       ))}
     </>
