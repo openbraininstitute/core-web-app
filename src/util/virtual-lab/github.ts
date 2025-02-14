@@ -1,3 +1,4 @@
+import path from 'path';
 import JSZip from 'jszip';
 import { z } from 'zod';
 
@@ -215,9 +216,11 @@ export async function fetchNotebook(
     );
   }
 
-  const [, owner, repo, branch, path] = match;
+  const [, owner, repo, branch, nPath] = match;
 
-  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  const directory = path.dirname(nPath);
+
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${directory}?ref=${branch}`;
 
   const response = await fetch(apiUrl, options);
 
@@ -276,14 +279,14 @@ export async function fetchNotebook(
   }
 
   return {
-    key: `${owner}/${repo}/${path}`,
+    key: `${owner}/${repo}/${nPath}`,
     name: metadata.name,
     description: metadata.description,
     notebookUrl: files['analysis_notebook.ipynb'].fileUrl,
     readmeUrl: files['README.md'].fileUrl,
     metadataUrl: files['analysis_info.json'].fileUrl,
     scale: metadata.scale,
-    path: `${path}/${files['analysis_notebook.ipynb'].name}`,
+    path: `${directory}/${files['analysis_notebook.ipynb'].name}`,
     authors: metadata.authors.join(', '),
     githubUser: owner,
     githubRepo: repo,

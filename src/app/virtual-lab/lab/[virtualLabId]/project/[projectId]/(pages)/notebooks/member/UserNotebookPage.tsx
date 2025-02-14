@@ -97,6 +97,12 @@ export default function UserNotebookPage({
     setLoading(false);
   };
 
+  newNotebooks?.map((n) =>
+    console.log(
+      `https://github.com/${n.githubUser}/${n.githubRepo}/tree/${n.defaultBranch}/${n.path}`
+    )
+  );
+
   return (
     <>
       <NotebookTable
@@ -191,7 +197,7 @@ export default function UserNotebookPage({
                         body: JSON.stringify({
                           notebooks: newNotebooks.map((n) => {
                             return {
-                              github_file_url: n.notebookUrl,
+                              github_file_url: `https://github.com/${n.githubUser}/${n.githubRepo}/tree/${n.defaultBranch}/${n.path}`,
                             };
                           }),
                         }),
