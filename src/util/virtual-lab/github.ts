@@ -5,7 +5,6 @@ import { z } from 'zod';
 export const options = {
   headers: {
     Accept: 'application/vnd.github.v3+json',
-    Authorization: 'token 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',
   },
 
   next: {

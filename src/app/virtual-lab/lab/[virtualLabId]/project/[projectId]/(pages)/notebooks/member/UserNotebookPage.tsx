@@ -97,12 +97,6 @@ export default function UserNotebookPage({
     setLoading(false);
   };
 
-  newNotebooks?.map((n) =>
-    console.log(
-      `https://github.com/${n.githubUser}/${n.githubRepo}/tree/${n.defaultBranch}/${n.path}`
-    )
-  );
-
   return (
     <>
       <NotebookTable
