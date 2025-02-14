@@ -15,7 +15,11 @@ import { Project } from '@/types/virtual-lab/projects';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
 import { topUpVirtualLabAccount } from '@/services/virtual-lab/labs';
 import EditIcon from '@/components/icons/Edit';
-import { virtualLabBalanceAtomFamily, virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
+import {
+  refreshVirtualLabBalanceAtom,
+  virtualLabBalanceAtomFamily,
+  virtualLabDetailAtomFamily,
+} from '@/state/virtual-lab/lab';
 
 const { Column } = Table;
 
@@ -181,8 +185,9 @@ function useJobReports({ virtualLabId, projectId }: { virtualLabId: string; proj
 
 export function useVirtualLabBalance({ virtualLabId }: { virtualLabId: string }) {
   const balanceAtom = virtualLabBalanceAtomFamily(virtualLabId);
+  const refreshBalance = useSetAtom(refreshVirtualLabBalanceAtom);
 
-  return [useLastTruthyValue(balanceAtom), useSetAtom(balanceAtom)] as const;
+  return [useLastTruthyValue(balanceAtom), refreshBalance] as const;
 }
 
 type JobReportListProps = {

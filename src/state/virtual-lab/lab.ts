@@ -67,6 +67,7 @@ export const virtualLabPaymentMethodsAtomFamily = atomFamily((virtualLabId: stri
   })
 );
 
+// TODO: cleanup
 // export const virtualLabBalanceAtomFamily = atomFamily((virtualLabId: string) =>
 //   atomWithRefresh<Promise<VlabBalance | undefined>>(async (get) => {
 //     const session = get(sessionAtom);
@@ -113,10 +114,17 @@ export const virtualLabPlansAtom = atom<
   return allPlans;
 });
 
+const virtualLabBalanceRefreshTriggerAtom = atom(0);
+export const refreshVirtualLabBalanceAtom = atom(0, (get, set) => {
+  set(virtualLabBalanceRefreshTriggerAtom, (prev) => prev + 1);
+});
+
 export const virtualLabBalanceAtomFamily = atomFamilyWithExpiration(
   (virtualLabId: string) =>
-    atomWithRefresh(async () =>
-      getVirtualLabAccountBalance({ virtualLabId, includeProjects: true })
-    ),
+    atom(async (get) => {
+      get(virtualLabBalanceRefreshTriggerAtom);
+
+      return getVirtualLabAccountBalance({ virtualLabId, includeProjects: true });
+    }),
   { ttl: 20_000 }
 );
