@@ -10,6 +10,7 @@ const url = `https://${API_SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/me
 const newsletterFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   name: z.string({ message: 'Please enter a name.' }).min(2, { message: 'Please a correct name' }),
+  tags: z.array(z.string()).optional(),
 });
 
 const ErrorMessageMap = {
@@ -30,6 +31,7 @@ type MailchimpErrorResponse = {
 type RequestBody = {
   email: string;
   name: string;
+  tags?: Array<string>;
 };
 
 function getErrorMessage(key: ErrorMessageMapType) {
@@ -40,8 +42,8 @@ export async function POST(req: Request) {
   let formValidation: RequestBody | null = null;
 
   try {
-    const { email, name } = (await req.json()) as RequestBody;
-    formValidation = await newsletterFormSchema.parseAsync({ email, name });
+    const { email, name, tags } = (await req.json()) as RequestBody;
+    formValidation = await newsletterFormSchema.parseAsync({ email, name, tags });
   } catch (error) {
     if (error instanceof z.ZodError) {
       const issues = error.issues.map((o) => o.message);
@@ -72,10 +74,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const tags = ['newsletter', 'website'];
+  let tags = ['newsletter', 'website'];
 
   if (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging') {
     tags.push('test');
+  }
+  if (formValidation.tags && formValidation.tags.length) {
+    tags = [...tags, ...formValidation.tags];
   }
 
   const data = {
