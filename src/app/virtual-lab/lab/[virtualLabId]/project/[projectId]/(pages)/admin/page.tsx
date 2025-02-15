@@ -12,5 +12,4 @@ export default function ProjectAdminPage({
       <VirtualLabProjectAdmin virtualLabId={virtualLabId} projectId={projectId} />
     </div>
   );
-  // return <ProjectAdminPageComponent virtualLabId={virtualLabId} projectId={projectId} />;
 }

@@ -1,13 +1,17 @@
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 
 import { detailUrlBuilder } from '@/util/common';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import sessionAtom from '@/state/session';
-import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
-import { useUnwrappedValue } from '@/hooks/hooks';
+import {
+  refreshBalanceAtom,
+  virtualLabBalanceAtomFamily,
+  virtualLabMembersAtomFamily,
+} from '@/state/virtual-lab/lab';
+import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 
 export function useExploreTableOnClickHandler() {

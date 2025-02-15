@@ -1,4 +1,4 @@
-import { DependencyList, useCallback, useEffect, useRef, useState } from 'react';
+import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { Atom } from 'jotai/vanilla';
@@ -48,11 +48,12 @@ export function useUnwrappedValue<T>(atom: Atom<T>) {
   @returns The last truthy value from the atom
 */
 export function useLastTruthyValue<T>(atom: Atom<T>) {
-  const currentValue = useAtomValue(unwrap(atom));
+  const unwrappedAtom = useMemo(() => unwrap(atom), [atom]);
+  const currentValue = useAtomValue(unwrappedAtom);
   const [lastTruthyValue, setLastTruthyValue] = useState(currentValue);
 
   useEffect(() => {
-    if (!currentValue) return;
+    if (!currentValue || Object.is(currentValue, lastTruthyValue)) return;
 
     setLastTruthyValue(currentValue);
   }, [currentValue]);

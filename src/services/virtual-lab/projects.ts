@@ -1,7 +1,11 @@
 import { createApiHeaders } from './common';
 import { virtualLabApi } from '@/config';
 import { Project, ProjectResponse } from '@/types/virtual-lab/projects';
-import { ProjectBalanceResponse, ProjectJobReportsResponse } from '@/types/virtual-lab/accounting';
+import {
+  ProjectBalance,
+  ProjectBalanceResponse,
+  ProjectJobReportsResponse,
+} from '@/types/virtual-lab/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { UsersResponse } from '@/types/virtual-lab/members';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
@@ -145,7 +149,7 @@ export async function getProjectAccountBalance({
 }: {
   virtualLabId: string;
   projectId: string;
-}): Promise<ProjectBalanceResponse> {
+}): Promise<ProjectBalance> {
   const response = await authFetch(
     `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/balance`
   );
@@ -154,7 +158,9 @@ export async function getProjectAccountBalance({
     throw new Error(`Status: ${response.status}`);
   }
 
-  return response.json();
+  const projectBalanceResponse: ProjectBalanceResponse = await response.json();
+
+  return projectBalanceResponse.data;
 }
 
 export async function getProjectJobReports({

@@ -7,6 +7,7 @@ import sessionAtom from '../session';
 import { Project } from '@/types/virtual-lab/projects';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
 import {
+  getProjectAccountBalance,
   getProjectJobReports,
   getUsersProjects,
   getVirtualLabProjectDetails,
@@ -16,6 +17,7 @@ import {
 import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { retrievePapersListCount } from '@/services/paper-ai/retrievePapersList';
 import { atomFamilyWithExpiration } from '@/util/atoms';
+import { virtualLabBalanceRefreshTriggerAtom } from './lab';
 
 export const virtualLabProjectsAtomFamily = atomFamily((virtualLabId: string) =>
   atomWithRefresh<Promise<VirtualLabAPIListData<Project> | undefined>>(async () => {
@@ -71,8 +73,18 @@ export const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (ge
   return projects?.total || 0;
 });
 
-export const ProjectJobReportsAtomFamily = atomFamilyWithExpiration(
+export const projectJobReportsAtomFamily = atomFamilyWithExpiration(
   ({ virtualLabId, projectId, page }: { virtualLabId: string; projectId: string; page: number }) =>
     atomWithRefresh(async () => getProjectJobReports({ virtualLabId, projectId, page })),
+  { ttl: 20_000, areEqual: fastDeepEqual }
+);
+
+export const projectBalanceAtomFamily = atomFamilyWithExpiration(
+  ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+    atom(async (get) => {
+      get(virtualLabBalanceRefreshTriggerAtom);
+
+      return getProjectAccountBalance({ virtualLabId, projectId });
+    }),
   { ttl: 20_000, areEqual: fastDeepEqual }
 );

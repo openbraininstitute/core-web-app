@@ -3,10 +3,10 @@
 import { ReactNode, useCallback, useMemo } from 'react';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { loadable, unwrap } from 'jotai/utils';
-import { Collapse, ConfigProvider, Spin } from 'antd';
+import { Spin } from 'antd';
 import { CollapseProps } from 'antd/lib/collapse/Collapse';
 import { CollapsibleType } from 'antd/lib/collapse/CollapsePanel';
-import { LoadingOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import { useQueryState } from 'nuqs';
 
 import Billing from '../Billing';
@@ -25,52 +25,7 @@ import {
 import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
 import { VALID_EMAIL_REGEXP, classNames } from '@/util/utils';
 import { VirtualLab, VirtualLabPlanType } from '@/types/virtual-lab/lab';
-
-function ExpandIcon({ isActive }: { isActive?: boolean }) {
-  return isActive ? (
-    <MinusOutlined style={{ fontSize: '14px' }} />
-  ) : (
-    <PlusOutlined style={{ fontSize: '14px' }} />
-  );
-}
-
-function CustomCollapse({ className, items, activeKey, onChange }: CollapseProps) {
-  return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorText: '#003A8C',
-        },
-        components: {
-          Collapse: {
-            headerBg: 'transparent', // Used in conjunction with "background" style definition below
-            headerPadding: '24px 28px',
-            contentPadding: '20px 0 20px',
-            borderRadiusLG: 0,
-            contentBg: '#002766',
-            colorBorder: '#002766',
-            fontSize: 20,
-          },
-        },
-      }}
-    >
-      <Collapse
-        accordion
-        destroyInactivePanel
-        activeKey={activeKey}
-        onChange={onChange}
-        expandIconPosition="end"
-        expandIcon={ExpandIcon}
-        className={classNames(className)}
-        items={items?.map((item) => ({
-          style: { background: '#fff' },
-          headerClass: 'font-bold !items-center', // TODO: See whether there's a better way to align center.
-          ...item,
-        }))}
-      />
-    </ConfigProvider>
-  );
-}
+import Collapse, { ExpandIcon } from '@/components/Collapse';
 
 export default function VirtualLabSettingsComponent({ id }: { id: string }) {
   const userIsAdmin = true;
@@ -351,7 +306,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
   }
 
   return (
-    <CustomCollapse
+    <Collapse
       className="my-10 flex flex-col gap-1 text-primary-8"
       items={collapseItems}
       activeKey={activePanelKey}
