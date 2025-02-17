@@ -133,7 +133,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_no
     },
   ];
 
-  const complientLinkItems = linkItems.filter(linkItemFilter);
+  const compliantLinkItems = linkItems.filter(linkItemFilter);
 
   return (
     <div className="my-8 mr-6 flex w-full flex-col gap-5">
@@ -142,7 +142,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_no
           virtualLabId,
           projectId,
           currentPage,
-          links: complientLinkItems,
+          links: compliantLinkItems,
         }}
       />
     </div>

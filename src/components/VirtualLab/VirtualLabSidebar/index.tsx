@@ -47,11 +47,11 @@ export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabI
     { key: LinkItemKey.Admin, content: 'Admin', href: 'admin', requires: { userRole: 'admin' } },
   ];
 
-  const complientLinkItems = linkItems.filter(linkItemFilter);
+  const compliantLinkItems = linkItems.filter(linkItemFilter);
 
   return (
     <div className="mr-5 flex w-full flex-col gap-5">
-      <VerticalLinks links={complientLinkItems} currentPage={currentPage} />
+      <VerticalLinks links={compliantLinkItems} currentPage={currentPage} />
     </div>
   );
 }
