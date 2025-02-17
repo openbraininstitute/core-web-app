@@ -6,10 +6,5 @@ export default function ProjectAdminPage({
 }: ServerSideComponentProp<{ virtualLabId: string; projectId: string }>) {
   const { virtualLabId, projectId } = params;
 
-  return (
-    <div>
-      <h1>Project admin page</h1>
-      <VirtualLabProjectAdmin virtualLabId={virtualLabId} projectId={projectId} />
-    </div>
-  );
+  return <VirtualLabProjectAdmin virtualLabId={virtualLabId} projectId={projectId} />;
 }
