@@ -2,7 +2,7 @@
 
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Form } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import kebabCase from 'lodash/kebabCase';
 
@@ -101,16 +101,18 @@ export default function SimulationButton({
     }
   };
 
-  if (simulationStatus?.status === 'error') {
-    notifyError(
-      simulationStatus.description ??
-        'We are having trouble running the simulation, please wait a few moments, and try again',
-      2,
-      'topRight',
-      true,
-      'simulation'
-    );
-  }
+  useEffect(() => {
+    if (simulationStatus?.status === 'error') {
+      notifyError(
+        simulationStatus.description ??
+          'We are having trouble running the simulation, please wait a few moments, and try again',
+        5,
+        'topRight',
+        true,
+        'simulation'
+      );
+    }
+  }, [simulationStatus, notifyError]);
 
   return (
     <div className="flex items-center justify-between gap-4">
