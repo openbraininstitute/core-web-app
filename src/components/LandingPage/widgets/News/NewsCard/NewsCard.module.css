@@ -1,0 +1,74 @@
+.newsCard {
+  position: relative;
+  width: min(640px, calc(100vw - 8px));
+  height: 240px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0;
+  flex: 0 0 auto;
+  scroll-snap-stop: always;
+  scroll-snap-align: start;
+}
+
+.newsCard > div.content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  padding-right: 16px;
+  z-index: 1;
+}
+
+.newsCard > div.content > * {
+  flex: 0 0 auto;
+}
+
+.newsCard > div.content > small {
+  flex: 1 1 auto;
+  color: #0008;
+  font-weight: normal;
+}
+
+.newsCard > div.content > p {
+  margin: 0;
+}
+
+.newsCard > div.picture {
+  z-index: 0;
+  width: 240px;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.newsCard > div.picture > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+@media (max-width: 600px) {
+  .newsCard > div.picture {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .newsCard > div.content {
+    padding: 1em;
+    background-color: color-mix(in srgb, var(--color-primary) 66%, transparent);
+    color: #fffe;
+  }
+
+  .newsCard > div.content > small {
+    color: #fffc;
+  }
+}

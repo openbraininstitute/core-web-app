@@ -1,0 +1,29 @@
+.title {
+  width: 100%;
+}
+
+.title > div {
+  content: '';
+  display: block;
+  height: 2px;
+  width: calc(100% - 24px);
+  font-size: 0;
+  background-color: var(--color-neutral);
+  margin: 0;
+  padding: 0;
+}
+
+.flex {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.flex > h1 {
+  flex: 1 1 auto;
+}
+
+.flex > div {
+  flex: 0 0 auto;
+}

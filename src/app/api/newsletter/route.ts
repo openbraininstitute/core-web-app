@@ -83,6 +83,7 @@ export async function POST(req: Request) {
       { status: result.status ?? 400 }
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('error sending newsletter email', error);
     captureException(error, {
       tags: { section: 'landing-page', feature: 'newsletter' },

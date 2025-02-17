@@ -1,0 +1,18 @@
+ul.sanityContentItems > li {
+  list-style-type: '⎯';
+  padding-inline-start: 1ch;
+  margin-bottom: 1em;
+  clear: both;
+}
+
+ul.sanityContentItems > li h3 {
+  font-size: var(--font-size-M-plus);
+  font-family: var(--font-serif);
+}
+
+.vignette {
+  width: 120px;
+  height: 120px;
+  float: left;
+  margin: 0 0.5em 0.5em 0;
+}

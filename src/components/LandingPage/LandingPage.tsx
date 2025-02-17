@@ -1,70 +1,82 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
-import { useAtom } from 'jotai';
-import SectionMain from './sections/SectionHome';
-import FooterPanel from './FooterPanel';
-import Menu from './Menu';
-import SectionInstitute from './sections/SectionInstitute';
-import SectionOurMission from './sections/SectionOurMission';
-import SectionPricing from './sections/SectionPricing';
-import SectionOurTeam from './sections/SectionOurTeam';
+import FooterPanel from './layout/FooterPanel';
+import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
-import TermsAndConditions from './sections/TermsAndConditions';
-import { atomSection, EnumSection } from './sections/sections';
+import { EnumSection } from './sections/sections';
+import { getSection } from './utils';
+import Hero from './layout/Hero';
+import SectionGeneric from './sections/SectionGeneric';
+import PaddedBlock from './components/PaddedBlock';
+import SectionNews from './sections/SectionNews';
 import { classNames } from '@/util/utils';
 import AcceptInviteErrorDialog from '@/components/Entrypoint/segments/AcceptInviteErrorDialog';
+import { logError } from '@/util/logger';
+
 import styles from './LandingPage.module.css';
 
 export interface LandingPageProps {
   className?: string;
-  errorCode: string | undefined;
+  section: EnumSection;
+  errorCode?: string;
 }
 
-export default function LandingPage({ className, errorCode }: LandingPageProps) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [section, setSection] = useAtom(atomSection);
+export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
+  const scrollHasStarted = useScrollHasStarted();
 
   useEffect(() => {
-    const div = ref.current;
-    if (!div) return;
-
-    div.scrollTo({
+    window.scrollTo({
       top: 0,
       behavior: 'instant',
     });
   }, [section]);
 
   return (
-    <div className={classNames(className, styles.landingPage)} ref={ref}>
-      <Menu />
-      {renderSection(section, setSection)}
-      <FooterPanel />
-      {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
-    </div>
+    <>
+      <div className={classNames(className, styles.landingPage)}>
+        <Menu scrollHasStarted={scrollHasStarted} section={section} />
+        <Hero section={section} />
+        <PaddedBlock>{renderSection(section)}</PaddedBlock>
+        <FooterPanel />
+        {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
+      </div>
+      {/* <MatomoAnalytics /> */}
+    </>
   );
 }
 
-function renderSection(
-  section: EnumSection,
-  setSection: (section: EnumSection) => void
-): React.ReactNode {
-  const makeNext = (nextSection: EnumSection) => () => setSection(nextSection);
+function renderSection(section: EnumSection): React.ReactNode {
   switch (section) {
-    case EnumSection.Institute:
-      return <SectionInstitute onNext={makeNext(EnumSection.OurMission)} />;
-    case EnumSection.OurMission:
-      return <SectionOurMission />;
+    case EnumSection.Home:
+    case EnumSection.About:
+    case EnumSection.Mission:
     case EnumSection.Pricing:
-      return <SectionPricing />;
-    case EnumSection.OurTeam:
-      return <SectionOurTeam />;
+    case EnumSection.Team:
+    case EnumSection.Repositories:
+    case EnumSection.TermsAndConditions:
+    case EnumSection.PrivacyPolicy:
+      return <SectionGeneric section={section} />;
     case EnumSection.Contact:
       return <SectionContact />;
-    case EnumSection.TermsAndConditions:
-      return <TermsAndConditions />;
+    case EnumSection.News:
+      return <SectionNews />;
     default:
-      return <SectionMain />;
+      logError('This slug has been implemented yet!', getSection(section));
+      return <SectionGeneric section={EnumSection.Home} />;
   }
+}
+
+function useScrollHasStarted() {
+  const [scrollHasStarted, setScrollHasStarted] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollHasStarted(window.scrollY > 0);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  return scrollHasStarted;
 }

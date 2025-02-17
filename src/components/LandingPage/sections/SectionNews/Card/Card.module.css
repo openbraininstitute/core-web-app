@@ -1,0 +1,58 @@
+.card {
+  max-width: 1000px;
+  margin: 8px;
+  margin-bottom: 64px;
+}
+
+.card > h1 {
+  margin: 0;
+}
+
+.subtitle {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 80%;
+  color: var(--color-neutral);
+  gap: 2em;
+  margin-bottom: 2em;
+}
+
+.content {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: strech;
+  gap: 16px;
+  height: 240px;
+}
+
+.text {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1em;
+}
+
+.text > button {
+  all: unset;
+  cursor: pointer;
+  border: 1px solid var(--color-neutral);
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  padding: 0 2em;
+  height: 3em;
+  margin-top: 1em;
+}
+
+.image {
+  width: 50%;
+}

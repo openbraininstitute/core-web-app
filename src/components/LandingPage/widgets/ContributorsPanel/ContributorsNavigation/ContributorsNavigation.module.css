@@ -1,0 +1,143 @@
+.contributorsPanel {
+  --margin-letter: var(--custom-margin-letter, 12px);
+  --size-letter: var(--custom-size-letter, 32px);
+
+  max-width: min(740px, calc(100vw - 2px));
+  margin-bottom: 3em;
+}
+
+.contributorsPanel header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.contributorsPanel header > div p {
+  all: unset;
+}
+
+.thanks {
+  font-family: var(--font-serif);
+  background-color: var(--color-neutral);
+  line-height: 0.8;
+  font-size: var(--font-size-L);
+  padding: 1.5rem;
+  text-align: right;
+}
+
+.more {
+  background-color: var(--color-primary);
+  color: #fff;
+  padding: 1.5rem;
+  font-size: var(--font-size-M);
+}
+
+.pages {
+  grid-column: 2/4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  padding: 0;
+  padding-top: 1em;
+  padding-bottom: 2em;
+}
+
+.chevron {
+  font-size: 0.6rem;
+}
+
+.pages div.container {
+  position: relative;
+  width: 100%;
+  height: calc(1.5 * var(--size-letter));
+}
+
+.pages div.container::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(2 * var(--margin-letter));
+  height: 100%;
+  background: linear-gradient(to right, #fff, #fff0);
+  z-index: 1;
+}
+
+.pages div.container::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: calc(2 * var(--margin-letter));
+  height: 100%;
+  background: linear-gradient(to left, #fff, #fff0);
+  z-index: 1;
+}
+
+.pages div.letters {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: scroll;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  font-size: 1rem;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  padding: 0 var(--margin-letter);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pages div.letters::-webkit-scrollbar {
+  display: none;
+}
+
+.pages button {
+  display: inline-block;
+  cursor: pointer;
+  border: 1px solid var(--color-neutral);
+  display: grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  flex: 0 0 auto;
+}
+
+.pages > button {
+  border: none;
+}
+
+.pages .letter {
+  padding: 0 var(--margin-letter);
+  z-index: 0;
+}
+
+.pages .letter button {
+  width: var(--size-letter, 32px);
+  height: var(--size-letter, 32px);
+  box-sizing: border-box;
+  font-size: calc(0.5 * var(--size-letter, 32px));
+}
+
+.pages .letter button[disabled] {
+  cursor: default;
+  pointer-events: none;
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .contributorsPanel header {
+    grid-template-columns: 1fr;
+  }
+
+  .contributorsPanel .thanks {
+    font-size: 2em;
+  }
+}

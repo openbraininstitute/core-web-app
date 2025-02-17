@@ -1,5 +1,9 @@
 import { virtualLabApi } from '@/config';
 import { VirtualLab, VirtualLabResponse } from '@/types/virtual-lab/lab';
+import {
+  VirtualLabBalanceResponse,
+  VirtualLabJobReportsResponse,
+} from '@/types/virtual-lab/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { UsersResponse } from '@/types/virtual-lab/members';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
@@ -106,4 +110,100 @@ export async function createVirtualLab({
   });
 
   return assertVLApiResponse(response);
+}
+
+export async function getVirtualLabAccountBalance({
+  virtualLabId,
+  includeProjects = false,
+}: {
+  virtualLabId: string;
+  includeProjects: boolean;
+}): Promise<VirtualLabBalanceResponse> {
+  const searchParams = new URLSearchParams();
+  searchParams.set('include_projects', includeProjects.toString());
+
+  const url = new URL(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/balance`);
+  url.search = searchParams.toString();
+
+  const response = await authFetch(url.toString());
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function getVirtualLabJobReports({
+  virtualLabId,
+  page = 0,
+  pageSize = 10,
+}: {
+  virtualLabId: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<VirtualLabJobReportsResponse> {
+  const searchParams = new URLSearchParams();
+
+  searchParams.set('page', page.toString());
+  searchParams.set('page_size', pageSize.toString());
+
+  const url = new URL(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/reports`);
+  url.search = searchParams.toString();
+
+  const response = await authFetch(url.toString());
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function topUpVirtualLabAccount({
+  virtualLabId,
+  amount,
+}: {
+  virtualLabId: string;
+  amount: number;
+}): Promise<VirtualLabJobReportsResponse> {
+  const response = await authFetch(
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/budget/top-up`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// ! This endpoint is only for demo purposes
+// TODO Replace with a proper integration with the payment provider
+export async function topUpVirtualLabBudget({
+  virtualLabId,
+  amount,
+}: {
+  virtualLabId: string;
+  amount: number;
+}): Promise<VirtualLabJobReportsResponse> {
+  const response = await authFetch(
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/budget/top-up`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
 }

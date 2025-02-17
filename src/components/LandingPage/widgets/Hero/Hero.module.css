@@ -1,0 +1,36 @@
+.hero {
+  position: relative;
+  padding-top: 50vh;
+  overflow: hidden;
+}
+
+.hero > .body {
+  background: #fff;
+  z-index: 2;
+  padding: 0 var(--colM);
+  padding-bottom: 3em;
+}
+
+.background {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--custom-aspect-ratio, 1/1);
+  z-index: 1;
+}
+
+.hero button.button {
+  all: unset;
+  cursor: pointer;
+  padding: 1em 2em;
+  border: 1px solid currentColor;
+  transition: all 0.4s;
+  margin-top: 1em;
+}
+
+.hero.light button.button:hover {
+  color: #fff;
+  background-color: var(--color-primary);
+}

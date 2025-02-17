@@ -1,0 +1,113 @@
+.menuContainer {
+  --size-button: 160px;
+  --size-header: var(--size-button);
+
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--font-size-M);
+  color: #fffe;
+  font-size: var(--font-size-M);
+  z-index: 999;
+  background-color: transparent;
+  transition: all 0.6s;
+}
+
+.menuContainer.stuck {
+  background-color: color-mix(in srgb, var(--color-primary) 90%, transparent);
+  backdrop-filter: blur(5px);
+}
+
+.menuContainer button > div {
+  white-space: nowrap;
+}
+
+.menuContainer button.logo {
+  flex: 0 0 auto;
+  max-width: 8em;
+}
+
+.menuContainer button.logo h2 {
+  text-align: right;
+  line-height: 0.8;
+}
+
+.menuContainer > div.items {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.menuContainer div.items button {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 1em;
+}
+
+.menuContainer div.items button::after {
+  content: '';
+  display: block;
+  height: 4px;
+  width: 48px;
+  background-color: #fffe;
+  border-radius: 999vmax;
+  opacity: 0;
+  transition: all 0.5s;
+}
+
+.menuContainer div.items button:hover::after {
+  opacity: 0.5;
+}
+
+.menuContainer div.items button.selected::after {
+  opacity: 1;
+}
+
+.menuContainer div.items button.loginButton::after {
+  display: none;
+}
+
+.menuContainer div.items button.loginButton {
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  transition: all 0.6s;
+}
+
+.menuContainer div.items button.loginButton:hover {
+  color: var(--color-primary);
+  background-color: #fffe;
+}
+
+.menuContainer > .items {
+  display: block;
+}
+
+.menuContainer > div.hamburger {
+  display: none;
+}
+
+.menuContainer > div.hamburger > button {
+  font-size: var(--font-size-L);
+}
+
+@media (max-width: 950px) {
+  .menuContainer > div.items {
+    display: none;
+  }
+
+  .menuContainer div.hamburger {
+    display: block;
+  }
+}

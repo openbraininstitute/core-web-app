@@ -1,0 +1,30 @@
+.news {
+  margin-top: 64px;
+}
+
+.news > header {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 2em;
+  color: var(--color-neutral);
+  margin-bottom: 128px;
+}
+
+.news > header > div.label {
+  line-height: 2;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.news > header > div.buttons {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+}
