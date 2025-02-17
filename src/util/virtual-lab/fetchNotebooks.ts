@@ -1,7 +1,6 @@
 'use server';
 
 import capitalize from 'lodash/capitalize';
-import { assertErrorMessage } from '../utils';
 
 import {
   assertGithubApiResponse,
@@ -100,12 +99,32 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
   });
 }
 
-export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[] | null> {
-  try {
-    return await fetchNotebooks(repoUrl);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(assertErrorMessage(e));
-    return null;
+export async function fetchNotebookCount(repoUrl: string) {
+  const repoDetails = extractUserAndRepo(repoUrl);
+
+  const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
+
+  const repoRes = await fetch(apiBaseUrl, options);
+
+  if (!repoRes.ok) {
+    assertGithubApiResponse(repoRes);
+    throw new Error(`Cannot fetch the repository ${repoUrl}`);
   }
+  const repository = await repoRes.json();
+
+  const defaultBranch = repository.default_branch;
+
+  if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
+
+  const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
+
+  if (!response.ok) {
+    throw new Error(`Cannot fetch the repository ${repoUrl} , ensure the repository is public`);
+  }
+
+  const tree: { tree: Item[] } = await response.json();
+
+  if (!tree.tree) throw new Error(`Cannot fetch the repository ${repoUrl}`);
+
+  return tree.tree.filter((i) => i.path.endsWith('ipynb')).length;
 }
