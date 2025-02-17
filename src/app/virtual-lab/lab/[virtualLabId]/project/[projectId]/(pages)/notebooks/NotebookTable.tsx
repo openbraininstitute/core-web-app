@@ -32,16 +32,21 @@ function NotebookTable({
   onDelete,
   vlabId,
   projectId,
+  serverError,
 }: {
   vlabId: string;
   projectId: string;
   notebooks: Notebook[];
   failed?: string[];
   onDelete?: (id: string) => void;
+  serverError?: string;
 }) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
+
+  if (serverError)
+    notification.error(serverError, undefined, undefined, undefined, 'notebooks-server-error');
 
   const resetModal = () => {
     setCurrentNotebook(null);

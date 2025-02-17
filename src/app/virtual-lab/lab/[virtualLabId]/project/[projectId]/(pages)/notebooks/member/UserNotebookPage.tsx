@@ -47,10 +47,12 @@ export default function UserNotebookPage({
   initialNotebooks,
   projectId,
   vlabId,
+  serverError,
 }: {
   initialNotebooks: Notebook[];
   projectId: string;
   vlabId: string;
+  serverError?: string;
 }) {
   const [notebooks, setNotebooks] = useState(initialNotebooks);
   const [openModal, setOpenModal] = useState(false);
@@ -61,6 +63,9 @@ export default function UserNotebookPage({
   );
   const [loading, setLoading] = useDelayedLoading(false);
   const [deleteNotebookId, setDeleteNotebookId] = useState('');
+
+  if (serverError)
+    notification.error(serverError, undefined, undefined, undefined, 'user-notebook-server-error');
 
   const resetModal = () => {
     setOpenModal(false);

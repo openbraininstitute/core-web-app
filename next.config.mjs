@@ -47,7 +47,7 @@ const nextConfig = {
   },
   basePath,
   assetPrefix: basePath ?? undefined,
-  reactStrictMode: false,
+  reactStrictMode: true,
   swcMinify: true,
   compress: false,
   output: 'standalone',
