@@ -15,12 +15,9 @@ import {
 import { VirtualLab } from '@/types/virtual-lab/lab';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
 import { VirtualLabMember } from '@/types/virtual-lab/members';
-import {
-  getVirtualLabBalanceDetails,
-  getVirtualLabPaymentMethods,
-} from '@/services/virtual-lab/billing';
-import { PaymentMethod, VlabBalance } from '@/types/virtual-lab/billing';
-import { atomFamilyWithExpiration } from '@/util/atoms';
+import { getVirtualLabPaymentMethods } from '@/services/virtual-lab/billing';
+import { PaymentMethod } from '@/types/virtual-lab/billing';
+import { readAtomFamilyWithExpiration } from '@/util/atoms';
 
 export const virtualLabDetailAtomFamily = atomFamily<
   string | undefined,
@@ -121,7 +118,7 @@ export const refreshBalanceAtom = atom(null, (get, set) => {
   set(virtualLabBalanceRefreshTriggerAtom, (prev) => prev + 1);
 });
 
-export const virtualLabBalanceAtomFamily = atomFamilyWithExpiration(
+export const virtualLabBalanceAtomFamily = readAtomFamilyWithExpiration(
   ({ virtualLabId }: { virtualLabId: string }) =>
     atom(async (get) => {
       get(virtualLabBalanceRefreshTriggerAtom);
