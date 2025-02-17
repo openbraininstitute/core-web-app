@@ -16,7 +16,7 @@ import {
 } from '@/services/virtual-lab/projects';
 import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { retrievePapersListCount } from '@/services/paper-ai/retrievePapersList';
-import { atomFamilyWithExpiration } from '@/util/atoms';
+import { atomFamilyFactoryWithExpiration, atomFamilyWithExpiration } from '@/util/atoms';
 import { virtualLabBalanceRefreshTriggerAtom } from './lab';
 
 export const virtualLabProjectsAtomFamily = atomFamily((virtualLabId: string) =>
@@ -73,11 +73,10 @@ export const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (ge
   return projects?.total || 0;
 });
 
-export const projectJobReportsAtomFamily = atomFamilyWithExpiration(
-  ({ virtualLabId, projectId, page }: { virtualLabId: string; projectId: string; page: number }) =>
-    atomWithRefresh(async () => getProjectJobReports({ virtualLabId, projectId, page })),
-  { ttl: 20_000, areEqual: fastDeepEqual }
-);
+export const projectJobReportsAtomFamily = atomFamilyFactoryWithExpiration(getProjectJobReports, {
+  ttl: 10_000,
+  areEqual: fastDeepEqual,
+});
 
 export const projectBalanceAtomFamily = atomFamilyWithExpiration(
   ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
