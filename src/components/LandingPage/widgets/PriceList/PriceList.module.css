@@ -1,0 +1,29 @@
+.priceList {
+  display: grid;
+  grid-template-columns: 280px repeat(var(--custom-plans-count), 280px);
+  gap: 16px;
+  width: auto;
+  overflow-x: auto;
+  scroll-snap-points-y: repeat(296px);
+  scroll-snap-type: x mandatory;
+}
+
+.priceList hr {
+  width: 100%;
+  height: 1px;
+  border: none;
+  background-color: var(--color-neutral-light);
+}
+
+.fullWidth {
+  grid-column: 1/-1;
+}
+
+.priceList em {
+  color: var(--color-neutral);
+  font-style: normal;
+}
+
+.priceList big {
+  font-size: var(--font-size-L);
+}

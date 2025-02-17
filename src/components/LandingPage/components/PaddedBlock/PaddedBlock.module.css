@@ -1,0 +1,19 @@
+div.paddedBlock {
+  --S: 800px;
+  --M: 1200px;
+  --L: 1600px;
+  --colM: var(0.5 * (var(--M) - var(--S)));
+  --colM: var(0.5 * (var(--L) - var(--M)));
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 8px 1fr var(--colL) var(--colM) var(--S) var(--colM) var(--colL) 1fr 8px;
+}
+
+div.paddedBlock h1 {
+  grid-column: 4/5;
+}
+
+div.paddedBlock > * {
+  grid-column: 4/5;
+}

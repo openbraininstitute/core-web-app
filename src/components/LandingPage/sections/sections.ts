@@ -1,13 +1,12 @@
-import { atom } from 'jotai';
-
 export enum EnumSection {
+  PrivacyPolicy = -3,
   TermsAndConditions = -2,
   Home = -1,
-  Institute = 0,
-  OurMission = 1,
-  Pricing = 2,
-  OurTeam = 3,
-  Contact = 4,
+  About = 0,
+  Mission,
+  News,
+  Pricing,
+  Team,
+  Repositories,
+  Contact,
 }
-
-export const atomSection = atom(EnumSection.Home);

@@ -1,0 +1,55 @@
+.contributorsList {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 4em 3.2em;
+  padding: 0 4rem;
+}
+
+@media (max-width: 640px) {
+  .contributorsList {
+    padding: 0;
+  }
+}
+
+.contributorsList > div {
+  width: min(calc(100vw - 2px), 360px);
+  max-height: calc(4 * var(--font-size-L));
+}
+
+.contributorsList > div > .name {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-M-plus);
+  font-weight: bolder;
+  line-height: 1;
+  padding: 0.4em 0.5em;
+  background-color: var(--color-neutral);
+}
+
+.contributorsList > div > .links {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.contributorsList > div > .links > a {
+  font-size: var(--font-size-M);
+}
+
+.links a {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 1rem;
+  border: solid 1px var(--color-neutral);
+  padding: 6px 12px;
+}
+
+button.loadMore {
+  display: inline-block;
+  padding: 0.5em 2em;
+  cursor: pointer;
+  border: 1px solid var(--color-neutral);
+  border-radius: 99vmax;
+  margin-top: 3rem;
+}

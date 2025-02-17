@@ -37,6 +37,7 @@
     "@lexical/table": "0.16.0",
     "@lexical/utils": "0.16.0",
     "@math.gl/core": "^4.0.1",
+    "@portabletext/react": "^3.2.0",
     "@radix-ui/react-accordion": "^1.1.1",
     "@radix-ui/react-checkbox": "^1.0.3",
     "@radix-ui/react-dialog": "^1.0.4",

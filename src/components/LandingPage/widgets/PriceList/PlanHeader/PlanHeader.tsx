@@ -1,0 +1,77 @@
+/* eslint-disable react/no-array-index-key */
+import React from 'react';
+
+import { classNames } from '@/util/utils';
+import {
+  ContentForPricingPlan,
+  MultiCurrencyPrice,
+} from '@/components/LandingPage/content/pricing';
+
+import { useCurrency } from '@/components/LandingPage/atoms';
+import styles from './PlanHeader.module.css';
+
+export interface PlanHeaderProps {
+  className?: string;
+  plan: ContentForPricingPlan;
+}
+
+export default function PlanHeader({ className, plan }: PlanHeaderProps) {
+  const [currency] = useCurrency();
+  const { discount, month, year } = usePrices(currency, plan);
+
+  return (
+    <div className={classNames(className, styles.planHeader)}>
+      <h2>{plan.title}</h2>
+      {plan.price.month.length > 0 && (
+        <>
+          <hr />
+          <em>Subscription</em>
+          <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
+            <strong>
+              {currency} {month}
+            </strong>
+            <small>/month</small>
+          </div>
+          <div>
+            <big>
+              {currency} {discount || month}
+            </big>
+            /month
+          </div>
+          <div>
+            <big>
+              {currency} {year}
+            </big>
+            /year
+          </div>
+          <ul>
+            {plan.notes.map((note, index) => (
+              <li key={index}>{note}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+function usePrices(
+  currency: string,
+  plan: ContentForPricingPlan
+): {
+  discount: number | null;
+  month: number | null;
+  year: number | null;
+} {
+  return {
+    discount: extractPrice(currency, plan.price.discount),
+    month: extractPrice(currency, plan.price.month),
+    year: extractPrice(currency, plan.price.year),
+  };
+}
+
+function extractPrice(currency: string, price?: null | MultiCurrencyPrice[]): number | null {
+  if (!price) return null;
+
+  return price.find((item) => item.currency === currency)?.value ?? null;
+}

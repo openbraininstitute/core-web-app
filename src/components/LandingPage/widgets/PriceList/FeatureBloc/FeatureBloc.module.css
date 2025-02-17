@@ -1,0 +1,13 @@
+.title {
+  color: var(--color-neutral);
+  text-transform: uppercase;
+  grid-column: 1/-1;
+}
+
+.title .capsule {
+  padding: 0 0.5em;
+  margin-left: 1em;
+  border-radius: 99vmax;
+  text-transform: none;
+  border: 1px solid var(--color-neutral);
+}

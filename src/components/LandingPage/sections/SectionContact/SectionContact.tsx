@@ -1,12 +1,14 @@
 import React from 'react';
 
-import Hero from '../../Hero';
-
 // import VerticalRuler from '../../VerticalRuler';
-import EmailButton from '../../buttons/EmailButton';
-import { EnumSection } from '../sections';
 // import Cards from './Cards';
+import EmailButton from '../../components/buttons/EmailButton';
+import VerticalRuler from '../../components/VerticalRuler';
+import { styleBlockLarge } from '../../styles';
+import SectionGeneric from '../SectionGeneric';
+import { EnumSection } from '../sections';
 import { classNames } from '@/util/utils';
+
 import styles from './SectionContact.module.css';
 
 export interface SectionContactProps {
@@ -15,22 +17,15 @@ export interface SectionContactProps {
 
 export default function SectionContact({ className }: SectionContactProps) {
   return (
-    <div className={classNames(className, styles.sectionContact)}>
-      <Hero section={EnumSection.Contact} />
-      <div className={styles.emails}>
-        <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
-        <EmailButton email="info@openbraininstitute.org">You have a general inquiry?</EmailButton>
+    <>
+      <VerticalRuler />
+      <div className={classNames(className, styles.sectionContact, styleBlockLarge)}>
+        <div className={styles.emails}>
+          <EmailButton email="support@openbraininstitute.org">Need some support?</EmailButton>
+          <EmailButton email="info@openbraininstitute.org">You have a general inquiry?</EmailButton>
+        </div>
       </div>
-      {/* <VerticalRuler />
-      <h1>Do you want to collaborate with us?</h1>
-      <p>
-        We invite neuroscience labs and individual scientists to join us in shaping the future of
-        brain research. Contribute by integrating your data, requesting new features, and
-        participating in user testing. Together, we can refine tools, drive innovation, and create a
-        transformative resource for the global neuroscience community. Be part of the journey to
-        advance our understanding of the brain!
-      </p>
-      <Cards /> */}
-    </div>
+      <SectionGeneric section={EnumSection.Contact} />
+    </>
   );
 }

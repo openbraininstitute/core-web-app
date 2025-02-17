@@ -1,0 +1,16 @@
+.verticalRuler {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  margin: 15px 0;
+  opacity: 0;
+}
+
+.verticalRuler > div {
+  display: block;
+  width: 20px;
+  height: 100%;
+  font-size: 0;
+  content: '.';
+  background-color: var(--color-neutral, currentColor);
+}
