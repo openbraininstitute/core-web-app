@@ -3,6 +3,7 @@ import { atomFamily, atomWithRefresh, atomWithDefault } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
 
 import sessionAtom from '../session';
+import { virtualLabBalanceRefreshTriggerAtom } from './lab';
 import { Project } from '@/types/virtual-lab/projects';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
 import {
@@ -16,7 +17,6 @@ import {
 import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { retrievePapersListCount } from '@/services/paper-ai/retrievePapersList';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
-import { virtualLabBalanceRefreshTriggerAtom } from './lab';
 
 export const virtualLabProjectsAtomFamily = atomFamily((virtualLabId: string) =>
   atomWithRefresh<Promise<VirtualLabAPIListData<Project> | undefined>>(async () => {

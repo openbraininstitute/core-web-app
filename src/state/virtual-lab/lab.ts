@@ -1,7 +1,7 @@
 import { RefObject } from 'react';
 import { PrimitiveAtom, atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh, atomWithReset } from 'jotai/utils';
-import fastDeepEqual from 'fast-deep-equal';
+import isEqual from 'lodash/isEqual';
 
 import sessionAtom from '../session';
 
@@ -113,10 +113,9 @@ export const virtualLabPlansAtom = atom<
 });
 
 export const virtualLabBalanceRefreshTriggerAtom = atom(0);
-export const refreshBalanceAtom = atom(null, (get, set) => {
-  console.log('refreshBalanceAtom');
-  set(virtualLabBalanceRefreshTriggerAtom, (prev) => prev + 1);
-});
+export const refreshBalanceAtom = atom(null, (get, set) =>
+  set(virtualLabBalanceRefreshTriggerAtom, (prev) => prev + 1)
+);
 
 export const virtualLabBalanceAtomFamily = readAtomFamilyWithExpiration(
   ({ virtualLabId }: { virtualLabId: string }) =>
@@ -125,5 +124,5 @@ export const virtualLabBalanceAtomFamily = readAtomFamilyWithExpiration(
 
       return getVirtualLabAccountBalance({ virtualLabId, includeProjects: true });
     }),
-  { ttl: 20_000, areEqual: fastDeepEqual }
+  { ttl: 20_000, areEqual: isEqual }
 );

@@ -116,7 +116,7 @@ export const authOptions: NextAuthOptions = {
       return {
         user: {
           ...session.user,
-          ...token.user as Session['user'],
+          ...(token.user as Session['user']),
         },
         accessToken: token.accessToken as string,
         idToken: token.idToken,

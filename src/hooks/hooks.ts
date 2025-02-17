@@ -56,7 +56,7 @@ export function useLastTruthyValue<T>(atom: Atom<T>) {
     if (!currentValue || Object.is(currentValue, lastTruthyValue)) return;
 
     setLastTruthyValue(currentValue);
-  }, [currentValue]);
+  }, [currentValue, lastTruthyValue]);
 
   return lastTruthyValue;
 }

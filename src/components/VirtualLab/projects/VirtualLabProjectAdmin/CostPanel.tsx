@@ -1,10 +1,10 @@
-import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
+import { ProjectBalanceCard } from './ProjectBalanceCard';
+import JobReportList from './ProjectJobReportList';
 import {
   projectBalanceAtomFamily,
   virtualLabProjectDetailsAtomFamily,
 } from '@/state/virtual-lab/projects';
-import JobReportList from './ProjectJobReportList';
-import { ProjectBalanceCard } from './ProjectBalanceCard';
+import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 
 export default function CostsPanel({
   virtualLabId,

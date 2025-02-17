@@ -26,7 +26,7 @@ export function readAtomFamilyWithExpiration<T, P>(
 
     const cleanup = () => family.remove(param);
 
-    wrapperAtomWithRefresh.onMount = (setAtom) => {
+    wrapperAtomWithRefresh.onMount = () => {
       if (ttlTimeoutId) {
         clearTimeout(ttlTimeoutId);
       } else {

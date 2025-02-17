@@ -1,6 +1,7 @@
-import { classNames } from '@/util/utils';
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { Collapse as AntdCollapse, CollapseProps, ConfigProvider } from 'antd';
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+
+import { classNames } from '@/util/utils';
 
 export function ExpandIcon({ isActive }: { isActive?: boolean }) {
   return isActive ? (

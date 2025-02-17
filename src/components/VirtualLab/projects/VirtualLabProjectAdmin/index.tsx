@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import { CollapseProps } from 'antd';
 import { useQueryState } from 'nuqs';
 
-import Collapse from '@/components/Collapse';
 import CostsPanel from './CostPanel';
+import Collapse from '@/components/Collapse';
 
 export default function VirtualLabProjectAdmin({
   virtualLabId,

@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { ReactNode, useCallback, useMemo } from 'react';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { loadable, unwrap } from 'jotai/utils';
@@ -23,7 +25,7 @@ import {
   virtualLabPlansAtom,
 } from '@/state/virtual-lab/lab';
 import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
-import { VALID_EMAIL_REGEXP, classNames } from '@/util/utils';
+import { VALID_EMAIL_REGEXP } from '@/util/utils';
 import { VirtualLab, VirtualLabPlanType } from '@/types/virtual-lab/lab';
 import Collapse, { ExpandIcon } from '@/components/Collapse';
 
