@@ -53,7 +53,6 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
   for (const item of Object.values(items)) {
     if (item.path.endsWith('.ipynb')) {
       const parts = item.path.split('/');
-      // const scale = parts[parts.length - 3] ?? '';
       const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
 
       if (withDate)
@@ -101,12 +100,12 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
   });
 }
 
-export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[] | string> {
+export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[] | null> {
   try {
     return await fetchNotebooks(repoUrl);
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(assertErrorMessage(e));
-    return repoUrl;
+    return null;
   }
 }
