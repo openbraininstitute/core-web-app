@@ -183,7 +183,7 @@ export default function UserNotebookPage({
               <div className="-mb-6 mt-5 flex justify-end gap-3">
                 <button
                   type="button"
-                  className="rounded bg-primary-8 p-2 text-white"
+                  className="rounded bg-primary-8 px-3 py-2 text-white"
                   onClick={async () => {
                     if (!newNotebooks) return;
                     setLoading(true);
@@ -226,7 +226,8 @@ export default function UserNotebookPage({
                     resetModal();
                   }}
                 >
-                  Register notebooks
+                  Register{' '}
+                  <span className="ml-1 text-sm text-primary-3">({newNotebooks?.length})</span>
                   {loading && <LoadingOutlined />}
                 </button>
 
