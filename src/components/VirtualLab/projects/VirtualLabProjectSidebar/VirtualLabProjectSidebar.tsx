@@ -6,7 +6,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 
 import { useMemo } from 'react';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import VerticalLinks, { LinkItem } from '@/components/VerticalLinks';
+import VerticalLinks from '@/components/VerticalLinks';
 import {
   virtualLabProjectPapersCountAtomFamily,
   virtualLabProjectUsersAtomFamily,
@@ -14,6 +14,8 @@ import {
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
 import { getBookmarksCount } from '@/services/virtual-lab/bookmark';
 import { useLoadableValue } from '@/hooks/hooks';
+import { useIsProjectAdmin } from '@/hooks/virtual-labs';
+import { LinkItemWithRequirements } from '@/types/virtual-lab/navigation';
 
 type Props = {
   virtualLabId: string;
@@ -32,6 +34,11 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_no
   const projectPapers = useLoadableValue(
     virtualLabProjectPapersCountAtomFamily({ virtualLabId, projectId })
   );
+
+  const isAdmin = useIsProjectAdmin({ virtualLabId, projectId });
+
+  const linkItemFilter = (link: LinkItemWithRequirements) =>
+    link.requires?.userRole === 'admin' ? isAdmin : true;
 
   const renderUserAmount = () => {
     if (projectUsers.state === 'loading') {
@@ -67,7 +74,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_no
     return null;
   }, [bookmarks]);
 
-  const linkItems: LinkItem[] = [
+  const linkItems: LinkItemWithRequirements[] = [
     { key: LinkItemKey.Home, content: 'Project Home', href: 'home' },
     {
       key: LinkItemKey.Library,
@@ -118,7 +125,16 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_no
       ),
       href: 'papers',
     },
+    {
+      key: LinkItemKey.Admin,
+      content: 'Admin',
+      href: 'admin',
+      requires: { userRole: 'admin' },
+    },
   ];
+
+  const compliantLinkItems = linkItems.filter(linkItemFilter);
+
   return (
     <div className="my-8 mr-6 flex w-full flex-col gap-5">
       <VerticalLinks
@@ -126,7 +142,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId, n_no
           virtualLabId,
           projectId,
           currentPage,
-          links: linkItems,
+          links: compliantLinkItems,
         }}
       />
     </div>

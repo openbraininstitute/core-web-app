@@ -1,6 +1,7 @@
 import { RefObject } from 'react';
 import { PrimitiveAtom, atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh, atomWithReset } from 'jotai/utils';
+import isEqual from 'lodash/isEqual';
 
 import sessionAtom from '../session';
 
@@ -9,15 +10,14 @@ import {
   getVirtualLabUsers,
   getVirtualLabsOfUser,
   getPlans,
+  getVirtualLabAccountBalance,
 } from '@/services/virtual-lab/labs';
 import { VirtualLab } from '@/types/virtual-lab/lab';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
 import { VirtualLabMember } from '@/types/virtual-lab/members';
-import {
-  getVirtualLabBalanceDetails,
-  getVirtualLabPaymentMethods,
-} from '@/services/virtual-lab/billing';
-import { PaymentMethod, VlabBalance } from '@/types/virtual-lab/billing';
+import { getVirtualLabPaymentMethods } from '@/services/virtual-lab/billing';
+import { PaymentMethod } from '@/types/virtual-lab/billing';
+import { readAtomFamilyWithExpiration } from '@/util/atoms';
 
 export const virtualLabDetailAtomFamily = atomFamily<
   string | undefined,
@@ -65,16 +65,17 @@ export const virtualLabPaymentMethodsAtomFamily = atomFamily((virtualLabId: stri
   })
 );
 
-export const virtualLabBalanceAtomFamily = atomFamily((virtualLabId: string) =>
-  atomWithRefresh<Promise<VlabBalance | undefined>>(async (get) => {
-    const session = get(sessionAtom);
-    if (!session) {
-      return;
-    }
-    const response = await getVirtualLabBalanceDetails(virtualLabId, session.accessToken);
-    return response.data;
-  })
-);
+// TODO: cleanup
+// export const virtualLabBalanceAtomFamily = atomFamily((virtualLabId: string) =>
+//   atomWithRefresh<Promise<VlabBalance | undefined>>(async (get) => {
+//     const session = get(sessionAtom);
+//     if (!session) {
+//       return;
+//     }
+//     const response = await getVirtualLabBalanceDetails(virtualLabId, session.accessToken);
+//     return response.data;
+//   })
+// );
 
 export const virtualLabsOfUserAtom = atomWithRefresh<
   Promise<VirtualLabAPIListData<VirtualLab> | undefined>
@@ -110,3 +111,18 @@ export const virtualLabPlansAtom = atom<
 
   return allPlans;
 });
+
+export const virtualLabBalanceRefreshTriggerAtom = atom(0);
+export const refreshBalanceAtom = atom(null, (get, set) =>
+  set(virtualLabBalanceRefreshTriggerAtom, (prev) => prev + 1)
+);
+
+export const virtualLabBalanceAtomFamily = readAtomFamilyWithExpiration(
+  ({ virtualLabId }: { virtualLabId: string }) =>
+    atom(async (get) => {
+      get(virtualLabBalanceRefreshTriggerAtom);
+
+      return getVirtualLabAccountBalance({ virtualLabId, includeProjects: true });
+    }),
+  { ttl: 20_000, areEqual: isEqual }
+);
