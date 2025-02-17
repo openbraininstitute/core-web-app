@@ -54,7 +54,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
           </button>
         </div>
       </div>
-      <PopupMenu visible={showMenu} onChange={setShowMenu} onClick={gotoSection} />
+      <PopupMenu visible={showMenu} onChange={setShowMenu} />
     </>
   );
 }

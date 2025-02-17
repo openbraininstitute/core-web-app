@@ -55,7 +55,8 @@ function renderItem(
       logError("Don't know how to render this item:", item);
       return (
         <Error>
-          Don&apos;t know (yet) how to display this content: <strong>{item._type}</strong>!
+          Don&apos;t know (yet) how to display this content:{' '}
+          <strong>{(item as { _type: string })._type}</strong>!
         </Error>
       );
   }
