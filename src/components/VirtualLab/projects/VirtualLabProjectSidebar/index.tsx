@@ -6,7 +6,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 
 import { useEffect, useMemo, useState } from 'react';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import VerticalLinks, { LinkItem } from '@/components/VerticalLinks';
+import VerticalLinks from '@/components/VerticalLinks';
 import {
   virtualLabProjectPapersCountAtomFamily,
   virtualLabProjectUsersAtomFamily,
@@ -14,6 +14,8 @@ import {
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
 import { getBookmarksCount } from '@/services/virtual-lab/bookmark';
 import { useLoadableValue } from '@/hooks/hooks';
+import { useIsProjectAdmin } from '@/hooks/virtual-labs';
+import { LinkItemWithRequirements } from '@/types/virtual-lab/navigation';
 import { fetchNotebookCount } from '@/util/virtual-lab/fetchNotebooks';
 import { notebookRepoUrl } from '@/config';
 
@@ -25,6 +27,7 @@ type Props = {
 export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Props) {
   const url = usePathname().split('/');
   const currentPage = url[url.length - 1] !== 'new' ? url[url.length - 1] : url[url.length - 2];
+
   const [notebookCount, setNotebookCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -33,7 +36,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
         const count = await fetchNotebookCount(notebookRepoUrl);
         setNotebookCount(count);
       } catch (e) {
-        console.error(e);
+        console.error(e); // eslint-disable-line no-console
       }
     }
     fetch();
@@ -46,6 +49,11 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
   const projectPapers = useLoadableValue(
     virtualLabProjectPapersCountAtomFamily({ virtualLabId, projectId })
   );
+
+  const isAdmin = useIsProjectAdmin({ virtualLabId, projectId });
+
+  const linkItemFilter = (link: LinkItemWithRequirements) =>
+    link.requires?.userRole === 'admin' ? isAdmin : true;
 
   const renderUserAmount = () => {
     if (projectUsers.state === 'loading') {
@@ -81,7 +89,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
     return null;
   }, [bookmarks]);
 
-  const linkItems: LinkItem[] = [
+  const linkItems: LinkItemWithRequirements[] = [
     { key: LinkItemKey.Home, content: 'Project Home', href: 'home' },
     {
       key: LinkItemKey.Library,
@@ -132,7 +140,16 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
       ),
       href: 'papers',
     },
+    {
+      key: LinkItemKey.Admin,
+      content: 'Admin',
+      href: 'admin',
+      requires: { userRole: 'admin' },
+    },
   ];
+
+  const compliantLinkItems = linkItems.filter(linkItemFilter);
+
   return (
     <div className="my-8 mr-6 flex w-full flex-col gap-5">
       <VerticalLinks
@@ -140,7 +157,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
           virtualLabId,
           projectId,
           currentPage,
-          links: linkItems,
+          links: compliantLinkItems,
         }}
       />
     </div>
