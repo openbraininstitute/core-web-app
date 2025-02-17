@@ -1,7 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithRefresh, atomWithDefault } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
-import fastDeepEqual from 'fast-deep-equal';
 
 import sessionAtom from '../session';
 import { Project } from '@/types/virtual-lab/projects';
@@ -73,10 +72,14 @@ export const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (ge
   return projects?.total || 0;
 });
 
-export const projectJobReportsAtomFamily = atomFamilyFactoryWithExpiration(getProjectJobReports, {
-  ttl: 10_000,
-  areEqual: fastDeepEqual,
-});
+export const projectJobReportsAtomFamily = atomFamilyFactoryWithExpiration(
+  ({ virtualLabId, projectId, page }: { virtualLabId: string; projectId: string; page: number }) =>
+    getProjectJobReports({ virtualLabId, projectId, page }),
+  {
+    ttl: 10_000,
+    areEqual: isEqual,
+  }
+);
 
 export const projectBalanceAtomFamily = atomFamilyWithExpiration(
   ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
@@ -85,5 +88,5 @@ export const projectBalanceAtomFamily = atomFamilyWithExpiration(
 
       return getProjectAccountBalance({ virtualLabId, projectId });
     }),
-  { ttl: 20_000, areEqual: fastDeepEqual }
+  { ttl: 20_000, areEqual: isEqual }
 );
