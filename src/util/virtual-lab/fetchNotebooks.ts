@@ -50,7 +50,7 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
   }, {});
 
   for (const item of Object.values(items)) {
-    if (item.path.endsWith('.ipynb')) {
+    if (item.path.endsWith('analysis_notebook.ipynb')) {
       const parts = item.path.split('/');
       const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
 

@@ -8,9 +8,9 @@ export const options = {
     Authorization: 'token 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',
   },
 
-  // next: {
-  //   revalidate: 3600 * 24,
-  // },
+  next: {
+    revalidate: 3600 * 24,
+  },
 };
 
 export interface Notebook {
