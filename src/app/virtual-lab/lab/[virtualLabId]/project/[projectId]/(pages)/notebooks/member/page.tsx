@@ -32,6 +32,7 @@ export default async function Notebooks({
   }
 
   const notebooksPromises = notebooks.map((n) => fetchNotebook(n.github_file_url));
+
   const validatedNotebooks = await Promise.all(notebooksPromises);
   const initialNotebooks = validatedNotebooks.map((n, i) => {
     return { ...n, id: notebooks[i].id, creationDate: notebooks[i].created_at };

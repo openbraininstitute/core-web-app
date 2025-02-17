@@ -259,7 +259,7 @@ export async function fetchNotebook(
 
   notebookFiles.forEach((k) => {
     if (files[k] === undefined)
-      throw new Error(`Cannot find ${k} for notebook ${owner}/${repo}/${path}`);
+      throw new Error(`Cannot find ${k} for notebook ${owner}/${repo}/${nPath}`);
   });
 
   let metadataContent = '';
@@ -267,7 +267,7 @@ export async function fetchNotebook(
   try {
     metadataContent = await fetchGithubFile(files['analysis_info.json'].fileUrl);
   } catch {
-    throw new Error(`Failed to download metadata file for notebook ${owner}/${repo}/${path}`);
+    throw new Error(`Failed to download metadata file for notebook ${owner}/${repo}/${nPath}`);
   }
 
   let metadata: ReturnType<typeof validateMetadata>;
@@ -275,7 +275,7 @@ export async function fetchNotebook(
   try {
     metadata = validateMetadata(metadataContent);
   } catch (e) {
-    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${path}` + e);
+    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${nPath}` + e);
   }
 
   return {
