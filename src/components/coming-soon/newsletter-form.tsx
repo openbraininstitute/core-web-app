@@ -138,10 +138,14 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               >
                 <span className="text-lg font-semibold text-primary-8">
                   I have read and accept
-                  {/* TODO: change this to new privacy url */}
-                  <Link key="/welcome/privacy" href="/welcome/privacy" className="ml-1 underline">
+                  <a
+                    target="_blank"
+                    href="/privacy"
+                    rel="noopener noreferrer"
+                    className="ml-1 underline"
+                  >
                     the privacy policy
-                  </Link>
+                  </a>
                 </span>
               </Checkbox>
             </Form.Item>
