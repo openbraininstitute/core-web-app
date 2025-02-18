@@ -1,6 +1,6 @@
 'use client';
 
-import { ConfigProvider, DatePicker } from 'antd';
+import { ConfigProvider, DatePicker, Input } from 'antd';
 
 import Table from 'antd/es/table';
 import Image from 'next/image';
@@ -263,7 +263,7 @@ function NotebookTable({
 
   const { filteredColumns, toggleColumn, isColumnHidden } = useToggleColumns(columns);
 
-  const { filteredData, onDateChange, filterCount } = useFilters(filteredNotebooks);
+  const { filteredData, onDateChange, filterCount, onChange } = useFilters(filteredNotebooks);
 
   return (
     <ConfigProvider
@@ -281,45 +281,80 @@ function NotebookTable({
         <div className="mt-10 flex items-center justify-between">
           {Search}
           <FilterControls numberOfColumns={filteredColumns.length - 1} filtersCount={filterCount}>
-            <ColumnToggle
-              hidden={isColumnHidden('scale')}
-              title="Scale"
-              onToggle={() => toggleColumn('scale')}
-            />
-            <ColumnToggle
-              hidden={isColumnHidden('objectOfInterest')}
-              title="Object of interest"
-              onToggle={() => toggleColumn('objectOfInterest')}
-            />
-            <ColumnToggle
-              hidden={isColumnHidden('authors')}
-              title="Author"
-              onToggle={() => toggleColumn('authors')}
-            />
-            <ColumnToggle
-              hidden={isColumnHidden('creationDate')}
-              title="Creation date"
-              onToggle={() => toggleColumn('creationDate')}
+            <ConfigProvider
+              theme={{
+                token: {
+                  colorBgBase: '#002766',
+                  colorPrimary: '#40a9ff',
+                  colorTextPlaceholder: '#8c8c8c',
+                  colorTextDisabled: '#8c8c8c',
+                  colorIcon: '#8c8c8c',
+                  colorIconHover: '#40a9ff',
+                },
+              }}
             >
-              <ConfigProvider
-                theme={{
-                  token: {
-                    colorBgBase: '#002766',
-                    colorPrimary: '#40a9ff',
-                    colorTextPlaceholder: '#8c8c8c',
-                    colorTextDisabled: '#8c8c8c',
-                    colorIcon: '#8c8c8c',
-                    colorIconHover: '#40a9ff',
-                  },
-                }}
+              <ColumnToggle
+                hidden={isColumnHidden('name')}
+                title="Name"
+                onToggle={() => toggleColumn('name')}
+              >
+                <Input
+                  className="w-2/3"
+                  onInput={(e) => {
+                    console.log(e.currentTarget.value);
+                    onChange('name', e.currentTarget.value);
+                  }}
+                />
+              </ColumnToggle>
+              <ColumnToggle
+                hidden={isColumnHidden('description')}
+                title="Description"
+                onToggle={() => toggleColumn('description')}
+              >
+                <Input
+                  className="w-2/3"
+                  onChange={(e) => onChange('description', e.currentTarget.value)}
+                />
+              </ColumnToggle>
+
+              <ColumnToggle
+                hidden={isColumnHidden('objectOfInterest')}
+                title="Object of interest"
+                onToggle={() => toggleColumn('objectOfInterest')}
+              >
+                <Input
+                  className="w-2/3"
+                  onChange={(e) => onChange('objectOfInterest', e.currentTarget.value)}
+                />
+              </ColumnToggle>
+              <ColumnToggle
+                hidden={isColumnHidden('scale')}
+                title="Scale"
+                onToggle={() => toggleColumn('scale')}
+              />
+
+              <ColumnToggle
+                hidden={isColumnHidden('authors')}
+                title="Author"
+                onToggle={() => toggleColumn('authors')}
+              >
+                <Input
+                  className="w-2/3"
+                  onChange={(e) => onChange('authors', e.currentTarget.value)}
+                />
+              </ColumnToggle>
+              <ColumnToggle
+                hidden={isColumnHidden('creationDate')}
+                title="Creation date"
+                onToggle={() => toggleColumn('creationDate')}
               >
                 <RangePicker
                   onChange={(values: RangeValue<Date>) => {
                     onDateChange('creationDate', values);
                   }}
                 />
-              </ConfigProvider>
-            </ColumnToggle>
+              </ColumnToggle>
+            </ConfigProvider>
           </FilterControls>
         </div>
       </>

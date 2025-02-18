@@ -70,6 +70,18 @@ export function useFilters<T>(data: T[]) {
     });
   }, []);
 
+  const onChange = useCallback(
+    // eslint-disable-next-line
+    function <K extends keyof T>(dataIndex: K, value: string) {
+      onFilterChange(dataIndex, !!value, (colValue) => {
+        if (!value || typeof colValue !== 'string') return true;
+
+        return colValue.toLocaleLowerCase().includes(value);
+      });
+    },
+    [onFilterChange]
+  );
+
   const onDateChange = useCallback(
     // eslint-disable-next-line
     function <K extends keyof T>(dataIndex: K, values: [Date | null, Date | null] | null) {
@@ -96,9 +108,10 @@ export function useFilters<T>(data: T[]) {
 
   return {
     onFilterChange,
+    onChange,
     onDateChange,
     filteredData: useMemo(() => data.filter(applyFilters), [data, applyFilters]),
-    filterCount: Object.values(filters).map((f) => (f as { isActive: boolean }).isActive).length,
+    filterCount: Object.values(filters).filter((f) => (f as { isActive: boolean }).isActive).length,
   };
 }
 
