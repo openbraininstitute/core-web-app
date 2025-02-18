@@ -23,7 +23,7 @@ export default function Header() {
     <header className={classNames('absolute top-0 z-50 w-full px-6 py-8 md:px-12')}>
       <nav className="mx-auto flex items-center justify-between gap-10">
         <div className="md flex w-full items-center justify-between">
-          <LogoAsLink type="image" />
+          <LogoAsLink type="svg" />
           {/* <Button
             type="text"
             htmlType="button"
