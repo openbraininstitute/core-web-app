@@ -28,7 +28,7 @@ jobs:
         with:
           registry-type: public
 
-      - name: Build
+      - name: Build a Docker image
         run: |
           docker build --build-arg DEPLOYMENT_ENV=staging -t ${{ vars.PUBLICECR_URI }}:staging .
 
