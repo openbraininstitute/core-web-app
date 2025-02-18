@@ -5,6 +5,11 @@ export const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
 export const typeStringOrUndef: TypeDef = ['|', 'string', 'undefined'];
 export const typeNumberOrNull: TypeDef = ['|', 'number', 'null'];
 export const typeBooleanOrNull: TypeDef = ['|', 'boolean', 'null'];
+export const typeImage = {
+  imageURL: 'string',
+  imageWidth: 'number',
+  imageHeight: 'number',
+} satisfies TypeDef;
 
 export interface ContentForRichTextPreview {
   _type: 'previewBlock';

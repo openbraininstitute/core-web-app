@@ -1,0 +1,5 @@
+.type {
+  display: inline-block;
+  color: var(--color-neutral);
+  padding-left: 1em;
+}

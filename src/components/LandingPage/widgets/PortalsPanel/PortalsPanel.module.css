@@ -8,4 +8,5 @@
   flex-wrap: wrap;
   gap: 16px;
   max-width: 1800px;
+  margin: 1em 0;
 }

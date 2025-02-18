@@ -2,6 +2,8 @@ import styles from './styles.module.css';
 
 export const styleButtonHoverable = styles.hoverableButton;
 
+export const styleButtonSquare = `${styles.hoverableButton} ${styles.squareButton}`;
+
 export const styleBlockFullWidth = styles.blockFullWidth;
 
 export const styleBlockSmall = styles.blockSmall;

@@ -5,8 +5,12 @@ import { env } from '@/env.mjs';
 const API_KEY = env.MAILCHIMP_API_KEY;
 const API_SERVER = env.MAILCHIMP_API_SERVER;
 const AUDIENCE_ID = env.MAILCHIMP_AUDIENCE_ID;
+const url = `https://${API_SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members`;
 
-const EmailSchema = z.string().email({ message: 'Please enter a valid email address' });
+const newsletterFormSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  name: z.string({ message: 'Please enter a name.' }).min(2, { message: 'Please a correct name' }),
+});
 
 const ErrorMessageMap = {
   'Member Exists': "Uh oh, it looks like this email's already subscribed 🧐.",
@@ -22,8 +26,10 @@ type MailchimpErrorResponse = {
   detail: string;
   instance: string;
 };
+
 type RequestBody = {
   email: string;
+  name: string;
 };
 
 function getErrorMessage(key: ErrorMessageMapType) {
@@ -31,17 +37,41 @@ function getErrorMessage(key: ErrorMessageMapType) {
 }
 
 export async function POST(req: Request) {
-  const { email } = (await req.json()) as RequestBody;
-  const emailValidation = EmailSchema.safeParse(email);
+  let formValidation: RequestBody | null = null;
 
-  if (!emailValidation.success) {
-    return new Response('ValidationError: Please enter a valid email address', {
-      status: 402,
-      statusText: 'Validation error',
-    });
+  try {
+    const { email, name } = (await req.json()) as RequestBody;
+    formValidation = await newsletterFormSchema.parseAsync({ email, name });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const issues = error.issues.map((o) => o.message);
+      const reason = error.issues.map((o) => ({ path: o.path, message: o.message }));
+      captureException(error, {
+        tags: { section: 'landing-page', feature: 'newsletter' },
+        extra: {
+          issues,
+          email: formValidation?.email,
+        },
+      });
+      return Response.json(
+        {
+          message: 'Oops! There was an error subscribing you to the newsletter',
+          reason,
+        },
+        { status: 422 }
+      );
+    }
+
+    return Response.json(
+      {
+        message: 'Oops! There was an error subscribing you to the newsletter',
+        reason:
+          'message' in (error as { message: string }) ? (error as { message: string }).message : '',
+      },
+      { status: 500 }
+    );
   }
 
-  const url = `https://${API_SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members`;
   const tags = ['newsletter', 'website'];
 
   if (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging') {
@@ -49,9 +79,12 @@ export async function POST(req: Request) {
   }
 
   const data = {
-    email_address: emailValidation.data,
-    status: 'subscribed',
     tags,
+    email_address: formValidation.email,
+    status: 'subscribed',
+    merge_fields: {
+      FNAME: formValidation.name,
+    },
   };
 
   try {
@@ -88,9 +121,10 @@ export async function POST(req: Request) {
     captureException(error, {
       tags: { section: 'landing-page', feature: 'newsletter' },
       extra: {
-        email: emailValidation.data,
+        email: formValidation.email,
       },
     });
+
     return Response.json(
       {
         message: 'Oops! There was an error subscribing you to the newsletter',

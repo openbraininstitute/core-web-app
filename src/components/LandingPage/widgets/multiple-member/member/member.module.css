@@ -1,0 +1,20 @@
+.member {
+  max-width: 360px;
+}
+
+.content {
+  background-color: var(--color-neutral-light);
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 1em;
+  padding: 1em;
+}
+
+.picture {
+  width: 100;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}

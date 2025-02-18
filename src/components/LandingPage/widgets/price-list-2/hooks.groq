@@ -1,0 +1,31 @@
+{
+  "plans": *[_type=="plan"] | order(position) {
+    "id": _id,
+    title
+  },
+  "labList": *[_type=="priceList"][0].labList[] {
+    name,
+    "list": blocList[] {
+      title,
+      "type": unitType,
+      items[] {
+        name,
+        "plans": prices[] {
+          cost,
+          "id": plan->_id
+        }
+      }
+    }
+  },
+  "generalList": *[_type=="priceList"][0].generalItems[] {
+    name,
+    "type": typeOfCurrency,
+    prices[] {
+      "currency": name,
+      "plans": pricePerPlan[] {
+        cost,
+        "id": plan->_id
+      }
+    }
+  },
+}

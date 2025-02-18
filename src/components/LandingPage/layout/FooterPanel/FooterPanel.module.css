@@ -58,6 +58,7 @@
 }
 
 .links > div.section {
+  font-size: var(--font-size-S);
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
@@ -68,6 +69,10 @@
   border-bottom: 1px solid var(--color-neutral);
   box-shadow: 0 0 inset var(--color-primary);
   transition: 0.5s box-shadow;
+}
+
+.links > div.section > button {
+  font-size: var(--font-size-S);
 }
 
 .links > div.section:hover {
