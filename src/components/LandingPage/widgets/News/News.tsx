@@ -3,6 +3,7 @@
 import React from 'react';
 
 import { styleBlockSmall } from '../../styles';
+import Title from '../../components/Title';
 import NewsCard from './NewsCard';
 import { ContentForNewsList, useSanityContentForNewsList } from '@/components/LandingPage/content';
 import { classNames } from '@/util/utils';
@@ -31,10 +32,9 @@ export function WidgetNews({ className }: WidgetNewsProps) {
 
   return (
     <>
-      <header className={classNames(className, styles.news, styleBlockSmall)}>
-        <h1>News and events</h1>
+      <Title value="News and events" className={styles.header}>
         {news.length > 1 && (
-          <div>
+          <nav>
             <button
               className={styles.arrow}
               type="button"
@@ -60,9 +60,9 @@ export function WidgetNews({ className }: WidgetNewsProps) {
             >
               <IconChevronRight />
             </button>
-          </div>
+          </nav>
         )}
-      </header>
+      </Title>
       <main ref={ref} className={classNames(className, styles.news, styleBlockSmall)}>
         {news.map((item, index) => (
           <NewsCard key={index} value={item} />

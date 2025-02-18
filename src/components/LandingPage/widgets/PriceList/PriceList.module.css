@@ -6,6 +6,7 @@
   overflow-x: auto;
   scroll-snap-points-y: repeat(296px);
   scroll-snap-type: x mandatory;
+  margin: 1em 0;
 }
 
 .priceList hr {
@@ -26,4 +27,27 @@
 
 .priceList big {
   font-size: var(--font-size-L);
+}
+
+.notesExplanation > li::marker {
+  display: none;
+}
+
+.header {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.header > div {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  margin-top: 1em;
+  margin-bottom: 2em;
 }

@@ -11,7 +11,7 @@ main.news {
   padding-bottom: 24px;
 }
 
-header.news {
+.header {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -19,11 +19,7 @@ header.news {
   flex-wrap: wrap;
 }
 
-header.news > * {
-  flex: 1 1 auto;
-}
-
-header.news > div {
+.header nav {
   flex: 0 0 auto;
   display: flex;
   flex-direction: row;
@@ -33,7 +29,7 @@ header.news > div {
   gap: 8px;
 }
 
-header.news > div > button.page {
+.header nav > button.page {
   content: '';
   width: 24px;
   height: 6px;
@@ -41,11 +37,11 @@ header.news > div > button.page {
   background-color: #0004;
 }
 
-header.news > div > button.page.selected {
+.header nav > button.page.selected {
   background-color: var(--color-primary);
 }
 
-header.news > div > button.arrow {
+.header nav > button.arrow {
   width: 3em;
   display: grid;
   place-items: center;

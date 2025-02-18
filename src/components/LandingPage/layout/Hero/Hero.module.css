@@ -88,3 +88,14 @@
   width: 100%;
   z-index: 9;
 }
+
+.comingSoon {
+  z-index: 8;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}

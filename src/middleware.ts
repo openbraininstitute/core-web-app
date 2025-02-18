@@ -45,14 +45,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Redirect to /about on mobile devices
-  // if (device.type === 'mobile' && !requestUrl.startsWith('/about')) {
-  //   const url = request.nextUrl.clone();
-  //   url.pathname = '/about';
-  //   url.searchParams.set('warning', 'yes');
-  //   return NextResponse.redirect(url);
-  // }
-
   // Let them through if they're trying to access a public page
   if (isFreeAccessRoute(requestUrl, FREE_ACCESS_PAGES)) {
     return NextResponse.next();

@@ -44,7 +44,12 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
               </button>
             );
           })}
-          <button type="button" aria-label="Log in" className={styles.loginButton}>
+          <button
+            type="button"
+            aria-label="Log in"
+            className={styles.loginButton}
+            onClick={() => gotoSection(EnumSection.ComingSoon)}
+          >
             <div>Login to the Platform</div>
           </button>
         </div>

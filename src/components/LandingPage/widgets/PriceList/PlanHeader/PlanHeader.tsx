@@ -17,7 +17,7 @@ export interface PlanHeaderProps {
 
 export default function PlanHeader({ className, plan }: PlanHeaderProps) {
   const [currency] = useCurrency();
-  const { discount, month, year } = usePrices(currency, plan);
+  const { discount, month, yearDiscount, yearNormal } = usePrices(currency, plan);
 
   return (
     <div className={classNames(className, styles.planHeader)}>
@@ -40,7 +40,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
           </div>
           <div>
             <big>
-              {currency} {year}
+              {currency} {discount ? yearDiscount : yearNormal}
             </big>
             /year
           </div>
@@ -55,18 +55,12 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
   );
 }
 
-function usePrices(
-  currency: string,
-  plan: ContentForPricingPlan
-): {
-  discount: number | null;
-  month: number | null;
-  year: number | null;
-} {
+function usePrices(currency: string, plan: ContentForPricingPlan) {
   return {
     discount: extractPrice(currency, plan.price.discount),
     month: extractPrice(currency, plan.price.month),
-    year: extractPrice(currency, plan.price.year),
+    yearNormal: extractPrice(currency, plan.price.yearNormal),
+    yearDiscount: extractPrice(currency, plan.price.yearDiscount),
   };
 }
 

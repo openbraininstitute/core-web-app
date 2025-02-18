@@ -32,7 +32,11 @@ export function useSanityContentForPricing(): ContentForPricing | undefined | nu
         "value": price,
         currency
       },
-      "year": yearlyPlan[] {
+      "yearNormal": yearlyPlanNormal[] {
+        "value": price,
+        currency
+      },
+      "yearDiscount": yearlyPlanDiscount[] {
         "value": price,
         currency
       }
@@ -115,7 +119,8 @@ const typeContentForPricingPlan: TypeDef = {
   price: {
     month: ['|', 'null', typeMultiCurrencyPriceArray],
     discount: ['|', 'null', typeMultiCurrencyPriceArray],
-    year: ['|', 'null', typeMultiCurrencyPriceArray],
+    yearNormal: ['|', 'null', typeMultiCurrencyPriceArray],
+    yearDiscount: ['|', 'null', typeMultiCurrencyPriceArray],
   },
 };
 
@@ -126,7 +131,8 @@ export interface ContentForPricingPlan {
   price: {
     month: MultiCurrencyPrice[];
     discount?: MultiCurrencyPrice[] | null;
-    year: MultiCurrencyPrice[];
+    yearNormal: MultiCurrencyPrice[];
+    yearDiscount: MultiCurrencyPrice[];
   };
 }
 
@@ -151,11 +157,13 @@ function sanityze(
     if (!plan.price) {
       plan.price = {
         month: FAKE_PRICES,
-        year: FAKE_PRICES,
+        yearNormal: FAKE_PRICES,
+        yearDiscount: FAKE_PRICES,
       };
     }
     if (!plan.price.month) plan.price.month = FAKE_PRICES;
-    if (!plan.price.year) plan.price.year = FAKE_PRICES;
+    if (!plan.price.yearNormal) plan.price.yearNormal = FAKE_PRICES;
+    if (!plan.price.yearDiscount) plan.price.yearDiscount = FAKE_PRICES;
   }
 
   return data;

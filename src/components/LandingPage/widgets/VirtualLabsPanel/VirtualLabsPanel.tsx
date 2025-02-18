@@ -8,12 +8,10 @@ import { classNames } from '@/util/utils';
 import styles from './VirtualLabsPanel.module.css';
 
 export function WidgetVirtualLabsPanel() {
-  // const sectionTitle = useSanityContentForVirtualLabsTitle();
   const blocks = useSanityContentForVirtualLabsBlocks();
 
   return (
     <>
-      {/* <h1 className={styleBlockSmall}>{sectionTitle}</h1> */}
       <div className={classNames(styles.triBlocks, styleBlockLarge)}>
         {blocks.map(({ title, description, videoURL }, index) => (
           <SingleSectionCard

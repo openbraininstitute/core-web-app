@@ -15,10 +15,10 @@ export default function Title({ className, value, children }: TitleProps) {
   if (children) {
     return (
       <>
-        <div className={classNames(className, styles.title, styleBlockSmallMarginLeft)}>
+        <div className={classNames(styles.title, styleBlockSmallMarginLeft)}>
           <div />
         </div>
-        <div className={classNames(styleBlockSmall, styles.flex)}>
+        <div className={classNames(className, styleBlockSmall, styles.flex)}>
           <h1>{value}</h1>
           <div>{children}</div>
         </div>
