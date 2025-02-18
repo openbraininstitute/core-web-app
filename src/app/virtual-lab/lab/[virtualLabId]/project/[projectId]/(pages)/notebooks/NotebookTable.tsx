@@ -263,7 +263,8 @@ function NotebookTable({
 
   const { filteredColumns, toggleColumn, isColumnHidden } = useToggleColumns(columns);
 
-  const { filteredData, onDateChange, filterCount, onChange } = useFilters(filteredNotebooks);
+  const { filteredData, onDateChange, filterCount, onChange, onFilterReset, filterValue } =
+    useFilters(filteredNotebooks);
 
   return (
     <ConfigProvider
@@ -299,9 +300,9 @@ function NotebookTable({
                 onToggle={() => toggleColumn('name')}
               >
                 <Input
+                  value={filterValue('name') ?? ''}
                   className="w-2/3"
                   onInput={(e) => {
-                    console.log(e.currentTarget.value);
                     onChange('name', e.currentTarget.value);
                   }}
                 />
@@ -354,6 +355,10 @@ function NotebookTable({
                   }}
                 />
               </ColumnToggle>
+
+              <button type="button" onClick={onFilterReset}>
+                Reset filters
+              </button>
             </ConfigProvider>
           </FilterControls>
         </div>
