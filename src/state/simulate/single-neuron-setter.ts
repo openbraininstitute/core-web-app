@@ -49,6 +49,12 @@ export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
 export const STIMULUS_PLOT_NAME = 'stimulus-plot';
 export const SIMULATION_PLOT_NAME = 'simulation-plot';
 
+const DEFAULT_ERROR_MSG =
+  'Simulation encountered an error, please be sure that the configuration is correct and try again';
+const LOW_FUNDS_ERROR_MSG =
+  'The project does not have enough credits to run the simulation, please add more and try again';
+const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
+
 export const createSingleNeuronSimulationAtom = atom<
   null,
   [string, string, string, string, string, SimulationType],
@@ -250,12 +256,24 @@ export const launchSimulationAtom = atom<
       });
 
       if (!response.ok) {
+        let errorMessage = DEFAULT_ERROR_MSG;
+
+        try {
+          const errResponseObj = await response.json();
+          if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
+            errorMessage = LOW_FUNDS_ERROR_MSG;
+          }
+        } catch {
+          // ignore
+        }
+
         set(simulationStatusAtom, {
           status: 'error',
-          description:
-            'Simulation encountered an error, please be sure that the configuration is correct and try again',
+          description: errorMessage,
         });
+
         delay(() => set(simulationStatusAtom, { status: null }), 1000);
+
         set(simulateStepTrackerAtom, {
           steps: get(simulateStepTrackerAtom).steps.map((p) => ({
             ...p,
