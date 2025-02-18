@@ -57,5 +57,5 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }} .
+          docker build --build-arg DEPLOYMENT_ENV=production -t ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }} .
           docker push ${{ vars.PUBLICECR_URI }}:$${{ env.NEW_TAG }}
