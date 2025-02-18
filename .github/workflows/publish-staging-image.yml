@@ -1,10 +1,10 @@
-name: Publish container image for STAGING environment to AWS ECR
+name: Publish STAGING image
 
 on:
-  workflow_dispatch: # Manually trigger the workflow
-  # push:
-  #   branches:
-  #     - feat/add-build-and-deploy-github-actions
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
 
 jobs:
   publish-image:
