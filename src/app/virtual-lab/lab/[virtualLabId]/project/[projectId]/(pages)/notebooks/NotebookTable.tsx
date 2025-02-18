@@ -301,7 +301,7 @@ function NotebookTable({
               >
                 <Input
                   value={filterValue('name') ?? ''}
-                  className="w-2/3"
+                  className="w-2/3 transition-none"
                   onInput={(e) => {
                     onChange('name', e.currentTarget.value);
                   }}
@@ -313,7 +313,8 @@ function NotebookTable({
                 onToggle={() => toggleColumn('description')}
               >
                 <Input
-                  className="w-2/3"
+                  value={filterValue('description') ?? ''}
+                  className="w-2/3 transition-none"
                   onChange={(e) => onChange('description', e.currentTarget.value)}
                 />
               </ColumnToggle>
@@ -324,7 +325,8 @@ function NotebookTable({
                 onToggle={() => toggleColumn('objectOfInterest')}
               >
                 <Input
-                  className="w-2/3"
+                  value={filterValue('objectOfInterest') ?? ''}
+                  className="w-2/3 transition-none"
                   onChange={(e) => onChange('objectOfInterest', e.currentTarget.value)}
                 />
               </ColumnToggle>
@@ -340,7 +342,8 @@ function NotebookTable({
                 onToggle={() => toggleColumn('authors')}
               >
                 <Input
-                  className="w-2/3"
+                  value={filterValue('authors') ?? ''}
+                  className="w-2/3 transition-none"
                   onChange={(e) => onChange('authors', e.currentTarget.value)}
                 />
               </ColumnToggle>
@@ -350,6 +353,7 @@ function NotebookTable({
                 onToggle={() => toggleColumn('creationDate')}
               >
                 <RangePicker
+                  value={(filterValue('creationDate') as RangeValue<Date>) ?? null}
                   onChange={(values: RangeValue<Date>) => {
                     onDateChange('creationDate', values);
                   }}
