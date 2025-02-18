@@ -12,6 +12,7 @@ export interface ProgressiveImageProps {
   height: number;
   alt?: string;
   background?: string;
+  forceAspectRatio?: boolean;
 }
 
 export default function ProgressiveImage({
@@ -21,6 +22,7 @@ export default function ProgressiveImage({
   height,
   alt = 'Vignette',
   background = 'var(--color-primary)',
+  forceAspectRatio = false,
 }: ProgressiveImageProps) {
   const [loaded, setLoaded] = React.useState(false);
 
@@ -28,6 +30,7 @@ export default function ProgressiveImage({
     <div
       style={{
         '--custom-background': background,
+        '--custom-aspect-ratio': forceAspectRatio ? `${width}/${height}` : 'none',
       }}
       className={classNames(className, styles.progressiveImage)}
     >

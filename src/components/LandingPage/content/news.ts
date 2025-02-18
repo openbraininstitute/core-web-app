@@ -1,15 +1,17 @@
 /* eslint-disable no-param-reassign */
-import { RichText, tryType, typeImage } from './_common';
+import { tryType, typeImage } from './_common';
 import { useSanity } from './content';
-import { typeStringOrNull } from './types';
+import { ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
+import { isNumber } from '@/util/type-guards';
 
 export interface ContentForNewsItem {
   id: string;
   title: string;
   content: string;
-  article: RichText | string | null;
+  article?: ContentForRichText | null;
   category: string;
   cardSize: string;
+  isEPFL: boolean;
   slug: string;
   imageURL: string;
   imageWidth: number;
@@ -23,13 +25,14 @@ function isContentForNewsList(data: unknown): data is ContentForNewsList {
   return tryType('ContentForNews', data, [
     'array',
     {
-      id: 'string',
-      title: 'string',
-      content: 'string',
+      id: typeStringOrNull,
+      title: typeStringOrNull,
+      content: typeStringOrNull,
       category: typeStringOrNull,
       cardSize: typeStringOrNull,
-      slug: 'string',
-      date: 'string',
+      isEPFL: typeBooleanOrNull,
+      slug: typeStringOrNull,
+      date: typeStringOrNull,
       ...typeImage,
     },
   ]);
@@ -37,13 +40,13 @@ function isContentForNewsList(data: unknown): data is ContentForNewsList {
 
 function isContentForNewsItem(data: unknown): data is ContentForNewsItem {
   return tryType('ContentForNews', data, {
-    id: 'string',
-    title: 'string',
-    content: 'string',
+    id: typeStringOrNull,
+    title: typeStringOrNull,
     category: typeStringOrNull,
     cardSize: typeStringOrNull,
-    slug: 'string',
-    date: 'string',
+    isEPFL: typeBooleanOrNull,
+    slug: typeStringOrNull,
+    date: typeStringOrNull,
     ...typeImage,
   });
 }
@@ -57,32 +60,34 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
   "content": thumbnailIntroduction,
   "article": content,
   "slug": slug.current,
+  "isEPFL": isBBPEPFLNews,
   category,
   cardSize,
   "imageURL": thumbnailImage.asset->url,
   "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
   "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
-  "date": _createdAt,
+  "date": customDate,
 }`,
       isContentForNewsItem
     ) ?? null
   );
 }
 
-export function useSanityContentForNewsList(): ContentForNewsList {
+export function useSanityContentForNewsList(limit?: number): ContentForNewsList {
   return sanitize(
     useSanity(
-      `*[_type=="news"] | order(_createdAt desc) {
+      `*[_type=="news"] | order(customDate desc) ${isNumber(limit) ? `[0..${limit - 1}]` : ''} {
   "id": _id,
   title,
   "content": thumbnailIntroduction,
+  "isEPFL": isBBPEPFLNews,
   "slug": slug.current,
   category,
   cardSize,
   "imageURL": thumbnailImage.asset->url,
   "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
   "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
-  "date": _createdAt,
+  "date": customDate,
 }`,
       isContentForNewsList
     ) ?? []

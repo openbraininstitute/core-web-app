@@ -36,12 +36,17 @@ export function useSanity<T>(
     const data = useSanityContent(query);
     if (isUndefined(data)) return undefined;
 
-    if (typeGuard(data)) return data;
-
-    console.log('The following Sanity GROQ query returned a data of unexpected type:');
-    console.log(`%s${query}`, 'font-family: monospace; color: #0f0; bakground: #000');
-    console.log(data);
-    return null;
+    try {
+      if (typeGuard(data)) return data;
+      throw Error('Type guard rejeted this type, but without any explanation!');
+    } catch (ex) {
+      console.log('The following Sanity GROQ query returned a data of unexpected type:');
+      console.log(`%c${query}`, 'font-family: monospace; color: #0f0; bakground: #000');
+      console.log(data);
+      const msg = ex instanceof Error ? ex.message : `${ex}`;
+      console.log(`%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
+      return null;
+    }
   } catch (ex) {
     logError('There was an exception in this Sanity query:', query);
     logError(ex);
@@ -82,6 +87,9 @@ export function useSanityContentRTF(sectionIndex: EnumSection): ContentForRichTe
   return useSanity(query, isContentForRichText) ?? [];
 }
 
+// Prevent a query from being fetched twice.
+const cache = new Map<string, unknown>();
+
 /**
  * Query Sanity without checking the returned format.
  * This is an utility function used by more specific ones.
@@ -90,11 +98,18 @@ export function useSanityContentRTF(sectionIndex: EnumSection): ContentForRichTe
  * @see https://open-brain-institute.sanity.studio
  */
 function useSanityContent(query: string): unknown {
-  const [content, setContent] = React.useState<unknown>(undefined);
+  const [content, setContent] = React.useState<unknown>(() => cache.get(query));
   React.useEffect(() => {
     const action = async () => {
+      const fromCache = cache.get(query);
+      if (fromCache) {
+        setContent(fromCache);
+        return;
+      }
+
       try {
         const data = await client.fetch(query);
+        cache.set(query, data);
         setContent(data);
       } catch (ex) {
         logError('Unable to connect to Sanity!', ex);

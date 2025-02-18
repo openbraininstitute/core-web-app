@@ -10,16 +10,19 @@ import styles from './repository-card.module.css';
 export interface RepositoryCardProps {
   className?: string;
   value: ContentForRepository;
+  showHeader?: boolean;
 }
 
-export default function RepositoryCard({ className, value }: RepositoryCardProps) {
+export default function RepositoryCard({ className, value, showHeader }: RepositoryCardProps) {
   return (
     <div className={classNames(className, styles.repositoryCard)}>
       <h2>{value.title}</h2>
-      <header>
-        <div className={styles.authorLabel}>Author</div>
-        <div className={styles.authorName}>{value.author}</div>
-      </header>
+      {showHeader && (
+        <header>
+          <div className={styles.authorLabel}>Type</div>
+          <div className={styles.authorName}>{value.type}</div>
+        </header>
+      )}
       <ProgressiveImage
         className={styles.image}
         src={value.imageURL}
@@ -32,7 +35,7 @@ export default function RepositoryCard({ className, value }: RepositoryCardProps
         href={value.url}
         target="_blank"
       >
-        <div>View Notebook</div>
+        <div>{value.buttonLabel ?? 'View resource'}</div>
         <IconEye />
       </a>
     </div>

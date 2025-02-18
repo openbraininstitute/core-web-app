@@ -1,6 +1,10 @@
 import React from 'react';
 
-import { styleBlockSmallMarginLeft, styleBlockSmall } from '../../styles';
+import {
+  styleBlockSmallMarginLeft,
+  styleBlockSmall,
+  styleBlockSmallExpandRight,
+} from '../../styles';
 import { classNames } from '@/util/utils';
 
 import styles from './Title.module.css';
@@ -18,7 +22,7 @@ export default function Title({ className, value, children }: TitleProps) {
         <div className={classNames(styles.title, styleBlockSmallMarginLeft)}>
           <div />
         </div>
-        <div className={classNames(className, styleBlockSmall, styles.flex)}>
+        <div className={classNames(className, styleBlockSmallExpandRight, styles.flex)}>
           <h1>{value}</h1>
           <div>{children}</div>
         </div>

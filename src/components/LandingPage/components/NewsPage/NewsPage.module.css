@@ -1,2 +1,44 @@
+.blueBackground {
+  width: 100%;
+  overflow: visible;
+  height: 33vh;
+  z-index: 0;
+}
+
+.blueBackground > div {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-primary);
+  z-index: 0;
+}
+
 .newsPage {
+  z-index: 1;
+}
+
+header.header {
+  grid-column: 1/-1;
+  color: #fffe;
+}
+
+header.header h1 {
+  font-size: calc(2 * var(--font-size-XL));
+  margin: 0;
+  margin-bottom: 0.5em;
+}
+
+header.header h2 {
+  font-family: var(--font-sans-serif);
+}
+
+.notes {
+  color: #3bf;
+  font-size: var(--font-size-M);
+  margin-bottom: 3em;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
 }

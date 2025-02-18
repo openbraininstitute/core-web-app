@@ -8,6 +8,6 @@ export enum EnumSection {
   News,
   Pricing,
   Team,
-  Repositories,
+  Resources,
   Contact,
 }

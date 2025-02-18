@@ -28,3 +28,29 @@
   align-items: center;
   gap: 1em;
 }
+
+h1.separator {
+  font-size: calc(1.4 * var(--font-size-XL));
+  color: var(--color-neutral);
+  margin: 0;
+  margin-top: 2em;
+}
+
+hr.separator {
+  margin-top: 1em;
+  margin-bottom: 3em;
+}
+
+.copyright {
+  color: var(--color-neutral);
+  font-size: var(--font-size-S);
+}
+
+div.epfl {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 24px;
+}

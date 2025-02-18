@@ -1,8 +1,10 @@
 *[_type=="repositories"] {
+  "type": objectOfStudy,
   title,
   author,
   description,
   url,
+  buttonLabel,
   "imageURL": image.asset->url,
   "imageWidth": image.asset->metadata.dimensions.width,
   "imageHeight": image.asset->metadata.dimensions.height

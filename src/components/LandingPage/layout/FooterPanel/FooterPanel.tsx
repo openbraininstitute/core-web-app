@@ -4,9 +4,7 @@ import VerticalRuler from '../../components/VerticalRuler';
 import { EnumSection } from '../../sections/sections';
 import { MENU_ITEMS } from '../../constants';
 import { gotoSection } from '../../utils';
-import IconLinkedin from './icons/iconLinkedin';
-import IconTwitter from './icons/iconTwitter';
-import IconBlueSky from './icons/iconBlueSky';
+import SocialMediaLinks from '../../components/social-media-links';
 import NewsLetterSubscription from './NewsLetterSubscription';
 import { classNames } from '@/util/utils';
 
@@ -24,7 +22,7 @@ export default function FooterPanel({ className, section }: FooterPanelProps) {
       <div className={classNames(className, styles.footerPanel)}>
         <div className={styles.title}>
           <h2>Open Brain Institute</h2>
-          <div>Copyright © 2025 - Open Brain Institute</div>
+          <div className={styles.copyright}>Copyright © 2025 - Open Brain Institute</div>
         </div>
         <div className={styles.links}>
           {MENU_ITEMS.map(({ caption, index }) => (
@@ -35,18 +33,7 @@ export default function FooterPanel({ className, section }: FooterPanelProps) {
           <Section section={EnumSection.TermsAndConditions}>Terms and conditions</Section>
           <Section section={EnumSection.PrivacyPolicy}>Privacy policy</Section>
           <div className={styles.socialmedia}>
-            {/* <a>Discord</a> */}
-            <a href="https://www.linkedin.com/company/openbraininstitute/">
-              <IconLinkedin className="mr-2 h-auto w-6" /> <span>Linkedin</span>
-            </a>
-            <a href="https://x.com/OpenBrainInst">
-              <IconTwitter className="mr-2 h-auto w-6" /> <span>X</span>
-            </a>
-            {/* <a>Youtube</a> */}
-            <a href="https://bsky.app/profile/openbraininst.bsky.social">
-              <IconBlueSky className="mr-2 h-auto w-6" />
-              <span>BlueSky</span>
-            </a>
+            <SocialMediaLinks />
           </div>
         </div>
         <NewsLetterSubscription className={styles.subscribe} onSectionChange={gotoSection} />

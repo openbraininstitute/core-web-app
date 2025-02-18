@@ -54,7 +54,7 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.Mission:
     case EnumSection.Pricing:
     case EnumSection.Team:
-    case EnumSection.Repositories:
+    case EnumSection.Resources:
     case EnumSection.TermsAndConditions:
     case EnumSection.PrivacyPolicy:
     case EnumSection.ComingSoon:

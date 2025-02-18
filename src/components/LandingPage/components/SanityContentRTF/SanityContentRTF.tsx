@@ -2,6 +2,7 @@ import React from 'react';
 
 import {
   ContentForRichText,
+  ContentForRichTextImage,
   ContentForRichTextItems,
   ContentForRichTextParagraph,
   ContentForRichTextPreview,
@@ -16,6 +17,7 @@ import SanityContentItems from './SanityContentItems';
 import SanityContentWidget from './SanityContentWidget';
 import SanityContentVerticalDivider from './SanityContentVerticalSpace';
 import SanityContentPreview from './SanityContentPreview';
+import SanityContentImage from './sanity-content-image';
 import { logError } from '@/util/logger';
 
 export interface SanityContentRTFProps {
@@ -34,7 +36,8 @@ function renderItem(
     | ContentForRichTextWidget
     | ContentForRichTextParagraph
     | ContentForRichTextVerticalSpace
-    | ContentForRichTextPreview,
+    | ContentForRichTextPreview
+    | ContentForRichTextImage,
   index: number
 ) {
   const key = `${item._type}/${index}`;
@@ -51,6 +54,8 @@ function renderItem(
       return <SanityContentWidget key={key} value={item} />;
     case 'previewBlock':
       return <SanityContentPreview key={key} value={item} />;
+    case 'imageBlock':
+      return <SanityContentImage key={key} value={item} />;
     default:
       logError("Don't know how to render this item:", item);
       return (

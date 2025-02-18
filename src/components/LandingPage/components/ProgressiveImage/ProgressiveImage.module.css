@@ -1,6 +1,7 @@
 .progressiveImage {
   position: relative;
   background: var(--custom-background, transparent);
+  aspect-ratio: var(--custom-aspect-ratio);
 }
 
 .progressiveImage > img {

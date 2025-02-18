@@ -58,6 +58,11 @@ button.squareButton {
   max-width: var(--S);
 }
 
+.layout .blockSmallExpandRight {
+  grid-column: 5/-1;
+  max-width: none;
+}
+
 .layout .blockMedium {
   grid-column: 4/7;
   max-width: var(--M);

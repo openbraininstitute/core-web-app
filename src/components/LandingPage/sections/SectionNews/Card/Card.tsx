@@ -16,7 +16,7 @@ export interface CardsProps {
 
 export default function Cards({ className, news }: CardsProps) {
   return (
-    <div className={classNames(className, styles.card)}>
+    <div className={classNames(className, styles.card, news.isEPFL && styles.small)}>
       <h1>{news.title}</h1>
       <div className={styles.subtitle}>
         <div>Published {formatDate(news.date)}</div>
@@ -24,13 +24,20 @@ export default function Cards({ className, news }: CardsProps) {
       </div>
       <div className={styles.content}>
         <div className={styles.text}>
-          <div>{news.content}</div>
-          <button type="button" className={styleButtonHoverable} onClick={() => gotoNews(news)}>
+          <div>
+            <span>{news.content}</span>
+          </div>
+          <button
+            type="button"
+            className={classNames(styleButtonHoverable, styles.button)}
+            onClick={() => gotoNews(news)}
+          >
             <div>Read more</div>
             <IconPlus />
           </button>
         </div>
         <ProgressiveImage
+          forceAspectRatio
           className={styles.image}
           src={news.imageURL}
           width={news.imageWidth}

@@ -2,6 +2,7 @@ import React from 'react';
 
 import { styleBlockLarge } from '../../styles';
 import ProgressiveImage from '../../components/ProgressiveImage';
+import SwipeableCardsList from '../../components/swipeable-cards-list';
 import { useSanityContentForFromCelltoBrainContent } from './hooks';
 import { classNames } from '@/util/utils';
 
@@ -15,7 +16,11 @@ export function WidgetFromCellToBrain({ className }: WidgetFromCellToBrainProps)
   const columns = useSanityContentForFromCelltoBrainContent();
 
   return (
-    <div className={classNames(className, styles.widgetFromCellToBrain, styleBlockLarge)}>
+    <SwipeableCardsList
+      className={classNames(className, styles.widgetFromCellToBrain, styleBlockLarge)}
+      hideFooter
+      gap="0"
+    >
       {columns.map((col) => (
         <div key={col.title} className={styles.column}>
           <h2>{col.title}</h2>
@@ -34,6 +39,6 @@ export function WidgetFromCellToBrain({ className }: WidgetFromCellToBrainProps)
           ))}
         </div>
       ))}
-    </div>
+    </SwipeableCardsList>
   );
 }

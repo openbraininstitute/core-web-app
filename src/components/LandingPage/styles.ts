@@ -8,6 +8,8 @@ export const styleBlockFullWidth = styles.blockFullWidth;
 
 export const styleBlockSmall = styles.blockSmall;
 
+export const styleBlockSmallExpandRight = styles.blockSmallExpandRight;
+
 export const styleBlockMedium = styles.blockMedium;
 
 export const styleBlockLarge = styles.blockLarge;

@@ -21,7 +21,7 @@ export const SECTIONS: Readonly<Section[]> = [
   { index: EnumSection.Mission, caption: 'Mission', slug: `${SLUG_PREFIX}mission` },
   { index: EnumSection.Pricing, caption: 'Pricing', slug: `${SLUG_PREFIX}pricing` },
   { index: EnumSection.Team, caption: 'Team', slug: `${SLUG_PREFIX}team` },
-  { index: EnumSection.Repositories, caption: 'Repositories', slug: `${SLUG_PREFIX}repositories` },
+  { index: EnumSection.Resources, caption: 'Resources', slug: `${SLUG_PREFIX}resources` },
   { index: EnumSection.Contact, caption: 'Contact', slug: `${SLUG_PREFIX}contact` },
   { index: EnumSection.PrivacyPolicy, caption: 'Privacy', slug: `${SLUG_PREFIX}privacy` },
   {
@@ -29,7 +29,7 @@ export const SECTIONS: Readonly<Section[]> = [
     caption: 'Terms',
     slug: `${SLUG_PREFIX}terms`,
   },
-  { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: `${SLUG_PREFIX}releasing-soon` },
+  { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: `/` },
 ];
 
 export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection }>> = [
@@ -38,7 +38,7 @@ export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection }>
   EnumSection.News,
   EnumSection.Pricing,
   EnumSection.Team,
-  EnumSection.Repositories,
+  EnumSection.Resources,
   EnumSection.Contact,
 ].map((index) => SECTIONS.find((section) => section.index === index) ?? DEFAULT_SECTION);
 

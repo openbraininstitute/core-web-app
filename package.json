@@ -13,7 +13,8 @@
     "prettier:write": "prettier --write . --log-level warn",
     "test": "jest --watch",
     "test:ci": "jest",
-    "analyze": "ANALYZE=true npm run build"
+    "analyze": "ANALYZE=true npm run build",
+    "typecheck": "npx tsc --noEmit --watch"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",

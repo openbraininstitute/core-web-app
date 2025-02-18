@@ -1,0 +1,14 @@
+.sanityContentImage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--custom-aspect-ratio);
+  position: relative;
+}
+
+.sanityContentImage > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
