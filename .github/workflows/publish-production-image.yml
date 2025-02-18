@@ -2,6 +2,9 @@ name: Publish container image for PRODUCTION environment to AWS ECR
 
 on:
   workflow_dispatch: # Manually trigger the workflow
+  push:
+    branches:
+      - feat/add-build-and-deploy-github-actions
 
 jobs:
   tag-and-publish-image:
