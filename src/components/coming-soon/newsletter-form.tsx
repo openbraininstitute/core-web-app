@@ -33,14 +33,20 @@ type Props = {
 
 const newsletterFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  name: z.string({ message: 'Please enter a name.' }).min(2, { message: 'Please a correct name' }),
+  name: z
+    .string({ message: 'Please enter a name.' })
+    .min(2, { message: 'Please a correct name' })
+    .optional(),
   accept_terms: z.boolean(),
 });
 
 export default function NewsletterForm({ cls, position = 'page' }: Props) {
   const [form] = Form.useForm<TNewsletterForm>();
   const [subscribing, setSubscribing] = useState(false);
-  const [status, setStatus] = useState<'success' | 'error' | null>(null);
+  const [subscribeResult, setSubscribeResult] = useState<{
+    status: 'success' | 'error' | null;
+    msg?: string;
+  } | null>(null);
   const values = Form.useWatch([], form);
 
   const disableForm =
@@ -55,11 +61,14 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
           email: formValues.email,
           tags: ['comingsoon'],
         });
-        setStatus('success');
+        setSubscribeResult({ status: 'success' });
       }
-    } catch (error) {
-      setStatus('error');
-      delay(() => setStatus(null), 6000);
+    } catch (error: any) {
+      setSubscribeResult({
+        status: 'error',
+        msg: 'message' in (error as { message: string }) ? error.message : null,
+      });
+      delay(() => setSubscribeResult(null), 6000);
     } finally {
       setSubscribing(false);
       form.resetFields();
@@ -69,15 +78,17 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
   return (
     <div className={classNames('flex w-full max-w-3xl flex-col bg-white p-8', cls?.container)}>
       <ConfigProvider theme={{ hashed: false }}>
-        {status === 'error' && (
+        {subscribeResult?.status === 'error' && (
           <Alert
-            onClose={() => setStatus(null)}
+            onClose={() => setSubscribeResult(null)}
             type="error"
-            message="An error occurred. Please check your details and try again"
+            message={
+              subscribeResult.msg ?? 'An error occurred. Please check your details and try again'
+            }
             className="mb-4 rounded-none font-semibold"
           />
         )}
-        {status !== 'success' ? (
+        {subscribeResult?.status !== 'success' ? (
           <Form
             form={form}
             onFinish={onSubscribe}
@@ -96,7 +107,6 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                   Name
                 </span>
               }
-              rules={[{ required: true, message: 'Please enter your name' }]}
             >
               <Input
                 placeholder="Enter your name"
@@ -111,6 +121,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                   className={classNames('text-lg font-bold text-primary-8', cls?.formItem?.label)}
                 >
                   Email
+                  <span className="ml-1 font-bold text-red-600">*</span>
                 </span>
               }
               rules={[{ required: true, message: 'Please enter your email', type: 'email' }]}

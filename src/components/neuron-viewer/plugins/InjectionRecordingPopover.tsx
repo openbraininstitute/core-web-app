@@ -61,8 +61,8 @@ export default function NeuronMeshInjectionRecordingPopover({
         top: y + 8,
       }}
     >
-      <Button onClick={onInject} className="z-10 w-32 rounded-none" type="text">
-        Move injection site here
+      <Button onClick={onInject} className="z-10 w-max rounded-none" type="text">
+        Move injection here
       </Button>
       <Divider orientation="center" type="vertical" className="mx-0" />
       <Button onClick={onRecord} className="z-10 w-32 rounded-none" type="text">

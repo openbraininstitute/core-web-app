@@ -46,6 +46,7 @@ export function useSanityContentForHero(sectionIndex: EnumSection): ContentForHe
   // Sanity onl uses th last pat of the slug.
   // `/welcome/news` becomes `news`.
   const slug = section.slug.split('/').pop();
+
   return (
     useSanity(
       `*[_type=="pages"][slug.current==${JSON.stringify(slug)}][0]{

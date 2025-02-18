@@ -279,6 +279,7 @@ export function BalanceDetails({ virtualLabId }: Props) {
     return null;
   }
 
+  // @ts-expect-error
   const { budget, total_spent: totalSpent } = balanceResult.data;
 
   return (

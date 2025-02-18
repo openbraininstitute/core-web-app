@@ -7,6 +7,7 @@ import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 
 export default function VirtualLabHome({ id }: { id: string }) {
   const vlab = useUnwrappedValue(virtualLabDetailAtomFamily(id));
+
   return (
     <>
       <WelcomeUserBanner title={vlab?.name} />
