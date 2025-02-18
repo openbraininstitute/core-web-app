@@ -6,6 +6,9 @@ on:
     branches:
       - feat/add-build-and-deploy-github-actions
 
+permissions:
+  contents: write
+
 jobs:
   tag-and-publish-image:
     runs-on: ubuntu-latest
