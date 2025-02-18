@@ -32,16 +32,21 @@ function NotebookTable({
   onDelete,
   vlabId,
   projectId,
+  serverError,
 }: {
   vlabId: string;
   projectId: string;
   notebooks: Notebook[];
   failed?: string[];
   onDelete?: (id: string) => void;
+  serverError?: string;
 }) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
+
+  if (serverError)
+    notification.error(serverError, undefined, undefined, undefined, 'notebooks-server-error');
 
   const resetModal = () => {
     setCurrentNotebook(null);
@@ -71,7 +76,7 @@ function NotebookTable({
     if (!search) return notebooks;
     return notebooks.filter((n) => {
       const searchFields: StringKeys[] = [
-        'author',
+        'authors',
         'description',
         'notebookUrl',
         'name',
@@ -202,6 +207,12 @@ function NotebookTable({
     },
 
     {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+
+    {
       title: 'Object of interest',
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
@@ -215,10 +226,9 @@ function NotebookTable({
     },
 
     {
-      title: 'Author',
-      dataIndex: 'author',
-      key: 'author',
-      sorter: getSorter('author'),
+      title: 'Authors',
+      dataIndex: 'authors',
+      key: 'authors',
     },
 
     {
@@ -278,9 +288,9 @@ function NotebookTable({
               onToggle={() => toggleColumn('objectOfInterest')}
             />
             <ColumnToggle
-              hidden={isColumnHidden('author')}
+              hidden={isColumnHidden('authors')}
               title="Author"
-              onToggle={() => toggleColumn('author')}
+              onToggle={() => toggleColumn('authors')}
             />
             <ColumnToggle
               hidden={isColumnHidden('creationDate')}

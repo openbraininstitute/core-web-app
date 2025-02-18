@@ -38,7 +38,7 @@ export function CreditForm({ virtualLabId }: Props) {
   const token = useAccessToken();
   const { replace: redirect } = useRouter();
   const { error: errorNotify, success: successNotify } = useNotification();
-  const refreshBalanceResult = useSetAtom(virtualLabBalanceAtomFamily(virtualLabId));
+  const refreshBalanceResult = useSetAtom(virtualLabBalanceAtomFamily({ virtualLabId }));
   const [{ credit, selectedPaymentMethodId, errors }, setTransactionFormState] =
     useAtom(transactionFormStateAtom);
   const paymentMethods = useAtomValue(loadable(virtualLabPaymentMethodsAtomFamily(virtualLabId)));
@@ -260,7 +260,7 @@ function BalanceDetailsCard(
 }
 
 export function BalanceDetails({ virtualLabId }: Props) {
-  const balanceAtom = virtualLabBalanceAtomFamily(virtualLabId);
+  const balanceAtom = virtualLabBalanceAtomFamily({ virtualLabId });
   const balanceResult = useAtomValue(loadable(balanceAtom));
 
   if (balanceResult.state === 'loading') {

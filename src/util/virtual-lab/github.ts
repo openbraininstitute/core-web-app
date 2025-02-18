@@ -1,7 +1,6 @@
+import path from 'path';
 import JSZip from 'jszip';
 import { z } from 'zod';
-import capitalize from 'lodash/capitalize';
-import { assertErrorMessage } from '../utils';
 
 export const options = {
   headers: {
@@ -23,7 +22,7 @@ export interface Notebook {
   notebookUrl: string;
   metadataUrl: string;
   readmeUrl: string;
-  author: string;
+  authors: string;
   githubUser: string;
   githubRepo: string;
   creationDate: string | null;
@@ -31,111 +30,18 @@ export interface Notebook {
   objectOfInterest: string;
 }
 
-type Item = {
+export type Item = {
   url: string;
   path: string;
 };
 
-function assertGithubApiResponse(res: Response) {
+export function assertGithubApiResponse(res: Response) {
   if (res.headers.get('x-ratelimit-remaining') === '0') {
     throw new Error('GitHub API Rate limit reached');
   }
 }
 
-export default async function fetchNotebooks(repoUrl: string): Promise<Notebook[]> {
-  const repoDetails = extractUserAndRepo(repoUrl);
-
-  const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
-
-  const repoRes = await fetch(apiBaseUrl, options);
-
-  if (!repoRes.ok) {
-    assertGithubApiResponse(repoRes);
-    throw new Error(`Cannot fetch the repository ${repoUrl}`);
-  }
-  const repository = await repoRes.json();
-
-  const defaultBranch = repository.default_branch;
-
-  if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
-
-  const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
-
-  if (!response.ok) {
-    throw new Error(`Cannot fetch the repository ${repoUrl} , ensure the repository is public`);
-  }
-
-  const tree: { tree: Item[] } = await response.json();
-
-  if (!tree.tree) throw new Error(`Cannot fetch the repository ${repoUrl}`);
-
-  const notebooks: Notebook[] = [];
-
-  const datePromises: Promise<string | null>[] = [];
-
-  const items = tree.tree.reduce<Record<string, Item>>((acc, item) => {
-    acc[item.path] = item;
-    return acc;
-  }, {});
-
-  for (const item of Object.values(items)) {
-    if (item.path.endsWith('.ipynb')) {
-      const parts = item.path.split('/');
-      const scale = parts[parts.length - 3] ?? '';
-      const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
-
-      datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
-      try {
-        const metadataUrl =
-          items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url;
-
-        const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
-
-        notebooks.push({
-          id: '', // OBI notebooks have no id in the database
-          scale,
-          path: item.path,
-          name,
-          notebookUrl: item.url,
-          metadataUrl,
-          readmeUrl: items[item.path.substring(0, item.path.lastIndexOf('/')) + '/README.md'].url,
-          key: item.path,
-          description: '',
-          author: 'OBI',
-          creationDate: '',
-          githubUser: repoDetails.user,
-          githubRepo: repoDetails.repo,
-          defaultBranch,
-          objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
-        });
-      } catch {
-        throw new Error(
-          `Error fetching or validating metafata for notebook ${repoUrl} ${item.path}`
-        );
-      }
-    }
-  }
-
-  const dates = await Promise.all(datePromises);
-
-  return notebooks.map((n, i) => {
-    // eslint-disable-next-line
-    n.creationDate = dates[i];
-    return n;
-  });
-}
-
-export async function fetchNotebooksCatchError(repoUrl: string): Promise<Notebook[] | string> {
-  try {
-    return await fetchNotebooks(repoUrl);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(assertErrorMessage(e));
-    return repoUrl;
-  }
-}
-
-async function getFileCreationDate(
+export async function getFileCreationDate(
   user: string,
   repo: string,
   filePath: string
@@ -176,14 +82,20 @@ async function getFileCreationDate(
 export async function fetchGithubFile(url: string) {
   const response = await fetch(url, options);
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(`Failed to file ${url}`);
+    throw new Error(`Failed to fetch file ${url}`);
   }
 
+  const data = await response.json();
+
   try {
-    return atob(data.content);
+    const binaryString = atob(data.content);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return new TextDecoder('utf-8').decode(bytes);
   } catch (e) {
     throw new Error(`Failed to parse contents of ${url}`);
   }
@@ -234,7 +146,7 @@ export async function downloadZippedNotebook(notebook: Notebook) {
   }
 }
 
-function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
+export function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
   try {
     const url = new URL(githubUrl);
 
@@ -257,44 +169,39 @@ function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
   }
 }
 
-export async function fetchMultipleRepos(githubUrl: string[]) {
-  const promises = githubUrl.map((u) => fetchNotebooks(u));
-
-  const results = await Promise.all(promises);
-
-  return results.flat();
-}
-
-function validateMetadata(input: string) {
+export function validateMetadata(input: string) {
   const json = JSON.parse(input);
 
-  try {
-    const dataTypeSchema = z
-      .object({
-        artefact: z.union([z.string().transform((val) => [val]), z.array(z.string())]),
-        required_properties: z.array(z.string()),
-      })
-      .strip();
+  const dataTypeSchema = z
+    .object({
+      artefact: z.union([z.string().transform((val) => [val]), z.array(z.string())]),
+      required_properties: z.array(z.string()),
+    })
+    .strip();
 
-    const inputItemSchema = z
-      .object({
-        data_type: dataTypeSchema,
-        class: z.string(),
-      })
-      .strip();
+  const inputItemSchema = z
+    .object({
+      data_type: dataTypeSchema,
+      class: z.string(),
+    })
+    .strip();
 
-    const inputSchema = z
-      .object({
-        input: z.array(inputItemSchema),
-      })
-      .strip();
-    return inputSchema.parse(json);
-  } catch (e) {
-    throw new Error('Invalid metadata');
-  }
+  const inputSchema = z
+    .object({
+      name: z.string(),
+      description: z.string(),
+      authors: z.array(z.string()),
+      scale: z
+        .string()
+        .transform((val) => val.toLowerCase())
+        .pipe(z.enum(['cellular', 'system', 'circuit', 'metabolism']))
+        .default('cellular'),
+      input: z.array(inputItemSchema),
+    })
+    .strip();
+
+  return inputSchema.parse(json);
 }
-
-const validScales = ['cellular', 'circuit', 'system'];
 
 export async function fetchNotebook(
   githubUrl: string
@@ -308,23 +215,11 @@ export async function fetchNotebook(
     );
   }
 
-  const [, owner, repo, branch, path] = match;
+  const [, owner, repo, branch, nPath] = match;
 
-  const pathParts = githubUrl.split('/');
-  const scale = pathParts[pathParts.length - 2] ?? '';
-  const name = capitalize(pathParts[pathParts.length - 1].replaceAll('_', ' ')) ?? '';
+  const directory = path.dirname(nPath);
 
-  if (!scale) {
-    throw new Error(
-      'Cannot parse scale from path. Ensure folder path follows  .../scale/name/analysis_info.json'
-    );
-  }
-
-  if (!validScales.includes(scale.toLocaleLowerCase())) {
-    throw new Error(`Invalid scale: should be one of ${validScales.join(', ')}.\n Found: ${scale}`);
-  }
-
-  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${directory}?ref=${branch}`;
 
   const response = await fetch(apiUrl, options);
 
@@ -363,7 +258,7 @@ export async function fetchNotebook(
 
   notebookFiles.forEach((k) => {
     if (files[k] === undefined)
-      throw new Error(`Cannot find ${k} for notebook ${owner}/${repo}/${path}`);
+      throw new Error(`Cannot find ${k} for notebook ${owner}/${repo}/${nPath}`);
   });
 
   let metadataContent = '';
@@ -371,27 +266,27 @@ export async function fetchNotebook(
   try {
     metadataContent = await fetchGithubFile(files['analysis_info.json'].fileUrl);
   } catch {
-    throw new Error(`Failed to download metadata file for notebook ${owner}/${repo}/${path}`);
+    throw new Error(`Failed to download metadata file for notebook ${owner}/${repo}/${nPath}`);
   }
 
   let metadata: ReturnType<typeof validateMetadata>;
 
   try {
     metadata = validateMetadata(metadataContent);
-  } catch {
-    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${path}`);
+  } catch (e) {
+    throw new Error(`Invalid metadata file for notebook ${owner}/${repo}/${nPath}` + e);
   }
 
   return {
-    key: `${owner}/${repo}/${path}`,
-    name,
-    description: '',
+    key: `${owner}/${repo}/${nPath}`,
+    name: metadata.name,
+    description: metadata.description,
     notebookUrl: files['analysis_notebook.ipynb'].fileUrl,
     readmeUrl: files['README.md'].fileUrl,
     metadataUrl: files['analysis_info.json'].fileUrl,
-    scale,
-    path: `${path}/${files['analysis_notebook.ipynb'].name}`,
-    author: owner,
+    scale: metadata.scale,
+    path: `${directory}/${files['analysis_notebook.ipynb'].name}`,
+    authors: metadata.authors.join(', '),
     githubUser: owner,
     githubRepo: repo,
     defaultBranch: branch,

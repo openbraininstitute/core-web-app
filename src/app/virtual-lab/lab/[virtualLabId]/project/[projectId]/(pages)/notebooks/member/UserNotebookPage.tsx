@@ -1,13 +1,12 @@
 'use client';
 
-import { Tag } from 'antd/lib';
-
 import { Input, Modal } from 'antd';
 import { useState, useEffect, useRef } from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import NotebookTable from '../NotebookTable';
-import { NotebookSchema } from '../schemas';
-import { fetchNotebook, Notebook } from '@/util/virtual-lab/github';
+import { NotebooksArraySchema } from '../schemas';
+import { Notebook } from '@/util/virtual-lab/github';
+import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import authFetch from '@/authFetch';
 import { notification } from '@/api/notifications';
 import { assertErrorMessage, assertVLApiResponse } from '@/util/utils';
@@ -46,24 +45,31 @@ export default function UserNotebookPage({
   initialNotebooks,
   projectId,
   vlabId,
+  serverError,
 }: {
   initialNotebooks: Notebook[];
   projectId: string;
   vlabId: string;
+  serverError?: string;
 }) {
   const [notebooks, setNotebooks] = useState(initialNotebooks);
   const [openModal, setOpenModal] = useState(false);
   const [step, setStep] = useState(0);
-  const [notebookUrl, setNotebookUrl] = useState('');
-  const [notebook, setNotebook] = useState<Omit<Notebook, 'id' | 'creationDate'> | null>(null);
+  const [repoUrl, setRepoUrl] = useState('');
+  const [newNotebooks, setNewNotebooks] = useState<Omit<Notebook, 'id' | 'creationDate'>[] | null>(
+    null
+  );
   const [loading, setLoading] = useDelayedLoading(false);
   const [deleteNotebookId, setDeleteNotebookId] = useState('');
+
+  if (serverError)
+    notification.error(serverError, undefined, undefined, undefined, 'user-notebook-server-error');
 
   const resetModal = () => {
     setOpenModal(false);
     setStep(0);
-    setNotebookUrl('');
-    setNotebook(null);
+    setRepoUrl('');
+    setNewNotebooks(null);
     setLoading(false);
   };
 
@@ -102,33 +108,15 @@ export default function UserNotebookPage({
         projectId={projectId}
         vlabId={vlabId}
       />
-      <Modal open={openModal} onCancel={resetModal} footer={false} width="40vw">
-        {step === 0 && (
-          <>
-            <div className="mb-2 text-lg font-bold text-primary-8">Add a notebook</div>
-            <div className="text-sm text-gray-500">
-              <div>
-                Ensure the url points to a github folder containing{' '}
-                <code className="ml-1 mr-1 text-xs">analysis_notebook.ipynb</code> and{' '}
-                <code className="ml-1 mr-1 text-xs">analys_info.json</code>
-              </div>
-
-              <div className="mt-2">
-                Ensure the folder path contains the scale and notebook name e.g
-                <code className="ml-1 text-xs">
-                  <span>
-                    https://github.com/openbraininstitute/obi_platform_analysis_notebooks/tree/main/
-                  </span>
-                  <strong>Cellular</strong>
-                  <strong>/display_morphology_population_features</strong>
-                </code>
-              </div>
-            </div>
+      <Modal open={openModal} onCancel={resetModal} footer={false} width="35vw">
+        <div className="p-4">
+          <div className="text-xl font-bold text-primary-8">Register notebooks</div>
+          {step === 0 && (
             <div className="mb-5 mt-5">
               <div className="mb-3 font-bold text-primary-8">Github url</div>
               <Input
-                onChange={(e) => setNotebookUrl(e.currentTarget.value)}
-                onInput={(e) => setNotebookUrl(e.currentTarget.value)}
+                onChange={(e) => setRepoUrl(e.currentTarget.value)}
+                onInput={(e) => setRepoUrl(e.currentTarget.value)}
                 placeholder="Paste your url here"
               />
               <div className="-mb-6 mt-5 flex justify-end gap-3">
@@ -138,7 +126,9 @@ export default function UserNotebookPage({
                   onClick={async () => {
                     try {
                       setLoading(true);
-                      setNotebook(await fetchNotebook(notebookUrl.trim()));
+
+                      const fetchedNotebooks = await fetchNotebooks(repoUrl.trim());
+                      setNewNotebooks(fetchedNotebooks);
                       setStep(1);
                     } catch (e) {
                       notification.error(assertErrorMessage(e));
@@ -147,7 +137,7 @@ export default function UserNotebookPage({
                     }
                   }}
                 >
-                  Add notebok
+                  Register notebooks
                 </button>
                 {loading && <LoadingOutlined />}
                 <button type="button" onClick={resetModal}>
@@ -155,80 +145,99 @@ export default function UserNotebookPage({
                 </button>
               </div>
             </div>
-          </>
-        )}
+          )}
 
-        {step === 1 && (
-          <div className="mb-5 mt-5">
-            <div className="mb-3 font-bold text-primary-8">Register notebook</div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <span className="text-primary-8">Name</span>
-                <Tag className="h-[30px] max-w-fit p-1">{notebook?.name}</Tag>
-              </div>
+          {step === 1 && (
+            <div className="mb-5 mt-5">
+              {newNotebooks?.map((notebook, i) => {
+                return (
+                  <div key={notebook.key} className="mb-10">
+                    <div className="mb-3 text-lg text-gray-600">{i + 1}</div>
+                    <div className="mb-3 flex justify-between">
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-400">Name</div>
+                        <div className="max-w-fit font-bold text-primary-8">{notebook?.name}</div>
+                      </div>
 
-              <div className="flex flex-col gap-2">
-                <span className="text-primary-8">Github folder url</span>
-                <Tag className="h-[40px] max-w-fit overflow-x-scroll p-1">{notebookUrl}</Tag>
-              </div>
+                      <div className="flex-1">
+                        <div className="mb-2 text-sm text-gray-400">Inputs</div>
+                        <div>
+                          {notebook?.objectOfInterest.split(',').map((t) => (
+                            <span
+                              className="mr-1 max-w-fit rounded-3xl border border-gray-200 px-2 py-1 text-xs text-primary-8"
+                              key={notebook.path + t}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mb-10">
+                      <div className="mb-1 text-sm text-gray-400">Description</div>
+                      <div className="text-sm">{notebook.description}</div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="-mb-6 mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  className="rounded bg-primary-8 px-3 py-2 text-white"
+                  onClick={async () => {
+                    if (!newNotebooks) return;
+                    setLoading(true);
 
-              <div className="flex flex-col gap-2">
-                <span className="text-primary-8">Inputs</span>
-                {notebook?.objectOfInterest.split(',').map((t) => (
-                  <Tag className="max-w-fit" key={notebook.path + t}>
-                    {t}
-                  </Tag>
-                ))}
-              </div>
-            </div>
-            <div className="-mb-6 mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                className="rounded bg-primary-8 p-2 text-white"
-                onClick={async () => {
-                  if (!notebook) return;
-                  setLoading(true);
+                    try {
+                      const notebookRes = await authFetch(
+                        `${virtualLabApi.url}/projects/${projectId}/notebooks/bulk_create/`,
+                        {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            notebooks: newNotebooks.map((n) => {
+                              return {
+                                github_file_url: `https://github.com/${n.githubUser}/${n.githubRepo}/tree/${n.defaultBranch}/${n.path}`,
+                              };
+                            }),
+                          }),
+                        }
+                      );
 
-                  try {
-                    const notebookRes = await authFetch(
-                      `${virtualLabApi.url}/projects/${projectId}/notebooks/`,
-                      {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ github_file_url: notebookUrl }),
-                      }
-                    );
+                      const newNotebook = await assertVLApiResponse(notebookRes);
 
-                    const newNotebook = await assertVLApiResponse(notebookRes);
+                      const newValidatedNotebooks = NotebooksArraySchema.parse(newNotebook.data);
+                      setNotebooks([
+                        ...notebooks,
+                        ...newNotebooks.map((n, i) => {
+                          return {
+                            ...n,
+                            id: newValidatedNotebooks[i].id,
+                            creationDate: newValidatedNotebooks[i].created_at,
+                          };
+                        }),
+                      ]);
+                    } catch (e) {
+                      notification.error('Unknown error, please try again.');
+                      resetModal();
+                      return;
+                    }
 
-                    const newValidatedNotebook = NotebookSchema.parse(newNotebook.data);
-                    setNotebooks([
-                      ...notebooks,
-                      {
-                        ...notebook,
-                        id: newValidatedNotebook.id,
-                        creationDate: newValidatedNotebook.created_at,
-                      },
-                    ]);
-                  } catch (e) {
-                    notification.error('Unknown error, please try again.');
                     resetModal();
-                    return;
-                  }
+                  }}
+                >
+                  Register{' '}
+                  <span className="ml-1 text-sm text-primary-3">({newNotebooks?.length})</span>
+                  {loading && <LoadingOutlined />}
+                </button>
 
-                  resetModal();
-                }}
-              >
-                Register notebook
-                {loading && <LoadingOutlined />}
-              </button>
-
-              <button type="button" onClick={resetModal}>
-                Cancel
-              </button>
+                <button type="button" onClick={resetModal}>
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </Modal>
       <Modal
         open={!!deleteNotebookId}
@@ -245,7 +254,8 @@ export default function UserNotebookPage({
         className="fixed bottom-10 right-10 h-[50px] w-[200px] bg-white text-primary-8"
         onClick={() => setOpenModal(true)}
       >
-        Add a notebook
+        <span className="mr-5 font-semibold">Register notebooks</span>
+        <UploadOutlined />
       </button>
     </>
   );

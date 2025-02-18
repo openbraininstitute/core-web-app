@@ -51,6 +51,7 @@ export default function VerticalLinks({ virtualLabId, projectId, currentPage, li
           </button>
         ) : (
           <Link
+            prefetch={link.key !== 'notebooks'}
             key={link.key}
             href={link.href}
             className={`border-primary-7 py-4 text-left font-bold ${(selectedLayout === link.key || currentPage === link.key) && 'bg-neutral-1 text-primary-8'} ${idx !== links.length - 1 && 'border-b'}`}
