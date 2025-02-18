@@ -192,7 +192,7 @@ function NotebookTable({
       key: 'name',
       render: (name: string, notebook: Notebook) => (
         <button
-          className="cursor-pointer"
+          className="cursor-pointer text-left hover:text-primary-5"
           aria-label="preview"
           type="button"
           onClick={() => {
@@ -210,12 +210,15 @@ function NotebookTable({
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
+      sorter: getSorter('description'),
+      render: (text) => <div className="line-clamp-2 max-w-[40em]">{text}</div>,
     },
 
     {
       title: 'Object of interest',
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
+      sorter: getSorter('objectOfInterest'),
     },
 
     {
@@ -229,6 +232,7 @@ function NotebookTable({
       title: 'Authors',
       dataIndex: 'authors',
       key: 'authors',
+      sorter: getSorter('authors'),
     },
 
     {

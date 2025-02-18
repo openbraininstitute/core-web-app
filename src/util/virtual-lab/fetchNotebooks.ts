@@ -51,9 +51,6 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
 
   for (const item of Object.values(items)) {
     if (item.path.endsWith('analysis_notebook.ipynb')) {
-      const parts = item.path.split('/');
-      const name = capitalize(parts[parts.length - 2].replaceAll('_', ' ')) ?? '';
-
       if (withDate)
         datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
 
@@ -65,9 +62,9 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
 
         notebooks.push({
           id: '', // OBI notebooks have no id in the database
-          scale: metadata.scale,
+          scale: capitalize(metadata.scale),
           path: item.path,
-          name,
+          name: metadata.name,
           notebookUrl: item.url,
           metadataUrl,
           readmeUrl: items[item.path.substring(0, item.path.lastIndexOf('/')) + '/README.md'].url,
