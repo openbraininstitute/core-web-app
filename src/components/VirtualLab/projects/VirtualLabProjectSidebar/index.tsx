@@ -17,7 +17,8 @@ import { useLoadableValue } from '@/hooks/hooks';
 import { useIsProjectAdmin } from '@/hooks/virtual-labs';
 import { LinkItemWithRequirements } from '@/types/virtual-lab/navigation';
 import { fetchNotebookCount } from '@/util/virtual-lab/fetchNotebooks';
-import { notebookRepoUrl } from '@/config';
+import { notebookRepoUrl, virtualLabApi } from '@/config';
+import authFetch from '@/authFetch';
 
 type Props = {
   virtualLabId: string;
@@ -29,18 +30,29 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
   const currentPage = url[url.length - 1] !== 'new' ? url[url.length - 1] : url[url.length - 2];
 
   const [notebookCount, setNotebookCount] = useState<number | null>(null);
+  const [userNotebookCount, setUserNotebookCount] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetch() {
       try {
         const count = await fetchNotebookCount(notebookRepoUrl);
+        const res = await authFetch(
+          `${virtualLabApi.url}/projects/${projectId}/notebooks/?page_size=1  `
+        );
+        let userCount: number;
+
+        if (res.ok) {
+          userCount = (await res.json()).data.total;
+          setUserNotebookCount(userCount);
+        }
+
         setNotebookCount(count);
       } catch (e) {
         console.error(e); // eslint-disable-line no-console
       }
     }
     fetch();
-  }, []);
+  }, [projectId]);
 
   const projectUsers = useLoadableValue(
     virtualLabProjectUsersAtomFamily({ virtualLabId, projectId })
@@ -121,7 +133,9 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
       content: (
         <div className="flex justify-between">
           <span>Notebooks</span>
-          {!!notebookCount && <span className="font-normal text-primary-3">{notebookCount}</span>}
+          {notebookCount !== null && userNotebookCount !== null && (
+            <span className="font-normal text-primary-3">{notebookCount + userNotebookCount}</span>
+          )}
         </div>
       ),
       href: 'notebooks',

@@ -218,7 +218,7 @@ export default function UserNotebookPage({
                         }),
                       ]);
                     } catch (e) {
-                      notification.error('Unknown error, please try again.');
+                      notification.error(assertErrorMessage(e));
                       resetModal();
                       return;
                     }

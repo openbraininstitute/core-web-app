@@ -31,7 +31,7 @@ export function useToggleColumns<T>(columns: Column<T>[]) {
 export function useFilters<T>(data: T[]) {
   const [filters, setFilters] = useState<{
     [K in keyof T]?: {
-      isActive: boolean;
+      value: T[K] | null;
       fun: (d: T[K]) => boolean;
     };
   }>({});
@@ -40,11 +40,11 @@ export function useFilters<T>(data: T[]) {
     (item: T) => {
       for (const [dataIndex, filter] of Object.entries(filters)) {
         const filterTyped = filter as {
-          isActive: boolean;
+          value: T[keyof T] | null;
           fun: (d: T[keyof T]) => boolean;
         };
 
-        if (filterTyped.isActive && !filterTyped.fun(item[dataIndex as keyof T])) {
+        if (filterTyped.value && !filterTyped.fun(item[dataIndex as keyof T])) {
           return false;
         }
       }
@@ -56,24 +56,36 @@ export function useFilters<T>(data: T[]) {
   // eslint-disable-next-line
   const onFilterChange = useCallback(function onFilterChange<K extends keyof T>(
     dataIndex: K,
-    isActive: boolean,
+    value: T[K] | null,
     filterFun: (value: T[K]) => boolean
   ) {
     setFilters((f) => {
       return {
         ...f,
         [dataIndex]: {
-          isActive,
+          value,
           fun: (d: T[K]) => filterFun(d),
         },
       };
     });
   }, []);
 
+  const onChange = useCallback(
+    // eslint-disable-next-line
+    function <K extends keyof T>(dataIndex: K, value: T[K]) {
+      onFilterChange(dataIndex, value ?? null, (colValue) => {
+        if (!value || typeof value !== 'string' || typeof colValue !== 'string') return true;
+
+        return colValue.toLocaleLowerCase().includes(value);
+      });
+    },
+    [onFilterChange]
+  );
+
   const onDateChange = useCallback(
     // eslint-disable-next-line
     function <K extends keyof T>(dataIndex: K, values: [Date | null, Date | null] | null) {
-      onFilterChange(dataIndex, values !== null, (value) => {
+      onFilterChange(dataIndex, values as T[K] | null, (value) => {
         if (!value && values) return false;
         if (!values) return true;
 
@@ -94,11 +106,26 @@ export function useFilters<T>(data: T[]) {
     [onFilterChange]
   );
 
+  const onFilterReset = useCallback(() => {
+    setFilters({});
+  }, []);
+
+  const filterValue = useCallback(
+    // eslint-disable-next-line
+    function <K extends keyof T>(dataIndex: K) {
+      return filters[dataIndex]?.value ?? null;
+    },
+    [filters]
+  );
+
   return {
     onFilterChange,
+    onChange,
     onDateChange,
+    onFilterReset,
+    filterValue,
     filteredData: useMemo(() => data.filter(applyFilters), [data, applyFilters]),
-    filterCount: Object.values(filters).map((f) => (f as { isActive: boolean }).isActive).length,
+    filterCount: Object.values(filters).filter((f) => !!(f as { value: T[keyof T] }).value).length,
   };
 }
 

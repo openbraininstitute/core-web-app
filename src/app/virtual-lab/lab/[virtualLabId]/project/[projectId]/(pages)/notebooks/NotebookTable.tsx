@@ -1,13 +1,13 @@
 'use client';
 
-import { ConfigProvider, DatePicker } from 'antd';
+import { ConfigProvider, DatePicker, Input, Select } from 'antd';
 
 import Table from 'antd/es/table';
 import Image from 'next/image';
 import { saveAs } from 'file-saver';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
-import { DeleteOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, LoadingOutlined, PlusOutlined, UndoOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
@@ -25,6 +25,7 @@ import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterC
 import { notification } from '@/api/notifications';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
+const { Option } = Select;
 
 function NotebookTable({
   notebooks,
@@ -192,7 +193,7 @@ function NotebookTable({
       key: 'name',
       render: (name: string, notebook: Notebook) => (
         <button
-          className="cursor-pointer"
+          className="cursor-pointer text-left hover:text-primary-5"
           aria-label="preview"
           type="button"
           onClick={() => {
@@ -210,12 +211,15 @@ function NotebookTable({
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
+      sorter: getSorter('description'),
+      render: (text) => <div className="line-clamp-2 max-w-[40em]">{text}</div>,
     },
 
     {
       title: 'Object of interest',
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
+      sorter: getSorter('objectOfInterest'),
     },
 
     {
@@ -229,6 +233,7 @@ function NotebookTable({
       title: 'Authors',
       dataIndex: 'authors',
       key: 'authors',
+      sorter: getSorter('authors'),
     },
 
     {
@@ -259,7 +264,8 @@ function NotebookTable({
 
   const { filteredColumns, toggleColumn, isColumnHidden } = useToggleColumns(columns);
 
-  const { filteredData, onDateChange, filterCount } = useFilters(filteredNotebooks);
+  const { filteredData, onDateChange, filterCount, onChange, onFilterReset, filterValue } =
+    useFilters(filteredNotebooks);
 
   return (
     <ConfigProvider
@@ -277,45 +283,108 @@ function NotebookTable({
         <div className="mt-10 flex items-center justify-between">
           {Search}
           <FilterControls numberOfColumns={filteredColumns.length - 1} filtersCount={filterCount}>
-            <ColumnToggle
-              hidden={isColumnHidden('scale')}
-              title="Scale"
-              onToggle={() => toggleColumn('scale')}
-            />
-            <ColumnToggle
-              hidden={isColumnHidden('objectOfInterest')}
-              title="Object of interest"
-              onToggle={() => toggleColumn('objectOfInterest')}
-            />
-            <ColumnToggle
-              hidden={isColumnHidden('authors')}
-              title="Author"
-              onToggle={() => toggleColumn('authors')}
-            />
-            <ColumnToggle
-              hidden={isColumnHidden('creationDate')}
-              title="Creation date"
-              onToggle={() => toggleColumn('creationDate')}
+            <ConfigProvider
+              theme={{
+                token: {
+                  colorBgBase: '#002766',
+                  colorPrimary: '#40a9ff',
+                  colorTextPlaceholder: '#8c8c8c',
+                  colorTextDisabled: '#8c8c8c',
+                  colorIcon: '#8c8c8c',
+                  colorIconHover: '#40a9ff',
+                },
+              }}
             >
-              <ConfigProvider
-                theme={{
-                  token: {
-                    colorBgBase: '#002766',
-                    colorPrimary: '#40a9ff',
-                    colorTextPlaceholder: '#8c8c8c',
-                    colorTextDisabled: '#8c8c8c',
-                    colorIcon: '#8c8c8c',
-                    colorIconHover: '#40a9ff',
-                  },
-                }}
+              <ColumnToggle
+                hidden={isColumnHidden('name')}
+                title="Name"
+                onToggle={() => toggleColumn('name')}
+              >
+                <Input
+                  value={filterValue('name') ?? ''}
+                  className="w-2/3 transition-none"
+                  onInput={(e) => {
+                    onChange('name', e.currentTarget.value);
+                  }}
+                />
+              </ColumnToggle>
+              <ColumnToggle
+                hidden={isColumnHidden('description')}
+                title="Description"
+                onToggle={() => toggleColumn('description')}
+              >
+                <Input
+                  value={filterValue('description') ?? ''}
+                  className="w-2/3 transition-none"
+                  onChange={(e) => onChange('description', e.currentTarget.value)}
+                />
+              </ColumnToggle>
+
+              <ColumnToggle
+                hidden={isColumnHidden('objectOfInterest')}
+                title="Object of interest"
+                onToggle={() => toggleColumn('objectOfInterest')}
+              >
+                <Input
+                  value={filterValue('objectOfInterest') ?? ''}
+                  className="w-2/3 transition-none"
+                  onChange={(e) => onChange('objectOfInterest', e.currentTarget.value)}
+                />
+              </ColumnToggle>
+              <ColumnToggle
+                hidden={isColumnHidden('scale')}
+                title="Scale"
+                onToggle={() => toggleColumn('scale')}
+              >
+                <ConfigProvider
+                  theme={{
+                    token: {
+                      colorPrimary: '#002766',
+                    },
+                  }}
+                >
+                  <Select
+                    placeholder="Select a scale"
+                    onChange={(value) => onChange('scale', value)}
+                    value={filterValue('scale')}
+                    style={{ width: 200 }}
+                  >
+                    <Option value="cellular">Cellular</Option>
+                    <Option value="metabolism">Metabolism</Option>
+                    <Option value="circuit">Circuit</Option>
+                    <Option value="system">System</Option>
+                  </Select>
+                </ConfigProvider>
+              </ColumnToggle>
+
+              <ColumnToggle
+                hidden={isColumnHidden('authors')}
+                title="Author"
+                onToggle={() => toggleColumn('authors')}
+              >
+                <Input
+                  value={filterValue('authors') ?? ''}
+                  className="w-2/3 transition-none"
+                  onChange={(e) => onChange('authors', e.currentTarget.value)}
+                />
+              </ColumnToggle>
+              <ColumnToggle
+                hidden={isColumnHidden('creationDate')}
+                title="Creation date"
+                onToggle={() => toggleColumn('creationDate')}
               >
                 <RangePicker
+                  value={(filterValue('creationDate') as RangeValue<Date>) ?? null}
                   onChange={(values: RangeValue<Date>) => {
                     onDateChange('creationDate', values);
                   }}
                 />
-              </ConfigProvider>
-            </ColumnToggle>
+              </ColumnToggle>
+
+              <button type="button" className="mt-5 w-fit" onClick={onFilterReset}>
+                Clear filters <UndoOutlined className="ml-3 text-lg" />
+              </button>
+            </ConfigProvider>
           </FilterControls>
         </div>
       </>

@@ -1,5 +1,8 @@
 import path from 'path';
+
 import JSZip from 'jszip';
+import capitalize from 'lodash/capitalize';
+
 import { z } from 'zod';
 
 export const options = {
@@ -284,7 +287,7 @@ export async function fetchNotebook(
     notebookUrl: files['analysis_notebook.ipynb'].fileUrl,
     readmeUrl: files['README.md'].fileUrl,
     metadataUrl: files['analysis_info.json'].fileUrl,
-    scale: metadata.scale,
+    scale: capitalize(metadata.scale),
     path: `${directory}/${files['analysis_notebook.ipynb'].name}`,
     authors: metadata.authors.join(', '),
     githubUser: owner,
