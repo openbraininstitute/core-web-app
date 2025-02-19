@@ -1,7 +1,7 @@
 import { useCallback, useState, useMemo, ReactNode } from 'react';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
-import { Column } from './ControlPanel';
 import { isNull } from 'lodash/fp';
+import { Column } from './ControlPanel';
 
 export function useToggleColumns<T>(columns: Column<T>[]) {
   const [columnHidden, setColumnHidden] = useState(() => {
