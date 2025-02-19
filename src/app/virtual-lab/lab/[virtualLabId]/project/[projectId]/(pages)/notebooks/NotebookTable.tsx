@@ -336,18 +336,25 @@ function NotebookTable({
                 title="Scale"
                 onToggle={() => toggleColumn('scale')}
               >
-                <Select
-                  showSearch
-                  placeholder="Select an scale"
-                  onChange={(value) => onChange('scale', value)}
-                  value={filterValue('scale')}
-                  style={{ width: 200 }}
+                <ConfigProvider
+                  theme={{
+                    token: {
+                      colorPrimary: '#002766',
+                    },
+                  }}
                 >
-                  <Option value="cellular">Cellular</Option>
-                  <Option value="metabolism">Metabolism</Option>
-                  <Option value="circuit">Circuit</Option>
-                  <Option value="system">System</Option>
-                </Select>
+                  <Select
+                    placeholder="Select a scale"
+                    onChange={(value) => onChange('scale', value)}
+                    value={filterValue('scale')}
+                    style={{ width: 200 }}
+                  >
+                    <Option value="cellular">Cellular</Option>
+                    <Option value="metabolism">Metabolism</Option>
+                    <Option value="circuit">Circuit</Option>
+                    <Option value="system">System</Option>
+                  </Select>
+                </ConfigProvider>
               </ColumnToggle>
 
               <ColumnToggle
