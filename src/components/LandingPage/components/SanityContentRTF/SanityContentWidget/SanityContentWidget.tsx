@@ -45,6 +45,7 @@ export default function SanityContentWidget({ value }: SanityContentWidgetProps)
     case 'smallCard':
       return <WidgetFromCellToBrain />;
     case 'supportEmailButton':
+    case 'infoEmailButton':
       return <WidgetEmail type={value.name} />;
     case 'itemPriceList':
       return <WidgetPriceList />;

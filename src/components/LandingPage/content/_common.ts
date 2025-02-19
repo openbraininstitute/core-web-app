@@ -1,5 +1,4 @@
 import { PortableTextBlock } from '@portabletext/react';
-import { logError } from '@/util/logger';
 import { assertType, TypeDef } from '@/util/type-guards';
 
 /**
@@ -7,13 +6,8 @@ import { assertType, TypeDef } from '@/util/type-guards';
  * @returns `true` if the type is correct.
  */
 export function tryType(typeName: string, data: unknown, type: TypeDef): boolean {
-  try {
-    assertType(data, type);
-    return true;
-  } catch (ex) {
-    logError(`Invalid format for data ${typeName}!`, data, ex);
-    return false;
-  }
+  assertType(data, type);
+  return true;
 }
 
 export type RichText = PortableTextBlock | PortableTextBlock[];

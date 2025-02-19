@@ -85,13 +85,13 @@ export default function Footer({ className }: { className?: string }) {
         </div>
         <div className="flex flex-col gap-4 px-2 py-4 md:px-0 md:py-0">
           <div className="flex flex-col gap-4">
-            <Section section={EnumSection.OurMission} setSection={() => {}}>
+            <Section section={EnumSection.Mission} setSection={() => {}}>
               Our mission
             </Section>
             <Section section={EnumSection.Pricing} setSection={() => {}}>
               Pricing
             </Section>
-            <Section section={EnumSection.OurTeam} setSection={() => {}}>
+            <Section section={EnumSection.Team} setSection={() => {}}>
               Our team
             </Section>
             <Section section={EnumSection.TermsAndConditions} setSection={() => {}}>

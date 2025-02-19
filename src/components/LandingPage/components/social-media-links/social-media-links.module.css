@@ -1,0 +1,26 @@
+.socialMediaLinks {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+}
+
+.image {
+  height: 1.5em;
+}
+
+.socialMediaLinks > a {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5em;
+  cursor: pointer;
+}
+
+.title {
+  display: none;
+}

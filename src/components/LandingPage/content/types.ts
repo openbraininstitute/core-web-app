@@ -11,6 +11,32 @@ export const typeImage = {
   imageHeight: 'number',
 } satisfies TypeDef;
 
+export interface ContentForRichTextImage {
+  _type: 'imageBlock';
+  alt: string;
+  caption: null | string;
+  image: null | {
+    url: string;
+    width: number;
+    height: number;
+  };
+}
+
+const typeContentForRichTextImage: TypeDef = {
+  _type: ['literal', 'imageBlock'],
+  alt: typeStringOrNull,
+  caption: typeStringOrNull,
+  image: [
+    '|',
+    'null',
+    {
+      url: 'string',
+      width: 'number',
+      height: 'number',
+    },
+  ],
+};
+
 export interface ContentForRichTextPreview {
   _type: 'previewBlock';
   title: string;
@@ -158,6 +184,7 @@ export type ContentForRichText = Array<
   | ContentForRichTextParagraph
   | ContentForRichTextVerticalSpace
   | ContentForRichTextPreview
+  | ContentForRichTextImage
 >;
 
 const typeContentForRichText: TypeDef = [
@@ -170,6 +197,7 @@ const typeContentForRichText: TypeDef = [
     typeContentForRichTextVerticalSpace,
     typeContentForRichTextParagraph,
     typeContentForRichTextPreview,
+    typeContentForRichTextImage,
   ],
 ];
 

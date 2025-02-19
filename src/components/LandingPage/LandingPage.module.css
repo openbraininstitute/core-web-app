@@ -32,7 +32,7 @@
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
-  text-wrap: balance;
+  text-wrap: auto;
   font-size: var(--font-size-M);
   scroll-behavior: smooth;
 }
@@ -106,7 +106,7 @@
 
 .landingPage p {
   font-size: var(--font-size-M);
-  text-wrap: balance;
+  text-wrap: auto;
   hyphens: none;
   /* text-align: justify;
   text-justify: distribute; */

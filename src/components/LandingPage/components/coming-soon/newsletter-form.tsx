@@ -53,6 +53,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
         await subscribeNewsletterHandler({
           name: formValues.name,
           email: formValues.email,
+          tags: [],
         });
         setStatus('success');
       }

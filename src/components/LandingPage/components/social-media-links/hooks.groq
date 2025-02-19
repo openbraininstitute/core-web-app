@@ -1,0 +1,9 @@
+*[_type=="footer"][0]
+.socialMediaList[_type=="socialMediaItem"]
+{
+  title,
+  url,
+  "imageURL": icon.asset->url,
+  "imageWidth": icon.asset->metadata.dimensions.width,
+  "imageHeight": icon.asset->metadata.dimensions.height
+}

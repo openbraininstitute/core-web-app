@@ -1,16 +1,9 @@
-.widgetFromCellToBrain {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: stretch;
-  gap: 0;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-}
-
 .column {
+  flex: 0 0 auto;
   padding: 8px;
-  min-width: 280px;
+  --width: min(calc(100vw - 16px), 392px);
+  width: var(--width);
+  min-width: var(--width);
   scroll-snap-stop: always;
 }
 
@@ -29,6 +22,7 @@
   border: 1px solid var(--color-neutral);
   display: grid;
   grid-template-columns: 1fr auto;
+  grid-template-rows: 1fr 1fr;
 }
 
 .card > h3 {
@@ -45,4 +39,6 @@
 
 .description {
   grid-column: 1/-1;
+  font-size: var(--font-size-S);
+  place-self: start;
 }

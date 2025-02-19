@@ -4,6 +4,22 @@
   margin-bottom: 64px;
 }
 
+.card.small {
+  max-width: 480px;
+}
+
+.card.small .image {
+  width: 100%;
+}
+
+.card.small .text {
+  order: 2;
+}
+
+.card.small .content {
+  flex-direction: column;
+}
+
 .card > h1 {
   margin: 0;
 }
@@ -38,7 +54,15 @@
   gap: 1em;
 }
 
-.text > button {
+.text > div > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+
+.text > button.button {
   all: unset;
   cursor: pointer;
   border: 1px solid var(--color-neutral);
@@ -50,9 +74,36 @@
   gap: 1em;
   padding: 0 2em;
   height: 3em;
+  min-height: 3em;
   margin-top: 1em;
+  transition: all 0.3s;
+}
+
+.text > button.button:hover {
+  color: #fffe;
+  background-color: var(--color-primary);
 }
 
 .image {
   width: 50%;
+  order: 1;
+}
+
+@media (max-width: 480px) {
+  .card {
+    margin: 64px 0;
+  }
+
+  .content {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .text {
+    order: 2;
+  }
+
+  .image {
+    width: 100%;
+  }
 }

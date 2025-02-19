@@ -10,9 +10,10 @@ import styles from './SectionNews.module.css';
 
 export interface SectionNewsProps {
   className?: string;
+  showHeader?: boolean;
 }
 
-export default function SectionNews({ className }: SectionNewsProps) {
+export default function SectionNews({ className, showHeader = false }: SectionNewsProps) {
   const [categories, setCategories] = React.useState<string[]>(ALL_CATEGORY_IDS);
   const newsList = useSanityContentForNewsList();
   const handleSwitchAll = () => {
@@ -29,33 +30,47 @@ export default function SectionNews({ className }: SectionNewsProps) {
   return (
     <>
       <div className={classNames(className, styles.news, styleBlockMedium)}>
-        <header>
-          <div className={styles.label}>Filter by</div>
-          <CategoryButton
-            selected={categories.length === CATEGORIES.length}
-            onClick={handleSwitchAll}
-          >
-            All
-          </CategoryButton>
-          <div className={styles.buttons}>
-            {CATEGORIES.map((cat) => (
-              <CategoryButton
-                key={cat.id}
-                onClick={() => handleSwitchCat(cat.id)}
-                selected={categories.includes(cat.id)}
-              >
-                {cat.label}
-              </CategoryButton>
-            ))}
-          </div>
-        </header>
+        {showHeader && (
+          <header>
+            <div className={styles.label}>Filter by</div>
+            <CategoryButton
+              selected={categories.length === CATEGORIES.length}
+              onClick={handleSwitchAll}
+            >
+              All
+            </CategoryButton>
+            <div className={styles.buttons}>
+              {CATEGORIES.map((cat) => (
+                <CategoryButton
+                  key={cat.id}
+                  onClick={() => handleSwitchCat(cat.id)}
+                  selected={categories.includes(cat.id)}
+                >
+                  {cat.label}
+                </CategoryButton>
+              ))}
+            </div>
+          </header>
+        )}
         <main>
           {newsList
+            .filter((item) => !item.isEPFL)
             .filter((item) => categories.includes(item.category))
             .map((item) => (
               <Card key={item.id} news={item} />
             ))}
         </main>
+        <h1 className={styles.separator}>BBP news highlight</h1>
+        <div className={styles.copyright}>Copyright © EPFL - BBP</div>
+        <hr className={styles.separator} />
+        <div className={styles.epfl}>
+          {newsList
+            .filter((item) => item.isEPFL)
+            .filter((item) => categories.includes(item.category))
+            .map((item) => (
+              <Card key={item.id} news={item} />
+            ))}
+        </div>
       </div>
     </>
   );

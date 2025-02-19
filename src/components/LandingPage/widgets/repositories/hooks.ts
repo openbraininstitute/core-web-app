@@ -8,10 +8,12 @@ export function useSanityContentForRepositories() {
 }
 
 export interface ContentForRepository {
+  type: string;
   title: string;
   author: string;
   description: string;
   url: string;
+  buttonLabel: string;
   imageURL: string;
   imageWidth: number;
   imageHeight: number;
@@ -21,10 +23,12 @@ function isContentForRepositories(data: unknown): data is ContentForRepository[]
   return tryType('ContentForRepositories', data, [
     'array',
     {
+      type: typeStringOrNull,
       title: typeStringOrNull,
       author: typeStringOrNull,
       description: typeStringOrNull,
       url: typeStringOrNull,
+      buttonLabel: typeStringOrNull,
       ...typeImage,
     },
   ]);

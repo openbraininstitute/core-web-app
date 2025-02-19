@@ -1,0 +1,63 @@
+.swipeableCardsList {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  margin: 1em 0;
+  gap: 48px;
+}
+
+.scroll {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--custom-gap, 48px);
+  flex-wrap: nowrap;
+  scroll-behavior: smooth;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 24px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.swipeableCardsList > footer {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  padding-right: 16px;
+}
+
+.swipeableCardsList nav {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.swipeableCardsList nav > button.page {
+  content: '';
+  width: 24px;
+  height: 6px;
+  border-radius: 99vmax;
+  background-color: #0004;
+}
+
+.swipeableCardsList nav > button.page.selected {
+  background-color: var(--color-primary);
+}
+
+.swipeableCardsList nav > button.arrow {
+  width: 3em;
+  display: grid;
+  place-items: center;
+}
