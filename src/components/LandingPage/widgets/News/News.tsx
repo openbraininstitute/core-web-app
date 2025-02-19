@@ -18,6 +18,7 @@ export function WidgetNews() {
 
   if (news.length === 0) return null;
 
+  console.log('🚀 [News] styleBlockSmallExpandRight = ', styleBlockSmallExpandRight); // @FIXME: Remove this line written on 2025-02-19 at 14:09
   return (
     <>
       <Title value="News and events" />

@@ -5,7 +5,7 @@
 .discount {
   color: var(--color-neutral);
   text-decoration: line-through;
-  text-decoration-color: var(--color-neutral-light);
+  text-decoration-color: currentColor;
 }
 
 .hide {
@@ -23,4 +23,26 @@
 
 .planHeader ul > li::marker {
   content: '+';
+}
+
+.pill {
+    content: "Launch";
+    color: var(--color-neutral);
+    font-size: var(--font-size-S);
+    height: 2em;
+    padding: 0 1em;
+    border-radius: 99vmax;
+    border: 1px solid currentColor;
+    margin-left: 1em;
+    display: grid;
+    place-items: center;
+}
+
+.price {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0;
 }
