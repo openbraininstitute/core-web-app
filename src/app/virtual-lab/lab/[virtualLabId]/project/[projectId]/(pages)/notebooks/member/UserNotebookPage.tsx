@@ -1,6 +1,7 @@
 'use client';
 
 import { Input, Modal } from 'antd';
+import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import NotebookTable from '../NotebookTable';
@@ -113,6 +114,15 @@ export default function UserNotebookPage({
           <div className="text-xl font-bold text-primary-8">Register notebooks</div>
           {step === 0 && (
             <div className="mb-5 mt-5">
+              <p className="mb-5">
+                Contribute and share your own analysis notebooks with your collaborators. Provide
+                the url of a code repository containing the notebooks and they will be available in
+                your virtual lab for all members. The repository must be structured according to the
+                following{' '}
+                <Link href="spec" className="text-primary-8 underline">
+                  specifications.
+                </Link>
+              </p>
               <div className="mb-3 font-bold text-primary-8">Github url</div>
               <Input
                 onChange={(e) => setRepoUrl(e.currentTarget.value)}
@@ -127,7 +137,10 @@ export default function UserNotebookPage({
                     try {
                       setLoading(true);
 
-                      const fetchedNotebooks = await fetchNotebooks(repoUrl.trim());
+                      const { notebooks: fetchedNotebooks, error } = await fetchNotebooks(
+                        repoUrl.trim()
+                      );
+                      if (error) throw new Error(error);
                       setNewNotebooks(fetchedNotebooks);
                       setStep(1);
                     } catch (e) {
