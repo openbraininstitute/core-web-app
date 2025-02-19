@@ -3,6 +3,7 @@
 'use client';
 
 import { HTMLProps, useState } from 'react';
+import Link from 'next/link';
 import { Form, Button, ConfigProvider, Checkbox, Result, Alert } from 'antd';
 import { z } from 'zod';
 import delay from 'lodash/delay';
@@ -132,14 +133,14 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               >
                 <span className="text-lg font-semibold text-primary-8">
                   I have read and accept
-                  <a
+                  <Link
                     target="_blank"
-                    href="privacy"
+                    href="/privacy"
                     rel="noopener noreferrer"
                     className="ml-1 underline"
                   >
                     the privacy policy
-                  </a>
+                  </Link>
                 </span>
               </Checkbox>
             </Form.Item>
