@@ -1,7 +1,12 @@
 import { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
+import { Metadata } from 'next';
 import { getVirtualLabsOfUser } from '@/services/virtual-lab/labs';
 import VirtualLabDashboard from '@/components/VirtualLab/VirtualLabDashboard';
+
+export const metadata: Metadata = {
+  title: 'Virtual labs',
+};
 
 export default async function VirtualLabMainPage() {
   let redirectPath: string | null = null;

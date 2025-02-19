@@ -1,8 +1,10 @@
-import { Gabarito, Titillium_Web, DM_Serif_Text } from 'next/font/google';
 import { ReactNode, Suspense } from 'react';
-import Providers from './providers';
+import { Gabarito, Titillium_Web, DM_Serif_Text } from 'next/font/google';
 
+import Providers from './providers';
+import MatomoAnalyticsConsent from '@/components/Matomo';
 import { auth } from '@/auth';
+
 import '@/styles/globals.scss';
 
 const titilliumWeb = Titillium_Web({
@@ -37,6 +39,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       <body>
         <Providers session={session}>
           <Suspense fallback={null}>{children}</Suspense>
+          <MatomoAnalyticsConsent />
           {/* <Feedback /> */}
         </Providers>
       </body>

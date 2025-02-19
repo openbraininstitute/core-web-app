@@ -1,5 +1,7 @@
+import { createHash } from 'crypto';
 import { captureException } from '@sentry/nextjs';
 import { z } from 'zod';
+
 import { env } from '@/env.mjs';
 
 const API_KEY = env.MAILCHIMP_API_KEY;
@@ -9,12 +11,14 @@ const url = `https://${API_SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/me
 
 const newsletterFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  name: z.string({ message: 'Please enter a name.' }).min(2, { message: 'Please a correct name' }),
+  name: z
+    .string({ message: 'Please enter a name.' })
+    .min(2, { message: 'Please a correct name' })
+    .optional(),
   tags: z.array(z.string()).optional(),
 });
 
 const ErrorMessageMap = {
-  'Member Exists': "Uh oh, it looks like this email's already subscribed 🧐.",
   'Invalid Resource': 'Please provide a valid email address.',
   default: 'Adding new email to newsletter audience failed',
 };
@@ -30,7 +34,7 @@ type MailchimpErrorResponse = {
 
 type RequestBody = {
   email: string;
-  name: string;
+  name?: string;
   tags?: Array<string>;
 };
 
@@ -92,9 +96,14 @@ export async function POST(req: Request) {
     },
   };
 
+  const subscriberHash = createHash('md5')
+    .update(formValidation.email.trim().toLowerCase())
+    .digest('hex');
+  const mailchimpUri = `${url}/${subscriberHash}`;
+
   try {
-    const response = await fetch(url, {
-      method: 'post',
+    const response = await fetch(mailchimpUri, {
+      method: 'put',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `api_key ${API_KEY}`,
@@ -116,7 +125,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         message: getErrorMessage(result.title ?? 'default'),
-        reason: result.title ?? 'unknown',
+        reason: result.title ?? null,
       },
       { status: result.status ?? 400 }
     );

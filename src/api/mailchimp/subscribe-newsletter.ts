@@ -17,8 +17,10 @@ export default async function subscribeNewsletterHandler({
     body: JSON.stringify({ email, name, tags }),
   });
   const result = await response.json();
+
   if (response.ok) {
     return { subscribed: true, message: result.message };
   }
+
   throw Error(result.message, { cause: result });
 }
