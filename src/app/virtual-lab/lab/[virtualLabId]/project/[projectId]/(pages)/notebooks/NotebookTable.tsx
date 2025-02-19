@@ -82,6 +82,7 @@ function NotebookTable({
         'notebookUrl',
         'name',
         'objectOfInterest',
+        'scale',
       ];
 
       for (const field of searchFields) {
