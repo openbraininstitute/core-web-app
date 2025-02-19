@@ -126,8 +126,7 @@ export function useFilters<T>(data: T[]) {
     onFilterReset,
     filterValue,
     filteredData: useMemo(() => data.filter(applyFilters), [data, applyFilters]),
-    filterCount: Object.values(filters).filter((f) => (f as { value: T[keyof T] }).value !== null)
-      .length,
+    filterCount: Object.values(filters).filter((f) => !!(f as { value: T[keyof T] }).value).length,
   };
 }
 
