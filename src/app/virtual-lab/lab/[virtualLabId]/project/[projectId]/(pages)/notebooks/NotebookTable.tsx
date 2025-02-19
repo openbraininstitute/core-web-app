@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { saveAs } from 'file-saver';
 import { format, compareAsc } from 'date-fns';
 import { Popover } from 'antd/lib';
-import { DeleteOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, LoadingOutlined, PlusOutlined, UndoOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
@@ -360,8 +360,8 @@ function NotebookTable({
                 />
               </ColumnToggle>
 
-              <button type="button" onClick={onFilterReset}>
-                Reset filters
+              <button type="button" className="mt-5 w-fit" onClick={onFilterReset}>
+                Clear filters <UndoOutlined className="ml-3 text-lg" />
               </button>
             </ConfigProvider>
           </FilterControls>
