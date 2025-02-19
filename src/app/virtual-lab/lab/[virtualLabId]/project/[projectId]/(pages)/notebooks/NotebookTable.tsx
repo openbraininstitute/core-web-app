@@ -1,6 +1,6 @@
 'use client';
 
-import { ConfigProvider, DatePicker, Input } from 'antd';
+import { ConfigProvider, DatePicker, Input, Select } from 'antd';
 
 import Table from 'antd/es/table';
 import Image from 'next/image';
@@ -25,6 +25,7 @@ import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterC
 import { notification } from '@/api/notifications';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
+const { Option } = Select;
 
 function NotebookTable({
   notebooks,
@@ -334,7 +335,20 @@ function NotebookTable({
                 hidden={isColumnHidden('scale')}
                 title="Scale"
                 onToggle={() => toggleColumn('scale')}
-              />
+              >
+                <Select
+                  showSearch
+                  placeholder="Select an scale"
+                  onChange={(value) => onChange('scale', value)}
+                  value={filterValue('scale')}
+                  style={{ width: 200 }}
+                >
+                  <Option value="cellular">Cellular</Option>
+                  <Option value="metabolism">Metabolism</Option>
+                  <Option value="circuit">Circuit</Option>
+                  <Option value="system">System</Option>
+                </Select>
+              </ColumnToggle>
 
               <ColumnToggle
                 hidden={isColumnHidden('authors')}
