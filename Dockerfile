@@ -1,5 +1,5 @@
 # Install dependencies only when needed
-FROM node:21-alpine AS deps
+FROM node:23-alpine AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine
 # to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
@@ -11,39 +11,27 @@ RUN npm ci
 
 
 # Rebuild the source code only when needed
-FROM node:21-alpine AS builder
+FROM node:23-alpine AS builder
 
-ARG NEXT_PUBLIC_SENTRY_DSN
-ARG SENTRY_AUTH_TOKEN
-ARG NEXT_PUBLIC_BASE_PATH
-ARG NEXT_PUBLIC_NEXUS_URL
-ARG NEXT_PUBLIC_BBS_ML_URL
-ARG NEXT_PUBLIC_ATLAS_ES_VIEW_ID
-ARG NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL
-ARG NEXT_PUBLIC_KG_INFERENCE_BASE_URL
-ARG NEXT_PUBLIC_ENVIRONMENT
-ARG CI_COMMIT_SHORT_SHA
-ARG NEXT_PUBLIC_VIRTUAL_LAB_API_URL
-ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-ARG NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL
-ARG NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_TAG
-ARG NEXT_PUBLIC_CELL_COMPOSITION_TAG
-ARG NEXT_PUBLIC_CELL_SVC_BASE_URL
-ARG NEXT_PUBLIC_BLUE_NAAS_URL
+ARG DEPLOYMENT_ENV
+
 ENV NODE_OPTIONS="--max_old_space_size=7168"
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Copy correct .env file according to the deployment environment
+RUN cp .deployment-envs/.env.$DEPLOYMENT_ENV .env.production
+
 RUN npm run build
 
 
 # Production image, copy all the files and run next
-FROM node:21-alpine AS runner
+FROM node:23-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -59,6 +47,6 @@ USER nextjs
 
 EXPOSE 8000
 
-ENV PORT 8000
+ENV PORT=8000
 
 CMD ["node", "server.js"]
