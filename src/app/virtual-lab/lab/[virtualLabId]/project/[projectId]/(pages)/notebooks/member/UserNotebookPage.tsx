@@ -127,7 +127,10 @@ export default function UserNotebookPage({
                     try {
                       setLoading(true);
 
-                      const fetchedNotebooks = await fetchNotebooks(repoUrl.trim());
+                      const { notebooks: fetchedNotebooks, error } = await fetchNotebooks(
+                        repoUrl.trim()
+                      );
+                      if (error) throw new Error(error);
                       setNewNotebooks(fetchedNotebooks);
                       setStep(1);
                     } catch (e) {

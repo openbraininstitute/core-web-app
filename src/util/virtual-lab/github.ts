@@ -150,26 +150,22 @@ export async function downloadZippedNotebook(notebook: Notebook) {
 }
 
 export function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
-  try {
-    const url = new URL(githubUrl);
+  const url = new URL(githubUrl);
 
-    if (url.hostname !== 'github.com') {
-      throw new Error('Not a GitHub URL');
-    }
-
-    const pathParts = url.pathname.split('/').filter((part) => part.length > 0);
-
-    if (pathParts.length < 2) {
-      throw new Error('Invalid GitHub URL: Missing user or repository');
-    }
-
-    const user = pathParts[0];
-    const repo = pathParts[1];
-
-    return { user, repo };
-  } catch (error) {
-    throw new Error('Invalid GitHub URL');
+  if (url.hostname !== 'github.com') {
+    throw new Error('Not a GitHub URL');
   }
+
+  const pathParts = url.pathname.split('/').filter((part) => part.length > 0);
+
+  if (pathParts.length < 2) {
+    throw new Error('Invalid GitHub URL: Missing user or repository');
+  }
+
+  const user = pathParts[0];
+  const repo = pathParts[1];
+
+  return { user, repo };
 }
 
 export function validateMetadata(input: string) {
