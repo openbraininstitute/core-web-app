@@ -3,9 +3,9 @@
 'use client';
 
 import { HTMLProps, useState } from 'react';
+import Link from 'next/link';
 import { Form, Button, ConfigProvider, Checkbox, Result, Alert } from 'antd';
 import { z } from 'zod';
-import Link from 'next/link';
 import delay from 'lodash/delay';
 
 import { classNames } from '@/util/utils';
@@ -67,12 +67,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
   };
 
   return (
-    <div
-      className={classNames(
-        'flex w-full max-w-3xl animate-fade-in flex-col bg-white p-8',
-        cls?.container
-      )}
-    >
+    <div className={classNames('flex w-full max-w-3xl flex-col bg-white p-8', cls?.container)}>
       <ConfigProvider theme={{ hashed: false }}>
         {status === 'error' && (
           <Alert
@@ -89,11 +84,11 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             requiredMark={false}
             layout="vertical"
             validateTrigger={['onChange']}
-            className="flex flex-col"
+            className="flex w-full flex-col"
           >
             <Form.Item
               name="name"
-              className="mb-7 h-[64.5px] w-full"
+              className="mb-7 h-[64.5px] w-full min-w-full"
               label={
                 <span
                   className={classNames('text-lg font-bold text-primary-8', cls?.formItem?.label)}
@@ -105,12 +100,12 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             >
               <Input
                 placeholder="Enter your name"
-                className={classNames('h-10', cls?.formItem?.input)}
+                className={classNames('h-10 w-full min-w-0', cls?.formItem?.input)}
               />
             </Form.Item>
             <Form.Item
               name="email"
-              className="mb-7 h-[64.5px] w-full"
+              className="mb-7 h-[64.5px] w-full  min-w-full"
               label={
                 <span
                   className={classNames('text-lg font-bold text-primary-8', cls?.formItem?.label)}
@@ -122,7 +117,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             >
               <Input
                 placeholder="Enter your email"
-                className={classNames('h-10', cls?.formItem?.input)}
+                className={classNames('h-10 w-full  min-w-0', cls?.formItem?.input)}
               />
             </Form.Item>
             <Form.Item
@@ -138,8 +133,12 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               >
                 <span className="text-lg font-semibold text-primary-8">
                   I have read and accept
-                  {/* TODO: change this to new privacy url */}
-                  <Link key="/welcome/privacy" href="/welcome/privacy" className="ml-1 underline">
+                  <Link
+                    target="_blank"
+                    href="/privacy"
+                    rel="noopener noreferrer"
+                    className="ml-1 underline"
+                  >
                     the privacy policy
                   </Link>
                 </span>
