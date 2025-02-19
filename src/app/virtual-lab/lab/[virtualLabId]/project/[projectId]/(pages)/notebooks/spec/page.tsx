@@ -6,13 +6,13 @@ export default function NotebookSpec() {
       <p className="mb-4">
         This document describes the structure of Jupyter notebooks to be used in an OBI virtual lab
         and of code repositories containing them. In case of questions, it may be helpful to visit
-        the
+        the{' '}
         <a
           href="https://github.com/openbraininstitute/obi_platform_analysis_notebooks/tree/main"
           className="underline"
         >
           repository of official OBI notebooks
-        </a>
+        </a>{' '}
         that adheres to these specifications.
       </p>
 
@@ -111,7 +111,7 @@ export default function NotebookSpec() {
             </li>
             <li>
               <strong>required_properties:</strong> A list of additional key-value pairs, e.g.,{' '}
-              <code>{'&quot;synapse_class&quot;: &quot;excitatory&quot;'}</code>.
+              <code>{'{ "synapse_class": "excitatory" }'}</code>.
             </li>
           </ul>
         </li>
