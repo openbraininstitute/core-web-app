@@ -3,9 +3,9 @@ name: Lint, Format, Test, Build
 on:
   push:
     branches:
-      - "*"
-      - "!main"
-      - "!develop"
+      - '*'
+      - '!main'
+      - '!develop'
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 23
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install Node.js packages
         run: npm ci
@@ -34,7 +34,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 23
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install Node.js packages
         run: npm ci
@@ -52,7 +52,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 23
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install Node.js packages
         run: npm ci
@@ -70,7 +70,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 23
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install Node.js packages
         run: npm ci
@@ -90,7 +90,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 23
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install Node.js packages
         run: npm ci
