@@ -14,7 +14,7 @@ export default function Hero() {
   const { videoURL } = useSanityContentForHero(EnumSection.ComingSoon);
 
   return (
-    <div className="relative h-svh w-screen bg-primary-8 text-white">
+    <div className="relative h-svh min-h-screen w-screen bg-primary-8 text-white">
       <div className="absolute inset-0">
         <Image
           fill
@@ -25,7 +25,7 @@ export default function Hero() {
         />
         <video
           className={classNames(
-            'absolute inset-0 h-full w-full object-cover',
+            'absolute inset-0 h-svh w-svw object-cover',
             'transition-opacity duration-1000',
             videoReady ? 'opacity-100' : 'opacity-0'
           )}
