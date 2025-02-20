@@ -1,8 +1,10 @@
 import { Metadata } from 'next';
 
 // import Entrypoint from '@/components/Entrypoint';
-import ComingSoon from './_coming-soon/page';
+// import ComingSoon from './coming-soon/page';
 import { basePath } from '@/config';
+import LandingPage from '@/components/LandingPage';
+import { EnumSection } from '@/components/LandingPage/sections/sections';
 // import LandingPage from '@/components/LandingPage';
 // import { EnumSection } from '@/components/LandingPage/sections/sections';
 
@@ -63,7 +65,7 @@ export default function RootPage({
 }: {
   searchParams: { errorcode: string | undefined };
 }) {
-  return <ComingSoon />;
-  // <LandingPage section={EnumSection.Home} errorCode={searchParams.errorcode} />;
+  // return <ComingSoon />;
+  return <LandingPage section={EnumSection.Home} errorCode={searchParams.errorcode} />;
   // return <Entrypoint errorCode={searchParams.errorcode} />;
 }

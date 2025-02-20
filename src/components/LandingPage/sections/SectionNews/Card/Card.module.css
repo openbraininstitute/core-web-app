@@ -18,6 +18,7 @@
 
 .card.small .content {
   flex-direction: column;
+  height: auto;
 }
 
 .card > h1 {
@@ -33,6 +34,7 @@
   color: var(--color-neutral);
   gap: 2em;
   margin-bottom: 2em;
+  margin-top: 0.5em;
 }
 
 .content {

@@ -8,7 +8,7 @@ export function useSanityContentForMultipleMember() {
       `*[_type=="multipleMemberBloc"].memberList[]->{
   firstName,
   lastName,
-  biography,
+  "biography": shortBiography,
   "imageURL": image.asset->url,
   "imageWidth": image.asset->metadata.dimensions.width,
   "imageHeight": image.asset->metadata.dimensions.height

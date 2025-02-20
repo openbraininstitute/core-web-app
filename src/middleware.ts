@@ -8,6 +8,7 @@ const FREE_ACCESS_PAGES = [
   '/about*',
   '/api/newsletter',
   '/welcome*',
+  '/coming-soon',
   '/privacy',
 ];
 const ASSETS = [

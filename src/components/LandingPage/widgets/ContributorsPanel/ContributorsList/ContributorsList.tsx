@@ -29,13 +29,18 @@ export default function ContributorsList({ className, list }: ContributorsListPr
               {contributor.google_scholar && (
                 <a
                   className={styleButtonHoverable}
+                  target="_BLANK"
                   href={`https://scholar.google.com/citations?user=${contributor.google_scholar}`}
                 >
                   Google Scholar
                 </a>
               )}
               {contributor.ORCID && (
-                <a className={styleButtonHoverable} href={`https://orcid.org/${contributor.ORCID}`}>
+                <a
+                  className={styleButtonHoverable}
+                  target="_BLANK"
+                  href={`https://orcid.org/${contributor.ORCID}`}
+                >
                   Orcid
                 </a>
               )}

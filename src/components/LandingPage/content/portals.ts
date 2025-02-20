@@ -6,9 +6,14 @@ export function useSanityContentForPortalsTitle(): string {
   return (
     useSanity(
       `*[_type=="pages" && slug.current=="home"][0].content[_type=="portalsList"][0].title`,
-      isString
+      isStringOrNull
     ) ?? ''
   );
+}
+
+function isStringOrNull(data: unknown): data is string | null {
+  if (data === null) return true;
+  return isString(data);
 }
 
 export interface ContentForPortalsListItem {
