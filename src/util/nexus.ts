@@ -152,13 +152,11 @@ export function getIdFromSelfUrl(selfUrl: string | null) {
 }
 
 export function getOrgFromSelfUrl(selfUrl: string | null) {
-  if (!selfUrl) return null;
-  return selfUrl.replace(`${nexus.url}/resources/`, '').split('/')[0];
+  return selfUrl ? selfUrl.split('/').at(-4) : null;
 }
 
 export function getProjectFromSelfUrl(selfUrl: string | null) {
-  if (!selfUrl) return null;
-  return selfUrl.replace(`${nexus.url}/resources/`, '').split('/')[1];
+  return selfUrl ? selfUrl.split('/').at(-3) : null;
 }
 
 export function getOrgAndProjectFromProjectId(projectId: string): { org: string; project: string } {
