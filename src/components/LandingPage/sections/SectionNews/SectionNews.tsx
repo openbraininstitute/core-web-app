@@ -27,6 +27,13 @@ export default function SectionNews({ className, showHeader = false }: SectionNe
     }
   };
 
+  newsList.forEach((news) => {
+    console.debug(news.category);
+    if (news.title.includes('Neuron Phenotype Ontology')) {
+      console.debug(news);
+    }
+  });
+
   return (
     <>
       <div className={classNames(className, styles.news, styleBlockMedium)}>
