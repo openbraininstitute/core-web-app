@@ -11,6 +11,7 @@ import delay from 'lodash/delay';
 import { classNames } from '@/util/utils';
 import { Input } from '@/components/inputs/input-outline';
 import subscribeNewsletterHandler from '@/api/mailchimp/subscribe-newsletter';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 type TNewsletterForm = {
   email: string;
@@ -28,7 +29,6 @@ type Props = {
     btn?: HTMLProps<HTMLElement>['className'];
     successMessage?: HTMLProps<HTMLElement>['className'];
   };
-  position?: 'page' | 'footer';
 };
 
 const newsletterFormSchema = z.object({
@@ -40,7 +40,8 @@ const newsletterFormSchema = z.object({
   accept_terms: z.boolean(),
 });
 
-export default function NewsletterForm({ cls, position = 'page' }: Props) {
+export default function NewsletterForm({ cls }: Props) {
+  const isWide = useMediaQuery('(min-width: 768px)');
   const [form] = Form.useForm<TNewsletterForm>();
   const [subscribing, setSubscribing] = useState(false);
   const [subscribeResult, setSubscribeResult] = useState<{
@@ -76,7 +77,13 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
   };
 
   return (
-    <div className={classNames('flex w-full max-w-3xl flex-col bg-white p-8', cls?.container)}>
+    <div
+      className={classNames(
+        'flex w-full max-w-full  flex-col bg-white',
+        'p-4 sm:max-w-3xl md:p-8',
+        cls?.container
+      )}
+    >
       <ConfigProvider theme={{ hashed: false }}>
         {subscribeResult?.status === 'error' && (
           <Alert
@@ -102,7 +109,10 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               className="mb-7 h-[64.5px] w-full min-w-full"
               label={
                 <span
-                  className={classNames('text-lg font-bold text-primary-8', cls?.formItem?.label)}
+                  className={classNames(
+                    'text-base font-bold text-primary-8 md:text-lg',
+                    cls?.formItem?.label
+                  )}
                 >
                   Name
                 </span>
@@ -111,6 +121,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               <Input
                 placeholder="Enter your name"
                 className={classNames('h-10 w-full min-w-0', cls?.formItem?.input)}
+                size={isWide ? 'large' : 'small'}
               />
             </Form.Item>
             <Form.Item
@@ -118,7 +129,10 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               className="mb-7 h-[64.5px] w-full  min-w-full"
               label={
                 <span
-                  className={classNames('text-lg font-bold text-primary-8', cls?.formItem?.label)}
+                  className={classNames(
+                    'text-base font-bold text-primary-8 md:text-lg',
+                    cls?.formItem?.label
+                  )}
                 >
                   Email
                   <span className="ml-1 font-bold text-red-600">*</span>
@@ -129,12 +143,14 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               <Input
                 placeholder="Enter your email"
                 className={classNames('h-10 w-full  min-w-0', cls?.formItem?.input)}
+                size={isWide ? 'large' : 'small'}
               />
             </Form.Item>
             <Form.Item
               name="accept_terms"
               valuePropName="checked"
               rules={[{ required: true, message: 'Please accept the privacy policy' }]}
+              className="mb-4 md:mb-7"
             >
               <Checkbox
                 className={classNames(
@@ -142,7 +158,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                   '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8'
                 )}
               >
-                <span className="text-lg font-semibold text-primary-8">
+                <span className="text-base font-semibold text-primary-8 md:text-lg">
                   I have read and accept
                   <Link
                     target="_blank"
@@ -160,7 +176,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                 loading={subscribing}
                 htmlType="submit"
                 className={classNames(
-                  'w-full rounded-full bg-white px-8 py-3 text-lg font-semibold text-primary-8 md:w-auto',
+                  'w-auto rounded-full bg-white px-8 py-3 text-lg font-semibold text-primary-8',
                   'mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:bg-primary-8 hover:!text-white',
                   'disabled:text-primary-8 disabled:hover:bg-gray-100 disabled:hover:!text-primary-4',
                   cls?.btn
@@ -177,8 +193,8 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             title="You’re all set! Some great news will be coming your way soon!"
             className={classNames(
               'font-serif  [&_.ant-result-title]:font-bold [&_.ant-result-title]:text-primary-8',
-              position === 'page' && '[&_.ant-result-title]:text-4xl',
-              position === 'footer' && '[&_.ant-result-title]:text-2xl'
+              'mx-auto max-w-full sm:max-w-[80%] lg:max-w-[60%]',
+              '[&_.ant-result-title]:text-2xl sm:[&_.ant-result-title]:text-4xl'
             )}
           />
         )}
