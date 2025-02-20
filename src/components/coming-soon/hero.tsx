@@ -21,11 +21,11 @@ export default function Hero() {
           priority
           alt="coming-soon"
           src={`${basePath}/images/coming-soon/background.webp`}
-          className="absolute inset-0 h-svh w-svw object-cover"
+          className="absolute inset-0 h-screen min-h-screen w-screen object-cover"
         />
         <video
           className={classNames(
-            'absolute inset-0 h-svh w-svw object-cover',
+            'absolute inset-0 h-screen w-screen object-cover',
             'transition-opacity duration-1000',
             videoReady ? 'opacity-100' : 'opacity-0'
           )}
