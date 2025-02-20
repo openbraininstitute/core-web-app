@@ -27,6 +27,13 @@ export default function SectionNews({ className, showHeader = false }: SectionNe
     }
   };
 
+  newsList.forEach((news) => {
+    console.debug(news.category);
+    if (news.title.includes('Neuron Phenotype Ontology')) {
+      console.debug(news);
+    }
+  });
+
   return (
     <>
       <div className={classNames(className, styles.news, styleBlockMedium)}>
@@ -77,10 +84,16 @@ export default function SectionNews({ className, showHeader = false }: SectionNe
 }
 
 const CATEGORIES: Array<{ id: string; label: string }> = [
-  { label: 'New feature', id: 'new-feature' },
-  { label: 'Paper release', id: 'paper-release' },
-  { label: 'Platform update', id: 'platform-update' },
-  { label: 'New model', id: 'new-model' },
+  { label: 'BBP news', id: 'BBP news' },
+  { label: 'Talk', id: 'Talk' },
+  { label: 'New feature', id: 'New feature' },
+  { label: 'Paper release', id: 'Paper release' },
+  { label: 'Platform update', id: 'Platform update' },
+  { label: 'New model', id: 'New model' },
+  { label: 'Event', id: 'Event' },
+  { label: 'Workshop', id: 'Workshop' },
+  { label: 'Knowledge', id: 'Knowledge' },
+  { label: 'Milestone', id: 'Milestone' },
 ];
 
 const ALL_CATEGORY_IDS = CATEGORIES.map((cat) => cat.id);
