@@ -34,7 +34,7 @@ export default function Page() {
           </div>
         </main>
       </div>
-      <div className="fixed bottom-3 left-3 z-50 px-2 py-2 text-base text-white shadow-md md:px-[19px]">
+      <div className="fixed bottom-3 left-3 z-50 px-2 py-2 text-base text-white md:px-[19px]">
         Copyright &copy; {new Date().getFullYear()} – Open Brain Institute
       </div>
     </div>
