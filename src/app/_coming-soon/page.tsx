@@ -25,9 +25,9 @@ export default function Page() {
             'px-6 sm:px-12'
           )}
         >
-          <div className="flex w-full flex-col items-start justify-start sm:min-w-[40rem] md:min-w-[48rem]">
+          <div className="flex w-full min-w-full flex-col items-start justify-start">
             <Main />
-            <NewsletterForm position="page" key="main-newsletter-form" />
+            <NewsletterForm key="main-newsletter-form" />
           </div>
         </main>
       </div>

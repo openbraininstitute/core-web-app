@@ -1,10 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
+import Image from 'next/image';
 
-import { useSanityContentForHero } from '../LandingPage/content';
-import { EnumSection } from '../LandingPage/sections/sections';
+import { useSanityContentForHero } from '@/components/LandingPage/content/hero';
+import { EnumSection } from '@/components/LandingPage/sections/sections';
 
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
@@ -21,7 +21,7 @@ export default function Hero() {
           priority
           alt="coming-soon"
           src={`${basePath}/images/coming-soon/background.webp`}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-svh w-svw object-cover"
         />
         <video
           className={classNames(
