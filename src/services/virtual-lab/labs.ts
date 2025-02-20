@@ -1,13 +1,10 @@
 import { virtualLabApi } from '@/config';
 import { VirtualLab, VirtualLabResponse } from '@/types/virtual-lab/lab';
-import {
-  VirtualLabBalanceResponse,
-  VirtualLabJobReportsResponse,
-} from '@/types/virtual-lab/accounting';
+import { VirtualLabBalanceResponse, VirtualLabJobReportsResponse } from '@/types/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { UsersResponse } from '@/types/virtual-lab/members';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
-import { assertVLApiResponse } from '@/util/utils';
+import { assertApiResponse } from '@/util/utils';
 import { VirtualLabWithOptionalId } from '@/components/VirtualLab/CreateVirtualLabButton/types';
 
 export async function getVirtualLabDetail(id: string): Promise<VirtualLabResponse> {
@@ -54,7 +51,7 @@ export async function patchVirtualLab(
     body: JSON.stringify(partialVlab),
   });
 
-  return assertVLApiResponse(res);
+  return assertApiResponse(res);
 }
 
 export async function deleteVirtualLab(id: string): Promise<
@@ -109,7 +106,7 @@ export async function createVirtualLab({
     body: JSON.stringify(lab),
   });
 
-  return assertVLApiResponse(response);
+  return assertApiResponse(response);
 }
 
 export async function getVirtualLabAccountBalance({

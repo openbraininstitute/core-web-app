@@ -259,7 +259,7 @@ export function signOut() {
   window.location.href = `${basePath}/log-out`;
 }
 
-export async function assertVLApiResponse(res: Response) {
+export async function assertApiResponse(res: Response) {
   const data = await res.json();
 
   if (!res.ok) {

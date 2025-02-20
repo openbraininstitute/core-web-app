@@ -17,6 +17,8 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
 import { getAgentForUser } from '@/services/virtual-lab/users';
 import { ContributorRole } from '@/constants/nexus';
+import { makeOneshotReservation, reportOneshotUsage } from '@/services/accounting';
+import { ServiceSubtype, ServiceType } from '@/types/accounting';
 
 type MEModelDetails = {
   description: string;
@@ -36,6 +38,14 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
     const contributerAgent = (await getAgentForUser()).data;
 
     if (!session || !meModelDetails || !selectedMModel || !selectedEModel) return null;
+
+    const accountingReservation = await makeOneshotReservation({
+      projectId: virtualLabInfo.projectId,
+      userId: session.user.id,
+      type: ServiceType.Oneshot,
+      subtype: ServiceSubtype.SingleCellBuild,
+      count: 1,
+    });
 
     let brainLocation: BrainLocation | undefined;
     if (meModelDetails.brainRegion) {
@@ -102,6 +112,16 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
     });
 
     const meModelResource = await createResource<MEModelResource>(entity, session, url);
+
+    await reportOneshotUsage({
+      projectId: virtualLabInfo.projectId,
+      type: ServiceType.Oneshot,
+      subtype: ServiceSubtype.SingleCellBuild,
+      count: 1,
+      jobId: accountingReservation?.jobId,
+      timestamp: new Date().toISOString(),
+    });
+
     set(meModelSelfUrlAtom, meModelResource._self);
     return meModelResource;
   }

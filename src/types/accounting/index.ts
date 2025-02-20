@@ -45,7 +45,9 @@ export enum ServiceType {
 export enum ServiceSubtype {
   Storage = 'storage',
   SingleCellSim = 'single-cell-sim',
+  SingleCellBuild = 'single-cell-build',
   SynaptomeSim = 'synaptome-sim',
+  SynaptomeBuild = 'synaptome-build',
   MlRetrieval = 'ml-retrieval',
   MlLlm = 'ml-llm',
   MlRag = 'ml-rag',
@@ -82,3 +84,24 @@ export type ProjectJobReports = {
 };
 
 export type ProjectJobReportsResponse = VlmResponse<ProjectJobReports>;
+
+/* -------------------------------------- Reservation types ------------------------------------- */
+
+export type OneshotReservation = {
+  projectId: string;
+  userId: string;
+  type: ServiceType;
+  subtype: ServiceSubtype;
+  count: number;
+};
+
+/* ----------------------------------------- Usage types ---------------------------------------- */
+
+export type OneshotUsage = {
+  projectId: string;
+  type: ServiceType;
+  subtype: ServiceSubtype;
+  count: number;
+  jobId: string;
+  timestamp: string;
+};

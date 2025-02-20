@@ -19,6 +19,8 @@ export const env = createEnv({
     MAILCHIMP_AUDIENCE_ID: z.string().min(1),
     MAILCHIMP_API_SERVER: z.string().min(1),
 
+    ACCOUNTING_BASE_URL: z.string().url().optional(),
+
     CI_COMMIT_SHORT_SHA: z.string().optional(),
     npm_package_version: z.string().optional(),
   },

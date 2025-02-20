@@ -10,7 +10,7 @@ import { Notebook } from '@/util/virtual-lab/github';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import authFetch from '@/authFetch';
 import { notification } from '@/api/notifications';
-import { assertErrorMessage, assertVLApiResponse } from '@/util/utils';
+import { assertErrorMessage, assertApiResponse } from '@/util/utils';
 import { virtualLabApi } from '@/config';
 
 function useDelayedLoading(initialValue = false, delay = 200) {
@@ -217,7 +217,7 @@ export default function UserNotebookPage({
                         }
                       );
 
-                      const newNotebook = await assertVLApiResponse(notebookRes);
+                      const newNotebook = await assertApiResponse(notebookRes);
 
                       const newValidatedNotebooks = NotebooksArraySchema.parse(newNotebook.data);
                       setNotebooks([
