@@ -6,7 +6,6 @@ import { env } from '@/env.mjs';
 const issuer = env.KEYCLOAK_ISSUER;
 const clientId = env.KEYCLOAK_CLIENT_ID;
 const clientSecret = env.KEYCLOAK_CLIENT_SECRET;
-const basePath = env.NEXT_PUBLIC_BASE_PATH;
 
 /**
  * Takes a token, and returns a new token with updated
