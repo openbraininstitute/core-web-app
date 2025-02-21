@@ -173,7 +173,7 @@ function ContextualContent() {
     const params = clearContextSearchParams(searchParams);
     params.set('contextual', 'true');
     params.set('context', 'more-options');
-    navigate(`/build/${step}/literature?${params.toString()}`);
+    navigate(`/app/build/${step}/literature?${params.toString()}`);
   };
 
   const gotoAskMoreMode = () => {
@@ -183,7 +183,7 @@ function ContextualContent() {
     params.set('contextual', 'true');
     params.set('context', 'ask-more');
     params.set('chatId', crypto.randomUUID());
-    navigate(`/build/${step}/literature?${params.toString()}`);
+    navigate(`/app/build/${step}/literature?${params.toString()}`);
   };
 
   const onContextSubmit = ({

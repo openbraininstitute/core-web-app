@@ -183,7 +183,7 @@ describe('LiteratureArticleListingPage', () => {
     await user.click(electrophysiologyOption);
 
     expect(mockRouter.push).toHaveBeenCalledWith(
-      `/explore/interactive/literature/electrophysiology?brainRegion=${encodeURIComponent(
+      `/app/explore/interactive/literature/electrophysiology?brainRegion=${encodeURIComponent(
         BrainRegionQueryParams!
       )}`
     );

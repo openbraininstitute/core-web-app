@@ -172,11 +172,11 @@ const weAreInRoute = ({
   const resourceType = experimentType ?? modelType ?? ExperimentTypeNames.MORPHOLOGY;
   if (isExperiment(resourceType)) {
     usePathname.mockReturnValue(
-      `/virtual-lab/lab/${virtualLabId}/project/${projectId}/explore/interactive/experimental/${resourceType}/somename`
+      `app/virtual-lab/lab/${virtualLabId}/project/${projectId}/explore/interactive/experimental/${resourceType}/somename`
     );
   } else {
     usePathname.mockReturnValue(
-      `/virtual-lab/lab/${virtualLabId}/project/${projectId}/explore/interactive/model/${modelType}/somename`
+      `/app/virtual-lab/lab/${virtualLabId}/project/${projectId}/explore/interactive/model/${modelType}/somename`
     );
   }
 };

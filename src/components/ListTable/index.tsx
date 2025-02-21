@@ -141,12 +141,12 @@ export function IndexColContent({
             },
             {
               children: <BrainIcon />,
-              href: `/build/cell-composition/interactive?brainModelConfigId=${id}`,
+              href: `/app/build/cell-composition/interactive?brainModelConfigId=${id}`,
               title: 'View brain configuration',
             },
             {
               children: <VirtualLabIcon />,
-              href: `/experiment-designer/experiment-setup?simulationCampaignUIConfigId=${id}`,
+              href: `/app/experiment-designer/experiment-setup?simulationCampaignUIConfigId=${id}`,
               title: 'View experiment configuration',
             },
           ].map(

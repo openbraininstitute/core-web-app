@@ -33,7 +33,7 @@ export default function VerticalLinks({ virtualLabId, projectId, currentPage, li
   const { push } = useRouter();
 
   const onClick = (href: string) => () =>
-    push(`/virtual-lab/lab/${virtualLabId}/project/${projectId}/${href}`);
+    push(`/app/virtual-lab/lab/${virtualLabId}/project/${projectId}/${href}`);
   const selectedLayout = useSelectedLayoutSegment();
 
   return (

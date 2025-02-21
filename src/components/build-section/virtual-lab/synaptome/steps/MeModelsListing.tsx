@@ -77,7 +77,7 @@ export default function MeModelsListing({
       record,
       selectedRows,
     });
-    const url = `/virtual-lab/lab/${virtualLabId}/project/${projectId}/explore/interactive/model/me-model/${to64(`${record._source.project.label}!/!${record._id}`)}`;
+    const url = `/app/virtual-lab/lab/${virtualLabId}/project/${projectId}/explore/interactive/model/me-model/${to64(`${record._source.project.label}!/!${record._id}`)}`;
     navigate(url);
   };
 
