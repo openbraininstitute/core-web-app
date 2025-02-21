@@ -1,9 +1,9 @@
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 import { assertApiResponse } from '@/util/utils';
-import { OneshotUsage, OneshotReservation } from '@/types/accounting';
+import { OneshotUsage, OneshotReservation, ServiceType, ServiceSubtype } from '@/types/accounting';
 
-export async function makeOneshotReservation(reservation: OneshotReservation) {
+async function makeOneshotReservation(reservation: OneshotReservation) {
   const res = await authFetch(`${basePath}/api/accounting/reservation/oneshot`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -13,7 +13,7 @@ export async function makeOneshotReservation(reservation: OneshotReservation) {
   return assertApiResponse(res);
 }
 
-export async function cancelOneshotReservation(jobId: string) {
+async function cancelOneshotReservation(jobId: string) {
   const res = await authFetch(`${basePath}/api/accounting/reservation/oneshot/${jobId}`, {
     method: 'DELETE',
   });
@@ -21,7 +21,7 @@ export async function cancelOneshotReservation(jobId: string) {
   return assertApiResponse(res);
 }
 
-export async function reportOneshotUsage(oneshotUsage: OneshotUsage) {
+async function reportOneshotUsage(oneshotUsage: OneshotUsage) {
   const res = await authFetch(`${basePath}/api/accounting/usage/oneshot`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -29,4 +29,18 @@ export async function reportOneshotUsage(oneshotUsage: OneshotUsage) {
   });
 
   return assertApiResponse(res);
+}
+
+export type OneshotSessionParams = {
+  projectId: string;
+  userId: string;
+  type: ServiceType;
+  subtype: ServiceSubtype;
+  count: number;
+};
+
+export class OneshotSession {
+  private jobId: string | null = null;
+
+  constructor(params: OneshotSessionParams) {}
 }

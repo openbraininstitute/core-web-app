@@ -1,4 +1,4 @@
-import { VlmResponse } from './common';
+import { VlmResponse } from '@/types/virtual-lab/common';
 
 /* ---------------------------------------- Common types ---------------------------------------- */
 
