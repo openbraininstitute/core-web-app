@@ -192,5 +192,5 @@ const bookmarksInclude = (resourceIds: string[]) => {
 
 const weAreNotInProject = () => {
   useParams.mockReturnValue({});
-  usePathname.mockReturnValue('/explore/interactive/experimental/morphology/somename');
+  usePathname.mockReturnValue('/app/explore/interactive/experimental/morphology/somename');
 };

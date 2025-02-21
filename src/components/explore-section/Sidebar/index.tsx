@@ -20,13 +20,13 @@ export const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
     name: 'Interactive exploration',
     description:
       'Explore each brain region and discover all the experimental data, virtual experiments targeting these regions and the literature associated to those.',
-    url: '/explore/interactive',
+    url: '/app/explore/interactive',
     bgcolor: 'bg-primary-5',
   },
   {
     name: 'Knowledge discovery',
     description: 'Explore the literature and query publications using a chatbot.',
-    url: '/explore/literature',
+    url: '/app/explore/literature',
     bgcolor: 'bg-primary-6',
   },
 ];

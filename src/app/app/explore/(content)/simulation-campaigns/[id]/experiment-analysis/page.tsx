@@ -91,7 +91,7 @@ export default function ExperimentAnalyses({
           <Link
             className="mt-5 rotate-180 whitespace-pre text-sm"
             href={
-              pathname?.replace(/\/experiment-analysis$/, '') || '/explore/simulation-campaigns'
+              pathname?.replace(/\/experiment-analysis$/, '') || '/app/explore/simulation-campaigns'
             }
             style={{ writingMode: 'vertical-rl' }}
           >

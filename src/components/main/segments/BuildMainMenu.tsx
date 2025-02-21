@@ -39,7 +39,7 @@ type CuratedModel = {
 type BuildMenuKey = 'create-model' | 'browse-models' | null;
 
 const loadableConfigAtom = loadable(configListAtom);
-const BUILD_BASE_HREF = '/build/cell-composition/interactive';
+const BUILD_BASE_HREF = '/app/build/cell-composition/interactive';
 const BUILD_MENU: Array<SubMenuList<BuildMenuKey>> = [
   {
     id: 'create-model',

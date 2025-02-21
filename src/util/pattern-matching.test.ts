@@ -16,16 +16,16 @@ describe('util/pattern-matching.ts', () => {
       expect(checkMatchPatterns(' lorem', [/^lorem$/])).toBeFalsy();
 
       expect(
-        checkMatchPatterns('/build/connectome-definition/interactive', [
-          '/build/cell-composition',
-          /^\/build\/connectome-definition\//,
+        checkMatchPatterns('/app/build/connectome-definition/interactive', [
+          '/app/build/cell-composition',
+          /^\/app\/build\/connectome-definition\//,
         ])
       ).toBeTruthy();
 
       expect(
-        checkMatchPatterns('/build/cell-composition/build', [
-          '/build/cell-composition',
-          /^\/build\/connectome-definition\//,
+        checkMatchPatterns('/app/build/cell-composition/build', [
+          '/app/build/cell-composition',
+          /^\/app\/build\/connectome-definition\//,
         ])
       ).toBeFalsy();
     });

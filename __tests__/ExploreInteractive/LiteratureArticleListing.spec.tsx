@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import isUndefined from 'lodash/isUndefined';
 import userEvent, { UserEvent } from '@testing-library/user-event';
-import LiteratureArticleListingPage from '@/app/explore/(interactive)/interactive/literature/[experiment-data-type]/page';
+import LiteratureArticleListingPage from '@/app/app/explore/(interactive)/interactive/literature/[experiment-data-type]/page';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { SelectedBrainRegion } from '@/state/brain-regions/types';
 import { ArticleItem } from '@/api/explore-section/resources';

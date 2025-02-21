@@ -3,7 +3,7 @@ import { Session } from 'next-auth';
 import { useEffect, useState } from 'react';
 import { RunningAnalysis, useCumulativeAnalysisReports } from '../../Simulations/CustomAnalysis';
 import { getEModelAnalysisWorkflowConfig } from '@/components/explore-section/Simulations/utils';
-import { Analysis } from '@/app/explore/(content)/simulation-campaigns/shared';
+import { Analysis } from '@/app/app/explore/(content)/simulation-campaigns/shared';
 import { createWorkflowConfigResource, fetchResourceById } from '@/api/nexus';
 import { composeUrl } from '@/util/nexus';
 import { launchWorkflowTask, launchUnicoreWorkflowSetup } from '@/services/bbp-workflow';
@@ -103,7 +103,7 @@ async function launchAnalysis(
   kg-org: bbp
   kg-proj: mmb-point-neuron-framework-model
   account: proj134
-  
+
   [MultiAnalyseEModelMeta]
   config-url: ${urlWithRev}
   `;

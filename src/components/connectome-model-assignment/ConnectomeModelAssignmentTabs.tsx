@@ -9,22 +9,22 @@ import TopNavigation from '@/components/TopNavigation';
 const tabs: MenuItem[] = [
   {
     label: 'Interactive',
-    href: '/build/connectome-model-assignment/interactive',
+    href: '/app/build/connectome-model-assignment/interactive',
     icon: <BrainIcon className="h-4" />,
   },
   {
     label: 'Analysis',
-    href: '/build/connectome-model-assignment/analysis',
+    href: '/app/build/connectome-model-assignment/analysis',
     icon: <AnalysisIcon className="h-4" />,
   },
   {
     label: 'Configuration',
-    href: '/build/connectome-model-assignment/configuration',
+    href: '/app/build/connectome-model-assignment/configuration',
     icon: <SettingsIcon className="h-4" />,
   },
   {
     label: 'Literature',
-    href: '/build/connectome-model-assignment/literature',
+    href: '/app/build/connectome-model-assignment/literature',
     icon: <ReadOutlined className="h-4 text-lg" />,
   },
 ];

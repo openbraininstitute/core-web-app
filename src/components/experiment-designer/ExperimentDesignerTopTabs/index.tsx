@@ -16,33 +16,33 @@ type Tab = {
 const tabs: Tab[] = [
   {
     name: 'Experiment Setup',
-    href: '/experiment-designer/experiment-setup',
-    baseHref: '/experiment-designer/experiment-setup',
+    href: '/app/experiment-designer/experiment-setup',
+    baseHref: '/app/experiment-designer/experiment-setup',
   },
   {
     name: 'Sensory Input',
-    href: '/experiment-designer/sensory-input',
-    baseHref: '/experiment-designer/sensory-input',
+    href: '/app/experiment-designer/sensory-input',
+    baseHref: '/app/experiment-designer/sensory-input',
   },
   {
     name: 'Stimulation Protocol',
-    href: '/experiment-designer/stimulation-protocol',
-    baseHref: '/experiment-designer/stimulation-protocol',
+    href: '/app/experiment-designer/stimulation-protocol',
+    baseHref: '/app/experiment-designer/stimulation-protocol',
   },
   {
     name: 'Recording',
-    href: '/experiment-designer/recording',
-    baseHref: '/experiment-designer/recording',
+    href: '/app/experiment-designer/recording',
+    baseHref: '/app/experiment-designer/recording',
   },
   {
     name: 'Imaging',
-    href: '/experiment-designer/imaging',
-    baseHref: '/experiment-designer/imaging',
+    href: '/app/experiment-designer/imaging',
+    baseHref: '/app/experiment-designer/imaging',
   },
   {
     name: 'Analysis',
-    href: '/experiment-designer/analysis',
-    baseHref: '/experiment-designer/analysis',
+    href: '/app/experiment-designer/analysis',
+    baseHref: '/app/experiment-designer/analysis',
   },
 ];
 

@@ -75,14 +75,14 @@ describe('QAContainer', () => {
   });
 
   test('shows controls for brain regions in explore', () => {
-    renderComponent('/explore/literature');
+    renderComponent('/app/explore/literature');
 
     expect(screen.getByTestId('selected-brain-region').innerHTML).toEqual(mockBrainRegion.title);
     expect(searchInBrainRegionSwitch()).toBeInTheDocument();
   });
 
   test('does not show back to configuration button in explore', () => {
-    renderComponent('/explore/literature');
+    renderComponent('/app/explore/literature');
 
     expect(screen.queryByText(/Back to configuration/i)).not.toBeInTheDocument();
   });
@@ -190,7 +190,7 @@ describe('QAContainer', () => {
     );
   }
 
-  const renderComponent = (path = '/build/literature') => {
+  const renderComponent = (path = '/app/build/literature') => {
     const selectedBrainRegion = { ...mockBrainRegion };
     const QAs: GenerativeQA[] = [
       mockQA({ question: NoBrainRegionQuestion, id: '1' }),

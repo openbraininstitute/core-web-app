@@ -11,7 +11,7 @@ import { initialParameters, literatureAtom, questionsParametersAtom } from '@/st
 
 function QAContainer() {
   const pathname = usePathname();
-  const isBuildSection = pathname?.startsWith('/build');
+  const isBuildSection = pathname?.startsWith('/app/build');
   const resetParameters = useSetAtom(questionsParametersAtom);
   const updateLiterature = useSetAtom(literatureAtom);
 

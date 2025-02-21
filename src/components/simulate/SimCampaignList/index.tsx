@@ -51,7 +51,7 @@ export default function SimCampaignList() {
   }, [simCampaignsLoadable]);
 
   const generateRedirectUrl = (config: SimulationCampaignUIConfigResource) => {
-    const baseHref = '/experiment-designer/experiment-setup';
+    const baseHref = '/app/experiment-designer/experiment-setup';
     const collapsedId: string = encodeURIComponent(config['@id'].split('/').pop() || '');
     return `${baseHref}?simulationCampaignUIConfigId=${collapsedId}`;
   };

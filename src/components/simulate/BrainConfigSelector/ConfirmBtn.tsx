@@ -11,7 +11,7 @@ import { createSimulationCampaignUIConfig } from '@/services/bbp-workflow/simula
 import expDesParamsDefaults from '@/components/experiment-designer/experiment-designer-defaults';
 import GenericButton from '@/components/Global/GenericButton';
 
-const expDesBaseUrl = '/experiment-designer/experiment-setup';
+const expDesBaseUrl = '/app/experiment-designer/experiment-setup';
 
 const loadableCircuitAtom = loadable(circuitAtom);
 

@@ -105,7 +105,7 @@ export default function EntrypointMenu({
           (status === 'authenticated' ? (
             <PrimaryButtonHome
               label="Log in"
-              url={`/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+              url={`/app/log-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
               hasIcon={false}
               theme="dark"
             />

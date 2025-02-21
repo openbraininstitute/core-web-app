@@ -13,22 +13,22 @@ import { MenuItem } from '@/components/TopNavigation/types';
 const DEFAULT_TABS: MenuItem[] = [
   {
     label: 'Interactive',
-    href: '/build/cell-composition/interactive',
+    href: '/app/build/cell-composition/interactive',
     icon: <BrainIcon className="h-4" />,
   },
   {
     label: 'Analysis',
-    href: '/build/cell-composition/analysis',
+    href: '/app/build/cell-composition/analysis',
     icon: <AnalysisIcon className="h-4" />,
   },
   {
     label: 'Configuration',
-    href: '/build/cell-composition/configuration',
+    href: '/app/build/cell-composition/configuration',
     icon: <SettingsIcon className="h-4" />,
   },
   {
     label: 'Literature',
-    href: '/build/cell-composition/literature',
+    href: '/app/build/cell-composition/literature',
     icon: <ReadOutlined className="h-4 text-lg" />,
   },
 ];

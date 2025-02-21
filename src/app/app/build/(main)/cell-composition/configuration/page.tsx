@@ -16,7 +16,7 @@ import { densityOrCountAtom, selectedBrainRegionAtom } from '@/state/brain-regio
 import { ResetIcon, UndoIcon } from '@/components/icons';
 import { basePath } from '@/config';
 import { switchStateType } from '@/util/common';
-import useCompositionHistory from '@/app/build/(main)/cell-composition/configuration/use-composition-history';
+import useCompositionHistory from '@/app/app/build/(main)/cell-composition/configuration/use-composition-history';
 import { analysedCompositionAtom, compositionAtom } from '@/state/build-composition';
 import { configPayloadAtom } from '@/state/brain-model-config/cell-composition';
 import { setCompositionPayloadConfigurationAtom } from '@/state/brain-model-config/cell-composition/extra';

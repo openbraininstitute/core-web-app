@@ -54,7 +54,7 @@ export default function AboutPageLayout({ children }: Props) {
       > */}
 
       {/* <OBPLogo color="text-white" />
-        <LoginButton label="Log in" link="/log-in" type="link" /> */}
+        <LoginButton label="Log in" link="/app/log-in" type="link" /> */}
       {/* </nav> */}
       <div className="relative">{children}</div>
     </div>

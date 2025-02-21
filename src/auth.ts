@@ -130,7 +130,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 10 * 60 * 60, // 10 hours
   },
   pages: {
-    signIn: basePath + '/log-in', // eslint-disable-line
+    signIn: '/app/log-in',
   },
 } satisfies NextAuthOptions;
 
