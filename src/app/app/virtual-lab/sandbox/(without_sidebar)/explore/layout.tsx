@@ -26,7 +26,7 @@ export default function ExploreInteractiveLayout({ children }: { children: React
   return (
     <div className="grid h-screen grid-cols-[min-content_min-content_auto] grid-rows-1">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <VirtualLabNavigationSidebar link="/virtual-lab/sandbox/explore" />
+        <VirtualLabNavigationSidebar link="/app/virtual-lab/sandbox/explore" />
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BrainRegionsSidebar />

@@ -1,9 +1,8 @@
-import { basePath } from '@/config';
 import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
 
 export default function Custom404() {
   const availableUrls = Object.values(EXPERIMENT_DATA_TYPES).map(
-    (dt) => `${basePath}/virtual-lab/sandbox/explore/interactive/experimental/${dt.name}`
+    (dt) => `/app/virtual-lab/sandbox/explore/interactive/experimental/${dt.name}`
   );
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">

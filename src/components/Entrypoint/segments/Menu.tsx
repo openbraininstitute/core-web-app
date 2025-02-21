@@ -113,7 +113,7 @@ export default function EntrypointMenu({
             <PrimaryButtonHome
               label="Go to the platform"
               url="/coming-soon"
-              // url="/virtual-lab"
+              // url="/app/virtual-lab"
               hasIcon={false}
               theme="dark"
             />

@@ -24,7 +24,7 @@ export default async function VirtualLabLayout({ children, params }: Props) {
             key: LinkItemKey.VirtualLab,
             id: params.virtualLabId,
             label: Label.VirtualLab,
-            href: `/virtual-lab/lab/${params.virtualLabId}/overview`,
+            href: `/app/virtual-lab/lab/${params.virtualLabId}/overview`,
           }}
         />
         <div className="flex h-screen w-full overflow-y-scroll bg-primary-9 p-8 text-white">

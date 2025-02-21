@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 export default function NotebookTabs({ vlabId, projectId }: { projectId: string; vlabId: string }) {
   const currentPath = usePathname();
 
-  const notebooksPath = `/virtual-lab/lab/${vlabId}/project/${projectId}/notebooks`;
+  const notebooksPath = `/app/virtual-lab/lab/${vlabId}/project/${projectId}/notebooks`;
 
   const tabClassName = (highlighted: boolean) =>
     classNames(
