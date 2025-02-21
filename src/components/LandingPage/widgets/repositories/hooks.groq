@@ -1,4 +1,4 @@
-*[_type=="repositories"] {
+*[_type=="resourcesList"][0].resources[]-> {
   "type": objectOfStudy,
   title,
   author,

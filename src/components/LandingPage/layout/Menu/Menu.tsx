@@ -3,7 +3,7 @@ import React from 'react';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
 import { ID_MENU, MENU_ITEMS } from '../../constants';
-import { gotoSection } from '../../utils';
+import { gotoSection, sanitizeURL } from '../../utils';
 import PopupMenu from './PopupMenu';
 import { classNames } from '@/util/utils';
 
@@ -48,7 +48,9 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
             type="button"
             aria-label="Log in"
             className={styles.loginButton}
-            onClick={() => gotoSection(EnumSection.ComingSoon)}
+            onClick={() => {
+              window.location.href = sanitizeURL('/coming-soon');
+            }}
           >
             <div>Login to the Platform</div>
           </button>

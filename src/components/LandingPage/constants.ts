@@ -29,7 +29,7 @@ export const SECTIONS: Readonly<Section[]> = [
     caption: 'Terms',
     slug: `${SLUG_PREFIX}terms`,
   },
-  { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: `/releasing-soon` },
+  { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: `${SLUG_PREFIX}releasing-soon` },
 ];
 
 export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection }>> = [

@@ -58,6 +58,7 @@ export default function SanityContentWidget({ value }: SanityContentWidgetProps)
     case 'multipleMember':
       return <WidgetMultipleMember />;
     case 'repositories':
+    case 'resourcesList':
       return <WidgetRepositories />;
     default:
       return (
