@@ -8,7 +8,7 @@ export function LargeButton() {
   return (
     <Link
       className="mt-10 flex h-auto w-[500px] justify-between rounded-none border border-primary-7 bg-transparent py-8 text-sm font-bold"
-      href="/log-in"
+      href="/app/log-in"
       prefetch={false}
     >
       <span className="pl-4 text-4xl text-white">Log in</span>

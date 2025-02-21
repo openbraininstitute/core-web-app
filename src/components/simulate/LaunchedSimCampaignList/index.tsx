@@ -25,8 +25,8 @@ const { Column } = Table;
 
 const loadableLaunchedSimCampaignListAtom = loadable(launchedSimCampaignListAtom);
 
-const expDesBaseUrl = '/experiment-designer/experiment-setup';
-const exploreSimCampBaseUrl = '/explore/simulation-campaigns/test';
+const expDesBaseUrl = '/app/experiment-designer/experiment-setup';
+const exploreSimCampBaseUrl = '/app/explore/simulation-campaigns/test';
 
 const dateRenderer = (createdAtStr: DateISOString) => {
   const dateColumnInfo = dateColumnInfoToRender(createdAtStr);

@@ -5,7 +5,7 @@ import { PlusOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import groupBy from 'lodash/groupBy';
 import { AnalysisFileType, AnalysisPDF, AnalysisType } from './types';
 import EModelAnalysisLauncher from '@/components/explore-section/EModel/DetailView/EModelAnalysisLauncher';
-import { useAnalyses } from '@/app/explore/(content)/simulation-campaigns/shared';
+import { useAnalyses } from '@/app/app/explore/(content)/simulation-campaigns/shared';
 import Link from '@/components/Link';
 
 const DynamicPDFViewer = dynamic(() => import('./PDFViewer'), {

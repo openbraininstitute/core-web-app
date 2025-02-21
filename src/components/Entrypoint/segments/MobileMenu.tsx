@@ -13,7 +13,7 @@ export default function MobileMenu({ style }: { style: React.CSSProperties }) {
         theme="dark"
       />
       <PrimaryButtonHome label="About" url="/about" hasIcon={false} theme="dark" />
-      {/* <PrimaryButtonHome label="Log in" url="/log-in" hasIcon={false} theme="light" /> */}
+      {/* <PrimaryButtonHome label="Log in" url="/app/log-in" hasIcon={false} theme="light" /> */}
     </nav>
   );
 }

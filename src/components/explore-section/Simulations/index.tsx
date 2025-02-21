@@ -17,7 +17,7 @@ import {
   displayOptions,
   showOnlyOptions,
 } from '@/components/explore-section/Simulations/constants';
-import { useAnalyses } from '@/app/explore/(content)/simulation-campaigns/shared';
+import { useAnalyses } from '@/app/app/explore/(content)/simulation-campaigns/shared';
 import { useEnsuredPath, useUnwrappedValue } from '@/hooks/hooks';
 
 export default function Simulations({ resource }: { resource: SimulationCampaign }) {

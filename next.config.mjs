@@ -63,23 +63,23 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/build',
-        destination: '/build/cell-composition/interactive',
+        source: '/app/build',
+        destination: '/app/build/cell-composition/interactive',
         permanent: false,
       },
       {
-        source: '/build/connectome-definition',
-        destination: '/build/connectome-definition/configuration',
+        source: '/app/build/connectome-definition',
+        destination: '/app/build/connectome-definition/configuration',
         permanent: false,
       },
       {
-        source: '/build/cell-model-assignment',
-        destination: '/build/cell-model-assignment/m-model/configuration',
+        source: '/app/build/cell-model-assignment',
+        destination: '/app/build/cell-model-assignment/m-model/configuration',
         permanent: false,
       },
       {
-        source: '/experiment-designer',
-        destination: '/experiment-designer/experiment-setup',
+        source: '/app/experiment-designer',
+        destination: '/app/experiment-designer/experiment-setup',
         permanent: false,
       },
     ];

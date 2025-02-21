@@ -3,7 +3,7 @@ import { usePathname } from 'next/navigation';
 import Link from '@/components/Link';
 import { classNames } from '@/util/utils';
 
-const baseHref = '/build/cell-model-assignment';
+const baseHref = '/app/build/cell-model-assignment';
 
 type ModeTabsType = {
   name: string;

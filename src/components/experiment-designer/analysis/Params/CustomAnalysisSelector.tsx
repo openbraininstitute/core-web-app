@@ -3,7 +3,7 @@ import { loadable } from 'jotai/utils';
 import { Select } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useCustomAnalysisConfig } from '@/hooks/experiment-designer';
-import { useAnalyses } from '@/app/explore/(content)/simulation-campaigns/shared';
+import { useAnalyses } from '@/app/app/explore/(content)/simulation-campaigns/shared';
 import {
   ExpDesignerCustomAnalysisParameter,
   ExpDesignerParam,

@@ -22,7 +22,7 @@ describe('DashboardBanner Component', () => {
   it('should generate correct href link', () => {
     render(<DashboardBanner createdAt={createdAt} description={description} id={id} name={name} />);
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', `/virtual-lab/lab/${id}/overview`);
+    expect(link).toHaveAttribute('href', `/app/virtual-lab/lab/${id}/overview`);
   });
 });
 

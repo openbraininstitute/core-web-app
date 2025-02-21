@@ -63,7 +63,7 @@ export function NewProjectModal({ virtualLabId }: { virtualLabId: string }) {
   const refreshProjectsList = useSetAtom(virtualLabProjectsAtomFamily(virtualLabId));
   const includeMembers = useAtomValue(selectedMembersAtom);
   const redirectUrl = (projectId: string) =>
-    `/virtual-lab/lab/${virtualLabId}/project/${projectId}/home`;
+    `/app/virtual-lab/lab/${virtualLabId}/project/${projectId}/home`;
 
   const router = useRouter();
 

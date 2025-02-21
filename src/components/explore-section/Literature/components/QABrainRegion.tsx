@@ -61,7 +61,7 @@ function QAContextBrainRegion() {
 
 function QABrainRegion() {
   const pathname = usePathname();
-  const isBuildSection = pathname?.startsWith('/build');
+  const isBuildSection = pathname?.startsWith('/app/build');
   const router = useRouter();
 
   return (

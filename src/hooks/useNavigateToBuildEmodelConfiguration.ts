@@ -49,7 +49,7 @@ export default function useNavigateToBuildEmodelConfiguration() {
           });
         });
 
-        const buildUrl = `/build/cell-model-assignment/e-model/configuration?${params.toString()}`;
+        const buildUrl = `/app/build/cell-model-assignment/e-model/configuration?${params.toString()}`;
         navigate(buildUrl);
       }
     }

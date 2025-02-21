@@ -34,7 +34,7 @@ export default function EModelCard({ exemplarMorphology, reselectLink = false }:
 
     if (!selectedEModel || !selectedEModelOrg || !selectedEModelProject) return '';
     if (!virtualLabId || !projectId)
-      return `/explore/interactive/model/e-model/${to64(`${orgProj}!/!${selectedEModel['@id']}`)}`;
+      return `/app/explore/interactive/model/e-model/${to64(`${orgProj}!/!${selectedEModel['@id']}`)}`;
 
     return detailUrlWithinLab(
       virtualLabId,

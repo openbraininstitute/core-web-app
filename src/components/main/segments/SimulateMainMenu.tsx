@@ -26,8 +26,8 @@ type CuratedTemplate = {
 };
 
 const loadableLaunchedSimCampaignListAtom = loadable(launchedSimCampaignListAtom);
-const EXPIREMENT_BASE_URL = '/experiment-designer/experiment-setup';
-const EXPLORE_SIM_CAMP_BASE_URM = '/explore/simulation-campaigns/test';
+const EXPIREMENT_BASE_URL = '/app/experiment-designer/experiment-setup';
+const EXPLORE_SIM_CAMP_BASE_URM = '/app/explore/simulation-campaigns/test';
 
 const CURATED_TEMPLATES = [
   {

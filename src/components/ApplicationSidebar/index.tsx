@@ -40,24 +40,24 @@ export type NavigationItemProps = {
 const DEFAULT_NAVIGATION: Array<TDefaulNavigation> = [
   {
     title: 'Home',
-    url: '/',
+    url: '/app/virtual-lab',
     icon: HomeOutlined,
     showIconOnCollapse: true,
   },
   {
-    url: '/explore/interactive',
+    url: '/app/explore/interactive',
     title: 'Explore',
     icon: ArrowRightOutlined,
     bgcolor: 'bg-primary-8',
   },
   {
-    url: '/main?tab=build',
+    url: '/app/main?tab=build',
     title: 'Build',
     icon: ArrowRightOutlined,
     bgcolor: 'bg-primary-8',
   },
   {
-    url: '/main?tab=simulate',
+    url: '/app/main?tab=simulate',
     title: 'Simulate',
     icon: ArrowRightOutlined,
     bgcolor: 'bg-primary-8',

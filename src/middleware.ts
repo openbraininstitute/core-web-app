@@ -3,24 +3,24 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const FREE_ACCESS_PAGES = [
   '/',
-  '/log-in',
-  '/getting-started',
-  '/about*',
-  '/api/newsletter',
-  '/welcome*',
-  '/coming-soon',
+  '/about',
+  '/mission',
+  '/news*',
+  '/pricing',
+  '/team',
+  '/resources',
+  '/contact',
+  '/terms',
   '/privacy',
-];
-const ASSETS = [
-  '/static*',
-  '/images*',
-  '/downloads*',
-  '/api/marketing',
-  '/_next*',
-  '/favicon.ico',
+  '/coming-soon',
+
+  '/app/log-in',
+
+  '/api/newsletter',
   '/api/auth*',
-  '/video*',
+  '/api/marketing',
 ];
+const ASSETS = ['/static*', '/images*', '/downloads*', '/_next*', '/favicon.ico', '/video*'];
 
 /* Don't allow arbitrary regex to avoid accidentally leaking protected pages
 Only two patterns allowed, exact match or /path* which matches the path
