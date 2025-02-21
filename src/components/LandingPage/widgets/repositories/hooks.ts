@@ -13,7 +13,10 @@ export interface ContentForRepository {
   author: string;
   description: string;
   url: string;
-  buttonLabel: string;
+  buttons: Array<{
+    title: string;
+    link: string;
+  }>;
   imageURL: string;
   imageWidth: number;
   imageHeight: number;
@@ -28,7 +31,13 @@ function isContentForRepositories(data: unknown): data is ContentForRepository[]
       author: typeStringOrNull,
       description: typeStringOrNull,
       url: typeStringOrNull,
-      buttonLabel: typeStringOrNull,
+      buttons: [
+        'array',
+        {
+          title: typeStringOrNull,
+          link: typeStringOrNull,
+        },
+      ],
       ...typeImage,
     },
   ]);

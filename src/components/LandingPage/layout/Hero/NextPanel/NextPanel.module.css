@@ -32,3 +32,10 @@ button.nextPanel > div.ruler {
   width: 2px;
   background-color: #fff;
 }
+
+@media (max-height: 480px) {
+    button.nextPanel {
+        height: 48px;
+        gap: .125em;
+    }
+}

@@ -39,7 +39,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
         <PaddedBlock>{renderSection(section)}</PaddedBlock>
-        <FooterPanel section={section} />
+        <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
       {/* <MatomoAnalytics /> */}

@@ -6,6 +6,8 @@ export const styleButtonSquare = `${styles.hoverableButton} ${styles.squareButto
 
 export const styleBlockFullWidth = styles.blockFullWidth;
 
+export const styleBlockFullWidthPadded = styles.blockFullWidthPadded;
+
 export const styleBlockSmall = styles.blockSmall;
 
 export const styleBlockSmallExpandRight = styles.blockSmallExpandRight;

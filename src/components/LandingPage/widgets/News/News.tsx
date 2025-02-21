@@ -23,7 +23,7 @@ export function WidgetNews() {
       <Title value="News and events" />
       <SwipeableCardsList
         className={styleBlockSmallExpandRight}
-        buttonLabel="Browse all news"
+        buttonLabel="Browse our news"
         buttonOnClick={() => gotoSection(EnumSection.News)}
       >
         {news.map((item, index) => (

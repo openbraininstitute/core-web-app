@@ -4,8 +4,8 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  margin: 1em 0;
-  gap: 48px;
+  margin: var(--gap-L) 0;
+  gap: var(--gap-S);
 }
 
 .scroll {

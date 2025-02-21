@@ -15,6 +15,11 @@
   --font-size-M-plus: calc(1.2 * var(--font-size-M));
   --font-size-L: calc(1.5 * var(--font-size-M));
   --font-size-XL: calc(2 * var(--font-size-M));
+  --gap-XL: 64px;
+  --gap-L: 32px;
+  --gap-M: 16px;
+  --gap-S: 8px;
+  --gap-XS: 4px;
 
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
