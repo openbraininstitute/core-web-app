@@ -1,9 +1,9 @@
 import DiscoverObpPanel from '@/components/VirtualLab/DiscoverObpPanel';
 
+import NewProjectCTABanner from '@/components/VirtualLab/VirtualLabCTABanner/project-cta-banner';
 import VirtualLabHome from '@/components/VirtualLab/VirtualLabHomePage';
-import NewProjectCTABanner from '@/components/VirtualLab/VirtualLabCTABanner/NewProjectCTABanner';
-import { ServerSideComponentProp } from '@/types/common';
 import { UsersHorizontalList } from '@/components/VirtualLab/projects/VirtualLabProjectHomePage';
+import { ServerSideComponentProp } from '@/types/common';
 
 export default function VirtualLab({ params }: ServerSideComponentProp<{ virtualLabId: string }>) {
   const { virtualLabId } = params;

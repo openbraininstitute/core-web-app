@@ -4,7 +4,6 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import sortBy from 'lodash/sortBy';
 
-import Member from '@/components/VirtualLab/VirtualLabHomePage/Member';
 import { ProjectDetailBanner, BudgetStatus } from '@/components/VirtualLab/VirtualLabBanner';
 import WelcomeUserBanner from '@/components/VirtualLab/VirtualLabHomePage/WelcomeUserBanner';
 import {
@@ -12,8 +11,10 @@ import {
   virtualLabProjectUsersAtomFamily,
 } from '@/state/virtual-lab/projects';
 import useNotification from '@/hooks/notifications';
+import MemberAvatar from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { useLoadableValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import { extractInitials } from '@/util/slugify';
 
 export type UsersHorizontalListProps = {
   virtualLabId: string;
@@ -37,17 +38,24 @@ export function UsersHorizontalList({ virtualLabId, projectId }: UsersHorizontal
     return (
       <div className="flex-no-wrap horizontal-thin-scrollbar flex items-center gap-4 overflow-x-auto overflow-y-hidden pb-4">
         {users.data &&
-          sortBy(users.data, ['role']).map((user) => (
-            <Member
-              key={user.id ?? user.email}
-              inviteAccepted={user.invite_accepted}
-              email={user.email}
-              firstName={user.first_name}
-              lastName={user.last_name}
-              name={user.name}
-              memberRole={user.role}
-            />
-          ))}
+          sortBy(users.data, ['role']).map((user, indx) => {
+            return (
+              <MemberAvatar
+                key={user.id ?? user.email}
+                index={indx}
+                layout="vertical"
+                id={user.id ?? user.email}
+                email={user.email}
+                role={user.role}
+                status={user.invite_accepted ? 'accept' : 'pending'}
+                name={user.id ? `${user.first_name} ${user.last_name}` : user.email}
+                initials={extractInitials(
+                  user.id ? `${user.first_name} ${user.last_name}` : user.email
+                )}
+                cls={{ text: 'text-white font-light wrap-text' }}
+              />
+            );
+          })}
       </div>
     );
   }

@@ -6,7 +6,7 @@ type Props = {
   onClick?: () => void;
 };
 
-export default function VirtualLabCTABanner({ title, subtitle, onClick }: Props) {
+export default function CTABanner({ title, subtitle, onClick }: Props) {
   return (
     <button
       type="button"
