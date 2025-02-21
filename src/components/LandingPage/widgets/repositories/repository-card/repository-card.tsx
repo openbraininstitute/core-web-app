@@ -30,14 +30,19 @@ export default function RepositoryCard({ className, value, showHeader }: Reposit
         height={value.imageHeight}
       />
       <p>{value.description}</p>
-      <a
-        className={classNames(styles.button, styleButtonHoverable)}
-        href={value.url}
-        target="_blank"
-      >
-        <div>{value.buttonLabel ?? 'View resource'}</div>
-        <IconEye />
-      </a>
+      <div className={styles.buttons}>
+        {value.buttons.map((btn) => (
+          <a
+            className={classNames(styles.button, styleButtonHoverable)}
+            href={btn.link}
+            target="_blank"
+            key={btn.title}
+          >
+            <div>{btn.title ?? 'View resource'}</div>
+            <IconEye />
+          </a>
+        ))}
+      </div>
     </div>
   );
 }

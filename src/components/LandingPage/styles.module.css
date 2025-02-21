@@ -27,6 +27,13 @@ button.squareButton {
   border: 1px solid currentColor;
   line-height: 3;
   padding: 0 2em;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  button.squareButton {
+    padding: 0 1em;
+  }
 }
 
 .layout {
@@ -50,7 +57,10 @@ button.squareButton {
 
 .layout .blockFullWidth {
   grid-column: 1/-1;
-  max-width: calc(100vw - var(--padding) - var(--padding));
+}
+
+.layout .blockFullWidthPadded {
+  grid-column: 2/-2;
 }
 
 .layout .blockSmall {

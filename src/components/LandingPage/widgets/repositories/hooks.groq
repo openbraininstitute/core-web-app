@@ -4,7 +4,10 @@
   author,
   description,
   url,
-  buttonLabel,
+  "buttons": buttonList[] {
+    title,
+    "link": externalLink
+  },
   "imageURL": image.asset->url,
   "imageWidth": image.asset->metadata.dimensions.width,
   "imageHeight": image.asset->metadata.dimensions.height
