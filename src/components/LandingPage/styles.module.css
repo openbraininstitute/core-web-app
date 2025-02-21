@@ -41,7 +41,7 @@ button.squareButton {
   --width-max: calc(100vw - (2 * var(--padding)));
   --S: min(800px, var(--width-max));
   --M: min(1200px, var(--width-max));
-  --L: min(1600px, var(--width-max));
+  --L: min(1512px, var(--width-max));
   --colM: calc(0.5 * (var(--M) - var(--S)));
   --colL: calc(0.5 * (var(--L) - var(--M)));
 

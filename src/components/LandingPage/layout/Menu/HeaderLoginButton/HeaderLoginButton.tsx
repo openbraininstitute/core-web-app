@@ -21,8 +21,8 @@ export default function HeaderLoginButton({ className, stuck }: HeaderLoginButto
   const { status } = useSession();
   const isAuthenticated = status === 'authenticated';
   const link = isAuthenticated ? '/app/virtual-lab' : `/app/log-in?callbackUrl=/app/virtual-lab`;
-  const captionLarge = isAuthenticated ? 'Go to' : 'Log in to';
-  const captionSmall = isAuthenticated ? 'Go to' : 'Log in to';
+  const captionLarge = isAuthenticated ? 'Go to' : 'Login to';
+  const captionSmall = isAuthenticated ? 'Go to' : 'Login to';
   return (
     <Link
       className={classNames(className, styles.headerLoginButton, stuck && styles.stuck)}

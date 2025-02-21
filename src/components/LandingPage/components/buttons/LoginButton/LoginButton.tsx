@@ -13,7 +13,7 @@ export default function LoginPanel() {
     <Button
       onClick={() => gotoSection(EnumSection.ComingSoon)}
       title="the Platform"
-      subTitle="Log in to"
+      subTitle="Login to"
     />
   );
 
@@ -24,7 +24,7 @@ export default function LoginPanel() {
   ) : (
     <Button
       onClick={`/app/log-in?callbackUrl=${basePath}/virtual-lab`}
-      subTitle="Log in to"
+      subTitle="Login to"
       title="the Platform"
     />
   );

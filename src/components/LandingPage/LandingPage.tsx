@@ -11,6 +11,7 @@ import Hero from './layout/Hero';
 import SectionGeneric from './sections/SectionGeneric';
 import PaddedBlock from './components/PaddedBlock';
 import SectionNews from './sections/SectionNews';
+import VerticalSpace from './components/VerticalSpace';
 import { classNames } from '@/util/utils';
 import AcceptInviteErrorDialog from '@/components/Entrypoint/segments/AcceptInviteErrorDialog';
 import { logError } from '@/util/logger';
@@ -39,6 +40,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
         <PaddedBlock>{renderSection(section)}</PaddedBlock>
+        <VerticalSpace height="30px" />
         <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const FREE_ACCESS_PAGES = [
   '/',
+  '/home',
   '/about',
   '/mission',
   '/news*',
