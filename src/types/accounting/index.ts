@@ -1,7 +1,5 @@
 import { VlmResponse } from '@/types/virtual-lab/common';
 
-/* ---------------------------------------- Common types ---------------------------------------- */
-
 export type Meta = {
   total_items: number;
   total_pages: number;
@@ -16,8 +14,6 @@ export type Links = {
   next: string;
   prev: string;
 };
-
-/* ---------------------------------------- Balance types --------------------------------------- */
 
 export type ProjectBalance = {
   proj_id: string;
@@ -34,8 +30,6 @@ type VirtualLabBalance = {
 };
 
 export type VirtualLabBalanceResponse = VlmResponse<VirtualLabBalance>;
-
-/* -------------------------------------- Job report types -------------------------------------- */
 
 export enum ServiceType {
   Oneshot = 'oneshot',
@@ -85,8 +79,6 @@ export type ProjectJobReports = {
 
 export type ProjectJobReportsResponse = VlmResponse<ProjectJobReports>;
 
-/* -------------------------------------- Reservation types ------------------------------------- */
-
 export type OneshotReservation = {
   virtualLabId: string;
   projectId: string;
@@ -100,8 +92,6 @@ export type OneshotReservationResponse = VlmResponse<{
   jobId: string;
   amount: string;
 }>;
-
-/* ----------------------------------------- Usage types ---------------------------------------- */
 
 export type OneshotUsage = {
   projectId: string;
