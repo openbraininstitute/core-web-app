@@ -9,7 +9,7 @@ type OneshotUsageReport = Omit<OneshotUsage, 'type'>;
 async function makeOneshotReservation(
   reservation: OneShotReservationRequest
 ): Promise<OneshotReservationResponse> {
-  const res = await authFetch('/api/accounting/reservation/oneshot', {
+  const res = await authFetch('/api/public-accounting/reservation/oneshot', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(reservation),
@@ -19,7 +19,7 @@ async function makeOneshotReservation(
 }
 
 async function cancelOneshotReservation(jobId: string) {
-  const res = await authFetch(`/api/accounting/reservation/oneshot/${jobId}`, {
+  const res = await authFetch(`/api/public-accounting/reservation/oneshot/${jobId}`, {
     method: 'DELETE',
   });
 
@@ -27,7 +27,7 @@ async function cancelOneshotReservation(jobId: string) {
 }
 
 async function reportOneshotUsage(oneshotUsageReport: OneshotUsageReport) {
-  const res = await authFetch('/api/accounting/usage/oneshot', {
+  const res = await authFetch('/api/public-accounting/usage/oneshot', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(oneshotUsageReport),
