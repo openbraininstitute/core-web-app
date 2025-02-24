@@ -18,39 +18,46 @@ export interface PlanHeaderProps {
 export default function PlanHeader({ className, plan }: PlanHeaderProps) {
   const [currency] = useCurrency();
   const { discount, month, yearDiscount, yearNormal } = usePrices(currency, plan);
+  const isFree = (discount || month || 0) <= 0;
 
   return (
     <div className={classNames(className, styles.planHeader)}>
       <h2>{plan.title}</h2>
       {plan.price.month.length > 0 && (
         <>
-          <hr />
-          <em>Subscription</em>
-          <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
-            <strong>
-              {currency} {month}
-            </strong>
-            <small>/month</small>
-          </div>
-          <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
-            <strong>
-              {currency} {yearNormal}
-            </strong>
-            <small>/year</small>
-          </div>
-          <div className={styles.price}>
-            <big>
-              {currency} {discount || month}
-            </big>
-            /month
-            {discount && <div className={styles.pill}>Launch</div>}
-          </div>
-          <div className={styles.price}>
-            <big>
-              {currency} {discount ? yearDiscount : yearNormal}
-            </big>
-            /year
-            {discount && <div className={styles.pill}>Launch</div>}
+          <div className={styles.priceHeader}>
+            {!isFree && (
+              <>
+                <hr />
+                <em>Subscription</em>
+                <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
+                  <strong>
+                    {currency} {month}
+                  </strong>
+                  <small>/month</small>
+                </div>
+                <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
+                  <strong>
+                    {currency} {yearNormal}
+                  </strong>
+                  <small>/year</small>
+                </div>
+                <div className={styles.price}>
+                  <b>
+                    {currency} {discount || month}
+                  </b>
+                  <small>/month</small>
+                  {discount && <DiscountPill />}
+                </div>
+                <div className={styles.price}>
+                  <b>
+                    {currency} {discount ? yearDiscount : yearNormal}
+                  </b>
+                  <small>/year</small>
+                  {discount && <DiscountPill />}
+                </div>
+              </>
+            )}
           </div>
           <ul>
             {plan.notes.map((note, index) => (
@@ -76,4 +83,8 @@ function extractPrice(currency: string, price?: null | MultiCurrencyPrice[]): nu
   if (!price) return null;
 
   return price.find((item) => item.currency === currency)?.value ?? null;
+}
+
+function DiscountPill() {
+  return <div className={styles.pill}>Special launch price</div>;
 }

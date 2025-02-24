@@ -19,6 +19,7 @@ import { WidgetSwipeableList } from '@/components/LandingPage/widgets/swipeable-
 import WidgetMultipleMember from '@/components/LandingPage/widgets/multiple-member/multiple-member';
 import WidgetPriceList2 from '@/components/LandingPage/widgets/price-list-2/price-list-2';
 import WidgetRepositories from '@/components/LandingPage/widgets/repositories';
+import WidgetSpecialContributors from '@/components/LandingPage/widgets/special-contributors';
 
 export interface SanityContentWidgetProps {
   value: ContentForRichTextWidget;
@@ -60,6 +61,8 @@ export default function SanityContentWidget({ value }: SanityContentWidgetProps)
     case 'repositories':
     case 'resourcesList':
       return <WidgetRepositories />;
+    case 'specialContributors':
+      return <WidgetSpecialContributors />;
     default:
       return (
         <Error>

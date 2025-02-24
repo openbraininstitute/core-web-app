@@ -15,9 +15,10 @@ export default function SelectCurrency({ className }: SelectCurrencyProps) {
 
   return (
     <div className={classNames(className, styles.selectCurrency)}>
+      <div>Currency: </div>
       <Select
+        className={styles.select}
         defaultValue={currency}
-        style={{ width: 160 }}
         onChange={setCurrency}
         options={[
           { value: 'CHF', label: 'Swiss Franc (CHF)' },
