@@ -105,7 +105,7 @@ function QALeftPanel() {
   const pathname = usePathname();
   const { isContextualLiterature } = useContextSearchParams();
   const dataSource = useLiteratureDataSource();
-  const isBuildSection = pathname?.startsWith('/build');
+  const isBuildSection = pathname?.startsWith('/app/build');
   const shouldShowNavigation = isContextualLiterature ? true : dataSource.length > 1;
 
   if (!shouldShowNavigation && !isBuildSection) return null;

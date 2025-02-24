@@ -1,4 +1,6 @@
 import { classNames } from '@/util/utils';
+import Video from '@/components/LandingPage/components/Video';
+
 import styles from './card.module.css';
 
 export type SingleSectionCardProps = {
@@ -11,7 +13,7 @@ export type SingleSectionCardProps = {
 export function SingleSectionCard({ index, title, description, video }: SingleSectionCardProps) {
   return (
     <button className={classNames(styles.card, index > 999 && styles.comingSoon)} type="button">
-      <video className={styles.background} src={video} muted autoPlay loop />
+      <Video className={styles.background} src={video} />
       {/* <div className={styles.curtain} /> */}
       {/* <div className={styles.curtain} /> */}
       <div className={styles.content}>

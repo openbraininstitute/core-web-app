@@ -12,7 +12,7 @@ export interface VideoProps {
 export default function Video({ className, src }: VideoProps) {
   return (
     <div className={classNames(className, styles.video)}>
-      <video src={src} muted autoPlay disablePictureInPicture />
+      <video src={src} muted autoPlay loop disablePictureInPicture />
     </div>
   );
 }

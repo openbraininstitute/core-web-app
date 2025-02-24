@@ -6,33 +6,31 @@ export interface Section {
   slug: string;
 }
 
-const SLUG_PREFIX = '/welcome/';
-
 export const DEFAULT_SECTION: Section = {
   index: EnumSection.Home,
   caption: 'Home',
-  slug: `${SLUG_PREFIX}home`,
+  slug: '/',
 };
 
 export const SECTIONS: Readonly<Section[]> = [
   DEFAULT_SECTION,
-  { index: EnumSection.About, caption: 'About', slug: `${SLUG_PREFIX}about` },
-  { index: EnumSection.News, caption: 'News', slug: `${SLUG_PREFIX}news` },
-  { index: EnumSection.Mission, caption: 'Mission', slug: `${SLUG_PREFIX}mission` },
-  { index: EnumSection.Pricing, caption: 'Pricing', slug: `${SLUG_PREFIX}pricing` },
-  { index: EnumSection.Team, caption: 'Team', slug: `${SLUG_PREFIX}team` },
-  { index: EnumSection.Resources, caption: 'Resources', slug: `${SLUG_PREFIX}resources` },
-  { index: EnumSection.Contact, caption: 'Contact', slug: `${SLUG_PREFIX}contact` },
-  { index: EnumSection.PrivacyPolicy, caption: 'Privacy', slug: `${SLUG_PREFIX}privacy` },
+  { index: EnumSection.About, caption: 'About', slug: '/about' },
+  { index: EnumSection.News, caption: 'News', slug: '/news' },
+  { index: EnumSection.Mission, caption: 'Mission', slug: '/mission' },
+  { index: EnumSection.Pricing, caption: 'Pricing', slug: '/pricing' },
+  { index: EnumSection.Team, caption: 'Team', slug: '/team' },
+  { index: EnumSection.Resources, caption: 'Resources', slug: '/resources' },
+  { index: EnumSection.Contact, caption: 'Contact', slug: '/contact' },
+  { index: EnumSection.PrivacyPolicy, caption: 'Privacy', slug: '/privacy' },
   {
     index: EnumSection.TermsAndConditions,
     caption: 'Terms',
-    slug: `${SLUG_PREFIX}terms`,
+    slug: '/terms',
   },
-  { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: `/releasing-soon` },
+  { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: '/releasing-soon' },
 ];
 
-export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection }>> = [
+export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection; slug: string }>> = [
   EnumSection.About,
   EnumSection.Mission,
   EnumSection.News,

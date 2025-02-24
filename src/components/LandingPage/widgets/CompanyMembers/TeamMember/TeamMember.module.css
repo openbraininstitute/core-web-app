@@ -16,7 +16,6 @@
   content: '';
   background-size: cover;
   background-color: var(--color-primary);
-  background-image: url(./background.jpg);
 }
 
 .teamMember > div.image > img {
@@ -37,7 +36,6 @@
 .teamMember > div.name {
   font-family: var(--font-serif);
   font-size: var(--font-size-M);
-  font-weight: bolder;
   background-color: var(--color-neutral-light);
   padding: 0 1em;
   margin: 0;

@@ -23,7 +23,7 @@ function ContextualTrigger({
   const path = usePathname();
   const searchParams = useSearchParams()!;
   const setContextualAtom = useSetAtom(contextualLiteratureAtom);
-  const isLiteraturePage = path?.startsWith('/build/cell-composition/literature');
+  const isLiteraturePage = path?.startsWith('/app/build/cell-composition/literature');
 
   const onTriggerContextualLiterature = () => {
     promptResponseNodesAtomFamily.setShouldRemove(() => true);

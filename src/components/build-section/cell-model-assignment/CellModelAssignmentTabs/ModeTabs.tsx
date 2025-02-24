@@ -7,7 +7,7 @@ import SettingsIcon from '@/components/icons/Settings';
 import { MenuItem } from '@/components/TopNavigation/types';
 import TopNavigation from '@/components/TopNavigation';
 
-const pathBase = '/build/cell-model-assignment';
+const pathBase = '/app/build/cell-model-assignment';
 
 export default function ModeTabs() {
   const pathName = usePathname();

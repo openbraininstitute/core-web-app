@@ -152,11 +152,11 @@ export function getIdFromSelfUrl(selfUrl: string | null) {
 }
 
 export function getOrgFromSelfUrl(selfUrl: string | null) {
-  return selfUrl ? selfUrl.split('/').at(-4) : null;
+  return selfUrl ? (selfUrl.split('/').at(-4) ?? null) : null;
 }
 
 export function getProjectFromSelfUrl(selfUrl: string | null) {
-  return selfUrl ? selfUrl.split('/').at(-3) : null;
+  return selfUrl ? (selfUrl.split('/').at(-3) ?? null) : null;
 }
 
 export function getOrgAndProjectFromProjectId(projectId: string): { org: string; project: string } {

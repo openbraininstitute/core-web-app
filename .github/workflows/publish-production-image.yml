@@ -64,4 +64,4 @@ jobs:
 
       - name: Publish To AWS ECR
         run: |
-          docker push ${{ vars.PUBLICECR_URI }}:$${{ env.NEW_TAG }}
+          docker push ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }}

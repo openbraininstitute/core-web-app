@@ -22,7 +22,7 @@ export const EXPLORE_NAVIGATION_LIST: Array<ExploreMainMenuProps> = [
     name: 'Interactive exploration',
     description:
       'Explore brain regions, experimental data, and virtual experiments targeting these regions.',
-    url: '/explore/interactive',
+    url: '/app/explore/interactive',
     img: {
       src: `${basePath}/images/obp_whole_brain.webp`,
       width: 1158,
@@ -34,7 +34,7 @@ export const EXPLORE_NAVIGATION_LIST: Array<ExploreMainMenuProps> = [
   {
     name: 'Knowledge discovery',
     description: 'Find scholarly articles and query publications from open-access sources.',
-    url: '/explore/literature',
+    url: '/app/explore/literature',
     img: {
       src: `${basePath}/images/obp_knowledge_discovery.webp`,
       width: 2108,

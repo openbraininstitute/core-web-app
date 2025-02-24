@@ -26,6 +26,10 @@
   line-height: 0.8;
 }
 
+.accepted {
+    max-width: max(300px, 32%);
+}
+
 .accepted > svg {
   width: 48px;
   height: 48px;
@@ -40,6 +44,7 @@
 
 .newsLetterSubscription.accepted > h2 {
   text-align: center;
+  line-height: 2;
 }
 
 .checkbox {

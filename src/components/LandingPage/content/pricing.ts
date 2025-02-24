@@ -2,47 +2,10 @@
 import { tryType } from './_common';
 import { useSanity } from './content';
 import { typeBooleanOrNull, typeNumberOrNull, typeStringOrNull } from './types';
+import query from './pricing.groq';
 import { isBoolean, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForPricing(): ContentForPricing | undefined | null {
-  const query = `{
-  "features": *[_type=="featureBlocList"].featuresBloc[] {
-    title,
-    "available": isAvailable,
-    features[] {
-      title,
-      description,
-      "plans": linkedPlan[]{
-        "id": plan->_id,
-        "label": specialLabel,
-        tooltip
-      }
-    }
-  },
-  "plans": *[_type=="plan"] | order(position) {
-    "id": _id,
-    title,
-    notes,
-    "price": {
-      "month": monthlyPlanNormal[] {
-        "value": price,
-        currency
-      },
-      "discount": monthlyPlanDiscount[] {
-        "value": price,
-        currency
-      },
-      "yearNormal": yearlyPlanNormal[] {
-        "value": price,
-        currency
-      },
-      "yearDiscount": yearlyPlanDiscount[] {
-        "value": price,
-        currency
-      }
-    }
-  }
-}`;
   return sanityze(useSanity(query, isContentForPricing));
 }
 

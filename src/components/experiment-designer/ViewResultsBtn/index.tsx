@@ -5,7 +5,7 @@ import { classNames } from '@/util/utils';
 import GenericButton from '@/components/Global/GenericButton';
 import { collapseId } from '@/util/nexus';
 
-const exploreBaseUrl = '/explore/simulation-campaigns/test';
+const exploreBaseUrl = '/app/explore/simulation-campaigns/test';
 
 type Props = {
   className?: string;

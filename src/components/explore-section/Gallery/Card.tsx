@@ -12,7 +12,7 @@ export default function Card({ content }: { content: SingleGallery }) {
 
   return (
     <Link
-      href={`/explore/gallery/${content.slug.current}`}
+      href={`/app/explore/gallery/${content.slug.current}`}
       className={classNames(
         'relative flex flex-col rounded-md p-3 transition-background duration-500 ease-linear',
         mouseStatus ? 'bg-primary-7' : 'bg-primary-8'

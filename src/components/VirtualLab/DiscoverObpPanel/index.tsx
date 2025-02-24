@@ -28,7 +28,7 @@ const items: {
     bottomElement: null,
     // bottomElement: (
     //   <DiscoverLinks
-    //     topLink="/virtual-lab/tutorials/explore"
+    //     topLink="/app/virtual-lab/tutorials/explore"
     //     topText="How do I explore?"
     //     bottomLink="explore"
     //     bottomText="Start exploring"
@@ -49,7 +49,7 @@ const items: {
     bottomElement: null,
     // bottomElement: (
     //   <DiscoverLinks
-    //     topLink="/virtual-lab/tutorials/build"
+    //     topLink="/app/virtual-lab/tutorials/build"
     //     topText="How can I build models?"
     //     bottomLink="build"
     //     bottomText="View models"
@@ -71,7 +71,7 @@ const items: {
     bottomElement: null,
     // bottomElement: (
     //   <DiscoverLinks
-    //     topLink="/virtual-lab/tutorials/simulate"
+    //     topLink="/app/virtual-lab/tutorials/simulate"
     //     topText="How can I launch simulations?"
     //     bottomLink="simulate"
     //     bottomText="View simulations"

@@ -6,8 +6,14 @@ import { assertType, TypeDef } from '@/util/type-guards';
  * @returns `true` if the type is correct.
  */
 export function tryType(typeName: string, data: unknown, type: TypeDef): boolean {
-  assertType(data, type);
-  return true;
+  try {
+    assertType(data, type);
+    return true;
+  } catch (ex) {
+    // eslint-disable-next-line no-console
+    console.log('Failing type:', type);
+    throw ex;
+  }
 }
 
 export type RichText = PortableTextBlock | PortableTextBlock[];

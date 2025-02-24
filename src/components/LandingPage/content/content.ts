@@ -58,7 +58,7 @@ export function useSanityContentRTF(sectionIndex: EnumSection): ContentForRichTe
   const section = getSection(sectionIndex);
   // In Sanity, we use only the last word of the actual slug.
   // `/welcome/home` is referenced as `home` in Sanity.
-  const slug = section.slug.split('/').pop();
+  const slug = section.slug.split('/').pop() || '/';
   const query = `*[_type=="pages"][slug.current=="${slug}"][0]{
   content[] {
     ...,

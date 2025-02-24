@@ -54,7 +54,7 @@ export default function NewsPage({ className, slug }: NewsPageProps) {
           {news.article && <SanityContentRTF value={news.article} />}
         </div>
       </PaddedBlock>
-      <FooterPanel section={EnumSection.News} />
+      <FooterPanel />
     </div>
   );
 }
