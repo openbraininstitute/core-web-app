@@ -1,9 +1,16 @@
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 import { assertApiResponse } from '@/util/utils';
-import { OneshotUsage, OneshotReservation, ServiceType, ServiceSubtype } from '@/types/accounting';
+import {
+  OneshotUsage,
+  OneshotReservation,
+  ServiceType,
+  OneshotReservationResponse,
+} from '@/types/accounting';
 
-async function makeOneshotReservation(reservation: OneshotReservation) {
+async function makeOneshotReservation(
+  reservation: OneshotReservation
+): Promise<OneshotReservationResponse> {
   const res = await authFetch(`${basePath}/api/accounting/reservation/oneshot`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,16 +38,35 @@ async function reportOneshotUsage(oneshotUsage: OneshotUsage) {
   return assertApiResponse(res);
 }
 
-export type OneshotSessionParams = {
-  projectId: string;
-  userId: string;
-  type: ServiceType;
-  subtype: ServiceSubtype;
-  count: number;
-};
-
 export class OneshotSession {
-  private jobId: string | null = null;
+  private params: OneshotReservation;
 
-  constructor(params: OneshotSessionParams) {}
+  constructor(params: Omit<OneshotReservation, 'type'>) {
+    this.params = {
+      ...params,
+      type: ServiceType.Oneshot,
+    };
+  }
+
+  async useWith<T>(executorFn: () => Promise<T>) {
+    const reservationRes = await makeOneshotReservation(this.params);
+    const { jobId } = reservationRes.data;
+
+    let result: T;
+
+    try {
+      result = await executorFn();
+    } catch (error) {
+      await cancelOneshotReservation(jobId);
+      throw error;
+    } finally {
+      await reportOneshotUsage({
+        ...this.params,
+        jobId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return result;
+  }
 }

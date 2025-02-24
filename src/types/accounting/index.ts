@@ -95,6 +95,11 @@ export type OneshotReservation = {
   count: number;
 };
 
+export type OneshotReservationResponse = VlmResponse<{
+  jobId: string;
+  amount: string;
+}>;
+
 /* ----------------------------------------- Usage types ---------------------------------------- */
 
 export type OneshotUsage = {
