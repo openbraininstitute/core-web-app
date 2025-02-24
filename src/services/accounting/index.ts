@@ -6,6 +6,7 @@ import {
   ServiceType,
   OneshotReservationResponse,
 } from '@/types/accounting';
+import { accountingBaseUrl } from '@/config';
 
 async function makeOneshotReservation(
   reservation: OneshotReservation
@@ -39,15 +40,22 @@ async function reportOneshotUsage(oneshotUsage: OneshotUsage) {
 
 export class OneshotSession {
   private params: OneshotReservation;
+  private enabled: boolean;
 
   constructor(params: Omit<OneshotReservation, 'type'>) {
     this.params = {
       ...params,
       type: ServiceType.Oneshot,
     };
+
+    this.enabled = !!accountingBaseUrl;
   }
 
   async useWith<T>(executorFn: () => Promise<T>) {
+    if (!this.enabled) {
+      return executorFn();
+    }
+
     const reservationRes = await makeOneshotReservation(this.params);
     const { jobId } = reservationRes.data;
 
