@@ -45,6 +45,8 @@ import { useSessionStorage } from '@/hooks/useSessionStorage';
 import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { validateFormula } from '@/api/bluenaas/validateSynapseGenerationFormula';
+import { OneshotSession } from '@/services/accounting';
+import { ServiceSubtype } from '@/types/accounting';
 
 const label = (text: string) => (
   <span className="text-base font-semibold text-primary-8">{text}</span>
@@ -263,11 +265,20 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
         brainLocation: resource.brainLocation,
       };
 
-      const resp = await fetch(resourceUrl, {
-        method: 'POST',
-        headers: createHeaders(session.accessToken),
-        body: JSON.stringify(sanitizedResource),
+      const accountingSession = new OneshotSession({
+        projectId: project,
+        virtualLabId: org,
+        subtype: ServiceSubtype.SynaptomeBuild,
+        count: 1,
       });
+
+      const resp = await accountingSession.useWith<Response>(() =>
+        fetch(resourceUrl, {
+          method: 'POST',
+          headers: createHeaders(session.accessToken),
+          body: JSON.stringify(sanitizedResource),
+        })
+      );
 
       const newSynaptomeModel: Entity = await resp.json();
 

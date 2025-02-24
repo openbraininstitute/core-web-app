@@ -6,6 +6,8 @@ export const isServer = typeof window === 'undefined';
 
 export const sentryDsn = env.NEXT_PUBLIC_SENTRY_DSN;
 
+export const accountingBaseUrl = env.NEXT_PUBLIC_ACCOUNTING_BASE_URL;
+
 export const bbsMlBaseUrl = env.NEXT_PUBLIC_BBS_ML_BASE_URL;
 export const bbsMlPrivateUrl = env.NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL;
 export const cellSvcBaseUrl = env.NEXT_PUBLIC_CELL_SVC_BASE_URL;

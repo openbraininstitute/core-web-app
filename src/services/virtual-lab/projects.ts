@@ -5,11 +5,11 @@ import {
   ProjectBalance,
   ProjectBalanceResponse,
   ProjectJobReportsResponse,
-} from '@/types/virtual-lab/accounting';
+} from '@/types/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { UsersResponse } from '@/types/virtual-lab/members';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
-import { assertVLApiResponse } from '@/util/utils';
+import { assertApiResponse } from '@/util/utils';
 
 export async function getVirtualLabProjects(
   id: string,
@@ -88,7 +88,7 @@ export async function createProject(
     }),
   });
 
-  return assertVLApiResponse(response);
+  return assertApiResponse(response);
 }
 
 export async function inviteUser({
@@ -116,7 +116,7 @@ export async function inviteUser({
     }
   );
 
-  return assertVLApiResponse(response);
+  return assertApiResponse(response);
 }
 
 export async function patchProject(

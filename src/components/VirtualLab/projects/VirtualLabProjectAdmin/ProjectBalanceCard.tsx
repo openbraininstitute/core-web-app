@@ -3,7 +3,7 @@ import { useSetAtom } from 'jotai';
 
 import EditIcon from '@/components/icons/Edit';
 import useBalanceTransferModal from '@/hooks/virtual-labs/project';
-import { ProjectBalance } from '@/types/virtual-lab/accounting';
+import { ProjectBalance } from '@/types/accounting';
 import { Project } from '@/types/virtual-lab/projects';
 import {
   projectBalanceAtomFamily,
