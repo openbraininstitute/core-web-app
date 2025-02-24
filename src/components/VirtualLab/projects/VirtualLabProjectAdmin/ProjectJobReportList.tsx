@@ -7,7 +7,7 @@ import {
   projectJobReportsAtomFamily,
   virtualLabProjectUsersAtomFamily,
 } from '@/state/virtual-lab/projects';
-import { JobReport, ServiceSubtype } from '@/types/virtual-lab/accounting';
+import { JobReport, ServiceSubtype } from '@/types/accounting';
 
 const { Column } = Table;
 
@@ -62,7 +62,9 @@ const tableTheme = {
 };
 
 const activityLabel: Record<ServiceSubtype, string> = {
+  [ServiceSubtype.SingleCellBuild]: 'Build',
   [ServiceSubtype.SingleCellSim]: 'Simulate',
+  [ServiceSubtype.SynaptomeBuild]: 'Build',
   [ServiceSubtype.SynaptomeSim]: 'Simulate',
   [ServiceSubtype.Storage]: 'Storage',
   // TODO: check if the following subtypes are still relevant and find better labels for them
@@ -76,7 +78,9 @@ function activityRenderFn(subtype: ServiceSubtype) {
 }
 
 const scaleLabel: Record<ServiceSubtype, string> = {
+  [ServiceSubtype.SingleCellBuild]: 'Single cell',
   [ServiceSubtype.SingleCellSim]: 'Single cell',
+  [ServiceSubtype.SynaptomeBuild]: 'Synaptome',
   [ServiceSubtype.SynaptomeSim]: 'Synaptome',
   [ServiceSubtype.Storage]: 'Storage',
   // TODO: check if the following subtypes are still relevant and find better labels for them

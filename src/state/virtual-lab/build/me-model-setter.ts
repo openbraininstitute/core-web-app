@@ -17,8 +17,8 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
 import { getAgentForUser } from '@/services/virtual-lab/users';
 import { ContributorRole } from '@/constants/nexus';
-import { makeOneshotReservation, OneshotSession, reportOneshotUsage } from '@/services/accounting';
-import { ServiceSubtype, ServiceType } from '@/types/accounting';
+import { OneshotSession } from '@/services/accounting';
+import { ServiceSubtype } from '@/types/accounting';
 
 type MEModelDetails = {
   description: string;
