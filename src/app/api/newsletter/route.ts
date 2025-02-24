@@ -82,7 +82,10 @@ export async function POST(req: Request) {
 
   if (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging') {
     tags.push('test');
+  } else {
+    tags.push('prod');
   }
+
   if (formValidation.tags && formValidation.tags.length) {
     tags = [...tags, ...formValidation.tags];
   }
