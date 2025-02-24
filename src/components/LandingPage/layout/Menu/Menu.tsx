@@ -1,9 +1,9 @@
 import React from 'react';
+import Link from 'next/link';
 
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
 import { ID_MENU, MENU_ITEMS } from '../../constants';
-import { gotoSection, sanitizeURL } from '../../utils';
 import PopupMenu from './PopupMenu';
 import { classNames } from '@/util/utils';
 
@@ -24,36 +24,24 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
         id={ID_MENU}
         className={classNames(className, styles.menuContainer, scrollHasStarted && styles.stuck)}
       >
-        <button
-          type="button"
-          className={classNames(styles.logo)}
-          onClick={() => gotoSection(EnumSection.Home)}
-        >
+        <Link href="/" className={styles.logo}>
           <h2>Open Brain Institute</h2>
-        </button>
+        </Link>
+
         <div className={styles.items}>
-          {MENU_ITEMS.map(({ caption, index }) => {
-            return (
-              <button
-                type="button"
-                className={classNames(index === section && styles.selected)}
-                key={caption}
-                onClick={() => gotoSection(index)}
-              >
-                <div>{caption}</div>
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            aria-label="Log in"
-            className={styles.loginButton}
-            onClick={() => {
-              window.location.href = sanitizeURL('/coming-soon');
-            }}
-          >
-            <div>Login to the Platform</div>
-          </button>
+          {MENU_ITEMS.map(({ caption, index, slug }) => (
+            <Link
+              key={slug}
+              href={slug}
+              className={classNames(index === section && styles.selected)}
+            >
+              {caption}
+            </Link>
+          ))}
+
+          <Link href="/coming-soon" className={styles.loginButton}>
+            Login to the Platform
+          </Link>
         </div>
         <div className={styles.hamburger}>
           <button type="button" onClick={() => setShowMenu(!showMenu)} aria-label="Popup menu">
