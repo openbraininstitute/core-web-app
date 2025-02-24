@@ -62,7 +62,7 @@ export class OneshotSession {
       await cancelOneshotReservation(jobId);
       throw error;
     } finally {
-      await reportOneshotUsage({
+      reportOneshotUsage({
         ...this.reservationRequest,
         jobId,
         timestamp: new Date().toISOString(),
