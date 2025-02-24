@@ -29,3 +29,7 @@ jobs:
             --cluster ${{ vars.AWS_STAGING_ECS_CLUSTER }} \
             --service ${{ vars.AWS_STAGING_ECS_SERVICE }} \
             --force-new-deployment
+
+          aws ecs wait services-stable \
+            --cluster ${{ vars.AWS_STAGING_ECS_CLUSTER }} \
+            --service ${{ vars.AWS_STAGING_ECS_SERVICE }}
