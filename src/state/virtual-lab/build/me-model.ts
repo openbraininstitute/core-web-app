@@ -176,12 +176,12 @@ export const selectedMEModelIdAtom = atom<string | null>((get) => {
 
 export const selectedMEModelOrgAtom = atom<string | null>((get) => {
   const meModelSelfUrl = get(meModelSelfUrlAtom);
-  return getOrgFromSelfUrl(meModelSelfUrl) ?? null;
+  return getOrgFromSelfUrl(meModelSelfUrl);
 });
 
 export const selectedMEModelProjectAtom = atom<string | null>((get) => {
   const meModelSelfUrl = get(meModelSelfUrlAtom);
-  return getProjectFromSelfUrl(meModelSelfUrl) ?? null;
+  return getProjectFromSelfUrl(meModelSelfUrl);
 });
 
 export const meModelResourceAtom = atom<Promise<MEModelResource | undefined>>(async (get) => {
