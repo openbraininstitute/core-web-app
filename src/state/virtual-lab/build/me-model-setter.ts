@@ -110,9 +110,9 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
       count: 1,
     });
 
-    const meModelResource = await accountingSession.useWith<MEModelResource>(async () => {
-      return createResource<MEModelResource>(entity, session, url);
-    });
+    const meModelResource = await accountingSession.useWith<MEModelResource>(async () =>
+      createResource<MEModelResource>(entity, session, url)
+    );
 
     set(meModelSelfUrlAtom, meModelResource._self);
     return meModelResource;

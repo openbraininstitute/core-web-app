@@ -20,7 +20,7 @@ async function makeOneshotReservation(
 }
 
 async function cancelOneshotReservation(jobId: string) {
-  const res = await authFetch('/api/accounting/reservation/oneshot/${jobId}', {
+  const res = await authFetch(`/api/accounting/reservation/oneshot/${jobId}`, {
     method: 'DELETE',
   });
 
