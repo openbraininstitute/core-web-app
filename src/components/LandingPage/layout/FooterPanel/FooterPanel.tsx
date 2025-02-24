@@ -1,6 +1,5 @@
 import React from 'react';
 
-import VerticalRuler from '../../components/VerticalRuler';
 import { EnumSection } from '../../sections/sections';
 import { MENU_ITEMS } from '../../constants';
 import { gotoSection } from '../../utils';
@@ -12,13 +11,11 @@ import styles from './FooterPanel.module.css';
 
 export interface FooterPanelProps {
   className?: string;
-  section: EnumSection;
 }
 
-export default function FooterPanel({ className, section }: FooterPanelProps) {
+export default function FooterPanel({ className }: FooterPanelProps) {
   return (
     <>
-      {section !== EnumSection.ComingSoon && <VerticalRuler />}
       <div className={classNames(className, styles.footerPanel)}>
         <div className={styles.title}>
           <h2>Open Brain Institute</h2>

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { styleBlockFullWidth } from '../../styles';
+import { styleBlockFullWidthPadded } from '../../styles';
 import PortalCard from './card/PortalCard';
 import { classNames } from '@/util/utils';
 import {
@@ -21,7 +21,7 @@ export function WidgetPortalsPanel({ className }: WidgetPortalsPanelProps) {
   return (
     <>
       <h1>{title}</h1>
-      <div className={classNames(className, styles.portalsPanel, styleBlockFullWidth)}>
+      <div className={classNames(className, styles.portalsPanel, styleBlockFullWidthPadded)}>
         {portals.map((portal) => (
           <PortalCard key={portal.link} value={portal} />
         ))}

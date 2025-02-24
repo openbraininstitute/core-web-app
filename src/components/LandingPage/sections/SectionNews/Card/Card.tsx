@@ -6,7 +6,7 @@ import { classNames } from '@/util/utils';
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { IconPlus } from '@/components/LandingPage/icons/IconPlus';
 import { styleButtonHoverable } from '@/components/LandingPage/styles';
-import { sanitizeURL } from '@/components/LandingPage/utils';
+
 import styles from './Card.module.css';
 
 export interface CardsProps {
@@ -29,6 +29,7 @@ export default function Cards({ className, news }: CardsProps) {
           </div>
           <button
             type="button"
+            title={news.link ?? ''}
             className={classNames(styleButtonHoverable, styles.button)}
             onClick={() => gotoNews(news)}
           >
@@ -56,6 +57,7 @@ function formatDate(d: string) {
 }
 
 function gotoNews(news: ContentForNewsItem): void {
-  const url = sanitizeURL(`/welcome/news/${news.slug}`);
-  window.location.href = url;
+  // const url = sanitizeURL(`/welcome/news/${news.slug}`);
+  const url = news.link;
+  if (url) window.open(url);
 }

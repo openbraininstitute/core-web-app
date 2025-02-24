@@ -15,7 +15,7 @@ import { fetchSimCampWorkflowConfig, getConfigWithMultiAnalysis, useAnalysisIds 
 import ScheduledIndicator from './ScheduledIndicator';
 import { SimulationCampaign } from '@/types/explore-section/delta-simulation-campaigns';
 import { useSessionAtomValue } from '@/hooks/hooks';
-import { useAnalyses, Analysis } from '@/app/explore/(content)/simulation-campaigns/shared';
+import { useAnalyses, Analysis } from '@/app/app/explore/(content)/simulation-campaigns/shared';
 import { createHeaders, formatTimeDifference } from '@/util/utils';
 import { fetchResourceById } from '@/api/nexus';
 import { launchUnicoreWorkflowSetup, launchWorkflowTask } from '@/services/bbp-workflow';

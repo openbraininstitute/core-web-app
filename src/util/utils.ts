@@ -2,7 +2,6 @@ import { format } from 'date-fns';
 import capitalize from 'lodash/capitalize';
 import _memoize from 'lodash/memoize';
 import { ZodError } from 'zod';
-import { basePath } from '@/config';
 
 export function createHeaders(
   token: string,
@@ -256,7 +255,7 @@ export function isJSON(str: any) {
   Sign out from the app and keycloak.
 */
 export function signOut() {
-  window.location.href = `${basePath}/log-out`;
+  window.location.href = `/app/log-out`;
 }
 
 export async function assertVLApiResponse(res: Response) {

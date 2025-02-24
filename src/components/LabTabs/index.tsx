@@ -30,23 +30,23 @@ export default function BrainFactoryTabs({ children }: BrainFactoryTabsProps) {
         items={[
           {
             label: 'Cell composition',
-            href: '/build/cell-composition/interactive',
-            baseHref: '/build/cell-composition',
+            href: '/app/build/cell-composition/interactive',
+            baseHref: '/app/build/cell-composition',
           },
           {
             label: 'Cell model assignment',
-            href: '/build/cell-model-assignment',
-            baseHref: '/build/cell-model-assignment',
+            href: '/app/build/cell-model-assignment',
+            baseHref: '/app/build/cell-model-assignment',
           },
           {
             label: 'Connectome definition',
-            href: '/build/connectome-definition/configuration/macro',
-            baseHref: '/build/connectome-definition',
+            href: '/app/build/connectome-definition/configuration/macro',
+            baseHref: '/app/build/connectome-definition',
           },
           {
             label: 'Connectome model assignment',
-            href: '/build/connectome-model-assignment/configuration',
-            baseHref: '/build/connectome-model-assignment',
+            href: '/app/build/connectome-model-assignment/configuration',
+            baseHref: '/app/build/connectome-model-assignment',
           },
         ]}
       />

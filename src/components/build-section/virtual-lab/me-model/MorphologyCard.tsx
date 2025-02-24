@@ -33,7 +33,7 @@ export default function MorphologyCard({ reselectLink = false }: Props) {
 
     if (!selectedMModel || !selectedMModelOrg || !selectedMModelProject) return '';
     if (!virtualLabId || !projectId)
-      return `/explore/interactive/experimental/morphology/${to64(`${orgProj}!/!${selectedMModel['@id']}`)}`;
+      return `/app/explore/interactive/experimental/morphology/${to64(`${orgProj}!/!${selectedMModel['@id']}`)}`;
 
     return detailUrlWithinLab(
       virtualLabId,

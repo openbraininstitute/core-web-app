@@ -92,7 +92,7 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
         </div>
 
         <div className="mb-5 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
-          <Link href="/virtual-lab">
+          <Link href="/app/virtual-lab">
             <HomeOutlined />
           </Link>
         </div>

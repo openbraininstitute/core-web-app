@@ -13,18 +13,18 @@ export default function LoginPanel() {
     <Button
       onClick={() => gotoSection(EnumSection.ComingSoon)}
       title="the Platform"
-      subTitle="Log in to"
+      subTitle="Login to"
     />
   );
 
   const { status } = useSession();
 
   return status === 'authenticated' ? (
-    <Button onClick="/virtual-lab" subTitle="Go to" title="the Platform" />
+    <Button onClick="/app/virtual-lab" subTitle="Go to" title="the Platform" />
   ) : (
     <Button
-      onClick={`/log-in?callbackUrl=${basePath}/virtual-lab`}
-      subTitle="Log in to"
+      onClick={`/app/log-in?callbackUrl=${basePath}/virtual-lab`}
+      subTitle="Login to"
       title="the Platform"
     />
   );

@@ -129,3 +129,35 @@
     min-width: calc(100vw - 16px);
   }
 }
+
+@media (max-width: 480px) {
+  .footerPanel > .subscribe {
+    min-height: auto;
+    height: auto;
+    gap: var(--gap-M);
+  }
+
+  .footerPanel .links {
+    width: 100%;
+  }
+
+  .footerPanel .title {
+    order: 4;
+    max-height: 6em;
+    min-height: 6em;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footerPanel .title > h2 {
+    max-width: 6em;
+  }
+
+  .footerPanel {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+}

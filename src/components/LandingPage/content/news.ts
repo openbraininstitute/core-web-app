@@ -12,6 +12,7 @@ export interface ContentForNewsItem {
   category: string;
   cardSize: string;
   isEPFL: boolean;
+  link: string | null;
   slug: string;
   imageURL: string;
   imageWidth: number;
@@ -82,6 +83,7 @@ export function useSanityContentForNewsList(limit?: number): ContentForNewsList 
   "content": thumbnailIntroduction,
   "isEPFL": isBBPEPFLNews,
   "slug": slug.current,
+  "link": externalLink,
   category,
   cardSize,
   "imageURL": thumbnailImage.asset->url,

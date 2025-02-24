@@ -14,7 +14,7 @@ import { autoSaveDebounceInterval } from '@/config';
 import { ROOT_BRAIN_REGION_URI } from '@/constants/brain-hierarchy';
 import { OriginalComposition } from '@/types/composition/original';
 import openNotification from '@/api/notifications';
-import schema from '@/app/build/(main)/cell-composition/configuration/schema.json';
+import schema from '@/app/app/build/(main)/cell-composition/configuration/schema.json';
 
 export const updateConfigPayloadAtom = atom<null, [CellCompositionConfigPayload], Promise<void>>(
   null,
