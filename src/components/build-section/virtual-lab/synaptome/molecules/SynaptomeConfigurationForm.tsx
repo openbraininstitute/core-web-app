@@ -267,7 +267,7 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
 
       const accountingSession = new OneshotSession({
         projectId: project,
-        userId: session.user.id,
+        virtualLabId: org,
         subtype: ServiceSubtype.SynaptomeBuild,
         count: 1,
       });

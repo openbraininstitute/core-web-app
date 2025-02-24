@@ -104,8 +104,8 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
     });
 
     const accountingSession = new OneshotSession({
+      virtualLabId: virtualLabInfo.virtualLabId,
       projectId: virtualLabInfo.projectId,
-      userId: session.user.id,
       subtype: ServiceSubtype.SingleCellBuild,
       count: 1,
     });

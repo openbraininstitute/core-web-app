@@ -1,15 +1,13 @@
 import authFetch from '@/authFetch';
 import { assertApiResponse } from '@/util/utils';
-import {
-  OneshotUsage,
-  OneshotReservation,
-  ServiceType,
-  OneshotReservationResponse,
-} from '@/types/accounting';
+import { OneshotUsage, OneshotReservation, OneshotReservationResponse } from '@/types/accounting';
 import { accountingBaseUrl } from '@/config';
 
+type OneShotReservationRequest = Omit<OneshotReservation, 'type' | 'userId'>;
+type OneshotUsageReport = Omit<OneshotUsage, 'type'>;
+
 async function makeOneshotReservation(
-  reservation: OneshotReservation
+  reservation: OneShotReservationRequest
 ): Promise<OneshotReservationResponse> {
   const res = await authFetch('/api/accounting/reservation/oneshot', {
     method: 'POST',
@@ -28,26 +26,23 @@ async function cancelOneshotReservation(jobId: string) {
   return assertApiResponse(res);
 }
 
-async function reportOneshotUsage(oneshotUsage: OneshotUsage) {
+async function reportOneshotUsage(oneshotUsageReport: OneshotUsageReport) {
   const res = await authFetch('/api/accounting/usage/oneshot', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(oneshotUsage),
+    body: JSON.stringify(oneshotUsageReport),
   });
 
   return assertApiResponse(res);
 }
 
 export class OneshotSession {
-  private params: OneshotReservation;
+  private reservationRequest: OneShotReservationRequest;
+
   private enabled: boolean;
 
-  constructor(params: Omit<OneshotReservation, 'type'>) {
-    this.params = {
-      ...params,
-      type: ServiceType.Oneshot,
-    };
-
+  constructor(params: OneShotReservationRequest) {
+    this.reservationRequest = params;
     this.enabled = !!accountingBaseUrl;
   }
 
@@ -56,7 +51,7 @@ export class OneshotSession {
       return executorFn();
     }
 
-    const reservationRes = await makeOneshotReservation(this.params);
+    const reservationRes = await makeOneshotReservation(this.reservationRequest);
     const { jobId } = reservationRes.data;
 
     let result: T;
@@ -68,7 +63,7 @@ export class OneshotSession {
       throw error;
     } finally {
       await reportOneshotUsage({
-        ...this.params,
+        ...this.reservationRequest,
         jobId,
         timestamp: new Date().toISOString(),
       });

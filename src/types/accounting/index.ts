@@ -88,6 +88,7 @@ export type ProjectJobReportsResponse = VlmResponse<ProjectJobReports>;
 /* -------------------------------------- Reservation types ------------------------------------- */
 
 export type OneshotReservation = {
+  virtualLabId: string;
   projectId: string;
   userId: string;
   type: ServiceType;
