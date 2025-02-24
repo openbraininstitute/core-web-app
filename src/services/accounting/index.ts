@@ -1,5 +1,4 @@
 import authFetch from '@/authFetch';
-import { basePath } from '@/config';
 import { assertApiResponse } from '@/util/utils';
 import {
   OneshotUsage,
@@ -11,7 +10,7 @@ import {
 async function makeOneshotReservation(
   reservation: OneshotReservation
 ): Promise<OneshotReservationResponse> {
-  const res = await authFetch(`${basePath}/api/accounting/reservation/oneshot`, {
+  const res = await authFetch('/api/accounting/reservation/oneshot', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(reservation),
@@ -21,7 +20,7 @@ async function makeOneshotReservation(
 }
 
 async function cancelOneshotReservation(jobId: string) {
-  const res = await authFetch(`${basePath}/api/accounting/reservation/oneshot/${jobId}`, {
+  const res = await authFetch('/api/accounting/reservation/oneshot/${jobId}', {
     method: 'DELETE',
   });
 
@@ -29,7 +28,7 @@ async function cancelOneshotReservation(jobId: string) {
 }
 
 async function reportOneshotUsage(oneshotUsage: OneshotUsage) {
-  const res = await authFetch(`${basePath}/api/accounting/usage/oneshot`, {
+  const res = await authFetch('/api/accounting/usage/oneshot', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(oneshotUsage),
