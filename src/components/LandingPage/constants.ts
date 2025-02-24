@@ -9,7 +9,7 @@ export interface Section {
 export const DEFAULT_SECTION: Section = {
   index: EnumSection.Home,
   caption: 'Home',
-  slug: '/home',
+  slug: '/',
 };
 
 export const SECTIONS: Readonly<Section[]> = [
