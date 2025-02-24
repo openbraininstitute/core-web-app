@@ -19,8 +19,6 @@ export const env = createEnv({
     MAILCHIMP_AUDIENCE_ID: z.string().min(1),
     MAILCHIMP_API_SERVER: z.string().min(1),
 
-    ACCOUNTING_BASE_URL: z.string().url().optional(),
-
     CI_COMMIT_SHORT_SHA: z.string().optional(),
     npm_package_version: z.string().optional(),
   },
@@ -35,6 +33,8 @@ export const env = createEnv({
       (sentryDsn) => sentryDsn || undefined,
       z.string().url().optional()
     ),
+
+    NEXT_PUBLIC_ACCOUNTING_BASE_URL: z.string().url().optional(),
 
     NEXT_PUBLIC_NEXUS_URL: z.string().url(),
 
@@ -99,8 +99,9 @@ export const env = createEnv({
   },
 
   experimental__runtimeEnv: {
-
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
+
+    NEXT_PUBLIC_ACCOUNTING_BASE_URL: process.env.NEXT_PUBLIC_ACCOUNTING_BASE_URL,
 
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 

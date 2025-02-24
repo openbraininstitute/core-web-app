@@ -1,6 +1,6 @@
-import { env } from '@/env.mjs';
 import { convertObjectKeystoCamelCase } from '@/util/object-keys-format';
 import { auth } from '@/auth';
+import { accountingBaseUrl } from '@/config';
 import authFetch from '@/authFetch';
 import { assertApiResponse } from '@/util/utils';
 
@@ -20,7 +20,7 @@ export const DELETE = async (
   const { reservationId } = params;
 
   try {
-    const res = await authFetch(`${env.ACCOUNTING_BASE_URL}/reservation/oneshot/${reservationId}`, {
+    const res = await authFetch(`${accountingBaseUrl}/reservation/oneshot/${reservationId}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     });

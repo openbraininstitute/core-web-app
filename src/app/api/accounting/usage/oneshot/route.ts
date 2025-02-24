@@ -1,10 +1,10 @@
 import { OneshotUsage } from '@/types/accounting';
-import { env } from '@/env.mjs';
 import {
   convertObjectKeystoCamelCase,
   convertObjectKeysToSnakeCase,
 } from '@/util/object-keys-format';
 import { auth } from '@/auth';
+import { accountingBaseUrl } from '@/config';
 import authFetch from '@/authFetch';
 import { assertApiResponse } from '@/util/utils';
 
@@ -20,7 +20,7 @@ export const POST = async (request: Request) => {
   }
 
   try {
-    const res = await authFetch(`${env.ACCOUNTING_BASE_URL}/usage/oneshot`, {
+    const res = await authFetch(`${accountingBaseUrl}/usage/oneshot`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(convertObjectKeysToSnakeCase(usage)),
