@@ -25,6 +25,11 @@ import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 
+const DEFAULT_ERROR_MSG = 'Somethng went wrong while creating the ME-model, please try again later';
+const LOW_FUNDS_ERROR_MSG =
+  'The project does not have enough credits to create a model, please add more and try again';
+const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
+
 type Params = {
   params: {
     virtualLabId: string;
@@ -149,8 +154,15 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
         setMeModelCreating(false);
         router.push(redirectionUrl);
       })
-      .catch(() => {
+      .catch((err) => {
         setMeModelCreating(false);
+        notification.error({
+          duration: 10,
+          message:
+            err?.cause?.error_code === LOW_FUNDS_ERROR_CODE
+              ? LOW_FUNDS_ERROR_MSG
+              : DEFAULT_ERROR_MSG,
+        });
       });
   };
 

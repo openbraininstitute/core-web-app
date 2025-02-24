@@ -65,7 +65,7 @@ export class OneshotSession {
       reportOneshotUsage({
         ...this.reservationRequest,
         jobId,
-        timestamp: new Date().toISOString(),
+        timestamp: Math.floor(Date.now() / 1000),
       });
     }
 
