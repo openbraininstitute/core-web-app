@@ -2,7 +2,7 @@ import { convertObjectKeystoCamelCase } from '@/util/object-keys-format';
 import { auth } from '@/auth';
 import { accountingBaseUrl } from '@/config';
 import authFetch from '@/authFetch';
-import { assertApiResponse } from '@/util/utils';
+import { assertApiResponse, RemoteAPIErrorResponse } from '@/util/utils';
 
 export const DELETE = async (
   request: Request,
@@ -25,15 +25,10 @@ export const DELETE = async (
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const resObj = assertApiResponse(res);
+    const resObj = await assertApiResponse(res);
 
     return Response.json(convertObjectKeystoCamelCase(resObj));
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-
-    return new Response('Failed to cancel oneshot reservation', {
-      status: 502,
-      statusText: errorMessage,
-    });
+    return RemoteAPIErrorResponse(error);
   }
 };

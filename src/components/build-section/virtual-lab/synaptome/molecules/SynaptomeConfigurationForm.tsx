@@ -48,6 +48,10 @@ import { validateFormula } from '@/api/bluenaas/validateSynapseGenerationFormula
 import { OneshotSession } from '@/services/accounting';
 import { ServiceSubtype } from '@/types/accounting';
 
+const LOW_FUNDS_ERROR_MSG =
+  'The project does not have enough credits to create a model, please add more and try again';
+const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
+
 const label = (text: string) => (
   <span className="text-base font-semibold text-primary-8">{text}</span>
 );
@@ -284,16 +288,6 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
 
       refreshSynaptomeModels();
 
-      if (!resp.ok) {
-        return notifyError(
-          CREATE_SYNAPTOME_FAIL,
-          undefined,
-          'topRight',
-          undefined,
-          'synaptome-config'
-        );
-      }
-
       form.resetFields();
       setSimulationScope(SimulationType.Synaptome);
       selectedRowsAtom.setShouldRemove(() => true); // set function to remove all
@@ -305,7 +299,11 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
 
       navigate(generateSynaptomeUrl(newSynaptomeModel));
     } catch (error) {
-      notifyError(CREATE_SYNAPTOME_FAIL, 7, 'topRight', undefined, 'synaptome-config');
+      const errorMessage =
+        (error as any)?.cause?.error_code === LOW_FUNDS_ERROR_CODE
+          ? LOW_FUNDS_ERROR_MSG
+          : CREATE_SYNAPTOME_FAIL;
+      notifyError(errorMessage, 7, 'topRight', undefined, 'synaptome-config');
       setLoading(false);
     }
   };

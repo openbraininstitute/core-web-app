@@ -27,7 +27,7 @@
 }
 
 .accepted {
-    max-width: max(300px, 32%);
+  max-width: max(300px, 32%);
 }
 
 .accepted > svg {

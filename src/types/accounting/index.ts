@@ -94,10 +94,11 @@ export type OneshotReservationResponse = VlmResponse<{
 }>;
 
 export type OneshotUsage = {
+  virtualLabId: string;
   projectId: string;
   type: ServiceType;
   subtype: ServiceSubtype;
   count: number;
   jobId: string;
-  timestamp: string;
+  timestamp: number;
 };

@@ -1,12 +1,9 @@
 import { OneshotReservation, ServiceType } from '@/types/accounting';
-import {
-  convertObjectKeystoCamelCase,
-  convertObjectKeysToSnakeCase,
-} from '@/util/object-keys-format';
+import { convertObjectKeystoCamelCase } from '@/util/object-keys-format';
 import { auth } from '@/auth';
 import { accountingBaseUrl } from '@/config';
 import authFetch from '@/authFetch';
-import { assertApiResponse } from '@/util/utils';
+import { assertApiResponse, RemoteAPIErrorResponse } from '@/util/utils';
 import { getVirtualLabProjectUsers } from '@/services/virtual-lab/projects';
 
 export const POST = async (request: Request) => {
@@ -35,24 +32,19 @@ export const POST = async (request: Request) => {
     const res = await authFetch(`${accountingBaseUrl}/reservation/oneshot`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(
-        convertObjectKeysToSnakeCase({
-          ...reservationRequest,
-          userId: session.user.id,
-          type: ServiceType.Oneshot,
-        })
-      ),
+      body: JSON.stringify({
+        proj_id: projectId,
+        user_id: session.user.id,
+        type: ServiceType.Oneshot,
+        subtype: reservationRequest.subtype,
+        count: reservationRequest.count,
+      }),
     });
 
-    const resObj = assertApiResponse(res);
+    const resObj = await assertApiResponse(res);
 
     return Response.json(convertObjectKeystoCamelCase(resObj));
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-
-    return new Response('Failed to create oneshot reservation', {
-      status: 502,
-      statusText: errorMessage,
-    });
+  } catch (error) {
+    return RemoteAPIErrorResponse(error);
   }
 };
