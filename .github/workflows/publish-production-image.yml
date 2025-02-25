@@ -2,9 +2,6 @@ name: Publish PRODUCTION image
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - chore/consolidate-push-and-deploy-actions-for-staging-ci
 
 permissions:
   contents: write
@@ -13,14 +10,14 @@ jobs:
   tag-and-publish-image:
     runs-on: ubuntu-latest
     env:
-      ENVIRONMENT: production
+      ENVIRONMENT: staging
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
-      # - name: Fail if branch is not main
-      #   if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
-      #   run: |
-      #     echo "This workflow should not be triggered with workflow_dispatch on a branch other than main"
-      #     exit 1
+      - name: Fail if branch is not main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "This workflow should not be triggered with workflow_dispatch on a branch other than main"
+          exit 1
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,44 +37,37 @@ jobs:
           DAY=$(date +'%d')
           LATEST_TAG=$(git tag --sort=-v:refname | grep -E "^${YEAR}\.${MONTH}\.${DAY}\.[0-9]+$" | head -n 1 || echo "")
 
-          echo "Latest tag: $LATEST_TAG"
-          git log --pretty=format:"- %s" ${LATEST_TAG}..HEAD
-
           if [[ -z "$LATEST_TAG" ]]; then
             COUNTER=1
-            COMMITS=$(git log --pretty=format:"- %s")
           else
             COUNTER=$(( ${LATEST_TAG##*.} + 1 ))
-            COMMITS=$(git log --pretty=format:"- %s" ${LATEST_TAG}..HEAD)
           fi
 
           NEW_TAG="${YEAR}.${MONTH}.${DAY}.${COUNTER}"
           echo "NEW_TAG=${NEW_TAG}" >> $GITHUB_ENV
-          echo "COMMITS=${COMMITS}" >> $GITHUB_ENV
           echo "New tag: $NEW_TAG"
-          echo "Commits: \n$COMMITS"
 
       - name: Create Git Tag
         run: |
-          git tag $NEW_TAG -m "Changes:\n\n${COMMITS}"
+          git tag $NEW_TAG
           git push origin $NEW_TAG
 
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     aws-access-key-id: ${{ secrets.PUBLICECR_UPLOAD_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.PUBLICECR_UPLOAD_SECRET_ACCESS_KEY }}
-      #     aws-region: ${{ vars.PUBLICECR_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PUBLICECR_UPLOAD_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PUBLICECR_UPLOAD_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.PUBLICECR_REGION }}
 
-      # - name: Authenticate with AWS Public ECR
-      #   uses: aws-actions/amazon-ecr-login@v2
-      #   with:
-      #     registry-type: public
+      - name: Authenticate with AWS Public ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
 
-      # - name: Build a Docker image
-      #   run: |
-      #     docker build --build-arg DEPLOYMENT_ENV=production -t ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }} .
+      - name: Build a Docker image
+        run: |
+          docker build --build-arg DEPLOYMENT_ENV=production -t ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }} .
 
-      # - name: Publish To AWS ECR
-      #   run: |
-      #     docker push ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }}
+      - name: Publish To AWS ECR
+        run: |
+          docker push ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }}
