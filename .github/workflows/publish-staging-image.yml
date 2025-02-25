@@ -1,9 +1,14 @@
 name: Deploy to STAGING
 
+permissions:
+  id-token: write # Required for OIDC authentication
+  contents: read # Standard permission for GitHub Actions
+
 on:
   push:
     branches:
       - develop
+      - fix/staging-gh-action
   workflow_dispatch:
 
 jobs:
