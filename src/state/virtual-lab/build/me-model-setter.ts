@@ -12,7 +12,7 @@ import sessionAtom from '@/state/session';
 import { BrainLocation, EntityCreation } from '@/types/nexus';
 import { MEModel, MEModelResource } from '@/types/me-model';
 import { createResource, fetchResourceById, updateResource } from '@/api/nexus';
-import { composeUrl } from '@/util/nexus';
+import { composeUrl, ensureArray } from '@/util/nexus';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
 import { getAgentForUser } from '@/services/virtual-lab/users';
@@ -157,8 +157,8 @@ export const initializeSummaryAtom = atom<
         }
   );
 
-  const usedEModel = meModel.hasPart.find((r) => r['@type'] === 'EModel');
-  const usedMModel = meModel.hasPart.find((r) => r['@type'] === 'NeuronMorphology');
+  const usedEModel = ensureArray(meModel.hasPart).find((r) => r['@type'] === 'EModel');
+  const usedMModel = ensureArray(meModel.hasPart).find((r) => r['@type'] === 'NeuronMorphology');
 
   if (!usedEModel || !usedMModel) throw new Error('No EModel or Morphology found for ME-Model');
 

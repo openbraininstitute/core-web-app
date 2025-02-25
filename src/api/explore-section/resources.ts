@@ -1,5 +1,6 @@
 import getPath from 'lodash/get';
 import esb, { Sort } from 'elastic-builder';
+
 import { API_SEARCH } from '@/constants/explore-section/queries';
 import {
   ExploreESHit,
@@ -9,7 +10,7 @@ import {
 } from '@/types/explore-section/es';
 import { Experiment } from '@/types/explore-section/es-experiment';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { getOrgAndProjectFromProjectId } from '@/util/nexus';
+import { ensureArray, getOrgAndProjectFromProjectId } from '@/util/nexus';
 import { fetchResourceById } from '@/api/nexus';
 import { MEModel, MEModelResource } from '@/types/me-model';
 import { nexus } from '@/config';
@@ -167,12 +168,14 @@ export async function fetchLinkedModel({
               ...(linkedProperty === 'linkedMeModel'
                 ? {
                     linkedMModel: cache.get(
-                      meMmodel?.hasPart.find((p: MEModel) => p['@type'] === 'NeuronMorphology')?.[
-                        '@id'
-                      ]!
+                      ensureArray(meMmodel?.hasPart).find(
+                        (p: MEModel) => p['@type'] === 'NeuronMorphology'
+                      )?.['@id']!
                     ),
                     linkedEModel: cache.get(
-                      meMmodel?.hasPart.find((p: MEModel) => p['@type'] === 'EModel')?.['@id']!
+                      ensureArray(meMmodel?.hasPart).find(
+                        (p: MEModel) => p['@type'] === 'EModel'
+                      )?.['@id']!
                     ),
                   }
                 : {}),
@@ -243,7 +246,9 @@ export async function fetchLinkedMandEModels({
       linkedEModel: undefined,
     };
 
-  const mModelId = meModel?.hasPart.find((p) => p['@type'] === 'NeuronMorphology')?.['@id']!;
+  const mModelId = ensureArray(meModel?.hasPart).find((p) => p['@type'] === 'NeuronMorphology')?.[
+    '@id'
+  ]!;
   const linkedMModel = await fetchResourceById<NeuronMorphology>(mModelId, session, {
     ...(mModelId.startsWith(nexus.defaultIdBaseUrl)
       ? {}
@@ -252,7 +257,7 @@ export async function fetchLinkedMandEModels({
           project,
         }),
   });
-  const eModelId = meModel?.hasPart.find((p) => p['@type'] === 'EModel')?.['@id']!;
+  const eModelId = ensureArray(meModel?.hasPart).find((p) => p['@type'] === 'EModel')?.['@id']!;
   const linkedEModel = await fetchResourceById<EModel>(eModelId, session, {
     ...(eModelId.startsWith(nexus.defaultIdBaseUrl)
       ? {}
