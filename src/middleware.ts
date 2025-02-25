@@ -41,6 +41,7 @@ function isFreeAccessRoute(requestUrl: string, paths: string[]) {
 
 export async function middleware(request: NextRequest) {
   const requestUrl = request.nextUrl.pathname;
+
   // const { device } = userAgent(request);
 
   // Allow free access to assets

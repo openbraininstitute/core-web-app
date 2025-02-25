@@ -1,0 +1,125 @@
+{
+  "plans": [
+    {
+      "id": "1",
+      "name": "Free",
+      "description": "Subscription",
+      "originalPrice": null,
+      "price": {
+        "amount": 0,
+        "currency": "CHF",
+        "interval": "month"
+      },
+      "yearlyPrice": null,
+      "features": [
+        "+ 100 free initial credits*",
+        "+ 1 GB private free storage**",
+        "+ Free public storage***"
+      ],
+      "categories": [
+        {
+          "name": "GENERAL",
+          "features": [
+            {
+              "text": "Join any lab",
+              "included": "full"
+            },
+            {
+              "text": "Invite lab members",
+              "included": "full"
+            }
+          ]
+        },
+        {
+          "name": "SUBCELLULAR SCALE",
+          "features": [
+            {
+              "text": "Explore",
+              "included": "full"
+            },
+            {
+              "text": "Build",
+              "included": "partial"
+            },
+            {
+              "text": "Experiment",
+              "included": "full"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Pro",
+      "description": "Subscription",
+      "originalPrice": {
+        "monthly": {
+          "amount": 50,
+          "currency": "CHF"
+        },
+        "yearly": {
+          "amount": 550,
+          "currency": "CHF"
+        }
+      },
+      "price": {
+        "amount": 25,
+        "currency": "CHF",
+        "interval": "month"
+      },
+      "yearlyPrice": {
+        "amount": 275,
+        "currency": "CHF",
+        "interval": "year"
+      },
+      "features": [
+        "+ 500 free initial credits*",
+        "+ 2 GB private free storage**",
+        "+ Free public storage***"
+      ],
+      "categories": [
+        {
+          "name": "GENERAL",
+          "features": [
+            {
+              "text": "Join any lab",
+              "included": "full"
+            },
+            {
+              "text": "Invite lab members",
+              "included": "full"
+            }
+          ]
+        },
+        {
+          "name": "SUBCELLULAR SCALE",
+          "features": [
+            {
+              "text": "Explore",
+              "included": "full"
+            },
+            {
+              "text": "Build",
+              "included": "full"
+            },
+            {
+              "text": "Experiment",
+              "included": "full"
+            }
+          ]
+        }
+      ],
+      "isSpecialPrice": true
+    },
+    {
+      "id": "3",
+      "name": "Premium",
+      "description": "Contact us for premium features",
+      "price": null,
+      "features": [],
+      "categories": [],
+      "action": "Contact us"
+    }
+  ]
+}

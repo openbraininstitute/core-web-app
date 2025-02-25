@@ -5,9 +5,8 @@ import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Switch } from 'antd';
 import dynamic from 'next/dynamic';
 
-import CreateVirtualLabButton from '@/components/VirtualLab/CreateVirtualLabButton';
-import VirtualLabAndProject from '@/components/VirtualLab/VirtualLabDashboard/VirtualLabAndProject';
-import DashboardTotals from '@/components/VirtualLab/VirtualLabDashboard/DashboardTotals';
+import VirtualLabAndProject from '@/components/VirtualLab/labs-listing/VirtualLabAndProject';
+import DashboardTotals from '@/components/VirtualLab/labs-listing/totals';
 import CreationModal from '@/components/VirtualLab/create-entity-flows/project/in-home';
 import { VirtualLab } from '@/types/virtual-lab/lab';
 
@@ -53,7 +52,14 @@ function VirtualLabDashboard({ virtualLabs }: { virtualLabs: VirtualLab[] }) {
                 Create project <PlusOutlined className="relative left-3 top-[0.1rem]" />
               </span>
             </Button>
-            <CreateVirtualLabButton />
+            <Button
+              className="mr-5 h-12 w-52 rounded-none border-none text-sm font-bold"
+              onClick={onOpen}
+            >
+              <span className="relative text-primary-8">
+                Create Virtual lab <PlusOutlined className="relative left-3 top-[0.1rem]" />
+              </span>
+            </Button>
           </div>
         </div>
       </div>

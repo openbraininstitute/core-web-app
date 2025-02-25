@@ -1,13 +1,18 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { Input as AInput, InputProps, Select as ASelect, SelectProps } from 'antd';
+import { ForwardedRef, forwardRef } from 'react';
+import { Input as AInput, InputProps, Select as ASelect, SelectProps, InputRef } from 'antd';
 import { TextAreaProps } from 'antd/lib/input/TextArea';
 import { classNames } from '@/util/utils';
 
 const { TextArea: ATextArea } = AInput;
 
-export function Input({ placeholder, className, ...props }: InputProps) {
+export function XInput(
+  { placeholder, className, ...props }: InputProps,
+  ref: ForwardedRef<InputRef>
+) {
   return (
     <AInput
+      ref={ref}
       placeholder={placeholder}
       className={classNames(
         'rounded-none border-0 border-b border-gray-300 px-1 focus:ring-0',
@@ -21,6 +26,7 @@ export function Input({ placeholder, className, ...props }: InputProps) {
     />
   );
 }
+export const Input = forwardRef(XInput);
 
 export function TextArea({ placeholder, rows = 4, className, ...props }: TextAreaProps) {
   return (

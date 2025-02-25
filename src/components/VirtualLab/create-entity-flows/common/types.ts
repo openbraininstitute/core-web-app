@@ -20,3 +20,5 @@ export const SIZE_MAP = {
   medium: 'h-20 w-20',
   large: 'h-24 w-24',
 };
+
+export type Step = 'information' | 'plans' | 'members';
