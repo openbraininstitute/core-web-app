@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import CreationModal from '@/components/VirtualLab/create-entity-flows/virtual-lab';
+import CreationModal from '@/components/VirtualLab/create-entity-flows/virtual-lab/form';
 import CTABanner from '@/components/VirtualLab/VirtualLabCTABanner/cta-banner';
 
 type Props = {

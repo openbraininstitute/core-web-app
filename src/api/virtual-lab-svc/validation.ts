@@ -24,7 +24,7 @@ export const VirtualLabPayloadSchema = z.object({
       })
     )
     .nullable(),
-  plan_id: z.number().optional(),
+  plan_id: z.string().optional(),
   email_status: EmailStatusSchema,
 });
 

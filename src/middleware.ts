@@ -57,6 +57,7 @@ export async function middleware(request: NextRequest) {
 
   // Rest of the existing middleware code...
   const requestUrl = request.nextUrl.pathname;
+
   // const { device } = userAgent(request);
 
   // Allow free access to assets

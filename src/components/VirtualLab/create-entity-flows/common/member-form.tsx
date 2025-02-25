@@ -24,7 +24,6 @@ export default function Content({ ListCompo, cls }: Props) {
   const prevItemsLength = useRef(memberField?.length || 0);
 
   useEffect(() => {
-    // scroll to bottom only when new items are added
     if (memberField?.length > prevItemsLength.current && ref.current) {
       ref.current.scrollTop = ref.current.scrollHeight;
     }
@@ -32,7 +31,12 @@ export default function Content({ ListCompo, cls }: Props) {
   }, [memberField?.length]);
 
   return (
-    <div className={classNames('flex w-full flex-col', cls?.container)}>
+    <div
+      className={classNames(
+        'mx-auto flex h-full w-full max-w-7xl flex-grow flex-col bg-white p-12',
+        cls?.container
+      )}
+    >
       {ListCompo && (
         <>
           <ListCompo />
@@ -89,7 +93,7 @@ export default function Content({ ListCompo, cls }: Props) {
                       },
                     ]}
                   >
-                    <Input type="email" placeholder="Enter email address here" />
+                    <Input autoFocus type="email" placeholder="Enter email address here" />
                   </Form.Item>
                   <Form.Item
                     {...restField}
@@ -129,7 +133,7 @@ export default function Content({ ListCompo, cls }: Props) {
                 </div>
               ))}
             </div>
-            <Form.Item>
+            <Form.Item className="mt-auto">
               <Button
                 className="h-14 rounded-none border-gray-400 bg-white px-10 text-gray-500 hover:bg-primary-8 hover:!text-white"
                 type="default"

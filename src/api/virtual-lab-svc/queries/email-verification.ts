@@ -35,7 +35,7 @@ export async function getEmailVerificationCode({
 }: VerificationCodeInitPayload): Promise<VerificationCodeResponse<'init'>> {
   try {
     const session = await getSession();
-    const response = await fetch(`${virtualLabApi}/virtual-labs/email/initiate-verification`, {
+    const response = await fetch(`${virtualLabApi.url}/virtual-labs/email/initiate-verification`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export async function verifyOtpCode({
 }: VerificationCodeVerifyPayload): Promise<VerificationCodeResponse<'verify'>> {
   try {
     const session = await getSession();
-    const response = await fetch(`${virtualLabApi}/virtual-labs/email/verify-code`, {
+    const response = await fetch(`${virtualLabApi.url}/virtual-labs/email/verify-code`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
