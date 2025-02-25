@@ -7,6 +7,7 @@ import ProgressiveImage from '../../components/ProgressiveImage';
 import NewsletterForm from '../../components/coming-soon/newsletter-form';
 import NextPanel from './NextPanel';
 import { classNames } from '@/util/utils';
+import useFullHeight from '@/hooks/useFullHeight';
 
 import styles from './Hero.module.css';
 
@@ -28,9 +29,9 @@ export default function Hero({ className, section }: HeroProps) {
     next,
   } = useSanityContentForHero(section);
   const [videoReady, setVideoReady] = React.useState(false);
-
+  const height = useFullHeight();
   return (
-    <div className={classNames(className, styles.hero)}>
+    <div className={classNames(className, styles.hero)} style={{ height }}>
       <div className={classNames(styles.background)}>
         {backgroundType === 'video' && (
           <>

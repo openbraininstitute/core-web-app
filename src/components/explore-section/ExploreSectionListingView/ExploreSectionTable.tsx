@@ -17,7 +17,7 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import type { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { classNames } from '@/util/utils';
-import styles from '@/app/explore/explore.module.scss';
+import styles from '@/app/app/explore/explore.module.scss';
 
 export type OnCellClick = (
   basePath: string,

@@ -8,12 +8,12 @@ const items: MenuItem[] = [
   {
     id: 'macro',
     label: 'Macro',
-    href: '/build/connectome-definition/configuration/macro',
+    href: '/app/build/connectome-definition/configuration/macro',
   },
   {
     id: 'micro',
     label: 'Micro',
-    href: '/build/connectome-definition/configuration/micro',
+    href: '/app/build/connectome-definition/configuration/micro',
   },
 ];
 

@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { IconArrowRight } from '../../../icons/IconArrowRight';
 import { classNames } from '@/util/utils';
-import { basePath } from '@/config';
 
 import styles from './HeaderLoginButton.module.css';
 
@@ -21,9 +20,9 @@ export interface HeaderLoginButtonProps {
 export default function HeaderLoginButton({ className, stuck }: HeaderLoginButtonProps) {
   const { status } = useSession();
   const isAuthenticated = status === 'authenticated';
-  const link = isAuthenticated ? '/virtual-lab' : `/log-in?callbackUrl=${basePath}/virtual-lab`;
-  const captionLarge = isAuthenticated ? 'Go to' : 'Log in to';
-  const captionSmall = isAuthenticated ? 'Go to' : 'Log in to';
+  const link = isAuthenticated ? '/app/virtual-lab' : `/app/log-in?callbackUrl=/app/virtual-lab`;
+  const captionLarge = isAuthenticated ? 'Go to' : 'Login to';
+  const captionSmall = isAuthenticated ? 'Go to' : 'Login to';
   return (
     <Link
       className={classNames(className, styles.headerLoginButton, stuck && styles.stuck)}

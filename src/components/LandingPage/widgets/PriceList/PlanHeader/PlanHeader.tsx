@@ -32,17 +32,25 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
             </strong>
             <small>/month</small>
           </div>
-          <div>
+          <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
+            <strong>
+              {currency} {yearNormal}
+            </strong>
+            <small>/year</small>
+          </div>
+          <div className={styles.price}>
             <big>
               {currency} {discount || month}
             </big>
             /month
+            {discount && <div className={styles.pill}>Launch</div>}
           </div>
-          <div>
+          <div className={styles.price}>
             <big>
               {currency} {discount ? yearDiscount : yearNormal}
             </big>
             /year
+            {discount && <div className={styles.pill}>Launch</div>}
           </div>
           <ul>
             {plan.notes.map((note, index) => (

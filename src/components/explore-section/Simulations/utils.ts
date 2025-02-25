@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Session } from 'next-auth';
 import JSZip from 'jszip';
-import { Analysis } from '@/app/explore/(content)/simulation-campaigns/shared';
+import { Analysis } from '@/app/app/explore/(content)/simulation-campaigns/shared';
 import { to64 } from '@/util/common';
 import {
   createWorkflowConfigResource,
@@ -69,7 +69,7 @@ function getMultiAnalysisWorkflowConfig(
 
 function getMultiAnalyseSimCampaignMetaConfig(url: string) {
   return `
-  
+
   [MultiAnalyseSimCampaignMeta]
   config-url: ${url}
   `;
@@ -152,7 +152,7 @@ type AnalysisConfig = {
 };
 
 /*
-  Gets all the custom analysis configurations 
+  Gets all the custom analysis configurations
   (configured during sim campaign configuration in the 'custom analysis' section)
 */
 function extractAnalysisConfigs(config: string): AnalysisConfig[] | undefined {
@@ -166,7 +166,7 @@ function extractAnalysisConfigs(config: string): AnalysisConfig[] | undefined {
   }
 }
 
-/* 
+/*
   Gets the ids of all the launched custom analysis
 */
 export function useAnalysisIds(resource: SimulationCampaign): [string[], boolean] {

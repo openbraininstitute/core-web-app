@@ -34,7 +34,8 @@ button.missionStatement {
 .missionStatement > div.text > h2 {
   font-family: var(--font-serif);
   font-size: var(--font-size-XL);
-  line-height: 1.5;
+  line-height: 1.2;
+  margin-left: 2em;
 }
 
 .missionStatement > div.background {

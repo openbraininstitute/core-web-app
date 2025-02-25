@@ -27,6 +27,13 @@ button.squareButton {
   border: 1px solid currentColor;
   line-height: 3;
   padding: 0 2em;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  button.squareButton {
+    padding: 0 1em;
+  }
 }
 
 .layout {
@@ -34,7 +41,7 @@ button.squareButton {
   --width-max: calc(100vw - (2 * var(--padding)));
   --S: min(800px, var(--width-max));
   --M: min(1200px, var(--width-max));
-  --L: min(1600px, var(--width-max));
+  --L: min(1512px, var(--width-max));
   --colM: calc(0.5 * (var(--M) - var(--S)));
   --colL: calc(0.5 * (var(--L) - var(--M)));
 
@@ -50,7 +57,10 @@ button.squareButton {
 
 .layout .blockFullWidth {
   grid-column: 1/-1;
-  max-width: calc(100vw - var(--padding) - var(--padding));
+}
+
+.layout .blockFullWidthPadded {
+  grid-column: 2/-2;
 }
 
 .layout .blockSmall {

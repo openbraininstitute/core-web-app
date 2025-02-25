@@ -107,11 +107,7 @@ export default function Footer({ className }: { className?: string }) {
           <h2 className="p-2 font-serif text-3xl font-semibold leading-[2.7rem] text-primary-8 lg:text-4xl">
             Subscribe to our <br /> newsletter
           </h2>
-          <NewsletterForm
-            position="footer"
-            key="footer-newsletter-form"
-            cls={{ container: '!p-2' }}
-          />
+          <NewsletterForm key="footer-newsletter-form" cls={{ container: '!p-2' }} />
         </div>
       </div>
     </>

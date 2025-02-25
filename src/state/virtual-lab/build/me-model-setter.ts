@@ -17,6 +17,8 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { nexus } from '@/config';
 import { getAgentForUser } from '@/services/virtual-lab/users';
 import { ContributorRole } from '@/constants/nexus';
+import { OneshotSession } from '@/services/accounting';
+import { ServiceSubtype } from '@/types/accounting';
 
 type MEModelDetails = {
   description: string;
@@ -101,7 +103,17 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
       project: virtualLabInfo.projectId,
     });
 
-    const meModelResource = await createResource<MEModelResource>(entity, session, url);
+    const accountingSession = new OneshotSession({
+      virtualLabId: virtualLabInfo.virtualLabId,
+      projectId: virtualLabInfo.projectId,
+      subtype: ServiceSubtype.SingleCellBuild,
+      count: 1,
+    });
+
+    const meModelResource = await accountingSession.useWith<MEModelResource>(async () =>
+      createResource<MEModelResource>(entity, session, url)
+    );
+
     set(meModelSelfUrlAtom, meModelResource._self);
     return meModelResource;
   }

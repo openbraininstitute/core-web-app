@@ -34,6 +34,8 @@ export const env = createEnv({
       z.string().url().optional()
     ),
 
+    NEXT_PUBLIC_ACCOUNTING_BASE_URL: z.string().url().optional(),
+
     NEXT_PUBLIC_NEXUS_URL: z.string().url(),
 
     NEXT_PUBLIC_NEXUS_DEFAULT_ORG: z.string().min(1),
@@ -97,8 +99,9 @@ export const env = createEnv({
   },
 
   experimental__runtimeEnv: {
-
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
+
+    NEXT_PUBLIC_ACCOUNTING_BASE_URL: process.env.NEXT_PUBLIC_ACCOUNTING_BASE_URL,
 
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 

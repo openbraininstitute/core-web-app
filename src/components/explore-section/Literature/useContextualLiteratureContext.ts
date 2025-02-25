@@ -13,7 +13,7 @@ export function useLiteratureDataSource() {
   const brainRegionSpecificQAs = useAtomValue(brainRegionQAs);
   const chatId = searchParams?.get('chatId');
   const isContextualLiterature = searchParams?.get('contextual') === 'true';
-  const isBuildSection = pathname?.startsWith('/build');
+  const isBuildSection = pathname?.startsWith('/app/build');
 
   return useMemo(() => {
     let dataSource: GenerativeQA[] = [];
@@ -38,7 +38,7 @@ export function useContextSearchParams() {
   const isAskMoreMode = searchParams?.get('context') === 'ask-more';
   const isContextualLiterature = searchParams?.get('contextual') === 'true';
 
-  const isBuildSection = pathname?.startsWith('/build');
+  const isBuildSection = pathname?.startsWith('/app/build');
   const isContextualMode = isAskMoreMode || isOptionsMode;
 
   const clearContextSearchParams = (
