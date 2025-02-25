@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - develop
-      - fix/staging-gh-action
   workflow_dispatch:
 
 jobs:
