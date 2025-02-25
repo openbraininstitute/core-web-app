@@ -40,6 +40,9 @@ jobs:
           DAY=$(date +'%d')
           LATEST_TAG=$(git tag --sort=-v:refname | grep -E "^${YEAR}\.${MONTH}\.${DAY}\.[0-9]+$" | head -n 1 || echo "")
 
+          echo "Latest tag: $LATEST_TAG"
+          git log --pretty=format:"- %s" ${LATEST_TAG}..HEAD
+
           if [[ -z "$LATEST_TAG" ]]; then
             COUNTER=1
             COMMITS=$(git log --pretty=format:"- %s")
