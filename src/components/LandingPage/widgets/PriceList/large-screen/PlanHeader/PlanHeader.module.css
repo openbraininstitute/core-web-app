@@ -27,12 +27,12 @@
 
 .pill {
   content: 'Launch';
-  color: var(--color-neutral);
+  color: var(--color-primary);
   font-size: var(--font-size-S);
-  height: 2em;
-  padding: 0 1em;
+  height: 1.5em;
+  padding: 0 0.5em;
   border-radius: 99vmax;
-  border: 1px solid currentColor;
+  border: 1px solid var(--color-neutral);
   margin-left: 1em;
   display: grid;
   place-items: center;
@@ -45,4 +45,8 @@
   justify-content: flex-start;
   align-items: center;
   gap: 0;
+}
+
+.priceHeader {
+  min-height: 200px;
 }

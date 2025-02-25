@@ -1,14 +1,12 @@
 /* eslint-disable react/no-array-index-key */
 import React, { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 
-import { PortableText } from 'next-sanity';
 import { Contributor, useContributors } from '../data';
 import { IconChevronLeft } from '@/components/LandingPage/icons/IconChevronLeft';
 import { IconChevronRight } from '@/components/LandingPage/icons/IconChevronRight';
-
 import { styleBlockSmall, styleButtonHoverable } from '@/components/LandingPage/styles';
-import { useSanityContentForContributors } from '@/components/LandingPage/content/contributors';
 import { classNames } from '@/util/utils';
+
 import styles from './ContributorsNavigation.module.css';
 
 export interface ContributorsNavigationProps {
@@ -19,7 +17,6 @@ const LETTER_WIDTH = 32;
 const LETTER_MARGIN = 12;
 
 export default function ContributorsNavigation({ onPageChange }: ContributorsNavigationProps) {
-  const { title, description } = useSanityContentForContributors();
   const refLetters = useRef<HTMLDivElement | null>(null);
   const contributors = useContributors();
   const pages = useMemo(() => splitByCapitalLetterOfLastName(contributors), [contributors]);
@@ -38,12 +35,12 @@ export default function ContributorsNavigation({ onPageChange }: ContributorsNav
         '--custom-margin-letter': `${LETTER_MARGIN}px`,
       }}
     >
-      <header>
+      {/* <header>
         <div className={styles.thanks}>{title}</div>
         <div className={styles.more}>
           <PortableText value={description} />
         </div>
-      </header>
+      </header> */}
       <div className={styles.pages}>
         <button
           type="button"

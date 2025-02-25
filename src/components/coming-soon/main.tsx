@@ -19,7 +19,7 @@ export default function Main() {
       </h1>
       <p
         className={classNames(
-          'mx-auto mr-4 max-w-3xl select-none font-medium md:text-justify',
+          'mx-auto mr-4 max-w-3xl select-none font-medium',
           'text-lg text-white sm:text-left md:text-balance md:text-xl',
           'leading-6 md:leading-7'
         )}

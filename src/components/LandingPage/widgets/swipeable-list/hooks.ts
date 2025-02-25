@@ -1,24 +1,9 @@
 import { tryType, typeStringOrNull } from '../../content';
 import { useSanity } from '../../content/content';
+import query from './hooks.groq';
 
 export function useSanityContentForSwipeableList() {
-  return useSanity(
-    `*[_type=="swipeableList"][0]
-{
-  title,
-  "button": buttonLabel,
-  "link": internalLink->slug.current,
-  "list": mediumItemList[] {
-    title,
-    subtitle,
-    "text": paragraph,
-    "imageURL": image.asset->url,
-    "imageWidth": image.asset->metadata.dimensions.width,
-    "imageHeight": image.asset->metadata.dimensions.height
-  }
-}`,
-    isContentForSwipeableList
-  );
+  return useSanity(query, isContentForSwipeableList);
 }
 
 export interface ContentForSwipeableList {
