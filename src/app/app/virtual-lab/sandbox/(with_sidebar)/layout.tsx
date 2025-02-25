@@ -7,7 +7,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
-import { OBPLogo } from '@/components/Entrypoint/segments/Splash';
+import Logo from '@/components/logo/as-svg';
 
 export default function VirtualLabSandboxLayout({ children }: { children: ReactNode }) {
   return (
@@ -15,7 +15,7 @@ export default function VirtualLabSandboxLayout({ children }: { children: ReactN
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <Suspense fallback={null}>
           <div className="flex flex-col gap-4">
-            <OBPLogo color="text-white" />
+            <Logo className="text-white" />
           </div>
         </Suspense>
       </ErrorBoundary>
