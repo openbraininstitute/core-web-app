@@ -103,12 +103,14 @@ export default function UserNotebookPage({
 
   return (
     <>
-      <NotebookTable
-        notebooks={notebooks}
-        onDelete={(id: string) => setDeleteNotebookId(id)}
-        projectId={projectId}
-        vlabId={vlabId}
-      />
+      <div className="mb-[100px]">
+        <NotebookTable
+          notebooks={notebooks}
+          onDelete={(id: string) => setDeleteNotebookId(id)}
+          projectId={projectId}
+          vlabId={vlabId}
+        />
+      </div>
       <Modal open={openModal} onCancel={resetModal} footer={false} width="35vw">
         <div className="p-4">
           <div className="text-xl font-bold text-primary-8">Register notebooks</div>
