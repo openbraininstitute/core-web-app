@@ -44,7 +44,7 @@ export async function checkProjectExists({
     }
 
     const result = (await response.json()) as ProjectExistsVerificationResponse;
-    return result.data?.exists ?? null;
+    return result.data?.exist ?? null;
   } catch (error) {
     // TODO: capture exception with sentry
     throw new Error(`Failed to check project existence: ${(error as Error).message}`);

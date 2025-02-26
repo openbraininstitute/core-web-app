@@ -42,7 +42,7 @@ export type VirtualLabExistsVerificationResponse = VlmResponse<{
 }>;
 
 export type ProjectExistsVerificationResponse = VlmResponse<{
-  exists: boolean;
+  exist: boolean;
 }>;
 
 export type InviteResponse = VlmResponse<{

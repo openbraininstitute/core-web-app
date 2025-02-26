@@ -1,11 +1,25 @@
+/* eslint-disable no-nested-ternary */
+
 import { useState } from 'react';
 import { Form } from 'antd';
+import { useParams } from 'next/navigation';
 import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
 
 import { Input, TextArea } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { checkProjectExists } from '@/api/virtual-lab-svc/queries/project';
+import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 
-export default function Overview({ virtualLabId }: { virtualLabId: string }) {
+interface IProjectPayload extends ProjectPayload {
+  virtual_lab_id: string;
+}
+
+export default function Overview() {
+  const { virtualLabId } = useParams<{ virtualLabId: string }>();
+  const form = Form.useFormInstance<IProjectPayload>();
+  const fields = Form.useWatch([], form);
+
+  const id = virtualLabId ?? fields?.virtual_lab_id;
+
   const [validName, setValidName] = useState<{
     loading: boolean;
     status: 'valid' | 'non-valid' | null;
@@ -15,23 +29,27 @@ export default function Overview({ virtualLabId }: { virtualLabId: string }) {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12">
       <Form.Item
         validateDebounce={500}
         label={<span className="font-semibold text-primary-8">Project&#39;s Name</span>}
         name="name"
         className="w-full flex-1"
         rules={[
-          { required: true, message: 'Please enter lab name' },
+          { required: true, message: 'Please enter project name' },
           {
             max: 80,
             message: 'Project name cannot exceed 80 characters!',
           },
           {
             validator: async (_: any, name: string) => {
-              if (!name.trim()) return;
+              if (!name.trim()) {
+                setValidName({ loading: false, status: 'non-valid' });
+                return Promise.reject();
+              }
               try {
-                const exists = await checkProjectExists({ vlabId: virtualLabId, name });
+                setValidName({ loading: true, status: null });
+                const exists = await checkProjectExists({ vlabId: id, name });
                 if (exists) {
                   setValidName({ loading: false, status: 'non-valid' });
                   return Promise.reject(new Error(`This project name is already taken.`));
@@ -48,14 +66,11 @@ export default function Overview({ virtualLabId }: { virtualLabId: string }) {
         <Input
           placeholder="Enter your project's name here..."
           suffix={
-            // eslint-disable-next-line no-nested-ternary
             validName.loading ? (
               <LoadingOutlined className="text-base text-blue-600" />
-            ) : // eslint-disable-next-line no-nested-ternary
-            validName.status === 'valid' ? (
+            ) : validName.status === 'valid' ? (
               <CheckCircleFilled className="text-base text-teal-600" />
-            ) : // eslint-disable-next-line no-nested-ternary
-            validName.status === 'non-valid' ? (
+            ) : validName.status === 'non-valid' ? (
               <CloseCircleFilled className="text-base text-pink-600" />
             ) : (
               <span />

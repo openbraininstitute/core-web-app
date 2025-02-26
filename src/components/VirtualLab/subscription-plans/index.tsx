@@ -10,7 +10,7 @@ type Props = {
 
 export default function PlanSection({ selectedPlan, onSelectPlan }: Props) {
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-8">
+    <section className="mx-auto w-full max-w-7xl bg-white px-6 py-8">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {plansData.plans.map((plan, index) => (
           <motion.div
