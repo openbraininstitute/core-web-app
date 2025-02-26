@@ -118,8 +118,10 @@ export const refreshBalanceAtom = atom(null, (get, set) =>
 );
 
 export const virtualLabBalanceAtomFamily = readAtomFamilyWithExpiration(
-  ({ virtualLabId }: { virtualLabId: string }) =>
+  ({ virtualLabId }: { virtualLabId?: string }) =>
     atom(async (get) => {
+      if (!virtualLabId) return;
+
       get(virtualLabBalanceRefreshTriggerAtom);
 
       return getVirtualLabAccountBalance({ virtualLabId, includeProjects: true });
