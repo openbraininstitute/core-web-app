@@ -1,4 +1,3 @@
-import { createApiHeaders } from './common';
 import { virtualLabApi } from '@/config';
 import { Project, ProjectResponse } from '@/types/virtual-lab/projects';
 import {
@@ -9,7 +8,6 @@ import {
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { UsersResponse } from '@/types/virtual-lab/members';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
-import { assertApiResponse } from '@/util/utils';
 
 export async function getVirtualLabProjects(
   id: string,
@@ -64,59 +62,6 @@ export async function getUsersProjects(): Promise<VlmResponse<VirtualLabAPIListD
   }
 
   return response.json();
-}
-
-export async function createProject(
-  {
-    name,
-    description,
-    includeMembers,
-  }: {
-    name: string;
-    description: string;
-    includeMembers: { email: string; role: 'admin' | 'member' }[];
-  },
-  virtualLabId: string
-): Promise<VlmResponse<{ project: Project }>> {
-  const response = await authFetch(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name,
-      description,
-      include_members: includeMembers,
-    }),
-  });
-
-  return assertApiResponse(response);
-}
-
-export async function inviteUser({
-  virtualLabId,
-  projectId,
-  email,
-  role,
-  token,
-}: {
-  virtualLabId: string;
-  projectId: string;
-  email: string;
-  role: 'admin' | 'member';
-  token: string;
-}): Promise<VlmResponse<{ project: Project }>> {
-  const response = await fetch(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/invites`,
-    {
-      method: 'POST',
-      headers: { ...createApiHeaders(token), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        role,
-      }),
-    }
-  );
-
-  return assertApiResponse(response);
 }
 
 export async function patchProject(

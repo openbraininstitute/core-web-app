@@ -143,6 +143,14 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
           validateTrigger={['onChange']}
           onValuesChange={onValuesChange}
           disabled={pending}
+          initialValues={{
+            include_members: [
+              {
+                email: '',
+                role: 'member',
+              },
+            ],
+          }}
         >
           <MemberList cls={{ listContainer: '!max-h-[400px] !px-0' }} />
           <div className="mt-auto flex items-end justify-end gap-3">
@@ -157,7 +165,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
               Cancel
             </Button>
             <Button
-              key="create-vlab-btn"
+              key="invite-btn"
               className="h-14 rounded-none border-primary-8 bg-primary-8 px-10 text-white hover:!text-white"
               type="default"
               size="large"

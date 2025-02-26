@@ -5,10 +5,9 @@ import FeatureBloc from './FeatureBloc';
 import { classNames } from '@/util/utils';
 import { styleBlockFullWidth } from '@/components/LandingPage/styles';
 import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
-
-import { ID_MENU } from '@/components/LandingPage/constants';
-import styles from './small-screen.module.css';
 import { useMenuHeight } from '@/components/LandingPage/utils';
+
+import styles from './small-screen.module.css';
 
 export interface SmallScreenProps {
   className?: string;

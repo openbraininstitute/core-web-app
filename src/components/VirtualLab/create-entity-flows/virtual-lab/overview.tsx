@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Form, Popover } from 'antd';
 import {
   CheckCircleFilled,
@@ -19,6 +19,7 @@ type Props = {
 };
 
 export default function Overview({ allowAskCode }: Props) {
+  const nameRef = useRef<string | null>(null);
   const [validName, setValidName] = useState<{
     loading: boolean;
     status: 'valid' | 'non-valid' | null;
@@ -26,14 +27,14 @@ export default function Overview({ allowAskCode }: Props) {
     loading: false,
     status: null,
   });
-
   return (
     <div className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12">
       <Form.Item
-        validateDebounce={500}
+        validateDebounce={800}
         label={<span className="font-semibold text-primary-8">Virtual Lab&#39;s Name</span>}
         name="name"
         className="w-full flex-1"
+        validateTrigger={['onBlur']}
         rules={[
           { required: true, message: 'Please enter lab name' },
           {
@@ -42,7 +43,9 @@ export default function Overview({ allowAskCode }: Props) {
           },
           {
             validator: async (_: any, name: string) => {
+              if (name === nameRef.current) return;
               if (!name.trim()) return;
+              nameRef.current = name;
               try {
                 setValidName({ loading: true, status: null });
                 const exists = await checkVirtualLabExists({ name });

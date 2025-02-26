@@ -43,15 +43,7 @@ export default function Content({ ListCompo, cls }: Props) {
           <div className="my-10 h-px bg-gray-100" />
         </>
       )}
-      <Form.List
-        name="include_members"
-        initialValue={[
-          {
-            email: '',
-            role: 'member',
-          },
-        ]}
-      >
+      <Form.List name="include_members">
         {(fields, { add, remove }) => (
           <>
             <div
@@ -76,6 +68,7 @@ export default function Content({ ListCompo, cls }: Props) {
                       </span>
                     }
                     name={[name, 'email']}
+                    validateTrigger={['onChange', 'onBlur']}
                     rules={[
                       { required: true, message: 'Please enter email' },
                       { type: 'email', message: 'Please enter a valid email' },
@@ -106,6 +99,7 @@ export default function Content({ ListCompo, cls }: Props) {
                     className="flex-[1_40%] [&_.ant-form-item-label]:p-0 [&_.ant-form-item-row]:flex-row [&_.ant-form-item-row]:flex-nowrap [&_.ant-form-item-row]:items-center"
                     initialValue="member"
                     name={[name, 'role']}
+                    validateTrigger={['onChange', 'onBlur']}
                   >
                     <Select
                       className={classNames(

@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Form } from 'antd';
 import { useParams } from 'next/navigation';
 import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
@@ -17,7 +17,7 @@ export default function Overview() {
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const form = Form.useFormInstance<IProjectPayload>();
   const fields = Form.useWatch([], form);
-
+  const nameRef = useRef<string | null>(null);
   const id = virtualLabId ?? fields?.virtual_lab_id;
 
   const [validName, setValidName] = useState<{
@@ -31,7 +31,7 @@ export default function Overview() {
   return (
     <div className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12">
       <Form.Item
-        validateDebounce={500}
+        validateDebounce={800}
         label={<span className="font-semibold text-primary-8">Project&#39;s Name</span>}
         name="name"
         className="w-full flex-1"
@@ -43,10 +43,12 @@ export default function Overview() {
           },
           {
             validator: async (_: any, name: string) => {
+              if (name === nameRef.current) return;
               if (!name.trim()) {
                 setValidName({ loading: false, status: 'non-valid' });
                 return Promise.reject();
               }
+              nameRef.current = name;
               try {
                 setValidName({ loading: true, status: null });
                 const exists = await checkProjectExists({ vlabId: id, name });

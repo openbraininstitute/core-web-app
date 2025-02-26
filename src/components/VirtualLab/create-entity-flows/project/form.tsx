@@ -23,6 +23,7 @@ import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { extractInitials } from '@/util/slugify';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
+import { tryCatch } from '@/api/utils';
 
 type Props = {
   step: ProjectFlowSteps;
@@ -101,27 +102,29 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
 
   const onFormSubmit = async (values: ProjectPayload & { virtual_lab_id: string }) => {
     startTransition(async () => {
-      try {
-        const id = virtualLabId ?? values.virtual_lab_id;
-        const result = await createProject(id, values);
-        if (result && result.data) {
-          notify.success(
-            `Your Project ${values.name} has been created successfully and is now ready to use.`,
-            undefined,
-            'topRight',
-            undefined
-          );
-          navigate(`${generateVlProjectUrl(id, result.data.project.id)}/home`);
-        } else {
-          throw new Error('Project creation failed');
-        }
-      } catch (error) {
+      const id = virtualLabId ?? values.virtual_lab_id;
+      const formValues = {
+        ...values,
+        include_members:
+          values.include_members?.map((o) => ({ email: o.email, role: o.role })) ?? null,
+      };
+      const { data: result, error } = await tryCatch(createProject(id, formValues));
+      if (error || !result || !result.data) {
         notify.error(
           'Project creation failed. Please check your details and try again.',
           undefined,
           'topRight',
           undefined
         );
+      }
+      if (result && result.data) {
+        notify.success(
+          `Your Project ${values.name} has been created successfully and is now ready to use.`,
+          undefined,
+          'topRight',
+          undefined
+        );
+        navigate(`${generateVlProjectUrl(id, result.data.project.id)}/home`);
       }
     });
   };
@@ -144,30 +147,31 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
         onValuesChange={onValuesChange}
         disabled={pending}
       >
-        <motion.div
-          key={step}
-          custom={slideDirection}
-          variants={{
-            initial: { opacity: 0 },
-            animate: { opacity: 1 },
-            exit: { opacity: 0 },
-          }}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            duration: 0.3,
-            type: 'tween',
-            ease: 'easeInOut',
-          }}
-          className="relative flex h-full flex-grow flex-col"
-        >
-          {virtualLabId && (
-            <Form.Item hidden name="virtual_lab_id">
-              <input name="virtual_lab_id" type="text" value={virtualLabId} hidden />
-            </Form.Item>
-          )}
-          <AnimatePresence initial={false} custom={slideDirection} mode="wait">
+        <AnimatePresence initial={false} custom={slideDirection} mode="wait">
+          <motion.div
+            key={step}
+            custom={slideDirection}
+            variants={{
+              initial: { opacity: 0 },
+              animate: { opacity: 1 },
+              exit: { opacity: 0 },
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              duration: 0.3,
+              type: 'tween',
+              ease: 'easeInOut',
+            }}
+            className="relative flex h-full flex-grow flex-col"
+          >
+            {virtualLabId && (
+              <Form.Item hidden name="virtual_lab_id">
+                <input name="virtual_lab_id" type="text" value={virtualLabId} hidden />
+              </Form.Item>
+            )}
+
             <div className={step !== 'virtual-lab' ? 'hidden' : ''}>
               <VirtualLabsList />
             </div>
@@ -180,10 +184,10 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
                 cls={{ listContainer: 'max-h-[calc(100vh-500px)] mb-5 secondary-scrollbar' }}
               />
             </div>
-          </AnimatePresence>
-        </motion.div>
+          </motion.div>
+        </AnimatePresence>
         <div className="mx-auto mt-auto w-full max-w-5xl px-4 lg:max-w-full">
-          <div className="py-4">
+          <div className="px-4 py-4">
             <Footer
               {...{
                 step,

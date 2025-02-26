@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { ConfigProvider, Form } from 'antd';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import MemberList from '@/components/VirtualLab/create-entity-flows/common/member-form';
@@ -21,6 +21,7 @@ import {
   virtualLabFlowSteps,
   type VirtualLabFlowSteps,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
+import { tryCatch } from '@/api/utils';
 
 type Props = {
   step: VirtualLabFlowSteps;
@@ -53,17 +54,19 @@ function Members() {
 export default function CreationForm({ step, onCancel, onStepChange }: Props) {
   const notify = useNotification();
   const { push: navigate } = useRouter();
+  const { data } = useSession();
+  const params = useSearchParams();
 
   const [form] = Form.useForm<VirtualLabPayload>();
   const [isFormValid, setIsFormValid] = useState(false);
   const [pending, startTransition] = useTransition();
-
   const [slideDirection, setSlideDirection] = useState<'right' | 'left'>('right');
   const fields = Form.useWatch<Omit<VirtualLabPayload, 'include_members'>>([], form);
 
-  const disableNextPlans = Boolean(!(isFormValid && fields.email_status === 'verified'));
+  const disableNextPlans = Boolean(!(isFormValid && fields?.email_status === 'verified'));
   const disableNextMembers = !fields?.plan_id;
   const allowAskCode = Boolean(isFormValid && fields.email_status !== 'verified');
+  const firstLogin = params.get('t') === 'f'; // check if the first login
 
   const onNextStep = () => {
     setSlideDirection('left');
@@ -83,47 +86,49 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
 
   const resetForm = () => form.resetFields();
 
-  const onSelectPlan = (id: string) => form.setFieldValue('plan_id', id);
+  const onSelectPlan = (id: string) => {
+    form.setFieldValue('plan_id', id);
+    if (typeof window !== 'undefined')
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  };
 
   const onValuesChange = () => {
     form
-      .validateFields()
+      .validateFields({ validateOnly: true })
       .then(() => {
         setIsFormValid(true);
       })
       .catch((error) => {
-        if (error.errorFields.length > 0) {
-          setIsFormValid(false);
-        } else {
-          setIsFormValid(true);
-        }
+        setIsFormValid(!(error.errorFields.length > 0));
       });
   };
 
   const onFormSubmit = async (values: VirtualLabPayload) => {
     startTransition(async () => {
-      try {
-        const result = await createVirtualLab(values);
-        if (result && result.data) {
-          notify.success(
-            'Your Virtual Lab has been created successfully and is now ready to use.',
-            undefined,
-            'topRight',
-            undefined
-          );
-          resetForm();
-          const labUrl = generateLabUrl(result.data.virtual_lab.id);
-          navigate(`${labUrl}/overview`);
-        } else {
-          throw new Error('Virtual lab creation failed');
-        }
-      } catch (error) {
+      const formValues = {
+        ...values,
+        include_members:
+          values.include_members?.map((o) => ({ email: o.email, role: o.role })) ?? null,
+      };
+      const { data: result, error } = await tryCatch(createVirtualLab(formValues));
+      if (error || !result || !result.data) {
         notify.error(
           'Virtual Lab creation failed. Please check your details and try again.',
           undefined,
           'topRight',
           undefined
         );
+      }
+      if (result && result.data) {
+        notify.success(
+          'Your Virtual Lab has been created successfully and is now ready to use.',
+          undefined,
+          'topRight',
+          undefined
+        );
+        resetForm();
+        const labUrl = generateLabUrl(result.data.virtual_lab.id);
+        navigate(`${labUrl}/overview`);
       }
     });
   };
@@ -139,7 +144,7 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
         requiredMark={false}
         validateTrigger={['onChange']}
         initialValues={{
-          name: '',
+          name: firstLogin ? `${data?.user.name}'s virtual lab` : undefined,
           description: '',
           entity: null,
           include_members: [],
@@ -185,7 +190,7 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
         </AnimatePresence>
 
         <div className="mx-auto mt-auto w-full max-w-5xl lg:max-w-full">
-          <div className="py-4">
+          <div className="px-4 py-4">
             <Footer
               {...{
                 step,
