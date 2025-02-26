@@ -1,0 +1,4 @@
+/* Prevent the dorpdown to be hidden by sticky headers. */
+div > div.ant-select-dropdown {
+  z-index: 9999999;
+}

@@ -32,24 +32,35 @@ export function useSanity<T>(
   query: string,
   typeGuard: (data: unknown) => data is T
 ): T | undefined | null {
-  try {
-    const data = useSanityContent(query);
-    if (isUndefined(data)) return undefined;
+  const [data, setData] = React.useState<T | undefined | null>(undefined);
+  React.useEffect(() => {
+    fetchSanity(query, typeGuard)
+      .then(setData)
+      .catch((ex) => {
+        logError('There was an exception in this Sanity query:', query);
+        logError(ex);
+        setData(null);
+      });
+  }, [query, typeGuard]);
+  return data;
+}
 
-    try {
-      if (typeGuard(data)) return data;
-      throw Error('Type guard rejeted this type, but without any explanation!');
-    } catch (ex) {
-      console.log('The following Sanity GROQ query returned a data of unexpected type:');
-      console.log(`%c${query}`, 'font-family: monospace; color: #0f0; bakground: #000');
-      console.log(data);
-      const msg = ex instanceof Error ? ex.message : `${ex}`;
-      console.log(`%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
-      return null;
-    }
+export async function fetchSanity<T>(
+  query: string,
+  typeGuard: (data: unknown) => data is T
+): Promise<T | undefined | null> {
+  const data = await fetchSanityContent(query);
+  if (isUndefined(data)) return undefined;
+
+  try {
+    if (typeGuard(data)) return data;
+    throw Error('Type guard rejeted this type, but without any explanation!');
   } catch (ex) {
-    logError('There was an exception in this Sanity query:', query);
-    logError(ex);
+    console.log('The following Sanity GROQ query returned a data of unexpected type:');
+    console.log(`%c${query}`, 'font-family: monospace; color: #0f0; bakground: #000');
+    console.log(data);
+    const msg = ex instanceof Error ? ex.message : `${ex}`;
+    console.log(`%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
     return null;
   }
 }
@@ -97,26 +108,16 @@ const cache = new Map<string, unknown>();
  *
  * @see https://open-brain-institute.sanity.studio
  */
-function useSanityContent(query: string): unknown {
-  const [content, setContent] = React.useState<unknown>(() => cache.get(query));
-  React.useEffect(() => {
-    const action = async () => {
-      const fromCache = cache.get(query);
-      if (fromCache) {
-        setContent(fromCache);
-        return;
-      }
+async function fetchSanityContent(query: string): Promise<unknown> {
+  const fromCache = cache.get(query);
+  if (fromCache) return fromCache;
 
-      try {
-        const data = await client.fetch(query);
-        cache.set(query, data);
-        setContent(data);
-      } catch (ex) {
-        logError('Unable to connect to Sanity!', ex);
-        setContent(null);
-      }
-    };
-    action();
-  }, [setContent, query]);
-  return content;
+  try {
+    const data = await client.fetch(query);
+    cache.set(query, data);
+    return data;
+  } catch (ex) {
+    logError('Unable to connect to Sanity!', ex);
+    return null;
+  }
 }
