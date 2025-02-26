@@ -6,6 +6,7 @@ import { fetchResourceById, fetchResourceByIdUsingResolver } from '@/api/nexus';
 import { EModelConfiguration, EModelWorkflow } from '@/types/e-model'; // TODO: Confirm these types
 import { EModelResource } from '@/types/explore-section/delta-model';
 import { MEModelResource } from '@/types/me-model'; // TODO: Confirm this type
+import { ensureArray } from '@/util/nexus';
 
 import sessionAtom from '@/state/session';
 
@@ -102,7 +103,7 @@ export const eModelConfigurationFamily = atomFamily<
 
       if (!followedWorkflow || !session) return null;
 
-      const eModelConfigurationPart = followedWorkflow.hasPart.find(
+      const eModelConfigurationPart = ensureArray(followedWorkflow.hasPart).find(
         ({ '@type': type }) => type === 'EModelConfiguration'
       );
 

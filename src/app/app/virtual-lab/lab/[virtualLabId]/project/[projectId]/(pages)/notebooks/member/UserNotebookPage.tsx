@@ -10,7 +10,7 @@ import { Notebook } from '@/util/virtual-lab/github';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import authFetch from '@/authFetch';
 import { notification } from '@/api/notifications';
-import { assertErrorMessage, assertVLApiResponse } from '@/util/utils';
+import { assertErrorMessage, assertApiResponse } from '@/util/utils';
 import { virtualLabApi } from '@/config';
 
 function useDelayedLoading(initialValue = false, delay = 200) {
@@ -103,12 +103,14 @@ export default function UserNotebookPage({
 
   return (
     <>
-      <NotebookTable
-        notebooks={notebooks}
-        onDelete={(id: string) => setDeleteNotebookId(id)}
-        projectId={projectId}
-        vlabId={vlabId}
-      />
+      <div className="mb-[100px]">
+        <NotebookTable
+          notebooks={notebooks}
+          onDelete={(id: string) => setDeleteNotebookId(id)}
+          projectId={projectId}
+          vlabId={vlabId}
+        />
+      </div>
       <Modal open={openModal} onCancel={resetModal} footer={false} width="35vw">
         <div className="p-4">
           <div className="text-xl font-bold text-primary-8">Register notebooks</div>
@@ -217,7 +219,7 @@ export default function UserNotebookPage({
                         }
                       );
 
-                      const newNotebook = await assertVLApiResponse(notebookRes);
+                      const newNotebook = await assertApiResponse(notebookRes);
 
                       const newValidatedNotebooks = NotebooksArraySchema.parse(newNotebook.data);
                       setNotebooks([

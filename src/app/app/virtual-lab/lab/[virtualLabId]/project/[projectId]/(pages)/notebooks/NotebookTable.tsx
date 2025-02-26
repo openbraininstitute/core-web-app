@@ -82,6 +82,7 @@ function NotebookTable({
         'notebookUrl',
         'name',
         'objectOfInterest',
+        'scale',
       ];
 
       for (const field of searchFields) {
@@ -390,7 +391,12 @@ function NotebookTable({
       </>
 
       <div id="table-container" className="mt-5">
-        <Table dataSource={filteredData} columns={filteredColumns} pagination={false} />
+        <Table
+          dataSource={filteredData}
+          columns={filteredColumns}
+          pagination={false}
+          locale={{ emptyText: <div className="mt-5 text-lg text-gray-400">No data</div> }}
+        />
       </div>
 
       <ContentModal notebook={currentNotebook} display={display} onCancel={resetModal} />

@@ -3,7 +3,7 @@ import UserNotebookPage from './UserNotebookPage';
 import { ServerSideComponentProp } from '@/types/common';
 import { fetchNotebook, Notebook } from '@/util/virtual-lab/github';
 import { virtualLabApi } from '@/config';
-import { assertErrorMessage, assertVLApiResponse } from '@/util/utils';
+import { assertErrorMessage, assertApiResponse } from '@/util/utils';
 import authFetch from '@/authFetch';
 
 export default async function Notebooks({
@@ -18,7 +18,7 @@ export default async function Notebooks({
       `${virtualLabApi.url}/projects/${projectId}/notebooks/?page_size=100`
     );
 
-    const userNotebookData = await assertVLApiResponse(userNotebooksRes);
+    const userNotebookData = await assertApiResponse(userNotebooksRes);
 
     const notebooks = NotebooksArraySchema.parse(userNotebookData.data.results);
 

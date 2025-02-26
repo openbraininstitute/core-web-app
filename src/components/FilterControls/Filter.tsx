@@ -76,7 +76,7 @@ export function useFilters<T>(data: T[]) {
       onFilterChange(dataIndex, value ?? null, (colValue) => {
         if (!value || typeof value !== 'string' || typeof colValue !== 'string') return true;
 
-        return colValue.toLocaleLowerCase().includes(value);
+        return colValue.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       });
     },
     [onFilterChange]

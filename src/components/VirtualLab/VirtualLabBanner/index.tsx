@@ -3,7 +3,7 @@
 import { ChangeEvent, CSSProperties, ReactNode, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { Button, ConfigProvider, Input, Progress } from 'antd';
+import { Button, ConfigProvider, Input } from 'antd';
 import { EditOutlined, UnlockOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
@@ -12,9 +12,12 @@ import VirtualLabMainStatistics from './VirtualLabMainStatistics';
 import { basePath } from '@/config';
 import { VirtualLab } from '@/types/virtual-lab/lab';
 import useUpdateProject from '@/hooks/useUpdateVirtualLabProject';
-import { useDebouncedCallback, useUnwrappedValue } from '@/hooks/hooks';
-import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
-import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { useDebouncedCallback, useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
+import { virtualLabBalanceAtomFamily, virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import {
+  projectBalanceAtomFamily,
+  virtualLabProjectUsersAtomFamily,
+} from '@/state/virtual-lab/projects';
 import { classNames } from '@/util/utils';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { notification as notify } from '@/api/notifications';
@@ -150,12 +153,14 @@ function BannerWrapper({
   createdAt,
   label,
   userCount,
+  balance,
 }: {
   admin?: string;
   children?: ReactNode;
   createdAt?: string;
   label?: string;
   userCount?: number;
+  balance?: number | string;
 }) {
   return (
     <div className="flex w-full flex-col gap-2">
@@ -164,7 +169,12 @@ function BannerWrapper({
         {children}
       </div>
       <div className="mt-auto">
-        <VirtualLabMainStatistics admin={admin} createdAt={createdAt} userCount={userCount} />
+        <VirtualLabMainStatistics
+          admin={admin}
+          createdAt={createdAt}
+          userCount={userCount}
+          balance={balance}
+        />
       </div>
     </div>
   );
@@ -177,7 +187,8 @@ const linkClassName = 'absolute left-0 top-0 flex h-full w-full justify-between 
 type Props = { createdAt?: string; description?: string; name?: string };
 
 export function DashboardBanner({ createdAt, description, id, name }: Props & { id: string }) {
-  const users = useAtomValue(unwrap(virtualLabMembersAtomFamily(id)));
+  const users = useLastTruthyValue(virtualLabMembersAtomFamily(id));
+  const balance = useLastTruthyValue(virtualLabBalanceAtomFamily({ virtualLabId: id }));
 
   const labUrl = id && generateLabUrl(id);
   const href = `${labUrl}/overview`;
@@ -191,12 +202,12 @@ export function DashboardBanner({ createdAt, description, id, name }: Props & { 
             createdAt={createdAt}
             label="Virtual lab Name"
             userCount={users?.length || 0}
+            balance={balance?.data.balance}
           >
             <StaticValues description={description} name={name} dataTestid="dashboard-banner" />
           </BannerWrapper>
         </Link>
       </BackgroundImg>
-      <BudgetStatus />
     </>
   );
 }
@@ -215,6 +226,7 @@ export function SandboxBanner({ description, name }: Omit<Props, 'createdAt'>) {
 
 export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
   const users = useUnwrappedValue(virtualLabMembersAtomFamily(vlab?.id));
+  const balance = useUnwrappedValue(virtualLabBalanceAtomFamily({ virtualLabId: vlab?.id }));
 
   const updateVlab = useUpdateVirtualLab(vlab?.id);
   const updateDebounced = useDebouncedCallback(updateVlab, [updateVlab], 600);
@@ -242,6 +254,7 @@ export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
             createdAt={vlab?.created_at}
             label="Virtual lab Name"
             userCount={users?.length || 0}
+            balance={balance?.data.balance}
           >
             {isEditable ? (
               <EditableInputs
@@ -257,38 +270,7 @@ export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
           {editBtn}
         </div>
       </BackgroundImg>
-      <BudgetStatus />
     </>
-  );
-}
-
-export function BudgetStatus() {
-  const totalSpent = 100;
-  const totalBudget = 300;
-  const remaining = totalBudget - totalSpent;
-
-  return (
-    <div className="mt-1 flex w-full flex-col items-start bg-primary-8 p-4 text-white">
-      <div className="mb-2 flex w-full justify-between text-primary-1">
-        <p className="font-bold text-white">Budget</p>
-        <p>Total budget: ${totalBudget}</p>
-      </div>
-      <Progress
-        showInfo={false}
-        percent={(totalSpent / totalBudget) * 100}
-        strokeColor="white"
-        trailColor="#91D5FF"
-        className="w-full"
-      />
-      <div className="flex w-full justify-between text-primary-1">
-        <p className="text-neutral-2">
-          Total spent: <span className="font-bold text-white">${totalSpent}</span>
-        </p>
-        <p>
-          Remaining: <span className="font-bold ">${remaining}</span>
-        </p>
-      </div>
-    </div>
   );
 }
 
@@ -310,6 +292,7 @@ export function ProjectDetailBanner({
   virtualLabId,
 }: Props & { projectId: string; virtualLabId: string }) {
   const users = useAtomValue(unwrap(virtualLabProjectUsersAtomFamily({ virtualLabId, projectId })));
+  const balance = useUnwrappedValue(projectBalanceAtomFamily({ virtualLabId, projectId }));
 
   const updateProject = useUpdateProject(virtualLabId, projectId);
 
@@ -354,7 +337,8 @@ export function ProjectDetailBanner({
           admin={users?.find((user) => user.role === 'admin')?.name || '-'}
           createdAt={createdAt}
           label="Project Name"
-          userCount={users?.length || 0}
+          userCount={users?.length ?? 0}
+          balance={balance?.balance ?? ''}
         >
           {isEditable ? (
             <EditableInputs

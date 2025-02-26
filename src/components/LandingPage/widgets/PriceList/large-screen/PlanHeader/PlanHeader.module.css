@@ -1,0 +1,52 @@
+.planHeader small {
+  font-size: var(--font-size-S);
+}
+
+.discount {
+  color: var(--color-neutral);
+  text-decoration: line-through;
+  text-decoration-color: currentColor;
+}
+
+.hide {
+  opacity: 0;
+}
+
+.show {
+  opacity: 1;
+}
+
+.planHeader ul {
+  margin-top: 2em;
+  margin-bottom: 3em;
+}
+
+.planHeader ul > li::marker {
+  content: '+';
+}
+
+.pill {
+  content: 'Launch';
+  color: var(--color-primary);
+  font-size: var(--font-size-S);
+  height: 1.5em;
+  padding: 0 0.5em;
+  border-radius: 99vmax;
+  border: 1px solid var(--color-neutral);
+  margin-left: 1em;
+  display: grid;
+  place-items: center;
+}
+
+.price {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0;
+}
+
+.priceHeader {
+  min-height: 200px;
+}

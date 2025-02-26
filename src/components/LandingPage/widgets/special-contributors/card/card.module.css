@@ -1,0 +1,29 @@
+.card {
+  width: 280px;
+  height: 320px;
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-M-plus);
+  line-height: 1;
+  padding: 0.4em 0.5em;
+  background-color: var(--color-neutral-light);
+}
+
+.links {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.links > a {
+  font-size: var(--font-size-M);
+  display: inline-block;
+  cursor: pointer;
+  font-size: 1rem;
+  border: solid 1px var(--color-neutral);
+  padding: 6px 12px;
+}

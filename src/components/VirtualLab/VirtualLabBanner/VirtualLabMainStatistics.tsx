@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarOutlined, UserOutlined } from '@ant-design/icons';
+import { CalendarOutlined, CreditCardOutlined, UserOutlined } from '@ant-design/icons';
 
 import VirtualLabStatistic from '../VirtualLabStatistic';
 import { MembersGroupIcon } from '@/components/icons';
@@ -10,9 +10,10 @@ type Props = {
   admin?: string;
   createdAt?: string;
   userCount?: number | string;
+  balance?: number | string;
 };
 
-export default function VirtualLabMainStatistics({ admin, createdAt, userCount }: Props) {
+export default function VirtualLabMainStatistics({ admin, createdAt, userCount, balance }: Props) {
   const iconStyle = { color: '#69C0FF' };
 
   return (
@@ -37,6 +38,13 @@ export default function VirtualLabMainStatistics({ admin, createdAt, userCount }
           icon={<CalendarOutlined style={iconStyle} />}
           title="Creation date"
           detail={createdAt && formatDate(createdAt)}
+        />
+      )}
+      {balance && (
+        <VirtualLabStatistic
+          icon={<CreditCardOutlined style={iconStyle} />}
+          title="Credit balance"
+          detail={balance}
         />
       )}
     </div>

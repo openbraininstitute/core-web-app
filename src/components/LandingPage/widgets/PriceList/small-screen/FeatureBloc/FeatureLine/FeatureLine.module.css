@@ -1,0 +1,13 @@
+.featureLine {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 2em;
+}
+
+.unavailable {
+  color: var(--color-neutral);
+}

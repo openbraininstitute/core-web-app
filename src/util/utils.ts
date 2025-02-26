@@ -258,7 +258,7 @@ export function signOut() {
   window.location.href = `/app/log-out`;
 }
 
-export async function assertVLApiResponse(res: Response) {
+export async function assertApiResponse(res: Response) {
   const data = await res.json();
 
   if (!res.ok) {
@@ -266,11 +266,23 @@ export async function assertVLApiResponse(res: Response) {
     throw new Error(message || 'An error occurred while processing your request...', {
       cause: {
         ...data,
+        status: res.status,
       },
     });
   }
 
   return data;
+}
+
+export function RemoteAPIErrorResponse(error: any, status: number = 502, defaultMessage?: string) {
+  const message = error.message ?? defaultMessage;
+
+  const resData = {
+    ...(error instanceof Error && typeof error.cause === 'object' ? error.cause : null),
+    message,
+  };
+
+  return Response.json(resData, { status });
 }
 
 export function assertErrorMessage(e: any) {

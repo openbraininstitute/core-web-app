@@ -1,6 +1,11 @@
-import { CalendarOutlined, LoadingOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  CalendarOutlined,
+  CreditCardOutlined,
+  LoadingOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import Link from 'next/link';
-import { loadable, unwrap } from 'jotai/utils';
+import { loadable } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 
@@ -10,6 +15,8 @@ import { Project } from '@/types/virtual-lab/projects';
 import { formatDate } from '@/util/utils';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { useLastTruthyValue } from '@/hooks/hooks';
+import { virtualLabBalanceAtomFamily } from '@/state/virtual-lab/lab';
 
 function MemberAmount({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) {
   const users = useAtomValue(
@@ -28,14 +35,18 @@ function MemberAmount({ virtualLabId, projectId }: { virtualLabId: string; proje
 function ProjectStats({ project }: { project: Project }) {
   const { created_at: createdAt, id: projectId, virtual_lab_id: virtualLabId } = project;
 
-  const projectUsers = useAtomValue(
-    unwrap(
-      virtualLabProjectUsersAtomFamily({
-        virtualLabId,
-        projectId,
-      })
-    )
+  const projectUsers = useLastTruthyValue(
+    virtualLabProjectUsersAtomFamily({
+      virtualLabId,
+      projectId,
+    })
   );
+
+  const virtualLabBalance = useLastTruthyValue(virtualLabBalanceAtomFamily({ virtualLabId }));
+
+  const projectBalance = virtualLabBalance?.data.projects?.find(
+    (pr) => pr.proj_id === projectId
+  )?.balance;
 
   const iconStyle = { color: '#69C0FF' };
 
@@ -78,6 +89,12 @@ function ProjectStats({ project }: { project: Project }) {
           icon: <CalendarOutlined style={iconStyle} />,
           key: 'creation-date',
           title: 'Creation date',
+        },
+        {
+          detail: projectBalance ?? 0,
+          icon: <CreditCardOutlined style={iconStyle} />,
+          key: 'credit-balance',
+          title: 'Credit balance',
         },
       ].map(({ detail, icon, key, title }) => (
         <VirtualLabStatistic detail={detail} icon={icon} key={key} title={title} />

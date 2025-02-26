@@ -34,6 +34,8 @@ export const env = createEnv({
       z.string().url().optional()
     ),
 
+    NEXT_PUBLIC_ACCOUNTING_BASE_URL: z.string().url().optional(),
+
     NEXT_PUBLIC_NEXUS_URL: z.string().url(),
 
     NEXT_PUBLIC_NEXUS_DEFAULT_ORG: z.string().min(1),
@@ -43,7 +45,6 @@ export const env = createEnv({
     NEXT_PUBLIC_BLUE_NAAS_URL: z.string().url(),
     NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL: z.string().url(),
     NEXT_PUBLIC_CELL_SVC_BASE_URL: z.string().url(),
-    NEXT_PUBLIC_FEEDBACK_URL: z.string().url().optional(),
     NEXT_PUBLIC_KG_INFERENCE_BASE_URL: z.string().url(),
     NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: z.string().url(),
     NEXT_PUBLIC_SYNTHESIS_URL: z.string().url(),
@@ -97,8 +98,9 @@ export const env = createEnv({
   },
 
   experimental__runtimeEnv: {
-
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
+
+    NEXT_PUBLIC_ACCOUNTING_BASE_URL: process.env.NEXT_PUBLIC_ACCOUNTING_BASE_URL,
 
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -111,7 +113,6 @@ export const env = createEnv({
     NEXT_PUBLIC_BLUE_NAAS_URL: process.env.NEXT_PUBLIC_BLUE_NAAS_URL,
     NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL: process.env.NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL,
     NEXT_PUBLIC_CELL_SVC_BASE_URL: process.env.NEXT_PUBLIC_CELL_SVC_BASE_URL,
-    NEXT_PUBLIC_FEEDBACK_URL: process.env.NEXT_PUBLIC_FEEDBACK_URL,
     NEXT_PUBLIC_KG_INFERENCE_BASE_URL: process.env.NEXT_PUBLIC_KG_INFERENCE_BASE_URL,
     NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: process.env.NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL,
     NEXT_PUBLIC_SYNTHESIS_URL: process.env.NEXT_PUBLIC_SYNTHESIS_URL,
