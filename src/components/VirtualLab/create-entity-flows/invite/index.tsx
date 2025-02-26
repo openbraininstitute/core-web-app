@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Form, Button } from 'antd';
 import { useSetAtom } from 'jotai';
 import isNull from 'lodash/isNull';
@@ -32,7 +32,7 @@ type InvitePayload = {
 export default function InviteModal({ isOpen, onClose, type, title, context }: Props) {
   const notify = useNotification();
   const [form] = Form.useForm<{ include_members: Array<InvitePayload> }>();
-  const [loading, setLoading] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [isFormValid, setIsFormValid] = useState(false);
 
   const refreshProjectInvites = useSetAtom(
@@ -65,65 +65,64 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
   };
 
   const onFormSubmit = async (values: { include_members: Array<InvitePayload> }) => {
-    try {
-      setLoading(true);
-      const items = values.include_members.filter((o) => !isNull(o));
+    startTransition(async () => {
+      try {
+        const items = values.include_members.filter((o) => !isNull(o));
+        // TODO: create bulk invite in vlab-svc
+        const invites = await Promise.allSettled(
+          items.map(({ email, role }) => {
+            if (type === 'project')
+              return inviteToProject({
+                virtualLabId: context.virtualLabId,
+                projectId: context.projectId,
+                email,
+                role,
+              });
+            if (type === 'vlab')
+              return inviteToVirtualLab({ virtualLabId: context.virtualLabId, email, role });
+            return null;
+          })
+        );
 
-      const invites = await Promise.allSettled(
-        items.map(({ email, role }) => {
-          if (type === 'project')
-            return inviteToProject({
-              virtualLabId: context.virtualLabId,
-              projectId: context.projectId,
-              email,
-              role,
-            });
-          if (type === 'vlab')
-            return inviteToVirtualLab({ virtualLabId: context.virtualLabId, email, role });
-          return null;
-        })
-      );
+        const failedInvites = invites
+          .map((o, idx) => {
+            if (o.status === 'rejected') return items.at(idx);
+            return -1;
+          })
+          .filter((o) => o !== -1);
 
-      const failedInvites = invites
-        .map((o, idx) => {
-          if (o.status === 'rejected') return items.at(idx);
-          return -1;
-        })
-        .filter((o) => o !== -1);
+        if (failedInvites.length && items.length !== failedInvites.length) {
+          notify.warning(
+            `Some invitations were sent successfully, but a few may not have been delivered.
+            ${failedInvites.map((o) => o?.email).join('\n')}.
+            `,
+            undefined,
+            'topLeft',
+            undefined
+          );
+        }
 
-      if (failedInvites.length && items.length !== failedInvites.length) {
-        notify.warning(
-          `Some invitations were sent successfully, but a few may not have been delivered. 
-          Please try re-inviting these users: ${failedInvites.map((o) => o?.email).join('\n')}.
-          `,
+        notify.success(
+          'All invitations have been sent successfully!',
           undefined,
-          'topLeft',
+          'topRight',
+          undefined
+        );
+
+        if (type === 'vlab') refreshVirtualLabInvites();
+        if (type === 'project') refreshProjectInvites();
+
+        resetForm();
+        onClose();
+      } catch (error) {
+        notify.error(
+          'We couldn’t send the invitations. Please try again shortly.',
+          undefined,
+          'topRight',
           undefined
         );
       }
-
-      notify.success(
-        'All invitations have been sent successfully!',
-        undefined,
-        'topRight',
-        undefined
-      );
-
-      if (type === 'vlab') refreshVirtualLabInvites();
-      if (type === 'project') refreshProjectInvites();
-
-      resetForm();
-      onClose();
-    } catch (error) {
-      notify.error(
-        'We couldn’t send the invitations. Please try again shortly.',
-        undefined,
-        'topRight',
-        undefined
-      );
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (
@@ -143,6 +142,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
           requiredMark={false}
           validateTrigger={['onChange']}
           onValuesChange={onValuesChange}
+          disabled={pending}
         >
           <MemberList cls={{ listContainer: '!max-h-[400px] !px-0' }} />
           <div className="mt-auto flex items-end justify-end gap-3">
@@ -162,8 +162,8 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
               type="default"
               size="large"
               htmlType="submit"
-              loading={loading}
-              disabled={!isFormValid}
+              loading={pending}
+              disabled={!isFormValid || pending}
             >
               Invite
             </Button>

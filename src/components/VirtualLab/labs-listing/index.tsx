@@ -2,19 +2,16 @@
 
 import { useState } from 'react';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Switch } from 'antd';
+import { Switch } from 'antd';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
 import VirtualLabAndProject from '@/components/VirtualLab/labs-listing/VirtualLabAndProject';
 import DashboardTotals from '@/components/VirtualLab/labs-listing/totals';
-import CreationModal from '@/components/VirtualLab/create-entity-flows/project/in-home';
 import { VirtualLab } from '@/types/virtual-lab/lab';
 
 function VirtualLabDashboard({ virtualLabs }: { virtualLabs: VirtualLab[] }) {
   const [showOnlyLabs, setShowOnlyLabs] = useState<boolean>(false);
-  const [isOpen, setOpen] = useState(false);
-  const onOpen = () => setOpen(true);
-  const onClose = () => setOpen(false);
 
   return (
     <>
@@ -43,31 +40,25 @@ function VirtualLabDashboard({ virtualLabs }: { virtualLabs: VirtualLab[] }) {
               showOnlyLabs={showOnlyLabs}
             />
           ))}
-          <div className="fixed bottom-5 right-5">
-            <Button
-              className="mr-5 h-12 w-52 rounded-none border-none text-sm font-bold"
-              onClick={onOpen}
+          <div className="fixed bottom-5 right-5 flex items-center gap-3">
+            <Link
+              className="rounded-none border-none font-bold"
+              href="/app/virtual-lab/lab/project/create"
             >
-              <span className="relative text-primary-8">
-                Create project <PlusOutlined className="relative left-3 top-[0.1rem]" />
-              </span>
-            </Button>
-            <Button
-              className="mr-5 h-12 w-52 rounded-none border-none text-sm font-bold"
-              onClick={onOpen}
-            >
-              <span className="relative text-primary-8">
-                Create Virtual lab <PlusOutlined className="relative left-3 top-[0.1rem]" />
-              </span>
-            </Button>
+              <div className="group flex h-12 items-center justify-between gap-8 bg-white px-4 py-2 text-primary-9">
+                <span>Create project</span>
+                <PlusOutlined className="text-lg group-hover:scale-105" />
+              </div>
+            </Link>
+            <Link className="rounded-none border-none font-bold" href="/app/virtual-lab/lab/create">
+              <div className="group flex h-12 items-center justify-between gap-8 bg-white px-4 py-2 text-primary-9">
+                <span>Create Virtual lab</span>
+                <PlusOutlined className="text-lg group-hover:scale-105" />
+              </div>
+            </Link>
           </div>
         </div>
       </div>
-      <CreationModal
-        vlabsList={virtualLabs.map((vl) => ({ label: vl.name, value: vl.id }))}
-        isOpen={isOpen}
-        onClose={onClose}
-      />
     </>
   );
 }

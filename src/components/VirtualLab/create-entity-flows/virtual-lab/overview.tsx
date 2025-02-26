@@ -1,3 +1,5 @@
+/* eslint-disable no-nested-ternary */
+
 import { useState } from 'react';
 import { Form, Popover } from 'antd';
 import {
@@ -9,8 +11,8 @@ import {
 
 import AdministratorEmail from '@/components/VirtualLab/create-entity-flows/virtual-lab/verification-code';
 import { Input, TextArea } from '@/components/VirtualLab/create-entity-flows/common/inputs';
-import { classNames } from '@/util/utils';
 import { checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { classNames } from '@/util/utils';
 
 type Props = {
   allowAskCode: boolean;
@@ -26,7 +28,7 @@ export default function Overview({ allowAskCode }: Props) {
   });
 
   return (
-    <div className="mx-auto h-full w-full max-w-7xl flex-grow bg-white p-12">
+    <div className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12">
       <Form.Item
         validateDebounce={500}
         label={<span className="font-semibold text-primary-8">Virtual Lab&#39;s Name</span>}
@@ -42,6 +44,7 @@ export default function Overview({ allowAskCode }: Props) {
             validator: async (_: any, name: string) => {
               if (!name.trim()) return;
               try {
+                setValidName({ loading: true, status: null });
                 const exists = await checkVirtualLabExists({ name });
                 if (exists) {
                   setValidName({ loading: false, status: 'non-valid' });
@@ -59,14 +62,11 @@ export default function Overview({ allowAskCode }: Props) {
         <Input
           placeholder="Enter your virtual lab's name here..."
           suffix={
-            // eslint-disable-next-line no-nested-ternary
             validName.loading ? (
               <LoadingOutlined className="text-base text-blue-600" />
-            ) : // eslint-disable-next-line no-nested-ternary
-            validName.status === 'valid' ? (
+            ) : validName.status === 'valid' ? (
               <CheckCircleFilled className="text-base text-teal-600" />
-            ) : // eslint-disable-next-line no-nested-ternary
-            validName.status === 'non-valid' ? (
+            ) : validName.status === 'non-valid' ? (
               <CloseCircleFilled className="text-base text-pink-600" />
             ) : (
               <span />

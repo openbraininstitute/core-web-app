@@ -16,7 +16,7 @@ export default async function Page() {
 
   try {
     const labs = await getVirtualLabsOfUser();
-    if (!labs.data.total) redirectUrl = '/app/virtual-lab/create';
+    if (!labs.data.total) redirectUrl = '/app/virtual-lab/lab/create';
     else node = <LabsListing virtualLabs={labs.data.results} />;
   } catch (error) {
     throw new Error((error as { message: string }).message);

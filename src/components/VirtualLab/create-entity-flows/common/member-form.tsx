@@ -33,7 +33,7 @@ export default function Content({ ListCompo, cls }: Props) {
   return (
     <div
       className={classNames(
-        'mx-auto flex h-full w-full max-w-7xl flex-grow flex-col bg-white p-12',
+        'mx-auto flex h-full w-full max-w-5xl flex-grow flex-col bg-white p-12',
         cls?.container
       )}
     >

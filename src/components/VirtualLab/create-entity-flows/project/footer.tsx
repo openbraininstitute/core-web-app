@@ -1,14 +1,17 @@
 import { Button } from 'antd';
-import { classNames } from '@/util/utils';
+import { useParams } from 'next/navigation';
+import reject from 'lodash/reject';
+
 import {
-  virtualLabFlowSteps,
-  type VirtualLabFlowSteps,
+  projectFlowSteps,
+  type ProjectFlowSteps,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
+import { classNames } from '@/util/utils';
 
 type Props = {
   loading: boolean;
-  step: VirtualLabFlowSteps;
-  disableNextPlans: boolean;
+  step: ProjectFlowSteps;
+  disableNextProject: boolean;
   disableNextMembers: boolean;
   disableCreate: boolean;
   onCancel: () => void;
@@ -19,13 +22,16 @@ type Props = {
 export default function Footer({
   loading,
   step,
-  disableNextPlans,
+  disableNextProject,
   disableNextMembers,
   disableCreate,
   onCancel,
   onNextStep,
   onPreviousStep,
 }: Props) {
+  const { virtualLabId } = useParams<{ virtualLabId: string }>();
+  const steps = virtualLabId ? reject(projectFlowSteps, { id: 'virtual-lab' }) : projectFlowSteps;
+
   return (
     <div className="mt-auto w-full">
       <div className="flex items-end justify-end gap-3">
@@ -42,7 +48,7 @@ export default function Footer({
         >
           Cancel
         </Button>
-        {step !== virtualLabFlowSteps.at(0)?.id && (
+        {step !== steps.at(0)?.id && (
           <Button
             key="back-to-information-btn"
             className={classNames(
@@ -57,7 +63,7 @@ export default function Footer({
             Back
           </Button>
         )}
-        {step !== virtualLabFlowSteps.at(-1)?.id && (
+        {step !== steps.at(-1)?.id && (
           <Button
             key="next-to-members-btn"
             className={classNames(
@@ -70,12 +76,12 @@ export default function Footer({
             size="large"
             htmlType="button"
             onClick={onNextStep}
-            disabled={step === 'information' ? disableNextPlans : disableNextMembers}
+            disabled={step === 'virtual-lab' ? disableNextProject : disableNextMembers}
           >
             Next
           </Button>
         )}
-        {step === virtualLabFlowSteps.at(-1)?.id && (
+        {step === steps.at(-1)?.id && (
           <Button
             key="create-project-btn"
             className={classNames(
@@ -90,7 +96,7 @@ export default function Footer({
             disabled={disableCreate}
             loading={loading}
           >
-            Create virtual lab
+            Create project
           </Button>
         )}
       </div>

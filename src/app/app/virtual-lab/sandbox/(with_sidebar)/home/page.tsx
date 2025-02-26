@@ -1,5 +1,5 @@
 import DiscoverObpPanel from '@/components/VirtualLab/DiscoverObpPanel';
-import NewVLabCTABanner from '@/components/VirtualLab/VirtualLabCTABanner/vlab-cta-banner';
+import NewVLabCTABanner from '@/components/VirtualLab/cta-banner.tsx/vlab-cta-banner';
 import { SandboxBanner } from '@/components/VirtualLab/VirtualLabBanner';
 
 export default function VirtualLabSandboxHomePage() {

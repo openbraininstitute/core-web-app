@@ -108,7 +108,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
     <div>
       <div className="flex items-end justify-between gap-4">
         <Form.Item hidden name="email_status">
-          <input name="email_status" value="none" type="text" />
+          <input name="email_status" value="none" type="text" hidden />
         </Form.Item>
         <Form.Item
           label={<span className="font-semibold text-primary-8">Administrator&#39;s email</span>}

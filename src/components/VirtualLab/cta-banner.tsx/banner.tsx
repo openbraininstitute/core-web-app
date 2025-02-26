@@ -1,16 +1,17 @@
+import Link from 'next/link';
 import SquareAddIcon from '@/components/icons/SquareAddIcon';
 
 type Props = {
   title: string;
   subtitle: string;
-  onClick?: () => void;
+  href: string;
 };
 
-export default function CTABanner({ title, subtitle, onClick }: Props) {
+export default function CTABanner({ title, subtitle, href }: Props) {
   return (
-    <button
+    <Link
       type="button"
-      onClick={onClick}
+      href={href}
       className="relative flex w-full items-center justify-between rounded-lg bg-[#348537] p-8"
     >
       <div className="z-[2] flex flex-col gap-2 text-left">
@@ -18,6 +19,6 @@ export default function CTABanner({ title, subtitle, onClick }: Props) {
         <p>{subtitle}</p>
       </div>
       <SquareAddIcon />
-    </button>
+    </Link>
   );
 }

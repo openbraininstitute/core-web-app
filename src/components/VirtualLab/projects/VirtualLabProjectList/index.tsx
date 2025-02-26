@@ -1,11 +1,11 @@
+import Link from 'next/link';
+
 import { PlusOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
-import { Button, ConfigProvider, Spin } from 'antd';
+import { ConfigProvider, Spin } from 'antd';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { useState } from 'react';
 
-import VirtualLabProjectItem from './VirtualLabProjectItem';
-import CreationModal from '@/components/VirtualLab/create-entity-flows/project/in-lab';
+import VirtualLabProjectItem from '@/components/VirtualLab/projects/VirtualLabProjectList/VirtualLabProjectItem';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 
 function SearchProjects() {
@@ -36,9 +36,7 @@ function SearchProjects() {
 
 export default function VirtualLabProjectList({ id }: { id: string }) {
   const virtualLabProjects = useAtomValue(unwrap(virtualLabProjectsAtomFamily(id)));
-  const [isOpen, setOpen] = useState(false);
-  const onOpen = () => setOpen(true);
-  const onClose = () => setOpen(false);
+
   if (!virtualLabProjects) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -67,16 +65,17 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-5 right-7">
-        <Button
-          className="mr-5 h-12 w-52 rounded-none border-none text-sm font-bold"
-          onClick={onOpen}
+      <div className="fixed bottom-5 right-5 z-10">
+        <Link
+          className="rounded-none border-none font-bold text-primary-9"
+          href={`/app/virtual-lab/lab/${id}/project/create`}
         >
-          <span className="relative text-primary-8">Create project</span>
-          <PlusOutlined className="relative left-3 top-[0.1rem]" />
-        </Button>
+          <div className="group flex h-12 items-center justify-between gap-8 bg-white px-4 py-2">
+            <span>Create project</span>
+            <PlusOutlined className="text-lg group-hover:scale-105" />
+          </div>
+        </Link>
       </div>
-      <CreationModal isOpen={isOpen} virtualLabId={id} onClose={onClose} />
     </>
   );
 }
