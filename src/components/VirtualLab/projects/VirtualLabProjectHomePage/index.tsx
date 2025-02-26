@@ -5,7 +5,7 @@ import { Spin } from 'antd';
 import sortBy from 'lodash/sortBy';
 
 import Member from '@/components/VirtualLab/VirtualLabHomePage/Member';
-import { ProjectDetailBanner, BudgetStatus } from '@/components/VirtualLab/VirtualLabBanner';
+import { ProjectDetailBanner } from '@/components/VirtualLab/VirtualLabBanner';
 import WelcomeUserBanner from '@/components/VirtualLab/VirtualLabHomePage/WelcomeUserBanner';
 import {
   virtualLabProjectDetailsAtomFamily,
@@ -77,7 +77,6 @@ export default function VirtualLabProjectHomePage({
           projectId={projectId!}
           virtualLabId={virtualLabId}
         />
-        <BudgetStatus />
         <div>
           <div className="my-10 text-lg font-bold uppercase">Members</div>
           <UsersHorizontalList virtualLabId={virtualLabId} projectId={projectId} />
