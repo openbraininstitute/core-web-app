@@ -1,6 +1,6 @@
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable no-param-reassign */
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 import { IconChevronLeft } from '../../icons/IconChevronLeft';
 import { IconChevronRight } from '../../icons/IconChevronRight';
@@ -15,7 +15,9 @@ export interface SwipeableCardsListProps {
   buttonLabel?: string;
   buttonOnClick?(): void;
   hideFooter?: boolean;
+  footerOnSmallScreen?: boolean;
   gap?: string;
+  style?: CSSProperties;
 }
 
 export default function SwipeableCardsList({
@@ -24,7 +26,9 @@ export default function SwipeableCardsList({
   buttonLabel,
   buttonOnClick,
   hideFooter = false,
+  footerOnSmallScreen = false,
   gap = '48px',
+  style = {},
 }: SwipeableCardsListProps) {
   const id = React.useId();
   const makeId = (index: number) => `${id}_${index}`;
@@ -43,7 +47,7 @@ export default function SwipeableCardsList({
   return (
     <div
       className={classNames(className, styles.swipeableCardsList)}
-      style={{ '--custom-gap': gap }}
+      style={{ ...style, '--custom-gap': gap }}
     >
       <div ref={ref} className={styles.scroll}>
         {children.map((child, index) => {
@@ -56,7 +60,7 @@ export default function SwipeableCardsList({
         })}
       </div>
       {!hideFooter && (
-        <footer>
+        <footer className={classNames(footerOnSmallScreen && styles.onlyOnSmallScreen)}>
           <div>
             {buttonLabel && (
               <button type="button" onClick={buttonOnClick} className={styleButtonSquare}>

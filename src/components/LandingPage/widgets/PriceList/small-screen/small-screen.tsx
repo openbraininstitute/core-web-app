@@ -8,6 +8,7 @@ import { useSanityContentForPricing } from '@/components/LandingPage/content/pri
 
 import { ID_MENU } from '@/components/LandingPage/constants';
 import styles from './small-screen.module.css';
+import { useMenuHeight } from '@/components/LandingPage/utils';
 
 export interface SmallScreenProps {
   className?: string;
@@ -16,13 +17,7 @@ export interface SmallScreenProps {
 export default function SmallScreen({ className }: SmallScreenProps) {
   const data = useSanityContentForPricing();
   const [currentPlanIndex, setCurrentPlanIndex] = React.useState(0);
-  const [menuHeight, setMenuHeight] = React.useState(0);
-  React.useEffect(() => {
-    const menu = document.getElementById(ID_MENU);
-    if (!menu) return;
-
-    setMenuHeight(menu.clientHeight);
-  }, []);
+  const menuHeight = useMenuHeight();
   if (!data) return null;
 
   const { plans, features } = data;

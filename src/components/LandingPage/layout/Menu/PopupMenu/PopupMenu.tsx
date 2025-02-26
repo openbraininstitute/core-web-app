@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import React from 'react';
-
 import Link from 'next/link';
+
 import { DEFAULT_SECTION, MENU_ITEMS } from '../../../constants';
 import { IconClose } from '../../../icons/IconClose';
 import { classNames } from '@/util/utils';

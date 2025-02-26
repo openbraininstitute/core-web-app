@@ -25,13 +25,32 @@
 
 .swipeableCardsList > footer {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  gap: 0;
+  gap: 1em;
   padding: 0;
   padding-right: 16px;
+}
+
+.swipeableCardsList > footer.onlyOnSmallScreen {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .swipeableCardsList > footer.onlyOnSmallScreen {
+    display: flex;
+  }
+
+  .swipeableCardsList > footer {
+    flex-direction: column;
+    gap: 2em;
+  }
+
+  .swipeableCardsList > footer >div {
+    order: 2;
+  }
 }
 
 .swipeableCardsList nav {
@@ -42,6 +61,7 @@
   align-items: center;
   flex-wrap: nowrap;
   gap: 8px;
+  order: 1;
 }
 
 .swipeableCardsList nav > button.page {

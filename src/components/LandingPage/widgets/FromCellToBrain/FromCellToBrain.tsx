@@ -3,6 +3,7 @@ import React from 'react';
 import { styleBlockLarge } from '../../styles';
 import ProgressiveImage from '../../components/ProgressiveImage';
 import SwipeableCardsList from '../../components/swipeable-cards-list';
+import { useMenuHeight } from '../../utils';
 import { useSanityContentForFromCelltoBrainContent } from './hooks';
 import { classNames } from '@/util/utils';
 
@@ -14,12 +15,14 @@ export interface WidgetFromCellToBrainProps {
 
 export function WidgetFromCellToBrain({ className }: WidgetFromCellToBrainProps) {
   const columns = useSanityContentForFromCelltoBrainContent();
+  const menuHeight = useMenuHeight();
 
   return (
     <SwipeableCardsList
       className={classNames(className, styles.widgetFromCellToBrain, styleBlockLarge)}
-      hideFooter
+      footerOnSmallScreen
       gap="0"
+      style={{ '--custom-menu-height': `${menuHeight}px` }}
     >
       {columns.map((col) => (
         <div key={col.title} className={styles.column}>
