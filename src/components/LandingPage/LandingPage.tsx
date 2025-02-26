@@ -17,6 +17,7 @@ import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialo
 import { logError } from '@/util/logger';
 
 import styles from './LandingPage.module.css';
+import './global.css';
 
 export interface LandingPageProps {
   className?: string;

@@ -22,7 +22,7 @@ export interface ContentForNewsItem {
 
 export type ContentForNewsList = ContentForNewsItem[];
 
-function isContentForNewsList(data: unknown): data is ContentForNewsList {
+export function isContentForNewsList(data: unknown): data is ContentForNewsList {
   return tryType('ContentForNews', data, [
     'array',
     {
@@ -74,10 +74,14 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
   );
 }
 
-export function useSanityContentForNewsList(limit?: number): ContentForNewsList {
+export function useSanityContentForNewsListCount(): number {
+  return useSanity(`count(*[_type=="news"])`, isNumber) ?? 0;
+}
+
+export function useSanityContentForNewsList(length = 0, start = 0): ContentForNewsList {
   return sanitize(
     useSanity(
-      `*[_type=="news"] | order(customDate desc) ${isNumber(limit) ? `[0..${limit - 1}]` : ''} {
+      `*[_type=="news"] | order(customDate desc) ${length > 0 ? `[${start}..${length - 1}]` : ''} {
   "id": _id,
   title,
   "content": thumbnailIntroduction,
