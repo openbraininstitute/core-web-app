@@ -30,7 +30,7 @@ export default function Footer({
     <div className="mt-auto w-full">
       <div className="flex items-end justify-end gap-3">
         <Button
-          key="cancel-information-btn"
+          key="cancel-btn"
           className={classNames(
             'h-14 rounded-none bg-white px-6 text-primary-8',
             'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
@@ -44,7 +44,7 @@ export default function Footer({
         </Button>
         {step !== virtualLabFlowSteps.at(0)?.id && (
           <Button
-            key="back-to-information-btn"
+            key="back-to-btn"
             className={classNames(
               'h-14 rounded-none bg-white px-6 text-primary-8',
               'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
@@ -59,7 +59,7 @@ export default function Footer({
         )}
         {step !== virtualLabFlowSteps.at(-1)?.id && (
           <Button
-            key="next-to-members-btn"
+            key="next-to-btn"
             className={classNames(
               'h-14 rounded-none border border-primary-8 bg-white px-14 text-primary-8',
               'hover:!border hover:!border-primary-5 hover:font-bold hover:shadow-sm',
@@ -77,7 +77,7 @@ export default function Footer({
         )}
         {step === virtualLabFlowSteps.at(-1)?.id && (
           <Button
-            key="create-project-btn"
+            key="create-vlab-btn"
             className={classNames(
               'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
               'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',

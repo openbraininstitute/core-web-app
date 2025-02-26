@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import { useAtomValue } from 'jotai';
 import { atomWithReset } from 'jotai/utils';
 
@@ -32,15 +33,16 @@ export default function BasicStepMenu<T>({ steps, title, flowAtom }: StepMenuPro
         <Breadcrumb>
           <BreadcrumbList className="gap-4">
             {steps.map((step, index) => (
-              <>
-                <BreadcrumbItem key={step.id}>
+              <Fragment key={step.id}>
+                <BreadcrumbItem>
                   <button
                     type="button"
                     aria-label={step.label}
                     className={classNames(
-                      'cursor-pointer px-3 py-2 text-lg uppercase tracking-wide hover:bg-white/15',
-                      currentStep === step.id ? 'font-bold text-white' : 'font-light text-primary-5'
+                      '!cursor-default select-none px-3 py-2 text-lg uppercase tracking-wide hover:bg-white/15',
+                      currentStep === step.id ? 'font-bold text-white' : 'font-light text-primary-3'
                     )}
+                    style={{ cursor: 'default' }}
                   >
                     {step.label}
                   </button>
@@ -48,7 +50,7 @@ export default function BasicStepMenu<T>({ steps, title, flowAtom }: StepMenuPro
                 {index < steps.length - 1 && (
                   <BreadcrumbSeparator key={`sep-${step.id}`} className="text-primary-5" />
                 )}
-              </>
+              </Fragment>
             ))}
           </BreadcrumbList>
         </Breadcrumb>
