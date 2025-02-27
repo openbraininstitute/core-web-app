@@ -29,7 +29,9 @@ export async function getVirtualLabUsers(virtualLabId: string): Promise<UsersRes
 export async function getVirtualLabsOfUser(): Promise<
   VlmResponse<VirtualLabAPIListData<VirtualLab>>
 > {
-  const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs`);
+  const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs`, {
+    next: { revalidate: 20 },
+  });
 
   if (!response.ok) {
     throw new Error(`Status: ${response.status}`);
@@ -61,7 +63,6 @@ export async function deleteVirtualLab(id: string): Promise<
 > {
   const response = await authFetch(`${virtualLabApi.url}/virtual-labs/${id}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {
