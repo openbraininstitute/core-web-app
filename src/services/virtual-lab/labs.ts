@@ -29,9 +29,7 @@ export async function getVirtualLabUsers(virtualLabId: string): Promise<UsersRes
 export async function getVirtualLabsOfUser(): Promise<
   VlmResponse<VirtualLabAPIListData<VirtualLab>>
 > {
-  const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs`, {
-    next: { cache: 'no-store' },
-  });
+  const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs`);
 
   if (!response.ok) {
     throw new Error(`Status: ${response.status}`);
