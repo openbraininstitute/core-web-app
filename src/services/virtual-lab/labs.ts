@@ -30,7 +30,7 @@ export async function getVirtualLabsOfUser(): Promise<
   VlmResponse<VirtualLabAPIListData<VirtualLab>>
 > {
   const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs`, {
-    next: { revalidate: 20 },
+    next: { cache: 'no-store' },
   });
 
   if (!response.ok) {
