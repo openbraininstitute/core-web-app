@@ -48,7 +48,7 @@
     gap: 2em;
   }
 
-  .swipeableCardsList > footer >div {
+  .swipeableCardsList > footer > div {
     order: 2;
   }
 }
