@@ -26,6 +26,7 @@ export default function VirtualLabProjectAdmin({
   const userIsAdmin = true;
 
   const refreshUserProjects = useSetAtom(userProjectsAtom);
+  const refreshVirtualLabProjects = useSetAtom(virtualLabProjectsAtomFamily(virtualLabId));
 
   const [activePanelKey, setActivePanel] = useQueryState('panel', {
     clearOnDefault: true,
@@ -50,10 +51,9 @@ export default function VirtualLabProjectAdmin({
       virtualLabId,
       projectId,
     });
-    virtualLabProjectsAtomFamily.remove(virtualLabId);
 
-    await refreshUserProjects();
-  }, [virtualLabId, projectId, refreshUserProjects]);
+    await Promise.all([refreshVirtualLabProjects(), refreshUserProjects()]);
+  }, [virtualLabId, projectId, refreshVirtualLabProjects, refreshUserProjects]);
 
   const costs = useMemo(
     () => ({
