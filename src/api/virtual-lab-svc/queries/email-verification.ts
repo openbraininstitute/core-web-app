@@ -14,7 +14,7 @@ export type VerificationCodeResponse<T extends 'init' | 'verify'> = T extends 'i
   : T extends 'verify'
     ? {
         message: string;
-        status: 'verified' | 'registered' | 'locked' | 'expired' | 'error';
+        status: 'not_match' | 'verified' | 'registered' | 'locked' | 'expired' | 'error';
         remaining_time: number | null;
         remaining_attempts: number | null;
         verified_at?: Date | null;

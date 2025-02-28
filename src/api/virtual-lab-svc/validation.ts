@@ -7,6 +7,7 @@ const EmailStatusSchema = z.enum([
   'locked',
   'code_sent',
   'expired',
+  'not-match',
   'registered',
 ]);
 
