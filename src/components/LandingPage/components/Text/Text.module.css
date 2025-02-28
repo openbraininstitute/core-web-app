@@ -6,3 +6,12 @@
   font-size: var(--font-size-M);
   line-height: 1.55;
 }
+
+.maxLines,
+.maxLines p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--custom-max-lines);
+}
