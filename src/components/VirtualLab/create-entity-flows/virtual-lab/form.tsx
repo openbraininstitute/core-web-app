@@ -92,7 +92,10 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
 
-  const onValuesChange = () => {
+  const onValuesChange = (changedValues: VirtualLabPayload, values: VirtualLabPayload) => {
+    if ('reference_email' in changedValues && values?.email_status !== 'none') {
+      form.setFieldValue('email_status', 'none');
+    }
     form
       .validateFields({ validateOnly: true })
       .then(() => {

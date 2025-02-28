@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Form, Button, Alert } from 'antd';
 import { CheckCircleFilled, LoadingOutlined } from '@ant-design/icons';
-import isEqual from 'lodash/isEqual';
 
 import {
   getEmailVerificationCode,
@@ -30,23 +29,17 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [codeButtonText, setCodeButtonText] = useState<'Send code' | 'Resend'>('Send code');
   const [verificationMsg, setVerificationMsg] = useState<string | null>(null);
-  const prevDataRef = useRef<{ name: string; reference_email: string } | null>(null);
   const form = Form.useFormInstance<VirtualLabPayload>();
-  const overviewFields = Form.useWatch([], form);
+  const fields = Form.useWatch([], form);
 
   const disableSendCode =
-    (schema.safeParse(overviewFields).error?.issues?.length || 0) > 0 ||
-    overviewFields?.email_status === 'locked' ||
-    overviewFields?.email_status === 'verified';
+    (schema.safeParse(fields).error?.issues?.length || 0) > 0 ||
+    fields?.email_status === 'locked' ||
+    fields?.email_status === 'verified';
 
   const openVerificationCode = () => setSendCode(true);
 
   const onAskNewCode = async () => {
-    prevDataRef.current = {
-      name: overviewFields?.name,
-      reference_email: overviewFields?.reference_email,
-    };
-
     const values = form.getFieldsValue();
     setCodeLoading(true);
 
@@ -89,21 +82,6 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
     setVerificationLoading(false);
   };
 
-  useEffect(() => {
-    if (
-      prevDataRef.current &&
-      !isEqual(prevDataRef.current, {
-        name: overviewFields?.name,
-        reference_email: overviewFields?.reference_email,
-      }) &&
-      overviewFields?.email_status === 'verified'
-    ) {
-      form.setFieldValue('email_status', 'none');
-      setCodeButtonText('Send code');
-      setSendCode(false);
-    }
-  }, [form, overviewFields?.name, overviewFields?.reference_email, overviewFields?.email_status]);
-
   return (
     <div>
       <div className="flex items-end justify-between gap-4">
@@ -128,7 +106,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
               'border-primary-8 text-primary-8 ',
               'hover:!border-primary-6 hover:!bg-white hover:!text-primary-6',
               'disabled:border-gray-200 disabled:text-gray-400',
-              overviewFields?.email_status === 'verified' && 'hidden'
+              fields?.email_status === 'verified' && 'hidden'
             )}
             type="text"
             size="large"
@@ -143,10 +121,10 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
       <Alert
         banner
         closable
-        type={['registered'].includes(overviewFields?.email_status) ? 'warning' : 'error'}
+        type={['registered'].includes(fields?.email_status) ? 'warning' : 'error'}
         className={classNames(
           'mb-2 flex w-4/5 flex-nowrap rounded-none',
-          ['error', 'locked', 'expired', 'registered'].includes(overviewFields?.email_status)
+          ['error', 'locked', 'expired', 'registered', 'not_match'].includes(fields?.email_status)
             ? 'block'
             : 'hidden'
         )}
@@ -157,7 +135,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
           <h2 className="text-lg font-bold">
             Enter your code here
             {verificationLoading && <LoadingOutlined className="ml-2" />}
-            {overviewFields?.email_status === 'verified' && (
+            {fields?.email_status === 'verified' && (
               <CheckCircleFilled className="ml-2 text-teal-600" />
             )}
           </h2>
@@ -167,7 +145,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
           </p>
           <div className="my-4">
             <VerificationCode
-              disabled={overviewFields?.email_status === 'verified'}
+              disabled={fields?.email_status === 'verified'}
               onComplete={onCodeComplete}
             />
           </div>
