@@ -48,7 +48,6 @@ export default function WithControlPanel({
   );
 
   const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
-
   const aggregations = data?.aggs;
 
   return (
