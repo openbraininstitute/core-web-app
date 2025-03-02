@@ -9,6 +9,8 @@ const getStripe = () => {
   return stripePromise;
 };
 
+
+
 export default getStripe;
 
 export function getErrorMessage(error: unknown) {

@@ -44,7 +44,7 @@ export default function Overview() {
           {
             validator: async (_: any, name: string) => {
               if (name === nameRef.current) return;
-              if (!name.trim()) {
+              if (!name?.trim()) {
                 setValidName({ loading: false, status: 'non-valid' });
                 return Promise.reject();
               }
