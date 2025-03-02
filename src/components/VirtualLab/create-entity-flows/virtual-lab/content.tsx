@@ -26,16 +26,11 @@ export default function Content() {
 
   if (!hydrated) return null;
   return (
-    <>
-      <CreationForm
-        key="virtual-lab-creation-flow"
-        step={currentStep}
-        onCancel={onCancel}
-        onStepChange={onStepChange}
-      />
-      <div className={currentStep !== 'payment' ? 'hidden' : ''}>
-        <Subscription />
-      </div>
-    </>
+    <CreationForm
+      key="virtual-lab-creation-flow"
+      step={currentStep}
+      onCancel={onCancel}
+      onStepChange={onStepChange}
+    />
   );
 }

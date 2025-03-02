@@ -35,6 +35,6 @@ export const projectFlowSteps: Array<{ id: ProjectFlowSteps; label: string }> = 
 export const virtualLabFlowSteps: Array<{ id: VirtualLabFlowSteps; label: string }> = [
   { id: 'information', label: 'Information' },
   { id: 'plans', label: 'Plans' },
-  { id: 'members', label: 'Members' },
   { id: 'payment', label: 'Payment' },
+  { id: 'members', label: 'Members' },
 ];

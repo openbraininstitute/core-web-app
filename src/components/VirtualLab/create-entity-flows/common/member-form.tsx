@@ -127,7 +127,7 @@ export default function Content({ ListCompo, cls }: Props) {
                 </div>
               ))}
             </div>
-            <Form.Item className="mt-auto">
+            <Form.Item>
               <Button
                 className="h-14 rounded-none border-gray-400 bg-white px-10 text-gray-500 hover:bg-primary-8 hover:!text-white"
                 type="default"
