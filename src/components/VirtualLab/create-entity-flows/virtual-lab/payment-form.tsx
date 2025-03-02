@@ -31,9 +31,20 @@ import { useAccessToken } from '@/hooks/useAccessToken';
 import { ADDING_NEW_PAYMENT_METHOD_FAILED, ADDING_NEW_PAYMENT_METHOD_SUCCEEDED, PREPARING_STRIPE_FORM } from '../../Billing/messages';
 import getStripe from '../../Billing/utils';
 import StripeInput from '../../Billing/StripeInput';
+import { PaymentFooter } from './footer';
+import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans/price-card';
 
+
+
+type StripeFormProps = {
+    virtualLabId: string;
+    onCancel: () => void;
+    onPrevious: () => void;
+};
 
 type PaymentFormProps = {
+    onCancel: () => void;
+    onPrevious: () => void;
     virtualLabId: string;
 };
 
@@ -66,7 +77,7 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
 });
 
 
-export function Form({ virtualLabId }: PaymentFormProps) {
+export function Form({ virtualLabId, onCancel, onPrevious }: StripeFormProps) {
     const elements = useElements();
     const stripe = useStripe();
     const { error: errorNotify, success: successNotify } = useNotification();
@@ -88,13 +99,48 @@ export function Form({ virtualLabId }: PaymentFormProps) {
 
     const onReady = () => setElementsReady(true);
 
+    const onPaymentMethodSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!stripe || !elements) {
+            return null;
+        }
+
+        setFormLoading(true);
+        const formData = new FormData(event.currentTarget);
+
+        // Convert FormData to an object
+        const data = Object.fromEntries(formData.entries());
+
+        console.log("Form Data:", data);
+        setFormLoading(false);
+
+        try {
+            const { error, setupIntent } = await stripe.confirmSetup({
+                elements,
+                redirect: 'if_required',
+                confirmParams: {
+                    return_url: window.location.href,
+                },
+            });
+
+            console.log("ᦨ #  payment-form.tsx:127 #  onPaymentMethodSubmit #  setupIntent:", setupIntent);
+
+
+        } catch (error) {
+        } finally {
+            elements.getElement('payment')?.clear();
+        }
+    };
+
     return (
-        <div className="relative my-4 flex w-full flex-col">
-            <form
-                name="stripe-payment-method-form"
-                className="mx-auto w-full max-w-2xl"
-            // onSubmit={onPaymentMethodSubmit}
-            >
+        <form
+            name="stripe-payment-flow-step"
+            className="mx-auto w-full h-full flex flex-col flex-grow"
+            onSubmit={onPaymentMethodSubmit}
+        >
+            <div className="mx-auto w-full max-w-2xl h-full flex flex-col flex-grow">
+                <PricingToggleCards />
                 {stripeElementsReady && (
                     <div className="w-full">
                         <StripeInput
@@ -110,24 +156,21 @@ export function Form({ virtualLabId }: PaymentFormProps) {
                     </div>
                 )}
                 <PaymentElement onReady={onReady} />
-                {stripeElementsReady && (
-                    <Button
-                        size="large"
-                        htmlType="submit"
-                        className="my-4 w-full rounded-none border-primary-8 bg-primary-8 text-center text-xl text-white"
-                        disabled={disableForm}
-                        loading={formLoading}
-                    >
-                        Pay
-                    </Button>
-                )}
-            </form>
-        </div>
+            </div>
+            {stripeElementsReady && (
+                <PaymentFooter
+                    disabled={disableForm}
+                    loading={formLoading}
+                    onPreviousStep={onPrevious}
+                    onCancel={onCancel}
+                />
+            )}
+        </form>
     );
 }
 
 
-export default function PaymentForm({ virtualLabId }: PaymentFormProps) {
+export default function PaymentForm({ virtualLabId, onCancel, onPrevious }: PaymentFormProps) {
     const stripeRef = useRef(false);
     const session = useAtomValue(sessionAtom);
     const { error: errorNotify } = useNotification();
@@ -169,19 +212,24 @@ export default function PaymentForm({ virtualLabId }: PaymentFormProps) {
 
     if (loadingStripe)
         return (
-            <div className="flex items-center justify-center py-7">
+            <div className="flex items-center justify-center py-7 h-full flex-grow">
                 <Spin size="large" indicator={<LoadingOutlined />} />
             </div>
         );
 
     return (
-        <Elements stripe={stripePromise} options={buildStripeFormOptions(clientSecret)}>
-            <Form
-                {...{
-                    customerId,
-                    virtualLabId,
-                }}
-            />
-        </Elements>
+        <div className="flex h-full flex-grow flex-col">
+            <Elements stripe={stripePromise} options={buildStripeFormOptions(clientSecret)}>
+                <Form
+                    {...{
+                        customerId,
+                        virtualLabId,
+                        onCancel,
+                        onPrevious
+                    }}
+                />
+            </Elements>
+
+        </div>
     );
 }
