@@ -44,7 +44,7 @@ export default function Overview({ allowAskCode }: Props) {
           {
             validator: async (_: any, name: string) => {
               if (name === nameRef.current) return;
-              if (!name.trim()) return;
+              if (!name?.trim()) return;
               nameRef.current = name;
               try {
                 setValidName({ loading: true, status: null });

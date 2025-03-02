@@ -21,7 +21,7 @@ export const SIZE_MAP = {
   large: 'h-24 w-24',
 };
 
-export type VirtualLabFlowSteps = 'information' | 'plans' | 'members';
+export type VirtualLabFlowSteps = 'information' | 'plans' | 'members' | 'payment';
 export type ProjectFlowSteps = 'virtual-lab' | 'information' | 'members';
 
 export type Step = { id: VirtualLabFlowSteps | ProjectFlowSteps; label: string };
@@ -36,4 +36,5 @@ export const virtualLabFlowSteps: Array<{ id: VirtualLabFlowSteps; label: string
   { id: 'information', label: 'Information' },
   { id: 'plans', label: 'Plans' },
   { id: 'members', label: 'Members' },
+  { id: 'payment', label: 'Payment' },
 ];

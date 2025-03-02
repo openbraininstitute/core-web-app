@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { atomWithReset } from 'jotai/utils';
 
 import {
@@ -10,7 +10,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/components/VirtualLab/create-entity-flows/common/breadcrumb';
-import { type Step } from '@/components/VirtualLab/create-entity-flows/common/types';
+import { type Step, virtualLabFlowSteps } from '@/components/VirtualLab/create-entity-flows/common/types';
 import { classNames } from '@/util/utils';
 
 export function createFlowAtom<T>(defaultStep: T) {
@@ -25,7 +25,7 @@ type StepMenuProps<T> = {
 
 export default function BasicStepMenu<T>({ steps, title, flowAtom }: StepMenuProps<T>) {
   const currentStep = useAtomValue(flowAtom);
-
+  const changeStep = useSetAtom(flowAtom);
   return (
     <div className="relative flex max-h-max w-full flex-grow items-center gap-4 bg-primary-9 px-4 py-4">
       <div className="absolute left-4 top-4 py-2 text-xl font-bold text-white">{title}</div>
