@@ -1,6 +1,8 @@
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
+const PRIMARY_HOSTNAME = process.env.PRIMARY_HOSTNAME;
+
 const FREE_ACCESS_PAGES = [
   '/',
   '/home',
@@ -40,6 +42,17 @@ function isFreeAccessRoute(requestUrl: string, paths: string[]) {
 }
 
 export async function middleware(request: NextRequest) {
+  // Primary hostname redirect
+  // TODO: remove after redirect is implemented on infra side
+  if (PRIMARY_HOSTNAME) {
+    const url = request.nextUrl.clone();
+    if (url.hostname !== PRIMARY_HOSTNAME) {
+      url.hostname = PRIMARY_HOSTNAME;
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Rest of the existing middleware code...
   const requestUrl = request.nextUrl.pathname;
   // const { device } = userAgent(request);
 
