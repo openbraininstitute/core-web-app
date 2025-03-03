@@ -45,7 +45,6 @@ export async function middleware(request: NextRequest) {
   // Primary hostname redirect
   // TODO: remove after redirect is implemented on infra side
   if (PRIMARY_HOSTNAME) {
-    console.log(`Req headers: ${request.headers}`);
     const host = request.headers.get('host');
     const url = request.nextUrl.clone();
     if (host !== PRIMARY_HOSTNAME) {
