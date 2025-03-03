@@ -61,7 +61,6 @@ export async function deleteVirtualLab(id: string): Promise<
 > {
   const response = await authFetch(`${virtualLabApi.url}/virtual-labs/${id}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {

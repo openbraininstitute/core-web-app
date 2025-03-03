@@ -13,10 +13,11 @@ import PaddedBlock from './components/PaddedBlock';
 import SectionNews from './sections/SectionNews';
 import VerticalSpace from './components/VerticalSpace';
 import { classNames } from '@/util/utils';
-import AcceptInviteErrorDialog from '@/components/Entrypoint/segments/AcceptInviteErrorDialog';
+import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
 import { logError } from '@/util/logger';
 
 import styles from './LandingPage.module.css';
+import './global.css';
 
 export interface LandingPageProps {
   className?: string;

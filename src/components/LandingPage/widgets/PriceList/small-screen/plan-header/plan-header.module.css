@@ -1,0 +1,75 @@
+.planHeader {
+  margin: 16px;
+  padding: 32px;
+  background-color: #fff;
+  box-shadow: 0 0.75em 1.5em #0003;
+  border-radius: 6px;
+  font-size: var(--font-size-M);
+}
+
+.planHeader .priceHeader em {
+  color: var(--color-neutral);
+  font-variant: normal;
+  font-style: normal;
+}
+
+.planHeader hr {
+  margin: 1em 0;
+}
+
+.planHeader > h1 {
+  margin: 0;
+  font-size: var(--font-size-XL);
+}
+
+.planHeader small {
+  font-size: var(--font-size-S);
+}
+
+.discount {
+  color: var(--color-neutral);
+  text-decoration: line-through;
+  text-decoration-color: currentColor;
+}
+
+.hide {
+  display: none;
+}
+
+.show {
+  display: block;
+}
+
+.planHeader ul {
+  margin: 1em 0 1em 1em;
+}
+
+.planHeader ul > li::marker {
+  content: '+';
+}
+
+.pill {
+  color: var(--color-primary);
+  font-size: var(--font-size-M);
+  height: 2em;
+  padding: 0 0.5em;
+  border-radius: 99vmax;
+  border: 1px solid var(--color-primary);
+  margin: 1em 0;
+  display: grid;
+  place-items: center;
+}
+
+.price {
+  font-size: var(--font-size-L);
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0;
+}
+
+.price > small {
+  font-size: var(--font-size-M);
+}

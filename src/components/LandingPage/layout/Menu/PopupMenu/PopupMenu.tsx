@@ -1,12 +1,12 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import React from 'react';
+import Link from 'next/link';
 
-import { MENU_ITEMS } from '../../../constants';
-import LoginButton from '../../../components/buttons/LoginButton/LoginButton';
+import { DEFAULT_SECTION, MENU_ITEMS } from '../../../constants';
 import { IconClose } from '../../../icons/IconClose';
 import { classNames } from '@/util/utils';
-import { gotoSection } from '@/components/LandingPage/utils';
 
+import { EnumSection } from '@/components/LandingPage/sections/sections';
 import styles from './PopupMenu.module.css';
 
 const MENU_LINKS = [...MENU_ITEMS];
@@ -39,20 +39,29 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
           </button>
         </header>
         <section>
-          {MENU_LINKS.map(({ caption, index }) => (
-            <button
+          {[
+            DEFAULT_SECTION,
+            ...MENU_LINKS,
+            {
+              index: EnumSection.ComingSoon,
+              caption: 'Login to the platform',
+              slug: 'coming-soon',
+            },
+          ].map(({ caption, slug }) => (
+            <Link
+              className={styles.link}
               type="button"
               key={caption}
               onClick={() => {
                 onChange(false);
-                gotoSection(index);
               }}
+              href={slug}
             >
               <div>{caption}</div>
-            </button>
+            </Link>
           ))}
         </section>
-        <LoginButton />
+        {/* <LoginButton /> */}
       </menu>
     </div>
   );

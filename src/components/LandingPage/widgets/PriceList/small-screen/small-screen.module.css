@@ -1,0 +1,49 @@
+@media (min-width: 481px) {
+  .smallScreen {
+    display: none;
+  }
+}
+
+.smallScreen > header {
+  all: unset;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 1em;
+  font-size: var(--font-size-L);
+  cursor: pointer;
+  padding: 0.5em 0;
+  background: #fffe;
+  backdrop-filter: blur(4px);
+  z-index: 999999;
+  position: sticky;
+  top: var(--custom-menu-height);
+}
+
+.smallScreen > header > button {
+  all: unset;
+  font-size: var(--font-size-L);
+  text-transform: uppercase;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0em;
+}
+
+.smallScreen > header > button::after {
+  content: '';
+  width: 2em;
+  height: 0.25em;
+  border-radius: 99vmax;
+  background: var(--color-primary);
+  transition: all 0.3s;
+  opacity: 0;
+}
+
+.smallScreen > header > button[disabled]::after {
+  opacity: 1;
+}

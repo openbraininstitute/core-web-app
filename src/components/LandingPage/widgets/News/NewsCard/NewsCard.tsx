@@ -18,7 +18,7 @@ export default function NewsCard({ className, value }: NewsCardProps) {
     <button
       className={classNames(className, styles.newsCard)}
       type="button"
-      onClick={() => gotoNews(value.id)}
+      onClick={() => gotoNews(value)}
     >
       <div className={styles.content}>
         <h2>{value.title}</h2>
@@ -43,8 +43,12 @@ function formatDate(d: string) {
   return fmt.format(date);
 }
 
-function gotoNews(newsId: string): void {
-  const section = getSection(EnumSection.News);
-  const url = sanitizeURL(`${section.slug}/${newsId}`);
-  window.location.href = url;
+function gotoNews(news: ContentForNewsItem): void {
+  if (news.link) {
+    window.open(news.link, '_BLANK');
+  } else {
+    const section = getSection(EnumSection.News);
+    const url = sanitizeURL(`${section.slug}/${news.id}`);
+    window.location.href = url;
+  }
 }

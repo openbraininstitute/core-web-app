@@ -6,7 +6,12 @@ import { EModel, EModelConfiguration, EModelWorkflow, NeuronMorphology } from '@
 import sessionAtom from '@/state/session';
 import { fetchResourceById, fetchResourceByIdUsingResolver } from '@/api/nexus';
 import { MEModelResource } from '@/types/me-model';
-import { getIdFromSelfUrl, getOrgFromSelfUrl, getProjectFromSelfUrl } from '@/util/nexus';
+import {
+  ensureArray,
+  getIdFromSelfUrl,
+  getOrgFromSelfUrl,
+  getProjectFromSelfUrl,
+} from '@/util/nexus';
 import authFetch from '@/authFetch';
 import { API_SEARCH } from '@/constants/explore-section/queries';
 import { Experiment } from '@/types/explore-section/es-experiment';
@@ -144,7 +149,7 @@ export const selectedEModelConfigurationAtom = atom<Promise<EModelConfiguration 
 
     if (!session || !org || !project || !selectedEModelWorkflow) return;
 
-    const selectedEModelConfigurationPart = selectedEModelWorkflow.hasPart.find(
+    const selectedEModelConfigurationPart = ensureArray(selectedEModelWorkflow.hasPart).find(
       ({ '@type': type }) => type === 'EModelConfiguration'
     );
 

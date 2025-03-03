@@ -5,8 +5,8 @@ import ApplicationSidebar, {
   NavigationItem,
   NavigationItemProps,
 } from '../ApplicationSidebar';
-import { OBPLogo } from '../Entrypoint/segments/Splash';
 import MainMenu from './Menu';
+import ObiLogoSvg from '@/components/logo/as-svg';
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
 
@@ -55,7 +55,7 @@ export default function Main() {
 
       <div className="grid h-screen grid-cols-[1fr_3fr] justify-end gap-x-2 py-5 pl-14 pr-7">
         <div className="flex w-full flex-col gap-y-7">
-          <OBPLogo color="text-white" />
+          <ObiLogoSvg className="z-10 text-white" />
           <div className="z-10 w-90percent">
             <DefaultAccountPanel expanded />
           </div>

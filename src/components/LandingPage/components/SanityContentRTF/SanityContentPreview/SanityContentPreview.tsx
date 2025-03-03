@@ -3,11 +3,12 @@ import React from 'react';
 import Title from '../../Title';
 import { Text } from '../../Text';
 import ProgressiveImage from '../../ProgressiveImage';
+import VerticalSpace from '../../VerticalSpace';
 import { classNames } from '@/util/utils';
 import { ContentForRichTextPreview } from '@/components/LandingPage/content';
-import { styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
-
+import { styleBlockFullWidth, styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
 import { gotoSection } from '@/components/LandingPage/utils';
+
 import styles from './SanityContentPreview.module.css';
 
 export interface SanityContentPreviewProps {
@@ -32,7 +33,8 @@ export default function SanityContentPreview({ value }: SanityContentPreviewProp
           alt="Background"
         />
       )}
-      <Title value={value.title} />
+      <Title value={value.title} margin="0" />
+      <VerticalSpace height="48px" className={styleBlockFullWidth} />
       <div className={classNames(styles.content, styleBlockSmall)}>
         {value.image && (
           <ProgressiveImage
