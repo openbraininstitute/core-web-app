@@ -1,6 +1,13 @@
 import Content from '@/components/VirtualLab/create-entity-flows/virtual-lab/content';
 import StepMenu from '@/components/VirtualLab/create-entity-flows/virtual-lab/step-menu';
 import { virtualLabFlowSteps } from '@/components/VirtualLab/create-entity-flows/common/types';
+import { atom } from 'jotai';
+
+const d = atom({
+  information: null,
+  plan: null,
+  subscription: null,
+})
 
 export default function Flow() {
   return (

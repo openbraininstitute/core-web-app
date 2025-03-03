@@ -5,34 +5,27 @@ import {
     useEffect,
     useRef,
     ChangeEvent,
-    Dispatch,
-    SetStateAction,
 } from 'react';
-import { Button, Spin } from 'antd';
+import { Spin } from 'antd';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
 
 import { useAtomValue, useSetAtom } from 'jotai';
-import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import z from 'zod';
 
+import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans/price-card';
+import StripeInput from '@/components/VirtualLab/Billing/StripeInput';
+import getStripe from '@/components/VirtualLab/Billing/utils';
 import useNotification from '@/hooks/notifications';
-import { getZodErrorPath, isStringEmpty } from '@/util/utils';
-import {
-    SetupIntentResponse,
-    addNewPaymentMethodToVirtualLab,
-    generateSetupIntent,
-} from '@/services/virtual-lab/billing';
 import sessionAtom from '@/state/session';
 import {
-    transactionFormStateAtom,
-    virtualLabPaymentMethodsAtomFamily,
-} from '@/state/virtual-lab/lab';
-import { useAccessToken } from '@/hooks/useAccessToken';
-import { ADDING_NEW_PAYMENT_METHOD_FAILED, ADDING_NEW_PAYMENT_METHOD_SUCCEEDED, PREPARING_STRIPE_FORM } from '../../Billing/messages';
-import getStripe from '../../Billing/utils';
-import StripeInput from '../../Billing/StripeInput';
-import { PaymentFooter } from './footer';
-import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans/price-card';
+    SetupIntentResponse,
+    generateSetupIntent,
+} from '@/services/virtual-lab/billing';
+import { PREPARING_STRIPE_FORM } from '../../Billing/messages';
+import { PaymentFooter } from '@/components/VirtualLab/create-entity-flows/virtual-lab/footer';
+import { vlabFlowState } from '@/components/VirtualLab/create-entity-flows/virtual-lab/flow-state';
+import { type VirtualLabFlowSteps } from '@/components/VirtualLab/create-entity-flows/common/types';
 
 
 
@@ -40,11 +33,13 @@ type StripeFormProps = {
     virtualLabId: string;
     onCancel: () => void;
     onPrevious: () => void;
+    onStepChange: (step: VirtualLabFlowSteps) => void;
 };
 
 type PaymentFormProps = {
     onCancel: () => void;
     onPrevious: () => void;
+    onStepChange: (step: VirtualLabFlowSteps) => void;
     virtualLabId: string;
 };
 
@@ -77,7 +72,7 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
 });
 
 
-export function Form({ virtualLabId, onCancel, onPrevious }: StripeFormProps) {
+export function Form({ virtualLabId, onCancel, onPrevious, onStepChange }: StripeFormProps) {
     const elements = useElements();
     const stripe = useStripe();
     const { error: errorNotify, success: successNotify } = useNotification();
@@ -85,7 +80,7 @@ export function Form({ virtualLabId, onCancel, onPrevious }: StripeFormProps) {
     const [formLoading, setFormLoading] = useState(false);
     const [name, setName] = useState<string>("");
     const [nameError, setNameError] = useState<string | null>(null);
-
+    const setFlowState = useSetAtom(vlabFlowState);
     const formLoaded = stripe && elements;
     const disableForm = !formLoaded || formLoading;
 
@@ -106,16 +101,10 @@ export function Form({ virtualLabId, onCancel, onPrevious }: StripeFormProps) {
             return null;
         }
 
-        setFormLoading(true);
-        const formData = new FormData(event.currentTarget);
-
-        // Convert FormData to an object
-        const data = Object.fromEntries(formData.entries());
-
-        console.log("Form Data:", data);
-        setFormLoading(false);
-
         try {
+            setFormLoading(true);
+            const formData = new FormData(event.currentTarget);
+            const data = Object.fromEntries(formData.entries());
             const { error, setupIntent } = await stripe.confirmSetup({
                 elements,
                 redirect: 'if_required',
@@ -123,13 +112,17 @@ export function Form({ virtualLabId, onCancel, onPrevious }: StripeFormProps) {
                     return_url: window.location.href,
                 },
             });
-
-            console.log("ᦨ #  payment-form.tsx:127 #  onPaymentMethodSubmit #  setupIntent:", setupIntent);
-
+            const subscription = undefined;
+            setFlowState(prev => ({
+                ...prev,
+                subscription,
+            }))
+            onStepChange("members");
 
         } catch (error) {
         } finally {
             elements.getElement('payment')?.clear();
+            setFormLoading(false);
         }
     };
 
@@ -170,7 +163,7 @@ export function Form({ virtualLabId, onCancel, onPrevious }: StripeFormProps) {
 }
 
 
-export default function PaymentForm({ virtualLabId, onCancel, onPrevious }: PaymentFormProps) {
+export default function PaymentForm({ virtualLabId, onCancel, onPrevious, onStepChange }: PaymentFormProps) {
     const stripeRef = useRef(false);
     const session = useAtomValue(sessionAtom);
     const { error: errorNotify } = useNotification();
@@ -225,11 +218,11 @@ export default function PaymentForm({ virtualLabId, onCancel, onPrevious }: Paym
                         customerId,
                         virtualLabId,
                         onCancel,
-                        onPrevious
+                        onPrevious,
+                        onStepChange
                     }}
                 />
             </Elements>
-
         </div>
     );
 }
