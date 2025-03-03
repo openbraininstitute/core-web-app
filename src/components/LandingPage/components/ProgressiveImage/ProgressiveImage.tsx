@@ -25,6 +25,9 @@ export default function ProgressiveImage({
   forceAspectRatio = false,
 }: ProgressiveImageProps) {
   const [loaded, setLoaded] = React.useState(false);
+  React.useEffect(() => {
+    setLoaded(false);
+  }, [src]);
 
   return (
     <div

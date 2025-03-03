@@ -4,7 +4,7 @@ import { Contributor } from '../data';
 import { classNames } from '@/util/utils';
 
 import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
-import { styleBlockLarge, styleButtonHoverable } from '@/components/LandingPage/styles';
+import { styleBlockFullWidthPadded, styleButtonHoverable } from '@/components/LandingPage/styles';
 import styles from './ContributorsList.module.css';
 
 export interface ContributorsListProps {
@@ -21,7 +21,10 @@ export default function ContributorsList({ className, list }: ContributorsListPr
 
   return (
     <>
-      <div className={classNames(className, styles.contributorsList, styleBlockLarge)} ref={ref}>
+      <div
+        className={classNames(className, styles.contributorsList, styleBlockFullWidthPadded)}
+        ref={ref}
+      >
         {list.slice(0, pagesToDisplay * contributorsPerPage).map((contributor) => (
           <div key={contributor.full_name}>
             <div className={styles.name}>{contributor.full_name}</div>
