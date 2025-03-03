@@ -28,6 +28,7 @@ import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { atlasVisualizationAtom } from '@/state/atlas/atlas';
 import { sectionAtom } from '@/state/application';
 import { useExpandRegionTree, useSetBrainRegionToQuery } from '@/hooks/brain-region-panel';
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 
 /**
  * the line component is added for each NavTitle with absolue position
@@ -185,6 +186,11 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
   const setResetAtlasVisualization = useResetAtom(atlasVisualizationAtom);
   const resetSelectedBrainRegion = useSetAtom(resetSelectedBrainRegionAtom);
 
+  const onNavTitle = async (id: string, title: string, leaves: any) => {
+    await userJourneyTracker.handleBrainRegionClick(title);
+    setSelectedBrainRegion(id, title, leaves);
+  };
+
   useExpandRegionTree(scope);
   useSetBrainRegionToQuery();
 
@@ -230,7 +236,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
                   className="text-base"
                   colorCode={colorCode}
                   id={id}
-                  onClick={() => setSelectedBrainRegion(id, title, leaves)}
+                  onClick={() => onNavTitle(id, title, leaves)}
                   title={title}
                   isExpanded={isExpanded}
                   trigger={trigger}
