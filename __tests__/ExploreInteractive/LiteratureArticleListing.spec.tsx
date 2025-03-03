@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import isUndefined from 'lodash/isUndefined';
 import userEvent, { UserEvent } from '@testing-library/user-event';
-import LiteratureArticleListingPage from '@/app/app/virtual-lab/lab/(free)/explore/(interactive)/interactive/literature/[experiment-data-type]/page';
+import LiteratureArticleListingPage from '@/app/app/virtual-lab/(free)/explore/(interactive)/interactive/literature/[experiment-data-type]/page';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { SelectedBrainRegion } from '@/state/brain-regions/types';
 import { ArticleItem } from '@/api/explore-section/resources';
@@ -41,8 +41,8 @@ jest.mock('next/navigation', () => {
 jest.mock('nuqs', () => ({
   ...jest.requireActual('nuqs'),
   useQueryState: (value: string) => {
-    if (value === 'brainRegion') return [BrainRegionQueryParams, () => {}];
-    if (value === 'brainRegionTitle') return [BrainRegionQueryParams, () => {}];
+    if (value === 'brainRegion') return [BrainRegionQueryParams, () => { }];
+    if (value === 'brainRegionTitle') return [BrainRegionQueryParams, () => { }];
   },
 }));
 
