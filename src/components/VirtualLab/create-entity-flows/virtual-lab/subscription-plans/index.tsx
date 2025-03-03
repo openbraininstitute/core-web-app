@@ -5,11 +5,11 @@ import { motion } from 'framer-motion';
 import PlanCard from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans/plan-card';
 import PricingCardSkeleton from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans/skeleton';
 import { PlansFooter } from '@/components/VirtualLab/create-entity-flows/virtual-lab/footer';
-import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
+import { ContentForPricingPlan, useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
 
 type Props = {
-  selectedPlan: string | null;
-  onSelectPlan: (id: string) => void;
+  selectedPlan?: ContentForPricingPlan | null;
+  onSelectPlan: (plan: ContentForPricingPlan) => void;
   onCancel: () => void;
   onNextPayment: () => void;
 };
@@ -33,8 +33,8 @@ export default function PlanSection({ selectedPlan, onSelectPlan, onCancel, onNe
                 key={plan.id}
                 plan={plan}
                 features={data.features}
-                isSelected={selectedPlan === plan.id}
-                onSelect={() => onSelectPlan(plan.id)}
+                isSelected={selectedPlan?.id === plan.id}
+                onSelect={() => onSelectPlan(plan)}
               />
             </motion.div>
           ))}

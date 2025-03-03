@@ -50,6 +50,9 @@ export default function Overview({ allowAskCode }: Props) {
                 setValidName({ loading: true, status: null });
                 const exists = await checkVirtualLabExists({ name });
                 if (exists) {
+
+                  console.log("ᦨ #  overview.tsx:54 #  validator: #  exists:", exists);
+
                   setValidName({ loading: false, status: 'non-valid' });
                   return Promise.reject(new Error('This virtual lab name is already taken.'));
                 }

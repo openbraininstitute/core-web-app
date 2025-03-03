@@ -1,29 +1,25 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ConfigProvider, Form } from 'antd';
+import { useAtomValue } from 'jotai';
+import { Form } from 'antd';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+
 
 import MemberList from '@/components/VirtualLab/create-entity-flows/common/member-form';
-import Overview from '@/components/VirtualLab/create-entity-flows/virtual-lab/overview';
-
-import Footer, { AddMembersFooter, CreateVirtualLabFooter } from '@/components/VirtualLab/create-entity-flows/virtual-lab/footer';
-import Plans from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans';
 import useNotification from '@/hooks/notifications';
 
+import { vlabFlowState } from '@/components/VirtualLab/create-entity-flows/virtual-lab/flow-state';
+import { AddMembersFooter, } from '@/components/VirtualLab/create-entity-flows/virtual-lab/footer';
 import { List } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { extractInitials } from '@/util/slugify';
-import {
-    virtualLabFlowSteps,
-    type VirtualLabFlowSteps,
-} from '@/components/VirtualLab/create-entity-flows/common/types';
 import { tryCatch } from '@/api/utils';
-import Subscription from './subscription';
+
+import { type VirtualLabFlowSteps, } from '@/components/VirtualLab/create-entity-flows/common/types';
 
 type Props = {
     step: VirtualLabFlowSteps;
@@ -56,20 +52,14 @@ function Members() {
 export default function AddMembers({ step, onCancel, onStepChange }: Props) {
     const notify = useNotification();
     const { push: navigate } = useRouter();
-    const { data } = useSession();
-    const params = useSearchParams();
-
     const [form] = Form.useForm<VirtualLabPayload>();
     const [isFormValid, setIsFormValid] = useState(false);
     const [pending, startTransition] = useTransition();
-    const fields = Form.useWatch<Omit<VirtualLabPayload, 'include_members'>>([], form);
+    const flowState = useAtomValue(vlabFlowState);
 
-    const disableNextPlans = Boolean(!(isFormValid && fields?.email_status === 'verified'));
-    const disableNextMembers = !fields?.plan_id;
-    const firstLogin = params.get('t') === 'f'; // check if the first login
 
     const resetForm = () => form.resetFields();
-
+    const onPrevious = () => onStepChange("payment");
     const onValuesChange = () => {
         form
             .validateFields({ validateOnly: true })
@@ -110,7 +100,29 @@ export default function AddMembers({ step, onCancel, onStepChange }: Props) {
             }
         });
     };
-
+    if (flowState?.plan?.title === "Free") return (
+        <div className="relative flex h-full flex-grow flex-col px-4 py-2">
+            <div className='mx-auto flex h-full w-full max-w-5xl flex-grow flex-col bg-white p-12'>
+                <Members />
+                <div className="my-10 h-px bg-gray-100" />
+                <div className='w-full p-6 bg-[#F0F0F0]'>
+                    <div className=''>
+                        <h1 className='text-xl font-bold'>Do you want to add other members?</h1>
+                        <p className='text-lg font-light'>Subscribe to our pro plan in order to invite new members</p>
+                    </div>
+                </div>
+            </div>
+            <AddMembersFooter
+                {...{
+                    showSubmit: false,
+                    onCancel,
+                    onPrevious: () => onStepChange('plans'),
+                    loading: pending,
+                    disabled: !isFormValid || pending,
+                }}
+            />
+        </div>
+    )
     return (
         <Form
             name="add-members-flow-step"
@@ -133,6 +145,7 @@ export default function AddMembers({ step, onCancel, onStepChange }: Props) {
             <AddMembersFooter
                 {...{
                     onCancel,
+                    onPrevious,
                     loading: pending,
                     disabled: !isFormValid || pending,
                 }}
