@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { atomWithReset } from 'jotai/utils';
 
 import { classNames } from '@/util/utils';
@@ -12,7 +12,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/VirtualLab/create-entity-flows/common/breadcrumb';
 import { type Step } from '@/components/VirtualLab/create-entity-flows/common/types';
-import { vlabFlowState } from '../virtual-lab/flow-state';
 
 export function createFlowAtom<T>(defaultStep: T) {
   return atomWithReset<T>(defaultStep);
@@ -26,8 +25,6 @@ type StepMenuProps<T> = {
 
 export default function BasicStepMenu<T>({ steps, title, flowAtom }: StepMenuProps<T>) {
   const currentStep = useAtomValue(flowAtom);
-  const changeStep = useSetAtom(flowAtom);
-  const flowState = useAtomValue(vlabFlowState);
 
   return (
     <div className="relative flex max-h-max w-full flex-grow items-center gap-4 bg-primary-9 px-4">
@@ -43,12 +40,9 @@ export default function BasicStepMenu<T>({ steps, title, flowAtom }: StepMenuPro
                     aria-label={step.label}
                     className={classNames(
                       '!cursor-default select-none px-6 py-6 text-lg uppercase tracking-wide hover:bg-white/15',
-                      currentStep === step.id ? 'font-bold text-white' : 'font-light text-primary-3',
-
+                      currentStep === step.id ? 'font-bold text-white' : 'font-light text-primary-3'
                     )}
-                    onClick={() => changeStep(step.id)}
                     style={{ cursor: 'default' }}
-                    disabled={step.id === "information" && Boolean(flowState?.information)}
                   >
                     {step.label}
                   </button>

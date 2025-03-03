@@ -1,86 +1,118 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useRouter } from 'next/navigation';
-import { useResetAtom } from 'jotai/utils';
-import { ConfigProvider } from 'antd';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ConfigProvider, Form } from 'antd';
+import { useState, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { motion } from 'framer-motion';
 
-import CreateVirtualLabForm from "@/components/VirtualLab/create-entity-flows/virtual-lab/create-virtual-lab-form";
-import Subscription from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription';
-import ContactUs from '@/components/VirtualLab/create-entity-flows/virtual-lab/contact-us-form';
-import AddMembersForm from "@/components/VirtualLab/create-entity-flows/virtual-lab/add-members-form";
+import Overview from '@/components/VirtualLab/create-entity-flows/virtual-lab/overview';
+import useNotification from '@/hooks/notifications';
+import { CreateVirtualLabFooter } from '@/components/VirtualLab/create-entity-flows/virtual-lab/footer';
 
-import { virtualLabFlowAtom } from '@/components/VirtualLab/create-entity-flows/virtual-lab/step-menu';
-import { vlabFlowState } from '@/components/VirtualLab/create-entity-flows/virtual-lab/flow-state';
-import { type VirtualLabFlowSteps } from '@/components/VirtualLab/create-entity-flows/common/types';
+import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
+import { tryCatch } from '@/api/utils';
 
-export default function Content() {
+export default function CreateVirtualLabForm() {
+  const { data } = useSession();
   const { push: navigate } = useRouter();
-  const [hydrated, setHydrated] = useState(false);
-  const [step, setCurrentStep] = useAtom(virtualLabFlowAtom);
+  const notify = useNotification();
+  const params = useSearchParams();
+  const [form] = Form.useForm<VirtualLabPayload>();
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const fields = Form.useWatch<Omit<VirtualLabPayload, 'include_members'>>([], form);
 
-  console.log("ᦨ #  content.tsx:25 #  Content #  step:", step);
+  const allowAskCode = Boolean(isFormValid && fields.email_status !== 'verified');
+  // TODO: remove it if requirement changes
+  const firstLogin = params.get('t') === 'f'; // check if the first login
 
-  const resetFlow = useResetAtom(virtualLabFlowAtom);
-  const resetFlowState = useSetAtom(vlabFlowState);
-  const state = useAtomValue(vlabFlowState);
-
-  console.log("ᦨ #  content.tsx:28 #  Content #  state:", state);
-
-
-  const [slideDirection, onChangeDirection] = useState<'right' | 'left'>('right');
-  const onStepChange = (t: VirtualLabFlowSteps) => setCurrentStep(t);
-  const onCancel = () => {
-    resetFlowState(null);
-    navigate('/app/virtual-lab');
-  }
-
-  useEffect(() => setHydrated(true), []);
-  useEffect(() => {
-    return () => {
-      resetFlow();
-      resetFlowState(null);
+  const resetForm = () => form.resetFields();
+  const onCancel = () => {};
+  const onValuesChange = (changedValues: VirtualLabPayload, values: VirtualLabPayload) => {
+    if ('reference_email' in changedValues && values?.email_status !== 'none') {
+      form.setFieldValue('email_status', 'none');
     }
-  }, [resetFlow, resetFlowState]);
+    form
+      .validateFields()
+      .then(() => {
+        setIsFormValid(true);
+      })
+      .catch((error) => {
+        setIsFormValid(!(error.errorFields.length > 0));
+      });
+  };
 
-  if (!hydrated) return null;
+  const onFormSubmit = async (values: VirtualLabPayload) => {
+    startTransition(async () => {
+      const { data: result, error } = await tryCatch(createVirtualLab(values));
+      if (error || !result || !result.data) {
+        notify.error(
+          'Virtual Lab creation failed. Please check your details and try again.',
+          undefined,
+          'topRight',
+          undefined
+        );
+      }
+      if (result && result.data) {
+        notify.success(
+          'Your Virtual Lab has been created successfully and is now ready to use.',
+          undefined,
+          'topRight',
+          undefined
+        );
+        resetForm();
+        navigate(`/app/virtual-lab/lab/${result.data.virtual_lab.id}/overview`);
+      }
+    });
+  };
+
   return (
     <ConfigProvider theme={{ hashed: false }}>
-      <AnimatePresence initial={false} custom={slideDirection} mode="wait">
-        <motion.div
-          key={step}
-          custom={slideDirection}
-          variants={{
-            initial: { opacity: 0 },
-            animate: { opacity: 1 },
-            exit: { opacity: 0 },
+      <motion.div
+        variants={{
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0 },
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{
+          duration: 0.3,
+          type: 'tween',
+          ease: 'easeInOut',
+        }}
+        className="relative flex h-full flex-grow flex-col"
+      >
+        <Form
+          name="virtual-lab-creation-flow-step"
+          form={form}
+          layout="vertical"
+          onFinish={onFormSubmit}
+          className="relative flex h-full flex-grow flex-col px-4 py-2"
+          requiredMark={false}
+          validateTrigger={['onChange']}
+          initialValues={{
+            name: firstLogin ? `${data?.user.name}'s virtual lab` : undefined,
+            description: '',
+            entity: null,
+            include_members: [],
           }}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            duration: 0.3,
-            type: 'tween',
-            ease: 'easeInOut',
-          }}
-          className="relative flex h-full flex-grow flex-col"
+          onValuesChange={onValuesChange}
+          disabled={pending}
         >
-          <div className={(step !== 'information') ? 'hidden' : 'flex h-full flex-grow flex-col'}>
-            <CreateVirtualLabForm {...{ step, onCancel, onStepChange, onChangeDirection }} />
-          </div>
-          <div className={step !== 'payment' && step !== "plans" ? 'hidden' : 'flex h-full flex-grow flex-col'}>
-            <Subscription {...{ step, onCancel, onStepChange }} />
-          </div>
-          <div className={step !== 'members' ? 'hidden' : 'flex h-full flex-grow flex-col'}>
-            <AddMembersForm {...{ step, onCancel, onStepChange }} />
-          </div>
-          <div className={step !== 'contact-us' ? 'hidden' : 'flex h-full flex-grow flex-col'}>
-            <ContactUs {...{ step, onCancel, onStepChange }} />
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    </ConfigProvider >
+          <Overview allowAskCode={allowAskCode} />
+          <CreateVirtualLabFooter
+            {...{
+              onCancel,
+              loading: pending,
+              disabled: !isFormValid || pending,
+            }}
+          />
+        </Form>
+      </motion.div>
+    </ConfigProvider>
   );
 }

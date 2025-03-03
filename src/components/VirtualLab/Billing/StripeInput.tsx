@@ -39,7 +39,7 @@ export default function StripeInput({
         />
         {error && (
           <p className="mt-1 text-[16px] text-rose-600" role="alert">
-            {typeof error === "string" ? error : `${id} provided is invalid`}
+            {typeof error === 'string' ? error : `${id} provided is invalid`}
           </p>
         )}
       </label>

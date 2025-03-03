@@ -1,9 +1,8 @@
-import { ReactNode } from 'react';
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 
 import { getVirtualLabsOfUser } from '@/services/virtual-lab/labs';
-import LabsListing from '@/components/VirtualLab/labs-listing';
+import LabsListing from '@/components/VirtualLab/labs-listing/listing';
+import CreateFirstLab from '@/components/VirtualLab/labs-listing/no-vlabs';
 
 export const metadata: Metadata = {
   title: 'Virtual labs',
@@ -11,17 +10,14 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  let redirectUrl: string | null = null;
-  let node: ReactNode = null;
-
   try {
     const labs = await getVirtualLabsOfUser();
-    if (!labs.data.total) redirectUrl = '/app/virtual-lab/lab/create?t=f';
-    else node = <LabsListing virtualLabs={labs.data.results} />;
+    if (!labs.data.total) {
+      return <CreateFirstLab />;
+    }
+
+    return <LabsListing virtualLabs={labs.data.results} />;
   } catch (error) {
     throw new Error((error as { message: string }).message);
   }
-
-  if (redirectUrl) redirect(redirectUrl);
-  else return node;
 }
