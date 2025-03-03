@@ -10,14 +10,7 @@ export default function Error({
   return (
     <div>
       <h2>Something went wrong! {error.message}</h2>
-      <button
-        type="button"
-        aria-label="reset"
-        onClick={
-          // Attempt to recover by trying to re-render the segment
-          () => reset()
-        }
-      >
+      <button type="button" aria-label="reset" onClick={() => reset()}>
         Try again
       </button>
     </div>

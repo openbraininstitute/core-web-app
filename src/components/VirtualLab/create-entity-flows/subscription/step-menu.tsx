@@ -7,14 +7,14 @@ import BasicStepMenu, {
   createFlowAtom,
 } from '@/components/VirtualLab/create-entity-flows/common/step-menu';
 import {
-  VirtualLabFlowSteps,
+  SubscriptionFlowSteps,
   type Step,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
 import { subscriptionFlowState } from '@/components/VirtualLab/create-entity-flows/subscription/flow-state';
 
-export const virtualLabFlowAtom = createFlowAtom<VirtualLabFlowSteps>('information');
+export const subscriptionLabFlowAtom = createFlowAtom<SubscriptionFlowSteps>('plans');
 
-export default function VirtualLabStepMenu({ steps }: { steps: Step[] }) {
+export default function SubscriptionStepMenu({ steps }: { steps: Step[] }) {
   const flowState = useAtomValue(subscriptionFlowState);
 
   let reducedSteps: Array<Step> = reject(steps, { id: 'contact-us' });
@@ -31,7 +31,7 @@ export default function VirtualLabStepMenu({ steps }: { steps: Step[] }) {
     <BasicStepMenu
       steps={reducedSteps}
       title="Virtual lab creation"
-      flowAtom={virtualLabFlowAtom}
+      flowAtom={subscriptionLabFlowAtom}
     />
   );
 }

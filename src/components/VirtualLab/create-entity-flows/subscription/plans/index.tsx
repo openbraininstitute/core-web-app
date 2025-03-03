@@ -2,10 +2,13 @@
 
 import { motion } from 'framer-motion';
 
-import PlanCard from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans/plan-card';
-import PricingCardSkeleton from '@/components/VirtualLab/create-entity-flows/virtual-lab/subscription-plans/skeleton';
-import { PlansFooter } from '@/components/VirtualLab/create-entity-flows/virtual-lab/footer';
-import { ContentForPricingPlan, useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
+import PlanCard from '@/components/VirtualLab/create-entity-flows/subscription/plans/plan-card';
+import PricingCardSkeleton from '@/components/VirtualLab/create-entity-flows/subscription/plans/skeleton';
+import { PlansFooter } from '@/components/VirtualLab/create-entity-flows/subscription/footer';
+import {
+  ContentForPricingPlan,
+  useSanityContentForPricing,
+} from '@/components/LandingPage/content/pricing';
 
 type Props = {
   selectedPlan?: ContentForPricingPlan | null;
@@ -14,14 +17,19 @@ type Props = {
   onNextPayment: () => void;
 };
 
-export default function PlanSection({ selectedPlan, onSelectPlan, onCancel, onNextPayment }: Props) {
+export default function PlanSection({
+  selectedPlan,
+  onSelectPlan,
+  onCancel,
+  onNextPayment,
+}: Props) {
   const data = useSanityContentForPricing();
 
   if (!data) return <PricingCardSkeleton />;
   return (
     <section className="flex h-full flex-grow flex-col">
       <div className="mx-auto w-full max-w-7xl bg-white p-6">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 pt-6">
+        <div className="grid grid-cols-1 gap-8 pt-6 md:grid-cols-2 lg:grid-cols-3">
           {data?.plans.map((plan, index) => (
             <motion.div
               key={plan.id}
@@ -40,7 +48,11 @@ export default function PlanSection({ selectedPlan, onSelectPlan, onCancel, onNe
           ))}
         </div>
       </div>
-      <PlansFooter disableNextPayment={selectedPlan === null} onCancel={onCancel} onNextStep={onNextPayment} />
+      <PlansFooter
+        disableNextPayment={selectedPlan === null}
+        onCancel={onCancel}
+        onNextStep={onNextPayment}
+      />
     </section>
   );
 }

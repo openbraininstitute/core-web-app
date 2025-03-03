@@ -4,17 +4,17 @@ import { ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
-import Logo from '@/components/logo/as-svg';
+import SideBar from '@/components/VirtualLab/side-bar';
 
 export default function VirtualLabPageLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-primary-9 p-10 text-white">
-      <div className="flex flex-row items-start justify-between">
-        <Logo className="text-white" />
-        <VirtualLabTopMenu />
+    <div className="flex h-screen flex-col bg-primary-9 p-10 text-white">
+      <div className="grid h-full grid-cols-[max-content_1fr] gap-12 overflow-hidden">
+        <SideBar />
+        <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
+          <div className="overflow-hidden">{children}</div>
+        </ErrorBoundary>
       </div>
-      <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>
     </div>
   );
 }
