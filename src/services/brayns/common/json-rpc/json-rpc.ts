@@ -1,7 +1,7 @@
 import isNil from 'lodash/isNil';
 
 import Async from '../utils/async';
-import GenericEvent from '../utils/generic-event';
+import GenericEvent from '../../../../util/generic-event';
 import Progress, {
   isJsonRpcMessage,
   isJsonRpcQueryFailure,

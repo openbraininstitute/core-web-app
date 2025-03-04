@@ -29,7 +29,7 @@ export default function StatItem({
   return (
     <Link
       href={href}
-      className="flex h-[50px] w-full justify-between rounded-sm bg-neutral-7 px-3 py-4 text-white hover:text-primary-4"
+      className="flex h-[50px] w-full justify-between rounded-sm bg-[#013a8c] px-3 py-4 text-white hover:text-primary-4"
       onClick={onClick}
       data-testid={testId}
     >

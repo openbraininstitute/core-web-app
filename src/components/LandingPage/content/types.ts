@@ -22,7 +22,7 @@ export interface ContentForRichTextImage {
   };
 }
 
-const typeContentForRichTextImage: TypeDef = {
+const typeContentForRichTextImage = {
   _type: ['literal', 'imageBlock'],
   alt: typeStringOrNull,
   caption: typeStringOrNull,
@@ -35,7 +35,17 @@ const typeContentForRichTextImage: TypeDef = {
       height: 'number',
     },
   ],
-};
+} satisfies TypeDef;
+
+export interface ContentForRichTextVideo {
+  _type: 'video';
+  url: string;
+}
+
+const typeContentForRichTextVideo = {
+  _type: ['literal', 'video'],
+  url: typeStringOrNull,
+} satisfies TypeDef;
 
 export interface ContentForRichTextPreview {
   _type: 'previewBlock';
@@ -178,13 +188,14 @@ export type RichTextParagraph =
     };
 
 export type ContentForRichText = Array<
-  | ContentForRichTextTitle
   | ContentForRichTextItems
+  | ContentForRichTextTitle
   | ContentForRichTextWidget
   | ContentForRichTextParagraph
   | ContentForRichTextVerticalSpace
   | ContentForRichTextPreview
   | ContentForRichTextImage
+  | ContentForRichTextVideo
 >;
 
 const typeContentForRichText: TypeDef = [
@@ -198,6 +209,7 @@ const typeContentForRichText: TypeDef = [
     typeContentForRichTextParagraph,
     typeContentForRichTextPreview,
     typeContentForRichTextImage,
+    typeContentForRichTextVideo,
   ],
 ];
 

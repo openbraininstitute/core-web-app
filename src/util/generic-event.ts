@@ -1,3 +1,4 @@
+import React from 'react';
 import { logError } from '@/util/logger';
 
 export interface GenericEventInterface<T> {
@@ -30,4 +31,20 @@ export default class GenericEvent<T> implements GenericEventInterface<T> {
       }
     }
   }
+}
+
+export function useGenericEventValue<T>(event: GenericEvent<T>, initialValue: T): T {
+  const [value, setValue] = React.useState(initialValue);
+  React.useEffect(() => {
+    event.addListener(setValue);
+    return () => event.removeListener(setValue);
+  }, [event]);
+  return value;
+}
+
+export function useGenericEventListener<T>(event: GenericEvent<T>, listener: (value: T) => void) {
+  React.useEffect(() => {
+    event.addListener(listener);
+    return () => event.removeListener(listener);
+  }, [event, listener]);
 }

@@ -1,6 +1,9 @@
 import { db, ClickTuple, ClickType } from '@/components/explore-section/Literature/user-journey/db';
+import GenericEvent from '@/util/generic-event';
 
 class ClickContextTracker {
+  public readonly eventChange = new GenericEvent<ClickContextTracker>();
+
   constructor(private dbInstance = db) {}
 
   async saveTuple(): Promise<void> {
@@ -18,6 +21,7 @@ class ClickContextTracker {
 
   async updateCurrentTuple(tuple: ClickTuple): Promise<void> {
     await this.dbInstance.activeSession.put({ key: 'current', value: tuple });
+    this.eventChange.dispatch(this);
   }
 
   async handleBrainRegionClick(data: string): Promise<void> {

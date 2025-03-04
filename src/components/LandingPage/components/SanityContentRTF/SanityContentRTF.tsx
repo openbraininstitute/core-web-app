@@ -8,6 +8,7 @@ import {
   ContentForRichTextPreview,
   ContentForRichTextTitle,
   ContentForRichTextVerticalSpace,
+  ContentForRichTextVideo,
   ContentForRichTextWidget,
 } from '../../content/types';
 import Error from '../Error';
@@ -18,6 +19,7 @@ import SanityContentWidget from './SanityContentWidget';
 import SanityContentVerticalDivider from './SanityContentVerticalSpace';
 import SanityContentPreview from './SanityContentPreview';
 import SanityContentImage from './sanity-content-image';
+import SanityContentVideo from './sanity-content-video';
 import { logError } from '@/util/logger';
 
 export interface SanityContentRTFProps {
@@ -37,7 +39,8 @@ function renderItem(
     | ContentForRichTextParagraph
     | ContentForRichTextVerticalSpace
     | ContentForRichTextPreview
-    | ContentForRichTextImage,
+    | ContentForRichTextImage
+    | ContentForRichTextVideo,
   index: number
 ) {
   const key = `${item._type}/${index}`;
@@ -56,6 +59,8 @@ function renderItem(
       return <SanityContentPreview key={key} value={item} />;
     case 'imageBlock':
       return <SanityContentImage key={key} value={item} />;
+    case 'video':
+      return <SanityContentVideo key={key} value={item} />;
     default:
       logError("Don't know how to render this item:", item);
       return (
