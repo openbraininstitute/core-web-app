@@ -4,23 +4,45 @@ import Link from 'next/link';
 import { PlusOutlined } from '@ant-design/icons';
 
 import Item from '@/components/VirtualLab/item/vlab-item';
-import { VirtualLab } from '@/types/virtual-lab/lab';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
-export default function VirtualLabDashboard({ virtualLabs }: { virtualLabs: VirtualLab[] }) {
+type Props = {
+  virtualLab: {
+    data: VirtualLab;
+    membersCount: number;
+    projectsCount: number;
+  };
+  pendingLabs: Array<VirtualLab>;
+};
+
+export default function VirtualLabDashboard({ virtualLab, pendingLabs }: Props) {
   return (
     <div className="flex h-full w-full flex-col">
       <div className="primary-scrollbar flex-1 overflow-y-auto pr-2">
         <div className="flex flex-col gap-3">
-          {virtualLabs.map((vl) => (
+          <div className="flex flex-col gap-3">
             <Item
-              key={vl.id}
-              id={vl.id}
-              name={vl.name}
-              lastUpdate={vl.created_at}
-              projectCount={30}
-              memberCount={30}
+              key={virtualLab.data.id}
+              id={virtualLab.data.id}
+              name={virtualLab.data.name}
+              lastUpdate={virtualLab.data.updated_at}
+              projectCount={virtualLab.projectsCount}
+              memberCount={virtualLab.membersCount}
             />
-          ))}
+          </div>
+          <div className="flex flex-col gap-3">
+            {pendingLabs.map((vl) => (
+              <Item
+                pending
+                key={vl.id}
+                id={vl.id}
+                name={vl.name}
+                lastUpdate={vl.created_at}
+                projectCount={30}
+                memberCount={30}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <div className="ml-auto mt-4 flex items-center gap-3 pr-3">

@@ -4,6 +4,7 @@ import uniqBy from 'lodash/uniqBy';
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import {
   VirtualLabExistsVerificationResponse,
+  VirtualLabListResponse,
   VirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabApi } from '@/config';
@@ -80,5 +81,34 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
     // eslint-disable-next-line no-console
     console.error('Error creating virtual lab:', error);
     throw new Error(`Failed to create virtual lab: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * List all virtual labs for a user.
+ *
+ * @returns {Promise<VirtualLabResponse[]>} - api response with the list of virtual labs.
+ * @throws {Error} - Throws an error if the request fails or the response is invalid.
+ */
+export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
+  const session = await getSession();
+  try {
+    const response = await fetch(`http://localhost:8000/virtual-labs`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`listing virtual labs failed ${response.status}`);
+    }
+
+    const result: VirtualLabListResponse = await response.json();
+    return result;
+  } catch (error) {
+    // TODO: capture exception with sentry
+    throw new Error(`Failed to list virtual labs: ${(error as Error).message}`);
   }
 }
