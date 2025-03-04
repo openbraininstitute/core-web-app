@@ -2,11 +2,7 @@
 
 import { ConfigProvider, Form } from 'antd';
 import { useState, useTransition } from 'react';
-<<<<<<< HEAD
 import { useRouter, useSearchParams } from 'next/navigation';
-=======
-import { useSearchParams } from 'next/navigation';
->>>>>>> 218d492f (add new vlab pages)
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 
@@ -20,10 +16,7 @@ import { tryCatch } from '@/api/utils';
 
 export default function CreateVirtualLabForm() {
   const { data } = useSession();
-<<<<<<< HEAD
   const { push: navigate } = useRouter();
-=======
->>>>>>> 218d492f (add new vlab pages)
   const notify = useNotification();
   const params = useSearchParams();
   const [form] = Form.useForm<VirtualLabPayload>();
@@ -36,7 +29,7 @@ export default function CreateVirtualLabForm() {
   const firstLogin = params.get('t') === 'f'; // check if the first login
 
   const resetForm = () => form.resetFields();
-  const onCancel = () => {};
+  const onCancel = () => { };
   const onValuesChange = (changedValues: VirtualLabPayload, values: VirtualLabPayload) => {
     if ('reference_email' in changedValues && values?.email_status !== 'none') {
       form.setFieldValue('email_status', 'none');
@@ -70,10 +63,7 @@ export default function CreateVirtualLabForm() {
           undefined
         );
         resetForm();
-<<<<<<< HEAD
         navigate(`/app/virtual-lab/lab/${result.data.virtual_lab.id}/overview`);
-=======
->>>>>>> 218d492f (add new vlab pages)
       }
     });
   };

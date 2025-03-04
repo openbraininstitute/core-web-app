@@ -30,11 +30,8 @@ export type VirtualLab = {
   reference_email: string;
   entity: string;
   id: string;
-  plan_id: number;
   created_at: string; // ISO timestamp
-  nexus_organization_id: string;
   updated_at: string; // ISO timestamp
-  budget: number;
 };
 
 export type VirtualLabExistsVerificationResponse = VlmResponse<{
