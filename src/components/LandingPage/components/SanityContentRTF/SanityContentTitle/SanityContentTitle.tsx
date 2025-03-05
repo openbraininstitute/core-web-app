@@ -4,6 +4,7 @@ import { ContentForRichTextTitle } from '../../../content/types';
 import Title from '../../Title';
 
 import styles from './SanityContentTitle.module.css';
+import { makeSpecialWidget } from './special-widget';
 
 export interface SanityContentTitleProps {
   value: ContentForRichTextTitle;
@@ -14,6 +15,10 @@ export default function SanityContentTitle({ value }: SanityContentTitleProps) {
     case 'h2':
       return <Title value={value.title} />;
     default:
-      return <h2 className={styles.sanityContentTitle}>{value.title}</h2>;
+      return (
+        makeSpecialWidget(value.title) ?? (
+          <h2 className={styles.sanityContentTitle}>{value.title}</h2>
+        )
+      );
   }
 }
