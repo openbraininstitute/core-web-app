@@ -1,0 +1,43 @@
+import Link from 'next/link';
+
+import { styleBlockSmall, styleButtonSquare } from '@/components/LandingPage/styles';
+
+const RX_CODE = /^[ \t]*\{\{([a-zA-Z0-9-]+)\}/g;
+
+export function makeSpecialWidget(rawCode: string) {
+  const code = rawCode.trim();
+  RX_CODE.lastIndex = -1;
+  const m = RX_CODE.exec(code);
+  if (!m) return null;
+
+  const [all, name] = m;
+  const rest = code.slice(all.length, -1).trim().slice(1, -1);
+  const args = rest.split(/\s*\}\s*\{\s*/);
+  switch (name) {
+    case 'button': {
+      const [href, text] = args;
+      return (
+        <div className={styleBlockSmall}>
+          <Link href={href} className={styleButtonSquare} style={{ fontSize: '200%' }}>
+            {text}
+          </Link>
+        </div>
+      );
+    }
+    default:
+      return (
+        <div className={styleBlockSmall}>
+          <pre>
+            {JSON.stringify(
+              {
+                name,
+                args,
+              },
+              null,
+              '  '
+            )}
+          </pre>
+        </div>
+      );
+  }
+}

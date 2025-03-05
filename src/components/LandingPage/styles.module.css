@@ -16,13 +16,16 @@ a.hoverableButton:active,
   background: var(--color-primary);
 }
 
-button.hoverableButton[disabled] {
+button.hoverableButton[disabled],
+a.hoverableButton[disabled] {
   pointer-events: none;
   opacity: 0.5;
   filter: grayscale(100%);
 }
 
-button.squareButton {
+button.squareButton,
+a.squareButton {
+  display: inline-block;
   color: var(--color-primary);
   border: 1px solid currentColor;
   line-height: 3;
@@ -30,7 +33,9 @@ button.squareButton {
   white-space: nowrap;
 }
 
-button.roundedButton {
+button.roundedButton,
+a.roundedButton {
+  display: inline-block;
   color: var(--color-primary);
   border: 1px solid currentColor;
   line-height: 3;
@@ -40,7 +45,8 @@ button.roundedButton {
 }
 
 @media (max-width: 480px) {
-  button.squareButton {
+  button.squareButton,
+  a.squareButton {
     padding: 0 1em;
   }
 }
