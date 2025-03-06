@@ -60,7 +60,7 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
   const [form] = Form.useForm<ProjectPayload & { virtual_lab_id: string }>();
   const [pending, startTransition] = useTransition();
   const [isFormValid, setIsFormValid] = useState(false);
-  const [slideDirection, setSlideDirection] = useState<'right' | 'left'>('right');
+  const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const fields = Form.useWatch([], form);
 
@@ -70,7 +70,7 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
   const disableNextMembers = !isFormValid || !fields?.name;
 
   const onNextStep = () => {
-    setSlideDirection('left');
+    onSlideDirectionChange('left');
     const currentIndex = steps.findIndex((s) => s.id === step);
     if (currentIndex < steps.length - 1) {
       onStepChange(steps[currentIndex + 1].id);
@@ -78,7 +78,7 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
   };
 
   const onPreviousStep = () => {
-    setSlideDirection('right');
+    onSlideDirectionChange('right');
     const currentIndex = steps.findIndex((s) => s.id === step);
     if (currentIndex > 0) {
       onStepChange(steps[currentIndex - 1].id);

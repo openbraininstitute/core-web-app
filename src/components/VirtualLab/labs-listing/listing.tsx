@@ -9,8 +9,8 @@ import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 type Props = {
   virtualLab: {
     data: VirtualLab;
-    membersCount: number;
-    projectsCount: number;
+    membersCount: number | null;
+    projectsCount: number | null;
   };
   pendingLabs: Array<VirtualLab>;
 };

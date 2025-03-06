@@ -74,27 +74,25 @@ export default function PricingToggleCards() {
 
   return (
     <div className="flex flex-col items-center justify-center bg-white py-10">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 md:flex-row">
-        <SimplePricingCard
-          id="monthly"
-          title="Pro Plan"
-          price={40}
-          currency="CHF"
-          interval="monthly"
-          selectedInterval={selectedInterval}
-          onSelect={handleSelect}
-        />
-        <SimplePricingCard
-          id="yearly"
-          title="Pro Plan"
-          price={250}
-          currency="CHF"
-          interval="yearly"
-          discount={20}
-          selectedInterval={selectedInterval}
-          onSelect={handleSelect}
-        />
-      </div>
+      <SimplePricingCard
+        id="monthly"
+        title="Pro Plan"
+        price={40}
+        currency="CHF"
+        interval="monthly"
+        selectedInterval={selectedInterval}
+        onSelect={handleSelect}
+      />
+      <SimplePricingCard
+        id="yearly"
+        title="Pro Plan"
+        price={250}
+        currency="CHF"
+        interval="yearly"
+        discount={20}
+        selectedInterval={selectedInterval}
+        onSelect={handleSelect}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
     SubscriptionResponse,
     SubscriptionStatus,
     SubscriptionsListResponse,
+    SetupIntentResponse
 } from './types';
 
 // const BASE_URL = `${virtualLabApi.url}/subscriptions`;
@@ -73,35 +74,6 @@ export async function getSubscription(subscriptionId: string): Promise<Subscript
         // TODO: capture exception with sentry
         console.error('Error getting subscription:', error);
         throw new Error(`Failed to get subscription details: ${(error as Error).message}`);
-    }
-}
-
-/**
- * Lists all available subscription plans.
- *
- * @returns {Promise<SubscriptionPlan[]>} - List of available subscription plans
- * @throws {Error} - Throws an error if the request fails
- */
-export async function listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    const session = await getSession();
-    try {
-        const response = await fetch(`${BASE_URL}/plans`, {
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${session?.accessToken}`,
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Listing subscription plans failed: ${response.status}`);
-        }
-
-        const result: SubscriptionPlansResponse = await response.json();
-        return result.data;
-    } catch (error) {
-        // TODO: capture exception with sentry
-        console.error('Error listing subscription plans:', error);
-        throw new Error(`Failed to list subscription plans: ${(error as Error).message}`);
     }
 }
 
@@ -180,5 +152,34 @@ export async function listSubscriptions(params?: {
         // TODO: capture exception with sentry
         console.error('Error listing subscriptions:', error);
         throw new Error(`Failed to list subscriptions: ${(error as Error).message}`);
+    }
+}
+
+
+/**
+ * Lists all available subscription plans.
+ *
+ * @returns {Promise<Array<SubscriptionPlan>>} - List of available subscription plans
+ * @throws {Error} - Throws an error if the request fails
+ */
+export async function listSubscriptionPlans(): Promise<Array<SubscriptionPlan>> {
+    const session = await getSession();
+    try {
+        const response = await fetch(`${BASE_URL}/plans`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session?.accessToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Listing subscription plans failed: ${response.status}`);
+        }
+        const result: SubscriptionPlansResponse = await response.json();
+        return result.data;
+    } catch (error) {
+        // TODO: capture exception with sentry
+        console.error('Error listing subscription plans:', error);
+        throw new Error(`Failed to list subscription plans: ${(error as Error).message}`);
     }
 }

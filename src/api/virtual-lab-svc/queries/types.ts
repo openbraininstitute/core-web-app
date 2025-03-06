@@ -133,3 +133,18 @@ export type SubscriptionPlansResponse = {
 export type SubscriptionsListResponse = {
   data: Array<SubscriptionDetails>;
 }
+
+
+export type VirtualLabListResponse = VlmResponse<{
+  pending_labs: Array<VirtualLab & { invite_id: string; }>,
+  virtual_lab: VirtualLab
+  members_count: number | null;
+  projects_count: number | null;
+}>
+
+type SetupIntent = {
+  id: string;
+  client_secret: string;
+  customer_id: string;
+}
+export type SetupIntentResponse = VlmResponse<SetupIntent>;

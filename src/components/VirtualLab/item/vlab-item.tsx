@@ -8,8 +8,8 @@ type Props = {
   id: string;
   name: string;
   lastUpdate: string;
-  projectCount: number;
-  memberCount: number;
+  projectCount: number | null;
+  memberCount: number | null;
   pending?: boolean;
 };
 

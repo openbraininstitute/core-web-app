@@ -92,7 +92,7 @@ export default function VirtualSplashScreen() {
   return (
     <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-10 flex flex-col min-h-screen">
       <HeroSection />
-      <div className="mt-6 w-full flex flex-col gap-6 mx-auto">
+      <div className="mt-6 w-full flex flex-col gap-3 mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -107,7 +107,6 @@ export default function VirtualSplashScreen() {
             onClick={() => console.log("Create virtual lab clicked")}
           />
         </motion.div>
-
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

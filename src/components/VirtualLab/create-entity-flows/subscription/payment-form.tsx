@@ -16,9 +16,9 @@ import { SetupIntentResponse, generateSetupIntent } from '@/services/virtual-lab
 import { PaymentFooter } from '@/components/VirtualLab/create-entity-flows/subscription/footer';
 import { subscriptionFlowState } from '@/components/VirtualLab/create-entity-flows/subscription/flow-state';
 import { type SubscriptionFlowSteps } from '@/components/VirtualLab/create-entity-flows/common/types';
+import { getSetupIntent } from '@/api/virtual-lab-svc/queries/subscription';
 
 type StripeFormProps = {
-  _virtualLabId: string;
   onCancel: () => void;
   onPrevious: () => void;
   onStepChange: (step: SubscriptionFlowSteps) => void;
@@ -28,7 +28,6 @@ type PaymentFormProps = {
   onCancel: () => void;
   onPrevious: () => void;
   onStepChange: (step: SubscriptionFlowSteps) => void;
-  virtualLabId: string;
 };
 
 const cardholderName = z.object({
@@ -61,8 +60,8 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
   },
 });
 
-// TODO: implement the payment
-export function Form({ _virtualLabId, onCancel, onPrevious, onStepChange }: StripeFormProps) {
+
+export function Form({ onCancel, onPrevious, onStepChange }: StripeFormProps) {
   const elements = useElements();
   const stripe = useStripe();
   const [stripeElementsReady, setElementsReady] = useState(false);
@@ -105,7 +104,6 @@ export function Form({ _virtualLabId, onCancel, onPrevious, onStepChange }: Stri
         ...prev,
         subscription,
       }));
-      onStepChange('members');
     } catch (error) {
       // TODO: handle error properly
       throw new Error('error paying');
@@ -152,7 +150,6 @@ export function Form({ _virtualLabId, onCancel, onPrevious, onStepChange }: Stri
 }
 
 export default function PaymentForm({
-  virtualLabId,
   onCancel,
   onPrevious,
   onStepChange,
@@ -163,8 +160,8 @@ export default function PaymentForm({
   const [stripePromise, setStripePromise] = useState<Stripe | null>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
 
-  const [{ client_secret: clientSecret, customer_id: customerId }, setStripeSetupObject] = useState<
-    SetupIntentResponse['data']
+  const [setupIntent, setStripeSetupObject] = useState<
+    SetupIntentResponse['data'] | null
   >({
     id: '',
     client_secret: '',
@@ -177,7 +174,7 @@ export default function PaymentForm({
         setLoadingStripe(true);
         if (session) {
           const [stripeSetup, stripeObject] = await Promise.all([
-            generateSetupIntent(virtualLabId, session.accessToken),
+            getSetupIntent(),
             getStripe(),
           ]);
           setStripePromise(stripeObject);
@@ -190,19 +187,18 @@ export default function PaymentForm({
           undefined,
           'topRight',
           true,
-          virtualLabId
         );
         setLoadingStripe(false);
       }
     }
 
-    if (virtualLabId && !stripeRef.current) {
+    if (!stripeRef.current) {
       initializeStripe();
       stripeRef.current = true;
     }
-  }, [errorNotify, session, virtualLabId]);
+  }, [errorNotify, session]);
 
-  if (loadingStripe)
+  if (loadingStripe || !setupIntent)
     return (
       <div className="flex h-full flex-grow items-center justify-center py-7">
         <Spin size="large" indicator={<LoadingOutlined />} />
@@ -211,11 +207,10 @@ export default function PaymentForm({
 
   return (
     <div className="flex h-full flex-grow flex-col">
-      <Elements stripe={stripePromise} options={buildStripeFormOptions(clientSecret)}>
+      <Elements stripe={stripePromise} options={buildStripeFormOptions(setupIntent?.client_secret)}>
         <Form
           {...{
-            customerId,
-            _virtualLabId: virtualLabId,
+            customerId: setupIntent.customer_id,
             onCancel,
             onPrevious,
             onStepChange,
