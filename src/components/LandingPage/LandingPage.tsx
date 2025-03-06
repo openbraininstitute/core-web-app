@@ -66,12 +66,14 @@ export default function LandingPage({
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
 
-      <Modal open={popupOpen} onCancel={handleClose} footer={null}>
-        <div>
-          {popUpData?.title}
-          {popUpData?.introduction}
-        </div>
-      </Modal>
+      {!!popUpData && (
+        <Modal open={popupOpen} onCancel={handleClose} footer={null}>
+          <div>
+            {popUpData?.title}
+            {popUpData?.introduction}
+          </div>
+        </Modal>
+      )}
 
       {/* <MatomoAnalytics /> */}
     </>
