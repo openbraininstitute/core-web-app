@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { Modal } from 'antd';
 import FooterPanel from './layout/FooterPanel';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
@@ -12,9 +13,11 @@ import SectionGeneric from './sections/SectionGeneric';
 import PaddedBlock from './components/PaddedBlock';
 import SectionNews from './sections/SectionNews';
 import VerticalSpace from './components/VerticalSpace';
+import { isServer } from '@/config';
 import { classNames } from '@/util/utils';
 import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
 import { logError } from '@/util/logger';
+import { ComingSoonData } from '@/types/common';
 
 import styles from './LandingPage.module.css';
 import './global.css';
@@ -22,11 +25,23 @@ import './global.css';
 export interface LandingPageProps {
   className?: string;
   section: EnumSection;
+  popUpData?: ComingSoonData;
   errorCode?: string;
 }
 
-export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
+export default function LandingPage({
+  className,
+  section,
+  errorCode,
+  popUpData,
+}: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  useEffect(() => {
+    if (isServer) return;
+    setPopupOpen(localStorage.getItem('popupOpen') === null);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({
@@ -34,6 +49,11 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       behavior: 'instant',
     });
   }, [section]);
+
+  const handleClose = () => {
+    localStorage.setItem('popupOpen', 'false');
+    setPopupOpen(false);
+  };
 
   return (
     <>
@@ -45,6 +65,14 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
+
+      <Modal open={popupOpen} onCancel={handleClose} footer={null}>
+        <div>
+          {popUpData?.title}
+          {popUpData?.introduction}
+        </div>
+      </Modal>
+
       {/* <MatomoAnalytics /> */}
     </>
   );

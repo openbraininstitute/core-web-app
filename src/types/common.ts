@@ -1,3 +1,4 @@
+import { z } from 'zod';
 /**
  * Constructs a type based on T and makes properties K optional.
  *
@@ -38,3 +39,10 @@ export type ApplicationSection = 'explore' | 'build' | 'simulate';
 export interface ServerSideComponentProp<Params> {
   params: Params;
 }
+
+export const comingSoonDataSchema = z.object({
+  title: z.string(),
+  introduction: z.string(),
+});
+
+export type ComingSoonData = z.infer<typeof comingSoonDataSchema>;
