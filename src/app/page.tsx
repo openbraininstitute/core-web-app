@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return metadata;
 }
 
-export default async function RootPage({
+export default function RootPage({
   searchParams,
 }: {
   searchParams: { errorcode: string | undefined };
