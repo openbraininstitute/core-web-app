@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
+import { z } from 'zod';
 import { Modal } from 'antd';
+
 import FooterPanel from './layout/FooterPanel';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
@@ -17,7 +18,6 @@ import VerticalSpace from './components/VerticalSpace';
 import { classNames } from '@/util/utils';
 import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
 import { logError } from '@/util/logger';
-import { ComingSoonData, comingSoonDataSchema } from '@/types/common';
 
 import styles from './LandingPage.module.css';
 import './global.css';
@@ -27,6 +27,13 @@ export interface LandingPageProps {
   section: EnumSection;
   errorCode?: string;
 }
+
+export const comingSoonDataSchema = z.object({
+  title: z.string(),
+  introduction: z.string(),
+});
+
+export type ComingSoonData = z.infer<typeof comingSoonDataSchema>;
 
 export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
