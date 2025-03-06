@@ -1,6 +1,5 @@
-import Link from 'next/link';
-
-import { styleBlockSmall, styleButtonSquare } from '@/components/LandingPage/styles';
+import { TemporaryGoToLabButton } from '../../TemporaryGoToLabButton';
+import { styleBlockSmall } from '@/components/LandingPage/styles';
 
 const RX_CODE = /^[ \t]*\{\{([a-zA-Z0-9-]+)\}/g;
 
@@ -15,13 +14,13 @@ export function makeSpecialWidget(rawCode: string) {
   const args = rest.split(/\s*\}\s*\{\s*/);
   switch (name) {
     case 'button': {
-      const [href, text] = args;
+      const [href, title, subTitle] = args;
       return (
-        <div className={styleBlockSmall}>
-          <Link href={href} className={styleButtonSquare} style={{ fontSize: '200%' }}>
-            {text}
-          </Link>
-        </div>
+        <TemporaryGoToLabButton
+          title={title}
+          subTitle={subTitle ?? 'Start exploring, discover public projects, showcases and mode'}
+          href={href}
+        />
       );
     }
     default:
