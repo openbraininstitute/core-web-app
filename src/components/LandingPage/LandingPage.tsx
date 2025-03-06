@@ -74,7 +74,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
 
-      <Modal open={popupOpen} onCancel={handleClose} footer={null}>
+      <Modal open={popupOpen && !!popUpData} onCancel={handleClose} footer={null}>
         <div>
           {popUpData?.title}
           {popUpData?.introduction}
