@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { z } from 'zod';
+import { Modal } from 'antd';
 
 import FooterPanel from './layout/FooterPanel';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
 import { EnumSection } from './sections/sections';
+import { useSanity } from './content/content';
 import { getSection } from './utils';
 import Hero from './layout/Hero';
 import SectionGeneric from './sections/SectionGeneric';
@@ -25,8 +28,28 @@ export interface LandingPageProps {
   errorCode?: string;
 }
 
+export const comingSoonDataSchema = z.object({
+  title: z.string(),
+  introduction: z.string(),
+});
+
+export type ComingSoonData = z.infer<typeof comingSoonDataSchema>;
+
 export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const popUpData = useSanity(
+    `*[slug.current == "releasing-soon"][0]`,
+    (data): data is ComingSoonData => {
+      comingSoonDataSchema.parse(data);
+      return true;
+    }
+  );
+
+  useEffect(() => {
+    setPopupOpen(localStorage.getItem('popupOpen') === null);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({
@@ -34,6 +57,11 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       behavior: 'instant',
     });
   }, [section]);
+
+  const handleClose = () => {
+    localStorage.setItem('popupOpen', 'false');
+    setPopupOpen(false);
+  };
 
   return (
     <>
@@ -45,6 +73,13 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
+
+      <Modal open={popupOpen && !!popUpData} onCancel={handleClose} footer={null}>
+        <div>
+          {popUpData?.title}
+          {popUpData?.introduction}
+        </div>
+      </Modal>
 
       {/* <MatomoAnalytics /> */}
     </>
