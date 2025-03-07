@@ -7,6 +7,7 @@
   --color-neutral-light: var(--Colors-Gray-4, #f0f0f0);
   --color-on-neutral: var(--color-on-bakground);
   --color-primary: var(--Colors-Blue-8, #003a8c);
+  --color-primary-light: var(--Colors-Blue-8, #1897e6);
   --color-on-primary: var(--color-background);
   --font-serif: 'DM Serif Text', serif;
   --font-sans-serif: 'Gabarito', sans-serif;

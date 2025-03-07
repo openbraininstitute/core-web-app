@@ -1,7 +1,7 @@
 import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
-const PRIMARY_HOSTNAME = process.env.PRIMARY_HOSTNAME;
+const { PRIMARY_HOSTNAME } = process.env;
 
 const FREE_ACCESS_PAGES = [
   '/',

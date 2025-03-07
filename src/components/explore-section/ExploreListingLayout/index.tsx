@@ -2,9 +2,12 @@
 
 import { ReactNode, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
 import { useParams, usePathname, useRouter } from 'next/navigation';
+import { useAtomValue } from 'jotai';
+import find from 'lodash/find';
+import type { MenuProps } from 'antd';
+
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -15,6 +18,8 @@ import { useLoadableValue } from '@/hooks/hooks';
 import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { selectedBrainRegionAtom } from '@/state/brain-regions';
 
 const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
 
@@ -55,13 +60,21 @@ export default function ExploreListingLayout({
   const router = useRouter();
   const params = useParams();
   const config = pathname.includes('experimental') ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
-
+  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const activePath = pathname?.split('/').pop() || 'morphology';
-  const onClick: MenuProps['onClick'] = (info) => {
-    const { key, domEvent } = info;
 
+  const onClick: MenuProps['onClick'] = async (info) => {
+    const { key, domEvent } = info;
     domEvent.preventDefault();
     domEvent.stopPropagation();
+
+    if (!(await userJourneyTracker.getCurrentTuple())) {
+      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+    }
+    await userJourneyTracker.handleClick(
+      'artifact',
+      find(DATA_TYPES_TO_CONFIGS, { name: key })?.title!
+    );
     router.push(key);
   };
 

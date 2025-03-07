@@ -62,10 +62,12 @@ export const virtualLabProjectPapersCountAtomFamily = atomFamily(
   isEqual
 );
 
-export const userProjectsAtom = atom<Promise<VirtualLabAPIListData<Project>>>(async () => {
-  const response = await getUsersProjects();
-  return response.data;
-});
+export const userProjectsAtom = atomWithRefresh<Promise<VirtualLabAPIListData<Project>>>(
+  async () => {
+    const response = await getUsersProjects();
+    return response.data;
+  }
+);
 
 export const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (get) => {
   const projects = await get(userProjectsAtom);
