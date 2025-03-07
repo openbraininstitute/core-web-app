@@ -37,19 +37,6 @@ export type ComingSoonData = z.infer<typeof comingSoonDataSchema>;
 
 export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
-  const [popupOpen, setPopupOpen] = useState(false);
-
-  const popUpData = useSanity(
-    `*[slug.current == "releasing-soon"][0]`,
-    (data): data is ComingSoonData => {
-      comingSoonDataSchema.parse(data);
-      return true;
-    }
-  );
-
-  useEffect(() => {
-    setPopupOpen(localStorage.getItem('popupOpen') === null);
-  }, []);
 
   useEffect(() => {
     window.scrollTo({
@@ -57,11 +44,6 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       behavior: 'instant',
     });
   }, [section]);
-
-  const handleClose = () => {
-    localStorage.setItem('popupOpen', 'false');
-    setPopupOpen(false);
-  };
 
   return (
     <>
@@ -73,13 +55,6 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         {/* <FooterPanel /> */}
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
-
-      <Modal open={popupOpen && !!popUpData} onCancel={handleClose} footer={null}>
-        <div>
-          {popUpData?.title}
-          {popUpData?.introduction}
-        </div>
-      </Modal>
 
       {/* <MatomoAnalytics /> */}
     </>
