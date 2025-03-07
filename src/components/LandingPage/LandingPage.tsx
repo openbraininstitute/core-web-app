@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { Modal } from 'antd';
 
@@ -40,6 +40,19 @@ export type ComingSoonData = z.infer<typeof comingSoonDataSchema>;
 export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
   const [popupOpen, setPopupOpen] = useState(false);
+  const [width, setWidth] = useState(0);
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const handleResize = () => {
+      if (ref.current) setWidth(ref.current.getBoundingClientRect().width);
+    };
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const popUpData = useSanity(
     `*[slug.current == "releasing-soon"][0]`,
@@ -67,7 +80,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
 
   return (
     <>
-      <div className={classNames(className, styles.landingPage)}>
+      <div className={classNames(className, styles.landingPage)} ref={ref}>
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
         <PaddedBlock>{renderSection(section)}</PaddedBlock>
@@ -81,9 +94,9 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         onCancel={handleClose}
         footer={null}
         centered
-        width="50%"
+        width={width < 800 ? '90%' : '40%'}
       >
-        <div className="p-8">
+        <div className="p-5">
           <div
             style={{ fontFamily: 'Gabarito serif' }}
             className="text-5xl font-bold text-primary-9"
@@ -91,7 +104,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
             {popUpData?.title}
           </div>
           <div className="mt-5 font-semibold text-primary-9">{popUpData?.introduction}</div>
-          <NewsletterForm />
+          <NewsletterForm cls={{ container: 'p-0 md:p-0 mt-5' }} />
         </div>
       </Modal>
 
