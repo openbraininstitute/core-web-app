@@ -3,6 +3,8 @@ import React from 'react';
 import { createClient } from 'next-sanity';
 import imageUrlBuilder from '@sanity/image-url';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
+import { atomFamily, unwrap } from 'jotai/utils';
+import { Atom, atom, useAtomValue } from 'jotai';
 import { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
 import { ContentForRichText, isContentForRichText } from './types';
@@ -22,26 +24,29 @@ export const urlFor = (source: SanityImageSource) => {
   return builder.image(source);
 };
 
+const dataFamily = atomFamily(
+  ({ query, typeGuard }: { query: string; typeGuard: (data: unknown) => data is unknown }) =>
+    atom(async () => {
+      try {
+        return fetchSanity(query, typeGuard);
+      } catch (ex) {
+        logError('There was an exception in this Sanity query:', query);
+        logError(ex);
+        return null;
+      }
+    }),
+
+  (a, b) => a.query === b.query
+);
+
 /**
  * @returns The expected object, or:
  *
  * - `undefined` if the query has not finished yet.
  * - `null` if an error occured.
  */
-export function useSanity<T>(
-  query: string,
-  typeGuard: (data: unknown) => data is T
-): T | undefined | null {
-  const [data, setData] = React.useState<T | undefined | null>(undefined);
-  React.useEffect(() => {
-    fetchSanity(query, typeGuard)
-      .then(setData)
-      .catch((ex) => {
-        logError('There was an exception in this Sanity query:', query);
-        logError(ex);
-        setData(null);
-      });
-  }, [query, typeGuard]);
+export function useSanity<T>(query: string, typeGuard: (data: unknown) => data is T) {
+  const data = useAtomValue(dataFamily({ query, typeGuard })) as T | undefined | null;
   return data;
 }
 

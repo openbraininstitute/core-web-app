@@ -68,9 +68,9 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       <div className={classNames(className, styles.landingPage)}>
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
-        <PaddedBlock>{renderSection(section)}</PaddedBlock>
+        {/* <PaddedBlock>{renderSection(section)}</PaddedBlock> */}
         <VerticalSpace height="30px" />
-        <FooterPanel />
+        {/* <FooterPanel /> */}
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
 

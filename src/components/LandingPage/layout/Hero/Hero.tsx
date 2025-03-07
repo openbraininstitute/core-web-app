@@ -28,6 +28,7 @@ export default function Hero({ className, section }: HeroProps) {
     content,
     next,
   } = useSanityContentForHero(section);
+
   const [videoReady, setVideoReady] = React.useState(false);
   const height = useFullHeight();
   return (
