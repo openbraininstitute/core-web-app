@@ -29,10 +29,10 @@ export default function LargeScreen() {
             <PlanHeader key={`${plan.title}/${index}`} plan={plan} />
           ))}
           {features.map((bloc, index) => (
-            <>
+            <React.Fragment key={`bloc/${index}`}>
               {index > 0 && <hr className={styles.fullWidth} />}
-              <FeatureBloc key={`bloc/${index}`} bloc={bloc} plans={plans} />
-            </>
+              <FeatureBloc bloc={bloc} plans={plans} />
+            </React.Fragment>
           ))}
         </div>
       </CenteredColumn>

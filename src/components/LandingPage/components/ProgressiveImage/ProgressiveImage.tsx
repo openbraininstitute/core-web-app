@@ -36,7 +36,7 @@ export default function ProgressiveImage({
     >
       <Image
         className={classNames(loaded && styles.show)}
-        onLoadingComplete={() => setLoaded(true)}
+        onLoad={() => setLoaded(true)}
         src={src}
         width={width}
         height={height}
