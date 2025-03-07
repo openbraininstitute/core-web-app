@@ -1,14 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { z } from 'zod';
-import { Modal } from 'antd';
 
 import FooterPanel from './layout/FooterPanel';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
 import { EnumSection } from './sections/sections';
-import { useSanity } from './content/content';
 import { getSection } from './utils';
 import Hero from './layout/Hero';
 import SectionGeneric from './sections/SectionGeneric';

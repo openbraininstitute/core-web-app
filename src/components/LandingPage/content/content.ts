@@ -1,10 +1,9 @@
 /* eslint-disable no-console */
-import React from 'react';
 import { createClient } from 'next-sanity';
 import imageUrlBuilder from '@sanity/image-url';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
-import { atomFamily, unwrap } from 'jotai/utils';
-import { Atom, atom, useAtomValue } from 'jotai';
+import { atomFamily } from 'jotai/utils';
+import { atom, useAtomValue } from 'jotai';
 import { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
 import { ContentForRichText, isContentForRichText } from './types';
