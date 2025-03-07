@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Modal } from 'antd';
 
+import NewsletterForm from '../coming-soon/newsletter-form';
 import FooterPanel from './layout/FooterPanel';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
@@ -16,6 +17,7 @@ import PaddedBlock from './components/PaddedBlock';
 import SectionNews from './sections/SectionNews';
 import VerticalSpace from './components/VerticalSpace';
 import { classNames } from '@/util/utils';
+
 import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
 import { logError } from '@/util/logger';
 
@@ -48,8 +50,8 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
   );
 
   useEffect(() => {
-    setPopupOpen(localStorage.getItem('popupOpen') === null);
-  }, []);
+    if (section === EnumSection.Home) setPopupOpen(localStorage.getItem('popupOpen') === null);
+  }, [section]);
 
   useEffect(() => {
     window.scrollTo({
@@ -74,10 +76,22 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
 
-      <Modal open={popupOpen && !!popUpData} onCancel={handleClose} footer={null}>
-        <div>
-          {popUpData?.title}
-          {popUpData?.introduction}
+      <Modal
+        open={popupOpen && !!popUpData}
+        onCancel={handleClose}
+        footer={null}
+        centered
+        width="50%"
+      >
+        <div className="p-8">
+          <div
+            style={{ fontFamily: 'Gabarito serif' }}
+            className="text-5xl font-bold text-primary-9"
+          >
+            {popUpData?.title}
+          </div>
+          <div className="mt-5 font-semibold text-primary-9">{popUpData?.introduction}</div>
+          <NewsletterForm />
         </div>
       </Modal>
 
