@@ -28,13 +28,6 @@ export interface LandingPageProps {
   errorCode?: string;
 }
 
-export const comingSoonDataSchema = z.object({
-  title: z.string(),
-  introduction: z.string(),
-});
-
-export type ComingSoonData = z.infer<typeof comingSoonDataSchema>;
-
 export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
 
@@ -50,9 +43,9 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       <div className={classNames(className, styles.landingPage)}>
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
-        {/* <PaddedBlock>{renderSection(section)}</PaddedBlock> */}
+        <PaddedBlock>{renderSection(section)}</PaddedBlock>
         <VerticalSpace height="30px" />
-        {/* <FooterPanel /> */}
+        <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
       </div>
 
