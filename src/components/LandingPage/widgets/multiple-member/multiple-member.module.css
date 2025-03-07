@@ -2,8 +2,8 @@
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: stretch;
-  gap: 1em;
+  gap: 2em;
   margin: 1em 0;
 }

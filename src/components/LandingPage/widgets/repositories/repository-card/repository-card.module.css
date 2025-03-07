@@ -1,5 +1,6 @@
 .repositoryCard {
-  width: 600px;
+  padding: 20px;
+  border: 1px solid var(--color-neutral);
 }
 
 .repositoryCard > h2 {
@@ -14,6 +15,10 @@
   justify-content: flex-start;
   align-items: center;
   gap: 1em;
+}
+
+.repositoryCard p {
+  line-height: 1.55;
 }
 
 .authorLabel {

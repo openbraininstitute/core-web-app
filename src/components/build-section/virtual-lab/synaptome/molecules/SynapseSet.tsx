@@ -41,8 +41,8 @@ type Props = {
   removeGroup: (index: number | number[]) => void;
 };
 
-const label = (text: string) => (
-  <span className={classNames('text-base font-bold capitalize text-gray-500')}>{text}</span>
+const label = (text: string, cls?: string) => (
+  <span className={classNames('text-base font-bold capitalize text-gray-500', cls)}>{text}</span>
 );
 
 export default function SynapseSet({
@@ -75,9 +75,14 @@ export default function SynapseSet({
     })
   );
 
+  const hasApic = groupedSections.includes('apic');
+
   const targetOptions = groupedSections.map((value) => ({
     value,
-    label: sectionTargetMapping[value as keyof typeof sectionTargetMapping],
+    label:
+      value === 'dend' && !hasApic
+        ? 'Dendrites'
+        : sectionTargetMapping[value as keyof typeof sectionTargetMapping],
   }));
 
   const isAlreadyVisualized = useMemo(
@@ -370,7 +375,7 @@ export default function SynapseSet({
                     displayFormulaHelp && 'justify-between'
                   )}
                 >
-                  {label('Formula')}
+                  {label('Synapse distribution formula', 'normal-case')}
                   {displayFormulaHelp ? (
                     <CloseOutlined className="text-gray-300" onClick={toggleFormulaHelp} />
                   ) : (
@@ -383,7 +388,7 @@ export default function SynapseSet({
                     displayFormulaHelp ? 'mb-4 h-full opacity-100' : 'mb-0 h-0 opacity-0'
                   )}
                 >
-                  More information on formulas here: <br />
+                  Supports advanced math functions (e.g., sin(x), log(x), ...). <br />
                   <a
                     target="_blank"
                     rel="noopener noreferrer"
@@ -397,10 +402,11 @@ export default function SynapseSet({
               <input hidden readOnly name="distribution" value="formula" />
               <Form.Item
                 name={[field.name, 'formula']}
+                extra={<small>x: distance from soma (µm)</small>}
                 rules={[
                   {
                     required: true,
-                    message: 'Please provide a valid formula!',
+                    message: 'Please provide a valid distribution formula!',
                     async validator(_, value) {
                       if (synapses?.[index].distribution !== 'formula') {
                         return Promise.resolve();
@@ -424,7 +430,7 @@ export default function SynapseSet({
                 )}
               >
                 <Input
-                  placeholder="00.3*x*x + 0.004"
+                  placeholder="0.03*x*x + 0.004"
                   size="large"
                   className={classNames(
                     'text-base font-bold italic [&_.ant-input]:text-primary-8',
