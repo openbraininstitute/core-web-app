@@ -19,8 +19,8 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: stretch;
-  padding: 1em;
   background-color: var(--color-neutral-light);
+  padding: 2.5em;
 }
 
 .picture {
@@ -95,6 +95,10 @@
   .ourFoundations > footer {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   }
+
+  .section {
+    padding: 2em;
+  }
 }
 
 @media (max-width: 480px) {
@@ -105,6 +109,10 @@
       'L';
     grid-template-columns: 1fr;
     grid-template-rows: auto 200px auto;
+  }
+
+  .section {
+    padding: 1em;
   }
 
   .section h2 {

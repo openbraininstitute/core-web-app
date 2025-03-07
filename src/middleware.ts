@@ -45,9 +45,12 @@ export async function middleware(request: NextRequest) {
   // Primary hostname redirect
   // TODO: remove after redirect is implemented on infra side
   if (PRIMARY_HOSTNAME) {
+    const host = request.headers.get('host');
     const url = request.nextUrl.clone();
-    if (url.hostname !== PRIMARY_HOSTNAME) {
+    if (host !== PRIMARY_HOSTNAME) {
       url.hostname = PRIMARY_HOSTNAME;
+      url.port = '443';
+      url.protocol = 'https';
       return NextResponse.redirect(url);
     }
   }

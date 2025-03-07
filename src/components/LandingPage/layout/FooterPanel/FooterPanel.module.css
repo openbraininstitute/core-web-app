@@ -6,6 +6,7 @@
   align-items: stretch;
   gap: 0;
   flex-wrap: nowrap;
+  padding: 32px;
 }
 
 .footerPanel > * {
@@ -113,9 +114,10 @@
   order: 4;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .footerPanel {
     flex-wrap: wrap;
+    padding: 16px;
   }
 
   .title,
@@ -125,8 +127,8 @@
 
   .subscribe {
     order: 1;
-    margin: 8px;
-    min-width: calc(100vw - 16px);
+    margin: 16px 0;
+    min-width: 100%;
   }
 }
 
@@ -135,6 +137,8 @@
     min-height: auto;
     height: auto;
     gap: var(--gap-M);
+    margin: 8px;
+    min-width: calc(100% - 16px);
   }
 
   .footerPanel .links {
@@ -159,5 +163,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    padding: 0;
   }
 }

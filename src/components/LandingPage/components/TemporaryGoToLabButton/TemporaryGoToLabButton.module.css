@@ -1,0 +1,42 @@
+a.temporaryGoToLabButton {
+  all: unset;
+  cursor: pointer;
+  font-family: var(--font-sans-serif);
+  font-size: var(--font-size-M);
+  position: relative;
+  min-height: 128px;
+  background-color: var(--color-primary);
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0;
+  margin: 1em 0;
+  padding: 0 2em;
+}
+
+.temporaryGoToLabButton > * {
+  display: block;
+  z-index: 2;
+}
+
+.temporaryGoToLabButton > strong {
+  color: #fffe;
+  font-size: var(--font-size-L);
+  font-weight: 400;
+}
+
+.temporaryGoToLabButton > div {
+  color: #fffb;
+  font-size: var(--font-size-S);
+}
+
+.temporaryGoToLabButton > .image {
+  z-index: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
