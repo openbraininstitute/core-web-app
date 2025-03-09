@@ -1,125 +1,192 @@
-"use client";
+'use client';
 
-import { forwardRef, } from "react";
-import { atom } from "jotai";
-import * as SwitchPrimitives from "@radix-ui/react-switch"
+import { forwardRef } from 'react';
+import { atom } from 'jotai';
+import map from 'lodash/map';
+import omit from 'lodash/omit';
+import keyBy from 'lodash/keyBy';
+import merge from 'lodash/merge';
+import * as SwitchPrimitives from '@radix-ui/react-switch';
 
-import { ContentForPricing } from "@/components/LandingPage/content/pricing";
-import { classNames } from "@/util/utils";
+import { classNames } from '@/util/utils';
+import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
+import { getSanityTiers } from '@/api/sanity/client';
 
-export const Switch = forwardRef<
-    React.ElementRef<typeof SwitchPrimitives.Root>,
-    React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> & {
-        thumbCls: string;
-    }
->(({ className, thumbCls, ...props }, ref) => (
-    <SwitchPrimitives.Root
-        className={classNames(
-            "peer inline-flex h-5 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
-            className
-        )}
-        {...props}
-        ref={ref}
-    >
-        <SwitchPrimitives.Thumb
-            className={classNames(
-                "pointer-events-none block h-3 w-3 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0",
-                thumbCls
-            )}
-        />
-    </SwitchPrimitives.Root>
-))
+type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
 
+type JsonObject = {
+  [key: string]: JsonValue;
+};
 
-export type FormattedFeature = {
-    name: string;
-    category?: string;
-    free: { value: boolean; label?: string | null; tooltip?: string | null };
-    pro: { value: boolean; label?: string | null; tooltip?: string | null };
-    premium: { value: boolean; label?: string | null; tooltip?: string | null };
-}
+type JsonArray = Array<JsonValue>;
 
-export type FormattedPlan = {
+type PriceValue = {
+  value: number;
+  currency: string;
+};
+
+type TierPrice = {
+  month: Array<PriceValue>;
+  discount: Array<PriceValue>;
+  yearNormal: Array<PriceValue>;
+  yearDiscount: Array<PriceValue>;
+};
+
+export type TierFeature = {
+  title: string;
+  specialLabel?: Array<string>;
+  tooltip?: Array<string>;
+};
+
+export type FeatureCategory = {
+  title: string;
+  available: boolean;
+  featuresList: Array<TierFeature>;
+};
+export type Tier = {
+  id: string;
+  title: string;
+  notes?: Array<string>;
+  price?: TierPrice;
+  features: Array<FeatureCategory>;
+};
+export type Interval = 'month' | 'year';
+
+export type ExtendedTier = Tier & {
+  app_id: string;
+  sanity_id: string;
+  prices: Array<{
     id: string;
-    title: string;
-    price: {
-        month: { value?: number, currency?: string, discount?: number },
-        year: { value?: number, currency?: string, discount?: number }
-    };
-    description: string;
-    notes?: string[];
-}
+    amount: number;
+    currency: string;
+    interval: Interval;
+    nickname: string;
+    discount: number;
+  }>;
+  metadata: Record<string, string>;
+};
 
-export type FormattedPricingData = {
-    features: FormattedFeature[];
-    planDetails: FormattedPlan[];
-    groupedFeatures: Record<string, FormattedFeature[]>
-}
-
-export function convertPricingData(data: ContentForPricing): FormattedPricingData {
-    const basicPlanId = data.plans.find(plan => plan.title === "Free")?.id || "";
-    const proPlanId = data.plans.find(plan => plan.title === "Pro")?.id || "";
-    const premiumPlanId = data.plans.find(plan => plan.title === "Premium")?.id || "";
-
-    const planDetails: FormattedPlan[] = data.plans.map(plan => {
-        const monthlyPrice = plan.price.month.find(p => p.currency === "CHF");
-        const yearlyPrice = plan.price.yearNormal.find(p => p.currency === "CHF");
-        const yearlyDiscount = plan.price.yearDiscount.find(p => p.currency === "CHF");
-        return {
-            id: plan.id,
-            title: plan.title,
-            price: {
-                month: { value: monthlyPrice?.value, currency: monthlyPrice?.currency },
-                year: { value: yearlyPrice?.value, currency: yearlyPrice?.currency, discount: yearlyDiscount?.value }
-            },
-            description: plan.title === "Free" ? "Everything you need to get started" :
-                plan.title === "Pro" ? "Perfect for growing teams" :
-                    "For large-scale projects",
-            notes: plan.notes
-        };
-    });
-
-
-
-    const formattedFeatures: FormattedFeature[] = [];
-
-    data.features.forEach(category => {
-        category.features.forEach(feature => {
-            const freeFeature = feature.plans.find(plan => plan.id === basicPlanId)!;
-            const proFeature = feature.plans.find(plan => plan.id === proPlanId)!;
-            const premiumFeature = feature.plans.find(plan => plan.id === premiumPlanId)!;
-
-            formattedFeatures.push({
-                name: feature.title,
-                category: category.title,
-                free: { value: !!freeFeature?.id, label: freeFeature?.label, tooltip: freeFeature?.tooltip },
-                pro: { value: !!proFeature?.id, label: proFeature?.label, tooltip: proFeature?.tooltip },
-                premium: { value: !!premiumFeature?.id, label: premiumFeature?.label, tooltip: premiumFeature?.tooltip },
-            });
-        });
-    });
-
-    const groupedFeatures = formattedFeatures.reduce((acc, feature) => {
-        const category = feature.category || "Uncategorized";
-        if (!acc[category]) {
-            acc[category] = [];
-        }
-        acc[category].push(feature);
-        return acc;
-    }, {} as Record<string, FormattedFeature[]>);
-
-    return {
-        features: formattedFeatures,
-        planDetails,
-        groupedFeatures,
-    };
-}
+export type TiersData = {
+  tiers: Tier[];
+};
 
 export const flowAtom = atom<{
-    step: "select" | "pay" | null;
-    selectedPlan: FormattedPlan | null;
+  step: 'select' | 'pay' | null;
+  tier: ExtendedTier | null;
+  interval: 'month' | 'year';
+  currency?: string;
 }>({
-    step: "select",
-    selectedPlan: null,
+  step: 'select',
+  tier: null,
+  interval: 'month',
+  currency: 'chf',
 });
 
+export const Switch = forwardRef<
+  React.ElementRef<typeof SwitchPrimitives.Root>,
+  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> & {
+    thumbCls: string;
+  }
+>(({ className, thumbCls, ...props }, ref) => (
+  <SwitchPrimitives.Root
+    className={classNames(
+      'peer inline-flex h-5 w-11 shrink-0 cursor-pointer items-center ',
+      'data-[state=unchecked]:bg-input rounded-full border-2 border-transparent transition-colors',
+      'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ',
+      'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50 ',
+      className
+    )}
+    // eslint-disable-next-line react/jsx-props-no-spreading
+    {...props}
+    ref={ref}
+  >
+    <SwitchPrimitives.Thumb
+      className={classNames(
+        'bg-background pointer-events-none block h-3 w-3 rounded-full shadow-lg ring-0 transition-transform',
+        'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
+        thumbCls
+      )}
+    />
+  </SwitchPrimitives.Root>
+));
+Switch.displayName = 'Switch';
+
+function transformData(data: any): TiersData {
+  const transformedTiers: Tier[] = data.plans?.map((plan: any) => {
+    const tierFeatures: FeatureCategory[] = data.features?.map((category: any) => {
+      // transform features within this category for this plan
+      const featuresList = category.features
+        ?.map((feature: any) => {
+          // Check if this feature is available for the current plan
+          const planFeature = feature.plans?.find((p: any) => p.id === plan.id);
+
+          if (!planFeature) {
+            return null;
+          }
+          const transformedFeature: TierFeature = {
+            title: feature.title,
+          };
+          if (planFeature.label) {
+            transformedFeature.specialLabel = [planFeature.label];
+          }
+          if (planFeature.tooltip) {
+            transformedFeature.tooltip = [planFeature.tooltip];
+          }
+
+          return transformedFeature;
+        })
+        .filter(Boolean);
+
+      return {
+        title: category.title,
+        available: category.available,
+        featuresList,
+      };
+    });
+
+    const transformedTier: Tier = {
+      id: plan.id,
+      title: plan.title,
+      features: tierFeatures,
+    };
+
+    if (plan.notes && plan.notes.length > 0) {
+      transformedTier.notes = plan.notes;
+    }
+
+    if (plan.price) {
+      transformedTier.price = {
+        month: plan.price.month || [],
+        discount: plan.price.discount || [],
+        yearNormal: plan.price.yearNormal || [],
+        yearDiscount: plan.price.yearDiscount || [],
+      };
+    }
+
+    return transformedTier;
+  });
+
+  return {
+    tiers: transformedTiers,
+  };
+}
+
+const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
+  map(arr, (obj) =>
+    obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj
+  );
+
+export async function getAllTiers(): Promise<Array<ExtendedTier>> {
+  const [appTiers, sanityTiers] = await Promise.all([
+    listSubscriptionTiers(),
+    getSanityTiers({ next: { revalidate: 3600 } }),
+  ]);
+  if (!appTiers || !sanityTiers) {
+    throw new Error('Tiers can not be fetched');
+  }
+  const tiers1 = keyBy(renameAndRemove(appTiers.tiers, 'id', 'app_id'), 'sanity_id');
+  const tiers2 = keyBy(transformData(sanityTiers).tiers, 'id');
+  const tiers = Object.values(merge({}, tiers1, tiers2));
+
+  return tiers;
+}

@@ -1,6 +1,3 @@
-
 export default function Page() {
-    return (
-        <div>credits</div>
-    )
+  return <div>credits</div>;
 }

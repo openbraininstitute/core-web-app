@@ -41,8 +41,8 @@ jest.mock('next/navigation', () => {
 jest.mock('nuqs', () => ({
   ...jest.requireActual('nuqs'),
   useQueryState: (value: string) => {
-    if (value === 'brainRegion') return [BrainRegionQueryParams, () => { }];
-    if (value === 'brainRegionTitle') return [BrainRegionQueryParams, () => { }];
+    if (value === 'brainRegion') return [BrainRegionQueryParams, () => {}];
+    if (value === 'brainRegionTitle') return [BrainRegionQueryParams, () => {}];
   },
 }));
 

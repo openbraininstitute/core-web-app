@@ -17,7 +17,7 @@ type Props = {
 
 export default function VirtualLabDashboard({ virtualLab, pendingLabs }: Props) {
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
       <div className="primary-scrollbar flex-1 overflow-y-auto pr-2">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-3">

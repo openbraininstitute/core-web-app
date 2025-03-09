@@ -5,7 +5,6 @@ import { Form, ConfigProvider } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import reject from 'lodash/reject';
 import find from 'lodash/find';
 
 import VirtualLabsList from '@/components/VirtualLab/create-entity-flows/project/vlabs-list';
@@ -14,9 +13,9 @@ import Overview from '@/components/VirtualLab/create-entity-flows/project/overvi
 import Footer from '@/components/VirtualLab/create-entity-flows/project/footer';
 import useNotification from '@/hooks/notifications';
 
-import {
-  projectFlowSteps,
-  type ProjectFlowSteps,
+import type {
+  ProjectFlowSteps,
+  ProjectFlowStepsArray,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
 import { List } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
@@ -27,6 +26,7 @@ import { tryCatch } from '@/api/utils';
 
 type Props = {
   step: ProjectFlowSteps;
+  steps: ProjectFlowStepsArray;
   onCancel: () => void;
   onStepChange: (t: ProjectFlowSteps) => void;
 };
@@ -53,7 +53,7 @@ function Members() {
   );
 }
 
-export default function CreationForm({ step, onCancel, onStepChange }: Props) {
+export default function CreationForm({ step, steps, onCancel, onStepChange }: Props) {
   const notify = useNotification();
   const { push: navigate } = useRouter();
 
@@ -63,8 +63,6 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
   const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const fields = Form.useWatch([], form);
-
-  const steps = virtualLabId ? reject(projectFlowSteps, { id: 'virtual-lab' }) : projectFlowSteps;
 
   const disableNextProject = !!find(steps, { id: 'virtual-lab' }) && !fields?.virtual_lab_id;
   const disableNextMembers = !isFormValid || !fields?.name;
@@ -191,6 +189,7 @@ export default function CreationForm({ step, onCancel, onStepChange }: Props) {
             <Footer
               {...{
                 step,
+                steps,
                 onCancel,
                 onNextStep,
                 onPreviousStep,

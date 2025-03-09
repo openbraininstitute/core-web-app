@@ -2,8 +2,7 @@
 
 import { ConfigProvider, Form } from 'antd';
 import { useState, useTransition } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 import Overview from '@/components/VirtualLab/create-entity-flows/virtual-lab/overview';
@@ -15,21 +14,18 @@ import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import { tryCatch } from '@/api/utils';
 
 export default function CreateVirtualLabForm() {
-  const { data } = useSession();
-  const { push: navigate } = useRouter();
   const notify = useNotification();
-  const params = useSearchParams();
+  const { push: navigate } = useRouter();
   const [form] = Form.useForm<VirtualLabPayload>();
   const [isFormValid, setIsFormValid] = useState(false);
   const [pending, startTransition] = useTransition();
   const fields = Form.useWatch<Omit<VirtualLabPayload, 'include_members'>>([], form);
 
   const allowAskCode = Boolean(isFormValid && fields.email_status !== 'verified');
-  // TODO: remove it if requirement changes
-  const firstLogin = params.get('t') === 'f'; // check if the first login
+  const allowSubmit = Boolean(fields?.email_status === 'verified');
 
   const resetForm = () => form.resetFields();
-  const onCancel = () => { };
+  const onCancel = () => navigate('/app/virtual-lab');
   const onValuesChange = (changedValues: VirtualLabPayload, values: VirtualLabPayload) => {
     if ('reference_email' in changedValues && values?.email_status !== 'none') {
       form.setFieldValue('email_status', 'none');
@@ -95,7 +91,7 @@ export default function CreateVirtualLabForm() {
           requiredMark={false}
           validateTrigger={['onChange']}
           initialValues={{
-            name: firstLogin ? `${data?.user.name}'s virtual lab` : undefined,
+            name: '',
             description: '',
             entity: null,
             include_members: [],
@@ -108,7 +104,7 @@ export default function CreateVirtualLabForm() {
             {...{
               onCancel,
               loading: pending,
-              disabled: !isFormValid || pending,
+              disabled: !isFormValid || pending || !allowSubmit,
             }}
           />
         </Form>

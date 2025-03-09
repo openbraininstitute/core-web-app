@@ -7,9 +7,12 @@ import { useResetAtom } from 'jotai/utils';
 
 import CreationForm from '@/components/VirtualLab/create-entity-flows/project/form';
 import { projectFlowAtom } from '@/components/VirtualLab/create-entity-flows/project/step-menu';
-import { type ProjectFlowSteps } from '@/components/VirtualLab/create-entity-flows/common/types';
+import type {
+  ProjectFlowSteps,
+  ProjectFlowStepsArray,
+} from '@/components/VirtualLab/create-entity-flows/common/types';
 
-export default function Content() {
+export default function Content({ steps }: { steps: ProjectFlowStepsArray }) {
   const resetFlow = useResetAtom(projectFlowAtom);
   const { push: navigate } = useRouter();
   const [hydrated, setHydrated] = useState(false);
@@ -33,6 +36,7 @@ export default function Content() {
     <CreationForm
       key="project-creation-flow"
       step={currentStep}
+      steps={steps}
       onCancel={onCancel}
       onStepChange={onStepChange}
     />

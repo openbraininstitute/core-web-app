@@ -1,5 +1,4 @@
 import { getSession } from 'next-auth/react';
-import uniqBy from 'lodash/uniqBy';
 
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import {
@@ -9,9 +8,9 @@ import {
 } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabApi } from '@/config';
 
+const BASE_URL = virtualLabApi.url;
+// const BASE_URL = 'http://localhost:8000/virtual-labs';
 
-// const BASE_URL = virtualLabApi.url;
-const BASE_URL = "http://localhost:8000"
 /**
  * Checks if a virtual lab with the given name already exists.
  *
@@ -25,16 +24,13 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
     if (!session?.accessToken) {
       throw new Error('User session not found. Please log in.');
     }
-    const response = await fetch(
-      `${BASE_URL}/virtual-labs/_check?q=${encodeURIComponent(name)}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJza2hnaTdjRWxFbEJzRFpnZXh1NGlvSzBNV081eGtQbWlXWENYang4eHVrIn0.eyJleHAiOjE4Mjc1NjExMjgsImlhdCI6MTc0MTI0NzUyOCwianRpIjoiOWIzYjQ3NjgtYjkzOS00ODM2LWFiYjItZjJmYzhjODEwZjdjIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjkwOTAvcmVhbG1zL29icC1yZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJlMDViOThhYS1mYTRjLTQ0ZjUtODM1Zi0zMjVhMGFlZDY3YzQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJvYnBhcHAiLCJzZXNzaW9uX3N0YXRlIjoiY2MzMjViYTYtNmFmZi00NDYzLTkxNmYtOThhN2M1ZjE0ZDY4IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsInNpZCI6ImNjMzI1YmE2LTZhZmYtNDQ2My05MTZmLTk4YTdjNWYxNGQ2OCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoidGVzdCB0ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoidGVzdCIsImdpdmVuX25hbWUiOiJ0ZXN0IiwiZmFtaWx5X25hbWUiOiJ0ZXN0IiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIn0.nfQQoXS1tefaHGgndbSKj0RV_tvBTOwj0KElDBtIPnrEpGTuboOjy8w5heBwNwRjeY2aQQq8s9mh-r8Pp7Nz3S2OAoEx1yKj0WJR0xaXm1WO172nb5nzLcS6INBvgtekogjNPg8KxzAMBm2ey6xDED0Yz1Y7m-20c74hX16qWchSxEa-m2OZ23TLHGOBMsn1loEhVlodFAnHosxf-aQf7FHbbjdxG23FgMOLTw_e4PR0I2DtQLJ69bgRwOPaWWZfhXAVMiLyhtw9PCGCvo6vmddvlUG621DY6w963slepla6kdby4DaMAbVr71b8HhDpRd2jH0sg_92YlHgSi9WQXg`,
-        },
-      }
-    );
+    const response = await fetch(`${BASE_URL}/_check?q=${encodeURIComponent(name)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    });
 
     if (!response.ok) {
       throw new Error('validating virtual lab name failed');
@@ -59,18 +55,13 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
 export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<VirtualLabResponse> {
   const session = await getSession();
   try {
-    const response = await fetch(`${BASE_URL}/virtual-labs`, {
+    const response = await fetch(BASE_URL, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,
       },
-      body: JSON.stringify({
-        ...lab,
-        include_members: uniqBy(lab.include_members, (o) => o.email.toLowerCase()),
-        // FIXME: should be removed after plans are integrated
-        plan_id: 1,
-      }),
+      body: JSON.stringify(lab),
     });
 
     if (!response.ok) {
@@ -96,11 +87,11 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
 export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
   const session = await getSession();
   try {
-    const response = await fetch(`${BASE_URL}/virtual-labs`, {
+    const response = await fetch(BASE_URL, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJza2hnaTdjRWxFbEJzRFpnZXh1NGlvSzBNV081eGtQbWlXWENYang4eHVrIn0.eyJleHAiOjE4Mjc1NjExMjgsImlhdCI6MTc0MTI0NzUyOCwianRpIjoiOWIzYjQ3NjgtYjkzOS00ODM2LWFiYjItZjJmYzhjODEwZjdjIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjkwOTAvcmVhbG1zL29icC1yZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJlMDViOThhYS1mYTRjLTQ0ZjUtODM1Zi0zMjVhMGFlZDY3YzQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJvYnBhcHAiLCJzZXNzaW9uX3N0YXRlIjoiY2MzMjViYTYtNmFmZi00NDYzLTkxNmYtOThhN2M1ZjE0ZDY4IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsInNpZCI6ImNjMzI1YmE2LTZhZmYtNDQ2My05MTZmLTk4YTdjNWYxNGQ2OCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoidGVzdCB0ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoidGVzdCIsImdpdmVuX25hbWUiOiJ0ZXN0IiwiZmFtaWx5X25hbWUiOiJ0ZXN0IiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIn0.nfQQoXS1tefaHGgndbSKj0RV_tvBTOwj0KElDBtIPnrEpGTuboOjy8w5heBwNwRjeY2aQQq8s9mh-r8Pp7Nz3S2OAoEx1yKj0WJR0xaXm1WO172nb5nzLcS6INBvgtekogjNPg8KxzAMBm2ey6xDED0Yz1Y7m-20c74hX16qWchSxEa-m2OZ23TLHGOBMsn1loEhVlodFAnHosxf-aQf7FHbbjdxG23FgMOLTw_e4PR0I2DtQLJ69bgRwOPaWWZfhXAVMiLyhtw9PCGCvo6vmddvlUG621DY6w963slepla6kdby4DaMAbVr71b8HhDpRd2jH0sg_92YlHgSi9WQXg`,
+        Authorization: `Bearer ${session?.accessToken}`,
       },
     });
 
@@ -115,4 +106,3 @@ export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
     throw new Error(`Failed to list virtual labs: ${(error as Error).message}`);
   }
 }
-

@@ -19,9 +19,11 @@ export default function Item({ title, url, icon, disabled, active = false }: Pro
       href={url}
       className={classNames(
         'group flex items-center gap-3 px-4 py-3 transition-all duration-200 ',
-        'border-b border-primary-5 last:border-b-0',
-        disabled ? "disabled cursor-not-allowed text-gray-400 hover:bg-transparent" : "hover:bg-primary-5",
-        active && 'active bg-primary-5',
+        'border-b border-primary-7 last:border-b-0',
+        disabled
+          ? 'disabled cursor-not-allowed text-gray-400 hover:bg-transparent'
+          : 'hover:bg-white hover:text-primary-8',
+        active && 'active bg-white !text-primary-9'
       )}
       aria-disabled={disabled}
     >

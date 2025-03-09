@@ -1,21 +1,20 @@
-import { useState } from 'react';
-import { useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 
-import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import { ReactNode } from 'react';
+import { flowAtom, Interval } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { classNames } from '@/util/utils';
 
-interface Props {
+type Props = {
   id: string;
-  title: string;
+  title: ReactNode;
   price: number;
   currency: string;
-  interval: 'monthly' | 'yearly';
+  interval: Interval;
   discount?: number;
-  selectedInterval: 'monthly' | 'yearly' | null;
-  onSelect: (id: 'monthly' | 'yearly') => void;
-}
-
+  selectedInterval: Interval | null;
+  onSelect: (interval: Interval) => void;
+};
 
 function PricingCard({
   id,
@@ -30,14 +29,18 @@ function PricingCard({
   return (
     <motion.button
       layout
+      id={id}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      onChange={() => onSelect(interval)}
+      onClick={() => onSelect(interval)}
       type="button"
-      className="relative border-0.5 flex flex-grow flex-col rounded-lg p-4 items-start bg-white border-gray-100"
+      className={classNames(
+        'border-0.5 relative flex flex-grow flex-col items-start rounded-lg border-gray-100  p-6',
+        selectedInterval === interval ? 'bg-primary-8 !text-white' : 'bg-white text-primary-8'
+      )}
     >
       <div className="flex w-full items-center justify-between">
         <input
@@ -45,22 +48,29 @@ function PricingCard({
           readOnly
           className="border-border-200 h-[22px] w-[22px] bg-transparent"
           type="radio"
-          name='billing_cycle'
+          name="billing_cycle"
           checked={selectedInterval === interval}
           value={interval}
         />
       </div>
-      <span className="text-primary-8 font-bold text-xl">{title}</span>
-      <span className="text-primary-8 inline-block text-sm">
-        <small className='font-light text-sm mr-1'>{currency}</small>
-        <span className='font-bold text-xl'>{price}</span>
+      <span className="text-2xl font-bold">{title}</span>
+      <span className="inline-block text-sm">
+        <small className="mr-1 text-sm font-light">{currency}</small>
+        <span className="text-xl font-bold">
+          {price}
+          <span className="font-light">
+            /<span className="text-sm font-light">{interval}</span>
+          </span>
+        </span>
       </span>
       {discount && (
-        <div className={classNames(
-          "text-primary-8 bg-blue-400 flex h-max items-center justify-center rounded-full bg-opacity-10 px-1 text-sm",
-          "absolute right-4 top-2 px-3 p-1"
-        )}>
-          Save 10%
+        <div
+          className={classNames(
+            'flex h-max items-center justify-center rounded-full bg-green-400 px-1 text-sm text-primary-7',
+            'absolute right-4 top-2 p-1 px-3'
+          )}
+        >
+          Save {discount}-
         </div>
       )}
     </motion.button>
@@ -68,26 +78,27 @@ function PricingCard({
 }
 
 export default function PricingToggleCards() {
-  const [selectedInterval, setSelectedInterval] = useState<'monthly' | 'yearly' | null>(null);
-  const { selectedPlan } = useAtomValue(flowAtom);
-  const handleSelect = (id: 'monthly' | 'yearly') => setSelectedInterval(id);
+  const [{ tier, interval }, updateFlowAtom] = useAtom(flowAtom);
+  const handleSelect = (t: Interval) => updateFlowAtom((prev) => ({ ...prev, interval: t }));
 
-  if (!selectedPlan) return null;
+  if (!tier) return null;
+
   return (
-    <div className="flex flex-row gap-3 items-center justify-center pb-4 w-full">
-      {Object.entries(selectedPlan.price).map(([price, details], catIdx) => (
-        <PricingCard
-          id={price}
-          discount={details.discount}
-          title={selectedPlan.title}
-          price={details.value!}
-          currency={details.currency!}
-          interval={price === "month" ? "monthly" : "yearly"}
-          selectedInterval={selectedInterval}
-          onSelect={handleSelect}
-        />
-      ))}
+    <div className="flex w-full flex-row items-center justify-center gap-3 pb-4">
+      {tier?.prices &&
+        tier.prices.map((o) => (
+          <PricingCard
+            key={`${o.id}`}
+            id={o.id}
+            title={tier.title}
+            price={o.discount / 100 || o.amount / 100}
+            currency={o.currency}
+            interval={o.interval}
+            discount={o.discount / 100}
+            selectedInterval={interval}
+            onSelect={handleSelect}
+          />
+        ))}
     </div>
   );
 }
-

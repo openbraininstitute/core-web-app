@@ -1,13 +1,13 @@
-
 import { getSession } from 'next-auth/react';
-import { virtualLabApi } from '@/config';
 import {
-    SetupIntentResponse
-} from './types';
+  SetupIntentResponse,
+  StandalonePaymentRequest,
+  StandalonePaymentResponse,
+} from '@/api/virtual-lab-svc/queries/types';
+import { virtualLabApi } from '@/config';
 
-// const BASE_URL = `${virtualLabApi.url}/payments`;
-const BASE_URL = `http://localhost:8000/payments`;
-
+const BASE_URL = `${virtualLabApi.url}/payments`;
+// const BASE_URL = `http://localhost:8000/payments`;
 
 /**
  * Lists subscriptions with optional filtering.
@@ -20,28 +20,48 @@ const BASE_URL = `http://localhost:8000/payments`;
  * @throws {Error} - Throws an error if the request fails
  */
 export async function getSetupIntent(): Promise<SetupIntentResponse> {
-    const session = await getSession();
-    try {
-        const url = `${BASE_URL}/setup-intent`;
-        const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJza2hnaTdjRWxFbEJzRFpnZXh1NGlvSzBNV081eGtQbWlXWENYang4eHVrIn0.eyJleHAiOjE4Mjc1ODMzMDksImlhdCI6MTc0MTI2OTcwOSwianRpIjoiZGEyNDJjZWMtMDg0Ny00NGU2LWEwOTItYzlkOTFkMWIwYWIyIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjkwOTAvcmVhbG1zL29icC1yZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJlMDViOThhYS1mYTRjLTQ0ZjUtODM1Zi0zMjVhMGFlZDY3YzQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJvYnBhcHAiLCJzZXNzaW9uX3N0YXRlIjoiMWVkNzE4NWYtY2I2YS00ZTdiLTk3MzMtZTYyMjljYWQyNDcwIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsInNpZCI6IjFlZDcxODVmLWNiNmEtNGU3Yi05NzMzLWU2MjI5Y2FkMjQ3MCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoidGVzdCB0ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoidGVzdCIsImdpdmVuX25hbWUiOiJ0ZXN0IiwiZmFtaWx5X25hbWUiOiJ0ZXN0IiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIn0.jqwIseP-SQk4IHFM3um_qamEvO9CnT4VylfSlJFbFjoEuxng5hp0y28VvuZ7ghDcGzBZiXopltQu3t7jY2eRNE2Px5frTwsUxvLWcuVoFaWHAoYKPVRt_FMKAsL2nspI60zznivh2PhtQvjMeJDB9GXcmo6mzQ9R5jXtABkfZWhbTcRbQztiHXRvvQytKgjxgVmooRWeOaZr_QrkBs184XYRz5NEmum9XGlT2FXWi7ZSbn6YNuQUxXXkmgrj4etwM2cJS7pzzNqoUNM-w-iaAL255wY9dofUqTmGc6pSoHGIi87dXb4eh6l6nnRV_5uf3g2fmtExz5holSI2ZmQ5CA`,
-            },
-        });
+  const session = await getSession();
+  const url = `${BASE_URL}/setup-intent`;
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+  });
 
-        if (!response.ok) {
-            throw new Error(`Listing subscriptions failed: ${response.status}`);
-        }
+  if (!response.ok) {
+    throw new Error(`Listing subscriptions failed: ${response.status}`);
+  }
 
-        const result: SetupIntentResponse = await response.json();
+  const result: SetupIntentResponse = await response.json();
+  return result;
+}
 
-        console.log("ᦨ #  payment.ts:39 #  getSetupIntent #  result:", result);
+/**
+ * Creates a standalone payment for the authenticated user
+ * @param amount - amount to charge in cents
+ * @param currency - currency code (e.g., 'chf')
+ * @param payment_method_id - stripe payment method id
+ * @returns payment details including receipt URL and card information
+ */
+export async function createStandalonePayment(
+  payload: StandalonePaymentRequest
+): Promise<StandalonePaymentResponse> {
+  const session = await getSession();
+  const response = await fetch(`${BASE_URL}/standalone`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
 
-        return result;
-    } catch (error) {
-        // TODO: capture exception with sentry
-        console.error('Error listing subscriptions:', error);
-        throw new Error(`Failed to list subscriptions: ${(error as Error).message}`);
-    }
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to create standalone payment');
+  }
+
+  const data = await response.json();
+  return data.data;
 }

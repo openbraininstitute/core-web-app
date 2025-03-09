@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Form, Popover } from 'antd';
 import {
   CheckCircleFilled,
@@ -19,6 +19,8 @@ type Props = {
 };
 
 export default function Overview({ allowAskCode }: Props) {
+  const [hydrated, setHydrated] = useState(false);
+
   const nameRef = useRef<string | null>(null);
   const [validName, setValidName] = useState<{
     loading: boolean;
@@ -27,6 +29,8 @@ export default function Overview({ allowAskCode }: Props) {
     loading: false,
     status: null,
   });
+  useEffect(() => setHydrated(true), []);
+  if (!hydrated) return null;
   return (
     <div className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12">
       <Form.Item
