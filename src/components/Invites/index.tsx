@@ -70,6 +70,18 @@ export default function InviteLoader() {
       return router.push(getErrorUrl(null, session?.accessToken, inviteToken));
     }
 
+    if (!session.user.plan?.includes('pro')) {
+      const planUpgradeSuccessRedirectUrl = `/app/invite?token=${inviteToken}`;
+      // TODO: When the upgrade page is implemented, make sure the location and search params are correct.
+      const planUpgradePageUrl = '/app/virtual-lab/subscription/upgrade';
+      const params = new URLSearchParams({
+        planUpgradeSuccessRedirectUrl,
+        extraMsgCode: 'inviteRequiresUpgrade',
+      });
+
+      return router.push(`${planUpgradePageUrl}?${params}`);
+    }
+
     getInviteDetails(session?.accessToken, inviteToken).then((response) => {
       if (isVlmError(response)) {
         return router.push(getErrorUrl(response, session?.accessToken, inviteToken));
@@ -115,7 +127,7 @@ export default function InviteLoader() {
                   type="button"
                   disabled={processing}
                 >
-                  Join Virtual Lab
+                  Join {inviteDetails.origin === 'Lab' ? 'Virtual Lab' : 'Project'}
                 </button>
               </div>
             </div>
