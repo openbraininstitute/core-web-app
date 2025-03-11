@@ -2,7 +2,10 @@ import { useMemo } from 'react';
 import { loadable } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useCustomAnalysisConfig } from '@/hooks/experiment-designer';
-import { useAnalyses, Analysis } from '@/app/app/explore/(content)/simulation-campaigns/shared';
+import {
+  useAnalyses,
+  Analysis,
+} from '@/app/app/virtual-lab/(free)/explore/(content)/simulation-campaigns/shared';
 
 import WorkflowLauncherBtn from '@/components/WorkflowLauncherBtn';
 import {

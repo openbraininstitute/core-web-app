@@ -8,7 +8,7 @@ export default function StripeInput({
   value,
   error,
   ...props
-}: ComponentProps<'input'> & { title: string; error: boolean }) {
+}: ComponentProps<'input'> & { title: string; error: string | boolean | null }) {
   return (
     <div className="mb-3">
       <label
@@ -39,7 +39,7 @@ export default function StripeInput({
         />
         {error && (
           <p className="mt-1 text-[16px] text-rose-600" role="alert">
-            Your {id} is invalid.
+            {typeof error === 'string' ? error : `${id} provided is invalid`}
           </p>
         )}
       </label>

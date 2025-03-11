@@ -4,7 +4,7 @@ import { styleButtonHoverable } from '../../../styles';
 import { useNewsLetterSubscription } from './hook';
 import { classNames } from '@/util/utils';
 
-import { isValidEMail } from '@/components/VirtualLab/projects/ModalInviteProjectMember/utils';
+import { isValidEMail } from '@/util/email';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
 import styles from './NewsLetterSubscription.module.css';
 

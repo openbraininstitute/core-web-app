@@ -28,7 +28,7 @@ type ListingState = {
 };
 
 const ARTICLE_LISTING_ERRORS_MAP: { [key: string]: string } = {
-  '1': 'No matching article was located based on the applied filters.\nKindly refine your filters and attempt the search again.\nShould the problem persist, please submit a support ticket by clicking on "Feedback" button.',
+  '1': 'No matching article was located based on the applied filters.\nKindly refine your filters and attempt the search again.\nShould the problem persist, please contact support',
 };
 
 export const ARTICLES_PER_PAGE = 50;
@@ -196,13 +196,16 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
       </div>
 
       <div
-        className="article-list-scrollbar mx-auto h-[calc(100vh-3.5rem)] max-w-7xl flex-1 overflow-y-auto"
+        className="article-list-scrollbar mx-auto h-[calc(100vh-3.5rem)] w-full max-w-7xl flex-1 overflow-y-auto"
         ref={refListingContainer}
       >
         <Header {...{ loading }} basePath={basePath} />
         <If id="error" condition={Boolean(error && experiment && articles.length === 0)}>
           <div
-            className="mx-auto self-center whitespace-pre-line border border-gray-400 p-7 text-warning"
+            className={classNames(
+              'mx-auto self-center whitespace-pre-line border border-gray-400 p-7',
+              'mt-10 max-w-max text-center text-lg font-semibold text-warning'
+            )}
             data-testid="article-listing-error"
           >
             {ARTICLE_LISTING_ERRORS_MAP[(error as { cause: number })?.cause] ??

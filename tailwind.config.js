@@ -126,6 +126,7 @@ module.exports = {
         'slide-out': 'slide-out 2s ease-in-out',
         'slide-up': 'slide-up 0.5s ease-in-out',
         'scale-down': 'scale-down .6s cubic-bezier(.55,-0.04,.91,.94) forwards',
+        'scale-up': 'scale-up 0.3s ease-out forwards',
         'fade-in': 'fade-in 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) both',
         'fade-out': 'fade-out 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) both',
         rotate: 'rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite',
@@ -194,6 +195,14 @@ module.exports = {
           },
           '100%': {
             transform: 'rotate(360deg)',
+          },
+        },
+        'scale-up': {
+          from: {
+            transform: 'scale(0)',
+          },
+          to: {
+            transform: 'scale(1)',
           },
         },
       },
