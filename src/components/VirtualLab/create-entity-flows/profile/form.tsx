@@ -1,7 +1,7 @@
 'use client';
 
 import React, { ForwardedRef, useEffect, useState, useTransition } from 'react';
-import { Form, InputProps, InputRef, Input, Button } from 'antd';
+import { Form, InputProps, InputRef, Input } from 'antd';
 import omit from 'lodash/omit';
 
 import countries from '../../../../../public/static/country';
@@ -171,7 +171,7 @@ function Profile({ data }: Props) {
             </div>
           </div>
 
-          <div className="mt-12 flex justify-end">
+          {/* <div className="mt-12 flex justify-end">
             <Button
               key="create-project-btn"
               className={classNames(
@@ -188,7 +188,7 @@ function Profile({ data }: Props) {
             >
               Update information
             </Button>
-          </div>
+          </div> */}
         </Form>
       </div>
     </div>

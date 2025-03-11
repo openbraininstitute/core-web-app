@@ -18,6 +18,7 @@ export default async function History() {
     subscription.payments.map((payment) => ({
       ...payment,
       subscription_id: subscription.id,
+      subscription_type: subscription.subscription_type,
     }))
   );
 
