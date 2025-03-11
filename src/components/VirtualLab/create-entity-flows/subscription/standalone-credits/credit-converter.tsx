@@ -1,52 +1,91 @@
 'use client';
 
-import { useState } from 'react';
+import { Button } from 'antd';
+import { atom, useAtom } from 'jotai';
 
-const conversionRate = 0.2;
-export default function CreditConverter({
-  onChange,
-}: {
-  onChange: (credits: number, amount: number) => void;
-}) {
-  const [credits, setCredits] = useState(0);
-  const [amount, setAmount] = useState(0 * 0.2);
+import { classNames } from '@/util/utils';
+
+const formatInputValue = (value: number) => {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+};
+
+export const creditAtom = atom<{ credits: number; step: 'overview' | 'pay' | null }>({
+  credits: 0,
+  step: 'overview',
+});
+
+export function CreditConverter({ showActions = true }: { showActions?: boolean }) {
+  const [{ credits }, updateCreditState] = useAtom(creditAtom);
+  const money = credits * 0.02;
 
   const handleCreditsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
     const numericValue = value === '' ? 0 : parseInt(value, 10);
-
-    setCredits(numericValue);
-    const newAmount = numericValue * conversionRate;
-    setAmount(newAmount);
-    onChange(numericValue, newAmount);
+    updateCreditState((prev) => ({ ...prev, credits: numericValue }));
   };
 
-  const formatInputValue = (value: number) => {
-    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  const onClick = () => {
+    if (credits > 0) {
+      updateCreditState((prev) => ({ ...prev, step: 'pay' }));
+    }
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col items-center">
+    <div className="mx-auto flex w-full flex-col items-center">
       <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex w-full items-center justify-between">
-          <span className="text-navy-800 text-base font-semibold">Credits</span>
-          <div className="mx-4 flex-1 px-4 py-2">
-            <input
-              type="text"
-              value={formatInputValue(credits)}
-              onChange={handleCreditsChange}
-              className="text-navy-900 w-full rounded border border-gray-200 px-4 py-2 text-center text-xl font-bold"
-              aria-label="Credit amount"
-            />
+        <div className="mb-4 w-full bg-white">
+          <div className="flex w-full items-center justify-center">
+            <span className="text-base font-semibold text-primary-8">Credits</span>
+            <div className="mx-4 py-2">
+              <input
+                type="text"
+                value={formatInputValue(credits)}
+                onChange={handleCreditsChange}
+                className="w-full min-w-24 max-w-max rounded border border-gray-200 px-4 py-2 text-center text-xl font-bold text-primary-8"
+                aria-label="Credit amount"
+              />
+            </div>
+            <span className="text-base font-bold text-primary-8">CHF {money}</span>
           </div>
-          <span className="text-navy-800 text-base font-semibold">CHF {amount}</span>
         </div>
+        {showActions && (
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              key="back-to-btn"
+              className={classNames(
+                'rounded-md bg-white px-6 text-primary-8',
+                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+              )}
+              type="text"
+              size="large"
+              htmlType="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              key="back-to-btn"
+              className={classNames(
+                'rounded-md border-gray-300 bg-white px-6 text-primary-8',
+                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+              )}
+              type="text"
+              size="large"
+              htmlType="button"
+              disabled={credits <= 0}
+              onClick={onClick}
+            >
+              Payment
+            </Button>
+          </div>
+        )}
       </div>
-      <div className="mt-4 flex gap-2">
-        <span className="h-2 w-2 rounded-full bg-gray-400" />
-        <span className="h-2 w-2 rounded-full bg-gray-300" />
-        <span className="h-2 w-2 rounded-full bg-gray-300" />
-      </div>
+      {!showActions && (
+        <div className="my-8 flex gap-2">
+          <span className="h-2 w-2 rounded-full bg-gray-400" />
+          <span className="h-2 w-2 rounded-full bg-gray-300" />
+          <span className="h-2 w-2 rounded-full bg-gray-300" />
+        </div>
+      )}
     </div>
   );
 }

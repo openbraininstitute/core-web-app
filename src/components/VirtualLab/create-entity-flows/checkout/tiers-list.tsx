@@ -153,8 +153,11 @@ function TiersComparison({
   });
 
   return (
-    <div className="relative w-full bg-primary-9 p-6 pb-24 text-white">
-      <div className="pointer-events-none absolute bottom-[40px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6">
+    <div className="relative flex h-full max-h-[85vh] w-full flex-col bg-primary-9 p-6 pb-24 text-white">
+      <div
+        id="tier-highlighter"
+        className="pointer-events-none absolute bottom-[40px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6"
+      >
         <div />
         {tiers.map((t) => {
           const isSelected =
@@ -166,7 +169,7 @@ function TiersComparison({
             <div
               key={`${t.id}-bg`}
               className={classNames(
-                'rounded-sm px-4',
+                'rounded-sm',
                 isSelected && 'bg-primary-8/90',
                 isHovered && !isSelected && 'bg-primary-8/40'
               )}
@@ -175,7 +178,10 @@ function TiersComparison({
         })}
       </div>
 
-      <div className="relative grid grid-cols-4 gap-6">
+      <div
+        id="tier-header"
+        className="sticky top-0 z-10 grid grid-cols-4 gap-6 bg-transparent pb-6"
+      >
         <div />
         {tiers.map((t) => {
           return (
@@ -186,7 +192,7 @@ function TiersComparison({
               tabIndex={0}
               key={`tier-btn${t.id}`}
               className={classNames(
-                'relative flex flex-col px-4',
+                'relative flex flex-col bg-transparent px-4',
                 t.title === 'Free' ? 'cursor-default' : 'cursor-pointer',
                 t.title === 'Pro' && !canSelect && 'pointer-events-none cursor-not-allowed'
               )}
@@ -259,86 +265,44 @@ function TiersComparison({
         })}
       </div>
 
-      {allCategories.map((category) => (
-        <div key={`${kebabCase(category.title)}`} className="relative mt-8">
-          <h3 className="mb-4 uppercase text-primary-4">
-            <span className="text-base font-bold">{category.title}</span>
-            {category.available === false && (
-              <span className="select ml-3 rounded-full border border-white px-2 py-1 text-xs !font-light text-white">
-                Future release
-              </span>
-            )}
-          </h3>
+      {/* Scrollable content section */}
+      <div className="flex-1 overflow-y-auto">
+        {allCategories.map((category) => (
+          <div id="tier-details" key={`${kebabCase(category.title)}`} className="relative mt-8">
+            <h3 className="mb-4 uppercase text-primary-4">
+              <span className="text-base font-bold">{category.title}</span>
+              {category.available === false && (
+                <span className="select ml-3 rounded-full border border-white px-2 py-1 text-xs !font-light text-white">
+                  Future release
+                </span>
+              )}
+            </h3>
 
-          {category.features.map((feature) => (
-            <div
-              key={`${kebabCase(category.title)}/${kebabCase(feature)}`}
-              className="relative grid grid-cols-4 gap-6 py-2"
-            >
-              <div className="text-base">{feature}</div>
+            {category.features.map((feature) => (
+              <div
+                key={`${kebabCase(category.title)}/${kebabCase(feature)}`}
+                className="relative grid grid-cols-4 gap-6 py-2"
+              >
+                <div className="text-base">{feature}</div>
 
-              {tiers.map((t) => (
-                <div
-                  key={`${t.id}-${feature}`}
-                  className="flex justify-center px-4"
-                  onMouseEnter={() => setHoveredTier(t.id)}
-                  onMouseLeave={() => setHoveredTier(null)}
-                >
-                  {renderFeatureAvailability(
-                    isFeatureAvailable(t, category.title, feature),
-                    getFeatureDetails(t, category.title, feature)
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      ))}
-
-      {/* <div className="mt-8 grid grid-cols-4 gap-6 relative">
-                <div />
-                {tiers.map((t) => {
-                    const isSelected = (tier && t.app_id === tier?.app_id) ||
-                        (currentTier?.toLowerCase() === t.title.toLowerCase());
-
-                    return (
-                        <div
-                            key={`${t.id}-action`}
-                            className="flex justify-center px-4"
-                            onMouseEnter={() => setHoveredTier(t.id)}
-                            onMouseLeave={() => setHoveredTier(null)}
-                        >
-                            {t.title === 'Pro' && (
-                                <Button
-                                    type="primary"
-                                    className={classNames(
-                                        'w-full rounded-none',
-                                        isSelected
-                                            ? '!bg-primary-8 !text-white'
-                                            : '!bg-white !text-primary-9'
-                                    )}
-                                    onClick={() => onSelectProTier(t)}
-                                    disabled={!canSelect}
-                                >
-                                    {currentTier?.toLowerCase() === 'pro' ? 'Current plan' : 'Select plan'}
-                                </Button>
-                            )}
-                            {t.title === 'Free' && <div />}
-                            {t.title === 'Premium' && (
-                                <Button
-                                    className={classNames(
-                                        "w-full rounded-none",
-                                        isSelected ? "bg-primary-8 text-white" : "bg-white text-primary-9"
-                                    )}
-                                    onClick={onSelectPremiumTier}
-                                >
-                                    Contact us
-                                </Button>
-                            )}
-                        </div>
-                    );
-                })}
-            </div> */}
+                {tiers.map((t) => (
+                  <div
+                    key={`${t.id}-${feature}`}
+                    className="flex justify-center px-4"
+                    onMouseEnter={() => setHoveredTier(t.id)}
+                    onMouseLeave={() => setHoveredTier(null)}
+                  >
+                    {renderFeatureAvailability(
+                      isFeatureAvailable(t, category.title, feature),
+                      getFeatureDetails(t, category.title, feature)
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

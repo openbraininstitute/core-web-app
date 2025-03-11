@@ -217,7 +217,6 @@ export type StandalonePaymentRequest = {
 };
 
 export type StandalonePaymentResponse = {
-  payment_id: string;
   amount: number;
   currency: string;
   status: string;

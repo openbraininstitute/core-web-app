@@ -1,22 +1,28 @@
 import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
-import { FormEvent, useState, useEffect, useRef, useTransition } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { Button, Spin } from 'antd';
 import isObject from 'lodash/isObject';
+import delay from 'lodash/delay';
 
 import getStripe from '@/components/VirtualLab/Billing/utils';
 import useNotification from '@/hooks/notifications';
 import sessionAtom from '@/state/session';
 
-import CreditConverter from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/credit-converter';
+import {
+  CreditConverter,
+  creditAtom,
+} from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/credit-converter';
 import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
 
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { SetupIntentResponse } from '@/services/virtual-lab/billing';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+
+const CONVERSION_RATE = 0.02;
 
 type Props = {
   isOpen: boolean;
@@ -53,21 +59,14 @@ function Form({ onClose }: { onClose: () => void }) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const { success: successNotify, error: errorNotify } = useNotification();
   const [formLoading, startTransition] = useTransition();
-  const [credits, setCredits] = useState(0);
-  const [amount, setAmount] = useState(0);
+  const { credits } = useAtomValue(creditAtom);
+
   const formLoaded = stripe && elements;
   const disableForm = !formLoaded || formLoading || credits === 0;
 
   const onReady = () => setElementsReady(true);
 
-  const onChange = (c: number, a: number) => {
-    setCredits(c);
-    setAmount(a);
-  };
-
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const onSubmit = async () => {
     if (!stripe || !elements) {
       return null;
     }
@@ -91,8 +90,8 @@ function Form({ onClose }: { onClose: () => void }) {
         );
         throw new Error(error.message);
       }
-      if (setupIntent?.status === 'succeeded' && setupIntent.payment_method && amount > 0) {
-        const amountInCents = Math.round(amount * 100);
+      if (setupIntent?.status === 'succeeded' && setupIntent.payment_method && credits > 0) {
+        const amountInCents = Math.round(credits * CONVERSION_RATE * 100);
         return await createStandalonePayment({
           amount: amountInCents,
           currency: 'chf',
@@ -126,7 +125,7 @@ function Form({ onClose }: { onClose: () => void }) {
           'credits-purchase-success'
         );
         onClose();
-        window.location.reload();
+        delay(() => window.location.reload(), 2000);
       }
 
       if (error) {
@@ -151,61 +150,56 @@ function Form({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <form
-      name="stripe-payment-flow-step"
-      className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center"
-      onSubmit={onSubmit}
-    >
-      <div className="flex h-full w-full max-w-3xl flex-grow flex-col items-center justify-center">
-        <CreditConverter onChange={onChange} />
-        <div className="mx-auto mt-8 flex w-full flex-col rounded-lg bg-white px-5 py-14">
-          <div className="mx-auto w-full max-w-xl">
-            <h3 className="mb-4 text-lg font-semibold">Payment Method</h3>
-            <PaymentElement id="subscription-form" onReady={onReady} />
-          </div>
+    <div className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center">
+      <div className="flex h-full w-full flex-grow flex-col items-center justify-center">
+        <CreditConverter showActions={false} />
+        <div className="mx-auto  flex w-full flex-col rounded-lg bg-white">
+          <PaymentElement id="credits-form" onReady={onReady} />
         </div>
       </div>
 
       {stripeElementsReady && (
         <div className="mt-8 flex w-full items-center justify-center gap-3">
-          <Button
-            key="back-to-btn"
-            className={classNames(
-              'h-14 rounded-none px-6 text-gray-700',
-              'hover:font-bold hover:text-gray-900'
-            )}
-            type="default"
-            size="large"
-            htmlType="button"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            key="pay-subscription"
-            className={classNames(
-              'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
-              'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-              'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-              'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
-            )}
-            type="primary"
-            size="large"
-            htmlType="submit"
-            disabled={disableForm}
-            loading={formLoading}
-          >
-            Purchase Credits
-          </Button>
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              key="cancel-btn"
+              className={classNames(
+                'rounded-md bg-white px-6 text-primary-8',
+                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+              )}
+              type="text"
+              size="large"
+              htmlType="button"
+              onClick={onClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              key="add-credits-btn"
+              className={classNames(
+                'rounded-md border-gray-300 bg-white px-6 text-primary-8',
+                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+              )}
+              type="text"
+              size="large"
+              htmlType="button"
+              disabled={disableForm}
+              loading={formLoading}
+              onClick={onSubmit}
+            >
+              Pay
+            </Button>
+          </div>
         </div>
       )}
-    </form>
+    </div>
   );
 }
 
 export default function PaymentForm({ isOpen, onClose }: Props) {
   const stripeRef = useRef(false);
   const session = useAtomValue(sessionAtom);
+  const { step } = useAtomValue(creditAtom);
   const { error: errorNotify } = useNotification();
   const [stripePromise, setStripePromise] = useState<Stripe | null>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
@@ -253,16 +247,28 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
     );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} footer={null}>
-      <div className="flex h-full flex-grow flex-col">
-        <h2 className="mb-6 text-2xl font-bold">Purchase Credits</h2>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      footer={null}
+      cls={{
+        parent: '!w-[550px]',
+        content: classNames(
+          '!rounded-md',
+          step === 'overview' && '!min-h-[8rem]',
+          step === 'pay' && '!min-h-[16rem]'
+        ),
+      }}
+    >
+      {step === 'overview' && <CreditConverter showActions />}
+      {step === 'pay' && (
         <Elements
           stripe={stripePromise}
           options={buildStripeFormOptions(setupIntent?.client_secret)}
         >
           <Form onClose={onClose} />
         </Elements>
-      </div>
+      )}
     </Modal>
   );
 }

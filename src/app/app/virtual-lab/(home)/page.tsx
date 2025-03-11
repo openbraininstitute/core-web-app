@@ -6,6 +6,7 @@ import CreateFirstLab from '@/components/VirtualLab/labs-listing/no-vlabs';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideBar from '@/components/VirtualLab/side-bar/home-sidebar';
+import Logout from '@/components/VirtualLab/side-bar/logout';
 
 export const metadata: Metadata = {
   title: 'Virtual labs',
@@ -23,7 +24,10 @@ export default async function Page() {
             labsCount={(labs.data?.pending_labs.length ?? 0) + (labs.data?.virtual_lab ? 1 : 0)}
           />
           <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-            <div className="ml-80 flex h-full w-[calc(100%-20rem)] flex-grow flex-col">
+            <div className="ml-80 flex w-[calc(100%-20rem)] items-end justify-end">
+              <Logout />
+            </div>
+            <div className="ml-80 mt-4 flex h-full w-[calc(100%-20rem)] flex-grow flex-col">
               {!labs.data?.virtual_lab ? (
                 <CreateFirstLab />
               ) : (
