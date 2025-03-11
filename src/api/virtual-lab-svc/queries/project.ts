@@ -1,5 +1,5 @@
-import { getSession } from 'next-auth/react';
 import uniqBy from 'lodash/uniqBy';
+import { getSession } from '@/authFetch';
 
 import {
   ProjectCreationResponse,

@@ -1,4 +1,4 @@
-import { getSession } from 'next-auth/react';
+import { getSession } from '@/authFetch';
 
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import {
@@ -8,7 +8,7 @@ import {
 } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabApi } from '@/config';
 
-const BASE_URL = virtualLabApi.url;
+const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
 // const BASE_URL = 'http://localhost:8000/virtual-labs';
 
 /**
@@ -86,9 +86,10 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
  */
 export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
   const session = await getSession();
+
   try {
     const response = await fetch(BASE_URL, {
-      method: 'GET',
+      method: 'get',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,
