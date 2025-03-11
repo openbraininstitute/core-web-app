@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import type { ColumnsType } from 'antd/es/table';
 
 import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
-import { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
+import { SubscriptionPaymentDetails, SubscriptionType } from '@/api/virtual-lab-svc/queries/types';
 import { LightFile } from '@/components/icons/EditorIcons';
 import { formatCurrency } from '@/utils/format';
 
@@ -13,6 +13,7 @@ interface Props {
   payments: Array<
     SubscriptionPaymentDetails & {
       subscription_id: string;
+      subscription_type: SubscriptionType;
     }
   >;
 }
@@ -20,10 +21,20 @@ interface Props {
 export default function BillingTable({ payments }: Props) {
   const columns: ColumnsType<SubscriptionPaymentDetails> = [
     {
-      title: 'Date',
-      dataIndex: 'payment_date',
-      key: 'payment_date',
-      render: (date: string) => format(new Date(date), 'MMM dd, yyyy'),
+      title: 'Object',
+      dataIndex: '',
+      key: 'subscription_type',
+      render: (record) => {
+        if (record.subscription_type === 'PRO') {
+          return <span className="font-bold text-white">Subscription Pro</span>;
+        }
+        if (record.subscription_type === 'PREMIUM') {
+          return <span className="font-bold text-white">Subscription Premium</span>;
+        }
+        if (record.subscription_type === 'FREE') {
+          return <span className="font-bold text-white">Subscription Free</span>;
+        }
+      },
     },
     {
       title: 'Period',

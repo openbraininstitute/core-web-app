@@ -3,7 +3,6 @@
 import { FormEvent, useState, useTransition } from 'react';
 import { Button } from 'antd';
 import { format } from 'date-fns';
-import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import isObject from 'lodash/isObject';
 
@@ -101,7 +100,6 @@ export function PaidSubscriptionFlow({ data }: { data: UserActiveSubscriptionRes
           'topRight',
           true
         );
-        revalidatePath('/app/virtual-lab/account/subscription');
       }
       onDowngradeClose();
     });
