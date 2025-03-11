@@ -46,6 +46,7 @@ export default async function Page() {
       </div>
     );
   } catch (error) {
+    console.log('@@err', error);
     throw new Error((error as { message: string }).message);
   }
 }

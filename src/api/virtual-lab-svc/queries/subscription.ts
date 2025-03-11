@@ -1,4 +1,5 @@
-import { getSession } from 'next-auth/react';
+import { getSession } from '@/authFetch';
+
 import { virtualLabApi } from '@/config';
 import {
   SubscriptionStatus,
