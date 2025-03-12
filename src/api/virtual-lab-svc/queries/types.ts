@@ -42,6 +42,11 @@ export type ProjectExistsVerificationResponse = VlmResponse<{
   exist: boolean;
 }>;
 
+export type ProjectUsersCountResponse = VlmResponse<{
+  project_id: string;
+  total: number;
+}>;
+
 export type InviteResponse = VlmResponse<{
   // TODO: include vlab as origin in virtual lab service
   origin?: 'Project';

@@ -30,4 +30,5 @@ export type Project = {
   created_at: string;
   updated_at: string;
   virtual_lab_id: string;
+  user_count?: number;
 };

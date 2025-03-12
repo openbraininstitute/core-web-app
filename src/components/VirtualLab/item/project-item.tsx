@@ -9,10 +9,10 @@ type Props = {
   vlabId: string;
   name: string;
   lastUpdate: string;
-  memberCount: number;
+  memberCount?: number;
 };
 
-export default function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
+export default async function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
   return (
     <div
       id={id}
