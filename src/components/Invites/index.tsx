@@ -1,5 +1,6 @@
 'use client';
 
+import { Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,7 +16,6 @@ import { InviteDetailsData } from '@/types/virtual-lab/invites';
 import sessionAtom from '@/state/session';
 
 import inviteBgImgSrc from '@/../public/images/invite/invite-bg.webp';
-import { Spin } from 'antd';
 import { isVlmError } from '@/types/virtual-lab/common';
 
 function getInviteDestinationLabel(inviteDetails: InviteDetailsData) {
@@ -70,7 +70,7 @@ export default function InviteLoader() {
       return router.push(getErrorUrl(null, session?.accessToken, inviteToken));
     }
 
-    if (!session.user.plan?.includes('pro')) {
+    if (!session.user.plan?.includes('paid')) {
       const planUpgradeSuccessRedirectUrl = `/app/invite?token=${inviteToken}`;
       // TODO: When the upgrade page is implemented, make sure the location and search params are correct.
       const planUpgradePageUrl = '/app/virtual-lab/subscription/upgrade';
