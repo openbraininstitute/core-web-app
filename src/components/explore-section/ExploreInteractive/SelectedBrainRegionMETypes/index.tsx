@@ -20,9 +20,7 @@ export default function SelectedBrainRegionMETypes() {
 
   if (composition.state === 'loading') {
     return (
-      <div
-        className={classNames('flex h-full w-full items-center justify-center bg-black text-white')}
-      >
+      <div className={classNames('flex h-full w-full items-center justify-center text-white')}>
         <LoadingOutlined />
       </div>
     );
@@ -30,7 +28,7 @@ export default function SelectedBrainRegionMETypes() {
 
   if (composition.state === 'hasError') {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-black text-white">
+      <div className="flex h-full w-full items-center justify-center text-white">
         Composition could not be calculated
       </div>
     );
@@ -45,7 +43,7 @@ export default function SelectedBrainRegionMETypes() {
   }
 
   return composition.data ? (
-    <div className="flex h-full w-full min-w-[300px] flex-col gap-5 bg-black py-8 pb-0 text-white">
+    <div className="flex h-full w-full min-w-[300px] flex-col gap-5 py-8 pb-0 text-white">
       <METypeDetails composition={composition.data} meTypesMetadata={meTypesMetadata} />
     </div>
   ) : (

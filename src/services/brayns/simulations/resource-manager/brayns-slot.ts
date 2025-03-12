@@ -1,7 +1,7 @@
 import isEqual from 'lodash/isEqual';
 import Calc, { Vector3 } from '../../common/utils/calc';
 import { CameraTransformInteface } from '../../common/utils/camera-transform';
-import GenericEvent from '../../common/utils/generic-event';
+import GenericEvent from '../../../../util/generic-event';
 import { TokenProvider } from '../types';
 import Allocator from './allocator';
 import BraynsService from './brayns-service';
