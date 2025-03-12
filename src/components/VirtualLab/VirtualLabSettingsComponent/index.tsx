@@ -31,6 +31,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     defaultValue: '',
   });
   const virtualLabDetail = useAtomValue(loadable(virtualLabDetailAtomFamily(id)));
+
   const refreshVirtualLabsOfUser = useSetAtom(virtualLabsOfUserAtom);
 
   const updateVirtualLab = useUpdateVirtualLab(id);
@@ -94,6 +95,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
                 initialValues={{
                   name: virtualLabDetail.data?.name,
                   reference_email: virtualLabDetail.data?.reference_email,
+                  entity: virtualLabDetail.data?.entity,
                   description: virtualLabDetail.data?.description,
                 }}
                 items={[
@@ -128,7 +130,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
                   },
                   {
                     children: renderInput,
-                    label: 'Entity',
+                    label: 'Affiliated entity',
                     name: 'entity',
                   },
                 ]}

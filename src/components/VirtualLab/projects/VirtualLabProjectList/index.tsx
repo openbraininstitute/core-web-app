@@ -29,7 +29,7 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
               id={project.id}
               vlabId={project.virtual_lab_id}
               lastUpdate={project.updated_at}
-              memberCount={0}
+              memberCount={project.user_count}
               name={project.name}
             />
           ))}

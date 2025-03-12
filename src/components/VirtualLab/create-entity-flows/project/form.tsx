@@ -23,6 +23,7 @@ import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { extractInitials } from '@/util/slugify';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { tryCatch } from '@/api/utils';
+import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 
 type Props = {
   step: ProjectFlowSteps;
@@ -56,7 +57,6 @@ function Members() {
 export default function CreationForm({ step, steps, onCancel, onStepChange }: Props) {
   const notify = useNotification();
   const { push: navigate } = useRouter();
-
   const [form] = Form.useForm<ProjectPayload & { virtual_lab_id: string }>();
   const [pending, startTransition] = useTransition();
   const [isFormValid, setIsFormValid] = useState(false);
@@ -99,8 +99,9 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
   };
 
   const onFormSubmit = async (values: ProjectPayload & { virtual_lab_id: string }) => {
+    const id = virtualLabId ?? values.virtual_lab_id;
+
     startTransition(async () => {
-      const id = virtualLabId ?? values.virtual_lab_id;
       const formValues = {
         ...values,
         include_members:
@@ -122,6 +123,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
           'topRight',
           undefined
         );
+        virtualLabProjectsAtomFamily.remove(id); // TODO: find better solution to refresh atom family with dynamic param
         navigate(`${generateVlProjectUrl(id, result.data.project.id)}/home`);
       }
     });
