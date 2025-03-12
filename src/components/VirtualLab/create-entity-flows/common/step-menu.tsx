@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, ReactNode } from 'react';
 import { useAtomValue } from 'jotai';
 import { atomWithReset } from 'jotai/utils';
 
@@ -19,7 +19,7 @@ export function createFlowAtom<T>(defaultStep: T) {
 
 type StepMenuProps<T> = {
   steps: Array<Step>;
-  title: string;
+  title: ReactNode;
   flowAtom: ReturnType<typeof createFlowAtom<T>>;
 };
 

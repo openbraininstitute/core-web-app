@@ -60,31 +60,6 @@ export async function deleteVirtualLab(id: string): Promise<
 > {
   const response = await authFetch(`${virtualLabApi.url}/virtual-labs/${id}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-
-  return response.json();
-}
-
-export async function getPlans(): Promise<
-  VlmResponse<{
-    all_plans: [
-      {
-        id: number;
-        name: string;
-        price: number;
-        features: Record<string, Array<string>>;
-      },
-    ];
-  }>
-> {
-  const response = await authFetch(`${virtualLabApi.url}/plans`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {

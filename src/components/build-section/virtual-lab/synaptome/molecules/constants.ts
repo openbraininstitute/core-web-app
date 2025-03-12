@@ -29,10 +29,10 @@ export const DEFAULT_SYNAPSE_VALUE: SingleSynaptomeConfig = {
 };
 
 export const sectionTargetMapping = {
-  dend: 'Dendrite',
+  dend: 'Basal Dendrites',
   soma: 'Soma',
-  apic: 'Apical dendrite',
-  basal: 'Basal dendrite',
+  apic: 'Apical dendrites',
+  basal: 'Basal dendrites',
   axon: 'Axon',
 };
 

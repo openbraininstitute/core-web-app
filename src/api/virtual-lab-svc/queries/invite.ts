@@ -1,4 +1,4 @@
-import { getSession } from 'next-auth/react';
+import { getSession } from '@/authFetch';
 
 import { InviteResponse } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabApi } from '@/config';

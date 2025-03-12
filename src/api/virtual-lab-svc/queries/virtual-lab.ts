@@ -1,5 +1,4 @@
-import { getSession } from 'next-auth/react';
-import uniqBy from 'lodash/uniqBy';
+import { getSession } from '@/authFetch';
 
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import {
@@ -8,6 +7,9 @@ import {
   VirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabApi } from '@/config';
+
+const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
+// const BASE_URL = 'http://localhost:8000/virtual-labs';
 
 /**
  * Checks if a virtual lab with the given name already exists.
@@ -22,16 +24,13 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
     if (!session?.accessToken) {
       throw new Error('User session not found. Please log in.');
     }
-    const response = await fetch(
-      `${virtualLabApi.url}/virtual-labs/_check?q=${encodeURIComponent(name)}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-      }
-    );
+    const response = await fetch(`${BASE_URL}/_check?q=${encodeURIComponent(name)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    });
 
     if (!response.ok) {
       throw new Error('validating virtual lab name failed');
@@ -56,18 +55,13 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
 export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<VirtualLabResponse> {
   const session = await getSession();
   try {
-    const response = await fetch(`${virtualLabApi.url}/virtual-labs`, {
+    const response = await fetch(BASE_URL, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,
       },
-      body: JSON.stringify({
-        ...lab,
-        include_members: uniqBy(lab.include_members, (o) => o.email.toLowerCase()),
-        // FIXME: should be removed after plans are integrated
-        plan_id: 1,
-      }),
+      body: JSON.stringify(lab),
     });
 
     if (!response.ok) {
@@ -92,9 +86,10 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
  */
 export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
   const session = await getSession();
+
   try {
-    const response = await fetch(`http://localhost:8000/virtual-labs`, {
-      method: 'GET',
+    const response = await fetch(BASE_URL, {
+      method: 'get',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,

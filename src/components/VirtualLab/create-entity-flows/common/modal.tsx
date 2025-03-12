@@ -7,6 +7,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   cls?: {
+    parent?: string;
     content?: string;
     body?: string;
   };
@@ -23,7 +24,7 @@ export default function CreateEntityModal({ children, footer, isOpen, cls, onClo
         onCancel={onClose}
         footer={footer}
         width={650}
-        className="custom-modal"
+        className={classNames('custom-modal', cls?.parent)}
         closable={false}
         classNames={{
           content: classNames(

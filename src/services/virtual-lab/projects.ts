@@ -88,6 +88,30 @@ export async function patchProject(
   });
 }
 
+export async function deleteProject(
+  virtualLabId: string,
+  projectId: string
+): Promise<
+  VlmResponse<{
+    project_id: string;
+    deleted: boolean;
+    deleted_at: string;
+  }>
+> {
+  const response = await authFetch(
+    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}`,
+    {
+      method: 'DELETE',
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export async function getProjectAccountBalance({
   virtualLabId,
   projectId,

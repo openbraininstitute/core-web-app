@@ -579,3 +579,32 @@ export function LightFile(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function NewWindowAdd(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M5.616 20q-.691 0-1.153-.462T4 18.384V5.616q0-.691.463-1.153T5.616 4h4.5q.212 0 .356.144t.144.357t-.144.356t-.356.143h-4.5q-.231 0-.424.192T5 5.616v12.769q0 .23.192.423t.423.192h12.77q.23 0 .423-.192t.192-.423v-4.5q0-.213.144-.357t.357-.143t.356.143t.143.357v4.5q0 .69-.462 1.153T18.384 20zM16 8h-2.5q-.213 0-.356-.144T13 7.499t.144-.356T13.5 7H16V4.5q0-.213.144-.356T16.501 4t.356.144T17 4.5V7h2.5q.213 0 .356.144t.144.357t-.144.356T19.5 8H17v2.5q0 .213-.144.356t-.357.144t-.356-.144T16 10.5z"
+      />
+    </svg>
+  );
+}
+
+export function UserCircle(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+        color="currentColor"
+      >
+        <path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />
+        <path d="M14.75 9.5a2.75 2.75 0 1 1-5.5 0a2.75 2.75 0 0 1 5.5 0M5.5 19l.56-.98a5 5 0 0 1 4.342-2.52h3.196a5 5 0 0 1 4.342 2.52l.56.98" />
+      </g>
+    </svg>
+  );
+}

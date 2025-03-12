@@ -32,6 +32,7 @@ export const projectFlowSteps: Array<{ id: ProjectFlowSteps; label: string }> = 
   { id: 'information', label: 'Information' },
   { id: 'members', label: 'Members' },
 ];
+export type ProjectFlowStepsArray = typeof projectFlowSteps;
 
 export const subscriptionFlowSteps: Array<{ id: SubscriptionFlowSteps; label: string }> = [
   { id: 'plans', label: 'Plans' },

@@ -1,16 +1,16 @@
 import { Button } from 'antd';
-import { useParams } from 'next/navigation';
-import reject from 'lodash/reject';
 
-import {
-  projectFlowSteps,
-  type ProjectFlowSteps,
-} from '@/components/VirtualLab/create-entity-flows/common/types';
 import { classNames } from '@/util/utils';
+
+import type {
+  ProjectFlowSteps,
+  ProjectFlowStepsArray,
+} from '@/components/VirtualLab/create-entity-flows/common/types';
 
 type Props = {
   loading: boolean;
   step: ProjectFlowSteps;
+  steps: ProjectFlowStepsArray;
   disableNextProject: boolean;
   disableNextMembers: boolean;
   disableCreate: boolean;
@@ -22,6 +22,7 @@ type Props = {
 export default function Footer({
   loading,
   step,
+  steps,
   disableNextProject,
   disableNextMembers,
   disableCreate,
@@ -29,9 +30,6 @@ export default function Footer({
   onNextStep,
   onPreviousStep,
 }: Props) {
-  const { virtualLabId } = useParams<{ virtualLabId: string }>();
-  const steps = virtualLabId ? reject(projectFlowSteps, { id: 'virtual-lab' }) : projectFlowSteps;
-
   return (
     <div className="mt-auto w-full">
       <div className="flex items-end justify-end gap-3">

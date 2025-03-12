@@ -15,7 +15,6 @@ import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 
 const schema = VirtualLabPayloadSchema.partial({
   entity: true,
-  include_members: true,
   email_status: true,
 });
 

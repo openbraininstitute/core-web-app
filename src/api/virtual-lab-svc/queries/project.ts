@@ -1,5 +1,5 @@
-import { getSession } from 'next-auth/react';
 import uniqBy from 'lodash/uniqBy';
+import { getSession } from '@/authFetch';
 
 import {
   ProjectCreationResponse,
@@ -8,6 +8,7 @@ import {
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { virtualLabApi } from '@/config';
 
+const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
 /**
  * Checks if a project with the given name already exists in a virtual lab.
  *
@@ -29,7 +30,7 @@ export async function checkProjectExists({
       throw new Error('User session not found. Please log in.');
     }
     const response = await fetch(
-      `${virtualLabApi.url}/virtual-labs/${vlabId}/projects/_check?q=${encodeURIComponent(name)}`,
+      `${BASE_URL}/${vlabId}/projects/_check?q=${encodeURIComponent(name)}`,
       {
         method: 'get',
         headers: {
@@ -57,7 +58,7 @@ export async function createProject(
 ): Promise<ProjectCreationResponse> {
   const session = await getSession();
   try {
-    const response = await fetch(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects`, {
+    const response = await fetch(`${BASE_URL}/${virtualLabId}/projects`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

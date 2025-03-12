@@ -26,11 +26,12 @@ export interface MorphoViewerProps {
    * Text content of a SWC file.
    */
   swc: string;
+  mode?: 'light' | 'dark';
   // We disable enhanced somas until they are fixed on the backend.
   // contentUrl?: string;
 }
 
-export function MorphoViewer({ className, swc }: MorphoViewerProps) {
+export function MorphoViewer({ className, swc, mode }: MorphoViewerProps) {
   const refDiv = useRef<HTMLDivElement | null>(null);
   const refMorphoCanvas = useRef(new MorphologyCanvas());
   const morphoCanvas = refMorphoCanvas.current;
@@ -45,6 +46,8 @@ export function MorphoViewer({ className, swc }: MorphoViewerProps) {
   useEffect(() => {
     morphoCanvas.canvas = refCanvas.current;
     morphoCanvas.swc = swc;
+    if (mode === 'dark') morphoCanvas.colors.background = '#000';
+    else if (mode === 'light') morphoCanvas.colors.background = '#fff';
     const handleWarning = () => {
       setWarning(true);
     };
@@ -55,7 +58,7 @@ export function MorphoViewer({ className, swc }: MorphoViewerProps) {
       morphoCanvas.eventMouseWheelWithoutCtrl.removeListener(handleWarning);
       gizmoCanvas.eventTipClick.removeListener(morphoCanvas.interpolateCamera);
     };
-  }, [morphoCanvas, gizmoCanvas, swc, setWarning]);
+  }, [morphoCanvas, gizmoCanvas, swc, setWarning, mode]);
 
   const handleFullscreen = () => {
     const div = refDiv.current;
