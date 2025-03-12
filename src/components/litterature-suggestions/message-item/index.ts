@@ -1,1 +1,1 @@
-export { default } from "./message-item"
+export { default } from './message-item';

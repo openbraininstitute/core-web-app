@@ -1,1 +1,1 @@
-export { default } from "./tool-morphologies"
+export { default } from './tool-morphologies';

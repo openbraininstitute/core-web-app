@@ -1,1 +1,1 @@
-export { default } from "./morphology-card"
+export { default } from './morphology-card';

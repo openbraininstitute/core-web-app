@@ -49,7 +49,17 @@ export const updateUserProfile = async (
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      first_name: payload.first_name,
+      last_name: payload.last_name,
+      address: {
+        street: payload.street,
+        postal_code: payload.postal_code,
+        locality: payload.locality,
+        region: payload.region,
+        country: payload.country,
+      },
+    }),
   });
 
   if (!response.ok) {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { ForwardedRef, useEffect, useState, useTransition } from 'react';
-import { Form, InputProps, InputRef, Input } from 'antd';
+import { Form, InputProps, InputRef, Input, Button } from 'antd';
 import omit from 'lodash/omit';
 
 import countries from '../../../../../public/static/country';
@@ -47,6 +47,17 @@ function Profile({ data }: Props) {
   const [form] = Form.useForm<UserProfileResponse>();
   const [pending, startTransition] = useTransition();
 
+  const initialValues = {
+    email: data?.email,
+    first_name: data?.first_name,
+    last_name: data?.last_name,
+    street: data?.address.street,
+    postal_code: data?.address.postal_code,
+    locality: data?.address.locality,
+    region: data?.address.region,
+    country: data?.address.country,
+  };
+
   const onSubmit = (values: UserProfileResponse) => {
     startTransition(async () => {
       const { error } = await tryCatch(
@@ -81,7 +92,7 @@ function Profile({ data }: Props) {
           form={form}
           layout="vertical"
           className="profile-form"
-          initialValues={data}
+          initialValues={initialValues}
           disabled={pending}
           onFinish={onSubmit}
         >
@@ -93,11 +104,11 @@ function Profile({ data }: Props) {
               <XInput id="last_name" name="last_name" type="text" />
             </Form.Item>
             <Form.Item
-              name="address"
+              name="street"
               className="space-y-1 md:col-span-2"
               label={<Label title="Address" />}
             >
-              <XInput id="address" name="address" type="text" />
+              <XInput id="street" name="street" type="text" />
             </Form.Item>
             <Form.Item
               name="postal_code"
@@ -171,7 +182,7 @@ function Profile({ data }: Props) {
             </div>
           </div>
 
-          {/* <div className="mt-12 flex justify-end">
+          <div className="mt-12 flex justify-end">
             <Button
               key="create-project-btn"
               className={classNames(
@@ -186,9 +197,9 @@ function Profile({ data }: Props) {
               disabled={pending}
               loading={pending}
             >
-              Update information
+              Update
             </Button>
-          </div> */}
+          </div>
         </Form>
       </div>
     </div>

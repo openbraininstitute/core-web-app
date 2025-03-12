@@ -1,1 +1,1 @@
-export { default } from "./sanity-content-video"
+export { default } from './sanity-content-video';

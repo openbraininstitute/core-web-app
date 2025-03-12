@@ -18,12 +18,12 @@
 }
 
 .articleCard p {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: var(--custom-max-lines, 2);
-  }
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--custom-max-lines, 2);
+}
 
 .articleCard > footer {
   margin-top: 1em;
