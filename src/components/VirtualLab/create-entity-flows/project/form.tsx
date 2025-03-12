@@ -170,9 +170,11 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
               </Form.Item>
             )}
 
-            <div className={step !== 'virtual-lab' ? 'hidden' : ''}>
-              <VirtualLabsList />
-            </div>
+            {Boolean(steps.find((o) => o.id === 'virtual-lab')?.id) && (
+              <div className={step !== 'virtual-lab' ? 'hidden' : ''}>
+                <VirtualLabsList />
+              </div>
+            )}
             <div className={step !== 'information' ? 'hidden' : ''}>
               <Overview />
             </div>
