@@ -8,7 +8,6 @@ import {
   getVirtualLabDetail,
   getVirtualLabUsers,
   getVirtualLabsOfUser,
-  getPlans,
   getVirtualLabAccountBalance,
 } from '@/services/virtual-lab/labs';
 import { VirtualLab } from '@/types/virtual-lab/lab';
@@ -92,23 +91,6 @@ export const userVirtualLabTotalsAtom = atom<Promise<number | undefined>>(async 
   }
   const virtualLabs = await get(virtualLabsOfUserAtom);
   return virtualLabs?.total || 0;
-});
-
-export const virtualLabPlansAtom = atom<
-  Promise<
-    | Array<{
-        id: number;
-        name: string;
-        price: number;
-        features: Record<string, Array<string>>;
-      }>
-    | undefined
-  >
->(async () => {
-  const { data } = await getPlans();
-  const { all_plans: allPlans } = data;
-
-  return allPlans;
 });
 
 export const virtualLabBalanceRefreshTriggerAtom = atom(0);

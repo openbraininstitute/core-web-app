@@ -107,11 +107,11 @@ function Profile({ data }: Props) {
               <XInput id="postal_code" name="postal_code" type="text" />
             </Form.Item>
 
-            <Form.Item name="city" className="space-y-1" label={<Label title="City" />}>
-              <XInput id="city" name="city" type="text" />
+            <Form.Item name="locality" className="space-y-1" label={<Label title="City" />}>
+              <XInput id="locality" name="locality" type="text" />
             </Form.Item>
-            <Form.Item name="state" className="space-y-1" label={<Label title="State/Canton" />}>
-              <XInput id="state" name="state" type="text" />
+            <Form.Item name="region" className="space-y-1" label={<Label title="State/Canton" />}>
+              <XInput id="region" name="region" type="text" />
             </Form.Item>
             <Form.Item name="country" className="space-y-1" label={<Label title="Country" />}>
               <Select

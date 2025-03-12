@@ -228,13 +228,14 @@ export type StandalonePaymentResponse = {
 export type UserProfile = {
   first_name: string | null;
   last_name: string | null;
-  address: string | null;
+  street: string | null;
   postal_code: string | null;
-  city: string | null;
-  state: string | null;
+  locality: string | null;
+  region: string | null;
   country: string | null;
 };
 export type UpdateUserProfileRequest = Partial<UserProfile>;
+
 export type UserProfileResponse = {
   id: string;
   preferred_username: string;
@@ -242,10 +243,10 @@ export type UserProfileResponse = {
   first_name: string;
   last_name: string;
   email_verified: boolean;
-  address?: string;
+  street?: string;
   postal_code?: string;
-  city?: string;
-  state?: string;
+  locality?: string;
+  region?: string;
   country?: string;
 };
 export type VlmStandalonePaymentResponse = VlmResponse<StandalonePaymentResponse>;
