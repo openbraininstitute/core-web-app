@@ -2,9 +2,9 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { ReactNode, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSetAtom, useAtomValue } from 'jotai';
-import { loadable, unwrap } from 'jotai/utils';
+import { loadable } from 'jotai/utils';
 import { Spin } from 'antd';
 import { CollapseProps } from 'antd/lib/collapse/Collapse';
 import { CollapsibleType } from 'antd/lib/collapse/CollapsePanel';
@@ -14,19 +14,14 @@ import { useQueryState } from 'nuqs';
 import Billing from '../Billing';
 import ProjectsPanel from './ProjectsPanel';
 import FormPanel, { renderInput, renderTextArea } from './FormPanel';
-import PlanPanel from './PlanPanel';
 import DangerZonePanel from './DangerZonePanel';
 import CostsPanel from './CostsPanel';
 
 import { deleteVirtualLab } from '@/services/virtual-lab/labs';
-import {
-  virtualLabDetailAtomFamily,
-  virtualLabsOfUserAtom,
-  virtualLabPlansAtom,
-} from '@/state/virtual-lab/lab';
+import { virtualLabDetailAtomFamily, virtualLabsOfUserAtom } from '@/state/virtual-lab/lab';
 import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
 import { VALID_EMAIL_REGEXP } from '@/util/utils';
-import { VirtualLab, VirtualLabPlanType } from '@/types/virtual-lab/lab';
+import { VirtualLab } from '@/types/virtual-lab/lab';
 import Collapse, { ExpandIcon } from '@/components/Collapse';
 
 export default function VirtualLabSettingsComponent({ id }: { id: string }) {
@@ -51,52 +46,6 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
 
     return new Promise((resolve) => resolve(virtualLab)); // eslint-disable-line no-promise-executor-return
   }, [id, refreshVirtualLabsOfUser]);
-
-  const plans = useAtomValue(unwrap(virtualLabPlansAtom));
-
-  const planDescriptions = [
-    {
-      id: 1,
-      name: VirtualLabPlanType.Entry,
-      description: (
-        <div className="flex flex-col gap-1 text-lg">
-          <h4 className="font-bold text-primary-3">CAPABILITIES</h4>
-          <ul className="list-disc pl-4">
-            <li>Unlimited downloads</li>
-            <li>Unlimited AI-assisted knowledge discovery based-on neuroscience literature</li>
-          </ul>
-          <h4 className="font-bold text-primary-3">BUILD & SIMULATE</h4>
-          <ul className="list-disc pl-4">
-            <li>Ion channel</li>
-            <li>Single neuron</li>
-            <li>Paired neuron</li>
-          </ul>
-          <h4 className="font-bold text-primary-3">COMPUTE & STORAGE CREDITS</h4>
-          <ul className="list-disc pl-4">
-            <li>Free compute resources</li>
-            <li>Additional compute resources can be purchased</li>
-          </ul>
-          <h4 className="font-bold text-primary-3">SUPPORT</h4>
-          <ul className="list-disc pl-4">
-            <li>Open Brain cellular lab support</li>
-          </ul>
-        </div>
-      ),
-      pricing: { cost: 20, currency: '$' },
-    },
-    {
-      id: 2,
-      name: VirtualLabPlanType.Beginner,
-      description: 'Cras mattis consectetur purus sit amet fermentum.',
-      pricing: { cost: 100, currency: '$' },
-    },
-    {
-      id: 3,
-      name: VirtualLabPlanType.Intermediate,
-      description: 'Cras mattis consectetur purus sit amet fermentum.',
-      pricing: { cost: 1000, currency: '$' },
-    },
-  ];
 
   const header = useMemo(() => {
     return virtualLabDetail.state === 'hasData'
@@ -191,44 +140,6 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
           }
         : {},
     [updateVirtualLab, virtualLabDetail]
-  );
-
-  // Merge API Plan data with the planDescriptions objects.
-  // TODO: Ask JDC whether to keep plan data in Frontend or Backend.
-  const plansWithDescriptions = plans?.reduce<
-    Array<{
-      id: number;
-      name: VirtualLabPlanType;
-      description: ReactNode;
-      pricing: { cost: number; currency: string };
-    }>
-  >(
-    (acc1, { id: planId }) =>
-      planDescriptions.reduce(
-        (acc2, { id: vlPlanId, name, description, pricing }) =>
-          vlPlanId === planId ? [...acc2, { id: planId, name, description, pricing }] : acc2,
-        acc1
-      ),
-    []
-  );
-
-  const plan = useMemo(
-    () =>
-      virtualLabDetail.state === 'hasData'
-        ? {
-            key: 'plans',
-            children: !!plansWithDescriptions && (
-              <PlanPanel
-                currentPlan={virtualLabDetail.data?.plan_id || 0}
-                items={plansWithDescriptions}
-                userIsAdmin={userIsAdmin}
-                onChange={updateVirtualLab}
-              />
-            ),
-            label: 'Plan',
-          }
-        : {},
-    [plansWithDescriptions, updateVirtualLab, userIsAdmin, virtualLabDetail]
   );
 
   const costs = useMemo(
