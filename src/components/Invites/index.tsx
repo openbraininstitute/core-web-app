@@ -89,7 +89,7 @@ export default function InviteLoader() {
 
       setInviteDetails(response.data);
     });
-  }, []);
+  }, [inviteToken, router, session?.accessToken, session?.user.plan]);
 
   return (
     <>
