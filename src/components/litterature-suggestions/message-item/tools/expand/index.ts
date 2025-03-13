@@ -1,1 +1,1 @@
-export { default } from "./expand"
+export { default } from './expand';

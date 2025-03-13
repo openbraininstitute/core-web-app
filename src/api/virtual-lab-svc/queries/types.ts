@@ -248,11 +248,13 @@ export type UserProfileResponse = {
   first_name: string;
   last_name: string;
   email_verified: boolean;
-  street?: string;
-  postal_code?: string;
-  locality?: string;
-  region?: string;
-  country?: string;
+  address: {
+    street?: string;
+    postal_code?: string;
+    locality?: string;
+    region?: string;
+    country?: string;
+  };
 };
 export type VlmStandalonePaymentResponse = VlmResponse<StandalonePaymentResponse>;
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;

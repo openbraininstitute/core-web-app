@@ -1,1 +1,1 @@
-export { default } from "./litterature-suggestions"
+export { default } from './litterature-suggestions';

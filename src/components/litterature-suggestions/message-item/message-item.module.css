@@ -67,16 +67,16 @@
 }
 
 .markdown a {
-    color: #1890ff;
-    text-decoration: underline;
+  color: #1890ff;
+  text-decoration: underline;
 }
 
 button.debugButton {
-    background: orange;
-    color: #000;
-    font-weight: bold;
-    border-radius: 99vmax;
-    padding: 0.25em 1em;
-    cursor: pointer;
-    margin: .5em 0
+  background: orange;
+  color: #000;
+  font-weight: bold;
+  border-radius: 99vmax;
+  padding: 0.25em 1em;
+  cursor: pointer;
+  margin: 0.5em 0;
 }

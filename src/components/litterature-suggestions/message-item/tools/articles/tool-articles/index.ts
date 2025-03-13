@@ -1,1 +1,1 @@
-export { default } from "./tool-articles"
+export { default } from './tool-articles';

@@ -1,15 +1,15 @@
 .suggestedQuestions {
-    display: flex;
-    flex-wrap: nowrap;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-end;
-    gap: .25em;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 0.25em;
 }
 
 .suggestedQuestions > button {
   border-radius: 4px;
-  padding: .5em 1em;
+  padding: 0.5em 1em;
   background-color: #888;
   border: 1px solid #888;
   color: #000;
