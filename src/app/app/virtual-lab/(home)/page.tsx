@@ -47,7 +47,6 @@ export default async function Page() {
       </div>
     );
   } catch (error) {
-    logError('@@err', error);
-    throw new Error((error as { message: string }).message);
+    throw new Error(`Failed to list virtual labs: ${(error as Error).message}`);
   }
 }

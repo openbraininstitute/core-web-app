@@ -86,24 +86,18 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
  */
 export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
   const session = await getSession();
+  const response = await fetch(BASE_URL, {
+    method: 'get',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+  });
 
-  try {
-    const response = await fetch(BASE_URL, {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`listing virtual labs failed ${response.status}`);
-    }
-
-    const result: VirtualLabListResponse = await response.json();
-    return result;
-  } catch (error) {
-    // TODO: capture exception with sentry
-    throw new Error(`Failed to list virtual labs: ${(error as Error).message}`);
+  if (!response.ok) {
+    throw new Error(`listing virtual labs failed ${response.status}`);
   }
+
+  const result: VirtualLabListResponse = await response.json();
+  return result;
 }
