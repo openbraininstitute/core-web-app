@@ -1,6 +1,3 @@
-import { Suspense } from "react";
-import { Spin } from "antd";
-
 import { Filter } from "@/features/listing-filter-panel/types";
 import { CheckListDescription, CheckListOption } from "@/features/listing-filter-panel/checklist/option";
 import { FacetOptionsList } from "@/features/listing-filter-panel/checklist/use-options";
@@ -29,19 +26,18 @@ export const defaultList = ({
         <ul className="flex flex-col space-y-3 divide-y divide-white/20">
             {options
                 ?.slice(0, renderLength)
-                ?.map(({ checked, value, id, label }) => (
+                ?.map(({ checked, value, id, label, type, count }) => (
                     <CheckListOption
                         key={id}
                         id={id}
+                        type={type}
                         checked={checked}
-                        value={value}
+                        value={count}
                         handleCheckedChange={handleCheckedChange}
                         filterField={filterField}
                         label={label}
                     >
-                        <Suspense fallback={<Spin />}>
-                            <CheckListDescription id={id} />
-                        </Suspense>
+                        {type === "mtype" && <CheckListDescription {...{ id, label, type, filterField }} />}
                     </CheckListOption>
                 ))}
         </ul>

@@ -1,11 +1,8 @@
 import map from 'lodash/map';
 import sortBy from 'lodash/sortBy';
-import find from 'lodash/find';
-import identity from 'lodash/identity';
 import isEmpty from 'lodash/isEmpty';
 
 import { Filter } from '@/features/listing-filter-panel/types';
-import { toDate } from '@/util/date';
 
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 
@@ -15,7 +12,7 @@ type TransformFiltersToQueryReturnValue = Record<
 >;
 
 /**
- * Transforms a user-provided search pattern using `*` as a wildcard
+ * transforms a user-provided search pattern using `*` as a wildcard
  * into a PostgreSQL `ILIKE`-compatible pattern.
  *
  * - Escapes existing `%` characters to prevent unintended matches.
@@ -36,36 +33,68 @@ export function transformToIlikePattern(str: string) {
     .replace(/\*/g, '%'); // Convert `*` to `%`
 }
 
-const QUERY_FIELDS_MODIFIERS: Array<{
-  field: string;
-  operator?: string;
-  modifier: (input: any) => any;
-}> = [
-    { field: 'name', operator: 'ilike', modifier: transformToIlikePattern },
-    { field: 'creation_date', modifier: toDate },
-    { field: 'update_date', modifier: toDate },
-    { field: 'registration_date', modifier: toDate },
-  ];
-
+/**
+ * transforms an array of filters into a query object for API requests.
+ * Uses the constraint field to determine the query parameter names.
+ * 
+ * @param {Array<Filter>} filters - The filters to transform
+ * @returns {TransformFiltersToQueryReturnValue} The transformed query object
+ */
 export function transformFiltersToQuery(
   filters: Array<Filter>
 ): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
-    const fieldModifier = find(QUERY_FIELDS_MODIFIERS, { field: filter.field });
-    const modifier = fieldModifier?.modifier ?? identity;
-    const operator = fieldModifier?.operator;
+    // Skip filters with null values
+    if (filter.value === null) {
+      return acc;
+    }
 
+    // handle different value types with their constraints
     if (filter.value !== null && typeof filter.value === 'object' && !Array.isArray(filter.value)) {
-      // Case: filter.value is an object (e.g., { gte: "...", lte: "..." })
+      // case: filter.value is an object (e.g., { gte: "...", lte: "..." })
       Object.entries(filter.value).forEach(([op, val]) => {
         if (val !== null) {
-          acc[`${filter.field}__${operator ?? op}`] = modifier(val);
+          // If constraint is an object with matching keys (e.g., { gte: "creation_date__gte" })
+          if (filter.constraint && typeof filter.constraint === 'object') {
+            const constraintObj = filter.constraint as Record<string, string>;
+            if (op in constraintObj) {
+              const constraintKey = constraintObj[op];
+              // Apply transformToIlikePattern for ilike constraints
+              if (typeof val === 'string' && constraintKey.endsWith('__ilike')) {
+                acc[constraintKey] = transformToIlikePattern(val);
+              } else {
+                acc[constraintKey] = val;
+              }
+            }
+          }
+          // if constraint is a string, append the operation (e.g., "creation_date__gte")
+          else if (filter.constraint && typeof filter.constraint === 'string') {
+            const constraintKey = `${filter.constraint}__${op}`;
+            // Apply transformToIlikePattern for ilike constraints
+            if (typeof val === 'string' && constraintKey.endsWith('__ilike')) {
+              acc[constraintKey] = transformToIlikePattern(val);
+            } else {
+              acc[constraintKey] = val;
+            }
+          }
         }
       });
+    } else if (Array.isArray(filter.value)) {
+      // case: Array values (e.g., CheckList)
+      if (filter.value.length > 0 && filter.constraint && typeof filter.constraint === 'string') {
+        acc[filter.constraint] = filter.value;
+      }
     } else {
-      // Case: Primitive or Array
-      const fieldKey = operator ? `${filter.field}__${operator}` : filter.field;
-      acc[fieldKey] = modifier(filter.value);
+      // case: Primitive value (string, number, etc.)
+      if (filter.value !== '' && filter.constraint && typeof filter.constraint === 'string') {
+        const constraintKey = filter.constraint;
+        // apply transformToIlikePattern for ilike constraints
+        if (typeof filter.value === 'string' && constraintKey.endsWith('__ilike')) {
+          acc[constraintKey] = transformToIlikePattern(filter.value);
+        } else {
+          acc[constraintKey] = filter.value;
+        }
+      }
     }
 
     return acc;

@@ -53,7 +53,7 @@ export default function ExploreSectionListingView<T extends EntityCoreBase>({
 
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
 
-  const data = useLoadableValue(
+  const result = useLoadableValue(
     dataAtom({
       dataType,
       dataScope,
@@ -112,7 +112,7 @@ export default function ExploreSectionListingView<T extends EntityCoreBase>({
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{ virtualLabInfo, dataScope, dataType }}
                 dataSource={hits}
-                loading={showLoadingState && data.state === 'loading'}
+                loading={showLoadingState && result.state === 'loading'}
                 onCellClick={onCellClick}
                 renderButton={renderButton}
                 selectionType={selectionType}

@@ -11,7 +11,7 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
 
-const base_uri = "/reconstruction-morphology/"
+const baseUri = "/reconstruction-morphology/"
 /**
  * Retrieves a list of reconstruction morphologies from the EntityCoreAPI.
  *
@@ -22,7 +22,7 @@ const base_uri = "/reconstruction-morphology/"
 export async function getReconstructionMorphologies({ with_facets, filters }: { with_facets?: boolean; filters?: IMorphologyFilter }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<EntityCoreResponse<IReconstructionMorphology>>(
-    base_uri,
+    baseUri,
     {
       ...getEntityCoreContext(),
       queryParams: {
@@ -50,7 +50,7 @@ export async function getReconstructionMorphology({
 }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<IReconstructionMorphology | IReconstructionMorphologyExpanded>(
-    `${base_uri}/${id}`,
+    `${baseUri}/${id}`,
     {
       ...getEntityCoreContext(),
       queryParams: {

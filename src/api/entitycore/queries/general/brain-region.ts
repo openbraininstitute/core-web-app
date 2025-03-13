@@ -16,13 +16,16 @@ import {
 export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
   { flat }: { flat?: T } = {} as { flat?: T }
 ): Promise<T extends true ? TemporaryFlatBrainRegionHierarchy : ITemporaryBrainRegionHierarchy> {
-  const api = await authApiClient(entityCoreUrl);
+  // TODO: the caching could be also passed to a specific function
+  const api = await authApiClient(entityCoreUrl); // cached it for 1 day
   return await api.get<
     T extends true ? TemporaryFlatBrainRegionHierarchy : ITemporaryBrainRegionHierarchy
   >('/brain-region/', {
     queryParams: {
       flat,
     },
+  }, {
+    cache: { cacheName: "brain-region", enabled: true, ttlInSeconds: 86_400 }
   });
 }
 

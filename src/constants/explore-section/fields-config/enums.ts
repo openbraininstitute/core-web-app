@@ -87,3 +87,17 @@ export enum Field {
   SimulationSynaptomeRecordingThumbnail = 'SimulationSynaptomeRecordingThumbnail',
   SimulationSynaptomeStimulusThumbnail = 'SimulationSynaptomeStimulusThumbnail',
 }
+
+export enum EntityCoreFields {
+  Preview = 'preview',
+  Name = 'name',
+  Description = 'description',
+  Species = 'species',
+  CreationDate = 'creation_date',
+  RegistrationDate = 'registration_date',
+  UpdateDate = 'update_date',
+  Contribution = 'contribution',
+  License = 'license',
+  BrainRegion = 'brain_region',
+  MType = 'mtype',
+}

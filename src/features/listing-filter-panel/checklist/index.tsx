@@ -25,11 +25,13 @@ export default function CheckList({
   values,
   onChange,
 }: Props) {
+
   const [filtersRenderLength, setFiltersRenderLength] = useState(() => 5);
   const options = useOptions(values, data);
 
   const handleCheckedChange = (value: string) => {
     let newValues = [...values];
+
     if (values.includes(value)) {
       newValues = values.filter((val) => val !== value);
     } else {

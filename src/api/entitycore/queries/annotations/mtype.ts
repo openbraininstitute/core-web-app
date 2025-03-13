@@ -6,7 +6,7 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
 
-const base_uri = "/mtype"
+const baseUri = "/mtype"
 /**
  * Retrieves a list of mtypes from the EntityCoreAPI.
 
@@ -15,7 +15,7 @@ const base_uri = "/mtype"
 export async function getMtypes({ filters }: { filters?: IMtypeFilter }) {
     const api = await authApiClient(entityCoreUrl);
     return await api.get<EntityCoreResponse<IMType>>(
-        base_uri,
+        baseUri,
         {
             ...getEntityCoreContext(),
             queryParams: {
@@ -33,9 +33,12 @@ export async function getMtypes({ filters }: { filters?: IMtypeFilter }) {
 export async function getMtype({ id }: { id: string }) {
     const api = await authApiClient(entityCoreUrl);
     return await api.get<IMType>(
-        `${base_uri}/${id}`,
+        `${baseUri}/${id}`,
         {
             ...getEntityCoreContext(),
+        },
+        {
+            cache: { cacheName: "mtype", enabled: true, ttlInSeconds: 86_400 }
         }
     );
 }

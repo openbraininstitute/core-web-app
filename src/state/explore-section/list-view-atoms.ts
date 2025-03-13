@@ -28,6 +28,7 @@ import {
   selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
+  setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
@@ -77,7 +78,7 @@ export const activeColumnsAtom = atomFamily(
         'index',
         ...(dimensionColumns || []),
         ...columns,
-        isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
+        // isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
       ];
     }),
   isListAtomEqual
@@ -105,20 +106,24 @@ export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Filter[]>>(async (get) => {
       const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
+
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
-        ...columns.map((colKey) => columnKeyToFilter(colKey)),
+        ...columns.map((colKey) => {
+          return columnKeyToFilter(colKey);
+        }),
         ...(dimensionsColumns || []).map(
           (dimension) =>
             ({
               field: dimension,
               type: FilterTypeEnum.ValueOrRange,
               value: { gte: null, lte: null },
-              aggregationType: 'stats',
             }) as Filter
         ),
       ];
     }),
+
+
   isListAtomEqual
 );
 

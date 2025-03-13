@@ -8,7 +8,13 @@ import LoadMoreButton from './LoadMoreButton';
 import useRowSelection, { RenderButtonProps } from './useRowSelection';
 import { useOnCellRouteHandler, useShowMore, useScrollNav } from './hooks';
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
+import { ExploreSectionResource } from '@/types/explore-section/resources';
+import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { classNames } from '@/util/utils';
+import type { ExploreESHit } from '@/types/explore-section/es';
+
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.scss';
@@ -178,7 +184,7 @@ export function BaseTable<T extends EntityCoreBase>({
         loading={loading}
         pagination={false}
         rowClassName={styles.tableRow}
-        rowKey={(row) => row._source._self}
+        rowKey={(row) => row.id}
         rowSelection={rowSelection}
         scroll={
           scrollable
@@ -302,7 +308,7 @@ export default function ExploreSectionTable<T extends EntityCoreBase>({
         hasError={hasError}
         loading={loading}
         onCellClick={onCellClick}
-        rowKey={(row) => row._source._self}
+        rowKey={(row) => row.id}
         rowSelection={rowSelection}
         showLoadMore={toggleDisplayMore}
         scrollable={scrollable}

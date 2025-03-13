@@ -10,42 +10,42 @@ export default function columnKeyToFilter(key: string): Filter {
         field: key,
         type: FilterTypeEnum.CheckList,
         value: [],
-        aggregationType: 'buckets',
+        constraint: fieldConfig.constraint,
       };
     case FilterTypeEnum.DateRange:
       return {
         field: key,
         type: FilterTypeEnum.DateRange,
         value: { gte: null, lte: null },
-        aggregationType: 'stats',
+        constraint: fieldConfig.constraint,
       };
     case FilterTypeEnum.ValueRange:
       return {
         field: key,
         type: FilterTypeEnum.ValueRange,
         value: { gte: null, lte: null },
-        aggregationType: 'stats',
+        constraint: fieldConfig.constraint,
       };
     case FilterTypeEnum.ValueOrRange:
       return {
         field: key,
         type: FilterTypeEnum.ValueOrRange,
         value: null,
-        aggregationType: 'buckets',
+        constraint: fieldConfig.constraint,
       };
     case FilterTypeEnum.Text:
       return {
         field: key,
         type: FilterTypeEnum.Text,
         value: '',
-        aggregationType: null,
+        constraint: fieldConfig.constraint,
       };
     default:
       return {
         field: key,
-        aggregationType: null,
         type: null,
         value: null,
+        constraint: fieldConfig.constraint,
       };
   }
 }
