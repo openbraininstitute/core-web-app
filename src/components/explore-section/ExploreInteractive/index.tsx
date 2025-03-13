@@ -1,9 +1,14 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+
 import DataTypeTabs from './DataTypeTabs';
 import SelectedBrainRegionMETypes from './SelectedBrainRegionMETypes';
 import DataTypeStatPanel from './DataTypeStatPanel';
 import ThreeDeeBrain from '@/components/ThreeDeeBrain';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import LitteratureSuggestions from '@/components/litterature-suggestions';
+
+const LitteratureSuggestions = dynamic(() => import('@/components/litterature-suggestions'));
 
 type ExploreInteractivePanelProps = {
   virtualLabInfo?: VirtualLabInfo;
