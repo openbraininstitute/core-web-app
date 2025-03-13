@@ -7,7 +7,6 @@ import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideBar from '@/components/VirtualLab/side-bar/home-sidebar';
 import Logout from '@/components/VirtualLab/side-bar/logout';
-import { logError } from '@/util/logger';
 
 export const metadata: Metadata = {
   title: 'Virtual labs',
@@ -47,6 +46,9 @@ export default async function Page() {
       </div>
     );
   } catch (error) {
-    throw new Error(`Failed to list virtual labs: ${(error as Error).message}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`We encountered an issue while loading your virtual labs: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }
