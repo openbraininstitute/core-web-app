@@ -137,6 +137,7 @@ export function Form({ onPrevious }: Props) {
 
   return (
     <form
+      data-testid="subscription-payment-from"
       name="stripe-payment-flow-step"
       className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center"
       onSubmit={onSubmit}

@@ -130,7 +130,10 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
         message={verificationMsg}
       />
       {sendCode && (
-        <div className="h-full w-4/5 animate-fade-in border border-gray-300 px-8 pt-3 text-primary-8">
+        <div
+          data-testid="verification-code-form"
+          className="h-full w-4/5 animate-fade-in border border-gray-300 px-8 pt-3 text-primary-8"
+        >
           <h2 className="text-lg font-bold">
             Enter your code here
             {verificationLoading && <LoadingOutlined className="ml-2" />}

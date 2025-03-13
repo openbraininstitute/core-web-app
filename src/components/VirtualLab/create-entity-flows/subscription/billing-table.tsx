@@ -118,6 +118,7 @@ export default function BillingTable({ payments }: Props) {
       }}
     >
       <Table
+        data-testid="subscription-history"
         columns={columns}
         dataSource={payments}
         rowKey="id"

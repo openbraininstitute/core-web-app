@@ -17,6 +17,7 @@ export default function StandalonePayment() {
     <>
       <Button
         key="buy-credits-btn"
+        data-testid="by-credits-btn"
         className={classNames(
           'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
           'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',

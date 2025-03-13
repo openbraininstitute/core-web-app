@@ -121,7 +121,10 @@ export function NoSubscriptionFound() {
 
 export function FreeSubscriptionStatus() {
   return (
-    <div className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div
+      data-testid="free-subscription-status"
+      className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
+    >
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold">Free plan</h2>
@@ -141,7 +144,10 @@ export function FreeSubscriptionStatus() {
 
 export function PaidSubscriptionStatus({ data }: { data: UserActiveSubscriptionResponse }) {
   return (
-    <div className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div
+      data-testid="paid-subscription-status"
+      className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
+    >
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold">Pro plan</h2>
@@ -177,7 +183,10 @@ export function PaidSubscriptionStatus({ data }: { data: UserActiveSubscriptionR
 
 export function SubscriptionCheckoutError() {
   return (
-    <div className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div
+      data-testid="subscription-checkout-error"
+      className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
+    >
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold text-red-200">

@@ -23,8 +23,10 @@ export default async function History() {
   );
 
   return (
-    <div className="h-full w-full py-5">
-      {allPayments.length > 0 && <BillingTable payments={allPayments} />}
-    </div>
+    allPayments.length > 0 && (
+      <div data-testid="payments-list" className="h-full w-full py-5">
+        <BillingTable payments={allPayments} />
+      </div>
+    )
   );
 }

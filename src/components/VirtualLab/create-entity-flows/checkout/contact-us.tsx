@@ -35,7 +35,7 @@ export default function ContactUs({ isOpen, onClose }: { isOpen: boolean; onClos
       ]}
       cls={{ content: '!min-h-[8rem]' }}
     >
-      <div className="flex flex-col gap-2">
+      <div data-testid="contact-us-form" className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-primary-8">
           Upgrade to Premium – Tell Us Your Needs!
         </h1>
