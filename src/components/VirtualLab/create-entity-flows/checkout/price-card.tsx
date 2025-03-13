@@ -30,6 +30,7 @@ function PricingCard({
     <motion.button
       layout
       id={id}
+      data-testid="price-card"
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       initial={{ opacity: 0, y: 20 }}
@@ -84,7 +85,10 @@ export default function PricingToggleCards() {
   if (!tier) return null;
 
   return (
-    <div className="flex w-full flex-row items-center justify-center gap-3 pb-4">
+    <div
+      data-testid="price-cards"
+      className="flex w-full flex-row items-center justify-center gap-3 pb-4"
+    >
       {tier?.prices &&
         tier.prices.map((o) => (
           <PricingCard

@@ -153,7 +153,10 @@ function TiersComparison({
   });
 
   return (
-    <div className="relative flex h-full max-h-[85vh] w-full flex-col bg-primary-9 p-6 pb-24 text-white">
+    <div
+      data-testid="tiers-list"
+      className="relative flex h-full max-h-[85vh] w-full flex-col bg-primary-9 p-6 pb-24 text-white"
+    >
       <div
         id="tier-highlighter"
         className="pointer-events-none absolute bottom-[40px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6"
@@ -200,6 +203,7 @@ function TiersComparison({
               onMouseLeave={() => setHoveredTier(null)}
               onClick={onTierClick(t)}
               aria-disabled={t.title === 'Pro' && !canSelect}
+              data-testid="tier-btn"
             >
               <h2 className="mb-2 text-2xl font-bold">{t.title}</h2>
               {t.price && t.title === 'Pro' && (
@@ -372,6 +376,7 @@ export default function TiersList({ currentTier, canSelect, onNextStep }: Props)
         <div className="fixed bottom-6 right-6">
           <Button
             key="create-project-btn"
+            data-testid="to-payment-btn"
             className={classNames(
               'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
               'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',

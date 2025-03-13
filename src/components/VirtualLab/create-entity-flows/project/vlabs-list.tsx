@@ -8,7 +8,10 @@ import { virtualLabsOfUserAtom } from '@/state/virtual-lab/lab';
 export default function List() {
   const list = useAtomValue(loadable(virtualLabsOfUserAtom));
   return (
-    <div className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12">
+    <div
+      data-testid="labs-dropdown-list"
+      className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12"
+    >
       <div className="flex h-full flex-grow flex-col">
         <Form.Item
           label={
@@ -24,6 +27,7 @@ export default function List() {
           className="w-full flex-1"
         >
           <Select
+            data-testid="labs-dropdown"
             size="large"
             options={
               list.state === 'hasData'

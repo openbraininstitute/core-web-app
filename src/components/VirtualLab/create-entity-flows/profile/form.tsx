@@ -86,9 +86,13 @@ function Profile({ data }: Props) {
 
   if (!hydrated) return null;
   return (
-    <div className="flex animate-fade-in items-center justify-center p-4">
+    <div
+      data-testid="profile-form-container"
+      className="flex animate-fade-in items-center justify-center p-4"
+    >
       <div className="w-full max-w-3xl">
         <Form
+          data-testid="profile-form"
           form={form}
           layout="vertical"
           className="profile-form"

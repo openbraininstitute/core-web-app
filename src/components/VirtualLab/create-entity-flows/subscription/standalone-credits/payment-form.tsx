@@ -150,7 +150,10 @@ function Form({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center">
+    <div
+      data-testid="stripe-payment-form"
+      className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center"
+    >
       <div className="flex h-full w-full flex-grow flex-col items-center justify-center">
         <CreditConverter showActions={false} />
         <div className="mx-auto  flex w-full flex-col rounded-lg bg-white">

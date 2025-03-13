@@ -29,7 +29,10 @@ export default function Overview() {
   });
 
   return (
-    <div className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12">
+    <div
+      data-testid="project-overview"
+      className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12"
+    >
       <Form.Item
         validateDebounce={800}
         label={<span className="font-semibold text-primary-8">Project&#39;s Name</span>}

@@ -31,7 +31,7 @@ export function CreditConverter({ showActions = true }: { showActions?: boolean 
   };
 
   return (
-    <div className="mx-auto flex w-full flex-col items-center">
+    <div data-testid="credit-converter" className="mx-auto flex w-full flex-col items-center">
       <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-4 w-full bg-white">
           <div className="flex w-full items-center justify-center">
