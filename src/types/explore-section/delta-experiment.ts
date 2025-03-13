@@ -83,3 +83,5 @@ export type Experiment =
   | ExperimentalSynapsesPerConnection
   | ExperimentalTrace
   | ReconstructedNeuronMorphology;
+
+export type EntityCore = IReconstructionMorphology;

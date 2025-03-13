@@ -10,7 +10,6 @@ import {
 } from '@/state/explore-section/generalization';
 import { filtersAtom } from '@/state/explore-section/list-view-atoms';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import ControlPanel from '@/components/explore-section/ControlPanel';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import { DataType } from '@/constants/explore-section/list-views';
 import ListingFilterPanel from '@/features/listing-filter-panel';
@@ -38,7 +37,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
     )
   );
 
-  const aggregations = useAtomValue(
+  const facets = useAtomValue(
     useMemo(
       () => unwrap(resourceBasedResponseAggregationsAtom({ resourceId, dataType })),
       [dataType, resourceId]

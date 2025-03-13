@@ -33,10 +33,11 @@ import {
   ExperimentalSynapsesPerConnection,
   ExperimentalTrace,
   Experiment as DeltaExperiment,
+  EntityCore,
 } from '@/types/explore-section/delta-experiment';
 import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import { DisplayMessages } from '@/constants/display-messages';
 import { getEtypeFromEModel, getMtypeFromMModel } from '@/util/modelMEtypes';
 import { EModel, NeuronMorphology } from '@/types/e-model';
@@ -812,6 +813,7 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       plural: 'Brain Regions',
       singular: 'Brain Region',
     },
+    constraint: "brain_region_id",
   },
   [EntityCoreFields.Species]: {
     title: 'Species',
@@ -821,6 +823,7 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       plural: 'Species',
       singular: 'Species',
     },
+    constraint: "species__name__in",
   },
   [EntityCoreFields.MType]: {
     fieldType: FieldType.CellType,
@@ -831,5 +834,6 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       plural: 'M-Types',
       singular: 'M-Type',
     },
+    constraint: "mtype__pref_label__in"
   },
 };

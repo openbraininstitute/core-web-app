@@ -8,7 +8,7 @@ export type Facet = {
   id: string;
   label: string;
   count: number;
-  type: string | null;
+  type?: string | null;
 }
 
 export type Facets = Record<string, Array<Facet>>

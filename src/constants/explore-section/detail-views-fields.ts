@@ -1,34 +1,31 @@
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { Field, EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
 import { DetailProps } from '@/types/explore-section/application';
 
 export const COMMON_FIELDS = [
   {
-    field: Field.Description,
+    field: EntityCoreFields.Description,
     className: 'col-span-3',
   },
   {
-    field: Field.Contributors,
+    field: EntityCoreFields.Contributors,
   },
   {
-    field: Field.RegistrationDate,
+    field: EntityCoreFields.RegistrationDate,
   },
 ] as DetailProps[];
 
 export const NEURON_MORPHOLOGY_FIELDS = [
   {
-    field: Field.BrainRegion,
+    field: EntityCoreFields.BrainRegion,
   },
   {
-    field: Field.SubjectSpecies,
+    field: EntityCoreFields.Species,
   },
   {
-    field: Field.License,
+    field: EntityCoreFields.License,
   },
   {
-    field: Field.MType,
-  },
-  {
-    field: Field.SubjectAge,
+    field: EntityCoreFields.MType,
   },
 ] as DetailProps[];
 

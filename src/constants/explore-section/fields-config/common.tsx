@@ -17,12 +17,15 @@ import Contributors from '@/components/explore-section/Contributors';
 import PreviewThumbnail from '@/components/explore-section/ExploreSectionListingView/PreviewThumbnail';
 import timeElapsedFromToday from '@/util/date';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import {
   ExperimentalTrace,
   ReconstructedNeuronMorphology,
 } from '@/types/explore-section/es-experiment';
-import { Experiment as DeltaExperiment } from '@/types/explore-section/delta-experiment';
+import {
+  Experiment as DeltaExperiment,
+  EntityCore,
+} from '@/types/explore-section/delta-experiment';
 import { SimulationCampaign as DeltaSimulationCampaign } from '@/types/explore-section/delta-simulation-campaigns';
 import {
   ExemplarMorphologyDataType as ExemplarMorphologyEModel,
@@ -244,6 +247,7 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Names',
       singular: 'Name',
     },
+    constraint: "name__ilike",
   },
   [EntityCoreFields.CreationDate]: {
     title: 'Creation date',
@@ -253,6 +257,10 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Dates',
       singular: 'Date',
     },
+    constraint: {
+      gte: "creation_date__gte",
+      lte: "creation_date__lte",
+    }
   },
   [EntityCoreFields.RegistrationDate]: {
     title: 'Registration date',
@@ -262,6 +270,10 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Dates',
       singular: 'Date',
     },
+    constraint: {
+      gte: "creation_date__gte",
+      lte: "creation_date__lte",
+    }
   },
   [EntityCoreFields.UpdateDate]: {
     title: 'Update date',
@@ -271,6 +283,10 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Dates',
       singular: 'Date',
     },
+    constraint: {
+      gte: "update_date__gte",
+      lte: "update_date__lte",
+    }
   },
   [EntityCoreFields.Description]: {
     title: 'Description',
@@ -281,7 +297,7 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       singular: 'Description',
     },
   },
-  [EntityCoreFields.Contributors]: {
+  [EntityCoreFields.Contribution]: {
     title: 'Contributors',
     filter: FilterTypeEnum.CheckList,
     render: (r) => renderEmptyOrValue(transformAgentToNames(r.contributors)),
@@ -289,5 +305,6 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Contributors',
       singular: 'Contributor',
     },
+    constraint: "contribution__pref_label__in"
   },
 };

@@ -40,15 +40,15 @@ export default function WithListingFilterPanel({
 
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
+  const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
+  const facets = data?.facets;
+
   const [filters, setFilters] = useAtom(
     useMemo(
       () => unwrap(filtersAtom({ dataType, dataScope, key: dataKey })),
       [dataType, dataScope, dataKey]
     )
   );
-
-  const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
-  const aggregations = data?.aggs;
 
   return (
     <>
@@ -69,6 +69,7 @@ export default function WithListingFilterPanel({
           dataType={dataType}
           dataScope={dataScope}
           dataKey={dataKey}
+          facets={facets}
         />
       )}
     </>

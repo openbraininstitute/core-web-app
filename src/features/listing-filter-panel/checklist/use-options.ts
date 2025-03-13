@@ -1,26 +1,29 @@
 import { useMemo } from 'react';
 
-export type FacetLabelValuePair = { id: string, label: string; value: string | number };
+export type FacetLabelValuePair = { id: string, label: string; value: string, type?: string | null; count: number; };
 
-export type FacetOptionsList = {
+export type FacetOptionsList = Array<{
   id: string;
   label: string;
-  value: string | number;
+  value: string;
   checked: boolean;
-}[] | undefined;
+  count: number;
+  type?: string | null;
+}> | undefined;
 
 
 export function useOptions(values: Array<string>, data?: Array<FacetLabelValuePair>): FacetOptionsList {
   return useMemo(() => {
     return (
       data &&
-      data.map((item) => {
-        const id = String(item.id);
+      data.map(({ id, label, value, type, count }) => {
         return {
           id,
-          label: item.label,
-          value: item.value,
-          checked: values?.includes(id),
+          label,
+          type,
+          value,
+          count,
+          checked: values?.includes(label),
         };
       })
     );

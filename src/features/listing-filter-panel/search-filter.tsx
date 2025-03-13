@@ -7,8 +7,7 @@ import { FacetLabelValuePair, useOptions } from '@/features/listing-filter-panel
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 
 import Search from '@/components/Search';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
-import { BucketAggregation } from '@/types/explore-section/es-aggs';
+import { DefaultOptionType } from 'antd/es/select';
 
 export default function SearchFilter({
   data,
@@ -21,9 +20,10 @@ export default function SearchFilter({
   values: string[];
   onChange: (newValues: string[]) => void;
 }) {
-  const buckets = data?.buckets ?? data?.excludeOwnFilter?.buckets;
-  const options = useOptions(values, buckets);
-  const handleCheckedChange = (value: string) => {
+
+  const options = useOptions(values, data);
+
+  const handleCheckedChange = (value: string, option: DefaultOptionType) => {
     let newValues = [...values];
     if (values.includes(value)) {
       newValues = values.filter((val) => val !== value);
@@ -35,7 +35,6 @@ export default function SearchFilter({
 
   const tagRender = (tagProps: CustomTagProps) => {
     const { label, closable, onClose } = tagProps;
-
     return (
       <ConfigProvider
         theme={{
@@ -72,10 +71,12 @@ export default function SearchFilter({
           value: id,
         }))}
         mode="multiple"
-        placeholder={`Search for ${EXPLORE_FIELDS_CONFIG[filter.field].vocabulary.plural}`}
-        tagRender={tagRender}
+        placeholder={`Search for ${ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.plural}`}
+        tagRender={(props) => {
+          return tagRender(props)
+        }}
         value={options.reduce(
-          (acc: string[], { checked, id }) => (checked ? [...acc, id] : acc),
+          (acc: string[], { checked, label }) => (checked ? [...acc, label] : acc),
           []
         )}
       />

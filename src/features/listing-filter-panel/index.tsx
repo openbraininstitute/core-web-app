@@ -1,3 +1,5 @@
+/* eslint-disable no-case-declarations */
+
 import {
   ChangeEvent,
   Dispatch,
@@ -7,8 +9,8 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Input, Spin } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+import { Input } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import map from 'lodash/map';
@@ -35,8 +37,8 @@ export type ListingFilterPanelProps = {
   dataType: DataType;
   dataScope?: ExploreDataScope;
   dataKey: string;
-  aggregations?: Aggregations;
   filters: Filter[];
+  facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
   resourceId?: string;
@@ -45,32 +47,12 @@ export type ListingFilterPanelProps = {
 
 function createFilterItemComponent(
   filter: Filter,
-  aggregations: Aggregations | undefined,
+  facets: Facets | undefined,
   filterValues: FilterValues,
   setFilterValues: Dispatch<SetStateAction<FilterValues>>
 ) {
-
-  console.log("ᦨ #  index.tsx:55 #  filter:", filter);
-
-
-  console.log("ᦨ #  index.tsx:55 #  facets:", facets);
-
-
-  console.log("ᦨ #  index.tsx:55 #  filterValues:", filterValues);
-
   return function FilterItemComponent() {
     const { type } = filter;
-    const esConfig = getFieldEsConfig(filter.field);
-
-    let agg;
-
-    if (!aggregations) {
-      return (
-        <div className="flex items-center justify-center">
-          <Spin indicator={<LoadingOutlined />} />
-        </div>
-      );
-    }
 
     const updateFilterValues = (field: string, values: Filter['value']) => {
       setFilterValues((prevState) => ({
@@ -79,7 +61,11 @@ function createFilterItemComponent(
       }));
     };
 
-    if (!aggregations) return null;
+    const emptyFilter = (
+      <div className="pl-9 font-light italic text-white">
+        No filter available for this property yet
+      </div>
+    );
 
     switch (type) {
       case FilterTypeEnum.DateRange:
@@ -91,12 +77,14 @@ function createFilterItemComponent(
         );
 
       case FilterTypeEnum.ValueRange:
-        if (esConfig?.nested) {
-          const nestedAgg = aggregations[filter.field] as NestedStatsAggregation;
-          agg = nestedAgg[filter.field][esConfig?.nested.aggregationName];
-        } else {
-          agg = aggregations[filter.field] as Statistics;
-        }
+        if (!facets) return emptyFilter;
+
+        // if (esConfig?.nested) {
+        //   const nestedAgg = facets[filter.field] as NestedStatsAggregation;
+        //   facet = nestedAgg[filter.field][esConfig?.nested.aggregationName];
+        // } else {
+        //   facet = facets[filter.field] as Statistics;
+        // }
 
         // return (
         //   <ValueRange
@@ -109,17 +97,15 @@ function createFilterItemComponent(
 
       case FilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
-        const facetItems = map(facets[filter.field], (facet) => ({
-          id: facet.id,
-          label: facet.label,
-          value: facet.count,
+        const facetItems = map(facets[filter.field], ({ id, label, count, type }) => ({
+          id, label, type, count,
+          value: label,
         }));
-
         return (
           <CheckList
-            data={agg}
+            data={facetItems}
             filter={filter}
-            values={filterValues[filter.field] as string[]}
+            values={filterValues[filter.field] as string[] ?? []}
             onChange={(values: string[]) => updateFilterValues(filter.field, values)}
           >
             {defaultList}
@@ -168,9 +154,9 @@ export default function ListingFilterPanel({
   dataType,
   dataScope,
   dataKey,
-  aggregations,
   filters,
   setFilters,
+  facets,
   showDisplayTrigger = true,
   resourceId,
 }: ListingFilterPanelProps) {
@@ -184,7 +170,6 @@ export default function ListingFilterPanel({
       [dataType, dataScope, dataKey]
     )
   );
-
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;
@@ -224,7 +209,7 @@ export default function ListingFilterPanel({
     ?.map((filter) => {
       return {
         content: filter.type
-          ? createFilterItemComponent(filter, aggregations, filterValues, setFilterValues)
+          ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
           : undefined,
         display: activeColumns?.includes(filter.field),
         label: fieldTitleSentenceCase(getFieldLabel(filter.field)),
@@ -235,7 +220,7 @@ export default function ListingFilterPanel({
       };
     })
     .filter((item) => showDisplayTrigger || item.content !== undefined) // If showDisplayTrigger is false and content is undefined that filter is not needed.
-    , []);
+    , [filters, facets, filterValues, setFilterValues, activeColumns, showDisplayTrigger, onToggleActive]);
 
   // The columnKeyToFilter method receives a string (key)
   // and in this case it is the equivalent to a filters[x].field
@@ -249,22 +234,24 @@ export default function ListingFilterPanel({
       data-testid="listing-view-filter-panel"
       className="fixed right-0 top-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 px-8 pt-6"
     >
-      <div>
-        <button
-          autoFocus // eslint-disable-line jsx-a11y/no-autofocus
-          type="button"
-          onClick={toggleDisplay}
-          className="float-right text-white"
-          aria-label="Close"
-        >
-          <CloseOutlined />
-        </button>
-        <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
-          Filters
-          <small className="text-base font-light text-primary-3">{activeColumnsText}</small>
-        </span>
+      <div className="mb-auto">
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
+            Filters
+            <small className="text-base font-light text-primary-3">{activeColumnsText}</small>
+          </span>
+          <button
+            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+            type="button"
+            onClick={toggleDisplay}
+            className="rounded-md px-2 py-1 text-white hover:bg-neutral-1 hover:bg-opacity-30"
+            aria-label="Close"
+          >
+            <CloseOutlined />
+          </button>
+        </div>
 
-        <p className="text-white">
+        <p className="pr-4 text-white">
           Use the eye icon to hide/show columns. Select the column titles and tick the checkbox of
           the option(s).
         </p>
@@ -275,7 +262,7 @@ export default function ListingFilterPanel({
         </div>
       </div>
 
-      <div className="sticky bottom-0 left-0 flex w-full items-center justify-between bg-primary-8 px-4 py-6">
+      <div className="sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between bg-primary-8 py-6">
         <ClearFilters onClick={clearFilters} />
         <button
           type="submit"

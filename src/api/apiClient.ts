@@ -26,35 +26,37 @@ type RequestOptions = {
   signal?: AbortSignal;
 };
 
+// New cache configuration type
+type CacheConfiguration = {
+  enabled: boolean;
+  ttlInSeconds: number;
+  cacheName: string;
+  excludeUrls?: RegExp[];
+};
+
 type ApiClientOptions = {
   rootUri: string;
   token?: string;
   headers?: Record<string, string>;
   config?: RequestConfiguration;
+  cache?: CacheConfiguration; // Add cache configuration to options
 };
 
 class ApiClient {
   private _rootUrl: string;
-
   private _headers: Record<string, string>;
-
   private _token?: string;
-
   private _timeout?: number;
-
   private _attempts?: number;
-
   private _backoff?: BackoffStrategy;
-
   private _retryOnError?: boolean;
-
   private _retryOnException?: boolean;
+  private _cacheConfig?: CacheConfiguration; // Cache configuration
 
   private requestInterceptors: ((request: Request) => Promise<Request>)[] = [];
-
   private responseInterceptors: ((response: Response) => Promise<Response>)[] = [];
 
-  constructor({ rootUri: rootUrl, token, headers = {}, config = {} }: ApiClientOptions) {
+  constructor({ rootUri: rootUrl, token, headers = {}, config = {}, cache }: ApiClientOptions) {
     this._rootUrl = rootUrl;
     this._headers = headers ?? {
       'Content-Type': 'application/json',
@@ -66,24 +68,122 @@ class ApiClient {
     this._backoff = config.backoff;
     this._retryOnError = config.retryOnError;
     this._retryOnException = config.retryOnException;
+    this._cacheConfig = cache; // Store cache configuration
   }
 
   /**
-   * Makes an HTTP request.
+   * checks if caching should be used for a specific URL
+   *
+   * @param {string} url - url to check
+   * @param {CacheConfiguration} cacheConfig - cache configuration
+   * @returns {boolean} whether caching should be used
+   */
+  private shouldUseCache(url: string, cacheConfig?: CacheConfiguration): boolean {
+    if (!cacheConfig?.enabled) return false;
+
+    // check if url is in the exclude list
+    if (cacheConfig.excludeUrls) {
+      for (const pattern of cacheConfig.excludeUrls) {
+        if (pattern.test(url)) return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * checks if a cached response exists and is still valid
+   *
+   * @param {string} url - url to fetch from cache
+   * @param {CacheConfiguration} cacheConfig -  cache configuration
+   * @returns {Promise<{ valid: boolean, response: Response | null }>} cache status and response
+   */
+  private async checkCache(url: string, cacheConfig: CacheConfiguration): Promise<{
+    valid: boolean,
+    response: Response | null
+  }> {
+    if (typeof caches === 'undefined') {
+      return { valid: false, response: null };
+    }
+
+    try {
+      const cache = await caches.open(cacheConfig.cacheName);
+      const cachedResponse = await cache.match(url);
+
+      if (!cachedResponse) {
+        return { valid: false, response: null };
+      }
+
+      // check if the cache has expired
+      const cacheDate = cachedResponse.headers.get('x-cache-timestamp');
+
+      if (!cacheDate) {
+        return { valid: false, response: cachedResponse };
+      }
+
+      const cacheTimestamp = parseInt(cacheDate, 10);
+      const now = Date.now();
+      const ageInSeconds = (now - cacheTimestamp) / 1000;
+
+      return {
+        valid: ageInSeconds < cacheConfig.ttlInSeconds,
+        response: cachedResponse
+      };
+    } catch (e) {
+      console.warn('Cache API access failed:', e);
+      return { valid: false, response: null };
+    }
+  }
+
+  /**
+   * stores a response in the cache
+   *
+   * @param {string} url - url to use as the cache key
+   * @param {Response} response - response to cache
+   * @param {CacheConfiguration} cacheConfig - cache configuration
+   * @returns {Promise<void>}
+   */
+  private async storeInCache(url: string, response: Response, cacheConfig: CacheConfiguration): Promise<void> {
+    if (typeof caches === 'undefined') return;
+
+    try {
+      const cache = await caches.open(cacheConfig.cacheName);
+
+      // Clone the response before using it
+      const responseToCache = response.clone();
+
+      // Create a new response with our custom timestamp header
+      const headers = new Headers(responseToCache.headers);
+      headers.set('x-cache-timestamp', Date.now().toString());
+
+      const cachedResponseToStore = new Response(await responseToCache.blob(), {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers: headers
+      });
+
+      await cache.put(url, cachedResponseToStore);
+    } catch (e) {
+      console.warn('Failed to store in cache:', e);
+    }
+  }
+
+  /**
+   * makes an http request with optional caching.
    *
    * @template T
-   * @param {string} method - The HTTP method (GET, POST, etc.)
-   * @param {string} endpoint - The endpoint to send the request to
-   * @param {RequestOptions} [options] - The options for the request
-   * @param {RequestConfiguration} [config] - The configuration for the request
-   * @param {() => void} [onAbort] - Callback function to execute if the request is aborted
-   * @returns {Promise<T>} A promise that resolves to the response data
+   * @param {string} method - http method (GET, POST, etc.)
+   * @param {string} endpoint -  endpoint to send the request to
+   * @param {RequestOptions} [options] - options for the request
+   * @param {RequestConfiguration & { cache?: CacheConfiguration }} [config] - configuration for the request including cache options
+   * @param {() => void} [onAbort] - callback function to execute if the request is aborted
+   * @returns {Promise<T>} a promise that resolves to the response data
    */
   private async _request<T>(
     method: string,
     endpoint: string,
     options: RequestOptions = {},
-    config: RequestConfiguration = {},
+    config: RequestConfiguration & { cache?: CacheConfiguration } = {},
     onAbort?: () => void
   ): Promise<T> {
     let attempt = 0;
@@ -98,9 +198,40 @@ class ApiClient {
       }
     });
 
+    const urlString = url.toString();
+
+    // determine if caching should be used for this request
+    const requestCacheConfig = config.cache ?? this._cacheConfig;
+    const useCache = method.toLowerCase() === 'get' &&
+      this.shouldUseCache(urlString, requestCacheConfig);
+
+    // get from cache first for "get" requests
+    if (useCache && requestCacheConfig) {
+      const { valid, response: cachedResponse } = await this.checkCache(urlString, requestCacheConfig);
+
+      if (valid && cachedResponse) {
+        console.debug(`[cached] ${urlString}`);
+        const contentType = cachedResponse.headers.get('Content-Type') || '';
+        if (contentType.includes('application/json')) {
+          return cachedResponse.json();
+        } else if (contentType.includes('text')) {
+          return (await cachedResponse.text()) as unknown as T;
+        } else if (contentType.includes('application/octet-stream')) {
+          return (await cachedResponse.blob()) as unknown as T;
+        } else {
+          return (await cachedResponse.arrayBuffer()) as unknown as T;
+        }
+      }
+
+      // if cache is invalid or expired, continue with the request
+      if (cachedResponse) {
+        console.log(`Cache expired for ${urlString}, fetching fresh data`);
+      }
+    }
+
     const runRequest = async (): Promise<T> => {
       attempt++;
-      let request = new Request(url.toString(), {
+      let request = new Request(urlString, {
         method,
         headers: {
           ...this._headers,
@@ -126,13 +257,17 @@ class ApiClient {
         return runRequest();
       }
 
+      // store successful GET responses in cache if caching is enabled
+      if (useCache && response.ok && requestCacheConfig) {
+        await this.storeInCache(urlString, response, requestCacheConfig);
+      }
+
       const contentType = response.headers.get('Content-Type') || '';
       let responseData: T;
       if (contentType.includes('application/json')) {
         responseData = await response.json();
       } else if (contentType.includes('text')) {
         responseData = (await response.text()) as unknown as T;
-        // TODO: fix the return type for binary types
       } else if (contentType.includes('application/octet-stream')) {
         responseData = (await response.blob()) as unknown as T;
       } else {
@@ -155,6 +290,8 @@ class ApiClient {
         });
       }
 
+
+
       return responseData;
     };
 
@@ -175,7 +312,7 @@ class ApiClient {
   }
 
   /**
-   * Calculates the backoff delay based on the attempt number and strategy.
+   * calculates the backoff delay based on the attempt number and strategy.
    *
    * @param {number} attempt - The current attempt number
    * @param {BackoffStrategy} [backoff] - The backoff strategy
@@ -189,34 +326,85 @@ class ApiClient {
     return backoff.type === 'exponential' ? backoff.delay * 2 ** (attempt - 1) : backoff.delay;
   }
 
-  get<T>(endpoint: string, options?: RequestOptions, config?: RequestConfiguration) {
+  /**
+   * clears all cached responses or specific URL
+   * 
+   * @param {string} [url] - optional specific url to clear from cache
+   * @returns {Promise<boolean>} Whether the operation succeeded
+   */
+  async clearCache(url?: string): Promise<boolean> {
+    if (!this._cacheConfig?.enabled || typeof caches === 'undefined') {
+      return false;
+    }
+
+    try {
+      const cache = await caches.open(this._cacheConfig.cacheName);
+
+      if (url) {
+        // Clear specific URL
+        const fullUrl = new URL(url, this._rootUrl).toString();
+        await cache.delete(fullUrl);
+      } else {
+        // Clear all cache
+        await caches.delete(this._cacheConfig.cacheName);
+      }
+
+      return true;
+    } catch (e) {
+      console.error('Failed to clear cache:', e);
+      return false;
+    }
+  }
+
+  get<T>(
+    endpoint: string,
+    options?: RequestOptions,
+    config?: RequestConfiguration & { cache?: CacheConfiguration }
+  ) {
     return this._request<T>('get', endpoint, options, config);
   }
 
-  post<T>(endpoint: string, options?: RequestOptions, config?: RequestConfiguration) {
+  post<T>(
+    endpoint: string,
+    options?: RequestOptions,
+    config?: RequestConfiguration & { cache?: CacheConfiguration }
+  ) {
     return this._request<T>('post', endpoint, options, config);
   }
 
-  put<T>(endpoint: string, options?: RequestOptions, config?: RequestConfiguration) {
+  put<T>(
+    endpoint: string,
+    options?: RequestOptions,
+    config?: RequestConfiguration & { cache?: CacheConfiguration }
+  ) {
     return this._request<T>('put', endpoint, options, config);
   }
 
-  delete<T>(endpoint: string, options?: RequestOptions, config?: RequestConfiguration) {
+  delete<T>(
+    endpoint: string,
+    options?: RequestOptions,
+    config?: RequestConfiguration & { cache?: CacheConfiguration }
+  ) {
     return this._request<T>('delete', endpoint, options, config);
   }
 }
 
 /**
- * Creates an authenticated API client.
+ * creates an authenticated API client.
  *
- * @param {string} rootUri - The root URI for the API client
- * @returns {Promise<ApiClient>} A promise that resolves to an instance of ApiClient
+ * @param {string} rootUri - the root url for the api client
+ * @param {CacheConfiguration} [cacheConfig] - optional cache configuration
+ * @returns {Promise<ApiClient>} a promise that resolves to an instance of ApiClient
  */
-export default async function authApiClient(rootUri: string) {
+export default async function authApiClient(
+  rootUri: string,
+  cacheConfig?: CacheConfiguration
+) {
   const session = await getSession();
 
   return new ApiClient({
     rootUri,
     token: session?.accessToken,
+    cache: cacheConfig
   });
 }

@@ -17,6 +17,7 @@ function NumericResultsInfo({
 }) {
   const res = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
 
+  if (!res) return null;
   return (
     <div className="flex w-full justify-start">
       <div
@@ -25,8 +26,7 @@ function NumericResultsInfo({
         aria-label="listing-view-title"
       >
         <span>Results </span>
-
-        <strong>{res?.total.value.toLocaleString('en-US')}</strong>
+        <strong>{res?.pagination.total_items.toLocaleString('en-US')}</strong>
       </div>
     </div>
   );

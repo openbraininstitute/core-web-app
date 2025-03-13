@@ -9,9 +9,9 @@ export interface GteLteValue {
 
 interface BaseFilter {
   field: string;
-  aggregationType: AggregationType;
   type: null;
   value: null;
+  constraint?: string | Record<string, string>;
 }
 
 export interface CheckListFilter extends Omit<BaseFilter, 'type' | 'value'> {

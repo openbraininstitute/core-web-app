@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { CheckIcon } from '@/components/icons';
 import { tryCatch } from '@/api/utils';
 import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
-import { ReactNode, Suspense } from 'react';
+import { memo, ReactNode, Suspense, useEffect, useState } from 'react';
 import { Spin } from 'antd';
 
 const DisplayLabel = (filterField: string, key: string): string | null => {
@@ -24,6 +24,7 @@ export function CheckListOption({
   id,
   filterField,
   label,
+  type,
   children,
 }: {
   children: ReactNode;
@@ -33,9 +34,11 @@ export function CheckListOption({
   id: string;
   filterField: string;
   label: string;
+  type?: string | null
 }) {
+  const onCheckedChange = () => handleCheckedChange(label);
   return (
-    <li className="flex flex-col gap-2" key={id}>
+    <li className="flex flex-col gap-2" key={`${filterField}–${id}`}>
       <div className="flex items-center justify-between pt-3">
         <span className="font-bold text-white">{DisplayLabel(filterField, label)}</span>
         <span className="flex items-center justify-between gap-2">
@@ -43,7 +46,7 @@ export function CheckListOption({
           <Checkbox.Root
             className="h-[14px] w-[14px] rounded border border-white bg-transparent"
             checked={!!checked}
-            onCheckedChange={() => handleCheckedChange(id)}
+            onCheckedChange={onCheckedChange}
           >
             <Checkbox.Indicator className="flex w-full items-center justify-center">
               <CheckIcon className="check" fill="#fff" />
@@ -56,10 +59,30 @@ export function CheckListOption({
   );
 }
 
-export async function CheckListDescription({ id }: { id: string }) {
-  const { data, error } = await tryCatch(getMtype({ id }));
-  if (error) return null;
+export const CheckListDescription = memo(function Description({
+  id,
+  filterField,
+  label,
+  type
+}: {
+  id: string;
+  filterField: string;
+  label: string;
+  type?: string | null
+}) {
+  const [definition, setDefinition] = useState<string | null>(null);
+
+  useEffect(() => {
+    // TODO: fetch based on the type
+    async function getDefinition() {
+      const { data, error } = await tryCatch(getMtype({ id }));
+      if (error) return null;
+      setDefinition(data.definition);
+    }
+    getDefinition();
+  }, [id])
+
   return (
-    <span className="text-primary-1 text-justify text-balance">{data.definition}</span>
+    <span className="text-primary-1 text-justify text-balance">{definition}</span>
   )
-}
+}, ({ id }, { id: nextId }) => id !== nextId);
