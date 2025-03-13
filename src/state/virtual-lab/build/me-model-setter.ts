@@ -28,7 +28,7 @@ type MEModelDetails = {
 
 export const meModelDetailsAtom = atomWithDefault<MEModelDetails | null>(() => null);
 
-export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelResource | null>>(
+export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelResource>>(
   null,
   async (get, set, virtualLabInfo) => {
     const session = get(sessionAtom);
@@ -37,7 +37,9 @@ export const createMEModelAtom = atom<null, [VirtualLabInfo], Promise<MEModelRes
     const meModelDetails = get(meModelDetailsAtom);
     const contributerAgent = (await getAgentForUser()).data;
 
-    if (!session || !meModelDetails || !selectedMModel || !selectedEModel) return null;
+    if (!session || !meModelDetails || !selectedMModel || !selectedEModel) {
+      throw new Error('Missing required data to create ME-model');
+    }
 
     let brainLocation: BrainLocation | undefined;
     if (meModelDetails.brainRegion) {
