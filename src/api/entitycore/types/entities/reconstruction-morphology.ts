@@ -71,7 +71,7 @@ export interface IReconstructionMorphology extends AuditMetadata {
   strain?: IStrain | null;
   brain_region: IBrainRegion;
   mtypes: Array<IMType> | null;
-  contributors?: Array<IContributor> | null;
+  contributions?: Array<IContributor> | null;
   type: "reconstruction-morphology",
 }
 

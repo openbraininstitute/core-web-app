@@ -12,6 +12,7 @@ export type EntityCoreDataType = typeof ENTITY_CORE_DATA_TYPES[keyof typeof ENTI
 
 export type EntityCoreBase = {
   id: string;
+  legacy_id: Array<string> | null;
 }
 
 export type EntityCoreBaseType = {
@@ -110,7 +111,7 @@ type PersonBase = {
 export interface IPerson extends PersonBase, AuditMetadata { }
 export type Agent = IPerson | IOrganization;
 
-export interface IContributor {
+export interface IContributor extends AuditMetadata {
   agent: Agent;
   role: IRole;
 }

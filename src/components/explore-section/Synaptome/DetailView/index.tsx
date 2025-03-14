@@ -3,27 +3,27 @@
 import { Spin } from 'antd';
 import { Suspense, useState } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-
 import Link from 'next/link';
+
+import SynapseGroupList from '@/components/build-section/virtual-lab/synaptome/view-model/ListSynapses';
+import useSynaptomeModel from '@/components/simulate/single-neuron/hooks/useSynaptomeModel';
+import Results from '@/components/build-section/virtual-lab/synaptome/view-model/Results';
+import Summary from '@/components/explore-section/details-view/summary';
+import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
+import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import {
   MODEL_DATA_COMMON_FIELDS,
-  SYNATOME_MODEL_FIELDS,
+  SYNAPTOME_MODEL_FIELDS,
 } from '@/constants/explore-section/detail-views-fields';
 import { MEModelConfiguration } from '@/components/build-section/virtual-lab/synaptome/view-model/MEModelConfig';
 import { SynaptomeModelResource } from '@/types/explore-section/delta-model';
-import { classNames } from '@/util/utils';
-
-import Results from '@/components/build-section/virtual-lab/synaptome/view-model/Results';
-import SynapseGroupList from '@/components/build-section/virtual-lab/synaptome/view-model/ListSynapses';
-import useSynaptomeModel from '@/components/simulate/single-neuron/hooks/useSynaptomeModel';
-import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import Detail from '@/components/explore-section/Detail';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import {
+  DataType,
   DataTypeToNewSimulationPage,
   DataTypeToNexusType,
 } from '@/constants/explore-section/list-views';
+import { classNames } from '@/util/utils';
 import { to64 } from '@/util/common';
 
 type Props = {
@@ -79,9 +79,10 @@ export default function SynaptomeModelDetailPage({
   return (
     <div className="secondary-scrollbar h-screen w-full overflow-y-auto">
       <Suspense fallback={<CentralLoadingSpinner />}>
-        <Detail
+        <Summary
           showViewMode
-          fields={SYNATOME_MODEL_FIELDS}
+          dataType={DataType.SingleNeuronSynaptome}
+          fields={SYNAPTOME_MODEL_FIELDS}
           commonFields={MODEL_DATA_COMMON_FIELDS}
           extraHeaderAction={
             model &&
@@ -145,7 +146,7 @@ export default function SynaptomeModelDetailPage({
               </div>
             );
           }}
-        </Detail>
+        </Summary>
       </Suspense>
     </div>
   );

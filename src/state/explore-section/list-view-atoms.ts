@@ -32,7 +32,7 @@ import {
 } from '@/state/brain-regions';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
-import { transformFiltersToQuery } from '@/api/entitycore/transformers';
+import { transformFiltersToQuery, transformQueryParamsArrayToString } from '@/api/entitycore/transformers';
 import { ENTITY_CORE_DATA_TYPES } from '@/api/entitycore/types/shared/context';
 import * as entitycoreApi from '@/api/entitycore/queries';
 
@@ -196,7 +196,6 @@ export const previousDataAtom = atomFamily(
 export const dataAtom = atomFamily(
   (scope) =>
     atom(async (get) => {
-      const query = await get(queryAtom(scope));
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const pageSize = get(pageSizeAtom);
@@ -205,11 +204,11 @@ export const dataAtom = atomFamily(
 
       // TODO: sorting should be fixed at the end, it's related to too many changes that break things
       const sortState = get(sortStateAtom(scope));
-      const queryParams = transformFiltersToQuery(filters);
+      const queryParams = transformQueryParamsArrayToString(transformFiltersToQuery(filters));
 
       if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
         const response = await entitycoreApi.getReconstructionMorphologies({
-          with_facets: true,
+          withFacets: true,
           filters: {
             page_size: pageSize,
             page: pageNumber,
@@ -221,8 +220,6 @@ export const dataAtom = atomFamily(
             //   : undefined,
           },
         });
-
-        console.log('ᦨ #  list-view-atoms.ts:226 #  atom #  response:', response);
 
         return ({
           ...response,

@@ -4,7 +4,6 @@ import { Suspense } from 'react';
 import { UseQueryStateReturn, parseAsString, useQueryState, Options } from 'nuqs';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Detail from '@/components/explore-section/Detail';
 import { E_MODEL_FIELDS } from '@/constants/explore-section/detail-views-fields';
 import SectionTabs, {
   EMODEL_TABS,
@@ -16,6 +15,8 @@ import {
   Simulation,
 } from '@/components/explore-section/EModel/DetailView';
 import If from '@/components/ConditionalRenderer/If';
+import Summary from '@/components/explore-section/details-view/summary';
+import { DataType } from '@/constants/explore-section/list-views';
 
 type Props = {
   params: {
@@ -33,7 +34,10 @@ export default function EModelDetailView({ params }: Props) {
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Detail fields={E_MODEL_FIELDS}>
+      <Summary
+        dataType={DataType.CircuitEModel}
+        fields={E_MODEL_FIELDS}
+      >
         {() => (
           <>
             <SectionTabs />
@@ -52,7 +56,7 @@ export default function EModelDetailView({ params }: Props) {
             </div>
           </>
         )}
-      </Detail>
+      </Summary>
     </Suspense>
   );
 }

@@ -14,6 +14,7 @@ import { DeltaResource } from '@/types/explore-section/resources';
 import { useLoadableValue } from '@/hooks/hooks';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import { COMMON_FIELDS } from '@/constants/explore-section/detail-views-fields';
+import { DataType } from '@/constants/explore-section/list-views';
 
 type ExtendsExperiment<T> = T extends DeltaResource ? T : never;
 
@@ -23,6 +24,7 @@ export default function Detail<T extends DeltaResource>({
   withRevision,
   commonFields = COMMON_FIELDS,
   extraHeaderAction,
+  dataType,
   children,
 }: {
   fields: DetailProps[];
@@ -30,14 +32,14 @@ export default function Detail<T extends DeltaResource>({
   commonFields?: DetailProps[];
   withRevision?: boolean;
   extraHeaderAction?: ReactNode;
-
+  dataType: DataType;
   children?: (detail: ExtendsExperiment<T>) => ReactNode;
 }) {
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
 
   const path = usePathname();
   const resourceInfo = useResourceInfoFromPath();
-  const detail = useLoadableValue(detailFamily(resourceInfo)) as Loadable<ExtendsExperiment<T>>;
+  const detail = useLoadableValue(detailFamily({ ...resourceInfo, dataType })) as Loadable<ExtendsExperiment<T>>;
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);
