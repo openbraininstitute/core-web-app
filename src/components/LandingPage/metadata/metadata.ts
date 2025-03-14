@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 
-import { fetchSanity } from '../content/content';
-import { tryType } from '../content';
+import { tryType, typeStringOrNull } from '../content';
 import queryTemplate from './metadata.groq';
 import { DEFAULT_METADATA } from './default';
+import { fetchSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
 
 export async function generateMetadataFromSanity(slug: string): Promise<Metadata> {
@@ -13,14 +13,14 @@ export async function generateMetadataFromSanity(slug: string): Promise<Metadata
     if (!content) return DEFAULT_METADATA;
 
     return {
-      title: content.seoTitle,
+      title: content.seoTitle ?? content.title,
       description: content.seoDescription,
-      keywords: content.seoKeywords,
+      keywords: content.seoKeywords ?? [],
       authors: [{ name: 'Open Brain Institute' }, { name: 'Henry Markram' }],
       creator: 'Open Brain Institute',
       openGraph: {
         title: content.title,
-        description: content.seoDescription,
+        description: content.seoDescription ?? '',
         images: [
           {
             url: content.imageURL,
@@ -39,9 +39,9 @@ export async function generateMetadataFromSanity(slug: string): Promise<Metadata
 
 interface ContentForSeo {
   title: string;
-  seoTitle: string;
-  seoDescription: string;
-  seoKeywords: string[];
+  seoTitle: null | string;
+  seoDescription: null | string;
+  seoKeywords: null | string[];
   imageURL: string;
   imageWidth: number;
   imageHeight: number;
@@ -50,9 +50,9 @@ interface ContentForSeo {
 function isContentForSeo(data: unknown): data is ContentForSeo {
   return tryType('ContentForSeo', data, {
     title: 'string',
-    seoTitle: 'string',
-    seoDescription: 'string',
-    seoKeywords: ['array', 'string'],
+    seoTitle: typeStringOrNull,
+    seoDescription: typeStringOrNull,
+    seoKeywords: ['|', 'null', ['array', 'string']],
     imageURL: 'string',
     imageWidth: 'number',
     imageHeight: 'number',

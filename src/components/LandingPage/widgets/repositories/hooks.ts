@@ -1,7 +1,7 @@
 import { tryType, typeStringOrNull } from '../../content';
 import { typeImage } from '../../content/_common';
-import { useSanity } from '../../content/content';
 import query from './hooks.groq';
+import { useSanity } from '@/services/sanity';
 
 export function useSanityContentForRepositories() {
   return useSanity(query, isContentForRepositories) ?? [];

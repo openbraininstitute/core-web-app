@@ -1,5 +1,5 @@
 import { tryType } from './_common';
-import { useSanity } from './content';
+import { useSanity } from '@/services/sanity';
 import { isString } from '@/util/type-guards';
 
 export function useSanityContentForVirtualLabsTitle() {

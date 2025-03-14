@@ -4,6 +4,7 @@ import {
   ContentForRichText,
   ContentForRichTextImage,
   ContentForRichTextItems,
+  ContentForRichTextMultipleButton,
   ContentForRichTextParagraph,
   ContentForRichTextPreview,
   ContentForRichTextTitle,
@@ -20,6 +21,7 @@ import SanityContentVerticalDivider from './SanityContentVerticalSpace';
 import SanityContentPreview from './SanityContentPreview';
 import SanityContentImage from './sanity-content-image';
 import SanityContentVideo from './sanity-content-video';
+import { SanityContentMultipleButton } from './sanity-content-multiple-button';
 import { logError } from '@/util/logger';
 
 export interface SanityContentRTFProps {
@@ -40,7 +42,8 @@ function renderItem(
     | ContentForRichTextVerticalSpace
     | ContentForRichTextPreview
     | ContentForRichTextImage
-    | ContentForRichTextVideo,
+    | ContentForRichTextVideo
+    | ContentForRichTextMultipleButton,
   index: number
 ) {
   const key = `${item._type}/${index}`;
@@ -61,12 +64,17 @@ function renderItem(
       return <SanityContentImage key={key} value={item} />;
     case 'video':
       return <SanityContentVideo key={key} value={item} />;
+    case 'multipleButton':
+      return <SanityContentMultipleButton key={key} value={item} />;
     default:
       logError("Don't know how to render this item:", item);
       return (
         <Error>
           Don&apos;t know (yet) how to display this content:{' '}
-          <strong>{(item as { _type: string })._type}</strong>!
+          <strong>
+            <code>&quot;{(item as { _type: string })._type}&quot;</code>
+          </strong>
+          !
         </Error>
       );
   }

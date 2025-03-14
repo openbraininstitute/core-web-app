@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
 import { tryType, typeImage } from './_common';
-import { useSanity } from './content';
 
 import query from './milestones.groq';
 import { typeStringOrNull } from './types';
+import { useSanity } from '@/services/sanity';
 
 export interface ContentForMilestoneItem {
   title: string;

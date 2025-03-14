@@ -1,5 +1,5 @@
-import { useSanity } from './content';
 import { tryType } from './_common';
+import { useSanity } from '@/services/sanity';
 
 export interface ContentForEMail {
   label: string;
