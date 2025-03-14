@@ -11,8 +11,6 @@ export const client = createClient({
   useCdn: process.env.NODE_ENV === 'production',
 });
 
-console.log('🚀 [content] NEXT_PUBLIC_SANITY_DATASET =', process.env.NEXT_PUBLIC_SANITY_DATASET); // @FIXME: Remove this line written on 2025-03-14 at 11:34
-
 /**
  * @returns The expected object, or:
  *
