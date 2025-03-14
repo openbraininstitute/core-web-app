@@ -1,6 +1,6 @@
 import { tryType, typeStringOrNull } from '../../content';
-import { useSanity } from '../../content/content';
 import query from './hooks.groq';
+import { useSanity } from '@/services/sanity';
 
 export function useSanityContentForSpecialContributors() {
   return useSanity(query, isContentForSpecialContributors) ?? [];

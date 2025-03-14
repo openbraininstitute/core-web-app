@@ -37,6 +37,31 @@ const typeContentForRichTextImage = {
   ],
 } satisfies TypeDef;
 
+export interface ContentForRichTextMultipleButton {
+  _type: 'multipleButton';
+  buttonsList: Array<{
+    title: string;
+    href: string;
+    backgroundURL: string;
+    backgroundWidth: number;
+    backgroundHeight: number;
+  }>;
+}
+
+const typeContentForRichTextMultipleButton = {
+  _type: ['literal', 'multipleButton'],
+  buttonsList: [
+    'array',
+    {
+      title: 'string',
+      href: 'string',
+      backgroundURL: 'string',
+      backgroundWidth: 'number',
+      backgroundHeight: 'number',
+    },
+  ],
+} satisfies TypeDef;
+
 export interface ContentForRichTextVideo {
   _type: 'video';
   url: string;
@@ -196,6 +221,7 @@ export type ContentForRichText = Array<
   | ContentForRichTextPreview
   | ContentForRichTextImage
   | ContentForRichTextVideo
+  | ContentForRichTextMultipleButton
 >;
 
 const typeContentForRichText: TypeDef = [
@@ -210,6 +236,7 @@ const typeContentForRichText: TypeDef = [
     typeContentForRichTextPreview,
     typeContentForRichTextImage,
     typeContentForRichTextVideo,
+    typeContentForRichTextMultipleButton,
   ],
 ];
 

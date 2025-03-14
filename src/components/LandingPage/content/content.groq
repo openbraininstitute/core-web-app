@@ -1,0 +1,32 @@
+*[_type=="pages"][slug.current=="<SLUG>"][0]{
+  content[] {
+    ...,
+    buttonsList[] {
+      title,
+      "href": file.asset->url,
+      'backgroundURL': backgroundImage.asset->url,
+      'backgroundWidth': backgroundImage.asset->metadata.dimensions.width,
+      'backgroundHeight': backgroundImage.asset->metadata.dimensions.height,
+    },
+    "image": image.asset->{
+      url,
+      "width": metadata.dimensions.width,
+      "height": metadata.dimensions.height,
+    },
+    "background": backgroundImage.asset->{
+      url,
+      "width": metadata.dimensions.width,
+      "height": metadata.dimensions.height,
+    },
+    "button": {
+      "label": buttonLabel,
+      "link": internalLink->slug.current
+    },
+    content[] {
+      ...,
+      'imageURL': image.asset->url,
+      'imageWidth': image.asset->metadata.dimensions.width,
+      'imageHeight': image.asset->metadata.dimensions.height,
+    }
+  }
+}.content

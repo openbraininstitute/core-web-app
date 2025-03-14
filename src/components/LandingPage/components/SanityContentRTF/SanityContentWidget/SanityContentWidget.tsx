@@ -66,6 +66,8 @@ export default function SanityContentWidget({ value }: SanityContentWidgetProps)
       return <WidgetSpecialContributors />;
     case 'milestones':
       return <WidgetMilestones />;
+    case 'multipleButton':
+      return <pre>{JSON.stringify(value, null, '  ')}</pre>;
     default:
       return (
         <Error>
