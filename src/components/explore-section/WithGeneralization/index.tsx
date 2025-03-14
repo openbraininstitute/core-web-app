@@ -21,7 +21,7 @@ const spinStyles = {
 const loadingIconText = 'Searching for similar morphologies';
 const notFoundText = 'No similar morphologies were found';
 
-export const genarilizationError = <h1>Something went wrong while fetching the data</h1>;
+export const generalizationError = <h1>Something went wrong while fetching the data</h1>;
 export const notFound = <CentralLoadingWheel style={spinStyles} text={notFoundText} noResults />;
 
 export default function WithGeneralization({
@@ -47,7 +47,7 @@ export default function WithGeneralization({
       render = <CentralLoadingWheel style={spinStyles} text={loadingIconText} />;
       break;
     case 'hasError':
-      render = genarilizationError;
+      render = generalizationError;
       break;
     case 'hasData':
       render = resourceBasedResponseHits.data?.length ? (

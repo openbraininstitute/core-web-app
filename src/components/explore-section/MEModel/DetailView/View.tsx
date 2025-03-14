@@ -8,12 +8,13 @@ import Link from 'next/link';
 import { Analysis, Configuration, Simulation } from '.';
 
 import {
+  DataType,
   DataTypeToNewSimulationPage,
   DataTypeToNexusType,
 } from '@/constants/explore-section/list-views';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Detail from '@/components/explore-section/Detail';
+
 import {
   ME_MODEL_FIELDS,
   MODEL_DATA_COMMON_FIELDS,
@@ -28,6 +29,7 @@ import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 
 import { initializeSummaryAtom } from '@/state/virtual-lab/build/me-model-setter';
 
+import Summary from '@/components/explore-section/details-view/summary';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
 
@@ -66,7 +68,8 @@ export default function MEModelDetailView({ params, showViewMode = false }: Prop
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Detail
+      <Summary
+        dataType={DataType.CircuitMEModel}
         fields={ME_MODEL_FIELDS}
         commonFields={MODEL_DATA_COMMON_FIELDS}
         showViewMode={showViewMode}
@@ -106,7 +109,7 @@ export default function MEModelDetailView({ params, showViewMode = false }: Prop
             /> */}
           </>
         )}
-      </Detail>
+      </Summary>
     </Suspense>
   );
 }

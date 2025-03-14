@@ -2,10 +2,12 @@ import { Dispatch, SetStateAction } from 'react';
 import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { IndexDataValue } from '@/types/explore-section/misc';
 import { FlattenedExploreESResponse, ExploreResource } from '@/types/explore-section/es';
-
+import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
+import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
 import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import { DataType } from '@/constants/explore-section/list-views';
+import { Prettify } from '@/types/common';
 
 // defines the source from where the explore data will be retrieved
 // SelectedBrainRegion: The data will be filtered based on the selected brain region
@@ -87,7 +89,7 @@ export type SingleCard = {
   items?: SubSectionCardItem[] | null;
 };
 
-export type DetailProps = { field: Field; className?: string };
+export type DetailProps = { field: EntityCoreFields; className?: string };
 
 export type ResourceInfo = {
   id: string;
@@ -95,3 +97,18 @@ export type ResourceInfo = {
   org: string;
   rev?: number;
 };
+
+export type DetailViewUrlParams = Prettify<
+  {
+    id: string;
+    virtualLabId?: string;
+    projectId?: string;
+  } & (
+    | {
+      experimentType?: ExperimentTypeNames;
+    }
+    | {
+      modelType?: ModelTypeNames;
+    }
+  )
+>;

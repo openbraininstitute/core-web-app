@@ -33,19 +33,22 @@ export default function ExperimentDetailViewPage() {
       break;
     case DataType.ExperimentalElectroPhysiology:
       content = (
-        <Detail<ExperimentalTrace> fields={ELECTRO_PHYSIOLOGY_FIELDS}>
+        <Detail<ExperimentalTrace>
+          dataType={DataType.ExperimentalElectroPhysiology}
+          fields={ELECTRO_PHYSIOLOGY_FIELDS}
+        >
           {(detail) => <EphysViewerContainer resource={detail} />}
         </Detail>
       );
       break;
     case DataType.ExperimentalBoutonDensity:
-      content = <Detail fields={BOUTON_DENSITY_FIELDS} />;
+      content = <Detail dataType={DataType.ExperimentalBoutonDensity} fields={BOUTON_DENSITY_FIELDS} />;
       break;
     case DataType.ExperimentalNeuronDensity:
-      content = <Detail fields={NEURON_DENSITY_FIELDS} />;
+      content = <Detail dataType={DataType.ExperimentalNeuronDensity} fields={NEURON_DENSITY_FIELDS} />;
       break;
     case DataType.ExperimentalSynapsePerConnection:
-      content = <Detail fields={SYNAPSE_PER_CONNECTION_FIELDS} />;
+      content = <Detail dataType={DataType.ExperimentalNeuronDensity} fields={SYNAPSE_PER_CONNECTION_FIELDS} />;
       break;
     default:
       content = null;

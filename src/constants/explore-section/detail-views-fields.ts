@@ -7,7 +7,7 @@ export const COMMON_FIELDS = [
     className: 'col-span-3',
   },
   {
-    field: EntityCoreFields.Contributors,
+    field: EntityCoreFields.Contributions,
   },
   {
     field: EntityCoreFields.RegistrationDate,
@@ -201,7 +201,7 @@ export const MODEL_DATA_COMMON_FIELDS = [
   },
 ] as DetailProps[];
 
-export const SYNATOME_MODEL_FIELDS = [
+export const SYNAPTOME_MODEL_FIELDS = [
   {
     field: Field.BrainRegion,
     className: 'col-span-1',

@@ -97,6 +97,7 @@ export enum EntityCoreFields {
   RegistrationDate = 'registration_date',
   UpdateDate = 'update_date',
   Contribution = 'contribution',
+  Contributions = 'contributions',
   License = 'license',
   BrainRegion = 'brain_region',
   MType = 'mtype',

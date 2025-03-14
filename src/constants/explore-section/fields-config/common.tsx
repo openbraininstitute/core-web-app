@@ -297,10 +297,20 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       singular: 'Description',
     },
   },
+  [EntityCoreFields.Contributions]: {
+    title: 'Contributors',
+    filter: FilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(transformAgentToNames(r.contributions)),
+    vocabulary: {
+      plural: 'Contributors',
+      singular: 'Contributor',
+    },
+    constraint: "contribution__pref_label__in"
+  },
   [EntityCoreFields.Contribution]: {
     title: 'Contributors',
     filter: FilterTypeEnum.CheckList,
-    render: (r) => renderEmptyOrValue(transformAgentToNames(r.contributors)),
+    render: (r) => renderEmptyOrValue(transformAgentToNames(r.contributions)),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',

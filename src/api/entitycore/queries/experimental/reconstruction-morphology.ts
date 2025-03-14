@@ -19,7 +19,7 @@ const baseUri = "/reconstruction-morphology/"
  * @param {IMorphologyFilter} [options.filters] - Optional filters to apply to the query
  * @returns {Promise<EntityCoreResponse<IReconstructionMorphology>>} A promise that resolves to the list of reconstruction morphologies
  */
-export async function getReconstructionMorphologies({ with_facets, filters }: { with_facets?: boolean; filters?: IMorphologyFilter }) {
+export async function getReconstructionMorphologies({ withFacets, filters }: { withFacets?: boolean; filters?: IMorphologyFilter }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<EntityCoreResponse<IReconstructionMorphology>>(
     baseUri,
@@ -27,7 +27,7 @@ export async function getReconstructionMorphologies({ with_facets, filters }: { 
       ...getEntityCoreContext(),
       queryParams: {
         ...filters,
-        with_facets,
+        with_facets: withFacets,
       },
     }
   );
@@ -46,11 +46,11 @@ export async function getReconstructionMorphology({
   expand,
 }: {
   id: string;
-  expand: ExpandReconstructionMorphologyParm;
+  expand?: ExpandReconstructionMorphologyParm;
 }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<IReconstructionMorphology | IReconstructionMorphologyExpanded>(
-    `${baseUri}/${id}`,
+    `${baseUri}${id}`,
     {
       ...getEntityCoreContext(),
       queryParams: {
