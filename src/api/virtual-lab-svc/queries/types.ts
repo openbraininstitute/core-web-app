@@ -221,6 +221,7 @@ export type UserSubscriptionsResponse = {
 export type StandalonePaymentRequest = {
   amount: number;
   currency: string;
+  virtual_lab_id: string;
   payment_method_id: string;
 };
 

@@ -12,6 +12,7 @@ import useNotification from '@/hooks/notifications';
 import sessionAtom from '@/state/session';
 
 import {
+  CONVERSION_RATE,
   CreditConverter,
   creditAtom,
 } from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/credit-converter';
@@ -21,8 +22,6 @@ import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/q
 import { SetupIntentResponse } from '@/services/virtual-lab/billing';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
-
-const CONVERSION_RATE = 0.02;
 
 type Props = {
   isOpen: boolean;
@@ -60,7 +59,7 @@ function Form({ onClose }: { onClose: () => void }) {
   const { success: successNotify, error: errorNotify } = useNotification();
   const [formLoading, startTransition] = useTransition();
   const { credits } = useAtomValue(creditAtom);
-
+  const virtualLabId = ''; // TODO: should be gathered from the url params
   const formLoaded = stripe && elements;
   const disableForm = !formLoaded || formLoading || credits === 0;
 
@@ -95,6 +94,7 @@ function Form({ onClose }: { onClose: () => void }) {
         return await createStandalonePayment({
           amount: amountInCents,
           currency: 'chf',
+          virtual_lab_id: virtualLabId,
           payment_method_id:
             typeof setupIntent.payment_method === 'string'
               ? setupIntent.payment_method
@@ -242,7 +242,15 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
 
   if (loadingStripe || !setupIntent)
     return (
-      <Modal isOpen={isOpen} onClose={onClose} footer={null}>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        footer={null}
+        cls={{
+          parent: '!w-[550px]',
+          content: '!rounded-md !min-h-[8rem]',
+        }}
+      >
         <div className="flex h-full flex-grow items-center justify-center py-7">
           <Spin size="large" indicator={<LoadingOutlined />} />
         </div>
@@ -259,7 +267,7 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
         content: classNames(
           '!rounded-md',
           step === 'overview' && '!min-h-[8rem]',
-          step === 'pay' && '!min-h-[16rem]'
+          step === 'pay' && '!min-h-[15rem]'
         ),
       }}
     >
