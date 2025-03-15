@@ -32,6 +32,9 @@ export type VirtualLab = {
   id: string;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
+  members_count: number | null;
+  projects_count: number | null;
+  invite_id: string | null;
 };
 
 export type VirtualLabExistsVerificationResponse = VlmResponse<{
@@ -139,10 +142,10 @@ export type SubscriptionTiersResponse = {
 };
 
 export type VirtualLabListResponse = VlmResponse<{
-  pending_labs: Array<VirtualLab & { invite_id: string }>;
-  virtual_lab: VirtualLab;
-  members_count: number | null;
-  projects_count: number | null;
+  total: number;
+  page: number;
+  page_size: number;
+  results: Array<VirtualLab>;
 }>;
 
 type SetupIntent = {

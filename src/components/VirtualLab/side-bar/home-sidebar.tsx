@@ -27,13 +27,13 @@ const withLabsMenuItems: Array<Props> = [
   },
 ];
 
-export default function SideBar({ labsCount }: { labsCount: number }) {
+export default function SideBar({ labsCount }: { labsCount?: number }) {
   const path = usePathname();
   return (
     <Base>
       <nav className="flex max-h-max flex-1 flex-col py-4">
         <div className="mt-20 border border-primary-5">
-          {labsCount >= 1 ? (
+          {(labsCount ?? 0) >= 1 ? (
             <Fragment key="labs">
               {withLabsMenuItems.map(({ url, title, disabled }) => (
                 <Item key={url} url={url} title={title} active={path === url} disabled={disabled} />
