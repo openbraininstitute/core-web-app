@@ -52,33 +52,11 @@ button.card .content {
   font-weight: lighter;
 }
 
-.background {
+button.card .background {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.curtain {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  background: linear-gradient(115deg, #fff 20%, #fff0);
-}
-
-.curtain {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  background: linear-gradient(115deg, #fff 20%, #fff0);
 }
