@@ -55,12 +55,7 @@ export default function ProgressiveVideo({
   };
 
   return (
-    <button
-      className={classNames(className, styles.video)}
-      type="button"
-      aria-label="Tap to play"
-      style={style}
-    >
+    <div className={classNames(className, styles.video)} aria-label="Tap to play" style={style}>
       <video
         className={classNames(controls && styles.pointer)}
         src={src}
@@ -75,6 +70,6 @@ export default function ProgressiveVideo({
         onCanPlay={handleReady}
         onTimeUpdate={handleTimeUpdate}
       />
-    </button>
+    </div>
   );
 }

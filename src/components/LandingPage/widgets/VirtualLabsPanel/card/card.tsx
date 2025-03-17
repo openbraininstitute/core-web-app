@@ -14,8 +14,6 @@ export function SingleSectionCard({ index, title, description, video }: SingleSe
   return (
     <button className={classNames(styles.card, index > 999 && styles.comingSoon)} type="button">
       <Video className={styles.background} src={video} />
-      {/* <div className={styles.curtain} /> */}
-      {/* <div className={styles.curtain} /> */}
       <div className={styles.content}>
         <div>
           {/* <h3>0{index + 1}</h3> */}
