@@ -87,11 +87,11 @@ function TiersComparison({
   };
 
   const renderFeatureAvailability = (available: boolean, feature?: TierFeature) => {
-    if (!available && !feature?.title) return <span className="text-gray-400">—</span>;
+    if (!available && !feature?.title) return <span className="text-primary-4">—</span>;
     if (!available && feature?.title)
       return (
         <span className="text-gray-400">
-          <CheckCircleFilled className="text-lg text-gray-500" />
+          <CheckCircleFilled className="text-lg text-primary-4" />
         </span>
       );
 
@@ -172,9 +172,9 @@ function TiersComparison({
             <div
               key={`${t.id}-bg`}
               className={classNames(
-                'rounded-sm',
+                'rounded-lg',
                 isSelected && 'bg-primary-8/90',
-                isHovered && !isSelected && 'bg-primary-8/40'
+                isHovered && !isSelected && 'bg-primary-5/20'
               )}
             />
           );
@@ -239,10 +239,15 @@ function TiersComparison({
                         {getPriceDisplay(t).mainPrice}/
                         <span className="text-sm font-light">{interval}</span>
                       </span>
-                      <span className="ml-1 text-xl font-bold text-white">
-                        {getPriceDisplay(t).discountPrice}/
-                        <span className="text-sm font-light">{interval}</span>
-                      </span>
+                      <div className="flex">
+                        <span className="ml-1 text-xl font-bold text-white">
+                          {getPriceDisplay(t).discountPrice}/
+                          <span className="text-sm font-light">{interval}</span>
+                        </span>
+                        <span className="ml-2 rounded-full border border-primary-2 px-3 py-1 text-sm text-primary-2">
+                          Launch
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-sm text-gray-400">
@@ -285,14 +290,14 @@ function TiersComparison({
             {category.features.map((feature) => (
               <div
                 key={`${kebabCase(category.title)}/${kebabCase(feature)}`}
-                className="relative grid grid-cols-4 gap-6 py-2"
+                className="relative grid grid-cols-4 gap-6 py-3"
               >
                 <div className="text-base">{feature}</div>
 
                 {tiers.map((t) => (
                   <div
                     key={`${t.id}-${feature}`}
-                    className="flex justify-center px-4"
+                    className="flex justify-start px-4"
                     onMouseEnter={() => setHoveredTier(t.id)}
                     onMouseLeave={() => setHoveredTier(null)}
                   >
