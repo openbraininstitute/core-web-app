@@ -14,6 +14,10 @@ const menuItems: Array<Props> = [
     url: '/app/virtual-lab/account/subscription',
     title: 'Subscription',
   },
+  {
+    url: '/app/virtual-lab/account/invoices',
+    title: 'Invoices',
+  },
 ];
 
 export default function SideBar() {

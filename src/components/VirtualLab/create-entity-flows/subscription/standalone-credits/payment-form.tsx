@@ -2,11 +2,12 @@ import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-
 import { useState, useEffect, useRef, useTransition } from 'react';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { Button, Spin } from 'antd';
 import isObject from 'lodash/isObject';
 import delay from 'lodash/delay';
 
+import { useParams } from 'next/navigation';
 import getStripe from '@/components/VirtualLab/Billing/utils';
 import useNotification from '@/hooks/notifications';
 import sessionAtom from '@/state/session';
@@ -59,12 +60,12 @@ function Form({ onClose }: { onClose: () => void }) {
   const { success: successNotify, error: errorNotify } = useNotification();
   const [formLoading, startTransition] = useTransition();
   const { credits } = useAtomValue(creditAtom);
+  const { virtualLabId } = useParams<{ virtualLabId: string }>();
 
   const formLoaded = stripe && elements;
   const disableForm = !formLoaded || formLoading || credits === 0;
 
   const onReady = () => setElementsReady(true);
-  const virtualLabId = ''; // TODO: should be gathered from the url params
   const onSubmit = async () => {
     if (!stripe || !elements) {
       return null;
@@ -118,7 +119,7 @@ function Form({ onClose }: { onClose: () => void }) {
 
       if (data) {
         successNotify(
-          `Successfully purchased ${credits} credits for ${data.amount} ${data.currency.toUpperCase()}`,
+          `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
           undefined,
           'topRight',
           true,
@@ -202,7 +203,7 @@ function Form({ onClose }: { onClose: () => void }) {
 export default function PaymentForm({ isOpen, onClose }: Props) {
   const stripeRef = useRef(false);
   const session = useAtomValue(sessionAtom);
-  const { step } = useAtomValue(creditAtom);
+  const [{ step }, updateCreditState] = useAtom(creditAtom);
   const { error: errorNotify } = useNotification();
   const [stripePromise, setStripePromise] = useState<Stripe | null>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
@@ -240,9 +241,20 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
     }
   }, [errorNotify, session, isOpen]);
 
+  const onClearAndClose = () => {
+    updateCreditState({ credits: 0, step: 'overview' });
+    onClose();
+  };
   if (loadingStripe || !setupIntent)
     return (
-      <Modal isOpen={isOpen} onClose={onClose} footer={null}>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClearAndClose}
+        footer={null}
+        cls={{
+          content: classNames('!rounded-md !min-h-[4rem]'),
+        }}
+      >
         <div className="flex h-full flex-grow items-center justify-center py-7">
           <Spin size="large" indicator={<LoadingOutlined />} />
         </div>
@@ -252,14 +264,14 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={onClearAndClose}
       footer={null}
       cls={{
         parent: '!w-[550px]',
         content: classNames(
           '!rounded-md',
-          step === 'overview' && '!min-h-[8rem]',
-          step === 'pay' && '!min-h-[15rem]'
+          step === 'overview' && '!min-h-[4rem]',
+          step === 'pay' && '!min-h-[12rem]'
         ),
       }}
     >
@@ -269,7 +281,7 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
           stripe={stripePromise}
           options={buildStripeFormOptions(setupIntent?.client_secret)}
         >
-          <Form onClose={onClose} />
+          <Form onClose={onClearAndClose} />
         </Elements>
       )}
     </Modal>
