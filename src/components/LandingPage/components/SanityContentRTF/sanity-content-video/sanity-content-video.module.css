@@ -1,10 +1,8 @@
 .sanityContentVideo nav {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 2em;
+  display: grid;
+  grid-template-columns: repeat(var(--custom-columns), 1fr);
+  place-items: center;
+  gap: 1.5em;
   font-size: var(--font-size-S);
   margin: 1em 0;
 }

@@ -37,13 +37,14 @@ export default function SanityContentVideo({ className, value }: SanityContentVi
     <div className={classNames(className, styles.sanityContentVideo, styleBlockMedium)}>
       <ProgressiveVideo
         src={value.url}
+        controls
         autosize
         currentTime={currentTime}
         onCurrentTimeChange={handleCurrentTimeChange}
       />
       {timestamps.length > 0 && (
         <>
-          <nav>
+          <nav style={{ '--custom-columns': `${timestamps.length}` }}>
             {timestamps.map(({ label }, index) =>
               index === stepIndex ? (
                 <div className={styles.currentStep} key={index} />

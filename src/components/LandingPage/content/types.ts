@@ -147,6 +147,10 @@ const typeRichTextParagraph: TypeDef = () => [
       _type: ['literal', 'span'],
       text: 'string',
     },
+    {
+      _type: ['literal', 'spacer'],
+      size: 'string',
+    },
   ],
 ];
 
