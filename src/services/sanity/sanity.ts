@@ -6,7 +6,7 @@ import { logError } from '@/util/logger';
 
 export const client = createClient({
   projectId: 'fgi7eh1v',
-  dataset: 'production', // process.env.NEXT_PUBLIC_SANITY_DATASET,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   apiVersion: '2023-03-25',
   useCdn: process.env.NODE_ENV === 'production',
 });
