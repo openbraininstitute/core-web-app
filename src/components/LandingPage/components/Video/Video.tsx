@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/media-has-caption */
 import React, { CSSProperties } from 'react';
 
 import { classNames } from '@/util/utils';
@@ -9,6 +10,7 @@ export interface ProgressiveVideoProps {
   className?: string;
   src: string;
   autosize?: boolean;
+  controls?: boolean;
   currentTime?: number;
   onCurrentTimeChange?(currentTime?: number): void;
 }
@@ -16,6 +18,7 @@ export interface ProgressiveVideoProps {
 export default function ProgressiveVideo({
   className,
   src,
+  controls,
   autosize,
   currentTime,
   onCurrentTimeChange,
@@ -50,9 +53,10 @@ export default function ProgressiveVideo({
       <video
         src={src}
         ref={refVideo}
-        muted
-        autoPlay
-        loop
+        controls={controls}
+        muted={!controls}
+        autoPlay={!controls}
+        loop={!controls}
         disablePictureInPicture
         playsInline
         onCanPlay={handleReady}

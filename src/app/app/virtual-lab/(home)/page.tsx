@@ -7,7 +7,6 @@ import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideBar from '@/components/VirtualLab/side-bar/home-sidebar';
 import Logout from '@/components/VirtualLab/side-bar/logout';
-import { logError } from '@/util/logger';
 
 export const metadata: Metadata = {
   title: 'Virtual labs',
