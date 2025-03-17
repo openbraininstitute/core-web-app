@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { tryType, typeImage } from './_common';
-import { useSanity } from './content';
 import { ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
+import { useSanity } from '@/services/sanity';
 import { isNumber } from '@/util/type-guards';
 
 export interface ContentForNewsItem {

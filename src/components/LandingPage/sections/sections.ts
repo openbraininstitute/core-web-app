@@ -10,4 +10,5 @@ export enum EnumSection {
   Team,
   Resources,
   Contact,
+  Story,
 }

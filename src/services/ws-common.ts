@@ -38,12 +38,16 @@ export default class WsCommon<WSResponses> {
 
   private serviceUp = false;
 
+  private token?: string;
+
   constructor(webSocketUrl: string, token: string, onMessage: OnMessageHandler<WSResponses>) {
     this.webSocketUrl = webSocketUrl;
 
     this.onMessage = onMessage;
 
-    this.init(token);
+    this.token = token;
+
+    this.init();
   }
 
   send(message: Message, data?: Data, cmdId?: CmdId) {
@@ -109,10 +113,10 @@ export default class WsCommon<WSResponses> {
     this.socket.send(JSON.stringify({}));
   }
 
-  private init = (token: string) => {
+  private init = () => {
     if (this.closing) return;
 
-    const socket = new WebSocket(this.webSocketUrl, `Bearer-${token}`);
+    const socket = new WebSocket(this.webSocketUrl, `Bearer-${this.token}`);
     this.socket = socket;
 
     // send message to check until the service is up

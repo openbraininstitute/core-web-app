@@ -40,7 +40,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
           ))}
 
           <Link href="/coming-soon" className={styles.loginButton}>
-            Go to your lab
+            Virtual Labs
           </Link>
         </div>
         <div className={styles.hamburger}>

@@ -1,0 +1,31 @@
+.litteratureSuggestions {
+  width: 640px;
+  background-color: #000;
+  color: #eee;
+  padding: 1em;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1em;
+}
+
+.litteratureSuggestions h1 {
+  font-size: 200%;
+  font-weight: bold;
+}
+
+.articles {
+  overflow: auto;
+}
+
+.error {
+  padding: 1em;
+  background-color: #f30;
+  color: #fffe;
+  border: 1px solid currentColor;
+  white-space: prewrap;
+}
+
+.bottom {
+  content: '';
+  height: 5em;
+}

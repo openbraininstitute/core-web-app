@@ -26,7 +26,7 @@ function Tab({ id, label, active, className, activeClassName, onClick }: TabProp
           className,
           active
             ? clsx('bg-white font-bold text-black', activeClassName)
-            : 'bg-neutral-10 text-white'
+            : 'bg-[#013a8c] text-white'
         )}
         role="tab"
       >

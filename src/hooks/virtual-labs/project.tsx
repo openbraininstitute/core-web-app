@@ -2,7 +2,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { ConfigProvider, Modal } from 'antd';
 import { useRef } from 'react';
 
-import BalanceTransferForm from '@/components/VirtualLab/projects/VirtualLabProjectAdmin/BalanceTransferForm';
+import BalanceTransferForm from '@/components/VirtualLab/VirtualLabSettingsComponent/BalanceTransferForm';
 
 const modalTheme = {
   token: {

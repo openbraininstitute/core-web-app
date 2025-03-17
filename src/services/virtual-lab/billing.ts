@@ -53,7 +53,7 @@ export type SetupIntentResponse = {
 };
 
 export async function generateSetupIntent(id: string, token: string): Promise<SetupIntentResponse> {
-  const response = await fetch(`${virtualLabApi.url}/virtual-labs/${id}/billing/setup-intent`, {
+  const response = await fetch(`${virtualLabApi.url}/billing/setup-intent`, {
     method: 'POST',
     headers: createApiHeaders(token),
   });

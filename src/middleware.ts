@@ -16,6 +16,7 @@ const FREE_ACCESS_PAGES = [
   '/terms',
   '/privacy',
   '/coming-soon',
+  '/the-real-digital-brain-story',
 
   '/app/log-in',
 
@@ -57,6 +58,7 @@ export async function middleware(request: NextRequest) {
 
   // Rest of the existing middleware code...
   const requestUrl = request.nextUrl.pathname;
+
   // const { device } = userAgent(request);
 
   // Allow free access to assets

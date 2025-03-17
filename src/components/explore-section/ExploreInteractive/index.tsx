@@ -1,8 +1,14 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+
 import DataTypeTabs from './DataTypeTabs';
 import SelectedBrainRegionMETypes from './SelectedBrainRegionMETypes';
 import DataTypeStatPanel from './DataTypeStatPanel';
 import ThreeDeeBrain from '@/components/ThreeDeeBrain';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
+
+const LitteratureSuggestions = dynamic(() => import('@/components/litterature-suggestions'));
 
 type ExploreInteractivePanelProps = {
   virtualLabInfo?: VirtualLabInfo;
@@ -10,32 +16,35 @@ type ExploreInteractivePanelProps = {
 
 export default function ExploreInteractivePanel({ virtualLabInfo }: ExploreInteractivePanelProps) {
   return (
-    <div className="relative h-full min-w-0 flex-1 overflow-hidden">
-      <div
-        id="interactive-layout"
-        className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px,repeat(4,1fr),minmax(80px,max-content)] gap-y-4 bg-black"
-      >
-        <div id="interactive-header" style={{ gridArea: '1 / 1 / 2 / 6' }}>
-          <DataTypeTabs />
-        </div>
+    <div className="relative flex h-full min-w-0 flex-1 overflow-hidden">
+      <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-[#012766]">
         <div
-          id="neurons-panel"
-          className="relative ml-4 mr-2 rounded-md"
-          style={{ gridArea: '2 / 1 / 6 / 3' }}
+          id="interactive-layout"
+          className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px,repeat(4,1fr),minmax(80px,max-content)] gap-y-4"
         >
-          <SelectedBrainRegionMETypes />
-        </div>
-        <div
-          id="3d-area"
-          className="3d relative ml-2 mr-4 h-full rounded-md border border-neutral-4 p-1"
-          style={{ gridArea: '2 / 3 / 6 / 6' }}
-        >
-          <ThreeDeeBrain />
-        </div>
-        <div id="statistic-panel" style={{ gridArea: '6 / 1 / 7 / 5' }}>
-          <DataTypeStatPanel virtualLabInfo={virtualLabInfo} />
+          <div id="interactive-header" style={{ gridArea: '1 / 1 / 2 / 6' }}>
+            <DataTypeTabs />
+          </div>
+          <div
+            id="neurons-panel"
+            className="relative ml-4 mr-2 rounded-md"
+            style={{ gridArea: '2 / 1 / 6 / 3' }}
+          >
+            <SelectedBrainRegionMETypes />
+          </div>
+          <div
+            id="3d-area"
+            className="3d relative ml-2 mr-4 h-full rounded-md border border-[#0250b3] p-1"
+            style={{ gridArea: '2 / 3 / 6 / 6' }}
+          >
+            <ThreeDeeBrain />
+          </div>
+          <div id="statistic-panel" style={{ gridArea: '6 / 1 / 7 / 5' }}>
+            <DataTypeStatPanel virtualLabInfo={virtualLabInfo} />
+          </div>
         </div>
       </div>
+      <LitteratureSuggestions className="flex-0" />
     </div>
   );
 }

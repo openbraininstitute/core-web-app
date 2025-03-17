@@ -11,6 +11,7 @@ import Hero from './layout/Hero';
 import SectionGeneric from './sections/SectionGeneric';
 import PaddedBlock from './components/PaddedBlock';
 import SectionNews from './sections/SectionNews';
+import AnnoucementPopup from './components/annoucement-popup';
 import VerticalSpace from './components/VerticalSpace';
 import { classNames } from '@/util/utils';
 import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
@@ -44,8 +45,8 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         <VerticalSpace height="30px" />
         <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
+        <AnnoucementPopup />
       </div>
-      {/* <MatomoAnalytics /> */}
     </>
   );
 }
@@ -61,6 +62,7 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.TermsAndConditions:
     case EnumSection.PrivacyPolicy:
     case EnumSection.ComingSoon:
+    case EnumSection.Story:
       return <SectionGeneric section={section} />;
     case EnumSection.Contact:
       return <SectionContact />;

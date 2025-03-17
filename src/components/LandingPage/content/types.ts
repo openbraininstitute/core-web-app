@@ -1,9 +1,9 @@
 import { RichText, tryType } from './_common';
 import { TypeDef } from '@/util/type-guards';
 
-export const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
+export const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
 export const typeStringOrUndef: TypeDef = ['|', 'string', 'undefined'];
-export const typeNumberOrNull: TypeDef = ['|', 'number', 'null'];
+export const typeNumberOrNull: TypeDef = ['|', 'number', 'null', 'undefined'];
 export const typeBooleanOrNull: TypeDef = ['|', 'boolean', 'null'];
 export const typeImage = {
   imageURL: 'string',
@@ -22,7 +22,7 @@ export interface ContentForRichTextImage {
   };
 }
 
-const typeContentForRichTextImage: TypeDef = {
+const typeContentForRichTextImage = {
   _type: ['literal', 'imageBlock'],
   alt: typeStringOrNull,
   caption: typeStringOrNull,
@@ -35,7 +35,59 @@ const typeContentForRichTextImage: TypeDef = {
       height: 'number',
     },
   ],
-};
+} satisfies TypeDef;
+
+export interface ContentForRichTextMultipleButton {
+  _type: 'multipleButton';
+  buttonsList: Array<{
+    title: string;
+    href: string;
+    backgroundURL: string;
+    backgroundWidth: number;
+    backgroundHeight: number;
+  }>;
+}
+
+const typeContentForRichTextMultipleButton = {
+  _type: ['literal', 'multipleButton'],
+  buttonsList: [
+    'array',
+    {
+      title: 'string',
+      href: 'string',
+      backgroundURL: 'string',
+      backgroundWidth: 'number',
+      backgroundHeight: 'number',
+    },
+  ],
+} satisfies TypeDef;
+
+export interface ContentForRichTextVideo {
+  _type: 'video';
+  url: string;
+  timestamps?: null | Array<{
+    label: string;
+    description: string;
+    timestamp: number;
+  }>;
+}
+
+const typeContentForRichTextVideo = {
+  _type: ['literal', 'video'],
+  url: typeStringOrNull,
+  timestamps: [
+    '?',
+    [
+      '|',
+      'null',
+      {
+        label: typeStringOrNull,
+        description: typeStringOrNull,
+        timestamp: typeNumberOrNull,
+      },
+    ],
+  ],
+} satisfies TypeDef;
 
 export interface ContentForRichTextPreview {
   _type: 'previewBlock';
@@ -80,7 +132,7 @@ const typeContentForRichTextPreview: TypeDef = {
       height: 'number',
     },
   ],
-  button: ['|', { label: 'string', link: 'string' }],
+  button: ['|', { label: typeStringOrNull, link: typeStringOrNull }],
 };
 
 const typeRichTextParagraph: TypeDef = () => [
@@ -94,6 +146,10 @@ const typeRichTextParagraph: TypeDef = () => [
     {
       _type: ['literal', 'span'],
       text: 'string',
+    },
+    {
+      _type: ['literal', 'spacer'],
+      size: 'string',
     },
   ],
 ];
@@ -178,13 +234,15 @@ export type RichTextParagraph =
     };
 
 export type ContentForRichText = Array<
-  | ContentForRichTextTitle
   | ContentForRichTextItems
+  | ContentForRichTextTitle
   | ContentForRichTextWidget
   | ContentForRichTextParagraph
   | ContentForRichTextVerticalSpace
   | ContentForRichTextPreview
   | ContentForRichTextImage
+  | ContentForRichTextVideo
+  | ContentForRichTextMultipleButton
 >;
 
 const typeContentForRichText: TypeDef = [
@@ -198,6 +256,8 @@ const typeContentForRichText: TypeDef = [
     typeContentForRichTextParagraph,
     typeContentForRichTextPreview,
     typeContentForRichTextImage,
+    typeContentForRichTextVideo,
+    typeContentForRichTextMultipleButton,
   ],
 ];
 

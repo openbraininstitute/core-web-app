@@ -1,5 +1,5 @@
-import { useSanity } from './content';
 import { RichText, tryType } from './_common';
+import { useSanity } from '@/services/sanity';
 
 export interface ContentForOurFoundationsText {
   title: string | null;

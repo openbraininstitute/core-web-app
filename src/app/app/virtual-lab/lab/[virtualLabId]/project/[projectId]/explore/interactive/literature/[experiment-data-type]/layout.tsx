@@ -10,7 +10,7 @@ export default function ArticleListForExperimentLayout({
 }: LabProjectLayoutProps) {
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
   return (
-    <div className="flex h-screen overflow-y-hidden bg-white">
+    <div className="flex h-screen w-full overflow-y-hidden bg-white">
       <BackToInteractiveExplorationBtn
         prefetch={false}
         href={`${vlProjectUrl}/explore/interactive`}

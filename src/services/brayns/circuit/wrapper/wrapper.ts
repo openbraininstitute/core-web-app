@@ -1,5 +1,5 @@
 import { Vector3 } from '../../common/utils/calc';
-import GenericEvent from '../../common/utils/generic-event';
+import GenericEvent from '../../../../util/generic-event';
 import ImageStream from '../../common/image-stream/image-stream';
 import BackendAllocatorService from '../allocation/backend-allocator-service';
 import { JsonRpcServiceInterface } from '../../common/json-rpc/types';

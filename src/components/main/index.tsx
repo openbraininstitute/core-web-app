@@ -5,7 +5,6 @@ import ApplicationSidebar, {
   NavigationItem,
   NavigationItemProps,
 } from '../ApplicationSidebar';
-import MainMenu from './Menu';
 import ObiLogoSvg from '@/components/logo/as-svg';
 import { basePath } from '@/config';
 import { classNames } from '@/util/utils';
@@ -60,7 +59,6 @@ export default function Main() {
             <DefaultAccountPanel expanded />
           </div>
         </div>
-        <MainMenu />
       </div>
     </div>
   );

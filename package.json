@@ -18,6 +18,8 @@
     "typecheck:watch": "npx tsc --noEmit --watch"
   },
   "dependencies": {
+    "@ai-sdk/react": "^1.1.21",
+    "@ai-sdk/ui-utils": "^1.1.17",
     "@ant-design/icons": "^5.0.1",
     "@apache-arrow/es2015-esm": "^16.0.0",
     "@bbp/morphoviewer": "^0.20.4",
@@ -69,7 +71,9 @@
     "distinct-colors": "^3.0.0",
     "elastic-builder": "^2.20.0",
     "file-saver": "^2.0.5",
+    "framer-motion": "^12.4.7",
     "github-markdown-css": "^5.8.1",
+    "input-otp": "^1.4.2",
     "jotai": "^2.7.2",
     "jotai-devtools": "^0.10.0",
     "jotai-optics": "^0.3.0",
@@ -81,6 +85,7 @@
     "next": "^14.2.2",
     "next-auth": "^4.24.7",
     "next-sanity": "^9.8.51",
+    "next-sanity-client": "^1.0.8",
     "node-cache-engine": "^1.2.0",
     "nuqs": "^1.14.1",
     "optics-ts": "^2.4.0",

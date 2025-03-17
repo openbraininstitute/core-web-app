@@ -120,16 +120,24 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   const createMEModel = useSetAtom(createMEModelAtom);
   const [meModelCreating, setMeModelCreating] = useState<boolean>(false);
 
-  const { contextHolder, createModal } = usePendingValidationModal();
+  const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
 
   const modelsAreSelected = selectedEModel && selectedMModel;
 
+  const showErrorNotification = (error: any) => {
+    notification.error({
+      duration: 10,
+      message:
+        error?.cause?.error_code === LOW_FUNDS_ERROR_CODE ? LOW_FUNDS_ERROR_MSG : DEFAULT_ERROR_MSG,
+    });
+  };
+
   const onClickWithValidation = () => {
     setMeModelCreating(true);
-    createMEModel({ virtualLabId, projectId });
-    setMeModelCreating(false);
-
-    createModal({ virtualLabId, projectId });
+    createMEModel({ virtualLabId, projectId })
+      .then(() => createValidationModal({ virtualLabId, projectId }))
+      .catch((err) => showErrorNotification(err))
+      .finally(() => setMeModelCreating(false));
   };
 
   const onClickWithoutValidation = () => {
@@ -137,7 +145,6 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
 
     createMEModel({ virtualLabId, projectId })
       .then((meModel) => {
-        if (!meModel) return;
         const redirectionUrl = detailUrlWithinLab(
           virtualLabId,
           projectId,
@@ -151,18 +158,13 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
           message: 'ME-model created successfully',
         });
         refreshMeModels();
-        setMeModelCreating(false);
         router.push(redirectionUrl);
       })
       .catch((err) => {
+        showErrorNotification(err);
+      })
+      .finally(() => {
         setMeModelCreating(false);
-        notification.error({
-          duration: 10,
-          message:
-            err?.cause?.error_code === LOW_FUNDS_ERROR_CODE
-              ? LOW_FUNDS_ERROR_MSG
-              : DEFAULT_ERROR_MSG,
-        });
       });
   };
 

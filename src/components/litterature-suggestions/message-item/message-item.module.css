@@ -1,0 +1,82 @@
+.messageItem {
+  --color-primary: #012766;
+  --size-icon: 48px;
+}
+
+.user {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0;
+  color: #fffe;
+  margin: 8px 0;
+}
+
+.iconContainer {
+  flex: 0 0 auto;
+  padding: 8px;
+  border-radius: 16px 0 0 16px;
+  background-color: var(--color-primary);
+}
+
+.icon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+.userContent {
+  flex: 1 1 auto;
+  padding: 8px;
+  border-radius: 0 16px 16px 0;
+  background-color: var(--color-primary);
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: stretch;
+  min-height: 64px;
+}
+
+.markdown ul {
+  list-style: disc;
+}
+
+.markdown ol {
+  list-style: decimal;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 1em 0;
+  padding: 0 2em;
+}
+
+.markdown li {
+  padding: 0;
+  margin: 0;
+  padding-left: 1em;
+  color: inherit;
+  font: inherit;
+}
+
+.markdown h3 {
+  font-weight: bolder;
+  font-size: 120%;
+}
+
+.markdown a {
+  color: #1890ff;
+  text-decoration: underline;
+}
+
+button.debugButton {
+  background: orange;
+  color: #000;
+  font-weight: bold;
+  border-radius: 99vmax;
+  padding: 0.25em 1em;
+  cursor: pointer;
+  margin: 0.5em 0;
+}

@@ -1,15 +1,32 @@
 import { VlmResponse } from './common';
 
+type InviteOrigin = 'Lab' | 'Project';
+
 export type InviteData = {
   virtual_lab_id: string;
   project_id?: string;
-  origin: 'Lab' | 'Project';
+  origin: InviteOrigin;
   status?: string;
 };
 
-export type InviteResponse = VlmResponse<InviteData>;
+export type AcceptInviteResponse = VlmResponse<InviteData>;
 
-export function isVlmInviteResponse(response: any): response is InviteResponse {
+export type InviteDetailsData = {
+  accepted: Boolean;
+  invite_id: string;
+  inviter_full_name: string;
+  origin: InviteOrigin;
+  project_id?: string;
+  project_name?: string;
+  virtual_lab_id: string;
+  virtual_lab_name?: string;
+};
+
+export type InviteDetailsResponse = VlmResponse<InviteDetailsData>;
+
+export function isVlmInviteResponse(
+  response: any
+): response is AcceptInviteResponse | InviteDetailsData {
   return response?.data?.origin && response?.data?.virtual_lab_id;
 }
 
