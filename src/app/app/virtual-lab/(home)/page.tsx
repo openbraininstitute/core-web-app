@@ -24,7 +24,9 @@ export default async function Page() {
     <div className="flex h-screen flex-col bg-primary-9 p-5 text-white">
       <div className="no-scrollbar h-full gap-12 overflow-y-auto overflow-x-hidden">
         <SideBar
-          labsCount={(result?.data?.pending_labs?.length ?? 0) + (result?.data?.virtual_lab ? 1 : 0)}
+          labsCount={
+            (result?.data?.pending_labs?.length ?? 0) + (result?.data?.virtual_lab ? 1 : 0)
+          }
         />
         <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
           <div className="ml-80 flex w-[calc(100%-20rem)] items-end justify-end">
