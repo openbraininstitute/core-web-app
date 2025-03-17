@@ -9,6 +9,7 @@ const formatInputValue = (value: number) => {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
 };
 
+export const CONVERSION_RATE = 0.05;
 export const creditAtom = atom<{ credits: number; step: 'overview' | 'pay' | null }>({
   credits: 0,
   step: 'overview',
@@ -16,7 +17,7 @@ export const creditAtom = atom<{ credits: number; step: 'overview' | 'pay' | nul
 
 export function CreditConverter({ showActions = true }: { showActions?: boolean }) {
   const [{ credits }, updateCreditState] = useAtom(creditAtom);
-  const money = credits * 0.02;
+  const money = credits * CONVERSION_RATE;
 
   const handleCreditsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');

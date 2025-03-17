@@ -14,6 +14,7 @@ import sessionAtom from '@/state/session';
 import {
   CreditConverter,
   creditAtom,
+  CONVERSION_RATE,
 } from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/credit-converter';
 import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
 
@@ -21,8 +22,6 @@ import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/q
 import { SetupIntentResponse } from '@/services/virtual-lab/billing';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
-
-const CONVERSION_RATE = 0.02;
 
 type Props = {
   isOpen: boolean;
@@ -65,7 +64,7 @@ function Form({ onClose }: { onClose: () => void }) {
   const disableForm = !formLoaded || formLoading || credits === 0;
 
   const onReady = () => setElementsReady(true);
-
+  const virtualLabId = ''; // TODO: should be gathered from the url params
   const onSubmit = async () => {
     if (!stripe || !elements) {
       return null;
@@ -95,6 +94,7 @@ function Form({ onClose }: { onClose: () => void }) {
         return await createStandalonePayment({
           amount: amountInCents,
           currency: 'chf',
+          virtual_lab_id: virtualLabId,
           payment_method_id:
             typeof setupIntent.payment_method === 'string'
               ? setupIntent.payment_method
@@ -259,7 +259,7 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
         content: classNames(
           '!rounded-md',
           step === 'overview' && '!min-h-[8rem]',
-          step === 'pay' && '!min-h-[16rem]'
+          step === 'pay' && '!min-h-[15rem]'
         ),
       }}
     >
