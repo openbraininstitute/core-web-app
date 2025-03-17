@@ -1,6 +1,7 @@
 import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState, useEffect, useRef, useTransition } from 'react';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { useRouter, useParams } from 'next/navigation';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { Button, Spin } from 'antd';
@@ -59,12 +60,12 @@ function Form({ onClose }: { onClose: () => void }) {
   const { success: successNotify, error: errorNotify } = useNotification();
   const [formLoading, startTransition] = useTransition();
   const { credits } = useAtomValue(creditAtom);
-
+  const { virtualLabId } = useParams<{ virtualLabId: string }>();
+  const { refresh } = useRouter();
   const formLoaded = stripe && elements;
   const disableForm = !formLoaded || formLoading || credits === 0;
 
   const onReady = () => setElementsReady(true);
-  const virtualLabId = ''; // TODO: should be gathered from the url params
   const onSubmit = async () => {
     if (!stripe || !elements) {
       return null;
@@ -118,12 +119,13 @@ function Form({ onClose }: { onClose: () => void }) {
 
       if (data) {
         successNotify(
-          `Successfully purchased ${credits} credits for ${data.amount} ${data.currency.toUpperCase()}`,
+          `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
           undefined,
           'topRight',
           true,
           'credits-purchase-success'
         );
+        refresh();
         onClose();
         delay(() => window.location.reload(), 2000);
       }
@@ -255,9 +257,9 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
       onClose={onClose}
       footer={null}
       cls={{
-        parent: '!w-[550px]',
+        parent: '!w-[550px] [&_.ant-modal-content]:!rounded-md [&_.ant-modal-content]:!px-8',
         content: classNames(
-          '!rounded-md',
+          '!rounded-lg',
           step === 'overview' && '!min-h-[8rem]',
           step === 'pay' && '!min-h-[15rem]'
         ),

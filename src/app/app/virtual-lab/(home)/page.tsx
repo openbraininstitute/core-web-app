@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
-
 import { ErrorBoundary } from 'react-error-boundary';
+
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import LabsListing from '@/components/VirtualLab/labs-listing/listing';
 import CreateFirstLab from '@/components/VirtualLab/labs-listing/no-vlabs';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideBar from '@/components/VirtualLab/side-bar/home-sidebar';
 import Logout from '@/components/VirtualLab/side-bar/logout';
