@@ -7,7 +7,6 @@ import { useSetAtom, useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { Spin } from 'antd';
 import { CollapseProps } from 'antd/lib/collapse/Collapse';
-import { CollapsibleType } from 'antd/lib/collapse/CollapsePanel';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQueryState } from 'nuqs';
 
@@ -15,14 +14,57 @@ import Billing from '../Billing';
 import ProjectsPanel from './ProjectsPanel';
 import FormPanel, { renderInput, renderTextArea } from './FormPanel';
 import DangerZonePanel from './DangerZonePanel';
-import CostsPanel from './CostsPanel';
+import CreditManagement from './CreditManagement';
+import SpendingsPanel from './Spendings';
 
 import { deleteVirtualLab } from '@/services/virtual-lab/labs';
-import { virtualLabDetailAtomFamily, virtualLabsOfUserAtom } from '@/state/virtual-lab/lab';
+import {
+  virtualLabBalanceAtomFamily,
+  virtualLabDetailAtomFamily,
+  virtualLabsOfUserAtom,
+} from '@/state/virtual-lab/lab';
 import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
-import { VALID_EMAIL_REGEXP } from '@/util/utils';
+import { classNames, VALID_EMAIL_REGEXP } from '@/util/utils';
 import { VirtualLab } from '@/types/virtual-lab/lab';
 import Collapse, { ExpandIcon } from '@/components/Collapse';
+import { useLastTruthyValue } from '@/hooks/hooks';
+
+function VirtualLabBlock({
+  virtualLabId,
+  className,
+}: {
+  virtualLabId: string;
+  className?: string;
+}) {
+  const virtualLabBalance = useLastTruthyValue(virtualLabBalanceAtomFamily({ virtualLabId }));
+
+  return (
+    <div
+      className={classNames(
+        'flex w-full justify-between border-2 border-primary-3 p-6 text-white',
+        className
+      )}
+    >
+      <h2 className="text-2xl font-bold">Virtual Lab</h2>
+
+      <div className="flex items-center gap-2 border border-primary-3 px-4 py-2">
+        <span className="text-sm text-primary-2">Credit balance</span>
+        <span className="text-lg font-semibold">{virtualLabBalance?.data.balance ?? ''}</span>
+      </div>
+    </div>
+  );
+}
+
+function CollapsibleLabel({ text, description }: { text: string; description: string }) {
+  return (
+    <span className="font-bold">
+      {text}
+      {description && (
+        <span className="ml-4 text-base font-normal text-gray-500">{description}</span>
+      )}
+    </span>
+  );
+}
 
 export default function VirtualLabSettingsComponent({ id }: { id: string }) {
   const userIsAdmin = true;
@@ -48,41 +90,41 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     return new Promise((resolve) => resolve(virtualLab)); // eslint-disable-line no-promise-executor-return
   }, [id, refreshVirtualLabsOfUser]);
 
-  const header = useMemo(() => {
-    return virtualLabDetail.state === 'hasData'
-      ? {
-          key: 'header',
-          collapsible: 'disabled' as CollapsibleType, // Type-casting shouldn't be necessary here, but it is for some reason.
-          showArrow: false,
-          label: (
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between bg-primary-8 text-white">
-                {virtualLabDetail.data?.name}
-                <div className="text-primary-2">
-                  Total budget: <span>$ {virtualLabDetail.data?.budget ?? 0}</span>
-                </div>
-              </div>
-              <div className="flex flex-col gap-3 bg-primary-8 text-white">
-                <div className="h-3 overflow-hidden rounded-full bg-primary-3">
-                  <div className="h-full w-[60%] bg-white" />
-                </div>
-                <div className="flex justify-between text-base font-light">
-                  <div className="flex flex-row gap-3">
-                    Total spent
-                    <span className="font-bold">$ N/A</span>
-                  </div>
-                  <div className="flex flex-row gap-3 text-primary-3">
-                    Remaining: <span className="font-bold">$ N/A</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ),
-          style: { background: '#003A8C' },
-          headerClass: '!text-white font-bold !items-center', // TODO: See whether there's a better way to align center.
-        }
-      : {};
-  }, [virtualLabDetail]);
+  const creditManagement = useMemo(
+    () => ({
+      key: 'creditManagement',
+      label: (
+        <CollapsibleLabel
+          text="Credit management"
+          description="Allocate credits to your virtual lab's projects"
+        />
+      ),
+      children: <CreditManagement virtualLabId={id} />,
+    }),
+    [id]
+  );
+
+  const purchases = useMemo(
+    () => ({
+      key: 'purchases',
+      label: <CollapsibleLabel text="Purchases" description="View details about your purchases" />,
+    }),
+    []
+  );
+
+  const spendings = useMemo(
+    () => ({
+      key: 'spendings',
+      label: (
+        <CollapsibleLabel
+          text="Spendings"
+          description="View all the activities that used credits"
+        />
+      ),
+      children: <SpendingsPanel virtualLabId={id} />,
+    }),
+    [id]
+  );
 
   const settings = useMemo(
     () =>
@@ -144,15 +186,6 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     [updateVirtualLab, virtualLabDetail]
   );
 
-  const costs = useMemo(
-    () => ({
-      key: 'costs',
-      children: <CostsPanel virtualLabId={id} />,
-      label: 'Costs',
-    }),
-    [id]
-  );
-
   const budget = useMemo(
     () => ({
       key: 'project-budget',
@@ -190,12 +223,10 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
 
   const collapseItems: CollapseProps['items'] = useMemo(
     () =>
-      // [header, costs, settings, plan, budget, billing, dangerZone].filter(
-      [costs, settings, dangerZone].filter(
+      [creditManagement, purchases, spendings, settings, dangerZone].filter(
         (item) => Object.keys(item).length !== 0 // Filter-out any "empty" panels (ex. DangerZone when not admin).
       ),
-    // [header, costs, settings, plan, budget, billing, dangerZone]
-    [costs, settings, dangerZone]
+    [creditManagement, purchases, spendings, settings, dangerZone]
   );
 
   if (virtualLabDetail.state === 'loading') {
@@ -221,11 +252,15 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
   }
 
   return (
-    <Collapse
-      className="my-10 flex flex-col gap-1 text-primary-8"
-      items={collapseItems}
-      activeKey={activePanelKey}
-      onChange={onChangePanel}
-    />
+    <div className="p-y-8">
+      <VirtualLabBlock className="mt-8" virtualLabId={id} />
+
+      <Collapse
+        className="my-10 flex flex-col gap-1 text-primary-8"
+        items={collapseItems}
+        activeKey={activePanelKey}
+        onChange={onChangePanel}
+      />
+    </div>
   );
 }

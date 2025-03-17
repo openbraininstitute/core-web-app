@@ -24,7 +24,7 @@ export default function CostsPanel({
 
   return (
     <>
-      <ProjectBalanceCard virtualLabId={virtualLabId} project={project} balance={balance} />
+      <ProjectBalanceCard project={project} balance={balance} />
       <JobReportList virtualLabId={virtualLabId} projectId={project.id} />
     </>
   );
