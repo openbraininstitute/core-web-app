@@ -18,7 +18,7 @@ export interface ProgressiveVideoProps {
 export default function ProgressiveVideo({
   className,
   src,
-  controls,
+  controls = false,
   autosize,
   currentTime,
   onCurrentTimeChange,
@@ -47,21 +47,34 @@ export default function ProgressiveVideo({
 
     onCurrentTimeChange(video.currentTime);
   };
+  const handlePlay = () => {
+    const video = refVideo.current;
+    if (!video || !onCurrentTimeChange) return;
+
+    video.muted = false;
+  };
 
   return (
-    <div className={classNames(className, styles.video)} style={style}>
+    <button
+      className={classNames(className, styles.video)}
+      type="button"
+      aria-label="Tap to play"
+      style={style}
+    >
       <video
+        className={classNames(controls && styles.pointer)}
         src={src}
         ref={refVideo}
         controls={controls}
-        muted={!controls}
-        autoPlay={!controls}
+        muted
+        autoPlay
         loop={!controls}
         disablePictureInPicture
         playsInline
+        onPlay={handlePlay}
         onCanPlay={handleReady}
         onTimeUpdate={handleTimeUpdate}
       />
-    </div>
+    </button>
   );
 }

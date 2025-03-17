@@ -55,18 +55,19 @@ export default function SanityContentVideo({ className, value }: SanityContentVi
                   className={styles.step}
                   onClick={() => jumpTo(index)}
                 >
-                  {`${index + 1}`.padStart(2, '0')}. {label}
+                  {index === 0 ? label : `${index}`.padStart(2, '0') + '. ' + label}
                 </button>
               )
             )}
           </nav>
-          <article>
+          {/* Removed for the time being, until they found a better way. */}
+          {/* <article>
             <div>
               {`${stepIndex + 1}`.padStart(2, '0')}.<br />
               {timestamps[stepIndex].label}
             </div>
             <div>{timestamps[stepIndex].description}</div>
-          </article>
+          </article> */}
         </>
       )}
     </div>
