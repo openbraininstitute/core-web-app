@@ -1,9 +1,9 @@
 import { RichText, tryType } from './_common';
 import { TypeDef } from '@/util/type-guards';
 
-export const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
+export const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
 export const typeStringOrUndef: TypeDef = ['|', 'string', 'undefined'];
-export const typeNumberOrNull: TypeDef = ['|', 'number', 'null'];
+export const typeNumberOrNull: TypeDef = ['|', 'number', 'null', 'undefined'];
 export const typeBooleanOrNull: TypeDef = ['|', 'boolean', 'null'];
 export const typeImage = {
   imageURL: 'string',
@@ -65,11 +65,28 @@ const typeContentForRichTextMultipleButton = {
 export interface ContentForRichTextVideo {
   _type: 'video';
   url: string;
+  timestamps?: null | Array<{
+    label: string;
+    description: string;
+    timestamp: number;
+  }>;
 }
 
 const typeContentForRichTextVideo = {
   _type: ['literal', 'video'],
   url: typeStringOrNull,
+  timestamps: [
+    '?',
+    [
+      '|',
+      'null',
+      {
+        label: typeStringOrNull,
+        description: typeStringOrNull,
+        timestamp: typeNumberOrNull,
+      },
+    ],
+  ],
 } satisfies TypeDef;
 
 export interface ContentForRichTextPreview {
@@ -115,7 +132,7 @@ const typeContentForRichTextPreview: TypeDef = {
       height: 'number',
     },
   ],
-  button: ['|', { label: 'string', link: 'string' }],
+  button: ['|', { label: typeStringOrNull, link: typeStringOrNull }],
 };
 
 const typeRichTextParagraph: TypeDef = () => [

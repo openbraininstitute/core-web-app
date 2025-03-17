@@ -40,6 +40,7 @@
   gap: 0;
   justify-content: flex-end;
   align-items: flex-start;
+  line-height: 2;
 }
 
 .menuContainer div.items a {
@@ -78,12 +79,14 @@
 .menuContainer div.items a.loginButton {
   border: 1px solid currentColor;
   border-radius: 4px;
+  color: var(--color-primary);
+  background-color: #fffe;
   transition: all 0.6s;
 }
 
 .menuContainer div.items a.loginButton:hover {
-  color: var(--color-primary);
-  background-color: #fffe;
+  background-color: var(--color-primary);
+  color: #fffe;
 }
 
 .menuContainer > div.hamburger {

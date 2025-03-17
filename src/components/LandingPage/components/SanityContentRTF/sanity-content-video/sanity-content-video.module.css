@@ -1,2 +1,47 @@
-.sanityContentVideo {
+.sanityContentVideo nav {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 2em;
+  font-size: var(--font-size-S);
+  margin: 1em 0;
+}
+
+.sanityContentVideo > nav > button.step {
+  font-size: var(--font-size-S);
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+div.currentStep {
+  content: '';
+  height: 4px;
+  width: 32px;
+  border-radius: 99vmax;
+  background-color: currentColor;
+}
+
+.sanityContentVideo > article {
+  margin-bottom: 2em;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 3em;
+}
+
+.sanityContentVideo > article > div:first-child {
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .sanityContentVideo > article {
+    flex-direction: column;
+    gap: 2em;
+  }
 }
