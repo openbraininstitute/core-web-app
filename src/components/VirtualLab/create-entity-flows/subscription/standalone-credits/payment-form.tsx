@@ -1,13 +1,13 @@
 import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState, useEffect, useRef, useTransition } from 'react';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { useRouter, useParams } from 'next/navigation';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtom, useAtomValue } from 'jotai';
 import { Button, Spin } from 'antd';
 import isObject from 'lodash/isObject';
 import delay from 'lodash/delay';
 
-import { useParams } from 'next/navigation';
 import getStripe from '@/components/VirtualLab/Billing/utils';
 import useNotification from '@/hooks/notifications';
 import sessionAtom from '@/state/session';
@@ -61,7 +61,7 @@ function Form({ onClose }: { onClose: () => void }) {
   const [formLoading, startTransition] = useTransition();
   const { credits } = useAtomValue(creditAtom);
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
-
+  const { refresh } = useRouter();
   const formLoaded = stripe && elements;
   const disableForm = !formLoaded || formLoading || credits === 0;
 
@@ -125,6 +125,7 @@ function Form({ onClose }: { onClose: () => void }) {
           true,
           'credits-purchase-success'
         );
+        refresh();
         onClose();
         delay(() => window.location.reload(), 2000);
       }
@@ -267,11 +268,11 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
       onClose={onClearAndClose}
       footer={null}
       cls={{
-        parent: '!w-[550px]',
+        parent: '!w-[550px] [&_.ant-modal-content]:!rounded-md [&_.ant-modal-content]:!px-8',
         content: classNames(
           '!rounded-md',
           step === 'overview' && '!min-h-[4rem]',
-          step === 'pay' && '!min-h-[12rem]'
+          step === 'pay' && '!min-h-[10rem]'
         ),
       }}
     >

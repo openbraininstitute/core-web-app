@@ -6,6 +6,7 @@ import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { tryCatch } from '@/api/utils';
 
 export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(): Promise<Metadata> {
   const { data: result, error } = await tryCatch(getUserProfile());
   if (error) {

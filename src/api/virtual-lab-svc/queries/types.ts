@@ -188,13 +188,32 @@ export type SubscriptionPaymentDetails = {
   currency: string;
   status: string;
   payment_date: string;
+  payment_type?: string;
   card_brand: string;
   card_last4: string;
+  card_exp_month?: number;
+  card_exp_year?: number;
   invoice_pdf: string | null;
   receipt_url: string | null;
   period_start: string;
   period_end: string;
+  created_at?: string;
+  updated_at?: string;
+  is_standalone?: boolean;
 };
+
+/**
+ * Response type for paginated subscription payments
+ */
+export type SubscriptionPaymentsResponse = VlmResponse<{
+  total_count: number;
+  total_pages: number;
+  current_page: number;
+  page_size: number;
+  has_next: boolean;
+  has_previous: boolean;
+  payments: SubscriptionPaymentDetails[];
+}>;
 
 export type UserSubscriptionHistory = {
   id: string;
