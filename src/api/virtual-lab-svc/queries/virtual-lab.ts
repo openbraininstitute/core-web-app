@@ -81,75 +81,29 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
 /**
  * List all virtual labs for a user.
  *
- * @param {Object} params - Parameters for listing virtual labs.
- * @param {number} [params.page=1] - The page number to fetch.
- * @param {number} [params.pageSize=10] - The number of items per page.
- * @returns {Promise<VirtualLabListResponse>} - api response with the list of virtual labs.
+ * @returns {Promise<VirtualLabResponse[]>} - api response with the list of virtual labs.
  * @throws {Error} - Throws an error if the request fails or the response is invalid.
  */
-export async function listVirtualLabs({
-  page = 1,
-  pageSize = 10,
-}: {
-  page?: number;
-  pageSize?: number;
-} = {}): Promise<VirtualLabListResponse> {
+export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
   const session = await getSession();
 
-  const url = new URL(BASE_URL);
-  url.searchParams.append('page', page.toString());
-  url.searchParams.append('page_size', pageSize.toString());
+  try {
+    const response = await fetch(BASE_URL, {
+      method: 'get',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    });
 
-  const response = await fetch(url.toString(), {
-    method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
+    if (!response.ok) {
+      throw new Error(`listing virtual labs failed ${response.status}`);
+    }
 
-  if (!response.ok) {
-    throw new Error(`listing virtual labs failed ${response.status}`);
+    const result: VirtualLabListResponse = await response.json();
+    return result;
+  } catch (error) {
+    // TODO: capture exception with sentry
+    throw new Error(`Failed to list virtual labs: ${(error as Error).message}`);
   }
-
-  const result: VirtualLabListResponse = await response.json();
-  return result;
-}
-
-/**
- * List pending virtual labs for a user.
- *
- * @param {Object} params - Parameters for listing virtual labs.
- * @param {number} [params.page=1] - The page number to fetch.
- * @param {number} [params.pageSize=10] - The number of items per page.
- * @returns {Promise<VirtualLabListResponse>} - api response with the list of virtual labs.
- * @throws {Error} - Throws an error if the request fails or the response is invalid.
- */
-export async function listPendingVirtualLabs({
-  page = 1,
-  pageSize = 10,
-}: {
-  page?: number;
-  pageSize?: number;
-} = {}): Promise<VirtualLabListResponse> {
-  const session = await getSession();
-
-  const url = new URL(`${BASE_URL}/pending`);
-  url.searchParams.append('page', page.toString());
-  url.searchParams.append('page_size', pageSize.toString());
-
-  const response = await fetch(url.toString(), {
-    method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`listing virtual labs failed ${response.status}`);
-  }
-
-  const result: VirtualLabListResponse = await response.json();
-  return result;
 }

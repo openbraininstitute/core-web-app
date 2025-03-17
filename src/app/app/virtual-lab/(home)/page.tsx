@@ -1,14 +1,13 @@
 import { Metadata } from 'next';
-import { ErrorBoundary } from 'react-error-boundary';
 
+import { ErrorBoundary } from 'react-error-boundary';
 import LabsListing from '@/components/VirtualLab/labs-listing/listing';
 import CreateFirstLab from '@/components/VirtualLab/labs-listing/no-vlabs';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideBar from '@/components/VirtualLab/side-bar/home-sidebar';
 import Logout from '@/components/VirtualLab/side-bar/logout';
-
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { tryCatch } from '@/api/utils';
+import { logError } from '@/util/logger';
 
 export const metadata: Metadata = {
   title: 'Virtual labs',
@@ -18,31 +17,28 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 export default async function Page() {
   try {
-    const result = await tryCatch(listVirtualLabs({ page: 1, pageSize: 10 }));
-
-    if (result.error) {
-      throw new Error((result.error as { message: string }).message);
-    }
-
-    const labs = result.data;
-
+    const labs = await listVirtualLabs();
     return (
       <div className="flex h-screen flex-col bg-primary-9 p-5 text-white">
         <div className="no-scrollbar h-full gap-12 overflow-y-auto overflow-x-hidden">
-          <SideBar labsCount={labs.data?.total} />
+          <SideBar
+            labsCount={(labs.data?.pending_labs.length ?? 0) + (labs.data?.virtual_lab ? 1 : 0)}
+          />
           <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-            <div className="sticky top-0 ml-80 flex w-[calc(100%-20rem)] items-end justify-end">
+            <div className="ml-80 flex w-[calc(100%-20rem)] items-end justify-end">
               <Logout />
             </div>
-            <div className="my-4 ml-80 flex h-[calc(100vh-7.5rem)] w-[calc(100%-20rem)] flex-grow flex-col overflow-hidden">
-              {!labs.data?.total ? (
+            <div className="ml-80 mt-4 flex h-full w-[calc(100%-20rem)] flex-grow flex-col">
+              {!labs.data?.virtual_lab ? (
                 <CreateFirstLab />
               ) : (
                 <LabsListing
-                  labs={labs.data?.results || []}
-                  initialPage={labs.data?.page || 1}
-                  pageSize={labs.data?.page_size || 10}
-                  totalItems={labs.data?.total || 0}
+                  virtualLab={{
+                    data: labs.data.virtual_lab,
+                    membersCount: labs.data.members_count,
+                    projectsCount: labs.data.projects_count,
+                  }}
+                  pendingLabs={labs.data.pending_labs}
                 />
               )}
             </div>
@@ -51,6 +47,7 @@ export default async function Page() {
       </div>
     );
   } catch (error) {
+    logError('@@err', error);
     throw new Error((error as { message: string }).message);
   }
 }
