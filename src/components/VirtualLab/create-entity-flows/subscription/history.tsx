@@ -15,11 +15,13 @@ export default async function History() {
   if (!data || data.subscriptions.length === 0) return <HistoryEmpty />;
 
   const allPayments = flatMap(data.subscriptions, (subscription) =>
-    subscription.payments.map((payment) => ({
-      ...payment,
-      subscription_id: subscription.id,
-      subscription_type: subscription.subscription_type,
-    }))
+    subscription.payments
+      .filter((payment) => !payment.is_standalone)
+      .map((payment) => ({
+        ...payment,
+        subscription_id: subscription.id,
+        subscription_type: subscription.subscription_type,
+      }))
   );
 
   return (
