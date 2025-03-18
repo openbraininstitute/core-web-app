@@ -15,7 +15,7 @@ export default function SelectCurrency({ className }: SelectCurrencyProps) {
 
   return (
     <div className={classNames(className, styles.selectCurrency)}>
-      <div>Currency: </div>
+      {/* <div>Currency: </div> */}
       <Select
         className={styles.select}
         defaultValue={currency}

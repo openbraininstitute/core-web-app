@@ -17,6 +17,8 @@ import { useGenericEventListener } from '@/util/generic-event';
 import { createHeaders } from '@/util/utils';
 import { logError } from '@/util/logger';
 
+const AGENT_URL = process.env.NEXT_PUBLIC_AI_AGENT_URL;
+
 export function useThreadId() {
   const refCurrentThreadId = React.useRef<string | null>(null);
   const [threadId, setThreadId] = React.useState<string | undefined>(undefined);
@@ -59,7 +61,7 @@ export function useLitteratureCrawler(threadId: string | undefined) {
   const session = useSession();
   // const [articles, setArticles] = React.useState<ScientificArticle[]>([]);
   const chat = useChat({
-    api: `http://main-2110738358.us-east-1.elb.amazonaws.com/fastapi/qa/chat_streamed/${threadId}`,
+    api: `${AGENT_URL}/qa/chat_streamed/${threadId}`,
     id: threadId,
     headers: {
       Authorization: `Bearer ${session.data?.accessToken}`,
@@ -112,9 +114,9 @@ export async function fetchJSON<T>(
   typeGuard: (data: unknown) => data is T
 ): Promise<T> {
   try {
-    const resp = await fetch('/api/explore-ai', {
+    const resp = await fetch(`${AGENT_URL}/threads`, {
       method: 'POST',
-      headers: createHeaders(accessToken ?? 'no-token', {
+      headers: createHeaders(accessToken ?? 'token-is-missing', {
         'Content-Type': 'application/json',
       }),
       body: JSON.stringify(query),

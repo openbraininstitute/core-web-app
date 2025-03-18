@@ -1,13 +1,14 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
 
+import ContactUs from '../../contact-us';
 import { classNames } from '@/util/utils';
 import {
   ContentForPricingPlan,
   MultiCurrencyPrice,
 } from '@/components/LandingPage/content/pricing';
-
 import { useCurrency } from '@/components/LandingPage/atoms';
+
 import styles from './PlanHeader.module.css';
 
 export interface PlanHeaderProps {
@@ -23,6 +24,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
   return (
     <div className={classNames(className, styles.planHeader)}>
       <h2>{plan.title}</h2>
+      {plan.buttonLabel && <ContactUs>{plan.buttonLabel}</ContactUs>}
       {plan.price.month.length > 0 && (
         <>
           <div className={styles.priceHeader}>
