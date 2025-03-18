@@ -4,6 +4,7 @@ import { ConfigProvider, Form } from 'antd';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 
 import Overview from '@/components/VirtualLab/create-entity-flows/virtual-lab/overview';
 import useNotification from '@/hooks/notifications';
@@ -14,6 +15,7 @@ import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import { tryCatch } from '@/api/utils';
 
 export default function CreateVirtualLabForm() {
+  const { data } = useSession();
   const notify = useNotification();
   const { push: navigate } = useRouter();
   const [form] = Form.useForm<VirtualLabPayload>();
@@ -91,7 +93,7 @@ export default function CreateVirtualLabForm() {
           requiredMark={false}
           validateTrigger={['onChange']}
           initialValues={{
-            name: '',
+            name: `${data?.user.name}'s virtual lab`,
             description: '',
             entity: null,
             include_members: [],
