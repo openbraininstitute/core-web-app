@@ -6,6 +6,7 @@ on:
       - '*'
       - '!main'
       - '!develop'
+      - '!entitycore-migration'
   workflow_dispatch:
 
 jobs:
