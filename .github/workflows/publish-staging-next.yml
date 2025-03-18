@@ -38,7 +38,7 @@ jobs:
 
       - name: Build a Docker image
         run: |
-          docker build --build-arg DEPLOYMENT_ENV=staging -t ${{ vars.PUBLICECR_URI }}:entitycore-migration .
+          docker build --build-arg DEPLOYMENT_ENV=staging-next -t ${{ vars.PUBLICECR_URI }}:entitycore-migration .
 
       - name: Publish To AWS ECR
         run: |
