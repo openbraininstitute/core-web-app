@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { Button, Tooltip } from 'antd';
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
 import kebabCase from 'lodash/kebabCase';
@@ -23,7 +23,6 @@ import { tryCatch } from '@/api/utils';
 type Props = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
   canSelect?: boolean;
-  onNextStep: () => void;
 };
 
 type TiersComparisonPros = {
@@ -42,7 +41,7 @@ function TiersComparison({
   const [{ interval, currency, tier }, updateFlowState] = useAtom(flowAtom);
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
   const onTierClick = (t: ExtendedTier) => () => {
-    if (t.title === 'Pro') updateFlowState((prev) => ({ ...prev, tier: t }));
+    if (t.title === 'Pro') updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
     if (t.title === 'Premium') onSelectPremiumTier();
   };
 
@@ -104,7 +103,7 @@ function TiersComparison({
               title={feature.tooltip[0]}
               overlayClassName="[&_.ant-tooltip-inner]:bg-primary-8 [&_.ant-tooltip-inner]:text-white [&_.ant-tooltip-inner]:rounded-none [&_.ant-tooltip-arrow]:before:bg-primary-8"
             >
-              <InfoCircleOutlined className="ml-1 text-white" />
+              <InfoCircleOutlined className="ml-1 text-green-500" />
             </Tooltip>
           )}
         </div>
@@ -155,11 +154,12 @@ function TiersComparison({
   return (
     <div
       data-testid="tiers-list"
-      className="relative flex h-full max-h-[85vh] w-full flex-col bg-primary-9 p-6 pb-24 text-white"
+      id="tiers-list"
+      className="relative flex h-full max-h-full w-full flex-col overflow-hidden bg-primary-9 p-6 text-white"
     >
       <div
         id="tier-highlighter"
-        className="pointer-events-none absolute bottom-[40px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6"
+        className="pointer-events-none absolute bottom-[10px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6"
       >
         <div />
         {tiers.map((t) => {
@@ -188,22 +188,12 @@ function TiersComparison({
         <div />
         {tiers.map((t) => {
           return (
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
             <div
-              role="button"
-              aria-label="tier-btn"
-              tabIndex={0}
               key={`tier-btn${t.id}`}
-              className={classNames(
-                'relative flex flex-col bg-transparent px-4',
-                t.title === 'Free' ? 'cursor-default' : 'cursor-pointer',
-                t.title === 'Pro' && !canSelect && 'pointer-events-none cursor-not-allowed'
-              )}
+              className="relative flex flex-col bg-transparent px-4"
               onMouseEnter={() => setHoveredTier(t.id)}
               onMouseLeave={() => setHoveredTier(null)}
-              onClick={onTierClick(t)}
-              aria-disabled={t.title === 'Pro' && !canSelect}
-              data-testid="tier-btn"
+              data-testid="tier-header"
             >
               <h2 className="mb-2 text-2xl font-bold">{t.title}</h2>
               {t.price && t.title === 'Pro' && (
@@ -275,7 +265,7 @@ function TiersComparison({
       </div>
 
       {/* Scrollable content section */}
-      <div className="flex-1 overflow-y-auto">
+      <div id="tier-details-container" className="flex-1 overflow-y-auto">
         {allCategories.map((category) => (
           <div id="tier-details" key={`${kebabCase(category.title)}`} className="relative mt-8">
             <h3 className="mb-4 uppercase text-primary-4">
@@ -312,16 +302,54 @@ function TiersComparison({
           </div>
         ))}
       </div>
+
+      {canSelect && (
+        <div
+          id="tier-buttons-container"
+          className="sticky bottom-0 z-10 grid grid-cols-4 gap-6 bg-transparent pb-2 pt-4"
+        >
+          <div />
+          {tiers.map((t) => {
+            const isCurrentTier = currentTier?.toLowerCase() === t.title.toLowerCase();
+            const isFree = t.title === 'Free';
+            const isPro = t.title === 'Pro';
+            const isPremium = t.title === 'Premium';
+            const isHovered = hoveredTier === t.id;
+            if (isFree && !currentTier) return <div key={`button-${t.id}`} className="px-4" />;
+            return (
+              <div
+                key={`button-${t.id}`}
+                className="relative px-4"
+                onMouseEnter={() => setHoveredTier(t.id)}
+                onMouseLeave={() => setHoveredTier(null)}
+              >
+                <Button
+                  className={classNames(
+                    'relative z-20 h-10 w-full rounded-none',
+                    'border-white bg-primary-9 text-white',
+                    isHovered && 'text-white hover:bg-primary-8 hover:!text-white'
+                  )}
+                  onClick={isPro ? onTierClick(t) : onSelectPremiumTier}
+                  disabled={isPro && !canSelect}
+                  data-testid={`select-${t.title.toLowerCase()}-btn`}
+                >
+                  {isFree && !isCurrentTier && 'Downgrade to Free'}
+                  {isPro && !isCurrentTier && 'Upgrade to Pro'}
+                  {isPremium && 'Contact Us'}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
-export default function TiersList({ currentTier, canSelect, onNextStep }: Props) {
-  const { tier } = useAtomValue(flowAtom);
+export default function TiersList({ currentTier, canSelect }: Props) {
   const [loading, setLoading] = useState(true);
   const [tiers, setTiers] = useState<{ data: Array<ExtendedTier> } | { error: any }>({ data: [] });
   const [open, setOpen] = useState<boolean>(false);
-  const disabled = !tier?.app_id;
 
   const onSelectPremiumTier = () => setOpen(true);
   const onClosePremiumTier = () => setOpen(false);
@@ -369,7 +397,11 @@ export default function TiersList({ currentTier, canSelect, onNextStep }: Props)
     );
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div
+      id="tiers-list-container"
+      className="mx-auto flex h-full max-w-6xl flex-col"
+      style={{ height: 'calc(100vh - 100px)' }}
+    >
       <TiersComparison
         tiers={tiers.data}
         canSelect={canSelect}
@@ -377,27 +409,6 @@ export default function TiersList({ currentTier, canSelect, onNextStep }: Props)
         onSelectPremiumTier={onSelectPremiumTier}
       />
       <ContactUs isOpen={open} onClose={onClosePremiumTier} />
-      {canSelect && (
-        <div className="fixed bottom-6 right-6">
-          <Button
-            key="create-project-btn"
-            data-testid="to-payment-btn"
-            className={classNames(
-              'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
-              'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-              'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-              'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
-            )}
-            type="default"
-            size="large"
-            htmlType="button"
-            disabled={disabled}
-            onClick={onNextStep}
-          >
-            To payment
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

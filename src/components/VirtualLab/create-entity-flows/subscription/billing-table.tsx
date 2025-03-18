@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Table, ConfigProvider, theme, Button } from 'antd';
 import { format } from 'date-fns';
 import type { ColumnsType } from 'antd/es/table';
@@ -19,6 +20,10 @@ interface Props {
 }
 
 export default function BillingTable({ payments }: Props) {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
+  if (!hydrated) return null;
   const columns: ColumnsType<SubscriptionPaymentDetails> = [
     {
       title: 'Object',
@@ -78,7 +83,7 @@ export default function BillingTable({ payments }: Props) {
               <Button
                 aria-label="download invoice"
                 type="text"
-                icon={<FileDownloadFill className="text-xl" />}
+                icon={<FileDownloadFill className="text-xl text-white" />}
                 size="small"
               />
             </a>
