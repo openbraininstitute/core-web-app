@@ -42,7 +42,7 @@ jobs:
 
       - name: Publish To AWS ECR
         run: |
-          docker push ${{ vars.PUBLICECR_URI }}:staging
+          docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration
 
       # - name: Authenticate with AWS ECS
       #   uses: aws-actions/configure-aws-credentials@v4
