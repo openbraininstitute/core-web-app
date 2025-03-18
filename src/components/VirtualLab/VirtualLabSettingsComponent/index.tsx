@@ -17,6 +17,7 @@ import DangerZonePanel from './DangerZonePanel';
 import CreditManagement from './CreditManagement';
 import SpendingsPanel from './Spendings';
 
+import BuyCredits from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/buy-credits';
 import { deleteVirtualLab } from '@/services/virtual-lab/labs';
 import {
   virtualLabBalanceAtomFamily,
@@ -261,6 +262,9 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
         activeKey={activePanelKey}
         onChange={onChangePanel}
       />
+      <div className="flex w-full justify-end">
+        <BuyCredits />
+      </div>
     </div>
   );
 }
