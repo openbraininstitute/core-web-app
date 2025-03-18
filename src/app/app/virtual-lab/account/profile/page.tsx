@@ -5,11 +5,6 @@ import { ProfileError } from '@/components/VirtualLab/create-entity-flows/profil
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { tryCatch } from '@/api/utils';
 
-export const metadata: Metadata = {
-  title: 'Profile',
-  description: 'Manage your account information',
-};
-
 export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   const { data: result, error } = await tryCatch(getUserProfile());
