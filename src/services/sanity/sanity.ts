@@ -7,7 +7,8 @@ import { logError } from '@/util/logger';
 export const client = createClient({
   projectId: 'fgi7eh1v',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
-  apiVersion: '2023-03-25',
+  perspective: 'published',
+  apiVersion: '2025-03-18',
   useCdn: process.env.NODE_ENV === 'production',
 });
 
@@ -69,7 +70,13 @@ async function fetchSanityContent(query: string): Promise<unknown> {
   if (fromCache) return fromCache;
 
   try {
-    const data = await client.fetch(query);
+    const data = await client.fetch(
+      query,
+      {},
+      {
+        cache: 'no-cache',
+      }
+    );
     cache.set(query, data);
     return data;
   } catch (ex) {

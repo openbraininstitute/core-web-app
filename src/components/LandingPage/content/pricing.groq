@@ -15,6 +15,7 @@
   "plans": *[_type=="plan"] | order(position) {
     "id": _id,
     title,
+    buttonLabel,
     notes,
     "price": {
       "month": monthlyPlanNormal[] {

@@ -78,6 +78,7 @@ export interface MultiCurrencyPrice {
 const typeContentForPricingPlan: TypeDef = {
   id: 'string',
   title: 'string',
+  buttonLabel: typeStringOrNull,
   notes: ['|', 'null', ['array', 'string']],
   price: {
     month: ['|', 'null', typeMultiCurrencyPriceArray],
@@ -90,6 +91,7 @@ const typeContentForPricingPlan: TypeDef = {
 export interface ContentForPricingPlan {
   id: string;
   title: string;
+  buttonLabel: string;
   notes: string[];
   price: {
     month: MultiCurrencyPrice[];
