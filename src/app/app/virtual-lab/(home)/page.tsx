@@ -21,7 +21,7 @@ export default async function Page() {
       <div className="flex h-screen flex-col bg-primary-9 p-5 text-white">
         <div className="no-scrollbar h-full gap-12 overflow-y-auto overflow-x-hidden">
           <SideBar
-            labsCount={(labs.data?.pending_labs.length ?? 0) + (labs.data?.virtual_lab ? 1 : 0)}
+            labsCount={(labs.data?.pending_labs?.length ?? 0) + (labs.data?.virtual_lab ? 1 : 0)}
           />
           <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
             <div className="ml-80 flex w-[calc(100%-20rem)] items-end justify-end">
@@ -33,11 +33,11 @@ export default async function Page() {
               ) : (
                 <LabsListing
                   virtualLab={{
-                    data: labs.data.virtual_lab,
-                    membersCount: labs.data.members_count,
-                    projectsCount: labs.data.projects_count,
+                    data: labs.data?.virtual_lab,
+                    membersCount: labs.data?.members_count,
+                    projectsCount: labs.data?.projects_count,
                   }}
-                  pendingLabs={labs.data.pending_labs}
+                  pendingLabs={labs.data?.pending_labs}
                 />
               )}
             </div>
