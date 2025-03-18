@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let tags = ['newsletter', 'website'];
+  let tags = ['website'];
 
   if (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging') {
     tags.push('test');
