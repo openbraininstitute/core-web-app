@@ -6,7 +6,7 @@ import type { ColumnsType } from 'antd/es/table';
 
 import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
 import { SubscriptionPaymentDetails, SubscriptionType } from '@/api/virtual-lab-svc/queries/types';
-import { LightFile } from '@/components/icons/EditorIcons';
+import { FileDownloadFill } from '@/components/icons/EditorIcons';
 import { formatCurrency } from '@/utils/format';
 
 interface Props {
@@ -78,7 +78,7 @@ export default function BillingTable({ payments }: Props) {
               <Button
                 aria-label="download invoice"
                 type="text"
-                icon={<LightFile className="text-xl" />}
+                icon={<FileDownloadFill className="text-xl" />}
                 size="small"
               />
             </a>
@@ -88,7 +88,7 @@ export default function BillingTable({ payments }: Props) {
               <Button
                 aria-label="download invoice"
                 type="text"
-                icon={<LightFile className="text-xl text-white" />}
+                icon={<FileDownloadFill className="text-xl text-white" />}
                 size="small"
               />
             </a>
@@ -106,11 +106,11 @@ export default function BillingTable({ payments }: Props) {
           Table: {
             colorBgContainer: '#002766',
             colorText: 'white',
-            colorTextHeading: 'white', // blue-400 equivalent
-            borderColor: '#002766',
+            colorTextHeading: 'white',
+            borderColor: '#096DD9',
             headerBg: '#002766',
-            headerColor: 'white',
-            headerSplitColor: 'white',
+            headerColor: '#BAE7FF',
+            headerSplitColor: 'transparent',
             rowHoverBg: '#0050B3',
             borderRadius: 0,
           },
