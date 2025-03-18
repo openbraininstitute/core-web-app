@@ -11,6 +11,9 @@ import ChevronIcon from './Chevron';
 import ChevronLeft from './ChevronLeft';
 import ChevronRight from './ChevronRight';
 import CloseIcon from './CloseIcon';
+import DocumentationIcon from './Documentation';
+import DocumentIcon from './DocumentIcon';
+import DocumentPileIcon from './DocumentPileIcon';
 import EyeIcon from './EyeIcon';
 import EyeTargetIcon from './EyeTarget';
 import FileIcon from './File';
@@ -28,6 +31,7 @@ import ResetIcon from './ResetIcon';
 import SettingsIcon from './Settings';
 import StatsEditIcon from './StatsEditIcon';
 import UndoIcon from './UndoIcon';
+import UserIcon from './UserIcon';
 import UserOutlinedIcon from './UserOutlined';
 import VirtualLabIcon from './VirtualLab';
 import { ZoomInIcon, ZoomOutIcon } from './Zoom';
@@ -46,6 +50,9 @@ export {
   ChevronLeft,
   ChevronRight,
   CloseIcon,
+  DocumentationIcon,
+  DocumentIcon,
+  DocumentPileIcon,
   EyeIcon,
   EyeTargetIcon,
   FileIcon,
@@ -63,6 +70,7 @@ export {
   SettingsIcon,
   StatsEditIcon,
   UndoIcon,
+  UserIcon,
   UserOutlinedIcon,
   VirtualLabIcon,
   ZoomInIcon,

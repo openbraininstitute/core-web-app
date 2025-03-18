@@ -1,17 +1,17 @@
 'use client';
 
-import { Fragment } from 'react';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Fragment } from 'react';
 
-import Item, { Props } from '@/components/VirtualLab/side-bar/item';
 import Base from '@/components/VirtualLab/side-bar/base';
+import Item, { Props } from '@/components/VirtualLab/side-bar/item';
 
 const noLabsMenuItems: Array<Props> = [
   {
-    url: '/app/virtual-lab/lab/',
-    title: 'Public projects',
-    disabled: true,
+    url: '/app/showcases',
+    title: 'Showcases',
+    disabled: false,
   },
 ];
 
@@ -21,9 +21,9 @@ const withLabsMenuItems: Array<Props> = [
     title: 'Virtual labs',
   },
   {
-    url: '/app/virtual-lab/public-projects',
-    title: 'Public projects',
-    disabled: true,
+    url: '/app/showcases',
+    title: 'Showcases',
+    disabled: false,
   },
 ];
 
