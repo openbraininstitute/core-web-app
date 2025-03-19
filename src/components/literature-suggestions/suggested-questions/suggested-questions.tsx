@@ -2,10 +2,10 @@
 
 import React from 'react';
 
-import { usePromptSuggestions } from '../hooks';
 import { classNames } from '@/util/utils';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { useGenericEventListener } from '@/util/generic-event';
+import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
 
 import styles from './suggested-questions.module.css';
 
@@ -15,7 +15,7 @@ export interface SuggestedQuestionsProps {
 }
 
 export default function SuggestedQuestions({ className, onClick }: SuggestedQuestionsProps) {
-  const [suggestions, clearSuggestions] = usePromptSuggestions();
+  const [suggestions, clearSuggestions] = useServiceAiAgentSuggestionFromUserJourney();
   const extraSuggestion = useMophologySuggestion();
 
   return (
