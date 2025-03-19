@@ -12,7 +12,6 @@ export interface LiteratureSearchToolItem {
   article_doi: string;
   article_authors: string[];
   abstract: string;
-  paragraph: string;
 }
 
 export function isLiteratureSearchToolResult(data: unknown): data is LiteratureSearchToolItem[] {
@@ -23,7 +22,6 @@ export function isLiteratureSearchToolResult(data: unknown): data is LiteratureS
       article_doi: 'string',
       article_authors: ['array', 'string'],
       abstract: 'string',
-      paragraph: 'string',
     },
   ]);
 }
