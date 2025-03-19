@@ -3,9 +3,12 @@
 import { ReactNode, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai/index';
+import dynamic from 'next/dynamic';
+
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { sectionAtom } from '@/state/application';
-import LitteratureSuggestions from '@/components/literature-suggestions';
+
+const LitteratureSuggestions = dynamic(() => import('@/components/literature-suggestions'));
 
 import styles from './layout.module.css';
 
