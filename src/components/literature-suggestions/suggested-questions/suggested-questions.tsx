@@ -3,8 +3,6 @@
 import React from 'react';
 
 import { classNames } from '@/util/utils';
-import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { useGenericEventListener } from '@/util/generic-event';
 import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
 
 import styles from './suggested-questions.module.css';
@@ -16,11 +14,11 @@ export interface SuggestedQuestionsProps {
 
 export default function SuggestedQuestions({ className, onClick }: SuggestedQuestionsProps) {
   const [suggestions, clearSuggestions] = useServiceAiAgentSuggestionFromUserJourney();
-  const extraSuggestion = useMophologySuggestion();
+  const extraSuggestions = useExtraSuggestions();
 
   return (
     <div className={classNames(className, styles.suggestedQuestions)}>
-      {[...suggestions, extraSuggestion]
+      {[...suggestions, ...extraSuggestions]
         .filter((prompt) => Boolean(prompt))
         .map((prompt) => (
           <button
@@ -38,23 +36,7 @@ export default function SuggestedQuestions({ className, onClick }: SuggestedQues
   );
 }
 
-function useMophologySuggestion(): string | null {
-  const [suggestion, setSuggestion] = React.useState<string | null>(null);
-  const fetchSuggestion = React.useCallback(() => {
-    const action = async () => {
-      let brainRegion = 'Cerebrum';
-      const journey = await userJourneyTracker.getLastTuples();
-      for (const group of journey) {
-        for (const [type, value] of group) {
-          if (type === 'brain_region') brainRegion = value;
-        }
-      }
-      brainRegion = 'Cerebrum';
-      setSuggestion(`Show me one morphology from this region: ${brainRegion}`);
-    };
-    action();
-  }, []);
-  React.useEffect(fetchSuggestion, [fetchSuggestion]);
-  useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestion);
-  return suggestion;
+function useExtraSuggestions(): string[] {
+  const [suggestions] = React.useState<string[]>([]);
+  return suggestions;
 }
