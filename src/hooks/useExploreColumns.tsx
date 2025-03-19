@@ -8,7 +8,7 @@ import { ValueArray } from '@/components/ListTable';
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.scss';
 
@@ -152,7 +152,7 @@ export default function useExploreColumns<T>(
     () =>
       keys.reduce((acc, key) => {
         const term = ENTITY_CORE_FIELDS_CONFIG[key];
-        const isSortable = term?.esTerms?.flat?.sort !== undefined;
+        const isSortable = term.isSortable;
         return [
           ...acc,
           {
@@ -217,8 +217,8 @@ export default function useExploreColumns<T>(
   if (dataType) {
     return columns.sort((a, b) =>
       a.key && b.key
-        ? DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(a.key as Field) -
-        DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(b.key as Field)
+        ? DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(a.key as EntityCoreFields) -
+        DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(b.key as EntityCoreFields)
         : -1
     );
   }

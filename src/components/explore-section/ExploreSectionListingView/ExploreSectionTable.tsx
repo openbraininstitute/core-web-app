@@ -8,12 +8,10 @@ import LoadMoreButton from './LoadMoreButton';
 import useRowSelection, { RenderButtonProps } from './useRowSelection';
 import { useOnCellRouteHandler, useShowMore, useScrollNav } from './hooks';
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { classNames } from '@/util/utils';
-import type { ExploreESHit } from '@/types/explore-section/es';
 
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
@@ -321,7 +319,11 @@ export default function ExploreSectionTable<T extends EntityCoreBase>({
           visible={controlsVisible}
         >
           {displayLoadMoreBtn && (
-            <LoadMoreButton dataContext={dataContext} dataKey={dataKey} hide={toggleDisplayMore} />
+            <LoadMoreButton
+              dataContext={{ ...dataContext, dataKey: dataKey }}
+              dataKey={dataKey}
+              hide={toggleDisplayMore}
+            />
           )}
         </TableControls>
       )}

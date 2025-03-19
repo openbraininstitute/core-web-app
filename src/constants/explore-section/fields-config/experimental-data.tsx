@@ -824,6 +824,11 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       singular: 'Species',
     },
     constraint: "species__name__in",
+    order: {
+      property: "species__order_by",
+      value: "name"
+    },
+    isSortable: false,
   },
   [EntityCoreFields.MType]: {
     fieldType: FieldType.CellType,
@@ -834,6 +839,11 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       plural: 'M-Types',
       singular: 'M-Type',
     },
-    constraint: "mtype__pref_label__in"
+    constraint: "mtype__pref_label__in",
+    order: {
+      property: "mtype__order_by",
+      value: "pref_label"
+    },
+    isSortable: false,
   },
 };

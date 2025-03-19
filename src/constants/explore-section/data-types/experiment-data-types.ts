@@ -27,75 +27,75 @@ export const EXPERIMENT_DATA_TYPES: { [key: string]: DataTypeConfig } = {
     curated: true,
     cardViewFields: [
       {
-        field: Field.Name,
+        field: EntityCoreFields.Name,
         className: 'col-span-2',
       },
       {
-        field: Field.NeuronMorphologyWidth,
+        field: EntityCoreFields.NeuronMorphologyWidth,
         className: 'col-span-2',
       },
       {
-        field: Field.NeuronMorphologyHeight,
+        field: EntityCoreFields.NeuronMorphologyHeight,
         className: 'col-span-2',
       },
       {
-        field: Field.NeuronMorphologyDepth,
+        field: EntityCoreFields.NeuronMorphologyDepth,
         className: 'col-span-2',
       },
       {
-        field: Field.AxonTotalLength,
+        field: EntityCoreFields.AxonTotalLength,
         className: 'col-span-2',
       },
       {
-        field: Field.AxonStrahlerNumber,
+        field: EntityCoreFields.AxonStrahlerNumber,
         className: 'col-span-2',
       },
       {
-        field: Field.AxonArborAsymmetryIndex,
+        field: EntityCoreFields.AxonArborAsymmetryIndex,
         className: 'col-span-2',
       },
       {
-        field: Field.BasalDendriticTotalLength,
+        field: EntityCoreFields.BasalDendriticTotalLength,
         className: 'col-span-2',
       },
       {
-        field: Field.BasalDendriteStrahlerNumber,
+        field: EntityCoreFields.BasalDendriteStrahlerNumber,
         className: 'col-span-2',
       },
       {
-        field: Field.BasalArborAsymmetryIndex,
+        field: EntityCoreFields.BasalArborAsymmetryIndex,
         className: 'col-span-2',
       },
       {
-        field: Field.ApicalDendriticTotalLength,
+        field: EntityCoreFields.ApicalDendriticTotalLength,
         className: 'col-span-2',
       },
       {
-        field: Field.ApicalDendtriteStrahlerNumber,
+        field: EntityCoreFields.ApicalDendtriteStrahlerNumber,
         className: 'col-span-2',
       },
       {
-        field: Field.SomaDiameter,
+        field: EntityCoreFields.SomaDiameter,
         className: 'col-span-2',
       },
       {
-        field: Field.ApicalArborAsymmetryIndex,
+        field: EntityCoreFields.ApicalArborAsymmetryIndex,
         className: 'col-span-2',
       },
       {
-        field: Field.BrainRegion,
+        field: EntityCoreFields.BrainRegion,
         className: 'col-span-2',
       },
       {
-        field: Field.MType,
+        field: EntityCoreFields.MType,
         className: 'col-span-2',
       },
       {
-        field: Field.SubjectSpecies,
+        field: EntityCoreFields.SubjectSpecies,
         className: 'col-span-2',
       },
       {
-        field: Field.Contributors,
+        field: EntityCoreFields.Contributions,
         className: 'col-span-2',
       },
     ],

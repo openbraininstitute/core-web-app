@@ -24,6 +24,11 @@ export interface SortState {
   field: string;
   order: 'asc' | 'desc';
 }
+export interface EntityCoreSortState {
+  property: string;
+  value: string;
+  direction: '+' | '-';
+}
 
 export type ListViewAtomValues = {
   activeColumns: string[];

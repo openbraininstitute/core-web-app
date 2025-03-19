@@ -5,7 +5,7 @@ import isEmpty from 'lodash/isEmpty';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
@@ -58,8 +58,8 @@ export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
   const initialState: SortState = isExperimentalData(scope.dataType)
-    ? { field: Field.CreationDate, order: 'desc' }
-    : { field: Field.RegistrationDate, order: 'desc' };
+    ? { field: EntityCoreFields.CreationDate, order: 'desc' }
+    : { field: EntityCoreFields.CreationDate, order: 'desc' };
 
   const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
     set(writableAtom, update); // Correctly updates the state
@@ -204,6 +204,9 @@ export const dataAtom = atomFamily(
 
       // TODO: sorting should be fixed at the end, it's related to too many changes that break things
       const sortState = get(sortStateAtom(scope));
+
+      console.log("ᦨ #  list-view-atoms.ts:216 #  atom #  sortState:", sortState);
+
       const queryParams = transformQueryParamsArrayToString(transformFiltersToQuery(filters));
 
       if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
@@ -214,6 +217,7 @@ export const dataAtom = atomFamily(
             page: pageNumber,
             search: isEmpty(searchString) ? null : searchString,
             ...queryParams,
+            order_by: `${sortState.order === "asc" ? "+" : "-"}${sortState.field}`,
             // TODO: ask backend team to extend the brain region filter to support the children of the selected one
             // brain_region_id: selectedBrainRegion?.id
             //   ? Number(selectedBrainRegion?.id.split('/').pop())
@@ -229,36 +233,6 @@ export const dataAtom = atomFamily(
           }))
         });
       }
-      // else {
-      //   const response =
-      //     query && (await fetchEsResourcesByType(query, undefined, scope.virtualLabInfo));
-
-      //   if (response?.hits) {
-      //     if (scope.dataType === DataType.SingleNeuronSynaptome) {
-      //       return {
-      //         aggs: response.aggs,
-      //         total: response.total,
-      //         hits: await fetchLinkedModel({
-      //           results: response.hits,
-      //           path: '_source.singleNeuronSynaptome.memodel.["@id"]',
-      //           linkedProperty: 'linkedMeModel',
-      //         }),
-      //       };
-      //     }
-      //     if (scope.dataType === DataType.SingleNeuronSynaptomeSimulation) {
-      //       return {
-      //         aggs: response.aggs,
-      //         total: response.total,
-      //         hits: await fetchLinkedModel({
-      //           results: response.hits,
-      //           path: '_source.synaptomeSimulation.synaptome.["@id"]',
-      //           linkedProperty: 'linkedSynaptomeModel',
-      //         }),
-      //       };
-      //     }
-      //     return response;
-      //   }
-      // }
       return null;
     }),
   isListAtomEqual

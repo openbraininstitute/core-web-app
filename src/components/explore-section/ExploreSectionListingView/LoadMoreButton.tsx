@@ -91,6 +91,7 @@ export default function LoadMoreButton({
     virtualLabInfo?: VirtualLabInfo;
     dataScope: ExploreDataScope;
     dataType: DataType;
+    dataKey: string;
   };
   dataKey: string;
   hide: () => void;
