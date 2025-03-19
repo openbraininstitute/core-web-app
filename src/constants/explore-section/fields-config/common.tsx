@@ -248,6 +248,11 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       singular: 'Name',
     },
     constraint: "name__ilike",
+    isSortable: true,
+    order: {
+      property: "order_by",
+      value: "name"
+    }
   },
   [EntityCoreFields.CreationDate]: {
     title: 'Creation date',
@@ -260,6 +265,11 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
     constraint: {
       gte: "creation_date__gte",
       lte: "creation_date__lte",
+    },
+    isSortable: true,
+    order: {
+      property: "order_by",
+      value: "creation_date"
     }
   },
   [EntityCoreFields.RegistrationDate]: {
@@ -273,6 +283,11 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
     constraint: {
       gte: "creation_date__gte",
       lte: "creation_date__lte",
+    },
+    isSortable: true,
+    order: {
+      property: "order_by",
+      value: "creation_date"
     }
   },
   [EntityCoreFields.UpdateDate]: {
@@ -286,6 +301,11 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
     constraint: {
       gte: "update_date__gte",
       lte: "update_date__lte",
+    },
+    isSortable: true,
+    order: {
+      property: "order_by",
+      value: "updated_at"
     }
   },
   [EntityCoreFields.Description]: {
@@ -305,7 +325,12 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Contributors',
       singular: 'Contributor',
     },
-    constraint: "contribution__pref_label__in"
+    constraint: "contribution__pref_label__in",
+    isSortable: false,
+    order: {
+      property: "contribution__order_by",
+      value: "pref_label"
+    }
   },
   [EntityCoreFields.Contribution]: {
     title: 'Contributors',
@@ -315,6 +340,11 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Contributors',
       singular: 'Contributor',
     },
-    constraint: "contribution__pref_label__in"
+    constraint: "contribution__pref_label__in",
+    isSortable: false,
+    order: {
+      property: "contribution__order_by",
+      value: "pref_label"
+    }
   },
 };

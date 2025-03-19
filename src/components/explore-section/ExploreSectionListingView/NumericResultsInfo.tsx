@@ -17,7 +17,8 @@ function NumericResultsInfo({
 }) {
   const res = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
 
-  if (!res) return null;
+  const current = res ? ((res.pagination.page - 1) * res.pagination.page_size + res.data.length).toLocaleString("en-US") : "";
+  const total = res ? res.pagination.total_items.toLocaleString('en-US') : ""
   return (
     <div className="flex w-full justify-start">
       <div
@@ -26,7 +27,7 @@ function NumericResultsInfo({
         aria-label="listing-view-title"
       >
         <span>Results </span>
-        <strong>{res?.pagination.total_items.toLocaleString('en-US')}</strong>
+        {res && <strong>{current}/{total}</strong>}
       </div>
     </div>
   );
