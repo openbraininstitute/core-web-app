@@ -32,7 +32,7 @@ export default function SingleNotebook({
           )}
         </header>
 
-        <div className="my-3 h-px w-16 bg-neutral-3" />
+        <div className="my-3 h-px w-12 bg-neutral-3" />
 
         <div className={styles.readMeParagraph}>
           <PortableText value={content.readMe} />
