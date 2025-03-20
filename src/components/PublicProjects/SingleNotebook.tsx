@@ -7,7 +7,7 @@ export default function SingleNotebook({ content }: { content: NotebooksProps })
   return (
     <div className="relative flex w-full flex-col items-start">
       <header className="relative flex w-full flex-row items-center justify-between text-primary-9">
-        <div className="w-2/3 hyphens-auto text-4xl font-bold leading-[1.3]">{content.name}</div>
+        <div className="w-2/3 hyphens-auto text-3xl font-bold leading-[1.3]">{content.name}</div>
         {content.url && (
           <a
             href={content.url}
@@ -19,7 +19,7 @@ export default function SingleNotebook({ content }: { content: NotebooksProps })
         )}
       </header>
 
-      <div className="my-6 h-px w-16 bg-neutral-3" />
+      <div className="my-3 h-px w-16 bg-neutral-3" />
 
       <div className={styles.readMeParagraph}>
         <PortableText value={content.readMe} />
