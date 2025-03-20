@@ -10,6 +10,7 @@ export function useServiceAiAgentChat(threadId: string) {
     headers: {
       Authorization: `Bearer ${session.data?.accessToken}`,
     },
+    body: { tool_selection: ['literature-search-tool', 'web-search-tool'] },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages[messages.length - 1];
       // const selectedTools = Object.keys(checkedTools).filter(

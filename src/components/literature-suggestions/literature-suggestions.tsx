@@ -3,11 +3,10 @@
 import React from 'react';
 
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
-import Spinner from '../Spinner';
-// import { useLitteratureCrawler, useThreadId } from './hooks';
 import SuggestedQuestions from './suggested-questions';
 import MessageItem from './message-item';
 import Prompt from './prompt';
+import { Spinner } from './spinner';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
@@ -81,7 +80,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               </footer>
             </>
           ) : (
-            <Spinner>Connecting AI service...</Spinner>
+            <Spinner />
           )}
         </>
       )}
