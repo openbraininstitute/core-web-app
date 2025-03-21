@@ -32,13 +32,13 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
           </div>
           <MEModelTable content={content.meModelsList} />
           {/* <div className="w-full flex flex-col">
-                            <MEModelHeaderTable />
-                            {  
-                                content.meModelsList.map((meModel: MEModelsProps, index: number ) => (
-                                    <MEModelRow key={`meModel_n-${meModel.name}`} content={meModel} index={index} />
-                                )
-                            )}
-                        </div> */}
+                <MEModelHeaderTable />
+                {  
+                    content.meModelsList.map((meModel: MEModelsProps, index: number ) => (
+                        <MEModelRow key={`meModel_n-${meModel.name}`} content={meModel} index={index} />
+                    )
+                )}
+            </div> */}
         </div>
       )}
     </div>

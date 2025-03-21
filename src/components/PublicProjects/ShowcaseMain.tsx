@@ -31,13 +31,35 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
       },
     ],
     description: 'unknown',
-    presentationVideo: {
-      url: 'string',
-      alt: 'string',
-      hasCaption: 'boolean',
-      useTimestamps: 'boolean',
-    },
-    captionTrack: ['|', 'null', 'string'],
+    videosList: [
+      '|',
+      'null',
+      [
+        'array',
+        {
+          url: 'string',
+          title: ['|', 'null', 'string'],
+          alt: 'string',
+          hasCaption: 'boolean',
+          caption: ['|', 'null', 'undefined', 'string'],
+          useTimestamps: 'boolean',
+          timestamps: [
+            '|',
+            'null',
+            'undefined',
+            [
+              'array',
+              {
+                timestamp: 'number',
+                label: 'string',
+                description: 'string',
+              },
+            ],
+          ],
+          captionTrack: ['|', 'null', 'string'],
+        },
+      ],
+    ],
     artifactType: 'string',
     artifact: [
       '|',

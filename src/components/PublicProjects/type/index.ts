@@ -1,10 +1,21 @@
 import { PortableTextBlock } from 'next-sanity';
 
+export type TimestampProps = {
+  timestamp: number;
+  label: string;
+  description: string;
+};
+
 export type PresentationVideoProps = {
   url: string;
+  title: string;
   alt: string;
   hasCaption: boolean;
+  caption: string;
   useTimeStamps: boolean;
+  timeStamps: TimestampProps[];
+  hasCaptionTrack: boolean;
+  captionTrack: string;
 };
 
 export type AuthorListProps = {
@@ -57,8 +68,7 @@ export type ShowCaseProjectQueryType = {
   heroImage: string;
   authorsList: AuthorListProps[];
   description: PortableTextBlock[];
-  presentationVideo: PresentationVideoProps;
-  captionTrack: string;
+  videosList: PresentationVideoProps[];
   artifactType: string;
   artifact: LinkAndDownloadArtifactProps[];
   meModelsList: MEModelsProps[];

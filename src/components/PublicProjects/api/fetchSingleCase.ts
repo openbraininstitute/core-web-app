@@ -11,13 +11,14 @@ const singleCaseQuery = (slug: string) =>
             institution
         },
         description,
-        presentationVideo {
+        videosList[] {
             url,
+            title,
             alt,
             hasCaption,
             useTimestamps,
-            },
-        "captionTrack": captionTrack.asset->url,
+            'captionTrack': captionTrack.asset->url
+        },
         artifactType,
         artifact[] {
             title, 
