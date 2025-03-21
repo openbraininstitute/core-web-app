@@ -6,7 +6,7 @@ import { tryType } from '../LandingPage/content';
 
 import { ShowCaseProjectQueryType } from './type';
 
-import HeaderSingleCase from './HeaderSingleCase';
+import HeaderPublicProject from './HeaderPublicProject';
 import NavigationSections from './NavigationSections';
 import singleCaseQuery from './api/fetchSingleCase';
 import ArtifactsSection from './sections/Artifacts';
@@ -125,7 +125,7 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
   });
 };
 
-export default function ShowcaseMain({ slug }: { slug: string }) {
+export default function PublicProjectMain({ slug }: { slug: string }) {
   const content = useSanity(singleCaseQuery(slug), isShowCaseProjectProps) ?? null;
 
   const [activeSection, setActiveSection] = useState<string>('description');
@@ -150,7 +150,7 @@ export default function ShowcaseMain({ slug }: { slug: string }) {
   return (
     content !== null && (
       <div className="relative flex min-h-screen w-screen flex-col gap-y-12 bg-primary-9 py-6 pl-28 pr-10">
-        <HeaderSingleCase title={content.name} headerImage={content?.heroImage} />
+        <HeaderPublicProject title={content.name} headerImage={content?.heroImage} />
 
         <div className="flex flex-col">
           <NavigationSections activeSection={activeSection} setActiveSection={setActiveSection} />

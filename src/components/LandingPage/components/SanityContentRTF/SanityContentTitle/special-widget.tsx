@@ -1,4 +1,5 @@
 import { TemporaryGoToLabButton } from '../../TemporaryGoToLabButton';
+
 import { styleBlockSmall } from '@/components/LandingPage/styles';
 
 const RX_CODE = /^[ \t]*\{\{([a-zA-Z0-9-]+)\}/g;
@@ -18,7 +19,7 @@ export function makeSpecialWidget(rawCode: string) {
       return (
         <TemporaryGoToLabButton
           title={title}
-          subTitle={subTitle ?? 'Start exploring, discover public projects, showcases and mode'}
+          subTitle={subTitle ?? 'Start exploring, discover public projects, and more'}
           href={href}
         />
       );

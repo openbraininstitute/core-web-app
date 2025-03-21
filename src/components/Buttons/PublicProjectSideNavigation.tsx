@@ -26,14 +26,14 @@ const ButtonsList = [
   },
 ];
 
-export default function ShowcasesSideNav() {
+export default function PublicProjectSideNavigation() {
   return (
     <div className="fixed left-0 top-0 z-10 flex h-screen flex-col justify-between p-6">
       <a
-        href="/app/showcases"
-        key="Showcases"
+        href="/app/public-projects"
+        key="Public Projects"
         className="flex h-12 w-12 items-center justify-center border border-solid border-primary-6"
-        aria-label="Go to all showcases"
+        aria-label="Go to all public projects"
       >
         <DocumentPileIcon iconColor="white" className="h-4 w-auto" />
       </a>

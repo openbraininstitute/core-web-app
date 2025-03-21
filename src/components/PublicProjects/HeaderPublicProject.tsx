@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-export default function HeaderSingleCase({
+export default function HeaderPublicProject({
   title,
   headerImage,
 }: {

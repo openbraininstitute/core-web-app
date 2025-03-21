@@ -5,12 +5,12 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideBar from '@/components/VirtualLab/side-bar/home-sidebar';
 
 import { tryCatch } from '@/api/utils';
-import ShowcasesList from '@/components/PublicProjects/ShowcasesList';
+import PublicProjectList from '@/components/PublicProjects/PublicProjectList';
 import Logout from '@/components/VirtualLab/side-bar/logout';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ShowcasesListingPage() {
+export default async function PublicProjectsListingPage() {
   const { data: result, error } = await tryCatch(listVirtualLabs());
   if (error) {
     throw new Error((error as { message: string }).message);
@@ -26,7 +26,7 @@ export default async function ShowcasesListingPage() {
         />
         <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
           <div className="flex w-full flex-row justify-between gap-x-8">
-            <ShowcasesList />
+            <PublicProjectList />
             <Logout />
           </div>
         </ErrorBoundary>
