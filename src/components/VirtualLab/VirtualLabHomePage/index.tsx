@@ -11,9 +11,7 @@ export default function VirtualLabHome({ id }: { id: string }) {
   return (
     <>
       <WelcomeUserBanner title={vlab?.name} />
-      <div className="mt-10">
-        <LabDetailBanner vlab={vlab ?? undefined} />
-      </div>
+      <LabDetailBanner vlab={vlab ?? undefined} />
     </>
   );
 }

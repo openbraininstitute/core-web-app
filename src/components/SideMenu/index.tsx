@@ -2,13 +2,13 @@
 
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
+import { DownOutlined, HomeOutlined, UpOutlined, UserOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { DownOutlined, HomeOutlined, UpOutlined } from '@ant-design/icons';
-import { LabItem, LinkItem, ProjectItem } from '../VerticalLinks';
 
+import UserMenu from '@/components/user-menu';
+import { LabItem, LinkItem, ProjectItem } from '@/components/VerticalLinks';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 import { virtualLabProjectDetailsAtomFamily } from '@/state/virtual-lab/projects';
-
 import { classNames } from '@/util/utils';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
@@ -51,7 +51,7 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
   const virtualLab = useAtomValue(unwrap(virtualLabDetailAtomFamily(lab.id)));
   return (
     <div className="sticky top-0 flex h-screen w-[45px] flex-col items-center justify-center gap-2 border-r-[1px] border-primary-7 bg-primary-9 text-light transition-transform ease-in-out will-change-auto">
-      <div className="flex grow flex-col items-center justify-between gap-3 overflow-hidden">
+      <div className="flex w-[45px] grow flex-col items-center justify-between gap-3 overflow-hidden">
         <div className="mt-2 flex w-full flex-col items-center gap-3 overflow-hidden">
           {links
             .slice()
@@ -92,8 +92,11 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
         </div>
 
         <div className="mb-5 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
-          <Link href="/app/virtual-lab">
-            <HomeOutlined />
+          <UserMenu>
+            <UserOutlined className="group-hover:text-white" />
+          </UserMenu>
+          <Link href="/app/virtual-lab" className="group cursor-pointer">
+            <HomeOutlined className="group-hover:text-white" />
           </Link>
         </div>
       </div>

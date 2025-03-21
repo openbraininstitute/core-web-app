@@ -1,11 +1,11 @@
 import { ErrorBoundary } from 'react-error-boundary';
 import { ReactNode, Suspense } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
+
+import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import VirtualLabSidebar from '@/components/VirtualLab/VirtualLabSidebar';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideMenu from '@/components/SideMenu';
-import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 
 type Props = {
   children: ReactNode;
@@ -33,8 +33,8 @@ export default async function VirtualLabLayout({ children, params }: Props) {
               <VirtualLabSidebar virtualLabId={params.virtualLabId} />
             </div>
 
-            <div className="m-w-9/12 ml-3 flex h-full flex-col" style={{ width: '75%' }}>
-              <VirtualLabTopMenu />
+            <div className="m-w-9/12 flex h-full flex-col" style={{ width: '75%' }}>
+              {/* <VirtualLabTopMenu /> */}
 
               <Suspense
                 fallback={
