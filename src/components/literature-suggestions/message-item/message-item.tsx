@@ -4,11 +4,10 @@ import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 import ReactMarkdown from 'react-markdown';
 
-import ScientistURL from './scientist.webp';
 import ToolArticles from './tools/articles/tool-articles';
 import ToolMorphologies from './tools/morphologies/tool-morphologies';
 import { classNames } from '@/util/utils';
-import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
+import { ChevronRight } from '@/components/icons';
 
 import styles from './message-item.module.css';
 
@@ -18,21 +17,19 @@ export interface MessageItemProps {
 }
 
 export default function MessageItem({ className, value }: MessageItemProps) {
-  return <div className={classNames(className, styles.messageItem)}>{renderMessage(value)}</div>;
+  const debug = useDebug();
+  return (
+    <div className={classNames(className, styles.messageItem)}>{renderMessage(value, debug)}</div>
+  );
 }
 
-function renderMessage(value: UIMessage): React.ReactNode {
+function renderMessage(value: UIMessage, debug: boolean): React.ReactNode {
   switch (value.role) {
     case 'user':
       return (
         <div className={styles.user}>
-          <div className={styles.iconContainer}>
-            <ProgressiveImage
-              className={styles.icon}
-              src={ScientistURL.src}
-              width={ScientistURL.width}
-              height={ScientistURL.height}
-            />
+          <div className={styles.userAvatar}>
+            <ChevronRight fill="currentColor" />
           </div>
           <div className={styles.userContent}>{value.content}</div>
         </div>
@@ -43,15 +40,17 @@ function renderMessage(value: UIMessage): React.ReactNode {
           <ToolArticles message={value} />
           <ToolMorphologies message={value} />
           <ReactMarkdown className={styles.markdown}>{value.content}</ReactMarkdown>
-          <button
-            type="button"
-            className={styles.debugButton}
-            onClick={() => {
-              debug(value);
-            }}
-          >
-            Debug...
-          </button>
+          {debug && (
+            <button
+              type="button"
+              className={styles.debugButton}
+              onClick={() => {
+                debugToConsole(value);
+              }}
+            >
+              Debug...
+            </button>
+          )}
         </>
       );
     }
@@ -60,7 +59,7 @@ function renderMessage(value: UIMessage): React.ReactNode {
   }
 }
 
-function debug(value: UIMessage) {
+function debugToConsole(value: UIMessage) {
   // eslint-disable-next-line no-console
   console.log(value);
   for (const part of value.parts) {
@@ -78,4 +77,10 @@ function debug(value: UIMessage) {
       console.error('Not a valid JSON:', result);
     }
   }
+}
+
+function useDebug(): boolean {
+  const [debug, setDebug] = React.useState(false);
+  React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
+  return debug;
 }

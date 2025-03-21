@@ -10,13 +10,12 @@ export function useServiceAiAgentChat(threadId: string) {
     headers: {
       Authorization: `Bearer ${session.data?.accessToken}`,
     },
-    body: { tool_selection: ['literature-search-tool', 'web-search-tool'] },
     experimental_prepareRequestBody: ({ messages }) => {
-      const lastMessage = messages[messages.length - 1];
-      // const selectedTools = Object.keys(checkedTools).filter(
-      //   (key) => key !== "allchecked" && checkedTools[key] === true,
-      // );
-      return { content: lastMessage.content }; // , tool_selection: selectedTools };
+      const lastMessage = messages.at(-1);
+      return {
+        content: (lastMessage?.content ?? '').trim(),
+        tool_selection: ['literature-search-tool', 'web-search-tool'],
+      };
     },
   });
   return {
@@ -24,5 +23,6 @@ export function useServiceAiAgentChat(threadId: string) {
     append: chat.append,
     status: chat.status,
     error: chat.error,
+    clear: () => chat.setMessages([]),
   };
 }

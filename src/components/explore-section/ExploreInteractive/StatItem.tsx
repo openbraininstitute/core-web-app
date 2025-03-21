@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { classNames } from '@/util/utils';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
+import { ensureString } from '@/util/type-guards';
+import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 
 export default function StatItem({
   href,
@@ -18,12 +20,15 @@ export default function StatItem({
   title: ReactNode;
   subtitle: ReactNode;
 }) {
+  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const onClick = async () => {
     if (!(await userJourneyTracker.getCurrentTuple())) {
       await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
     }
-    await userJourneyTracker.handleClick('artifact', title as string);
+    const artifact = ensureString(title, 'Morphology');
+    setCurrentExplorerArtifact(artifact);
+    await userJourneyTracker.handleClick('artifact', artifact);
   };
 
   return (

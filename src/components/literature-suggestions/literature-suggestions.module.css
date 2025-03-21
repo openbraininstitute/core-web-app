@@ -55,3 +55,24 @@
   content: '';
   height: 1em;
 }
+
+.literatureSuggestions button.actionButton {
+    font: inherit;
+    color: white;
+    background-color: #013a8c;
+    border: 1px solid #fff3;
+    border-radius: 4px;
+    line-height: 2;
+    padding: 0 1em;
+    cursor: pointer;
+}
+
+.footerButtons {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1em;
+    margin: 1em 0;
+}

@@ -14,11 +14,22 @@
   margin: 8px 0;
 }
 
-.iconContainer {
+.userAvatar {
   flex: 0 0 auto;
   padding: 8px;
   border-radius: 16px 0 0 16px;
   background-color: var(--color-primary);
+  font-size: 1em;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.userAvatar > svg {
+  width: 1em;
+  height: 1em;
 }
 
 .icon {
