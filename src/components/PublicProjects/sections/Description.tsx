@@ -6,13 +6,13 @@ import VideoBlock from '../VideoBlock';
 
 import styles from '../style/portableText.module.css';
 
-export default function DescriptionSection({ content }: { content: ShowCaseProjectQueryType }) {
-  const components = {
-    types: {
-      glossaryList: ({ value }: { value: PTGlossaryListProps }) => <PTGlossary content={value} />,
-    },
-  };
+const components = {
+  types: {
+    glossaryList: ({ value }: { value: PTGlossaryListProps }) => <PTGlossary content={value} />,
+  },
+};
 
+export default function DescriptionSection({ content }: { content: ShowCaseProjectQueryType }) {
   return (
     <div className="relative flex w-full flex-row flex-nowrap gap-x-12">
       <div className={styles.coreContent}>
