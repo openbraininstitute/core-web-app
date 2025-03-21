@@ -20,6 +20,8 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
+import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
+import { ensureString } from '@/util/type-guards';
 
 const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
 
@@ -54,6 +56,7 @@ export default function ExploreListingLayout({
   children: ReactNode;
   virtualLabInfo?: VirtualLabInfo;
 }) {
+  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const pathname = usePathname();
   const splittedPathname = pathname.split('/');
   const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
@@ -71,10 +74,9 @@ export default function ExploreListingLayout({
     if (!(await userJourneyTracker.getCurrentTuple())) {
       await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
     }
-    await userJourneyTracker.handleClick(
-      'artifact',
-      find(DATA_TYPES_TO_CONFIGS, { name: key })?.title!
-    );
+    const artifact = ensureString(find(DATA_TYPES_TO_CONFIGS, { name: key })?.title, 'Morphology');
+    setCurrentExplorerArtifact(artifact);
+    await userJourneyTracker.handleClick('artifact', artifact);
     router.push(key);
   };
 

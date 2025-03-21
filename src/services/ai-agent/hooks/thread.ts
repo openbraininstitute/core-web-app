@@ -1,15 +1,15 @@
 import { useSession } from 'next-auth/react';
 import React from 'react';
-import { serviceAiAgentThreadCreate, serviceAiAgentThreadDelete } from '../api/thread';
+import { serviceAiAgentThreadCreate } from '../api/thread';
 import { logError } from '@/util/logger';
 
-export function useServiceAiAgentThread() {
+export function useServiceAiAgentThread(): [string | undefined, () => void] {
   const refCurrentThreadId = React.useRef<string | null>(null);
   const [threadId, setThreadId] = React.useState<string | undefined>(undefined);
   const session = useSession();
   const accessToken = session.data?.accessToken;
   const user = session.data?.user.username;
-  React.useEffect(() => {
+  const createThread = React.useCallback(() => {
     if (!accessToken) return;
 
     serviceAiAgentThreadCreate({
@@ -21,16 +21,26 @@ export function useServiceAiAgentThread() {
         refCurrentThreadId.current = data.threadId;
       })
       .catch(logError);
+  }, [accessToken, user]);
+  React.useEffect(() => {
+    if (!accessToken) return;
+
+    createThread();
     return () => {
       const currentThreadId = refCurrentThreadId.current;
       if (!currentThreadId) return;
 
       refCurrentThreadId.current = null;
-      serviceAiAgentThreadDelete({
-        accessToken,
-        threadId: currentThreadId,
-      });
+      /**
+       * March 21th 2025
+       * Jan asked to never delete the threads, so he can
+       * "analyze what people ask and make the service better".
+       */
+      // serviceAiAgentThreadDelete({
+      //   accessToken,
+      //   threadId: currentThreadId,
+      // });
     };
-  }, [accessToken, user]);
-  return threadId;
+  }, [accessToken, createThread]);
+  return [threadId, createThread];
 }

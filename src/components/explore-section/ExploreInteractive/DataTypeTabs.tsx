@@ -38,10 +38,8 @@ export default function DataTypeTabs() {
     if (!(await userJourneyTracker.getCurrentTuple())) {
       await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
     }
-    await userJourneyTracker.handleClick(
-      'data_type',
-      DATA_TYPE_TABS.find((o) => o.id === activeKey)?.label!
-    );
+    const artifact = DATA_TYPE_TABS.find((o) => o.id === activeKey)?.label;
+    await userJourneyTracker.handleClick('data_type', artifact!);
   };
 
   return (

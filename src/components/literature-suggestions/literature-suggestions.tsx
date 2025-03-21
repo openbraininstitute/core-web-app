@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+
 import SuggestedQuestions from './suggested-questions';
 import MessageItem from './message-item';
 import Prompt from './prompt';
@@ -19,9 +19,9 @@ export interface LiteratureSuggestionsProps {
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
   const [collapsedPanel, setCollapsedPanel] = React.useState(false);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
-  const threadId = useServiceAiAgentThread();
+  const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
-  const { messages, status, append, error } = useServiceAiAgentChat(threadId ?? '');
+  const { messages, clear, status, append, error } = useServiceAiAgentChat(threadId ?? '');
   const handleQuery = React.useCallback(
     (content: string) => {
       append({
@@ -35,6 +35,10 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
   React.useEffect(() => {
     refChatBottom.current?.scrollIntoView();
   }, [messages]);
+  const handleClearChat = () => {
+    clear();
+    recreateThreadId();
+  };
 
   return (
     <div
@@ -63,7 +67,21 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
                   {messages.map((item) => (
                     <MessageItem key={item.id} value={item} />
                   ))}
-                  {status !== 'ready' && <Spinner />}
+                  {status === 'ready' ? (
+                    messages.length > 0 && (
+                      <div className={styles.footerButtons}>
+                        <button
+                          type="button"
+                          className={styles.actionButton}
+                          onClick={handleClearChat}
+                        >
+                          Clear the Chat
+                        </button>
+                      </div>
+                    )
+                  ) : (
+                    <Spinner />
+                  )}
                   <div ref={refChatBottom} className={styles.bottom} />
                 </div>
               )}
