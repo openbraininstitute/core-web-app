@@ -1,9 +1,9 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai/index';
 import dynamic from 'next/dynamic';
+import { ReactNode, useEffect } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { sectionAtom } from '@/state/application';
