@@ -1,6 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
 
+import ContactUs from '../../contact-us';
 import { classNames } from '@/util/utils';
 import {
   ContentForPricingPlan,
@@ -23,6 +24,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
   return (
     <div className={classNames(className, styles.planHeader)}>
       <h1>{plan.title} Plan</h1>
+      {plan.buttonLabel && <ContactUs>{plan.buttonLabel}</ContactUs>}
       {plan.price.month.length > 0 && (
         <>
           <div className={styles.priceHeader}>

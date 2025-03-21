@@ -17,6 +17,8 @@ import DangerZonePanel from './DangerZonePanel';
 import CreditManagement from './CreditManagement';
 import SpendingsPanel from './Spendings';
 
+import BuyCredits from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/buy-credits';
+import PurchasesHistory from '@/components/VirtualLab/VirtualLabSettingsComponent/purchases-history';
 import { deleteVirtualLab } from '@/services/virtual-lab/labs';
 import {
   virtualLabBalanceAtomFamily,
@@ -108,6 +110,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     () => ({
       key: 'purchases',
       label: <CollapsibleLabel text="Purchases" description="View details about your purchases" />,
+      children: <PurchasesHistory />,
     }),
     []
   );
@@ -261,6 +264,9 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
         activeKey={activePanelKey}
         onChange={onChangePanel}
       />
+      <div className="mb-4 flex w-full justify-end">
+        <BuyCredits />
+      </div>
     </div>
   );
 }

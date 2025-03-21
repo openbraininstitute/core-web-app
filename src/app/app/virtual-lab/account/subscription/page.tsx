@@ -1,7 +1,6 @@
 import { Fragment } from 'react';
 import { Metadata } from 'next';
 
-import SubscriptionHistory from '@/components/VirtualLab/create-entity-flows/subscription/history';
 import {
   ErrorSubscriptionStatus,
   PaidSubscriptionStatus,
@@ -49,9 +48,6 @@ export default async function Page() {
           <PaidSubscriptionFlow data={data} />
         </Fragment>
       )}
-      <div className="mt-5 space-y-6">
-        <SubscriptionHistory />
-      </div>
     </div>
   );
 }

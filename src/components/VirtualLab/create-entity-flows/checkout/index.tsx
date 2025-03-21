@@ -17,14 +17,9 @@ export default function CheckoutFlow({ data }: Props) {
   const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const [flow, updateFlow] = useAtom(flowAtom);
 
-  const onNextStep = () => {
-    onSlideDirectionChange('left');
-    updateFlow((prev) => ({ ...prev, step: 'pay' }));
-  };
-
   const onPreviousStep = () => {
     onSlideDirectionChange('right');
-    updateFlow((prev) => ({ ...prev, step: 'select' }));
+    updateFlow((prev) => ({ ...prev, step: 'select', tier: null }));
   };
 
   useEffect(() => {
@@ -59,11 +54,7 @@ export default function CheckoutFlow({ data }: Props) {
         className="relative flex h-full flex-grow flex-col"
       >
         <div className={flow.step !== 'select' ? 'hidden' : 'h-full'}>
-          <TiersList
-            currentTier={data?.subscription_type}
-            canSelect={data?.status !== 'active'}
-            onNextStep={onNextStep}
-          />
+          <TiersList currentTier={data?.subscription_type} canSelect={data?.status !== 'active'} />
         </div>
         <div className={flow.step !== 'pay' ? 'hidden' : 'h-full'}>
           <PaymentForm onPrevious={onPreviousStep} />

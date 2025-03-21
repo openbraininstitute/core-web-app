@@ -20,7 +20,7 @@ function extractFromLiteratureSearch(message: UIMessage, articles: ScientificArt
     for (const item of output) {
       const article: ScientificArticle = {
         title: item.article_title,
-        abstract: item.paragraph,
+        abstract: item.abstract,
         authors: item.article_authors,
         url: `https://doi.org/${item.article_doi}`,
       };
