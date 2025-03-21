@@ -1,0 +1,37 @@
+.spinner {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  height: 2em;
+}
+
+.spinner .bullet {
+  content: '';
+  border-radius: 50%;
+  width: 0.5em;
+  height: 0.5em;
+  background-color: currentColor;
+  animation-name: animation;
+  animation-duration: var(--custom-period);
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-delay: var(--custom-delay);
+}
+
+@keyframes animation {
+  0% {
+    transform: scale(calc(0.3 * var(--custom-size)));
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(calc(2 * var(--custom-size)));
+    opacity: 1;
+  }
+  100% {
+    transform: scale(calc(0.3 * var(--custom-size)));
+    opacity: 0.5;
+  }
+}

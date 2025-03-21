@@ -8,9 +8,9 @@ import dynamic from 'next/dynamic';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { sectionAtom } from '@/state/application';
 
-const LitteratureSuggestions = dynamic(() => import('@/components/literature-suggestions'));
-
 import styles from './layout.module.css';
+
+const LitteratureSuggestions = dynamic(() => import('@/components/literature-suggestions'));
 
 type GenericLayoutProps = {
   children: ReactNode;

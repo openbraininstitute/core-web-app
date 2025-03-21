@@ -11,7 +11,11 @@ import MenuTabs from '@/components/MenuTabs';
 enum DataTypeTabsEnum {
   'Experimental data' = 'experimental-data',
   'Model data' = 'model-data',
-  'Literature' = 'literature',
+  /**
+   * Daniela asked to remove it in this ticket:
+   * https://github.com/openbraininstitute/prod-explore-functionality/issues/47#issuecomment-2729269604
+   */
+  // 'Literature' = 'literature',
 }
 
 type DataTypeActiveTab = `${DataTypeTabsEnum}`;

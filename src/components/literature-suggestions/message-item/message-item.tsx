@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { UIMessage } from '@ai-sdk/ui-utils';
+import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 import ReactMarkdown from 'react-markdown';
 
 import ScientistURL from './scientist.webp';
@@ -47,8 +47,7 @@ function renderMessage(value: UIMessage): React.ReactNode {
             type="button"
             className={styles.debugButton}
             onClick={() => {
-              // eslint-disable-next-line no-console
-              console.debug(value);
+              debug(value);
             }}
           >
             Debug...
@@ -58,5 +57,25 @@ function renderMessage(value: UIMessage): React.ReactNode {
     }
     default:
       return <pre>{JSON.stringify(value, null, '  ')}</pre>;
+  }
+}
+
+function debug(value: UIMessage) {
+  // eslint-disable-next-line no-console
+  console.log(value);
+  for (const part of value.parts) {
+    if (part.type !== 'tool-invocation') continue;
+
+    const toolInvocation = part.toolInvocation as ToolInvocation & { result: string };
+    // eslint-disable-next-line no-console
+    console.debug(`%c${toolInvocation.toolName}`, 'font-weight: bolder; font-size: 110%');
+    const { result } = toolInvocation;
+    try {
+      // eslint-disable-next-line no-console
+      console.debug(JSON.parse(result));
+    } catch (ex) {
+      // eslint-disable-next-line no-console
+      console.error('Not a valid JSON:', result);
+    }
   }
 }
