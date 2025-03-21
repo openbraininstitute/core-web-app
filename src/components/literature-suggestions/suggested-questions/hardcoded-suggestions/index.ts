@@ -1,1 +1,1 @@
-export * from "./hardcoded-suggestions"
+export * from './hardcoded-suggestions';
