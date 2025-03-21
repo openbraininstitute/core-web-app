@@ -9,8 +9,8 @@ import Item, { Props } from '@/components/VirtualLab/side-bar/item';
 
 const noLabsMenuItems: Array<Props> = [
   {
-    url: '/app/showcases',
-    title: 'Showcases',
+    url: '/app/public-projects',
+    title: 'Public projects',
     disabled: false,
   },
 ];
@@ -21,8 +21,8 @@ const withLabsMenuItems: Array<Props> = [
     title: 'Virtual labs',
   },
   {
-    url: '/app/showcases',
-    title: 'Showcases',
+    url: '/app/public-projects',
+    title: 'Public projects',
     disabled: false,
   },
 ];

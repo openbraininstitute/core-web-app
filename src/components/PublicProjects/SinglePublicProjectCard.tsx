@@ -18,7 +18,7 @@ function getDaysFromDate(inputDate: string | Date): number | string {
   return diffInDays;
 }
 
-export default function SingleShowCaseCard({ value }: { value: ShowCaseProjectQueryType }) {
+export default function SinglePublicProjectCard({ value }: { value: ShowCaseProjectQueryType }) {
   const [isMouseHover, setIsMouseHover] = useState<boolean>(false);
 
   let date;
@@ -36,7 +36,7 @@ export default function SingleShowCaseCard({ value }: { value: ShowCaseProjectQu
 
   return (
     <a
-      href={`/app/showcases/${value.slug}?section=description`}
+      href={`/app/piublic-projects/${value.slug}?section=description`}
       className="relative w-full scale-100 overflow-hidden rounded-3xl border border-solid border-primary-7 bg-primary-9 p-8 text-white transition-all duration-300 ease-in-out hover:scale-[0.98] hover:bg-primary-7"
       style={{
         boxShadow: isMouseHover

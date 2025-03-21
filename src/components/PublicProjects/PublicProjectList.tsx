@@ -3,7 +3,7 @@
 import { tryType } from '../LandingPage/content';
 
 import query from './api/query';
-import SingleShowCaseCard from './SingleShowCaseCard';
+import SinglePublicProjectCard from './SinglePublicProjectCard';
 import { ShowCaseProjectQueryType } from './type';
 
 import { useSanity } from '@/services/sanity';
@@ -31,13 +31,13 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
   ]);
 };
 
-export default function ShowcasesList() {
+export default function PublicProjectList() {
   const content = useSanity(query, isShowCaseProjectProps) ?? [];
 
   return (
     <div className="flex h-full w-1/2 flex-grow flex-col gap-y-8 pl-96">
       {content.map((showcase: ShowCaseProjectQueryType) => (
-        <SingleShowCaseCard key={showcase.slug} value={showcase} />
+        <SinglePublicProjectCard key={showcase.slug} value={showcase} />
       ))}
     </div>
   );
