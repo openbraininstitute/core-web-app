@@ -1,6 +1,6 @@
 'use client';
 
-import { DocumentIcon, DocumentPileIcon, UserIcon } from '../icons';
+import { DocumentIcon, DocumentPileIcon, HomeFillIcon, UserIcon } from '../icons';
 
 type ButotnListProps = {
   name: string;
@@ -9,6 +9,11 @@ type ButotnListProps = {
 };
 
 const ButtonsList = [
+  {
+    name: 'Home',
+    href: '/app/virtual-lab',
+    icon: <HomeFillIcon iconColor="white" className="h-4 w-auto" />,
+  },
   {
     name: 'Documentation',
     href: '/app/documentation',
@@ -33,7 +38,7 @@ export default function ShowcasesSideNav() {
         <DocumentPileIcon iconColor="white" className="h-4 w-auto" />
       </a>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 text-white">
         {ButtonsList.map((button: ButotnListProps) => (
           <a
             href={button.href}
