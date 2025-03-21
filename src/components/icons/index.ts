@@ -19,6 +19,7 @@ import EyeTargetIcon from './EyeTarget';
 import FileIcon from './File';
 import GripDotsVerticalIcon from './GripDotsVerticalIcon';
 import HomeIcon from './Home';
+import HomeFillIcon from './HomeFillIcon';
 import InteractiveViewIcon from './InteractiveView';
 import LinkIcon from './Link';
 import LockIcon from './LockIcon';
@@ -57,6 +58,7 @@ export {
   EyeTargetIcon,
   FileIcon,
   GripDotsVerticalIcon,
+  HomeFillIcon,
   HomeIcon,
   InteractiveViewIcon,
   LinkIcon,

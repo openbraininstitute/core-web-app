@@ -18,7 +18,7 @@ export default function DescriptionSection({ content }: { content: ShowCaseProje
       <div className={styles.coreContent}>
         <PortableText value={content.description} components={components} />
       </div>
-      <div className="sticky top-12 flex h-screen w-1/2 flex-col gap-y-8">
+      <div className="flex w-1/2 flex-col gap-y-8">
         {content.videosList.map((video: PresentationVideoProps, index: number) => (
           <VideoBlock key={`Video of ${video.title}`} content={video} index={index} />
         ))}
