@@ -1,24 +1,18 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
-
 import { useEffect, useMemo, useState } from 'react';
-import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
+import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
+
 import VerticalLinks from '@/components/VerticalLinks';
-import {
-  virtualLabProjectPapersCountAtomFamily,
-  virtualLabProjectUsersAtomFamily,
-} from '@/state/virtual-lab/projects';
-import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
-import { getBookmarksCount } from '@/services/virtual-lab/bookmark';
-import { useLoadableValue } from '@/hooks/hooks';
-import { useIsProjectAdmin } from '@/hooks/virtual-labs';
 import { LinkItemWithRequirements } from '@/types/virtual-lab/navigation';
 import { fetchNotebookCount } from '@/util/virtual-lab/fetchNotebooks';
-import { notebookRepoUrl, virtualLabApi } from '@/config';
-import authFetch from '@/authFetch';
+import { projectStatsAtomFamily } from '@/state/virtual-lab/projects';
+import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
+import { notebookRepoUrl } from '@/config';
+import { tryCatch } from '@/api/utils';
 
 type Props = {
   virtualLabId: string;
@@ -26,153 +20,118 @@ type Props = {
 };
 
 export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Props) {
+  const { data: session } = useSession();
   const url = usePathname().split('/');
   const currentPage = url[url.length - 1] !== 'new' ? url[url.length - 1] : url[url.length - 2];
-
-  const [notebookCount, setNotebookCount] = useState<number | null>(null);
-  const [userNotebookCount, setUserNotebookCount] = useState<number | null>(null);
+  const [globalNotebookCount, setGlobalNotebookCount] = useState<number>(0);
+  const projectStats = useAtomValue(
+    useMemo(
+      () => unwrap(projectStatsAtomFamily({ virtualLabId, projectId })),
+      [virtualLabId, projectId]
+    )
+  );
 
   useEffect(() => {
-    async function fetch() {
-      try {
-        const count = await fetchNotebookCount(notebookRepoUrl);
-        const res = await authFetch(
-          `${virtualLabApi.url}/projects/${projectId}/notebooks/?page_size=1  `
-        );
-        let userCount: number;
+    let isMounted = true;
+    const fetchData = async () => {
+      const { data, error } = await tryCatch(fetchNotebookCount(notebookRepoUrl));
+      if (isMounted && data) setGlobalNotebookCount(data ?? 0);
+      if (error) setGlobalNotebookCount(0);
+    };
 
-        if (res.ok) {
-          userCount = (await res.json()).data.total;
-          setUserNotebookCount(userCount);
-        }
+    fetchData();
 
-        setNotebookCount(count);
-      } catch (e) {
-        console.error(e); // eslint-disable-line no-console
-      }
-    }
-    fetch();
-  }, [projectId]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  const projectUsers = useLoadableValue(
-    virtualLabProjectUsersAtomFamily({ virtualLabId, projectId })
-  );
-  const bookmarks = useLoadableValue(bookmarksForProjectAtomFamily({ virtualLabId, projectId }));
-  const projectPapers = useLoadableValue(
-    virtualLabProjectPapersCountAtomFamily({ virtualLabId, projectId })
-  );
+  const stats = projectStats?.data;
+  const isAdmin = session?.user.id ? stats?.admin_users.includes(session.user.id) : false;
+  const linkItems: Array<LinkItemWithRequirements> = useMemo(() => {
+    const bookmarksCount = stats?.total_bookmarks;
+    const membersCount = stats?.total_members;
+    const notebookCount = (stats?.total_notebooks ?? 0) + globalNotebookCount;
 
-  const isAdmin = useIsProjectAdmin({ virtualLabId, projectId });
+    return [
+      { key: LinkItemKey.Home, content: 'Project Home', href: 'home' },
+      {
+        key: LinkItemKey.Library,
+        content: (
+          <div className="flex justify-between">
+            <span>Project Library</span>
+            {bookmarksCount ? (
+              <span className="font-normal text-primary-3">{bookmarksCount}</span>
+            ) : null}
+          </div>
+        ),
+        href: 'library',
+      },
+      {
+        key: LinkItemKey.Team,
+        content: (
+          <div className="flex justify-between">
+            <span>Project Team</span>
+            {membersCount ? (
+              <span className="font-normal text-primary-3">{membersCount}</span>
+            ) : null}
+          </div>
+        ),
+        href: 'team',
+      },
+      {
+        key: LinkItemKey.Activity,
+        content: 'Activity',
+        href: 'activity',
+      },
+      {
+        key: 'notebooks',
+        content: (
+          <div className="flex justify-between">
+            <span>Notebooks</span>
+            {notebookCount > 0 ? (
+              <span className="font-normal text-primary-3">{notebookCount}</span>
+            ) : null}
+          </div>
+        ),
+        href: 'notebooks',
+      },
+      { key: LinkItemKey.Explore, content: 'Explore', href: 'explore/interactive' },
+      { key: LinkItemKey.Build, content: 'Build', href: 'build' },
+      { key: LinkItemKey.Simulate, content: 'Simulate', href: 'simulate' },
+      {
+        key: LinkItemKey.Papers,
+        disabled: true,
+        content: (
+          <div className="flex justify-between">
+            <span className="opacity-50">Project papers</span>
+            <span className="font-normal text-primary-3">Coming soon</span>
+          </div>
+        ),
+        href: 'papers',
+      },
+      {
+        key: LinkItemKey.Admin,
+        content: 'Admin',
+        href: 'admin',
+        requires: { userRole: 'admin' },
+      },
+    ];
+  }, [stats, globalNotebookCount]);
 
-  const linkItemFilter = (link: LinkItemWithRequirements) =>
-    link.requires?.userRole === 'admin' ? isAdmin : true;
-
-  const renderUserAmount = () => {
-    if (projectUsers.state === 'loading') {
-      return <Spin indicator={<LoadingOutlined />} />;
-    }
-    if (projectUsers.state === 'hasData') {
-      const count = projectUsers.data?.length;
-      return `${count} member${count && count > 1 ? 's' : ''}`;
-    }
-    return null;
-  };
-
-  // Use this function once Project Papers is implemented
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const renderPapersAmount = () => {
-    if (projectPapers.state === 'loading') {
-      return <Spin indicator={<LoadingOutlined />} />;
-    }
-    if (projectPapers.state === 'hasData') {
-      const count = projectPapers.data;
-      return `${count} paper${count && count > 1 ? 's' : ''}`;
-    }
-    return null;
-  };
-
-  const bookmarksCount = useMemo(() => {
-    if (bookmarks.state === 'loading') {
-      return <Spin indicator={<LoadingOutlined />} />;
-    }
-    if (bookmarks.state === 'hasData') {
-      return getBookmarksCount(bookmarks.data);
-    }
-    return null;
-  }, [bookmarks]);
-
-  const linkItems: LinkItemWithRequirements[] = [
-    { key: LinkItemKey.Home, content: 'Project Home', href: 'home' },
-    {
-      key: LinkItemKey.Library,
-      content: (
-        <div className="flex justify-between">
-          <span>Project Library</span>
-          <span className="font-normal text-primary-3">{bookmarksCount}</span>
-        </div>
-      ),
-      href: 'library',
-    },
-    {
-      key: LinkItemKey.Team,
-      content: (
-        <div className="flex justify-between">
-          <span>Project Team</span>
-          <span className="font-normal text-primary-3">{renderUserAmount()}</span>
-        </div>
-      ),
-      href: 'team',
-    },
-    {
-      key: LinkItemKey.Activity,
-      content: 'Activity',
-      href: 'activity',
-    },
-    {
-      key: 'notebooks',
-      content: (
-        <div className="flex justify-between">
-          <span>Notebooks</span>
-          {notebookCount !== null && userNotebookCount !== null && (
-            <span className="font-normal text-primary-3">{notebookCount + userNotebookCount}</span>
-          )}
-        </div>
-      ),
-      href: 'notebooks',
-    },
-    { key: LinkItemKey.Explore, content: 'Explore', href: 'explore/interactive' },
-    { key: LinkItemKey.Build, content: 'Build', href: 'build' },
-    { key: LinkItemKey.Simulate, content: 'Simulate', href: 'simulate' },
-    {
-      key: LinkItemKey.Papers,
-      disabled: true,
-      content: (
-        <div className="flex justify-between">
-          <span className="opacity-50">Project papers</span>
-          <span className="font-normal text-primary-3">Coming soon</span>
-        </div>
-      ),
-      href: 'papers',
-    },
-    {
-      key: LinkItemKey.Admin,
-      content: 'Admin',
-      href: 'admin',
-      requires: { userRole: 'admin' },
-    },
-  ];
-
-  const compliantLinkItems = linkItems.filter(linkItemFilter);
+  const compliantLinkItems = useMemo(() => {
+    const linkItemFilter = (link: LinkItemWithRequirements) =>
+      link.requires?.userRole === 'admin' ? isAdmin : true;
+    return linkItems.filter(linkItemFilter);
+  }, [linkItems, isAdmin]);
 
   return (
     <div className="my-8 mr-6 flex w-full flex-col gap-5">
       <VerticalLinks
-        {...{
-          virtualLabId,
-          projectId,
-          currentPage,
-          links: compliantLinkItems,
-        }}
+        virtualLabId={virtualLabId}
+        projectId={projectId}
+        currentPage={currentPage}
+        links={compliantLinkItems}
       />
     </div>
   );

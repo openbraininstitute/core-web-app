@@ -123,7 +123,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
           'topRight',
           undefined
         );
-        virtualLabProjectsAtomFamily.remove(id); // TODO: find better solution to refresh atom family with dynamic param
+        virtualLabProjectsAtomFamily.remove({ virtualLabId, page: 0, size: 5 }); // TODO: find better solution to refresh atom family with dynamic param
         navigate(`${generateVlProjectUrl(id, result.data.project.id)}/home`);
       }
     });
@@ -181,10 +181,12 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
               <Overview />
             </div>
             <div className={step !== 'members' ? 'hidden' : ''}>
-              <MemberList
-                ListCompo={Members}
-                cls={{ listContainer: 'max-h-[calc(100vh-500px)] mb-5 secondary-scrollbar' }}
-              />
+              <div className="mt-10 w-full">
+                <MemberList
+                  ListCompo={Members}
+                  cls={{ listContainer: 'max-h-[calc(100vh-500px)] mb-5 secondary-scrollbar' }}
+                />
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>

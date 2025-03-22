@@ -4,10 +4,11 @@ import { virtualLabApi } from '@/config';
 import {
   UpdateUserProfileRequest,
   UserProfileResponse,
+  VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
 
-const BASE_URL = virtualLabApi.url;
+const BASE_URL = `${virtualLabApi.url}/users`;
 // const BASE_URL = 'http://localhost:8000';
 
 /**
@@ -17,7 +18,7 @@ const BASE_URL = virtualLabApi.url;
  */
 export const getUserProfile = async (): Promise<{ profile: UserProfileResponse } | null> => {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/users/profile`, {
+  const response = await fetch(`${BASE_URL}/profile`, {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ export const updateUserProfile = async (
   payload: UpdateUserProfileRequest
 ): Promise<{ profile: UserProfileResponse } | null> => {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/users/profile`, {
+  const response = await fetch(`${BASE_URL}/profile`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -63,9 +64,31 @@ export const updateUserProfile = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to update user profile: ${response.statusText}`);
+    throw new Error(`Failed to update user profile`, { cause: await response.json() });
   }
 
   const result: VlmUserProfile = await response.json();
   return result.data;
+};
+
+/**
+ * Get the groups that the authenticated user belongs to
+ *
+ * @returns list of user's groups
+ */
+export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
+  const session = await getSession();
+  const response = await fetch(`${BASE_URL}/groups`, {
+    method: 'GET',
+    headers: {
+      accept: 'application/json',
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get user groups`, { cause: await response.json() });
+  }
+
+  return await response.json();
 };

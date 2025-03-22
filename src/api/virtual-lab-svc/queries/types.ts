@@ -3,17 +3,49 @@ export interface VlmResponse<T> {
   data: T | null;
 }
 
+export type Role = 'admin' | 'member';
+export type Member = {
+  id: string;
+  username: string;
+  created_at: string;
+  first_name: string;
+  last_name: string;
+  invite_accepted: boolean;
+  role: Role;
+  name: string;
+  email: string;
+};
+
+export type MembersResponse = VlmResponse<{
+  owner_id: string;
+  users: Array<Member>;
+  total: number;
+}>;
+export type MemberResponse = VlmResponse<{
+  user: Member;
+}>;
+
+export type Project = {
+  id: string;
+  nexus_project_id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  virtual_lab_id: string;
+  user_count?: number;
+};
+
+export type ProjectsResponse = {
+  results: Array<Project>;
+  page: number;
+  size: number;
+  page_size: number;
+  total: number;
+};
+
 export type ProjectCreationResponse = VlmResponse<{
-  project: {
-    id: string;
-    nexus_project_id: string;
-    name: string;
-    description: string;
-    created_at: Date;
-    updated_at: Date;
-    virtual_lab_id: string;
-    budget: number;
-  };
+  project: Project;
   failed_invites: [
     {
       user_email: string;
@@ -25,13 +57,15 @@ export type ProjectCreationResponse = VlmResponse<{
 }>;
 
 export type VirtualLab = {
+  id: string;
   name: string;
   description: string;
   reference_email: string;
   entity: string;
-  id: string;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
+  members_count: number | null;
+  projects_count: number | null;
 };
 
 export type VirtualLabExistsVerificationResponse = VlmResponse<{
@@ -141,8 +175,7 @@ export type SubscriptionTiersResponse = {
 export type VirtualLabListResponse = VlmResponse<{
   pending_labs: Array<VirtualLab & { invite_id: string }>;
   virtual_lab: VirtualLab;
-  members_count: number | null;
-  projects_count: number | null;
+  membership_labs: Array<VirtualLab>;
 }>;
 
 type SetupIntent = {
@@ -276,6 +309,56 @@ export type UserProfileResponse = {
     country?: string;
   };
 };
+
+export type ProjectStats = {
+  project_id: string;
+  total_stars: number;
+  total_bookmarks: number;
+  total_pending_invites: number;
+  total_members: number;
+  total_notebooks: number;
+  admin_users: Array<string>;
+  member_users: Array<string>;
+};
+
+export type VirtualLabStats = {
+  virtual_lab_id: string;
+  total_projects: number;
+  total_members: number;
+  total_pending_invites: number;
+  admin_users: Array<string>;
+  member_users: Array<string>;
+};
+
+export type DeleteProjectMember = {
+  project_id: string;
+  deleted: string;
+  deleted_at: string;
+};
+
+export type UserGroup = {
+  group_id: string;
+  name: string;
+  group_type: 'vlab' | 'project';
+  project_id?: string;
+  virtual_lab_id?: string;
+  role: Role;
+};
+
+type UserStats = {
+  owned_labs_count: number;
+  member_labs_count: number;
+  pending_invites_count: number;
+  owned_projects_count: number;
+  member_projects_count: number;
+  total_labs: number;
+  total_projects: number;
+};
+
+export interface UserGroupsResponse {
+  groups: Array<UserGroup>;
+}
+
 export type VlmStandalonePaymentResponse = VlmResponse<StandalonePaymentResponse>;
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;
@@ -289,3 +372,9 @@ export type VlmListSubscriptionTiersResponse = VlmResponse<SubscriptionTiersResp
 export type VlmActiveSubscriptionResponse = VlmResponse<UserActiveSubscriptionResponse>;
 export type VlmNextPaymentResponse = VlmResponse<NextPaymentDateResponse>;
 export type VlmUserProfile = VlmResponse<{ profile: UserProfileResponse }>;
+export type VlmProjectsResponse = VlmResponse<ProjectsResponse>;
+export type VlmProjectStatsResponse = VlmResponse<ProjectStats>;
+export type VlmVirtualLabStatsResponse = VlmResponse<VirtualLabStats>;
+export type VlmDeleteProjectMemberResponse = VlmResponse<DeleteProjectMember>;
+export type VlmUserGroupsResponse = VlmResponse<UserGroupsResponse>;
+export type VlmUserStatsResponse = VlmResponse<UserStats>;

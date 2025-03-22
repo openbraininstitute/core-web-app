@@ -6,8 +6,8 @@ import {
   ProjectJobReportsResponse,
 } from '@/types/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-import { UsersResponse } from '@/types/virtual-lab/members';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
+import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 
 export async function getVirtualLabProjects(
   id: string,
@@ -45,7 +45,7 @@ export async function getVirtualLabProjectDetails(
 export async function getVirtualLabProjectUsers(
   virtualLabId: string,
   projectId: string
-): Promise<UsersResponse> {
+): Promise<MembersResponse> {
   const response = await authFetchRetryOnError(
     `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/users`
   );

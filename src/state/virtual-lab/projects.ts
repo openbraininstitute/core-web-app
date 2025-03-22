@@ -11,18 +11,27 @@ import {
   getProjectJobReports,
   getUsersProjects,
   getVirtualLabProjectDetails,
-  getVirtualLabProjectUsers,
-  getVirtualLabProjects,
 } from '@/services/virtual-lab/projects';
-import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { retrievePapersListCount } from '@/services/paper-ai/retrievePapersList';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
+import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+import {
+  MembersResponse,
+  VlmProjectsResponse,
+  VlmProjectStatsResponse,
+} from '@/api/virtual-lab-svc/queries/types';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { getProjectStats } from '@/api/virtual-lab-svc/queries/stats';
+import { tryCatch } from '@/api/utils';
 
-export const virtualLabProjectsAtomFamily = atomFamily((virtualLabId: string) =>
-  atomWithRefresh<Promise<VirtualLabAPIListData<Project> | undefined>>(async () => {
-    const response = await getVirtualLabProjects(virtualLabId);
-    return response.data;
-  })
+export const virtualLabProjectsAtomFamily = atomFamily(
+  (params: { virtualLabId: string; page: number; size: number }) =>
+    atomWithRefresh<Promise<VlmProjectsResponse | null>>(async () => {
+      if (params.size === 0) return null;
+      const response = await listProjects(params);
+      return response;
+    }),
+  isEqual
 );
 
 export const virtualLabProjectDetailsAtomFamily = atomFamily(
@@ -36,10 +45,10 @@ export const virtualLabProjectDetailsAtomFamily = atomFamily(
 
 export const virtualLabProjectUsersAtomFamily = atomFamily(
   ({ virtualLabId, projectId }: { virtualLabId: string | null; projectId: string | null }) =>
-    atomWithRefresh<Promise<VirtualLabMember[] | null>>(async () => {
+    atomWithRefresh<Promise<MembersResponse | null>>(async () => {
       if (!virtualLabId || !projectId) return null;
-      const response = await getVirtualLabProjectUsers(virtualLabId, projectId);
-      return response.data.users;
+      const response = await listProjectMembers({ virtualLabId, projectId });
+      return response;
     }),
   isEqual
 );
@@ -91,4 +100,12 @@ export const projectBalanceAtomFamily = readAtomFamilyWithExpiration(
       return getProjectAccountBalance({ virtualLabId, projectId });
     }),
   { ttl: 20_000, areEqual: isEqual }
+);
+
+export const projectStatsAtomFamily = atomFamily(
+  ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+    atomWithRefresh<Promise<VlmProjectStatsResponse | null>>(async () => {
+      const { data } = await tryCatch(getProjectStats(virtualLabId, projectId));
+      return data;
+    })
 );
