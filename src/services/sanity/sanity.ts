@@ -8,7 +8,7 @@ export const client = createClient({
   projectId: 'fgi7eh1v',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   perspective: 'published',
-  apiVersion: '2025-03-18',
+  apiVersion: '2023-03-25',
   useCdn: process.env.NODE_ENV === 'production',
 });
 
