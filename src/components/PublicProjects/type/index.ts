@@ -34,13 +34,18 @@ export type LinkAndDownloadArtifactProps = {
 };
 
 export type MEModelsProps = {
+  file: string;
   name: string;
-  morphology: string;
-  trace: string;
-  validated: boolean;
   brainRegion: string;
+  validated: boolean;
   mType: string;
   eType: string;
+  morphologyId: string;
+  hasMorphologyThumbnail: boolean;
+  morphology: string;
+  traceFileId: string;
+  hasTraceThumbnail: boolean;
+  trace: string;
   url: string;
   _type: string;
 };
