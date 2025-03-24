@@ -24,8 +24,8 @@ const withLabsMenuItems: Array<ItemProps> = [
   },
   {
     url: '/app/virtual-lab/public-projects',
-    title: 'Showcases',
-    disabled: true,
+    title: 'Public project',
+    disabled: false,
   },
 ];
 

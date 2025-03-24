@@ -1,4 +1,3 @@
-import PublicProjectSideNavigation from '@/components/Buttons/PublicProjectSideNavigation';
 import PublicProjectMain from '@/components/PublicProjects/PublicProjectMain';
 
 export type ParamProps = {
@@ -10,10 +9,5 @@ export type ParamProps = {
 export default async function SinglePublicProjectPage({ params }: ParamProps) {
   const { slug } = params;
 
-  return (
-    <>
-      {/* <PublicProjectSideNavigation /> */}
-      <PublicProjectMain slug={slug} />
-    </>
-  );
+  return <PublicProjectMain slug={slug} />;
 }

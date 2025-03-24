@@ -195,6 +195,7 @@ export type UserActiveSubscriptionResponse = {
     canceled_at?: string;
     next_billing_date?: string;
     type?: 'free' | 'paid';
+    tier: 'FREE' | 'PRO' | 'PREMIUM';
   };
 } | null;
 

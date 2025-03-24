@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 
 import CheckoutFlow from '@/components/VirtualLab/create-entity-flows/checkout';
 import { SubscriptionCheckoutError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
-import { checkUserSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { tryCatch } from '@/api/utils';
 
 export const metadata: Metadata = {
@@ -13,10 +13,11 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const { error, data } = await tryCatch(checkUserSubscription(), undefined, {
+  const { data, error } = await tryCatch(getUserActiveSubscription(), undefined, {
     section: 'subscription-checkout-page',
-    feature: 'check-user-subscription',
+    feature: 'get-user-active-subscription',
   });
+
   if (error) {
     return <SubscriptionCheckoutError />;
   }

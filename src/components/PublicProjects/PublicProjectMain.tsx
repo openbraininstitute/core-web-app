@@ -154,7 +154,7 @@ export default function PublicProjectMain({ slug }: { slug: string }) {
 
   return (
     content !== null && (
-      <div className="relative flex min-h-screen w-screen flex-col gap-y-12 bg-primary-9 py-6 pl-28 pr-10">
+      <div className="relative flex min-h-screen w-full flex-col gap-y-12 bg-primary-9 py-6 pl-28 pr-10">
         <HeaderPublicProject title={content.name} headerImage={content?.heroImage} />
 
         <div className="flex flex-col">

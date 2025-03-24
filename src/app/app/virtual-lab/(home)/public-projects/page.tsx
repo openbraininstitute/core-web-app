@@ -1,7 +1,6 @@
 import { ErrorBoundary } from 'react-error-boundary';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
-
 import PublicProjectList from '@/components/PublicProjects/PublicProjectList';
 
 export const dynamic = 'force-dynamic';
