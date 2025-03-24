@@ -1,4 +1,4 @@
-.contactUs {
+/* .contactUs {
   padding: 0;
   margin: 0;
   display: flex;
@@ -7,5 +7,10 @@
   justify-content: center;
   align-items: flex-start;
   height: 100%;
-  min-height: 100px;
+  min-height: 120px;
+} */
+
+.contactUs {
+  padding: 0;
+  margin-top: 186px;
 }

@@ -17,7 +17,7 @@
 }
 
 .planHeader ul {
-  margin-top: 2em;
+  /* margin-top: 2em; */
   margin-bottom: 3em;
 }
 
@@ -48,5 +48,5 @@
 }
 
 .priceHeader {
-  min-height: 200px;
+  min-height: 180px;
 }
