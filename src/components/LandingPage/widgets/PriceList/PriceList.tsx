@@ -13,7 +13,6 @@ export default function WidgetPriceList() {
     <>
       <div className={classNames(styles.header, styleBlockLarge)}>
         <div>
-          {/* <SelectCurrency /> */}
           <LargeScreen />
           <SmallScreen />
         </div>

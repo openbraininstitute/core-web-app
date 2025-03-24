@@ -1,13 +1,17 @@
+
+'use client'
+
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
 
 import ContactUs from '../../contact-us';
-import { classNames } from '@/util/utils';
+
+import { useCurrency } from '@/components/LandingPage/atoms';
 import {
   ContentForPricingPlan,
   MultiCurrencyPrice,
 } from '@/components/LandingPage/content/pricing';
-import { useCurrency } from '@/components/LandingPage/atoms';
+import { classNames } from '@/util/utils';
 
 import styles from './PlanHeader.module.css';
 
@@ -21,9 +25,22 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
   const { discount, month, yearDiscount, yearNormal } = usePrices(currency, plan);
   const isFree = (discount || month || 0) <= 0;
 
+  const [paymentPeriod, setPaymentPeriod] = React.useState<"monthly" | "yearly">('monthly');
+
+  console.log('Which payement period are we?', paymentPeriod);
+
   return (
     <div className={classNames(className, styles.planHeader)}>
-      <h2>{plan.title}</h2>
+      {
+        plan.title === 'Pro' ? (
+          <div className="w-full flex flex-row items-center justify-between gap-x-4">
+            <h2>{plan.title}</h2>
+            <PaymentPeriodToggle paymentPeriod={paymentPeriod} setPaymentPeriod={setPaymentPeriod} />
+          </div>
+        ):(
+          <h2>{plan.title}</h2>
+        )
+      }
       {plan.buttonLabel && <ContactUs>{plan.buttonLabel}</ContactUs>}
       {plan.price.month.length > 0 && (
         <>
@@ -32,32 +49,48 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
               <>
                 <hr />
                 <em>Subscription</em>
-                <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
-                  <strong>
-                    {currency} {month}
-                  </strong>
-                  <small>/month</small>
-                </div>
-                <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
-                  <strong>
-                    {currency} {yearNormal}
-                  </strong>
-                  <small>/year</small>
-                </div>
-                <div className={styles.price}>
-                  <b>
-                    {currency} {discount || month}
-                  </b>
-                  <small>/month</small>
-                  {discount && <DiscountPill />}
-                </div>
-                <div className={styles.price}>
-                  <b>
-                    {currency} {discount ? yearDiscount : yearNormal}
-                  </b>
-                  <small>/year</small>
-                  {discount && <DiscountPill />}
-                </div>
+                {
+                  paymentPeriod === 'monthly' && (
+                  <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
+                    <strong>
+                      {currency} {month}
+                    </strong>
+                    <small>/month</small>
+                  </div>
+                  )
+                }
+                {
+                  paymentPeriod === 'yearly' && (
+                    <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
+                      <strong>
+                        {currency} {yearNormal}
+                      </strong>
+                      <small>/year</small>
+                    </div>
+                  )
+                }
+                {
+                  paymentPeriod === 'monthly' && (
+                    <div className={styles.price}>
+                      <b>
+                        {currency} {discount || month}
+                      </b>
+                      <small>/month</small>
+                      {discount && <DiscountPill />}
+                    </div>
+                  )
+                }
+                {
+                  paymentPeriod === 'yearly' && (
+                    <div className={styles.price}>
+                      <b>
+                        {currency} {discount ? yearDiscount : yearNormal}
+                      </b>
+                      <small>/year</small>
+                      {discount && <DiscountPill />}
+                    </div>
+                  )
+                }
               </>
             )}
           </div>
@@ -89,4 +122,34 @@ function extractPrice(currency: string, price?: null | MultiCurrencyPrice[]): nu
 
 function DiscountPill() {
   return <div className={styles.pill}>Special launch price</div>;
+}
+
+function PaymentPeriodToggle({
+  paymentPeriod,
+  setPaymentPeriod,
+}: {
+  paymentPeriod: "monthly" | "yearly";
+  setPaymentPeriod: (period: "monthly" | "yearly") => void;
+}) {
+
+  const handleToggle = () => {
+    setPaymentPeriod(paymentPeriod === 'monthly' ? 'yearly' : 'monthly');
+  };
+  
+
+  return (
+    <div className={styles.paymentPeriodContainer}>
+      <div>Monthly</div>
+        <button
+          type="button"
+          name="Toggle payment period"
+          onClick={handleToggle}
+          className={styles.paymentPeriodToggle}
+          aria-label="Toggle payment period"
+          >
+            <div className={classNames(styles.toggleButton, paymentPeriod === 'monthly' ? styles.paymentMonthy : styles.paymentYearly )} />
+        </button>
+      <div>Yearly</div>
+    </div>
+  )
 }
