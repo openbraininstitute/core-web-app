@@ -12,7 +12,7 @@ export function usePendingValidationModal() {
   const destroyRef = useRef<() => void>();
   const onClose = () => destroyRef?.current?.();
 
-  function createModal(virtualLabInfo: VirtualLabInfo) {
+  function createModal(virtualLabInfo: VirtualLabInfo, accessToken: string) {
     const { destroy } = modal.confirm({
       title: null,
       icon: null,
@@ -28,7 +28,13 @@ export function usePendingValidationModal() {
       },
       closeIcon: <CloseOutlined className="text-2xl text-primary-8" />,
       className: '![&>.ant-modal-content]:bg-red-500',
-      content: <BluePyEModelContainer onClose={onClose} virtualLabInfo={virtualLabInfo} />,
+      content: (
+        <BluePyEModelContainer
+          onClose={onClose}
+          virtualLabInfo={virtualLabInfo}
+          accessToken={accessToken}
+        />
+      ),
     });
     destroyRef.current = destroy;
     return destroy;
