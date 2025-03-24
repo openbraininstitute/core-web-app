@@ -1,12 +1,11 @@
 import FileSaver from 'file-saver';
 import { Session } from 'next-auth';
-import uniqBy from 'lodash/uniqBy';
 
-import { EntityResource, Distribution, FileMetadata } from '@/types/nexus/common';
+import { postNexusArchive } from './post-archive';
+import { EntityResource, Distribution } from '@/types/nexus/common';
 import { fetchFileMetadataByUrl, fetchResourceByUrl } from '@/api/nexus';
 import { ensureArray } from '@/util/nexus';
-import { createHeaders } from '@/util/utils';
-import { nexus } from '@/config';
+import authFetch from '@/authFetch';
 
 interface ResourceWithDistribution extends EntityResource {
   distribution: Distribution | Distribution[];
@@ -23,40 +22,6 @@ async function fetchDistribution(selfId: string, session: Session) {
   );
 }
 
-/** Ensure usable filename length, and override default archive file structure. */
-function formatArchiveResource(resource: FileMetadata) {
-  const orgProject = new URL(resource._project).pathname.split('/');
-  const [org, project] = orgProject.slice(Math.max(orgProject.length - 2, 1));
-  const getFileExt = /(?:\.([^.]+))?$/;
-  const filename = resource._filename;
-  const ext = filename && getFileExt.exec(filename)?.[1];
-  const shortFilename = ext && filename.length > 99 && filename.substring(0, 98 - ext.length) + ext;
-
-  return {
-    '@type': resource['@type'],
-    project: `${org}/${project}`,
-    resourceId: resource['@id'],
-    path: `/${shortFilename || filename}`,
-  };
-}
-
-/** Create and return a TAR file containing the provided resources. */
-function postNexusArchive(resources: FileMetadata[], session: Session) {
-  return fetch(
-    `${nexus.url}/archives/${nexus.org}/${nexus.project}/`, // Can be any org/project combo (will be overridden by project property of resource)
-    {
-      method: 'POST',
-      headers: createHeaders(session.accessToken, {
-        'Content-Type': 'application/json',
-      }),
-      body: JSON.stringify({
-        // resources array should have unique 'path' field (Nexus limitation)
-        resources: uniqBy(resources.map(formatArchiveResource), 'path'),
-      }),
-    }
-  );
-}
-
 /** Create and download a Nexus archive for the provided resource IDs, and trigger a callback, if one is provided. */
 export default async function fetchArchive(
   resourceIds: string[],
@@ -69,11 +34,17 @@ export default async function fetchArchive(
   return Promise.all(resourceIds.map((selfId) => fetchDistribution(selfId, session)))
     .then((responses) => responses.flat())
     .then((resources) => postNexusArchive(resources, session))
-    .then((response) => {
-      if (!response.ok) {
+    .then(async (response) => {
+      if (!response) {
         throw Error('Error fetching archive');
       }
-      return response.blob();
+      const fileRes = await authFetch(response, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return fileRes.blob();
     })
     .then(FileSaver.saveAs)
     .then(successCallback)
