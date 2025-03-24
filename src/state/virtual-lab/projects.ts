@@ -105,7 +105,10 @@ export const projectBalanceAtomFamily = readAtomFamilyWithExpiration(
 export const projectStatsAtomFamily = atomFamily(
   ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
     atomWithRefresh<Promise<VlmProjectStatsResponse | null>>(async () => {
-      const { data } = await tryCatch(getProjectStats(virtualLabId, projectId));
+      const { data } = await tryCatch(getProjectStats(virtualLabId, projectId), undefined, {
+        section: 'project-stats-family',
+        feature: 'get-project-stats',
+      });
       return data;
     })
 );

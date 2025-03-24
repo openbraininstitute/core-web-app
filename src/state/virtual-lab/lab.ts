@@ -117,7 +117,10 @@ export const virtualLabBalanceAtomFamily = readAtomFamilyWithExpiration(
 
 export const virtualLabStatsAtomFamily = atomFamily((virtualLabId: string) =>
   atomWithRefresh<Promise<VlmVirtualLabStatsResponse | null>>(async () => {
-    const { data } = await tryCatch(getVirtualLabStats(virtualLabId));
+    const { data } = await tryCatch(getVirtualLabStats(virtualLabId), undefined, {
+      section: 'virtual-lab-stats-family',
+      feature: 'get-virtual-lab-stats',
+    });
     return data;
   })
 );

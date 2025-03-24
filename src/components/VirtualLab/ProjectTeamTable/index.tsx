@@ -134,15 +134,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
       }
     );
     if (error) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'cause' in error &&
-        typeof error.cause === 'object' &&
-        error.cause !== null &&
-        'error_code' in error.cause &&
-        error.cause.error_code === 'FORBIDDEN_OPERATION'
-      ) {
+      if (get(error, 'cause.error_code') === 'FORBIDDEN_OPERATION') {
         notifyError(
           'You are not authorized to remove this user from the virtual lab.',
           undefined,
@@ -328,7 +320,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
       ),
     },
   ];
-  const { disableFeature } = useActiveSubscription();
+  const { forbiddenOperation } = useActiveSubscription();
   return (
     <div className="flex h-full flex-col pb-8">
       <div className="flex h-8 flex-shrink-0 items-center px-3">
@@ -383,7 +375,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
           type="default"
           size="large"
           htmlType="button"
-          disabled={disableFeature}
+          disabled={forbiddenOperation}
           onClick={onOpen}
         >
           Add member

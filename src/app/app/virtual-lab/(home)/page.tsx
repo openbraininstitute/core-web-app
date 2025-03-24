@@ -20,7 +20,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function Page() {
   const { data: result, error } = await tryCatch(
-    Promise.all([listVirtualLabs(), getUserActiveSubscription()])
+    Promise.all([listVirtualLabs(), getUserActiveSubscription()]),
+    undefined,
+    {
+      section: 'virtual-lab-home-page',
+    }
   );
 
   if (error) {

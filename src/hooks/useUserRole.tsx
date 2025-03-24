@@ -11,12 +11,15 @@ type Props = {
   projectId?: string;
 };
 
-export function useUserRole({ virtualLabId, projectId }: Props) {
+export default function useUserRole({ virtualLabId, projectId }: Props) {
   const [userGroups, setUserGroups] = useState<Array<UserGroup>>([]);
 
   useEffect(() => {
     async function fetchUserGroups() {
-      const { data: result } = await tryCatch(getUserGroups());
+      const { data: result } = await tryCatch(getUserGroups(), undefined, {
+        feature: 'get-user-groups',
+        section: 'useUserRole',
+      });
       if (result?.data) setUserGroups(result.data.groups);
       else setUserGroups([]);
     }

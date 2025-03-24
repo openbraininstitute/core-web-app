@@ -123,7 +123,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
           'topRight',
           undefined
         );
-        virtualLabProjectsAtomFamily.remove({ virtualLabId, page: 0, size: 5 }); // TODO: find better solution to refresh atom family with dynamic param
+        virtualLabProjectsAtomFamily.remove({ virtualLabId, page: 0, size: 20 });
         navigate(`${generateVlProjectUrl(id, result.data.project.id)}/home`);
       }
     });
