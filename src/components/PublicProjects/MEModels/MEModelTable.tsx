@@ -76,18 +76,18 @@ const columns: Column[] = [
     cell: (info) => info.getValue(),
     size: 112,
   },
-  {
-    accessorKey: 'morphologyId',
-    header: 'Morphology File',
-    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
-    size: 112,
-  },
-  {
-    accessorKey: 'traceFileId',
-    header: 'Trace File',
-    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
-    size: 112,
-  },
+  // {
+  //   accessorKey: 'morphologyId',
+  //   header: 'Morphology File',
+  //   cell: ({ getValue }) => <DownloadButton url={getValue()} />,
+  //   size: 112,
+  // },
+  // {
+  //   accessorKey: 'traceFileId',
+  //   header: 'Trace File',
+  //   cell: ({ getValue }) => <DownloadButton url={getValue()} />,
+  //   size: 112,
+  // },
   // {
   //   accessorKey: 'morphology',
   //   header: 'Morphology',
@@ -119,7 +119,12 @@ const columns: Column[] = [
 ];
 
 export default function MEModelTable({ content }: { content: MEModelsProps[] }) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: 'brainRegion',
+      desc: false,
+    },
+  ]);
 
   const table = useReactTable({
     data: content,
