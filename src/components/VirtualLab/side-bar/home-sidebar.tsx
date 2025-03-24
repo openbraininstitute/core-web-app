@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAtomValue } from 'jotai';
 import { Fragment } from 'react';
 
+import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import Base from '@/components/VirtualLab/side-bar/base';
-import Item, { Props } from '@/components/VirtualLab/side-bar/item';
+import { userStatsAtom } from '@/state/virtual-lab/lab';
 
-const noLabsMenuItems: Array<Props> = [
+const noLabsMenuItems: Array<ItemProps> = [
   {
     url: '/app/public-projects',
     title: 'Public projects',
@@ -15,28 +17,38 @@ const noLabsMenuItems: Array<Props> = [
   },
 ];
 
-const withLabsMenuItems: Array<Props> = [
+const withLabsMenuItems: Array<ItemProps> = [
   {
     url: '/app/virtual-lab',
     title: 'Virtual labs',
   },
   {
-    url: '/app/public-projects',
-    title: 'Public projects',
-    disabled: false,
+    url: '/app/virtual-lab/showcases',
+    title: 'Showcases',
+    disabled: true,
   },
 ];
 
-export default function SideBar({ labsCount }: { labsCount: number }) {
+export default function SideBar() {
   const path = usePathname();
+  const userStats = useAtomValue(userStatsAtom);
+  const labsCount = userStats?.data?.total_labs;
+
   return (
     <Base>
       <nav className="flex max-h-max flex-1 flex-col py-4">
         <div className="mt-20 border border-primary-5">
-          {labsCount >= 1 ? (
+          {labsCount && labsCount >= 1 ? (
             <Fragment key="labs">
               {withLabsMenuItems.map(({ url, title, disabled }) => (
-                <Item key={url} url={url} title={title} active={path === url} disabled={disabled} />
+                <Item
+                  key={url}
+                  url={url}
+                  title={title}
+                  active={path === url}
+                  disabled={disabled}
+                  count={url === '/app/virtual-lab' ? labsCount : undefined}
+                />
               ))}
             </Fragment>
           ) : (

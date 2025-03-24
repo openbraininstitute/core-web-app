@@ -8,9 +8,9 @@ import type { TextAreaProps } from 'antd/lib/input/TextArea';
 import capitalize from 'lodash/capitalize';
 
 import useNotification from '@/hooks/notifications';
-import { VirtualLab } from '@/types/virtual-lab/lab';
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type RenderInputProps = Omit<FormItemProps, 'children'> & {
   children: (props: InputProps & TextAreaProps) => ReactNode;

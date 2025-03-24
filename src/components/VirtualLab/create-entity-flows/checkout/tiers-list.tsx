@@ -41,7 +41,11 @@ function TiersComparison({
   const [{ interval, currency, tier }, updateFlowState] = useAtom(flowAtom);
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
   const onTierClick = (t: ExtendedTier) => () => {
-    if (t.title === 'Pro') updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
+    if (t.title === 'Pro') {
+      if (t.app_id) {
+        updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
+      }
+    }
     if (t.title === 'Premium') onSelectPremiumTier();
   };
 

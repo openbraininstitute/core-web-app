@@ -22,7 +22,10 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const { data, error } = await tryCatch(getUserActiveSubscription());
+  const { data, error } = await tryCatch(getUserActiveSubscription(), undefined, {
+    section: 'subscription-home-page',
+    feature: 'get-user-active-subscription',
+  });
 
   if (error) {
     return (

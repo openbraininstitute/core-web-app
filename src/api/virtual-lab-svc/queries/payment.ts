@@ -33,7 +33,7 @@ export async function getSetupIntent(): Promise<SetupIntentResponse> {
   });
 
   if (!response.ok) {
-    throw new Error(`Listing subscriptions failed: ${response.status}`);
+    throw new Error(`Listing subscriptions failed`, { cause: await response.json() });
   }
 
   const result: SetupIntentResponse = await response.json();
@@ -61,8 +61,7 @@ export async function createStandalonePayment(
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to create standalone payment');
+    throw new Error('Failed to create standalone payment', { cause: await response.json() });
   }
 
   const data = await response.json();
@@ -101,7 +100,7 @@ export async function listStandalonePayments({
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch subscription payments: ${response.status}`);
+    throw new Error(`Failed to fetch subscription payments`, { cause: await response.json() });
   }
 
   return await response.json();

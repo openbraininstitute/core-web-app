@@ -1,4 +1,5 @@
 import flatMap from 'lodash/flatMap';
+
 import BillingTable from '@/components/VirtualLab/create-entity-flows/subscription/billing-table';
 import {
   HistoryEmpty,
@@ -8,7 +9,10 @@ import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subs
 import { tryCatch } from '@/api/utils';
 
 export default async function History() {
-  const { data, error } = await tryCatch(listUserSubscriptionsHistory());
+  const { data, error } = await tryCatch(listUserSubscriptionsHistory(), undefined, {
+    section: 'invoices-page',
+    feature: 'list-user-subscription-history',
+  });
 
   if (error) return <HistoryError />;
 

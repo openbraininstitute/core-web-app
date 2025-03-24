@@ -13,7 +13,10 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const { error, data } = await tryCatch(checkUserSubscription());
+  const { error, data } = await tryCatch(checkUserSubscription(), undefined, {
+    section: 'subscription-checkout-page',
+    feature: 'check-user-subscription',
+  });
   if (error) {
     return <SubscriptionCheckoutError />;
   }

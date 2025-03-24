@@ -5,9 +5,9 @@ import { useEffect, useRef } from 'react';
 import filter from 'lodash/filter';
 
 import { classNames } from '@/util/utils';
-import { Role } from '@/types/virtual-lab/members';
 import { DeleteOutline } from '@/components/icons/EditorIcons';
 import { Input } from '@/components/VirtualLab/create-entity-flows/common/inputs';
+import { Role } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   ListCompo?: () => JSX.Element;
