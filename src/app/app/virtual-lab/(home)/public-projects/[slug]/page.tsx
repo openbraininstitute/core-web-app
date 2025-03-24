@@ -12,7 +12,7 @@ export default async function SinglePublicProjectPage({ params }: ParamProps) {
 
   return (
     <>
-      <PublicProjectSideNavigation />
+      {/* <PublicProjectSideNavigation /> */}
       <PublicProjectMain slug={slug} />
     </>
   );

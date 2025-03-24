@@ -36,7 +36,7 @@ export default function SinglePublicProjectCard({ value }: { value: ShowCaseProj
 
   return (
     <a
-      href={`/app/public-projects/${value.slug}?section=description`}
+      href={`/app/virtual-lab/public-projects/${value.slug}?section=description`}
       className="relative w-full scale-100 overflow-hidden rounded-3xl border border-solid border-primary-7 bg-primary-9 p-8 text-white transition-all duration-300 ease-in-out hover:scale-[0.98] hover:bg-primary-7"
       style={{
         boxShadow: isMouseHover

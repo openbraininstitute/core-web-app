@@ -11,7 +11,7 @@ import { userStatsAtom } from '@/state/virtual-lab/lab';
 
 const noLabsMenuItems: Array<ItemProps> = [
   {
-    url: '/app/public-projects',
+    url: '/app/virtual-lab/public-projects',
     title: 'Public projects',
     disabled: false,
   },
@@ -23,7 +23,7 @@ const withLabsMenuItems: Array<ItemProps> = [
     title: 'Virtual labs',
   },
   {
-    url: '/app/virtual-lab/showcases',
+    url: '/app/virtual-lab/public-projects',
     title: 'Showcases',
     disabled: true,
   },

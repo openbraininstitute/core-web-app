@@ -168,7 +168,6 @@ function TiersComparison({
         <div />
         {tiers.map((t) => {
           const isSelected =
-            (tier && t.app_id === tier?.app_id) ||
             currentTier?.toLowerCase() === t.title.toLowerCase();
           const isHovered = hoveredTier === t.id;
 
