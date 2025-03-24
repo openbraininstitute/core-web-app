@@ -13,20 +13,24 @@ import { MEModelsProps } from '../type';
 
 export function DownloadButton({ url }: { url: string }) {
   return (
-    <a href={url} className="py-2 px-6 text-base text-primary-9 border border-solid border-primary-9 rounded-3xl my-2 transition-colors duration-300 ease-in-out bg-white hover:bg-primary-9 hover:text-white" download>
-        Download
-      </a>
-  )
+    <a
+      href={url}
+      className="my-2 rounded-3xl border border-solid border-primary-9 bg-white px-6 py-2 text-base text-primary-9 transition-colors duration-300 ease-in-out hover:bg-primary-9 hover:text-white"
+      download
+    >
+      Download
+    </a>
+  );
 }
 
 const nameFormating = (str: string, length: number) => {
-  const newString = str.replace(/_{1,2}/g, ' ')
+  const newString = str.replace(/_{1,2}/g, ' ');
 
-  if (newString.length <= length){
+  if (newString.length <= length) {
     return newString;
-  } 
+  }
   return newString.substring(0, length) + '...';
-}
+};
 
 export type Column = {
   accessorKey: string;
@@ -45,10 +49,8 @@ const columns: Column[] = [
   {
     accessorKey: 'file',
     header: 'File',
-    cell: ({getValue}) => (
-      <DownloadButton url={getValue()} />
-    ),
-    size: 100
+    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
+    size: 100,
   },
   {
     accessorKey: 'brainRegion',
@@ -77,17 +79,13 @@ const columns: Column[] = [
   {
     accessorKey: 'morphologyId',
     header: 'Morphology File',
-    cell: ({getValue}) => (
-      <DownloadButton url={getValue()} />
-    ),
+    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
     size: 112,
   },
   {
     accessorKey: 'traceFileId',
     header: 'Trace File',
-    cell: ({getValue}) => (
-      <DownloadButton url={getValue()} />
-    ),
+    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
     size: 112,
   },
   // {
@@ -123,7 +121,6 @@ const columns: Column[] = [
 export default function MEModelTable({ content }: { content: MEModelsProps[] }) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-
   const table = useReactTable({
     data: content,
     columns,
@@ -135,7 +132,6 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
     getSortedRowModel: getSortedRowModel(),
   });
 
-
   return (
     <div className="relative w-full pb-44">
       <table className="w-full border-collapse gap-y-12">
@@ -145,7 +141,7 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="cursor-pointer p-2 text-left font-normal text-sm uppercase tracking-wide text-neutral-4"
+                  className="cursor-pointer p-2 text-left text-sm font-normal uppercase tracking-wide text-neutral-4"
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   {flexRender(header.column.columnDef.header, header.getContext())}
@@ -160,10 +156,7 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
         </thead>
         <tbody className="mt-24">
           {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className="cursor-pointer border-b py-2"
-            >
+            <tr key={row.id} className="cursor-pointer border-b py-2">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="p-5">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
