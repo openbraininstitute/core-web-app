@@ -19,6 +19,7 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
   return tryType('ShowCaseProjectProps', data, {
     name: 'string',
     slug: 'string',
+    species: ['|', 'undefined', 'string'],
     introduction: 'string',
     heroImage: 'string',
     authorsList: [

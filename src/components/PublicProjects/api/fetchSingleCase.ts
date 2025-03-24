@@ -30,6 +30,7 @@ const singleCaseQuery = (slug: string) =>
         meModelsList[] {
             'file': file.asset->url,
             name,
+            species,
             brainRegion,
             validated,
             mType,

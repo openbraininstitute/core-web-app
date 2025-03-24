@@ -36,6 +36,7 @@ export type LinkAndDownloadArtifactProps = {
 export type MEModelsProps = {
   file: string;
   name: string;
+  species: string;
   brainRegion: string;
   validated: boolean;
   mType: string;

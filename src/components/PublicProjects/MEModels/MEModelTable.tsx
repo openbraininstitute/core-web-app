@@ -8,6 +8,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
+import Image from 'next/image';
+
 import { useState } from 'react';
 import { MEModelsProps } from '../type';
 
@@ -17,6 +19,7 @@ export function DownloadButton({ url }: { url: string }) {
       href={url}
       className="my-2 rounded-3xl border border-solid border-primary-9 bg-white px-6 py-2 text-base text-primary-9 transition-colors duration-300 ease-in-out hover:bg-primary-9 hover:text-white"
       download
+      target="_blank"
     >
       Download
     </a>
@@ -47,16 +50,30 @@ const columns: Column[] = [
     size: 250,
   },
   {
-    accessorKey: 'file',
-    header: 'File',
-    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
-    size: 100,
-  },
-  {
     accessorKey: 'brainRegion',
     header: 'Brain Region',
     cell: (info) => nameFormating(info.getValue(), 30),
     size: 200,
+  },
+  {
+    accessorKey: 'species',
+    header: 'Species',
+    cell: (info) => info.getValue(),
+    size: 36,
+  },
+  {
+    accessorKey: 'trace',
+    header: 'Trace',
+    cell: ({ getValue }) => (
+      <Image
+        src={getValue()}
+        alt="Image of trace"
+        width={100}
+        height={100}
+        className="h-auto w-full"
+      />
+    ),
+    size: 116,
   },
   {
     accessorKey: 'validated',
@@ -75,6 +92,12 @@ const columns: Column[] = [
     header: 'E Type',
     cell: (info) => info.getValue(),
     size: 112,
+  },
+  {
+    accessorKey: 'file',
+    header: 'File',
+    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
+    size: 100,
   },
   // {
   //   accessorKey: 'morphologyId',
@@ -95,20 +118,6 @@ const columns: Column[] = [
   //     <Image
   //       src={getValue()}
   //       alt="Image of morphology"
-  //       width={100}
-  //       height={100}
-  //       className="h-auto w-full"
-  //     />
-  //   ),
-  //   size: 116,
-  // },
-  // {
-  //   accessorKey: 'trace',
-  //   header: 'Trace',
-  //   cell: ({ getValue }) => (
-  //     <Image
-  //       src={getValue()}
-  //       alt="Image of trace"
   //       width={100}
   //       height={100}
   //       className="h-auto w-full"
