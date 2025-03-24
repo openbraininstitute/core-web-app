@@ -132,10 +132,18 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
     });
   };
 
+  const fetchFreshAccessToken = async () => {
+    const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
+    const token = await res.json();
+    return token.accessToken;
+  };
+
   const onClickWithValidation = () => {
     setMeModelCreating(true);
+
     createMEModel({ virtualLabId, projectId })
-      .then(() => createValidationModal({ virtualLabId, projectId }))
+      .then(fetchFreshAccessToken)
+      .then((accessToken) => createValidationModal({ virtualLabId, projectId }, accessToken))
       .catch((err) => showErrorNotification(err))
       .finally(() => setMeModelCreating(false));
   };
