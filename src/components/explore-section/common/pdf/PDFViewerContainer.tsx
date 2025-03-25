@@ -1,19 +1,17 @@
 import dynamic from 'next/dynamic';
 import { useRef, useState } from 'react';
-import { ConfigProvider, Select, Button } from 'antd';
-import { PlusOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
-import groupBy from 'lodash/groupBy';
-import { AnalysisType, analysisTypes } from './types';
-import EModelAnalysisLauncher from '@/components/explore-section/EModel/DetailView/EModelAnalysisLauncher';
-import { useAnalyses } from '@/app/app/virtual-lab/(free)/explore/(content)/simulation-campaigns/shared';
-import Link from '@/components/Link';
+import { ConfigProvider, Button } from 'antd';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { AnalysisType, analysisTypes, typeLabel } from './types';
 
 const DynamicPDFViewer = dynamic(() => import('./PDFViewer'), {
   ssr: false,
 });
 
+type Distribution = { '@id': string; about: string };
+
 interface Props {
-  distributions: { '@id': string; about: string }[];
+  distributions: Distribution[];
 }
 
 export function PDFViewerContainer({ distributions }: Props) {
@@ -64,10 +62,10 @@ export function PDFViewerContainer({ distributions }: Props) {
               <button
                 type="button"
                 key={option}
-                className={`cursor-pointer capitalize text-primary-8 focus:outline-none ${type === option ? 'font-bold' : ''}`}
+                className={`cursor-pointer text-primary-8 focus:outline-none ${type === option ? 'font-bold' : ''}`}
                 onClick={() => setType(option)}
               >
-                {option}
+                {typeLabel(option)}
                 <span className="pl-1 text-neutral-4">
                   {distributions.filter((d) => matchesType(d, option)).length}
                 </span>
@@ -106,20 +104,11 @@ export function PDFViewerContainer({ distributions }: Props) {
 
         <div ref={scrollContainerRef} onScroll={onScroll} className="w-full overflow-x-auto">
           <div className="flex gap-x-16" style={{ minWidth: 'min-content' }}>
-            {Object.entries(groupedDistributions).map(([pdfType, groupedDistribution]) => (
-              <div style={{ minWidth: '30%', flexGrow: 1 }} key={pdfType}>
-                {groupedDistribution.map((dist) => {
-                  return JSON.stringify(dist);
-                  // return (
-                  //   <DynamicPDFViewer
-                  //     url={pdf.contentUrl}
-                  //     type={index === 0 ? pdfType : undefined}
-                  //     key={pdf.contentUrl}
-                  //   />
-                  // );
-                })}
-              </div>
-            ))}
+            <div style={{ minWidth: '30%', flexGrow: 1 }}>
+              {currentDistributions.map((d) => {
+                return <DynamicPDFViewer distribution={d} key={d['@id']} />;
+              })}
+            </div>
           </div>
 
           {/* <Select
@@ -146,12 +135,4 @@ const matchesType = (distribution: { '@id': string; about: string }, type: Analy
   const lowerCaseName = distribution.about.toLowerCase();
 
   return lowerCaseName.includes(type);
-};
-
-const nameToType = (name: string): AnalysisType => {
-  const lowerCaseName = name.toLowerCase();
-
-  return analysisTypes.find((fileTypeValue) =>
-    lowerCaseName.endsWith(fileTypeValue.toLowerCase())
-  )!;
 };

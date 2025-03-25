@@ -223,6 +223,18 @@ export async function updateJsonFileByUrl(
   );
 }
 
+export function fetchResourceByIdRaw(
+  id: string,
+  session: Session,
+  options?: ComposeUrlParams,
+  headerExtraOptions?: Record<string, string> | null
+) {
+  const url = composeUrl('resource', id, options);
+  return fetch(url, {
+    headers: createHeaders(session.accessToken, headerExtraOptions),
+  });
+}
+
 export function fetchResourceById<T>(
   id: string,
   session: Session,

@@ -14,3 +14,8 @@ export const analysisTypes = [
 ] as const;
 
 export type AnalysisType = (typeof analysisTypes)[number]; // 'all' | 'traces' | 'scores' ...
+
+export function typeLabel(analysisType: AnalysisType) {
+  const label = analysisType.replaceAll('_', ' ').replace('evo', 'evolution');
+  return label.charAt(0).toLocaleUpperCase() + label.slice(1);
+}

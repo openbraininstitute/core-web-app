@@ -1,13 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { Fragment, useMemo, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Divider, Skeleton, Empty } from 'antd';
-import { AnalysisType } from './types';
+import { AnalysisType, typeLabel } from './types';
 import { getSession } from '@/authFetch';
-import { createHeaders, classNames } from '@/util/utils';
+import { classNames } from '@/util/utils';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { fetchResourceByIdRaw } from '@/api/nexus';
+import { nexus } from '@/config';
+import { composeUrl } from '@/util/nexus';
 import styles from './styles.module.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -16,15 +19,16 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 type Props = {
-  url: string;
-  type?: string;
+  distribution: Distribution;
 };
 
 const options = {
   standardFontDataUrl: '/standard_fonts/',
 };
 
-export default function PDFViewer({ url, type }: Props) {
+type Distribution = { '@id': string; about: string };
+
+export default function PDFViewer({ distribution }: Props) {
   const [totalPages, setNumPages] = useState<number>();
   const token = useAccessToken();
 
@@ -32,26 +36,29 @@ export default function PDFViewer({ url, type }: Props) {
     setNumPages(numPages);
   };
 
-  const pdfFile = useMemo(
-    () => ({
-      url,
-      httpHeaders: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+  const parts = distribution.about.split('/');
+  const type = parts[parts.length - 1] as AnalysisType;
+
+  const pdfFile = {
+    url: composeUrl('resource', distribution['@id'], {
+      org: nexus.org,
+      project: nexus.project,
     }),
-    [url, token]
-  );
+    httpHeaders: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
   return (
     <div className="mt-4 flex flex-col items-center">
       {type && (
-        <h2 className="mb-6 w-full bg-neutral-1 p-3 text-center text-2xl font-bold capitalize text-primary-8">
-          {type}
+        <h2 className="mb-6 w-full bg-neutral-1 p-3 text-center text-2xl font-bold text-primary-8">
+          {typeLabel(type)}
         </h2>
       )}
-      {type === AnalysisType.Thumbnail ? (
-        <ImageViewer contentUrl={url} />
+      {type === 'thumbnail' ? (
+        <ImageViewer contentUrl={distribution['@id']} />
       ) : (
         <Document
           options={options}
@@ -60,7 +67,7 @@ export default function PDFViewer({ url, type }: Props) {
           className={classNames('w-full', styles.pdf)}
         >
           {Array.from(new Array(totalPages), (el, index) => (
-            <Fragment key={url}>
+            <Fragment key={distribution['@id']}>
               <Page
                 key={`page_${index + 1}`}
                 pageNumber={index + 1}
@@ -81,29 +88,31 @@ export default function PDFViewer({ url, type }: Props) {
 }
 
 function ImageViewer({ contentUrl }: { contentUrl: string }) {
-  const [thumbnail, setImage] = useState<string | null>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    (async () => {
+    const fetch = async () => {
       const session = await getSession();
       if (!session) {
         return null;
       }
       setLoading(true);
-      fetch(contentUrl, {
-        method: 'GET',
-        headers: createHeaders(session.accessToken),
-      })
-        .then((response) => {
-          return response.blob();
-        })
-        .then((blob) => {
-          setImage(URL.createObjectURL(blob));
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    })();
+
+      const res = await fetchResourceByIdRaw(contentUrl, session, {
+        org: nexus.org,
+        project: nexus.project,
+      });
+
+      const blob = await res.blob();
+      setThumbnail(URL.createObjectURL(blob));
+    };
+
+    try {
+      fetch();
+    } finally {
+      setLoading(false);
+    }
   }, [contentUrl]);
 
   if (thumbnail) {
