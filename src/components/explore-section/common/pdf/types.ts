@@ -2,20 +2,15 @@ import { FileDistribution } from '@/types/explore-section/delta-properties';
 
 export type AnalysisPDF = FileDistribution & { name?: string };
 
-export enum AnalysisType {
-  All = 'all',
-  Traces = 'traces',
-  Scores = 'scores',
-  Distribution = 'distribution',
-  Other = 'other',
-  Custom = 'custom',
-  Thumbnail = 'thumbnail',
-}
+export const analysisTypes = [
+  'all',
+  'traces',
+  'scores',
+  'thumbnail',
+  'optimisation',
+  'parameters_distribution',
+  'evo_parameter_density',
+  'currentscape',
+] as const;
 
-export enum AnalysisFileType {
-  Traces = 'traces.pdf',
-  Scores = 'scores.pdf',
-  Distribution = 'distribution.pdf',
-  Thumbnail = 'thumbnail.png',
-  Currentscape = 'currentscape.pdf',
-}
+export type AnalysisType = (typeof analysisTypes)[number]; // 'all' | 'traces' | 'scores' ...

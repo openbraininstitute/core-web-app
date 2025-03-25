@@ -38,6 +38,10 @@ export type EModelResource = ModelResource & {
   seed: number;
   subject: ModelSubject;
   score?: number;
+  image: {
+    '@id': string;
+    about: string;
+  }[];
 };
 
 export type SynaptomeModelResource = EntityResource & {
