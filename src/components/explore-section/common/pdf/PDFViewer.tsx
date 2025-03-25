@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Divider, Skeleton, Empty } from 'antd';
 import { AnalysisType, typeLabel } from './types';
@@ -37,18 +37,21 @@ export default function PDFViewer({ distribution }: Props) {
   };
 
   const parts = distribution.about.split('/');
-  const type = parts[parts.length - 1] as AnalysisType;
+  const type = parts.at(-1) as AnalysisType;
 
-  const pdfFile = {
-    url: composeUrl('resource', distribution['@id'], {
-      org: nexus.org,
-      project: nexus.project,
+  const pdfFile = useMemo(
+    () => ({
+      url: composeUrl('resource', distribution['@id'], {
+        org: nexus.org,
+        project: nexus.project,
+      }),
+      httpHeaders: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
     }),
-    httpHeaders: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  };
+    [token]
+  );
 
   return (
     <div className="mt-4 flex flex-col items-center">
