@@ -130,7 +130,7 @@ export function Form({ onPrevious }: Props) {
           true,
           'subscription-payment-success'
         );
-        delay(() => navigate('/app/virtual-lab/account/subscription'), 2000);
+        delay(() => navigate('/app/virtual-lab/account/invoices'), 2000);
       }
     });
   };
