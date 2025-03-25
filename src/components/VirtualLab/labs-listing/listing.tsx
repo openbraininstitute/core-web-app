@@ -1,8 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { PlusOutlined } from '@ant-design/icons';
-
 import Item from '@/components/VirtualLab/item/vlab-item';
 import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
@@ -60,17 +57,6 @@ export default function VirtualLabDashboard({ virtualLab, pendingLabs, membershi
             </div>
           )}
         </div>
-      </div>
-      <div className="ml-auto mt-4 flex items-center gap-3 pr-3">
-        <Link
-          className="rounded-none border-none font-bold"
-          href="/app/virtual-lab/lab/project/create"
-        >
-          <div className="group flex h-12 items-center justify-between gap-8 bg-white px-4 py-2 text-primary-9">
-            <span>Create project</span>
-            <PlusOutlined className="text-lg group-hover:scale-105" />
-          </div>
-        </Link>
       </div>
     </div>
   );
