@@ -87,7 +87,7 @@ export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer  ${session?.accessToken}`,
+      Authorization: `Bearer ${session?.accessToken}`,
     },
   });
 
