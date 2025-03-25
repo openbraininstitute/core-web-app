@@ -1,12 +1,13 @@
 import { Suspense, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { Button } from 'antd';
 import Link from 'next/link';
 import kebabCase from 'lodash/kebabCase';
-import Icon, { ArrowRightOutlined, UserOutlined, HomeOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
+import Icon, { UserOutlined, HomeOutlined } from '@ant-design/icons';
 
 import { classNames, signOut } from '@/util/utils';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
+import UserMenu from '@/components/user-menu';
 
 type TDefaulNavigation = {
   title: string;
@@ -25,8 +26,6 @@ type ApplicationSidebarHeaderProps = {
 type P = { expanded: boolean };
 type ApplicationSidebarProps = {
   title: ({ expanded }: P) => React.ReactNode;
-  account?: (({ expanded }: P) => React.ReactNode) | null;
-  navigation?: (({ expanded }: P) => React.ReactNode) | null;
   children?: ({ expanded }: P) => React.ReactNode;
 };
 
@@ -43,24 +42,6 @@ const DEFAULT_NAVIGATION: Array<TDefaulNavigation> = [
     url: '/app/virtual-lab',
     icon: HomeOutlined,
     showIconOnCollapse: true,
-  },
-  {
-    url: '/app/explore/interactive',
-    title: 'Explore',
-    icon: ArrowRightOutlined,
-    bgcolor: 'bg-primary-8',
-  },
-  {
-    url: '/app/main?tab=build',
-    title: 'Build',
-    icon: ArrowRightOutlined,
-    bgcolor: 'bg-primary-8',
-  },
-  {
-    url: '/app/main?tab=simulate',
-    title: 'Simulate',
-    icon: ArrowRightOutlined,
-    bgcolor: 'bg-primary-8',
   },
 ];
 
@@ -203,12 +184,7 @@ function ApplicationSidebarHeader({
   );
 }
 
-export default function ApplicationSidebar({
-  title,
-  account = DefaultAccountPanel,
-  navigation = AppNavigation,
-  children,
-}: ApplicationSidebarProps) {
+export default function ApplicationSidebar({ title, children }: ApplicationSidebarProps) {
   const ref = useRef<HTMLDivElement>(null);
   const expanded = false;
   const toggleExpand = () => {};
@@ -227,7 +203,7 @@ export default function ApplicationSidebar({
     <div
       ref={ref}
       className={classNames(
-        'relative h-screen bg-primary-9 text-light transition-transform ease-in-out',
+        'relative h-screen w-[45px] bg-primary-9 text-light transition-transform ease-in-out',
         expanded
           ? 'flex w-80 flex-col items-start justify-start px-5 shadow-[0px_5px_15px_rgba(0,0,0,.35)]'
           : 'flex w-10 flex-col items-center justify-between transition-transform ease-in-out will-change-auto'
@@ -237,11 +213,24 @@ export default function ApplicationSidebar({
       <div className="primary-scrollbar flex h-[calc(100%-410px)] w-full flex-col items-start justify-start gap-y-1 overflow-y-auto">
         <Suspense>{children?.({ expanded })}</Suspense>
       </div>
-      {(account || navigation) && (
+      <div className="mb-2 flex flex-col items-center justify-center">
+        <UserMenu>
+          <UserOutlined className="group-hover:text-white" />
+        </UserMenu>
+        <Link
+          href="/app/virtual-lab"
+          className={classNames(
+            'group inline-flex w-full flex-row items-center justify-between px-3 py-3'
+          )}
+        >
+          <HomeOutlined className="cursor-pointer text-primary-2 group-hover:text-white" />
+        </Link>
+      </div>
+      {/* {(account || navigation) && (
         <div className="absolute bottom-0 z-20 mb-4 mt-auto flex w-[calc(100%-2.5rem)] flex-col items-center justify-center bg-primary-9">
           {navigation?.({ expanded })}
         </div>
-      )}
+      )} */}
     </div>
   );
 }

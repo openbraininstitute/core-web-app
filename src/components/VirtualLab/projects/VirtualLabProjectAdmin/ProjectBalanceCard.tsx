@@ -1,10 +1,10 @@
 import { ProjectBalance } from '@/types/accounting';
-import { Project } from '@/types/virtual-lab/projects';
 import {
   projectBalanceAtomFamily,
   virtualLabProjectDetailsAtomFamily,
 } from '@/state/virtual-lab/projects';
 import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
+import { Project } from '@/api/virtual-lab-svc/queries/types';
 
 export function ProjectBalanceCard({
   project,

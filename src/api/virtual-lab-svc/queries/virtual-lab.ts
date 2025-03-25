@@ -21,9 +21,6 @@ const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
 export async function checkVirtualLabExists({ name }: { name: string }): Promise<boolean | null> {
   try {
     const session = await getSession();
-    if (!session?.accessToken) {
-      throw new Error('User session not found. Please log in.');
-    }
     const response = await fetch(`${BASE_URL}/_check?q=${encodeURIComponent(name)}`, {
       method: 'GET',
       headers: {
@@ -33,7 +30,7 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
     });
 
     if (!response.ok) {
-      throw new Error('validating virtual lab name failed');
+      throw new Error('validating virtual lab name failed', { cause: await response.json() });
     }
 
     const result = (await response.json()) as VirtualLabExistsVerificationResponse;
@@ -65,7 +62,7 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
     });
 
     if (!response.ok) {
-      throw new Error(`creating virtual lab failed ${response.status}`);
+      throw new Error(`creating virtual lab failed`, { cause: await response.json() });
     }
 
     const result: VirtualLabResponse = await response.json();
@@ -90,14 +87,39 @@ export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer  ${session?.accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`listing virtual labs failed`, { cause: await response.json() });
+  }
+
+  const result: VirtualLabListResponse = await response.json();
+  return result;
+}
+
+/**
+ * Get details for a single virtual lab.
+ *
+ * @param {string} id - The ID of the virtual lab to retrieve
+ * @returns {Promise<VirtualLabResponse>} - API response with the virtual lab details
+ * @throws {Error} - Throws an error if the request fails or the response is invalid
+ */
+export async function getVirtualLab(id: string): Promise<VirtualLabResponse> {
+  const session = await getSession();
+  const response = await fetch(`${BASE_URL}/${id}`, {
+    method: 'get',
+    headers: {
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
     },
   });
 
   if (!response.ok) {
-    throw new Error(`listing virtual labs failed ${response.status}`);
+    throw new Error(`getting virtual lab failed`, { cause: await response.json() });
   }
 
-  const result: VirtualLabListResponse = await response.json();
+  const result: VirtualLabResponse = await response.json();
   return result;
 }

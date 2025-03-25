@@ -10,8 +10,6 @@ import { CollapseProps } from 'antd/lib/collapse/Collapse';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQueryState } from 'nuqs';
 
-import Billing from '../Billing';
-import ProjectsPanel from './ProjectsPanel';
 import FormPanel, { renderInput, renderTextArea } from './FormPanel';
 import DangerZonePanel from './DangerZonePanel';
 import CreditManagement from './CreditManagement';
@@ -19,16 +17,16 @@ import SpendingsPanel from './Spendings';
 
 import BuyCredits from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/buy-credits';
 import PurchasesHistory from '@/components/VirtualLab/VirtualLabSettingsComponent/purchases-history';
+import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
+import Collapse, { ExpandIcon } from '@/components/Collapse';
 import { deleteVirtualLab } from '@/services/virtual-lab/labs';
 import {
   virtualLabBalanceAtomFamily,
   virtualLabDetailAtomFamily,
   virtualLabsOfUserAtom,
 } from '@/state/virtual-lab/lab';
-import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
 import { classNames, VALID_EMAIL_REGEXP } from '@/util/utils';
-import { VirtualLab } from '@/types/virtual-lab/lab';
-import Collapse, { ExpandIcon } from '@/components/Collapse';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
 
 function VirtualLabBlock({
@@ -138,10 +136,10 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
               <FormPanel
                 className="grid grid-cols-2 gap-x-6"
                 initialValues={{
-                  name: virtualLabDetail.data?.name,
-                  reference_email: virtualLabDetail.data?.reference_email,
-                  entity: virtualLabDetail.data?.entity,
-                  description: virtualLabDetail.data?.description,
+                  name: virtualLabDetail.data?.virtual_lab.name,
+                  reference_email: virtualLabDetail.data?.virtual_lab.reference_email,
+                  entity: virtualLabDetail.data?.virtual_lab.entity,
+                  description: virtualLabDetail.data?.virtual_lab.description,
                 }}
                 items={[
                   {
@@ -189,24 +187,6 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     [updateVirtualLab, virtualLabDetail]
   );
 
-  const budget = useMemo(
-    () => ({
-      key: 'project-budget',
-      children: <ProjectsPanel expandIcon={ExpandIcon} virtualLabId={id} />,
-      label: 'Budgets',
-    }),
-    [id]
-  );
-
-  const billing = useMemo(
-    () => ({
-      key: 'billing',
-      children: <Billing virtualLabId={id} />,
-      label: 'Billing',
-    }),
-    [id]
-  );
-
   const dangerZone = useMemo(
     () =>
       virtualLabDetail.state === 'hasData' && userIsAdmin
@@ -215,7 +195,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
             children: (
               <DangerZonePanel
                 onClick={onDeleteVirtualLab}
-                name={virtualLabDetail.data?.name || ''}
+                name={virtualLabDetail.data?.virtual_lab.name || ''}
               />
             ),
             label: 'Danger Zone',

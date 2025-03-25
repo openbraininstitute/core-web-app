@@ -47,7 +47,7 @@ export default function Main() {
         }}
       />
       <div className="fixed left-0 z-20">
-        <ApplicationSidebar title={MainSidebarHeader} account={null} navigation={null}>
+        <ApplicationSidebar title={MainSidebarHeader}>
           {({ expanded }) => <MainNavigation {...{ expanded }} />}
         </ApplicationSidebar>
       </div>

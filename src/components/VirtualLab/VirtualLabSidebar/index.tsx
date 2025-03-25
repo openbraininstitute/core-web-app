@@ -1,25 +1,30 @@
 'use client';
 
+import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { unwrap } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
 
-import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
-import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import VerticalLinks from '@/components/VerticalLinks';
-import { type LinkItemWithRequirements } from '@/types/virtual-lab/navigation';
+import { virtualLabStatsAtomFamily } from '@/state/virtual-lab/lab';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import { useUnwrappedValue } from '@/hooks/hooks';
-import { useIsVirtualLabAdmin } from '@/hooks/virtual-labs';
+import { type LinkItemWithRequirements } from '@/types/virtual-lab/navigation';
 
 export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabId: string }) {
+  const { data: session } = useSession();
   const currentPage = usePathname().split('/').pop();
-  const projects = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
-  const users = useUnwrappedValue(virtualLabMembersAtomFamily(virtualLabId))?.length;
+  const virtualLabStats = useAtomValue(
+    useMemo(() => unwrap(virtualLabStatsAtomFamily(virtualLabId)), [virtualLabId])
+  );
 
-  const isAdmin = useIsVirtualLabAdmin({ virtualLabId });
-
+  const isAdmin = session?.user.id
+    ? virtualLabStats?.data?.admin_users.includes(session?.user.id)
+    : false;
+  const totalMembers = virtualLabStats?.data?.total_members;
+  const totalProjects = virtualLabStats?.data?.total_projects;
   const linkItemFilter = (link: LinkItemWithRequirements) =>
     link.requires?.userRole === 'admin' ? isAdmin : true;
-
   const linkItems: LinkItemWithRequirements[] = [
     { key: LinkItemKey.Lab, content: 'Virtual lab overview', href: 'overview' },
     {
@@ -27,7 +32,9 @@ export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabI
       content: (
         <div className="flex justify-between">
           <span>Projects</span>
-          <span className="font-normal text-primary-3">{projects?.results.length}</span>
+          {Boolean(totalProjects) && (
+            <span className="font-normal text-primary-3">{totalProjects}</span>
+          )}
         </div>
       ),
       href: 'projects',
@@ -37,8 +44,8 @@ export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabI
       content: (
         <div className="flex justify-between">
           <span>Team</span>
-          {users !== undefined && (
-            <span className="font-normal text-primary-3">{`${users} member${users !== 1 ? 's' : ''}`}</span>
+          {Boolean(totalMembers) && (
+            <span className="font-normal text-primary-3">{`${totalMembers} member${totalMembers !== 1 ? 's' : ''}`}</span>
           )}
         </div>
       ),
@@ -46,9 +53,7 @@ export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabI
     },
     { key: LinkItemKey.Admin, content: 'Admin', href: 'admin', requires: { userRole: 'admin' } },
   ];
-
   const compliantLinkItems = linkItems.filter(linkItemFilter);
-
   return (
     <div className="mr-5 flex w-full flex-col gap-5">
       <VerticalLinks links={compliantLinkItems} currentPage={currentPage} />

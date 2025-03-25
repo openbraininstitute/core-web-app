@@ -10,10 +10,11 @@ export type Props = {
   active?: boolean;
   title: ReactNode;
   icon?: JSX.Element;
+  count?: number;
   disabled?: boolean;
 };
 
-export default function Item({ title, url, icon, disabled, active = false }: Props) {
+export default function Item({ title, url, icon, disabled, count, active = false }: Props) {
   return (
     <Link
       href={url}
@@ -29,6 +30,9 @@ export default function Item({ title, url, icon, disabled, active = false }: Pro
     >
       {icon}
       {title}
+      {count && (
+        <span className="ml-auto font-bold text-primary-3 group-hover:text-gray-400">{count}</span>
+      )}
     </Link>
   );
 }

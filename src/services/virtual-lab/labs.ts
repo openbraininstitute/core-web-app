@@ -1,29 +1,10 @@
 import { virtualLabApi } from '@/config';
-import { VirtualLab, VirtualLabResponse } from '@/types/virtual-lab/lab';
 import { VirtualLabBalanceResponse, VirtualLabJobReportsResponse } from '@/types/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-import { UsersResponse } from '@/types/virtual-lab/members';
+
 import { assertApiResponse } from '@/util/utils';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
-
-export async function getVirtualLabDetail(id: string): Promise<VirtualLabResponse> {
-  const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs/${id}`);
-
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-  return response.json();
-}
-
-export async function getVirtualLabUsers(virtualLabId: string): Promise<UsersResponse> {
-  const response = await authFetchRetryOnError(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/users`
-  );
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-  return response.json();
-}
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 export async function getVirtualLabsOfUser(): Promise<
   VlmResponse<VirtualLabAPIListData<VirtualLab>>

@@ -1,5 +1,7 @@
 import SanityClient from 'next-sanity-client';
+
 import tiersQuery from './tiers.query.groq';
+
 import { ContentForPricing } from '@/components/LandingPage/content/pricing';
 
 const client = new SanityClient({

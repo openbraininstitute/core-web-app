@@ -1,42 +1,54 @@
 'use client';
 
-import { Fragment } from 'react';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useAtomValue } from 'jotai';
+import { Fragment } from 'react';
 
-import Item, { Props } from '@/components/VirtualLab/side-bar/item';
+import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import Base from '@/components/VirtualLab/side-bar/base';
+import { userStatsAtom } from '@/state/virtual-lab/lab';
 
-const noLabsMenuItems: Array<Props> = [
+const noLabsMenuItems: Array<ItemProps> = [
   {
-    url: '/app/virtual-lab/lab/',
+    url: '/app/virtual-lab/public-projects',
     title: 'Public projects',
-    disabled: true,
+    disabled: false,
   },
 ];
 
-const withLabsMenuItems: Array<Props> = [
+const withLabsMenuItems: Array<ItemProps> = [
   {
     url: '/app/virtual-lab',
     title: 'Virtual labs',
   },
   {
     url: '/app/virtual-lab/public-projects',
-    title: 'Public projects',
-    disabled: true,
+    title: 'Public project',
+    disabled: false,
   },
 ];
 
-export default function SideBar({ labsCount }: { labsCount: number }) {
+export default function SideBar() {
   const path = usePathname();
+  const userStats = useAtomValue(userStatsAtom);
+  const labsCount = userStats?.data?.total_labs;
+
   return (
     <Base>
       <nav className="flex max-h-max flex-1 flex-col py-4">
         <div className="mt-20 border border-primary-5">
-          {labsCount >= 1 ? (
+          {labsCount && labsCount >= 1 ? (
             <Fragment key="labs">
               {withLabsMenuItems.map(({ url, title, disabled }) => (
-                <Item key={url} url={url} title={title} active={path === url} disabled={disabled} />
+                <Item
+                  key={url}
+                  url={url}
+                  title={title}
+                  active={path === url}
+                  disabled={disabled}
+                  count={url === '/app/virtual-lab' ? labsCount : undefined}
+                />
               ))}
             </Fragment>
           ) : (
