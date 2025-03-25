@@ -39,9 +39,11 @@ export default function PDFViewer({ distribution }: Props) {
   const parts = distribution.about.split('/');
   const type = parts.at(-1) as AnalysisType;
 
+  const id = distribution['@id'];
+
   const pdfFile = useMemo(
     () => ({
-      url: composeUrl('resource', distribution['@id'], {
+      url: composeUrl('resource', id, {
         org: nexus.org,
         project: nexus.project,
       }),
@@ -50,7 +52,7 @@ export default function PDFViewer({ distribution }: Props) {
         Authorization: `Bearer ${token}`,
       },
     }),
-    [token]
+    [token, id]
   );
 
   return (
