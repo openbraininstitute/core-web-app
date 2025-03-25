@@ -37,8 +37,8 @@ export function UsersHorizontalList({ virtualLabId, projectId }: UsersHorizontal
   if (users.state === 'hasData') {
     return (
       <div className="flex-no-wrap horizontal-thin-scrollbar flex items-center gap-4 overflow-x-auto overflow-y-hidden pb-4">
-        {users.data &&
-          sortBy(users.data, ['role']).map((user, indx) => {
+        {users.data?.data?.users &&
+          sortBy(users.data?.data?.users, ['role']).map((user, indx) => {
             return (
               <MemberAvatar
                 key={user.id ?? user.email}

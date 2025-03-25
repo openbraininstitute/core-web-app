@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import { Metadata } from 'next';
 
 import {
@@ -7,10 +6,7 @@ import {
   FreeSubscriptionStatus,
   NoSubscriptionFound,
 } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
-import {
-  FreeSubscriptionFlow,
-  PaidSubscriptionFlow,
-} from '@/components/VirtualLab/create-entity-flows/subscription/index';
+import { ChangeTier } from '@/components/VirtualLab/create-entity-flows/subscription/index';
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { tryCatch } from '@/api/utils';
 
@@ -22,7 +18,10 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const { data, error } = await tryCatch(getUserActiveSubscription());
+  const { data, error } = await tryCatch(getUserActiveSubscription(), undefined, {
+    section: 'subscription-home-page',
+    feature: 'get-user-active-subscription',
+  });
 
   if (error) {
     return (
@@ -38,16 +37,13 @@ export default async function Page() {
   return (
     <div className="px-5">
       {data?.subscription.type === 'free' ? (
-        <Fragment key="free-status">
-          <FreeSubscriptionStatus />
-          <FreeSubscriptionFlow />
-        </Fragment>
+        <FreeSubscriptionStatus />
       ) : (
-        <Fragment key="paid-status">
-          <PaidSubscriptionStatus key={data.subscription?.id} data={data} />
-          <PaidSubscriptionFlow data={data} />
-        </Fragment>
+        <PaidSubscriptionStatus key={data.subscription?.id} data={data} />
       )}
+      <div className="w-full items-center justify-items-end">
+        <ChangeTier />
+      </div>
     </div>
   );
 }

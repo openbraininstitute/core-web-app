@@ -8,7 +8,10 @@ import { tryCatch } from '@/api/utils';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { data: result, error } = await tryCatch(getUserProfile());
+  const { data: result, error } = await tryCatch(getUserProfile(), undefined, {
+    section: 'profile-page',
+    feature: 'get-user-profile',
+  });
   if (error) {
     return {
       title: 'Profile',
@@ -22,7 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  const { data: result, error } = await tryCatch(getUserProfile());
+  const { data: result, error } = await tryCatch(getUserProfile(), undefined, {
+    section: 'profile-page',
+    feature: 'get-user-profile',
+  });
   if (error) {
     return <ProfileError />;
   }

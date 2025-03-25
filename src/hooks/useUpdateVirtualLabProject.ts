@@ -3,7 +3,7 @@ import { useSetAtom } from 'jotai';
 
 import { patchProject } from '@/services/virtual-lab/projects';
 import { virtualLabProjectDetailsAtomFamily } from '@/state/virtual-lab/projects';
-import { VirtualLab } from '@/types/virtual-lab/lab';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 export default function useUpdateProject(virtualLabId: string, projectId: string) {
   const setProjectDetails = useSetAtom(

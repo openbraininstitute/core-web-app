@@ -36,7 +36,7 @@ export function useIsVirtualLabAdmin({ virtualLabId }: { virtualLabId: string })
     return false;
   }
 
-  const currentLabUser = virtualLabUsers.find(
+  const currentLabUser = virtualLabUsers.data?.users.find(
     (virtualLabUser) => virtualLabUser.id === session.user.id
   );
 
@@ -71,7 +71,7 @@ export function useIsProjectAdmin({
     return false;
   }
 
-  const currentLabUser = virtualLabUsers.find(
+  const currentLabUser = virtualLabUsers.data?.users.find(
     (virtualLabUser) => virtualLabUser.id === session.user.id
   );
 

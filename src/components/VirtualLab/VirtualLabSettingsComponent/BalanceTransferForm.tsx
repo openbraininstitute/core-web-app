@@ -23,7 +23,9 @@ export default function BalanceTransferForm({
   onClose: () => void;
   onTransferSuccess: () => void;
 }) {
-  const projectsObj = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
+  const projectsObj = useUnwrappedValue(
+    virtualLabProjectsAtomFamily({ virtualLabId, size: 20, page: 1 })
+  );
   const virtualLabDetails = useUnwrappedValue(virtualLabDetailAtomFamily(virtualLabId));
   const virtualLabBalance = useLastTruthyValue(virtualLabBalanceAtomFamily({ virtualLabId }));
 
@@ -64,13 +66,13 @@ export default function BalanceTransferForm({
     onClose();
   };
 
-  const project = projectsObj?.results?.find((proj) => proj.id === projectId);
+  const project = projectsObj?.data?.results?.find((proj) => proj.id === projectId);
   const projectBalance = virtualLabBalance?.data.projects?.find((p) => p.proj_id === projectId);
 
   const virtualLabLabel = (
     <>
       <span className="text-xl font-bold">Virtual Lab</span> <br />
-      <span>{virtualLabDetails?.name ?? ''}</span>
+      <span>{virtualLabDetails?.virtual_lab.name ?? ''}</span>
     </>
   );
   const projectLabel = (

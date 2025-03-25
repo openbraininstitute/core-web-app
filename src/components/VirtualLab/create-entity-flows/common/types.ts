@@ -1,4 +1,4 @@
-import { Role } from '@/types/virtual-lab/members';
+import { Role } from '@/api/virtual-lab-svc/queries/types';
 
 export const MemberRoleMap = {
   member: 'member',
