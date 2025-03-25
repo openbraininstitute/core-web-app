@@ -26,7 +26,7 @@ export function useServiceAiAgentThread(): [string | undefined, () => void] {
         refCurrentThreadId.current = data.threadId;
       })
       .catch(logError);
-  }, [accessToken, user]);
+  }, [accessToken, user, virtualLabId, projectId]);
   React.useEffect(() => {
     if (!accessToken) return;
 
