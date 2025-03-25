@@ -2,37 +2,42 @@ import { RefObject } from 'react';
 import { PrimitiveAtom, atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh, atomWithReset } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
+import isNil from 'lodash/isNil';
 
 import sessionAtom from '@/state/session';
-import {
-  getVirtualLabDetail,
-  getVirtualLabUsers,
-  getVirtualLabsOfUser,
-  getVirtualLabAccountBalance,
-} from '@/services/virtual-lab/labs';
-import { VirtualLab } from '@/types/virtual-lab/lab';
+import { getVirtualLabsOfUser, getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
-import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { getVirtualLabPaymentMethods } from '@/services/virtual-lab/billing';
 import { PaymentMethod } from '@/types/virtual-lab/billing';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
+import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
+import {
+  MembersResponse,
+  VirtualLab,
+  VirtualLabResponseData,
+  VlmUserStatsResponse,
+  VlmVirtualLabStatsResponse,
+} from '@/api/virtual-lab-svc/queries/types';
+import { getUserStats, getVirtualLabStats } from '@/api/virtual-lab-svc/queries/stats';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { tryCatch } from '@/api/utils';
 
 export const virtualLabDetailAtomFamily = atomFamily<
   string | undefined,
-  PrimitiveAtom<Promise<VirtualLab | null>>
->((virtualLabId) =>
+  PrimitiveAtom<Promise<VirtualLabResponseData | null>>
+>((virtualLabId?: string) =>
   atomWithDefault(async () => {
-    if (!virtualLabId) return null;
-    const response = await getVirtualLabDetail(virtualLabId);
-    return response?.data.virtual_lab ?? null;
+    if (isNil(virtualLabId)) return null;
+    const response = await getVirtualLab(virtualLabId);
+    return response.data;
   })
 );
 
 export const virtualLabMembersAtomFamily = atomFamily((virtualLabId?: string) =>
-  atomWithRefresh<Promise<VirtualLabMember[] | null>>(async () => {
+  atomWithRefresh<Promise<MembersResponse | null>>(async () => {
     if (!virtualLabId) return null;
-    const response = await getVirtualLabUsers(virtualLabId);
-    return response.data.users;
+    const response = await listVirtualLabMembers({ virtualLabId });
+    return response;
   })
 );
 
@@ -109,3 +114,18 @@ export const virtualLabBalanceAtomFamily = readAtomFamilyWithExpiration(
     }),
   { ttl: 20_000, areEqual: isEqual }
 );
+
+export const virtualLabStatsAtomFamily = atomFamily((virtualLabId: string) =>
+  atomWithRefresh<Promise<VlmVirtualLabStatsResponse | null>>(async () => {
+    const { data } = await tryCatch(getVirtualLabStats(virtualLabId), undefined, {
+      section: 'virtual-lab-stats-family',
+      feature: 'get-virtual-lab-stats',
+    });
+    return data;
+  })
+);
+
+export const userStatsAtom = atomWithRefresh<Promise<VlmUserStatsResponse | null>>(async () => {
+  const { data } = await tryCatch(getUserStats());
+  return data;
+});

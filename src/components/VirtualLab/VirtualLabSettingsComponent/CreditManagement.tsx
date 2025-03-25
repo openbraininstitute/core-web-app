@@ -2,14 +2,16 @@ import { useCallback, useMemo } from 'react';
 import { useSetAtom } from 'jotai';
 import { RetweetOutlined } from '@ant-design/icons';
 
+import useBalanceTransferModal from '@/hooks/virtual-labs/project';
 import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 import { refreshBalanceAtom, virtualLabBalanceAtomFamily } from '@/state/virtual-lab/lab';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { ProjectBalance } from '@/types/accounting';
-import useBalanceTransferModal from '@/hooks/virtual-labs/project';
 
 export default function CreditManagement({ virtualLabId }: { virtualLabId: string }) {
-  const projectsObj = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
+  const projectsObj = useUnwrappedValue(
+    virtualLabProjectsAtomFamily({ virtualLabId, page: 1, size: 20 })
+  );
   const virtualLabBalance = useLastTruthyValue(virtualLabBalanceAtomFamily({ virtualLabId }));
   const refreshBalance = useSetAtom(refreshBalanceAtom);
   const { createModal, contextHolder } = useBalanceTransferModal();
@@ -66,7 +68,7 @@ export default function CreditManagement({ virtualLabId }: { virtualLabId: strin
         <div className="w-48 flex-none">Current credit balance</div>
         <div className="w-32 flex-none">Actions</div>
       </div>
-      {projectsObj?.results.map((project) => (
+      {projectsObj.data?.results.map((project) => (
         <div
           key={project.id}
           className="mt-4 flex gap-x-4 border border-primary-7 px-8 py-5 text-xl text-white"

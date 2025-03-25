@@ -6,8 +6,10 @@ import { Button, Tooltip } from 'antd';
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
 import kebabCase from 'lodash/kebabCase';
 import toUpper from 'lodash/toUpper';
+import noop from 'lodash/noop';
 
 import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
+import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import {
   ExtendedTier,
   flowAtom,
@@ -19,30 +21,34 @@ import {
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
-  canSelect?: boolean;
+  subscriptionData: UserActiveSubscriptionResponse;
 };
 
 type TiersComparisonPros = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
-  canSelect?: boolean;
   tiers: Array<ExtendedTier>;
   onSelectPremiumTier: () => void;
+  onSelectFree: () => void;
+  subscriptionData: UserActiveSubscriptionResponse;
 };
 
 function TiersComparison({
   currentTier,
-  canSelect,
   tiers,
   onSelectPremiumTier,
+  onSelectFree,
+  subscriptionData,
 }: TiersComparisonPros) {
-  const [{ interval, currency, tier }, updateFlowState] = useAtom(flowAtom);
+  const [{ interval, currency }, updateFlowState] = useAtom(flowAtom);
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
   const onTierClick = (t: ExtendedTier) => () => {
-    if (t.title === 'Pro') updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
-    if (t.title === 'Premium') onSelectPremiumTier();
+    if (t.title === 'Pro' && t.app_id) {
+      updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
+    }
   };
 
   const getCurrencySymbol = (c: string) => {
@@ -155,25 +161,23 @@ function TiersComparison({
     <div
       data-testid="tiers-list"
       id="tiers-list"
-      className="relative flex h-full max-h-full w-full flex-col overflow-hidden bg-primary-9 p-6 text-white"
+      className="relative flex h-full max-h-full w-full flex-col overflow-hidden bg-primary-9 px-6 py-2 text-white"
     >
       <div
         id="tier-highlighter"
-        className="pointer-events-none absolute bottom-[10px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6"
+        className="pointer-events-none absolute bottom-[50px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6"
       >
         <div />
         {tiers.map((t) => {
-          const isSelected =
-            (tier && t.app_id === tier?.app_id) ||
-            currentTier?.toLowerCase() === t.title.toLowerCase();
-          const isHovered = hoveredTier === t.id;
+          const isSelected = currentTier?.toLowerCase() === t.title.toLowerCase();
+          const isHovered = hoveredTier === t.app_id;
 
           return (
             <div
               key={`${t.id}-bg`}
               className={classNames(
                 'rounded-lg',
-                isSelected && 'bg-primary-8/90',
+                isSelected && 'border-2 border-primary-3 bg-primary-8/90',
                 isHovered && !isSelected && 'bg-primary-5/20'
               )}
             />
@@ -183,7 +187,7 @@ function TiersComparison({
 
       <div
         id="tier-header"
-        className="sticky top-0 z-10 grid grid-cols-4 gap-6 bg-transparent pb-6"
+        className="sticky top-0 z-10 grid grid-cols-4 gap-6 bg-transparent pb-6 pt-4"
       >
         <div />
         {tiers.map((t) => {
@@ -191,7 +195,7 @@ function TiersComparison({
             <div
               key={`tier-btn${t.id}`}
               className="relative flex flex-col bg-transparent px-4"
-              onMouseEnter={() => setHoveredTier(t.id)}
+              onMouseEnter={() => setHoveredTier(t.app_id)}
               onMouseLeave={() => setHoveredTier(null)}
               data-testid="tier-header"
             >
@@ -265,7 +269,7 @@ function TiersComparison({
       </div>
 
       {/* Scrollable content section */}
-      <div id="tier-details-container" className="flex-1 overflow-y-auto">
+      <div id="tier-details-container" className="no-scrollbar flex-1 overflow-y-auto">
         {allCategories.map((category) => (
           <div id="tier-details" key={`${kebabCase(category.title)}`} className="relative mt-8">
             <h3 className="mb-4 uppercase text-primary-4">
@@ -288,7 +292,7 @@ function TiersComparison({
                   <div
                     key={`${t.id}-${feature}`}
                     className="flex justify-start px-4"
-                    onMouseEnter={() => setHoveredTier(t.id)}
+                    onMouseEnter={() => setHoveredTier(t.app_id)}
                     onMouseLeave={() => setHoveredTier(null)}
                   >
                     {renderFeatureAvailability(
@@ -303,56 +307,72 @@ function TiersComparison({
         ))}
       </div>
 
-      {canSelect && (
-        <div
-          id="tier-buttons-container"
-          className="sticky bottom-0 z-10 grid grid-cols-4 gap-6 bg-transparent pb-2 pt-4"
-        >
-          <div />
-          {tiers.map((t) => {
-            const isCurrentTier = currentTier?.toLowerCase() === t.title.toLowerCase();
-            const isFree = t.title === 'Free';
-            const isPro = t.title === 'Pro';
-            const isPremium = t.title === 'Premium';
-            const isHovered = hoveredTier === t.id;
-            if (isFree && !currentTier) return <div key={`button-${t.id}`} className="px-4" />;
-            return (
-              <div
-                key={`button-${t.id}`}
-                className="relative px-4"
-                onMouseEnter={() => setHoveredTier(t.id)}
-                onMouseLeave={() => setHoveredTier(null)}
+      <div
+        id="tier-buttons-container"
+        className="sticky bottom-0 z-10 grid grid-cols-4 gap-6 bg-transparent pt-4"
+      >
+        <div />
+        {tiers.map((t) => {
+          const isCurrentTier = currentTier?.toLowerCase() === t.title.toLowerCase();
+          const isCurrentTierPremium = currentTier?.toLowerCase() === 'premium';
+          const isFree = t.title === 'Free';
+          const isPro = t.title === 'Pro';
+          const isPremium = t.title === 'Premium';
+          const isHovered = hoveredTier === t.app_id;
+          if (isFree && isCurrentTier) return <div key="free-disabled" />;
+          if (isPro && isCurrentTier) return <div key="pro-disabled" />;
+
+          if (
+            subscriptionData?.subscription.canceled_at ||
+            subscriptionData?.subscription.cancel_at_period_end
+          ) {
+            if (isPro || isFree) return <div key="tier-disabled" />;
+          }
+          if (isCurrentTierPremium && isPro) return <div key="pro-disabled" />;
+
+          let controller = noop;
+          if (isFree) controller = onSelectFree;
+          if (isPro) controller = onTierClick(t);
+          if (isPremium) controller = onSelectPremiumTier;
+
+          return (
+            <div
+              key={`button-${t.app_id}`}
+              className="relative px-4"
+              onMouseEnter={() => setHoveredTier(t.app_id)}
+              onMouseLeave={() => setHoveredTier(null)}
+            >
+              <Button
+                className={classNames(
+                  'relative z-20 h-10 w-full rounded-none',
+                  'border-white bg-primary-9 text-white',
+                  isHovered && 'text-white hover:bg-primary-8 hover:!text-white'
+                )}
+                onClick={controller}
+                data-testid={`select-${t.title.toLowerCase()}-btn`}
               >
-                <Button
-                  className={classNames(
-                    'relative z-20 h-10 w-full rounded-none',
-                    'border-white bg-primary-9 text-white',
-                    isHovered && 'text-white hover:bg-primary-8 hover:!text-white'
-                  )}
-                  onClick={isPro ? onTierClick(t) : onSelectPremiumTier}
-                  disabled={isPro && !canSelect}
-                  data-testid={`select-${t.title.toLowerCase()}-btn`}
-                >
-                  {isFree && !isCurrentTier && 'Downgrade to Free'}
-                  {isPro && !isCurrentTier && 'Upgrade to Pro'}
-                  {isPremium && 'Contact Us'}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                {isFree && !isCurrentTier && 'Downgrade to Free'}
+                {isPro && !isCurrentTier && !isCurrentTierPremium && 'Upgrade to Pro'}
+                {isPremium && 'Contact Us'}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-export default function TiersList({ currentTier, canSelect }: Props) {
+export default function TiersList({ currentTier, subscriptionData }: Props) {
   const [loading, setLoading] = useState(true);
   const [tiers, setTiers] = useState<{ data: Array<ExtendedTier> } | { error: any }>({ data: [] });
   const [open, setOpen] = useState<boolean>(false);
+  const [openDowngrade, setOpenDowngrade] = useState<boolean>(false);
 
   const onSelectPremiumTier = () => setOpen(true);
   const onClosePremiumTier = () => setOpen(false);
+  const onDowngradeFreeClick = () => setOpenDowngrade(true);
+  const onDowngradeFreeClose = () => setOpenDowngrade(false);
 
   useEffect(() => {
     (async () => {
@@ -404,11 +424,13 @@ export default function TiersList({ currentTier, canSelect }: Props) {
     >
       <TiersComparison
         tiers={tiers.data}
-        canSelect={canSelect}
         currentTier={currentTier}
         onSelectPremiumTier={onSelectPremiumTier}
+        onSelectFree={onDowngradeFreeClick}
+        subscriptionData={subscriptionData}
       />
       <ContactUs isOpen={open} onClose={onClosePremiumTier} />
+      <DowngradeFree isOpen={openDowngrade} onClose={onDowngradeFreeClose} />
     </div>
   );
 }

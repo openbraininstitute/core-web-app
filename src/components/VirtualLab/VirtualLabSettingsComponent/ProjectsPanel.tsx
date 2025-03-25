@@ -86,7 +86,9 @@ export default function ProjectsPanel({
   expandIcon: CollapseProps['expandIcon'];
   virtualLabId: string;
 }) {
-  const virtualLabProjects = useAtomValue(loadable(virtualLabProjectsAtomFamily(virtualLabId)));
+  const virtualLabProjects = useAtomValue(
+    loadable(virtualLabProjectsAtomFamily({ virtualLabId, size: 20, page: 1 }))
+  );
 
   if (virtualLabProjects.state === 'loading') {
     return (
@@ -104,8 +106,9 @@ export default function ProjectsPanel({
     );
   }
 
-  const items = virtualLabProjects.data?.results.map((project) => ({
-    label: <ItemHeader budget={project.budget} key={project.id} name={project.name} />,
+  const items = virtualLabProjects.data?.data?.results.map((project) => ({
+    // @ts-expect-error
+    label: <ItemHeader budget={project.budget ?? 0} key={project.id} name={project.name} />,
     children: <ItemChildren />,
   }));
 

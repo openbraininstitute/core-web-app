@@ -23,7 +23,8 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   const setMEModelDetails = useSetAtom(meModelDetailsAtom);
   const setSelectedMModel = useSetAtom(selectedMModelIdAtom);
   const setSelectedEModel = useSetAtom(selectedEModelIdAtom);
-  const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }));
+  const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
+    ?.data?.users;
   const [isFormValid, setIsFormValid] = useState(false);
   const brainRegions = useAtomValue(brainRegionsWithRepresentationAtom);
   const setBrainRegion = useSetAtom(setSelectedBrainRegionAtomGetter('build'));

@@ -1,15 +1,18 @@
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
-import { Collapse, ConfigProvider, Spin } from 'antd';
 import { RightOutlined, ArrowRightOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Collapse, ConfigProvider, Spin } from 'antd';
+import { loadable } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
+
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { virtualLabsOfUserAtom } from '@/state/virtual-lab/lab';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { basePath } from '@/config';
 
 function VirtualLabProjects({ labId }: { labId: string }) {
-  const virtualLabProjectsLoadable = useAtomValue(loadable(virtualLabProjectsAtomFamily(labId)));
+  const virtualLabProjectsLoadable = useAtomValue(
+    loadable(virtualLabProjectsAtomFamily({ virtualLabId: labId, page: 1, size: 20 }))
+  );
 
   if (virtualLabProjectsLoadable.state === 'loading') {
     return <Spin indicator={<LoadingOutlined />} />;
@@ -17,12 +20,12 @@ function VirtualLabProjects({ labId }: { labId: string }) {
 
   if (
     virtualLabProjectsLoadable.state === 'hasData' &&
-    virtualLabProjectsLoadable.data?.results?.length
+    virtualLabProjectsLoadable.data?.data?.results?.length
   ) {
     return (
       <div className="w-[16.1rem]">
         <h1 className="text-md mb-2 font-thin uppercase text-primary-4">Projects</h1>
-        {virtualLabProjectsLoadable.data?.results.map((project) => (
+        {virtualLabProjectsLoadable.data?.data.results.map((project) => (
           <Link
             href={`${generateVlProjectUrl(labId, project.id)}/home`}
             key={project.id}

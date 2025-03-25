@@ -4,12 +4,14 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { ComponentType } from 'react';
 
-import { VirtualLabMember } from '@/types/virtual-lab/members';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import type { Member } from '@/api/virtual-lab-svc/queries/types';
 
 type WithVirtualLabUsersProps = {
-  users: VirtualLabMember[];
+  ownerId: string;
+  total: number;
+  users: Array<Member>;
 };
 
 export default function withVirtualLabUsers(
@@ -41,10 +43,16 @@ export default function withVirtualLabUsers(
         </div>
       );
     }
-    if (users.data) {
-      return <WrappedComponent users={users.data} />;
+    if (users.data?.data) {
+      return (
+        <WrappedComponent
+          ownerId={users.data.data.owner_id}
+          users={users.data.data.users}
+          total={users.data.data.total}
+        />
+      );
     }
-    return <WrappedComponent users={[]} />;
+    return null;
   }
   return WithVirtualLabUsers;
 }

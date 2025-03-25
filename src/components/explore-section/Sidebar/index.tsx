@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { ArrowRightOutlined, HomeOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined } from '@ant-design/icons';
 
 import { useSession } from 'next-auth/react';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
@@ -7,9 +7,6 @@ import { classNames } from '@/util/utils';
 import usePathname from '@/hooks/pathname';
 import Link from '@/components/Link';
 import ApplicationSidebar, {
-  AppNavigation,
-  AppNavigationItem,
-  DefaultAccountPanel,
   NavigationItem,
   NavigationItemProps,
 } from '@/components/ApplicationSidebar';
@@ -68,39 +65,15 @@ function ExploreNavigation({ expanded }: { expanded: boolean }) {
 }
 
 function ExploreSideBarHeader() {
-  return <Link href="/main?tab=explore">Explore</Link>;
-}
-
-function AnonymousExploreSideBarNavigation({ expanded }: { expanded: boolean }) {
-  return (
-    <div
-      className={classNames(
-        'my-2 flex w-full flex-col gap-y-1',
-        expanded ? 'items-start' : 'items-center'
-      )}
-    >
-      <AppNavigationItem
-        showIconOnCollapse
-        {...{
-          expanded,
-          title: 'Home',
-          url: '/',
-          icon: HomeOutlined,
-        }}
-      />
-    </div>
-  );
+  return <div className="select-none">Explore</div>;
 }
 
 export default function ExploreSidebar() {
   const { status } = useSession();
   const Control = status === 'unauthenticated' ? MainNavigation : ExploreNavigation;
-  const navigation =
-    status === 'unauthenticated' ? AnonymousExploreSideBarNavigation : AppNavigation;
-  const account = status === 'unauthenticated' ? null : DefaultAccountPanel;
 
   return (
-    <ApplicationSidebar title={ExploreSideBarHeader} navigation={navigation} account={account}>
+    <ApplicationSidebar title={ExploreSideBarHeader}>
       {({ expanded }) => <Control {...{ expanded }} />}
     </ApplicationSidebar>
   );

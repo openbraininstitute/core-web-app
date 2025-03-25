@@ -61,7 +61,12 @@ function Profile({ data }: Props) {
   const onSubmit = (values: UserProfileResponse) => {
     startTransition(async () => {
       const { error } = await tryCatch(
-        updateUserProfile(omit(values, ['email_verified', 'id', 'email']))
+        updateUserProfile(omit(values, ['email_verified', 'id', 'email'])),
+        undefined,
+        {
+          section: 'profile-page',
+          feature: 'update-user-profile',
+        }
       );
       if (error) {
         errorNotify(
