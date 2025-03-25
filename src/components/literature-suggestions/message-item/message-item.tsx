@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { AnchorHTMLAttributes } from 'react';
+import Link from 'next/link';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 import ReactMarkdown from 'react-markdown';
 
 import ToolArticles from './tools/articles/tool-articles';
 import ToolMorphologies from './tools/morphologies/tool-morphologies';
 import { classNames } from '@/util/utils';
-import { ChevronRight } from '@/components/icons';
 
 import styles from './message-item.module.css';
 
@@ -28,10 +28,10 @@ function renderMessage(value: UIMessage, debug: boolean): React.ReactNode {
     case 'user':
       return (
         <div className={styles.user}>
-          <div className={styles.userAvatar}>
-            <ChevronRight fill="currentColor" />
+          {/* <div className={styles.userAvatar}><ChevronRight fill="currentColor" /></div> */}
+          <div className={styles.userContent}>
+            <div>{value.content}</div>
           </div>
-          <div className={styles.userContent}>{value.content}</div>
         </div>
       );
     case 'assistant': {
@@ -39,7 +39,14 @@ function renderMessage(value: UIMessage, debug: boolean): React.ReactNode {
         <>
           <ToolArticles message={value} />
           <ToolMorphologies message={value} />
-          <ReactMarkdown className={styles.markdown}>{value.content}</ReactMarkdown>
+          <ReactMarkdown
+            className={styles.markdown}
+            components={{
+              a: LinkWithExternalTarget,
+            }}
+          >
+            {value.content}
+          </ReactMarkdown>
           {debug && (
             <button
               type="button"
@@ -83,4 +90,14 @@ function useDebug(): boolean {
   const [debug, setDebug] = React.useState(false);
   React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
   return debug;
+}
+
+function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
+  if (!href) return null;
+
+  return (
+    <Link href={href} target="_blank">
+      {children}
+    </Link>
+  );
 }

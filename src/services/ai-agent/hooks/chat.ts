@@ -18,6 +18,7 @@ export function useServiceAiAgentChat(threadId: string) {
       };
     },
   });
+
   return {
     messages: chat.messages,
     append: chat.append,
