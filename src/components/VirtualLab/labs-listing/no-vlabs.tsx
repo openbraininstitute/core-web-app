@@ -109,7 +109,7 @@ export default function VirtualSplashScreen() {
           transition={{ delay: 0.8, duration: 0.5 }}
         >
           <ActionCard
-            href="/app/virtual-lab/account/subscription/checkout"
+            href="/app/virtual-lab/account/subscription"
             title="Get your Pro plan"
             description="In order to push further your models and experiment, choose our Pro plan option"
             icon={<UserCircle className="text-4xl" />}
