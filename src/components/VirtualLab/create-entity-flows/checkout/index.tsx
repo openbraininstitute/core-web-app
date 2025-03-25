@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAtom } from 'jotai';
 
+import { useSearchParams } from 'next/navigation';
 import TiersList from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
 import PaymentForm from '@/components/VirtualLab/create-entity-flows/checkout/payment-form';
 import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
@@ -16,6 +17,10 @@ type Props = {
 export default function CheckoutFlow({ data }: Props) {
   const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const [flow, updateFlow] = useAtom(flowAtom);
+
+  const searchParams = useSearchParams();
+  const planUpgradeSuccessRedirectUrl =
+    searchParams.get('planUpgradeSuccessRedirectUrl') ?? undefined;
 
   const onPreviousStep = () => {
     onSlideDirectionChange('right');
@@ -57,7 +62,10 @@ export default function CheckoutFlow({ data }: Props) {
           <TiersList subscriptionData={data} currentTier={data?.subscription.tier} />
         </div>
         <div className={flow.step !== 'pay' ? 'hidden' : 'h-full'}>
-          <PaymentForm onPrevious={onPreviousStep} />
+          <PaymentForm
+            onPrevious={onPreviousStep}
+            successRedirectUrl={planUpgradeSuccessRedirectUrl}
+          />
         </div>
       </motion.div>
     </AnimatePresence>
