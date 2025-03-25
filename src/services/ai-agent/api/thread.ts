@@ -4,14 +4,18 @@ import { isType } from '@/util/type-guards';
 export async function serviceAiAgentThreadCreate({
   accessToken,
   title,
+  virtualLabId,
+  projectId,
 }: {
   accessToken: string;
   title: string;
+  virtualLabId: string | null;
+  projectId: string | null;
 }): Promise<{ threadId: string }> {
   const data = await fetchJSON({
     accessToken,
     path: 'threads',
-    query: { title },
+    query: { title, virtual_lab_id: virtualLabId, project_id: projectId },
     typeGuard: isThreadCreateResponse,
   });
   return { threadId: data.thread_id };

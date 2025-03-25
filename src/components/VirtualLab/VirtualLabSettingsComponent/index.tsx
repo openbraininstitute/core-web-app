@@ -187,29 +187,29 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     [updateVirtualLab, virtualLabDetail]
   );
 
-  const dangerZone = useMemo(
-    () =>
-      virtualLabDetail.state === 'hasData' && userIsAdmin
-        ? {
-            key: 'danger-zone',
-            children: (
-              <DangerZonePanel
-                onClick={onDeleteVirtualLab}
-                name={virtualLabDetail.data?.virtual_lab.name || ''}
-              />
-            ),
-            label: 'Danger Zone',
-          }
-        : {},
-    [onDeleteVirtualLab, userIsAdmin, virtualLabDetail]
-  );
+  // const dangerZone = useMemo(
+  //   () =>
+  //     virtualLabDetail.state === 'hasData' && userIsAdmin
+  //       ? {
+  //           key: 'danger-zone',
+  //           children: (
+  //             <DangerZonePanel
+  //               onClick={onDeleteVirtualLab}
+  //               name={virtualLabDetail.data?.virtual_lab.name || ''}
+  //             />
+  //           ),
+  //           label: 'Danger Zone',
+  //         }
+  //       : {},
+  //   [onDeleteVirtualLab, userIsAdmin, virtualLabDetail]
+  // );
 
   const collapseItems: CollapseProps['items'] = useMemo(
     () =>
-      [creditManagement, purchases, spendings, settings, dangerZone].filter(
+      [creditManagement, purchases, spendings, settings].filter(
         (item) => Object.keys(item).length !== 0 // Filter-out any "empty" panels (ex. DangerZone when not admin).
       ),
-    [creditManagement, purchases, spendings, settings, dangerZone]
+    [creditManagement, purchases, spendings, settings]
   );
 
   if (virtualLabDetail.state === 'loading') {
