@@ -2,8 +2,11 @@ import { useSession } from 'next-auth/react';
 import React from 'react';
 import { serviceAiAgentThreadCreate } from '../api/thread';
 import { logError } from '@/util/logger';
+import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
 export function useServiceAiAgentThread(): [string | undefined, () => void] {
+  const virtualLabId = useParamVirtualLabId();
+  const projectId = useParamProjectId();
   const refCurrentThreadId = React.useRef<string | null>(null);
   const [threadId, setThreadId] = React.useState<string | undefined>(undefined);
   const session = useSession();
@@ -15,6 +18,8 @@ export function useServiceAiAgentThread(): [string | undefined, () => void] {
     serviceAiAgentThreadCreate({
       accessToken,
       title: `${user} ${new Date().toISOString()}`,
+      virtualLabId,
+      projectId,
     })
       .then((data) => {
         setThreadId(data.threadId);
