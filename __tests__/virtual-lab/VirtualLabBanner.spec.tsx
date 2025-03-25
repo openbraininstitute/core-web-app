@@ -43,10 +43,11 @@ describe('LabDetailBanner Component', () => {
     name: 'Test lab',
     description: 'this is the description',
     entity: 'BBP',
-    created_at: '6/08/2024',
+    created_at: '2025-03-22T15:13:19.810273Z',
     reference_email: 'test@test.ch',
-    budget: 1000,
-    plan_id: 1,
+    updated_at: '2025-03-22T15:13:19.810273Z',
+    members_count: 10,
+    projects_count: 10,
   };
 
   it('should display the correct name and description', () => {

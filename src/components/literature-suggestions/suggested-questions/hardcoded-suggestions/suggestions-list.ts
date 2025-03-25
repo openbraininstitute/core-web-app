@@ -1,17 +1,17 @@
 export const SuggestionsList: Record<string, string[]> = {
   Morphology: [
-    'Do you want to see papers about neuron morphologies in {brain_region} in {rodents/humans}?',
-    'Do you want to see recent papers using 3D reconstruction techniques to analyze neuronal morphology in {brain_region} in {rodents/humans}?',
-    'Do you want to see papers comparing cell morphologies between neurons in {brain_region} in {rodents/humans}?',
+    'Show me papers about neuron morphologies in {brain_region} in {rodents/humans}?',
+    'Show me recent papers using 3D reconstruction techniques of neuronal morphologies in {brain_region} in {rodents/humans}?',
+    'I would like to see papers comparing cell morphologies between neurons in {brain_region} in {rodents/humans}?',
   ],
   Electrophysiology: [
-    'Do you want to see papers about intracellular patch clamp data for {brain_region} in {rodents/humans}? ',
-    'Do you want to see papers about  intracellular patch-seq data for {brain_region} in {rodents/humans}? ',
-    'Do you want to see papers about experimental electrophysiology data for {brain_region} in {rodents/humans}? ',
+    'I would like to see papers about intracellular patch clamp data for {brain_region} in {rodents/humans}',
+    'Can I see papers about intracellular patch-seq data for {brain_region} in {rodents/humans}?',
+    'Could you show find papers about experimental electrophysiology data for {brain_region} in {rodents/humans}?',
   ],
   'Bouton density': [
     'Are there publications bouton densities in {brain_region} in {rodents/humans}?',
-    'Are there publications reporting differences in bouton density between excitatory and inhibitory synapses in {brain_region} in {rodents}?',
+    'Are there publications reporting differences in bouton density between excitatory and inhibitory synapses in {brain_region} in {rodents/humans}?',
     'Are there publications reporting bouton densities across cortical layers in {rodents/humans}?',
     'Are there publications reporting species-specific differences in axonal bouton density between mice, rats and humans?',
     'How does bouton density correlate with synaptic efficacy in {rodents/humans}?',
@@ -27,22 +27,22 @@ export const SuggestionsList: Record<string, string[]> = {
   ],
   'Synapse per connection': [
     'Are there publications exploring the relationship between synaptic density and functional connectivity in {brain_region} of {rodent/human} brain circuits?',
-    'Are there publications reporting the average number of synapses per in {brain_region} in {rodents/humans}?',
+    'Are there publications reporting the average number of synapses per connection in {brain_region} in {rodents/humans}?',
     'Are there publications reporting how the average number of synapses per connection vary across regions in {rodents/humans}?',
     'What techniques are used to quantify the number of synapses per axonal-dendritic connection in {rodents/humans}?',
   ],
   'E-model': [
-    'Do you want to see papers about biophysically detailed single-cell electrical models for {brain_region} in {rodents/humans}?',
-    'Do you want to see papers about electrophysiological models for {brain_region} in {rodents/humans}?',
+    'Show mechanismLocations papers about biophysically detailed single-cell electrical models for {brain_region} in {rodents/humans}',
+    'I want to see papers about electrophysiological models for {brain_region} in {rodents/humans}',
   ],
   'ME-model': [
-    'Do you want to see papers about biophysically detailed single-cell electrical models for {brain_region} in {rodents/humans}?',
-    'Do you want to see papers about electrophysiological models for {brain_region} in {rodents/humans}?',
+    'I would like to see papers about biophysically detailed single-cell electrical models for {brain_region} in {rodents/humans}',
+    'Let me see papers about electrophysiological models for {brain_region} in {rodents/humans}',
   ],
   Synaptome: [
-    'Are there publications exploring the relationship between synaptic density and functional connectivity in {brain region} of {rodent/human} brain circuits?',
-    'Are there publications reporting the average number of synapses per in {brain_region} in {rodents/humans}?',
-    'Are there publications reporting how the average number of synapses per connection vary across regions in {rodents/humans}?',
-    'What techniques are used to quantify the number of synapses per axonal-dendritic connection in {rodents/humans}?',
+    'Are there recent studies that published a comprehensive single-cell resolution connectome datasets for {brain_region} in {rodent/human} brains?',
+    'Are there publications that report quantitative synaptic connectivity matrices at single-cell resolution in the{rodent/human} {brain_region}?',
+    'Are there publications that used electron microscopy to map synaptic connections between neurons in {brain_region} in {rodent/human}?',
+    'What recent large-scale projects have published single-cell resolution connectome datasets for {rodent/human} brains?',
   ],
 };

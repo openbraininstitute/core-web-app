@@ -15,6 +15,7 @@
 }
 
 .userAvatar {
+  content: '';
   flex: 0 0 auto;
   padding: 8px;
   border-radius: 16px 0 0 16px;
@@ -40,7 +41,7 @@
 .userContent {
   flex: 1 1 auto;
   padding: 8px;
-  border-radius: 0 16px 16px 0;
+  border-radius: 16px;
   background-color: var(--color-primary);
   display: flex;
   flex-wrap: nowrap;
@@ -48,6 +49,12 @@
   justify-content: space-around;
   align-items: stretch;
   min-height: 64px;
+}
+
+.userContent > div {
+  border-left: 3px solid color-mix(in srgb, transparent, currentColor);
+  padding-left: 1em;
+  margin-left: 0.5em;
 }
 
 .markdown ul {

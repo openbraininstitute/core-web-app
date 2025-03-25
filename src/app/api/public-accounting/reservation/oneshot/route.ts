@@ -20,7 +20,7 @@ export const POST = async (request: Request) => {
   const { virtualLabId, projectId } = reservationRequest;
 
   const projectUsers = await getVirtualLabProjectUsers(virtualLabId, projectId);
-  const projectUser = projectUsers.data.users.find((user) => user.id === session.user.id);
+  const projectUser = projectUsers.data?.users.find((user) => user.id === session.user.id);
   if (!projectUser) {
     return new Response('Unauthorized', {
       status: 401,

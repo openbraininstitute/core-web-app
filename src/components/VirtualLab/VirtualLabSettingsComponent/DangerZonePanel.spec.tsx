@@ -7,7 +7,7 @@ import DangerZonePanel from './DangerZonePanel';
 import sessionAtom from '@/state/session';
 import { createMockVirtualLab } from '__tests__/__utils__/VirtualLab';
 import { changeInputValue, getButton } from '__tests__/__utils__/utils';
-import { VirtualLab } from '@/types/virtual-lab/lab';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 jest.mock('next/navigation', () => ({
   __esModule: true,

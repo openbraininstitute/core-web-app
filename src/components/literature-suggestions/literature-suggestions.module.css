@@ -43,14 +43,6 @@
   overflow: auto;
 }
 
-.error {
-  padding: 1em;
-  background-color: #f30;
-  color: #fffe;
-  border: 1px solid currentColor;
-  white-space: prewrap;
-}
-
 .bottom {
   content: '';
   height: 1em;

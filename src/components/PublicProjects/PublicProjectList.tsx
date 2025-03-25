@@ -35,7 +35,7 @@ export default function PublicProjectList() {
   const content = useSanity(query, isShowCaseProjectProps) ?? [];
 
   return (
-    <div className="flex h-full w-1/2 flex-grow flex-col gap-y-8 pl-96">
+    <div className="flex h-full w-full flex-grow flex-col gap-y-8">
       {content.map((showcase: ShowCaseProjectQueryType) => (
         <SinglePublicProjectCard key={showcase.slug} value={showcase} />
       ))}

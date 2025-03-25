@@ -23,7 +23,7 @@ function useGetProjectUserById({
   );
 
   return useCallback(
-    (userId: string) => projectUsers?.find((user) => user.id === userId),
+    (userId: string) => projectUsers?.data?.users?.find((user) => user.id === userId),
     [projectUsers]
   );
 }

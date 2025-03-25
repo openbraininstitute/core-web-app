@@ -1,9 +1,9 @@
 import { ErrorBoundary } from 'react-error-boundary';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
-import SideMenu from '@/components/SideMenu';
 import VirtualLabProjectSidebar from '@/components/VirtualLab/projects/VirtualLabProjectSidebar';
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import SideMenu from '@/components/SideMenu';
+
 import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
@@ -32,7 +32,6 @@ export default async function VirtualLabProjectLayout({ children, params }: LabP
               href: `${labProjectUrl}/home`,
             }}
           />
-
           <VirtualLabProjectSidebar
             virtualLabId={params.virtualLabId}
             projectId={params.projectId}
@@ -41,7 +40,6 @@ export default async function VirtualLabProjectLayout({ children, params }: LabP
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <div className="mt-8 flex w-full flex-col gap-10 overflow-y-auto overflow-x-hidden pr-3">
-          <VirtualLabTopMenu />
           {children}
         </div>
       </ErrorBoundary>

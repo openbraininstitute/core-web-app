@@ -1,21 +1,4 @@
-import { VlmResponse } from './common';
-import { VirtualLabMember } from './members';
 import { DataType } from '@/constants/explore-section/list-views';
-import { DateISOString } from '@/types/nexus';
-
-export type VirtualLab = {
-  id: string;
-  name: string;
-  description: string;
-  entity: string;
-  created_at: DateISOString;
-  reference_email: string;
-  budget: number;
-  plan_id: number;
-  include_members?: VirtualLabMember[];
-};
-
-export type VirtualLabResponse = VlmResponse<{ virtual_lab: VirtualLab }>;
 
 export enum VirtualLabPlanType {
   Entry = 'Cellular lab',
