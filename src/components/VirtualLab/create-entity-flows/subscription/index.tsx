@@ -18,7 +18,7 @@ import { tryCatch } from '@/api/utils';
 function Upgrade() {
   return (
     <Link
-      href="/app/virtual-lab/account/subscription/checkout"
+      href="/app/virtual-lab/account/subscription"
       key="upgrade-link"
       className={classNames(
         'flex h-14 items-center justify-center rounded-none border border-white bg-primary-9 px-14 text-lg text-white',
@@ -35,7 +35,7 @@ function Upgrade() {
 export function ChangeTier() {
   return (
     <Link
-      href="/app/virtual-lab/account/subscription/checkout"
+      href="/app/virtual-lab/account/subscription"
       key="upgrade-link"
       className={classNames(
         'flex h-14 w-max items-center justify-center rounded-none border border-white bg-primary-9 px-14 text-lg text-white',

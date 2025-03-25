@@ -15,13 +15,20 @@ export const creditAtom = atom<{ credits: number; step: 'overview' | 'pay' | nul
   step: 'overview',
 });
 
-export function CreditConverter({ showActions = true }: { showActions?: boolean }) {
+export function CreditConverter({
+  showActions = true,
+  onClose,
+}: {
+  showActions?: boolean;
+  onClose: () => void;
+}) {
   const [{ credits }, updateCreditState] = useAtom(creditAtom);
-  const money = credits * CONVERSION_RATE;
+  const money = parseFloat(Number(credits * CONVERSION_RATE).toFixed(2));
 
   const handleCreditsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    const numericValue = value === '' ? 0 : parseInt(value, 10);
+    const value = e.target.value.replace(/[^0-9.]/g, '');
+    const numericValue = value === '' ? 0 : parseFloat(Number(value).toFixed(2));
+
     updateCreditState((prev) => ({ ...prev, credits: numericValue }));
   };
 
@@ -42,7 +49,7 @@ export function CreditConverter({ showActions = true }: { showActions?: boolean 
                 type="text"
                 value={formatInputValue(credits)}
                 onChange={handleCreditsChange}
-                className="w-full min-w-24 max-w-max rounded border border-gray-200 px-4 py-2 text-center text-xl font-bold text-primary-8"
+                className="w-full min-w-24 max-w-32 rounded border border-gray-200 px-4 py-2 text-center text-xl font-bold text-primary-8"
                 aria-label="Credit amount"
               />
             </div>
@@ -60,6 +67,7 @@ export function CreditConverter({ showActions = true }: { showActions?: boolean 
               type="text"
               size="large"
               htmlType="button"
+              onClick={onClose}
             >
               Cancel
             </Button>

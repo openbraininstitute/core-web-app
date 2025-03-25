@@ -54,7 +54,7 @@ export default async function Page() {
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
       {result?.[1]?.subscription.type === 'free' && (
         <Link
-          href="/app/virtual-lab/account/subscription/checkout"
+          href="/app/virtual-lab/account/subscription"
           className={classNames(
             'relative',
             'mx-auto mb-6 h-32 w-full max-w-7xl rounded-lg p-6',

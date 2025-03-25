@@ -91,7 +91,7 @@ function Form({ onClose }: { onClose: () => void }) {
         throw new Error(error.message);
       }
       if (setupIntent?.status === 'succeeded' && setupIntent.payment_method && credits > 0) {
-        const amountInCents = Math.round(credits * CONVERSION_RATE * 100);
+        const amountInCents = parseFloat(Number(credits * CONVERSION_RATE * 100).toFixed(2));
         return await createStandalonePayment({
           amount: amountInCents,
           currency: 'chf',
@@ -157,7 +157,7 @@ function Form({ onClose }: { onClose: () => void }) {
       className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center"
     >
       <div className="flex h-full w-full flex-grow flex-col items-center justify-center">
-        <CreditConverter showActions={false} />
+        <CreditConverter showActions={false} onClose={onClose} />
         <div className="mx-auto  flex w-full flex-col rounded-lg bg-white">
           <PaymentElement id="credits-form" onReady={onReady} />
         </div>
@@ -272,11 +272,11 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
         content: classNames(
           '!rounded-md',
           step === 'overview' && '!min-h-[4rem]',
-          step === 'pay' && '!min-h-[10rem]'
+          step === 'pay' && '!min-h-[9rem]'
         ),
       }}
     >
-      {step === 'overview' && <CreditConverter showActions />}
+      {step === 'overview' && <CreditConverter showActions onClose={onClearAndClose} />}
       {step === 'pay' && (
         <Elements
           stripe={stripePromise}
