@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CloseOutlined } from '@ant-design/icons';
 import { Button, ConfigProvider, Input, InputRef, Modal, Spin } from 'antd';
-import { VirtualLab } from '@/types/virtual-lab/lab';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 function DeleteVirtualLabConfirmation({
   open,

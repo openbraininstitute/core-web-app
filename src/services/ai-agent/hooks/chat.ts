@@ -11,17 +11,19 @@ export function useServiceAiAgentChat(threadId: string) {
       Authorization: `Bearer ${session.data?.accessToken}`,
     },
     experimental_prepareRequestBody: ({ messages }) => {
-      const lastMessage = messages[messages.length - 1];
-      // const selectedTools = Object.keys(checkedTools).filter(
-      //   (key) => key !== "allchecked" && checkedTools[key] === true,
-      // );
-      return { content: lastMessage.content }; // , tool_selection: selectedTools };
+      const lastMessage = messages.at(-1);
+      return {
+        content: (lastMessage?.content ?? '').trim(),
+        tool_selection: ['literature-search-tool', 'web-search-tool'],
+      };
     },
   });
+
   return {
     messages: chat.messages,
     append: chat.append,
     status: chat.status,
     error: chat.error,
+    clear: () => chat.setMessages([]),
   };
 }

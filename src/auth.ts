@@ -12,7 +12,7 @@ const clientSecret = env.KEYCLOAK_CLIENT_SECRET;
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
-async function refreshAccessToken(token: TokenSet) {
+export async function refreshAccessToken(token: TokenSet) {
   try {
     const tokenUrl = `${issuer}/protocol/openid-connect/token`;
 

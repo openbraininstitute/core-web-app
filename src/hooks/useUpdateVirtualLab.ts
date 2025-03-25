@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useSetAtom } from 'jotai';
 import { patchVirtualLab } from '@/services/virtual-lab/labs';
-import { VirtualLab } from '@/types/virtual-lab/lab';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 export default function useUpdateVirtualLab(id?: string) {
   const setVirtualLabDetail = useSetAtom(virtualLabDetailAtomFamily(id));
@@ -15,7 +15,7 @@ export default function useUpdateVirtualLab(id?: string) {
         const { virtual_lab: virtualLab } = data;
         setVirtualLabDetail(
           new Promise((resolve) => {
-            resolve(virtualLab);
+            resolve({ virtual_lab: virtualLab, successful_invites: [], failed_invites: [] });
           })
         );
       });

@@ -7,10 +7,10 @@ import { useAtom } from 'jotai';
 import TiersList from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
 import PaymentForm from '@/components/VirtualLab/create-entity-flows/checkout/payment-form';
 import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
-import { SubscriptionStatusResponse } from '@/api/virtual-lab-svc/queries/types';
+import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
-  data: SubscriptionStatusResponse | null;
+  data: UserActiveSubscriptionResponse | null;
 };
 
 export default function CheckoutFlow({ data }: Props) {
@@ -54,7 +54,7 @@ export default function CheckoutFlow({ data }: Props) {
         className="relative flex h-full flex-grow flex-col"
       >
         <div className={flow.step !== 'select' ? 'hidden' : 'h-full'}>
-          <TiersList currentTier={data?.subscription_type} canSelect={data?.status !== 'active'} />
+          <TiersList subscriptionData={data} currentTier={data?.subscription.tier} />
         </div>
         <div className={flow.step !== 'pay' ? 'hidden' : 'h-full'}>
           <PaymentForm onPrevious={onPreviousStep} />

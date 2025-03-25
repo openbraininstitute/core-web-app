@@ -6,7 +6,6 @@ import { format } from 'date-fns';
 
 import BluePyEModelCls from '@/services/virtual-lab/build/me-model/bluepy-emodel';
 import { meModelSelfUrlAtom, selectedMEModelIdAtom } from '@/state/virtual-lab/build/me-model';
-import { useSessionAtomValue } from '@/hooks/hooks';
 import CentralLoadingWheel from '@/components/CentralLoadingWheel';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
@@ -174,9 +173,11 @@ function ValidationError({
 
 export default function BluePyEModelContainer({
   virtualLabInfo,
+  accessToken,
   onClose,
 }: {
   virtualLabInfo: VirtualLabInfo;
+  accessToken: string;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -184,14 +185,12 @@ export default function BluePyEModelContainer({
   const meModelSelfUrl = useAtomValue(meModelSelfUrlAtom);
   const meModelId = useAtomValue(selectedMEModelIdAtom);
 
-  const session = useSessionAtomValue();
-
   const bluePyEModelInstance = useRef<BluePyEModelCls | null>(null);
 
   const [analysisState, setAnalysisState] = useState<AnalisysState>('initializing');
 
   useEffect(() => {
-    if (bluePyEModelInstance.current || !meModelSelfUrl || !session?.accessToken) return;
+    if (bluePyEModelInstance.current || !meModelSelfUrl || !accessToken) return;
 
     const onInit = () => {
       bluePyEModelInstance.current?.runAnalysis();
@@ -206,7 +205,7 @@ export default function BluePyEModelContainer({
       setAnalysisState('error');
     };
 
-    bluePyEModelInstance.current = new BluePyEModelCls(meModelSelfUrl, session.accessToken, {
+    bluePyEModelInstance.current = new BluePyEModelCls(meModelSelfUrl, accessToken, {
       onInit,
       onAnalysisDone,
       onAnalysisError,
@@ -217,7 +216,7 @@ export default function BluePyEModelContainer({
       bluePyEModelInstance.current.destroy();
       bluePyEModelInstance.current = null;
     };
-  }, [meModelSelfUrl, router, session, virtualLabInfo.projectId, virtualLabInfo.virtualLabId]);
+  }, [meModelSelfUrl, router, accessToken, virtualLabInfo.projectId, virtualLabInfo.virtualLabId]);
 
   if (analysisState === 'initializing') {
     return <ValidationInit virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;

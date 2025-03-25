@@ -5,7 +5,9 @@ import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabBalanceAtomFamily } from '@/state/virtual-lab/lab';
 
 export default function SpendingsPanel({ virtualLabId }: { virtualLabId: string }) {
-  const projectsObj = useUnwrappedValue(virtualLabProjectsAtomFamily(virtualLabId));
+  const projectsObj = useUnwrappedValue(
+    virtualLabProjectsAtomFamily({ virtualLabId, page: 1, size: 20 })
+  );
   const virtualLabBalance = useLastTruthyValue(virtualLabBalanceAtomFamily({ virtualLabId }));
 
   if (!projectsObj || !virtualLabBalance) {
@@ -20,7 +22,7 @@ export default function SpendingsPanel({ virtualLabId }: { virtualLabId: string 
 
   return (
     <>
-      {projectsObj.results.map((project) => (
+      {projectsObj.data?.results.map((project) => (
         <div key={project.id}>
           <ProjectBalanceCard project={project} balance={getProjectBalance(project.id)} />
           <JobReportList virtualLabId={virtualLabId} projectId={project.id} />

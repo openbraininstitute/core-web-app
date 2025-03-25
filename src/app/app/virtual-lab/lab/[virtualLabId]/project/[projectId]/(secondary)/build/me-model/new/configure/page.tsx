@@ -25,7 +25,8 @@ import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 
-const DEFAULT_ERROR_MSG = 'Somethng went wrong while creating the ME-model, please try again later';
+const DEFAULT_ERROR_MSG =
+  'Something went wrong while creating the ME-model, please try again later';
 const LOW_FUNDS_ERROR_MSG =
   'The project does not have enough credits to create a model, please add more and try again';
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
@@ -38,7 +39,8 @@ type Params = {
 };
 
 function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
-  const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }));
+  const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
+    ?.data?.users;
   const selectedMModel = useAtomValue(selectedMModelAtom);
   const selectedEModel = useAtomValue(selectedEModelAtom);
 
@@ -132,10 +134,18 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
     });
   };
 
+  const fetchFreshAccessToken = async () => {
+    const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
+    const token = await res.json();
+    return token.accessToken;
+  };
+
   const onClickWithValidation = () => {
     setMeModelCreating(true);
+
     createMEModel({ virtualLabId, projectId })
-      .then(() => createValidationModal({ virtualLabId, projectId }))
+      .then(fetchFreshAccessToken)
+      .then((accessToken) => createValidationModal({ virtualLabId, projectId }, accessToken))
       .catch((err) => showErrorNotification(err))
       .finally(() => setMeModelCreating(false));
   };

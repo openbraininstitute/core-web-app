@@ -49,7 +49,7 @@ export async function createSubscription(
   });
 
   if (!response.ok) {
-    throw new Error(`Creating subscription failed: ${response.status}`, {
+    throw new Error(`Creating subscription failed`, {
       cause: await response.json(),
     });
   }
@@ -77,7 +77,7 @@ export async function getSubscription(
   });
 
   if (!response.ok) {
-    throw new Error(`Getting subscription details failed: ${response.status}`, {
+    throw new Error(`Getting subscription details failed`, {
       cause: await response.json(),
     });
   }
@@ -107,7 +107,7 @@ export async function cancelSubscription(
   });
 
   if (!response.ok) {
-    throw new Error(`Canceling subscription failed: ${response.status}`, {
+    throw new Error(`Canceling subscription failed`, {
       cause: await response.json(),
     });
   }
@@ -146,7 +146,7 @@ export async function listSubscriptions(params?: {
   });
 
   if (!response.ok) {
-    throw new Error(`Listing subscriptions failed: ${response.status}`, {
+    throw new Error(`Listing subscriptions failed`, {
       cause: await response.json(),
     });
   }
@@ -171,7 +171,7 @@ export async function listSubscriptionTiers(): Promise<SubscriptionTiersResponse
   });
 
   if (!response.ok) {
-    throw new Error(`Listing subscription plans failed: ${response.status}`, {
+    throw new Error(`Listing subscription plans failed`, {
       cause: await response.json(),
     });
   }
@@ -199,7 +199,7 @@ export async function getUserActiveSubscription(): Promise<UserActiveSubscriptio
   });
 
   if (!response.ok) {
-    throw new Error(`Getting user subscription failed: ${response.status}`, {
+    throw new Error(`Getting user subscription failed`, {
       cause: await response.json(),
     });
   }
@@ -224,7 +224,7 @@ export async function getNextPaymentDate(): Promise<NextPaymentDateResponse | nu
   });
 
   if (!response.ok) {
-    throw new Error(`Getting next payment date failed: ${response.status}`, {
+    throw new Error(`Getting next payment date failed`, {
       cause: await response.json(),
     });
   }
@@ -250,7 +250,7 @@ export async function checkUserSubscription(): Promise<SubscriptionStatusRespons
   });
 
   if (!response.ok) {
-    throw new Error(`Checking user subscription failed: ${response.status}`, {
+    throw new Error(`Checking user subscription failed`, {
       cause: await response.json(),
     });
   }
@@ -276,7 +276,7 @@ export async function listUserSubscriptionsHistory(): Promise<UserSubscriptionsR
   });
 
   if (!response.ok) {
-    throw new Error(`Listing user subscriptions with payments failed: ${response.status}`, {
+    throw new Error(`Listing user subscriptions with payments failed`, {
       cause: await response.json(),
     });
   }

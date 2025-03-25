@@ -2,7 +2,6 @@ import { useAtomValue } from 'jotai';
 
 import { dataTabAtom } from './DataTypeTabs';
 import DataTypeGroupTotals from './DataTypeGroupTotals';
-import LiteratureForExperimentType from './LiteratureForExperimentType';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
@@ -30,9 +29,13 @@ export default function DataTypeStatsPanel({ virtualLabInfo }: DataTypeStatsPane
       />
     );
   }
-  if (dataTypeActiveTab === 'literature') {
-    component = <LiteratureForExperimentType />;
-  }
+  /**
+   * Daniela asked that we removed this section
+   * https://github.com/openbraininstitute/prod-explore-functionality/issues/47
+   */
+  // if (dataTypeActiveTab === 'literature') {
+  //   component = <LiteratureForExperimentType />;
+  // }
 
   return (
     <div className="relative grid h-full grid-flow-row grid-cols-2 gap-x-3 gap-y-1 p-4 pt-0">
