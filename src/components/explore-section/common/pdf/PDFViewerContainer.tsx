@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 import { useRef, useState } from 'react';
-import { ConfigProvider, Button } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { ConfigProvider } from 'antd';
+
 import { AnalysisType, analysisTypes, typeLabel } from './types';
 
 const DynamicPDFViewer = dynamic(() => import('./PDFViewer'), {
@@ -22,27 +22,6 @@ export function PDFViewerContainer({ distributions }: Props) {
   const currentDistributions = distributions.filter((d) => matchesType(d, type));
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
-
-  const onScroll = () => {
-    setScrollPosition(scrollContainerRef.current?.scrollLeft || 0);
-  };
-
-  const scroll = (scrollOffset: number) => {
-    scrollContainerRef.current?.scrollBy({
-      top: 0,
-      left: scrollOffset,
-      behavior: 'smooth',
-    });
-  };
-
-  const canScrollLeft = type === 'all' && scrollPosition > 0;
-  const canScrollRight =
-    type === 'all' &&
-    scrollPosition <
-      (scrollContainerRef.current?.scrollWidth ?? 0) -
-        (scrollContainerRef.current?.clientWidth ?? 0) -
-        5;
 
   return (
     <div className="w-full">
@@ -73,23 +52,6 @@ export function PDFViewerContainer({ distributions }: Props) {
             ))}
           </div>
 
-          {(canScrollLeft || canScrollRight) && (
-            <div className="flex gap-2">
-              <Button
-                type="text"
-                icon={<LeftOutlined className={!canScrollLeft ? 'text-neutral-4' : ''} />}
-                disabled={!canScrollLeft}
-                onClick={() => scroll(-300)}
-              />
-              <Button
-                type="text"
-                icon={<RightOutlined className={!canScrollRight ? 'text-neutral-4' : ''} />}
-                disabled={!canScrollRight}
-                onClick={() => scroll(300)}
-              />
-            </div>
-          )}
-
           {/* <Link
             className="flex items-center gap-2 text-primary-9"
             href="/simulate/experiment-analysis?targetEntity=EModel"
@@ -102,7 +64,7 @@ export function PDFViewerContainer({ distributions }: Props) {
           </Link> */}
         </div>
 
-        <div ref={scrollContainerRef} onScroll={onScroll} className="w-full overflow-x-auto">
+        <div ref={scrollContainerRef} className="w-full overflow-x-auto">
           <div className="flex gap-x-16" style={{ minWidth: 'min-content' }}>
             <div style={{ minWidth: '30%', flexGrow: 1 }}>
               {currentDistributions.map((d) => {
