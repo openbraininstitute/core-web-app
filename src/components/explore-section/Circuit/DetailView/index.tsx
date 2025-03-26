@@ -1,7 +1,9 @@
 'use client'
 
-import { SingleCircuitListView } from "../content/CIRCUITS_PLACEHOLDER";
+import { InteractiveImageProps, SingleCircuitListView } from "../type";
 import HeaderCircuitDetailView from "./modules/Header";
+import HeroImageContainer from "./modules/HeroImageContainer";
+import CircuitDetailViewSectionContainer from "./sections";
 
 export default function CircuitDetailViewMain({
   content
@@ -9,10 +11,19 @@ export default function CircuitDetailViewMain({
   content: SingleCircuitListView;
 }) {
 
+  const heroImage: InteractiveImageProps = {
+    circuit: content.name,
+    src: content.images.high,
+    alt: `Image of the circuit ${content.name}`,
+    width: 1920,
+    height: 1080
+  }
+
   return (
-    <div className="relative w-full min-h-[100vh] bg-white p-10">
+    <div className="relative w-full bg-white p-10 pb-40 overflow-x-hidden">
         <HeaderCircuitDetailView content={content} />
-        {content.name}
+        <HeroImageContainer content={heroImage}  />
+        <CircuitDetailViewSectionContainer content={content} />
     </div>
   )
 }

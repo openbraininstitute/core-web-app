@@ -4,10 +4,10 @@ import { Key, useState } from "react";
 
 import { Table } from "antd";
 
-import CIRCUIT_PLACHOLDER_DATA, { SingleCircuitListView } from "./content/CIRCUITS_PLACEHOLDER";
-import { ArrowSmall } from "./icon/ArrowSubcircuitIcon";
+import CIRCUIT_PLACHOLDER_DATA, { SingleCircuitListView } from "../content/CIRCUITS_PLACEHOLDER";
+import { ArrowSmall } from "../icon/ArrowSubcircuitIcon";
 
-import { CircuitColumn } from "./type";
+import { CircuitColumn } from "../type";
 
 import { ChevronRight } from "@/components/icons";
 import { classNames } from "@/util/utils";

@@ -2,10 +2,11 @@
 
 import { Suspense } from "react";
 
-import CIRCUIT_PLACHOLDER_DATA, { SingleCircuitListView } from "@/components/explore-section/Circuit/content/CIRCUITS_PLACEHOLDER";
+import CIRCUIT_PLACHOLDER_DATA from "@/components/explore-section/Circuit/content/CIRCUITS_PLACEHOLDER";
 
 import CentralLoadingSpinner from "@/components/CentralLoadingSpinner";
 import CircuitDetailViewMain from "@/components/explore-section/Circuit/DetailView";
+import { SingleCircuitListView } from "@/components/explore-section/Circuit/type";
 
 type Params = {
   params: {

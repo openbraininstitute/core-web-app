@@ -1,5 +1,5 @@
 
-import ExploreCircuitTable from "@/components/explore-section/Circuit/ExploreCircuitTable";
+import ExploreCircuitTable from "@/components/explore-section/Circuit/ListView/ExploreCircuitTable";
 
 export type ColumnType = {
     name: string;

@@ -1,8 +1,7 @@
-import { SingleCircuitListView } from "./content/CIRCUITS_PLACEHOLDER";
-
 import { classNames } from "@/util/utils";
 
 import { ChevronRight } from "@/components/icons";
+import { SingleCircuitListView } from "../type";
 
 const columns = ({
         handleExpandRow,
@@ -52,14 +51,14 @@ const columns = ({
             title: 'Created by',
             key: 'createdBy',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap font-normal">{value.createdBy}</span>
+                <span className="whitespace-nowrap font-normal">{value.metadata.createdBy}</span>
             ),
         },
         {
             title: 'Creation date',
             key: 'creationDate',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap font-normal">{value.creationDate}</span>
+                <span className="whitespace-nowrap font-normal">{value.metadata.creationDate}</span>
             ),
         },
         {

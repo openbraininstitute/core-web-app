@@ -1,4 +1,4 @@
-import { SingleCircuitListView } from "../../content/CIRCUITS_PLACEHOLDER";
+import { SingleCircuitListView } from "../../type";
 import CloneCircuitModelButton from "../buttons/CloneCircuitModelButton";
 import DownloadCircuitButton from "../buttons/DownloadCircuitButton";
 import SaveToLibraryButton from "../buttons/SaveToLibraryButton";
@@ -11,7 +11,7 @@ export default function HeaderButtonActionsBlock({
 }) {
 
     return (
-        <div className="relative flex flex-row gap-x-5">
+        <div className="relative flex flex-row gap-x-5 -right-12">
             <SimulateCircuitModelButton />
             <CloneCircuitModelButton />
             <SaveToLibraryButton />

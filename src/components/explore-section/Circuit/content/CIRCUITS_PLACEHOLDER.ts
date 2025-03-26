@@ -1,36 +1,5 @@
-export type SingleFileProps = {
-    type: string;
-    url: string;
-    key: string;
-    isAvailable: boolean;
-}
+import { SingleCircuitListView } from "../type";
 
-export type SingleCircuitListView = {
-    key: string;
-    name: string;
-    description: string;
-    brainRegion: string;
-    specie: string;
-    numberOfNeurons: string;
-    numberOfConnections: string;
-    numberOfSynapses: string;
-    files: SingleFileProps[];  
-    provenance: {
-        isASubcircuit: boolean;
-        subcircuitOf: string | null;
-    };
-    hasSubcircuits: boolean;
-    subcircuits: SingleCircuitListView[] | null;
-    metadata: {
-        revision: number;
-        createdBy: string;
-        creationDate: string;
-        license: {
-            name: string;
-            url: string;
-        } | null;
-    }
-}
 
 const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
     {
@@ -99,6 +68,11 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
                         name: "Open",
                         url: "https://www.sciencedirect.com/journal/neuroscience/publish/open-access-options"
                     }
+                },
+                images: {
+                    low: "/images/circuits/Somatosensory_cortex_preview_01.png",
+                    normal: "/images/circuits/Somatosensory_cortex_preview_01.png",
+                    high: "/images/circuits/Somatosensory_cortex_preview_01.png"
                 }
             },
             {
@@ -138,6 +112,11 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
                         name: "Open",
                         url: "https://www.sciencedirect.com/journal/neuroscience/publish/open-access-options"
                     }
+                },
+                images: {
+                    low: "/images/circuits/Somatosensory_cortex_preview_01.png",
+                    normal: "/images/circuits/Somatosensory_cortex_preview_01.png",
+                    high: "/images/circuits/Somatosensory_cortex_preview_01.png"
                 }
             }
         ],
@@ -149,6 +128,11 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
                 name: "Open",
                 url: "https://www.sciencedirect.com/journal/neuroscience/publish/open-access-options"
             }
+        },
+        images: {
+            low: "/images/circuits/Somatosensory_cortex_preview_01.png",
+            normal: "/images/circuits/Somatosensory_cortex_preview_01.png",
+            high: "/images/circuits/Somatosensory_cortex_preview_01.png"
         }
     },
     {
@@ -188,6 +172,11 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
                 name: "Open",
                 url: "https://www.sciencedirect.com/journal/neuroscience/publish/open-access-options"
             }
+        },
+        images: {
+            low: "/images/circuits/Somatosensory_cortex_preview_01.png",
+            normal: "/images/circuits/Somatosensory_cortex_preview_01.png",
+            high: "/images/circuits/Somatosensory_cortex_preview_01.png"
         }
     },
     {
@@ -227,6 +216,11 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
                 name: "Open",
                 url: "https://www.sciencedirect.com/journal/neuroscience/publish/open-access-options"
             }
+        },
+        images: {
+            low: "/images/circuits/Somatosensory_cortex_preview_01.png",
+            normal: "/images/circuits/Somatosensory_cortex_preview_01.png",
+            high: "/images/circuits/Somatosensory_cortex_preview_01.png"
         }
     }
 ]

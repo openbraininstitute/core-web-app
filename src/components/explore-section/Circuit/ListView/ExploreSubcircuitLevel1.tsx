@@ -1,8 +1,8 @@
 import { Table } from "antd";
 
-import { ArrowSmall } from "./icon/ArrowSubcircuitIcon";
+import { ArrowSmall } from "../icon/ArrowSubcircuitIcon";
 
-import { SingleCircuitListView } from "./content/CIRCUITS_PLACEHOLDER";
+import { SingleCircuitListView } from "../content/CIRCUITS_PLACEHOLDER";
 
 import { classNames } from "@/util/utils";
 

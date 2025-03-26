@@ -114,7 +114,7 @@ export default function ExploreListingLayout({
 
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-primary-9" id="interactive-data-layout">
+    <div className="flex w-full h-screen overflow-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         {
           !pathname.includes('UID_Circuit') && (
