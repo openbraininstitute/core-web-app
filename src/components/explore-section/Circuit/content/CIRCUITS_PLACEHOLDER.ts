@@ -8,6 +8,7 @@ export type SingleCircuitListView = {
     numberOfNeurons: number;
     createdBy: string;
     creationDate: string;
+    file: string;
     hasSubcircuits: boolean;
     subcircuits?: SingleCircuitListView[];
 }
@@ -22,6 +23,7 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
         numberOfNeurons: 1000,
         createdBy: "James Isbister",
         creationDate: "2023-05-12",
+        file: "https://www.google.com",
         hasSubcircuits: true,
         subcircuits: [
             {
@@ -33,6 +35,7 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
                 numberOfNeurons: 1000,
                 createdBy: "James Isbister",
                 creationDate: "2023-05-12",
+                file: "https://www.google.com",
                 hasSubcircuits: false
             },
             {
@@ -44,6 +47,7 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
                 numberOfNeurons: 1000,
                 createdBy: "James Isbister",
                 creationDate: "2023-05-12",
+                file: "https://www.google.com",
                 hasSubcircuits: false
             }
         ]
@@ -57,6 +61,7 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
         numberOfNeurons: 1000,
         createdBy: "James Isbister",
         creationDate: "2023-05-12",
+        file: "https://www.google.com",
         hasSubcircuits: false
     },
     {
@@ -68,6 +73,7 @@ const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
         numberOfNeurons: 1000,
         createdBy: "James Isbister",
         creationDate: "2023-05-12",
+        file: "https://www.google.com",
         hasSubcircuits: false
     }
 ]
