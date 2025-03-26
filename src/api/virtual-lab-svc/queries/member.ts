@@ -132,7 +132,7 @@ export async function cancelVirtualLabInvite({
   role?: Role;
 }): Promise<VlmResponse<null>> {
   const session = await getSession();
-  const response = await fetch(`${baseUri}/virtual-labs/${virtualLabId}/invites/cancel`, {
+  const response = await fetch(`${baseUri}/${virtualLabId}/invites/cancel`, {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',

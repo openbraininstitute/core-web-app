@@ -54,7 +54,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
         type="button"
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
-        <h1 title={status}>Explore AI</h1>
+        <h1 title={status}>AI Assistant</h1>
         {collapsedPanel ? <PlusOutlined /> : <MinusOutlined />}
       </button>
       {!collapsedPanel && (
@@ -62,8 +62,12 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
           {threadId ? (
             <>
               <div className={styles.articles}>
-                {messages.map((item) => (
-                  <MessageItem key={item.id} value={item} />
+                {messages.map((item, messageIndex) => (
+                  <MessageItem
+                    key={item.id}
+                    value={item}
+                    hideTools={messageIndex === messages.length - 1 && status !== 'ready'}
+                  />
                 ))}
                 {status === 'ready' && messages.length > 0 && (
                   <div className={styles.footerButtons}>

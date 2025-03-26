@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
 import { ShowCaseProjectQueryType } from './type';
 
 function getDaysFromDate(inputDate: string | Date): number | string {
@@ -19,8 +18,6 @@ function getDaysFromDate(inputDate: string | Date): number | string {
 }
 
 export default function SinglePublicProjectCard({ value }: { value: ShowCaseProjectQueryType }) {
-  const [isMouseHover, setIsMouseHover] = useState<boolean>(false);
-
   let date;
 
   switch (getDaysFromDate(value._updatedAt)) {
@@ -37,16 +34,7 @@ export default function SinglePublicProjectCard({ value }: { value: ShowCaseProj
   return (
     <a
       href={`/app/virtual-lab/public-projects/${value.slug}?section=description`}
-      className="relative w-full scale-100 overflow-hidden rounded-3xl border border-solid border-primary-7 bg-primary-9 p-8 text-white transition-all duration-300 ease-in-out hover:scale-[0.98] hover:bg-primary-7"
-      style={{
-        boxShadow: isMouseHover
-          ? '0px 30px 24px -12px rgba(0,0,0,0.4)'
-          : '0px 47px 56px -24px rgba(0,0,0,0.35)',
-      }}
-      onMouseOver={() => setIsMouseHover(true)}
-      onFocus={() => setIsMouseHover(true)}
-      onMouseOut={() => setIsMouseHover(false)}
-      onBlur={() => setIsMouseHover(false)}
+      className="relative w-full overflow-hidden rounded-lg border border-solid border-primary-7 bg-primary-9 p-8 text-white transition-all duration-300 ease-in-out hover:scale-[0.98] hover:bg-primary-7"
     >
       <header className="relative z-10 mb-2 flex w-full flex-row justify-between">
         <div className="text-3xl font-bold">{value.name}</div>
