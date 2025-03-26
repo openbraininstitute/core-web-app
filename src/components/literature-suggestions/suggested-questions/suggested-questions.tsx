@@ -4,6 +4,7 @@ import React from 'react';
 
 import { useHardcodedSuggestions } from './hardcoded-suggestions';
 import { classNames } from '@/util/utils';
+import IconIdea from '@/components/icons/Idea';
 import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
 
 import styles from './suggested-questions.module.css';
@@ -31,7 +32,8 @@ export default function SuggestedQuestions({ className, onClick }: SuggestedQues
               clearSuggestions();
             }}
           >
-            {prompt}
+            <IconIdea />
+            <div>{prompt}</div>
           </button>
         ))}
     </div>
