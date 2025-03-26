@@ -516,3 +516,146 @@ export function Delete(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function StorageSolid(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 36 36" {...props}>
+      <path
+        fill="currentColor"
+        d="M17.91 18.28c8.08 0 14.66-1.74 15.09-3.94V8.59c-.43 2.2-7 3.94-15.09 3.94A39.4 39.4 0 0 1 6.25 11V9a39.4 39.4 0 0 0 11.66 1.51C26 10.53 32.52 8.79 33 6.61c-.2-3.41-9.48-4.33-15-4.33S3 3.21 3 6.71v22.58c0 3.49 9.43 4.43 15 4.43s15-.93 15-4.43v-5.2C32.57 26.28 26 28 17.91 28a39.4 39.4 0 0 1-11.66-1.48v-2A39.4 39.4 0 0 0 17.91 26C26 26 32.57 24.28 33 22.09v-5.75c-.43 2.2-7 3.94-15.09 3.94a39.4 39.4 0 0 1-11.66-1.51v-2a39.4 39.4 0 0 0 11.66 1.51"
+        className="clr-i-solid clr-i-solid-path-1"
+      />
+      <path fill="none" d="M0 0h36v36H0z" />
+    </svg>
+  );
+}
+
+export function CreditsSolid(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="m20.312 12.647l.517-1.932c.604-2.255.907-3.382.68-4.358a4 4 0 0 0-1.162-2.011c-.731-.685-1.859-.987-4.114-1.591c-2.255-.605-3.383-.907-4.358-.68a4 4 0 0 0-2.011 1.162c-.587.626-.893 1.543-1.348 3.209l-.244.905l-.517 1.932c-.605 2.255-.907 3.382-.68 4.358a4 4 0 0 0 1.162 2.011c.731.685 1.859.987 4.114 1.592c2.032.544 3.149.843 4.064.73q.15-.019.294-.052a4 4 0 0 0 2.011-1.16c.685-.732.987-1.86 1.592-4.115Z" />
+        <path
+          d="M16.415 17.974a4 4 0 0 1-1.068 1.678c-.731.685-1.859.987-4.114 1.591s-3.383.907-4.358.679a4 4 0 0 1-2.011-1.161c-.685-.731-.988-1.859-1.592-4.114l-.517-1.932c-.605-2.255-.907-3.383-.68-4.358a4 4 0 0 1 1.162-2.011c.731-.685 1.859-.987 4.114-1.592q.638-.172 1.165-.309"
+          opacity=".5"
+        />
+      </g>
+    </svg>
+  );
+}
+
+export function StorageOutline(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 36 36" {...props}>
+      <path
+        fill="currentColor"
+        d="M7 7.76v2.09a43.5 43.5 0 0 0 11 1.27a55 55 0 0 0 6.2-.36a7.5 7.5 0 0 1-1.13-1.88c-1.5.15-3.2.24-5.07.24A37.6 37.6 0 0 1 7 7.76"
+        className="clr-i-outline--badged clr-i-outline-path-1--badged"
+      />
+      <path
+        fill="currentColor"
+        d="M31 13.43v.82c-.33.86-5.06 2.45-13 2.45a37.5 37.5 0 0 1-11-1.36v2.08a43.3 43.3 0 0 0 11 1.28c4 0 9.93-.48 13-2v5.17c-.33.86-5.06 2.45-13 2.45a37.5 37.5 0 0 1-11-1.4V25a43.3 43.3 0 0 0 11 1.28c4 0 9.93-.48 13-2v5.1c-.35.86-5.08 2.45-13 2.45S5.3 30.2 5 29.37V6.82c.3-.82 5-2.46 13-2.46c1.7 0 3.25.08 4.64.2a7.4 7.4 0 0 1 .67-1.94c-1.88-.18-3.75-.26-5.31-.26c-5.57 0-15 .93-15 4.43v22.58c0 3.49 9.43 4.43 15 4.43s15-.93 15-4.43v-16.5a7.5 7.5 0 0 1-2 .56"
+        className="clr-i-outline--badged clr-i-outline-path-2--badged"
+      />
+      <circle
+        cx="30"
+        cy="6"
+        r="5"
+        fill="currentColor"
+        className="clr-i-outline--badged clr-i-outline-path-3--badged clr-i-badge"
+      />
+      <path fill="none" d="M0 0h36v36H0z" />
+    </svg>
+  );
+}
+
+export function LightFile(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M14 11a3 3 0 0 1-3-3V4H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-8zm-2-3a2 2 0 0 0 2 2h3.59L12 4.41zM7 3h5l7 7v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3"
+      />
+    </svg>
+  );
+}
+
+export function NewWindowAdd(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M5.616 20q-.691 0-1.153-.462T4 18.384V5.616q0-.691.463-1.153T5.616 4h4.5q.212 0 .356.144t.144.357t-.144.356t-.356.143h-4.5q-.231 0-.424.192T5 5.616v12.769q0 .23.192.423t.423.192h12.77q.23 0 .423-.192t.192-.423v-4.5q0-.213.144-.357t.357-.143t.356.143t.143.357v4.5q0 .69-.462 1.153T18.384 20zM16 8h-2.5q-.213 0-.356-.144T13 7.499t.144-.356T13.5 7H16V4.5q0-.213.144-.356T16.501 4t.356.144T17 4.5V7h2.5q.213 0 .356.144t.144.357t-.144.356T19.5 8H17v2.5q0 .213-.144.356t-.357.144t-.356-.144T16 10.5z"
+      />
+    </svg>
+  );
+}
+
+export function UserCircle(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+        color="currentColor"
+      >
+        <path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />
+        <path d="M14.75 9.5a2.75 2.75 0 1 1-5.5 0a2.75 2.75 0 0 1 5.5 0M5.5 19l.56-.98a5 5 0 0 1 4.342-2.52h3.196a5 5 0 0 1 4.342 2.52l.56.98" />
+      </g>
+    </svg>
+  );
+}
+
+export function FileDownloadFill(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="m16 2l5 5v14.008a.993.993 0 0 1-.993.992H3.993A1 1 0 0 1 3 21.008V2.992C3 2.444 3.445 2 3.993 2zm-3 10V8h-2v4H8l4 4l4-4z"
+      />
+    </svg>
+  );
+}
+
+export function SignOutFill(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M4 5.4A1.4 1.4 0 0 1 5.4 4h6.2A1.4 1.4 0 0 1 13 5.4V8a1 1 0 1 0 2 0V5.4A3.4 3.4 0 0 0 11.6 2H5.4A3.4 3.4 0 0 0 2 5.4v13.2A3.4 3.4 0 0 0 5.4 22h6.2a3.4 3.4 0 0 0 3.4-3.4V16a1 1 0 1 0-2 0v2.6a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 18.6z"
+      />
+      <path
+        fill="currentColor"
+        d="M17.293 8.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 0 1-1.414-1.414L18.586 13H7a1 1 0 1 1 0-2h11.586l-1.293-1.293a1 1 0 0 1 0-1.414"
+      />
+    </svg>
+  );
+}
+
+export function PendingInvite({ width = 33, height = 32, ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={width}
+      height={height}
+      viewBox="0 0 33 32"
+      fill="none"
+      {...props}
+    >
+      <rect width={31} height={31} x={0.5} y={0.5} stroke="#096DD9" rx={15.5} />
+      <path
+        fill="#fff"
+        d="M10.333 12v8h11.333v-8H10.334ZM16 16.133l-3.2-2.8h6.433L16 16.133Zm-2.4-.333-1.933 1.933v-3.6L13.6 15.8Zm1 .867.967.833c.133.1.267.167.433.167.167 0 .3-.067.433-.167l.867-.767 1.933 1.933H12.6l2-2Zm3.733-.8 2-1.733V17.9l-2-2.034Z"
+      />
+      <path
+        stroke="#fff"
+        strokeLinecap="round"
+        strokeWidth={3}
+        d="M31.281 11.258a16 16 0 0 0-8.439-9.721"
+      />
+    </svg>
+  );
+}

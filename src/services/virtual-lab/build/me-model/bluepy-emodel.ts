@@ -1,4 +1,4 @@
-import Ws, { BluePyEModelCmd, WSResponses } from './websocket';
+import Ws, { BluePyEModelCmd, Cmd } from './websocket';
 
 import { meModelAnalysisSvc } from '@/config';
 
@@ -15,7 +15,7 @@ export default class BluePyEModelCls {
 
   constructor(modelSelfUrl: string, token: string, config: BluePyEModelConfig = {}) {
     this.config = config;
-    this.ws = new Ws(meModelAnalysisSvc.wsUrl, token, this.onMessage);
+    this.ws = new Ws(meModelAnalysisSvc.wsUrl, token, { onMessage: this.onMessage });
     this.ws.send(BluePyEModelCmd.SET_MODEL, { model_self_url: modelSelfUrl });
   }
 
@@ -23,7 +23,7 @@ export default class BluePyEModelCls {
     this.ws.send(BluePyEModelCmd.RUN_ANALYSIS, {});
   }
 
-  private onMessage = (cmd: WSResponses) => {
+  private onMessage = (cmd: Cmd) => {
     switch (cmd) {
       case 'set_model_done':
         this.config.onInit?.();

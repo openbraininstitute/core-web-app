@@ -7,10 +7,8 @@ import { Button, ConfigProvider, Input } from 'antd';
 import { EditOutlined, UnlockOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
-import VirtualLabMainStatistics from './VirtualLabMainStatistics';
-
-import { basePath } from '@/config';
-import { VirtualLab } from '@/types/virtual-lab/lab';
+import VirtualLabMainStatistics from '@/components/VirtualLab/VirtualLabBanner/VirtualLabMainStatistics';
+import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
 import useUpdateProject from '@/hooks/useUpdateVirtualLabProject';
 import { useDebouncedCallback, useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabBalanceAtomFamily, virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
@@ -18,10 +16,11 @@ import {
   projectBalanceAtomFamily,
   virtualLabProjectUsersAtomFamily,
 } from '@/state/virtual-lab/projects';
-import { classNames } from '@/util/utils';
-import { generateLabUrl } from '@/util/virtual-lab/urls';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { notification as notify } from '@/api/notifications';
-import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
+import { generateLabUrl } from '@/util/virtual-lab/urls';
+import { classNames } from '@/util/utils';
+import { basePath } from '@/config';
 import styles from './virtual-lab-banner.module.css';
 
 function BackgroundImg({
@@ -187,12 +186,13 @@ const linkClassName = 'absolute left-0 top-0 flex h-full w-full justify-between 
 type Props = { createdAt?: string; description?: string; name?: string };
 
 export function DashboardBanner({ createdAt, description, id, name }: Props & { id: string }) {
-  const users = useLastTruthyValue(virtualLabMembersAtomFamily(id));
+  const usersResult = useLastTruthyValue(virtualLabMembersAtomFamily(id));
   const balance = useLastTruthyValue(virtualLabBalanceAtomFamily({ virtualLabId: id }));
 
   const labUrl = id && generateLabUrl(id);
   const href = `${labUrl}/overview`;
-
+  const users = usersResult?.data?.users;
+  const total = usersResult?.data?.total;
   return (
     <>
       <BackgroundImg backgroundImage={hippocampusImg} className="hover:brightness-110">
@@ -201,7 +201,7 @@ export function DashboardBanner({ createdAt, description, id, name }: Props & { 
             admin={users?.find((user) => user.role === 'admin')?.name || '-'}
             createdAt={createdAt}
             label="Virtual lab Name"
-            userCount={users?.length || 0}
+            userCount={total || 0}
             balance={balance?.data.balance}
           >
             <StaticValues description={description} name={name} dataTestid="dashboard-banner" />
@@ -225,7 +225,7 @@ export function SandboxBanner({ description, name }: Omit<Props, 'createdAt'>) {
 }
 
 export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
-  const users = useUnwrappedValue(virtualLabMembersAtomFamily(vlab?.id));
+  const usersResult = useUnwrappedValue(virtualLabMembersAtomFamily(vlab?.id));
   const balance = useUnwrappedValue(virtualLabBalanceAtomFamily({ virtualLabId: vlab?.id }));
 
   const updateVlab = useUpdateVirtualLab(vlab?.id);
@@ -244,7 +244,8 @@ export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
   };
 
   const { button: editBtn, isEditable } = useEditBtn({ dataTestid: 'lab-detail-banner-edit-btn' });
-
+  const users = usersResult?.data?.users;
+  const total = usersResult?.data?.total;
   return (
     <>
       <BackgroundImg backgroundImage={hippocampusImg}>
@@ -253,7 +254,7 @@ export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
             admin={users?.find((user) => user.role === 'admin')?.name || '-'}
             createdAt={vlab?.created_at}
             label="Virtual lab Name"
-            userCount={users?.length || 0}
+            userCount={total || 0}
             balance={balance?.data.balance}
           >
             {isEditable ? (
@@ -291,7 +292,9 @@ export function ProjectDetailBanner({
   projectId,
   virtualLabId,
 }: Props & { projectId: string; virtualLabId: string }) {
-  const users = useAtomValue(unwrap(virtualLabProjectUsersAtomFamily({ virtualLabId, projectId })));
+  const usersResult = useAtomValue(
+    unwrap(virtualLabProjectUsersAtomFamily({ virtualLabId, projectId }))
+  );
   const balance = useUnwrappedValue(projectBalanceAtomFamily({ virtualLabId, projectId }));
 
   const updateProject = useUpdateProject(virtualLabId, projectId);
@@ -314,6 +317,8 @@ export function ProjectDetailBanner({
     { leading: true }
   );
 
+  const users = usersResult?.data?.users;
+  const totalUsers = usersResult?.data?.total_active;
   const { button: editBtn, isEditable } = useEditBtn({
     dataTestid,
   });
@@ -337,7 +342,7 @@ export function ProjectDetailBanner({
           admin={users?.find((user) => user.role === 'admin')?.name || '-'}
           createdAt={createdAt}
           label="Project Name"
-          userCount={users?.length ?? 0}
+          userCount={totalUsers ?? 0}
           balance={balance?.balance ?? ''}
         >
           {isEditable ? (

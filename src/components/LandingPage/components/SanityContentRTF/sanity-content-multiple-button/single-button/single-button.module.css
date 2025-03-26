@@ -1,0 +1,38 @@
+a.singleButton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-primary);
+  border-radius: 16px;
+  width: 588px;
+  max-width: calc(100vw - 16px);
+  height: 250px;
+  padding: 32px;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-sans-serif);
+  font-size: var(--font-size-M);
+  color: #fffe;
+}
+
+.background {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+a.singleButton h1 {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-L);
+  margin: 0;
+}
+
+a.singleButton > div,
+a.singleButton > svg {
+  z-index: 2;
+}

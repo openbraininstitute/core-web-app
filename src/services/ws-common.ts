@@ -17,9 +17,9 @@ type Message = string;
 type Data = any;
 type CmdId = number;
 type MessageQueueEntry = [Message, Data, CmdId | undefined];
-type OnMessageHandler<WSResponses> = (cmd: WSResponses, data: any) => void;
+export type OnMessageHandler<Cmd> = (cmd: Cmd, data: any) => void;
 
-export default class WsCommon<WSResponses> {
+export default class WsCommon<Cmd> {
   private cmdId: number = 0;
 
   private closing: boolean = false;
@@ -28,7 +28,11 @@ export default class WsCommon<WSResponses> {
 
   private messageContext?: any;
 
-  private onMessage: OnMessageHandler<WSResponses>;
+  private onMessage: OnMessageHandler<Cmd>;
+
+  private onOpen?: () => void;
+
+  private onClose?: () => void;
 
   private requestResolvers = new Map<number, (data: Data) => void>();
 
@@ -38,12 +42,26 @@ export default class WsCommon<WSResponses> {
 
   private serviceUp = false;
 
-  constructor(webSocketUrl: string, token: string, onMessage: OnMessageHandler<WSResponses>) {
+  private token?: string;
+
+  constructor(
+    webSocketUrl: string,
+    token: string,
+    {
+      onMessage,
+      onOpen,
+      onClose,
+    }: { onMessage: OnMessageHandler<Cmd>; onOpen: () => void; onClose: () => void }
+  ) {
     this.webSocketUrl = webSocketUrl;
 
     this.onMessage = onMessage;
+    this.onOpen = onOpen;
+    this.onClose = onClose;
 
-    this.init(token);
+    this.token = token;
+
+    this.init();
   }
 
   send(message: Message, data?: Data, cmdId?: CmdId) {
@@ -109,15 +127,22 @@ export default class WsCommon<WSResponses> {
     this.socket.send(JSON.stringify({}));
   }
 
-  private init = (token: string) => {
+  private init = () => {
     if (this.closing) return;
 
-    const socket = new WebSocket(this.webSocketUrl, `Bearer-${token}`);
+    const socket = new WebSocket(this.webSocketUrl, `Bearer-${this.token}`);
     this.socket = socket;
 
     // send message to check until the service is up
-    socket.addEventListener('open', () => this.sendCheckUpMsg());
-    socket.addEventListener('close', this.reconnect);
+    socket.addEventListener('open', () => {
+      this.sendCheckUpMsg();
+      this.onOpen?.();
+    });
+
+    socket.addEventListener('close', () => {
+      this.onClose?.();
+      this.reconnect();
+    });
 
     socket.addEventListener('message', (e) => {
       const message = JSON.parse(e.data);

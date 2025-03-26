@@ -1,7 +1,6 @@
 'use client';
 
 import { Input, Modal } from 'antd';
-import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import NotebookTable from '../NotebookTable';
@@ -121,9 +120,14 @@ export default function UserNotebookPage({
                 the url of a code repository containing the notebooks and they will be available in
                 your virtual lab for all members. The repository must be structured according to the
                 following{' '}
-                <Link href="spec" className="text-primary-8 underline">
+                <a
+                  href="https://github.com/openbraininstitute/obi_platform_analysis_notebooks/blob/main/Notebook_repository.md"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  className="text-primary-8 underline"
+                >
                   specifications.
-                </Link>
+                </a>
               </p>
               <div className="mb-3 font-bold text-primary-8">Github url</div>
               <Input

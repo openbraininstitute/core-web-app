@@ -1,7 +1,8 @@
 import React from 'react';
-import { PortableText } from 'next-sanity';
+import { PortableText, PortableTextReactComponents } from 'next-sanity';
 
 import { RichText } from '../../content/_common';
+import Spacer from './spacer';
 import { classNames } from '@/util/utils';
 import { isString } from '@/util/type-guards';
 
@@ -11,12 +12,29 @@ export interface TextProps {
   className?: string;
   value: string | RichText;
   raw?: boolean;
+  maxLines?: number;
 }
 
-export function Text({ className, value, raw }: TextProps) {
+export function Text({ className, value, raw, maxLines = 0 }: TextProps) {
   return (
-    <div className={classNames(className, styles.text, raw && styles.raw)}>
-      {isString(value) ? value : <PortableText value={value} />}
+    <div
+      className={classNames(
+        className,
+        styles.text,
+        raw && styles.raw,
+        maxLines > 0 && styles.maxLines
+      )}
+      style={{
+        '--custom-max-lines': maxLines,
+      }}
+    >
+      {isString(value) ? value : <PortableText value={value} components={COMPONENTS} />}
     </div>
   );
 }
+
+const COMPONENTS: Partial<PortableTextReactComponents> = {
+  types: {
+    spacer: (value: unknown) => <Spacer value={value} />,
+  },
+};

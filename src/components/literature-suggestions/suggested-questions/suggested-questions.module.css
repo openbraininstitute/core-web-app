@@ -1,0 +1,36 @@
+.suggestedQuestions {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 0.25em;
+}
+
+.suggestedQuestions > button {
+  --color-grey: color-mix(in srgb, var(--color-neutral-0) 20%, transparent);
+  padding: 0 0 0 0.5em;
+  background-color: transparent;
+  border: none;
+  border-left: 1px solid var(--color-grey);
+  color: var(--color-primary-3);
+  transition: all 0.3s;
+  text-align: left;
+  margin: 0.25em 0;
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+
+.suggestedQuestions > button > svg {
+  flex: 0 0 auto;
+  color: var(--color-grey);
+}
+
+.suggestedQuestions > button:hover {
+  color: var(--color-primary-5);
+}

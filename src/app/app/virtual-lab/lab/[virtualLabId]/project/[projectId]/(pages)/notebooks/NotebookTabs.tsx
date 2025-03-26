@@ -18,7 +18,7 @@ export default function NotebookTabs({ vlabId, projectId }: { projectId: string;
   const isMember = currentPath.includes('member');
 
   return (
-    <div className="-mt-[84px] ml-5 flex">
+    <div className="ml-5 flex">
       <Link href={notebooksPath} className={tabClassName(!isMember)}>
         OBI Notebooks
       </Link>

@@ -16,6 +16,7 @@ const FREE_ACCESS_PAGES = [
   '/terms',
   '/privacy',
   '/coming-soon',
+  '/the-real-digital-brain-story',
 
   '/app/log-in',
 
@@ -45,15 +46,19 @@ export async function middleware(request: NextRequest) {
   // Primary hostname redirect
   // TODO: remove after redirect is implemented on infra side
   if (PRIMARY_HOSTNAME) {
+    const host = request.headers.get('host');
     const url = request.nextUrl.clone();
-    if (url.hostname !== PRIMARY_HOSTNAME) {
+    if (host !== PRIMARY_HOSTNAME) {
       url.hostname = PRIMARY_HOSTNAME;
+      url.port = '443';
+      url.protocol = 'https';
       return NextResponse.redirect(url);
     }
   }
 
   // Rest of the existing middleware code...
   const requestUrl = request.nextUrl.pathname;
+
   // const { device } = userAgent(request);
 
   // Allow free access to assets

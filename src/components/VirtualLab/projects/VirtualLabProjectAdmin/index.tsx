@@ -26,7 +26,9 @@ export default function VirtualLabProjectAdmin({
   const userIsAdmin = true;
 
   const refreshUserProjects = useSetAtom(userProjectsAtom);
-  const refreshVirtualLabProjects = useSetAtom(virtualLabProjectsAtomFamily(virtualLabId));
+  const refreshVirtualLabProjects = useSetAtom(
+    virtualLabProjectsAtomFamily({ virtualLabId, page: 1, size: 20 })
+  );
 
   const [activePanelKey, setActivePanel] = useQueryState('panel', {
     clearOnDefault: true,

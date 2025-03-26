@@ -25,7 +25,8 @@ import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 
-const DEFAULT_ERROR_MSG = 'Somethng went wrong while creating the ME-model, please try again later';
+const DEFAULT_ERROR_MSG =
+  'Something went wrong while creating the ME-model, please try again later';
 const LOW_FUNDS_ERROR_MSG =
   'The project does not have enough credits to create a model, please add more and try again';
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
@@ -38,7 +39,8 @@ type Params = {
 };
 
 function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
-  const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }));
+  const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
+    ?.data?.users;
   const selectedMModel = useAtomValue(selectedMModelAtom);
   const selectedEModel = useAtomValue(selectedEModelAtom);
 
@@ -120,16 +122,32 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   const createMEModel = useSetAtom(createMEModelAtom);
   const [meModelCreating, setMeModelCreating] = useState<boolean>(false);
 
-  const { contextHolder, createModal } = usePendingValidationModal();
+  const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
 
   const modelsAreSelected = selectedEModel && selectedMModel;
 
+  const showErrorNotification = (error: any) => {
+    notification.error({
+      duration: 10,
+      message:
+        error?.cause?.error_code === LOW_FUNDS_ERROR_CODE ? LOW_FUNDS_ERROR_MSG : DEFAULT_ERROR_MSG,
+    });
+  };
+
+  const fetchFreshAccessToken = async () => {
+    const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
+    const token = await res.json();
+    return token.accessToken;
+  };
+
   const onClickWithValidation = () => {
     setMeModelCreating(true);
-    createMEModel({ virtualLabId, projectId });
-    setMeModelCreating(false);
 
-    createModal({ virtualLabId, projectId });
+    createMEModel({ virtualLabId, projectId })
+      .then(fetchFreshAccessToken)
+      .then((accessToken) => createValidationModal({ virtualLabId, projectId }, accessToken))
+      .catch((err) => showErrorNotification(err))
+      .finally(() => setMeModelCreating(false));
   };
 
   const onClickWithoutValidation = () => {
@@ -137,7 +155,6 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
 
     createMEModel({ virtualLabId, projectId })
       .then((meModel) => {
-        if (!meModel) return;
         const redirectionUrl = detailUrlWithinLab(
           virtualLabId,
           projectId,
@@ -151,18 +168,13 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
           message: 'ME-model created successfully',
         });
         refreshMeModels();
-        setMeModelCreating(false);
         router.push(redirectionUrl);
       })
       .catch((err) => {
+        showErrorNotification(err);
+      })
+      .finally(() => {
         setMeModelCreating(false);
-        notification.error({
-          duration: 10,
-          message:
-            err?.cause?.error_code === LOW_FUNDS_ERROR_CODE
-              ? LOW_FUNDS_ERROR_MSG
-              : DEFAULT_ERROR_MSG,
-        });
       });
   };
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Session } from 'next-auth';
 import JSZip from 'jszip';
-import { Analysis } from '@/app/app/explore/(content)/simulation-campaigns/shared';
+import { Analysis } from '@/app/app/virtual-lab/(free)/explore/(content)/simulation-campaigns/shared';
 import { to64 } from '@/util/common';
 import {
   createWorkflowConfigResource,

@@ -28,6 +28,11 @@ export const SECTIONS: Readonly<Section[]> = [
     slug: '/terms',
   },
   { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: '/releasing-soon' },
+  {
+    index: EnumSection.Story,
+    caption: 'The real digital brain story',
+    slug: '/the-real-digital-brain-story',
+  },
 ];
 
 export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection; slug: string }>> = [

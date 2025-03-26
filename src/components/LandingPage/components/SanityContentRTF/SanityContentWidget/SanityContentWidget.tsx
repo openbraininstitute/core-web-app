@@ -20,6 +20,7 @@ import WidgetMultipleMember from '@/components/LandingPage/widgets/multiple-memb
 import WidgetPriceList2 from '@/components/LandingPage/widgets/price-list-2/price-list-2';
 import WidgetRepositories from '@/components/LandingPage/widgets/repositories';
 import WidgetSpecialContributors from '@/components/LandingPage/widgets/special-contributors';
+import WidgetMilestones from '@/components/LandingPage/widgets/milestones';
 
 export interface SanityContentWidgetProps {
   value: ContentForRichTextWidget;
@@ -63,6 +64,10 @@ export default function SanityContentWidget({ value }: SanityContentWidgetProps)
       return <WidgetRepositories />;
     case 'specialContributors':
       return <WidgetSpecialContributors />;
+    case 'milestones':
+      return <WidgetMilestones />;
+    case 'multipleButton':
+      return <pre>{JSON.stringify(value, null, '  ')}</pre>;
     default:
       return (
         <Error>

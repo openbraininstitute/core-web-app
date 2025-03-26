@@ -91,7 +91,7 @@ export default function ThreeDeeBrain() {
   }
 
   return (
-    <div ref={threeDRef} className="h-full w-full bg-black">
+    <div ref={threeDRef} className="h-full w-full">
       <LoadingHandler section={section} />
       <FullScreen elementRef={threeDRef} />
       <Canvas

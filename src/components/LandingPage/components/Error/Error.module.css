@@ -7,3 +7,7 @@
   margin: 1em;
   white-space: pre-wrap;
 }
+
+.error pre {
+  font-size: var(--font-size-S);
+}

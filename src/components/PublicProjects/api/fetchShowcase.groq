@@ -1,0 +1,8 @@
+`*[_type == "publicProjects"][] {
+    name,
+    slug,
+    authorsList,
+    description,
+    _updatedAt,
+    'heroImage': heroImage.asset->url,
+}`

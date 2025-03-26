@@ -5,11 +5,11 @@ import {
   isContentForNewsList,
   useSanityContentForNewsListCount,
 } from '../../content';
-import { fetchSanity } from '../../content/content';
 import { styleBlockMedium, styleButtonRounded } from '../../styles';
 import CenteredColumn from '../../components/CenteredColumn';
 import Card from './Card';
 import CategoryButton from './CategoryButton';
+import { fetchSanity } from '@/services/sanity';
 import { classNames } from '@/util/utils';
 
 import styles from './SectionNews.module.css';

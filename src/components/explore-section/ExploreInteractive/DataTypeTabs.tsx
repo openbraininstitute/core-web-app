@@ -4,13 +4,18 @@ import { useMemo } from 'react';
 import { useAtomValue, atom, useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { brainRegionsAtom, selectedBrainRegionAtom } from '@/state/brain-regions';
 import MenuTabs from '@/components/MenuTabs';
 
 enum DataTypeTabsEnum {
   'Experimental data' = 'experimental-data',
   'Model data' = 'model-data',
-  'Literature' = 'literature',
+  /**
+   * Daniela asked to remove it in this ticket:
+   * https://github.com/openbraininstitute/prod-explore-functionality/issues/47#issuecomment-2729269604
+   */
+  // 'Literature' = 'literature',
 }
 
 type DataTypeActiveTab = `${DataTypeTabsEnum}`;
@@ -27,7 +32,15 @@ export default function DataTypeTabs() {
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const brainRegions = useAtomValue(useMemo(() => unwrap(brainRegionsAtom), []));
   const selected = brainRegions?.find((brainRegion) => brainRegion.id === selectedBrainRegion?.id);
-  const onTabClick = (activeKey: string) => setDataTypeTab(activeKey as DataTypeActiveTab);
+
+  const onTabClick = async (activeKey: string) => {
+    setDataTypeTab(activeKey as DataTypeActiveTab);
+    if (!(await userJourneyTracker.getCurrentTuple())) {
+      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+    }
+    const artifact = DATA_TYPE_TABS.find((o) => o.id === activeKey)?.label;
+    await userJourneyTracker.handleClick('data_type', artifact!);
+  };
 
   return (
     selected && (

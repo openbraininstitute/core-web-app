@@ -1,4 +1,4 @@
-import GenericEvent from './generic-event';
+import GenericEvent from '../../../../util/generic-event';
 
 interface PointerStart {
   startX: number;

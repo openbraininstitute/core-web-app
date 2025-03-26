@@ -1,8 +1,13 @@
 import { ReactNode } from 'react';
-import Link from 'next/link';
+import { useAtomValue } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 
 import { classNames } from '@/util/utils';
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { selectedBrainRegionAtom } from '@/state/brain-regions';
+import { ensureString } from '@/util/type-guards';
+import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 
 export default function StatItem({
   href,
@@ -15,10 +20,22 @@ export default function StatItem({
   title: ReactNode;
   subtitle: ReactNode;
 }) {
+  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
+  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const onClick = async () => {
+    if (!(await userJourneyTracker.getCurrentTuple())) {
+      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+    }
+    const artifact = ensureString(title, 'Morphology');
+    setCurrentExplorerArtifact(artifact);
+    await userJourneyTracker.handleClick('artifact', artifact);
+  };
+
   return (
     <Link
       href={href}
-      className="flex h-[50px] w-full justify-between rounded-sm bg-neutral-7 px-3 py-4 text-white hover:text-primary-4"
+      className="flex h-[50px] w-full justify-between rounded-sm bg-[#013a8c] px-3 py-4 text-white hover:text-primary-4"
+      onClick={onClick}
       data-testid={testId}
     >
       <span className="text-base font-bold">{title}</span>

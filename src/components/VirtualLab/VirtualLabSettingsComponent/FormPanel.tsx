@@ -1,17 +1,16 @@
-import { ReactNode, useCallback, useReducer, useState } from 'react';
-import { Button, ConfigProvider, Form, Input } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { ReactNode, useReducer, useState } from 'react';
+import { ConfigProvider, Form, Input } from 'antd';
 import { ConfigProviderProps } from 'antd/lib/config-provider';
 import { FormProps } from 'antd/lib/form/Form';
 import type { FormItemProps } from 'antd/lib/form/FormItem';
 import type { InputProps } from 'antd/lib/input/Input';
 import type { TextAreaProps } from 'antd/lib/input/TextArea';
-
 import capitalize from 'lodash/capitalize';
+
 import useNotification from '@/hooks/notifications';
-import { VirtualLab } from '@/types/virtual-lab/lab';
-import { classNames } from '@/util/utils';
 import { useDebouncedCallback } from '@/hooks/hooks';
+import { classNames } from '@/util/utils';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type RenderInputProps = Omit<FormItemProps, 'children'> & {
   children: (props: InputProps & TextAreaProps) => ReactNode;
@@ -24,7 +23,6 @@ type InformationForm = { name: string; description: string; reference_email: str
 export const renderInput = ({
   disabled,
   maxLength,
-  onClick,
   placeholder,
   style,
   title,
@@ -32,7 +30,7 @@ export const renderInput = ({
 }: InputProps) => {
   return (
     <Input
-      addonAfter={<Button ghost icon={<EditOutlined />} onClick={onClick} />}
+      // addonAfter={<Button ghost icon={<EditOutlined />} onClick={onClick} />}
       className={classNames('!bg-white px-4 pl-3 pr-2 text-primary-9', disabled ? '' : 'font-bold')}
       disabled={disabled}
       maxLength={maxLength} // Used in conjunction with "rules"
@@ -49,7 +47,6 @@ export const renderTextArea: (props: TextAreaProps) => ReactNode = ({
   disabled,
   maxLength,
   name,
-  onClick,
   placeholder,
   style,
   title,
@@ -72,7 +69,7 @@ export const renderTextArea: (props: TextAreaProps) => ReactNode = ({
           variant="borderless"
         />
       </Form.Item>
-      <Button className="mr-2 mt-2 self-baseline" ghost icon={<EditOutlined />} onClick={onClick} />
+      {/* <Button className="mr-2 mt-2 self-baseline" ghost icon={<EditOutlined />} onClick={onClick} /> */}
     </Input.Group>
   );
 };
@@ -88,16 +85,16 @@ function SettingsFormItem({
   type,
   validateStatus,
 }: RenderInputProps) {
-  const [disabled, dispatch] = useReducer(
+  const [disabled] = useReducer(
     (state: boolean, { action }: { action: 'toggle' }): boolean => {
       return action === 'toggle' ? !state : state;
     },
     true // Disabled by default
   );
 
-  const onClick = useCallback(() => {
-    dispatch({ action: 'toggle' });
-  }, []);
+  // const onClick = useCallback(() => {
+  //   dispatch({ action: 'toggle' });
+  // }, []);
 
   return (
     <ConfigProvider
@@ -130,7 +127,6 @@ function SettingsFormItem({
             disabled,
             maxLength, // Used in conjunction with "rules"
             name, // Used for TextArea, not for Input
-            onClick,
             placeholder: `${label}...`,
             type,
           })}
@@ -192,6 +188,7 @@ function SettingsForm({
         className={classNames('px-[28px]', className)}
         layout="vertical"
         requiredMark={false}
+        disabled
         {...formProps} // eslint-disable-line react/jsx-props-no-spreading
       >
         {

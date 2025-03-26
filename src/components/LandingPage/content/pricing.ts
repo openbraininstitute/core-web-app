@@ -1,8 +1,8 @@
 /* eslint-disable no-param-reassign */
 import { tryType } from './_common';
-import { useSanity } from './content';
 import { typeBooleanOrNull, typeNumberOrNull, typeStringOrNull } from './types';
 import query from './pricing.groq';
+import { useSanity } from '@/services/sanity';
 import { isBoolean, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForPricing(): ContentForPricing | undefined | null {
@@ -78,6 +78,7 @@ export interface MultiCurrencyPrice {
 const typeContentForPricingPlan: TypeDef = {
   id: 'string',
   title: 'string',
+  buttonLabel: typeStringOrNull,
   notes: ['|', 'null', ['array', 'string']],
   price: {
     month: ['|', 'null', typeMultiCurrencyPriceArray],
@@ -90,6 +91,7 @@ const typeContentForPricingPlan: TypeDef = {
 export interface ContentForPricingPlan {
   id: string;
   title: string;
+  buttonLabel: string;
   notes: string[];
   price: {
     month: MultiCurrencyPrice[];

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { styleBlockLarge } from '../../styles';
+import { styleBlockFullWidthPadded } from '../../styles';
 import { useSanityContentForRepositories } from './hooks';
 import RepositoryCard from './repository-card';
 import { classNames } from '@/util/utils';
@@ -15,7 +15,7 @@ export default function WidgetRepositories({ className }: WidgetRepositoriesProp
   const repositories = useSanityContentForRepositories();
 
   return (
-    <div className={classNames(className, styles.repositories, styleBlockLarge)}>
+    <div className={classNames(className, styles.repositories, styleBlockFullWidthPadded)}>
       {repositories.map((repo) => (
         <RepositoryCard key={repo.url} value={repo} />
       ))}

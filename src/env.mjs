@@ -95,6 +95,8 @@ export const env = createEnv({
     NEXT_PUBLIC_MATOMO_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_CDN_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_SITE_ID: z.string().optional(),
+    // There is only one Sanity server, but with two datasets.
+    NEXT_PUBLIC_SANITY_DATASET: z.enum(["staging", "production"]).optional(),
   },
 
   experimental__runtimeEnv: {

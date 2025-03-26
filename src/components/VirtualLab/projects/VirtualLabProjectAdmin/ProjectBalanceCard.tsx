@@ -1,41 +1,18 @@
-import { useCallback } from 'react';
-import { useSetAtom } from 'jotai';
-
-import EditIcon from '@/components/icons/Edit';
-import useBalanceTransferModal from '@/hooks/virtual-labs/project';
 import { ProjectBalance } from '@/types/accounting';
-import { Project } from '@/types/virtual-lab/projects';
 import {
   projectBalanceAtomFamily,
   virtualLabProjectDetailsAtomFamily,
 } from '@/state/virtual-lab/projects';
 import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
-import { refreshBalanceAtom } from '@/state/virtual-lab/lab';
+import { Project } from '@/api/virtual-lab-svc/queries/types';
 
 export function ProjectBalanceCard({
-  virtualLabId,
   project,
   balance,
 }: {
-  virtualLabId: string;
   project: Project;
   balance: ProjectBalance;
 }) {
-  const refreshBalance = useSetAtom(refreshBalanceAtom);
-
-  const {
-    createModal: createBalanceTransferModal,
-    contextHolder: balanceTransferModalContextHolder,
-  } = useBalanceTransferModal();
-
-  const onBalanceTransferClick = useCallback(() => {
-    createBalanceTransferModal({
-      virtualLabId,
-      projectId: project.id,
-      onTransferSuccess: refreshBalance,
-    });
-  }, [createBalanceTransferModal, virtualLabId, project.id, refreshBalance]);
-
   return (
     <div className="flex w-full items-center justify-between rounded-lg py-6 text-white">
       <div>
@@ -54,17 +31,7 @@ export function ProjectBalanceCard({
           <p className="text-sm text-primary-2">Credit balance</p>
           <p className="text-lg font-semibold">{balance?.balance ?? ''}</p>
         </div>
-        <button
-          type="button"
-          className="flex items-center justify-center px-4 py-2 hover:bg-primary-5 focus:outline-none"
-          aria-label="Transfer credits"
-          onClick={onBalanceTransferClick}
-        >
-          <EditIcon />
-        </button>
       </div>
-
-      {balanceTransferModalContextHolder}
     </div>
   );
 }
@@ -85,5 +52,5 @@ export function ProjectBalanceCardWithFetching({
     return <div>Loading...</div>;
   }
 
-  return <ProjectBalanceCard virtualLabId={virtualLabId} project={project} balance={balance} />;
+  return <ProjectBalanceCard project={project} balance={balance} />;
 }

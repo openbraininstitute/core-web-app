@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { CheckCircleFilled, ClockCircleFilled } from '@ant-design/icons';
 
 import colorDictionary from './availableColors';
-import { Role } from '@/types/virtual-lab/members';
 import { classNames } from '@/util/utils';
+import { Role } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   memberRole: Role;

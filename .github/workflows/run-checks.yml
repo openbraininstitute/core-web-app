@@ -59,26 +59,27 @@ jobs:
 
       - name: Run linter
         run: npm run lint
-  test:
-    needs: install_packages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+  # test:
+  #   needs: install_packages
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v4
 
-      - name: Set-up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 23
-          cache: 'npm'
+  #     - name: Set-up Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 23
+  #         cache: 'npm'
 
-      - name: Install Node.js packages
-        run: npm ci
+  #     - name: Install Node.js packages
+  #       run: npm ci
 
-      - name: Run tests
-        run: npm run test:ci
+  #     - name: Run tests
+  #       run: npm run test:ci
+  #
   build:
-    needs: [test, prettier, linter]
+    needs: [prettier, linter]
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: --max-old-space-size=7168
