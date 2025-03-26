@@ -1,4 +1,5 @@
-.icon {
-  width: 1.5em;
-  height: 1.5em;
+svg.icon {
+  width: var(--custom-icon-size, 1.5em);
+  height: var(--custom-icon-size, 1.5em);
+  background-color: transparent;
 }

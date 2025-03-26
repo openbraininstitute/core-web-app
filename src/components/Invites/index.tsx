@@ -123,7 +123,7 @@ export default function InviteLoader() {
 
               {!hasPaidPlan && (
                 <p className="mt-4 text-xl text-primary-9">
-                  Only users with a paid subscription can join others' {inviteDetails.origin}s.
+                  Only users with a paid subscription can join others&apos; {inviteDetails.origin}s.
                 </p>
               )}
 

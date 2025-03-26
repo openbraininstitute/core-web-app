@@ -1,5 +1,4 @@
 .messageItem {
-  --color-primary: #012766;
   --size-icon: 48px;
 }
 
@@ -10,7 +9,7 @@
   justify-content: flex-start;
   align-items: stretch;
   gap: 0;
-  color: #fffe;
+  color: var(--color-neutral-0);
   margin: 8px 0;
 }
 
@@ -19,7 +18,7 @@
   flex: 0 0 auto;
   padding: 8px;
   border-radius: 16px 0 0 16px;
-  background-color: var(--color-primary);
+  background-color: var(--color-neutral-5);
   font-size: 1em;
   display: flex;
   flex-wrap: nowrap;
@@ -41,20 +40,19 @@
 .userContent {
   flex: 1 1 auto;
   padding: 8px;
-  border-radius: 16px;
-  background-color: var(--color-primary);
+  border-radius: 6px;
+  background-color: var(--color-neutral-5);
   display: flex;
   flex-wrap: nowrap;
   flex-direction: column;
   justify-content: space-around;
   align-items: stretch;
   min-height: 64px;
+  color: var(--color-primary-3);
 }
 
 .userContent > div {
-  border-left: 3px solid color-mix(in srgb, transparent, currentColor);
-  padding-left: 1em;
-  margin-left: 0.5em;
+  padding: 0 1em;
 }
 
 .markdown ul {
@@ -85,7 +83,7 @@
 }
 
 .markdown a {
-  color: #1890ff;
+  color: var(--color-secondary-5);
   text-decoration: underline;
 }
 
