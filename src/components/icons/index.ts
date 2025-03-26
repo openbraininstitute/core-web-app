@@ -10,10 +10,12 @@ import CheckIcon from './Check';
 import ChevronIcon from './Chevron';
 import ChevronLeft from './ChevronLeft';
 import ChevronRight from './ChevronRight';
+import CloneStrokeIcon from './CloneStrokeIcon';
 import CloseIcon from './CloseIcon';
 import DocumentationIcon from './Documentation';
 import DocumentIcon from './DocumentIcon';
 import DocumentPileIcon from './DocumentPileIcon';
+import DownloadIcon from './DownloadIcon';
 import EyeIcon from './EyeIcon';
 import EyeTargetIcon from './EyeTarget';
 import FileIcon from './File';
@@ -30,6 +32,7 @@ import IconPlus from './Plus';
 import RangeIcon from './Range';
 import ResetIcon from './ResetIcon';
 import SettingsIcon from './Settings';
+import SimulateIcon from './SimulateIcon';
 import StatsEditIcon from './StatsEditIcon';
 import UndoIcon from './UndoIcon';
 import UserIcon from './UserIcon';
@@ -49,11 +52,10 @@ export {
   CheckIcon,
   ChevronIcon,
   ChevronLeft,
-  ChevronRight,
-  CloseIcon,
-  DocumentationIcon,
+  ChevronRight, CloneStrokeIcon, CloseIcon, DocumentationIcon,
   DocumentIcon,
   DocumentPileIcon,
+  DownloadIcon,
   EyeIcon,
   EyeTargetIcon,
   FileIcon,
@@ -70,11 +72,13 @@ export {
   RangeIcon,
   ResetIcon,
   SettingsIcon,
+  SimulateIcon,
   StatsEditIcon,
   UndoIcon,
   UserIcon,
   UserOutlinedIcon,
   VirtualLabIcon,
   ZoomInIcon,
-  ZoomOutIcon,
+  ZoomOutIcon
 };
+

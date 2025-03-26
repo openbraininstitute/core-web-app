@@ -29,30 +29,23 @@ export default function ExploreCircuitTable() {
         );
       };
 
-    // const rowSelection = {
-    //     selectedRowKeys,
-    //     onChange: (newSelectedRow: Key[], _selectedRow: SingleCircuitListView[]) => {
-    //         setSelectedRowKeys(newSelectedRow as string[]);
-    //         console.log('Selected rows:', newSelectedRow);
-    //     },
-    // }
 
     const rowSelection = {
         selectedRowKeys,
         onChange: (newSelectedRowKeys: Key[], selectedRows: SingleCircuitListView[]) => {
-          // When a parent row is selected, expand it and select its sub-rows
+          
           const updatedExpandedKeys = newSelectedRowKeys
             .filter((key) => CIRCUIT_PLACHOLDER_DATA.some((row) => row.key === key && row.hasSubcircuits))
             .map((key) => key as string);
+
           const subRowKeys = selectedRows
             .flatMap((row) => row.subcircuits?.map((sub) => sub.key) || [])
             .filter(Boolean);
+
           setExpandedRowKeys(updatedExpandedKeys);
+
           setSelectedRowKeys([...newSelectedRowKeys.map((k) => k as string), ...subRowKeys]);
         },
-        getCheckboxProps: (record: SingleCircuitListView) => ({
-          disabled: !record.hasSubcircuits,
-        }),
       };
 
     const columns: CircuitColumn[] = [
@@ -60,28 +53,28 @@ export default function ExploreCircuitTable() {
             title: 'Name',
             key: 'name',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap">{value.name}</span>
+                <a href={value.key} className="whitespace-nowrap">{value.name}</a>
             ),
         },
         {
             title: 'Description',
             key: 'description',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap font-normal">{value.description}</span>
+                <a href={value.key} className="whitespace-nowrap font-normal">{value.description}</a>
             ),
         },
         {
             title: 'Brain region',
             key: 'brainRegion',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap font-normal">{value.brainRegion}</span>
+                <a href={value.key} className="whitespace-nowrap font-normal">{value.brainRegion}</a>
             ),
         },
         {
             title: '# Neurons',
             key: 'numberOfNeurons',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap font-normal">{value.numberOfNeurons}</span>
+                <a href={value.key} className="whitespace-nowrap font-normal">{value.numberOfNeurons}</a>
             ),
         },
         {
@@ -95,14 +88,14 @@ export default function ExploreCircuitTable() {
             title: 'Created by',
             key: 'createdBy',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap font-normal">{value.createdBy}</span>
+                <a href={value.key} className="whitespace-nowrap font-normal">{value.metadata.createdBy}</a>
             ),
         },
         {
             title: 'Creation date',
             key: 'creationDate',
             render: (value: SingleCircuitListView) => (
-                <span className="whitespace-nowrap font-normal">{value.creationDate}</span>
+                <a href={value.key} className="whitespace-nowrap font-normal">{value.metadata.creationDate}</a>
             ),
         },
         {
@@ -168,9 +161,7 @@ export default function ExploreCircuitTable() {
                                 .filter((key) => !circuit.subcircuits?.find((subcircuit) => subcircuit.key === key))
                                 .concat(newSelectedRow as string[])
                             if (!updatedKeys.includes(parentKey)) updatedKeys.push(parentKey);
-                            setSelectedRowKeys(updatedKeys);
-                            // setSelectedRowKeys(newSelectedRow as string[]);
-                            // console.log('Selected rows:', newSelectedRow);
+                            setSelectedRowKeys(updatedKeys);                           
                         },
                     }}
                     expandable={{
@@ -189,6 +180,37 @@ export default function ExploreCircuitTable() {
         );
     };
 
+    const handleFileDownload = (format: string) => {
+
+            const selectedRowKeyObjects = CIRCUIT_PLACHOLDER_DATA.filter((circuit) => selectedRowKeys.includes(circuit.key));
+
+            selectedRowKeyObjects.forEach((circuit: SingleCircuitListView ) => {
+                const fileName = circuit.name;
+                let url;
+
+                if (circuit === null) return;
+
+                switch(format) {
+                    case 'sonataFile':
+                        url = circuit.files?.[0]?.key;
+                        break;
+                    case 'connectomeUtilitiesFile':
+                        url = circuit.files?.[1]?.key;
+                        break;
+                    default:
+                        url = circuit.files?.[0].key;
+                        break;
+                }
+
+                const link = document.createElement('a');
+      
+                link.href = url || '';
+                link.download = fileName;
+                link.target = '_blank';
+
+                link.click();
+            })
+    }
 
     return (
         <div className="relative w-full h-full bg-white text-primary-9 text-2xl font-bold py-10">
@@ -222,6 +244,36 @@ export default function ExploreCircuitTable() {
                     expandIcon: () => null,
                 }}
             />
+
+            <div
+                className="fixed w-[400px] h-16 flex flex-row items-center justify-between bottom-6 right-24 z-50 pl-8 bg-primary-8 transition-bottom duration-300 ease-in-out"
+                style={{
+                    bottom: selectedRowKeys.length > 0 ? "24px" : "-60px"
+                }}
+                >
+                    <div className="font-normal text-base text-primary-3">
+                        Download ({selectedRowKeys.length})
+                    </div>
+                    <div className="relative h-full flex flex-row">
+                        <button
+                            type="button"
+                            aria-label="Download sonata circuit"
+                            className="text-white font-normal text-base bg-primary-8 transition-colors duration-300 ease-in hover:bg-primary-1 hover:text-primary-8 px-5"
+                            onClick={() => handleFileDownload('sonataFile')}
+                            >
+                            Sonata 
+                        </button>
+                        <button
+                            type="button"
+                            aria-label="Download connectome utilities"
+                            className="text-white font-normal text-base bg-primary-8 transition-colors duration-300 ease-in hover:bg-primary-1 hover:text-primary-8 px-5"
+                            onClick={() => handleFileDownload('connectomeUtilitiesFile')}
+                            >
+                            Connectome utilities
+                        </button>
+
+                    </div>
+            </div>
         </div>
     )
 }
