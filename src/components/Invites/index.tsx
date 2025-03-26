@@ -150,7 +150,7 @@ export default function InviteLoader() {
                     className="bg-primary-5 px-12 py-8 text-white disabled:text-gray-400"
                     type="button"
                   >
-                    Upgrade to Pro
+                    Upgrade subscription
                   </button>
                 )}
               </div>
