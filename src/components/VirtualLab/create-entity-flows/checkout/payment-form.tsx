@@ -23,6 +23,7 @@ import { SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   onPrevious: () => void;
+  successRedirectUrl?: string;
 };
 
 const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => ({
@@ -49,7 +50,7 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
   },
 });
 
-export function Form({ onPrevious }: Props) {
+export function Form({ onPrevious, successRedirectUrl }: Props) {
   const elements = useElements();
   const stripe = useStripe();
   const { interval, tier } = useAtomValue(flowAtom);
@@ -130,7 +131,7 @@ export function Form({ onPrevious }: Props) {
           true,
           'subscription-payment-success'
         );
-        delay(() => navigate('/app/virtual-lab/account/invoices'), 2000);
+        delay(() => navigate(successRedirectUrl ?? '/app/virtual-lab/account/invoices'), 2000);
       }
     });
   };
@@ -188,7 +189,7 @@ export function Form({ onPrevious }: Props) {
   );
 }
 
-export default function PaymentForm({ onPrevious }: Props) {
+export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
   const stripeRef = useRef(false);
   const session = useAtomValue(sessionAtom);
   const { step } = useAtomValue(flowAtom);
@@ -240,7 +241,7 @@ export default function PaymentForm({ onPrevious }: Props) {
   return (
     <div className="flex h-full flex-grow flex-col">
       <Elements stripe={stripePromise} options={buildStripeFormOptions(setupIntent?.client_secret)}>
-        <Form onPrevious={onPrevious} />
+        <Form onPrevious={onPrevious} successRedirectUrl={successRedirectUrl} />
       </Elements>
     </div>
   );
