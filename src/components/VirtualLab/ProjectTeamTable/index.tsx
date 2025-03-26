@@ -326,7 +326,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
       <div className="flex h-8 flex-shrink-0 items-center px-3">
         <div className="flex gap-2">
           <span className="text-lg text-primary-3">Total members</span>
-          <span className="text-lg font-bold">{total}</span>
+          {total && <span className="text-lg font-bold">{total}</span>}
         </div>
       </div>
       <div className="h-[calc(100vh-180px)] flex-grow overflow-hidden py-5">

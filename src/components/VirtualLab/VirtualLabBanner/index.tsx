@@ -318,7 +318,7 @@ export function ProjectDetailBanner({
   );
 
   const users = usersResult?.data?.users;
-  const totalUsers = usersResult?.data?.total;
+  const totalUsers = usersResult?.data?.total_active;
   const { button: editBtn, isEditable } = useEditBtn({
     dataTestid,
   });
