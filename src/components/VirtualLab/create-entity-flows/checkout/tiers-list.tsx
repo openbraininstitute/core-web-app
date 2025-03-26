@@ -319,7 +319,7 @@ function TiersComparison({
           const isPro = t.title === 'Pro';
           const isPremium = t.title === 'Premium';
           const isHovered = hoveredTier === t.app_id;
-          if (isFree && isCurrentTier) return <div key="free-disabled" />;
+          if (isFree && (isCurrentTier || !currentTier)) return <div key="free-disabled" />;
           if (isPro && isCurrentTier) return <div key="pro-disabled" />;
 
           if (
