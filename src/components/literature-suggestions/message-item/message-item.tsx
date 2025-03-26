@@ -14,16 +14,19 @@ import styles from './message-item.module.css';
 export interface MessageItemProps {
   className?: string;
   value: UIMessage;
+  hideTools: boolean;
 }
 
-export default function MessageItem({ className, value }: MessageItemProps) {
+export default function MessageItem({ className, value, hideTools }: MessageItemProps) {
   const debug = useDebug();
   return (
-    <div className={classNames(className, styles.messageItem)}>{renderMessage(value, debug)}</div>
+    <div className={classNames(className, styles.messageItem)}>
+      {renderMessage(value, hideTools, debug)}
+    </div>
   );
 }
 
-function renderMessage(value: UIMessage, debug: boolean): React.ReactNode {
+function renderMessage(value: UIMessage, hideTools: boolean, debug: boolean): React.ReactNode {
   switch (value.role) {
     case 'user':
       return (
@@ -37,8 +40,6 @@ function renderMessage(value: UIMessage, debug: boolean): React.ReactNode {
     case 'assistant': {
       return (
         <>
-          <ToolArticles message={value} />
-          <ToolMorphologies message={value} />
           <ReactMarkdown
             className={styles.markdown}
             components={{
@@ -47,6 +48,12 @@ function renderMessage(value: UIMessage, debug: boolean): React.ReactNode {
           >
             {value.content}
           </ReactMarkdown>
+          {!hideTools && (
+            <>
+              <ToolArticles message={value} />
+              <ToolMorphologies message={value} />
+            </>
+          )}
           {debug && (
             <button
               type="button"
