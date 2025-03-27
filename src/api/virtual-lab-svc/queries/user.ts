@@ -51,6 +51,7 @@ export const updateUserProfile = async (
       Authorization: `Bearer ${session?.accessToken}`,
     },
     body: JSON.stringify({
+      email: payload.email,
       first_name: payload.first_name,
       last_name: payload.last_name,
       address: {
