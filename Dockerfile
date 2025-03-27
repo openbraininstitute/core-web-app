@@ -14,6 +14,8 @@ RUN npm ci
 FROM node:23-alpine AS builder
 
 ARG DEPLOYMENT_ENV
+ARG SENTRY_AUTH_TOKEN
+ARG NEXT_PUBLIC_SENTRY_DSN
 
 ENV NODE_OPTIONS="--max_old_space_size=7168"
 
