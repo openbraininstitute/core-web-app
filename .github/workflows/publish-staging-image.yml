@@ -38,12 +38,7 @@ jobs:
 
       - name: Build a Docker image
         run: |
-          docker build \
-            --build-arg DEPLOYMENT_ENV=staging \
-            --build-arg SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }} \
-            --build-arg NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }} \
-            -t ${{ vars.PUBLICECR_URI }}:staging \
-            .
+          docker build --build-arg DEPLOYMENT_ENV=staging -t ${{ vars.PUBLICECR_URI }}:staging .
 
       - name: Publish To AWS ECR
         run: |
