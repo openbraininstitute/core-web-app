@@ -43,7 +43,7 @@ const columns = ({
       title: 'Species',
       key: 'specie',
       render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.specie}</span>
+        <span className="whitespace-nowrap font-normal">{value.species}</span>
       ),
     },
     {

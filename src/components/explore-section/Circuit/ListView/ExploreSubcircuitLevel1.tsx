@@ -1,8 +1,7 @@
 import { Table } from 'antd';
 
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-
-import { CircuitSchemaProps } from '../content/CIRCUITS_PLACEHOLDER';
+import { CircuitSchemaProps } from '../type';
 
 import { classNames } from '@/util/utils';
 

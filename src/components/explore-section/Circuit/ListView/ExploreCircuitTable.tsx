@@ -50,18 +50,14 @@ export default function ExploreCircuitTable() {
       key: 'name',
       fixed: 'left',
       render: (value: CircuitSchemaProps) => (
-        <a href={value.key} className="whitespace-nowrap">
-          {value.name}
-        </a>
+        <span className="whitespace-nowrap">{value.name}</span>
       ),
     },
     {
       title: 'Description',
       key: 'description',
       render: (value: CircuitSchemaProps) => (
-        <a href={value.key} className="whitespace-nowrap font-normal">
-          {truncate(value.description, 40)}
-        </a>
+        <span className="whitespace-nowrap font-normal">{truncate(value.description, 40)}</span>
       ),
       width: 300,
     },
@@ -69,18 +65,14 @@ export default function ExploreCircuitTable() {
       title: 'Brain region',
       key: 'brainRegion',
       render: (value: CircuitSchemaProps) => (
-        <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.brainRegion}
-        </a>
+        <span className="whitespace-nowrap font-normal">{value.brainRegion}</span>
       ),
     },
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
       render: (value: CircuitSchemaProps) => (
-        <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.numberOfNeurons}
-        </a>
+        <span className="whitespace-nowrap font-normal">{value.numberOfNeurons}</span>
       ),
     },
     {
@@ -94,18 +86,14 @@ export default function ExploreCircuitTable() {
       title: 'Contributor',
       key: 'contributorSimple',
       render: (value: CircuitSchemaProps) => (
-        <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.metadata.contributorSimple}
-        </a>
+        <span className="whitespace-nowrap font-normal">{value.metadata.contributorSimple}</span>
       ),
     },
     {
       title: 'Registration date',
       key: 'registrationDate',
       render: (value: CircuitSchemaProps) => (
-        <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.metadata.registrationDate}
-        </a>
+        <span className="whitespace-nowrap font-normal">{value.metadata.registrationDate}</span>
       ),
     },
     {
