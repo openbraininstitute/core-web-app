@@ -114,21 +114,19 @@ export default function ExploreListingLayout({
   return (
     <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        {!pathname.includes('UID_Circuit') || pathname.includes('circuit') && (
-          <BackToInteractiveExplorationBtn href={interactivePageHref} />
-        )}
+        <BackToInteractiveExplorationBtn href={interactivePageHref} />
+
         <div className="flex-1">
-          {!pathname.includes('UID_Circuit') && (
-            <Menu
-              onClick={onClick}
-              selectedKeys={[activePath]}
-              mode="horizontal"
-              theme="dark"
-              style={{ backgroundColor: '#002766' }}
-              className="flex w-full justify-start"
-              items={items}
-            />
-          )}
+          <Menu
+            onClick={onClick}
+            selectedKeys={[activePath]}
+            mode="horizontal"
+            theme="dark"
+            style={{ backgroundColor: '#002766' }}
+            className="flex w-full justify-start"
+            items={items}
+          />
+
           <div className="h-full w-full bg-primary-9 text-white">{children}</div>
         </div>
       </ErrorBoundary>
