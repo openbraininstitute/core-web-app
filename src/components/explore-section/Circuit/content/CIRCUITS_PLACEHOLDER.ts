@@ -1,6 +1,6 @@
-import { SingleCircuitListView } from '../type';
+import { CircuitSchemaProps } from '../type';
 
-const CIRCUIT_PLACHOLDER_DATA: SingleCircuitListView[] = [
+const CIRCUIT_PLACHOLDER_DATA: CircuitSchemaProps[] = [
   {
     key: 'UID_Circuit_Central_subvolume_Somatosensory_cortex_N-1',
     name: 'Central subvolume',

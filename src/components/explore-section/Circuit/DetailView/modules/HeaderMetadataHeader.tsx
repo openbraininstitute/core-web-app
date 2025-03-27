@@ -1,7 +1,7 @@
-import { SingleCircuitListView } from '../../content/CIRCUITS_PLACEHOLDER';
+import { CircuitSchemaProps } from '../../content/CIRCUITS_PLACEHOLDER';
 import TitleAndPropertyBloc from './blocs/TitleAndPropertyBloc';
 
-export default function HeaderMetadataHeader({ content }: { content: SingleCircuitListView }) {
+export default function HeaderMetadataHeader({ content }: { content: CircuitSchemaProps }) {
   return (
     <div className="relative flex w-[480px] flex-col gap-y-4">
       <TitleAndPropertyBloc title="Description" content={content.description} />

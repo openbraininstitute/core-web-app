@@ -1,10 +1,10 @@
-import { SingleCircuitListView } from '../../type';
+import { CircuitSchemaProps } from '../../type';
 import CloneCircuitModelButton from '../buttons/CloneCircuitModelButton';
 import DownloadCircuitButton from '../buttons/DownloadCircuitButton';
 import SaveToLibraryButton from '../buttons/SaveToLibraryButton';
 import SimulateCircuitModelButton from '../buttons/SimulateCircuitModelButton';
 
-export default function HeaderButtonActionsBlock({ content }: { content: SingleCircuitListView }) {
+export default function HeaderButtonActionsBlock({ content }: { content: CircuitSchemaProps }) {
   return (
     <div className="relative -right-12 flex flex-row gap-x-5">
       <SimulateCircuitModelButton />

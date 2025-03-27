@@ -1,7 +1,7 @@
-import { PaperLitteratureProps, SingleCircuitListView } from '../../../type';
+import { CircuitSchemaProps, PaperLitteratureProps } from '../../../type';
 import SingleArticleCard from './SingleArticleCard';
 
-export default function LiteratureContent({ content }: { content: SingleCircuitListView }) {
+export default function LiteratureContent({ content }: { content: CircuitSchemaProps }) {
   const circuitProvenanceContent: PaperLitteratureProps[] = (
     content.provenance.literature || []
   ).filter((publication: PaperLitteratureProps) => publication.category === 'Circuit provenance');

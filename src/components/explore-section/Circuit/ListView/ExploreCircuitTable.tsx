@@ -4,10 +4,10 @@ import { Key, useState } from 'react';
 
 import { Table } from 'antd';
 
-import CIRCUIT_PLACHOLDER_DATA from '../content/CIRCUITS_PLACEHOLDER';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 
-import { CircuitColumn, SingleCircuitListView } from '../type';
+import HARD_CODED_CONTENT from '../content/circuits_tree';
+import { CircuitColumn, CircuitSchemaProps } from '../type';
 
 import { TableDownloadButtonLight } from './TableDownloadButton';
 
@@ -20,7 +20,7 @@ export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
-  const handleExpandRow = (row: SingleCircuitListView, _index: number) => {
+  const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
@@ -30,11 +30,9 @@ export default function ExploreCircuitTable() {
 
   const rowSelection = {
     selectedRowKeys,
-    onChange: (newSelectedRowKeys: Key[], selectedRows: SingleCircuitListView[]) => {
+    onChange: (newSelectedRowKeys: Key[], selectedRows: CircuitSchemaProps[]) => {
       const updatedExpandedKeys = newSelectedRowKeys
-        .filter((key) =>
-          CIRCUIT_PLACHOLDER_DATA.some((row) => row.key === key && row.hasSubcircuits)
-        )
+        .filter((key) => HARD_CODED_CONTENT.some((row) => row.key === key && row.hasSubcircuits))
         .map((key) => key as string);
 
       const subRowKeys = selectedRows
@@ -52,7 +50,7 @@ export default function ExploreCircuitTable() {
       title: 'Name',
       key: 'name',
       fixed: 'left',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap">
           {value.name}
         </a>
@@ -61,7 +59,7 @@ export default function ExploreCircuitTable() {
     {
       title: 'Description',
       key: 'description',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {truncate(value.description, 40)}
         </a>
@@ -71,7 +69,7 @@ export default function ExploreCircuitTable() {
     {
       title: 'Brain region',
       key: 'brainRegion',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.brainRegion}
         </a>
@@ -80,7 +78,7 @@ export default function ExploreCircuitTable() {
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.numberOfNeurons}
         </a>
@@ -89,32 +87,32 @@ export default function ExploreCircuitTable() {
     {
       title: 'Species',
       key: 'specie',
-      render: (value: SingleCircuitListView) => (
-        <span className="whitespace-nowrap font-normal">{value.specie}</span>
+      render: (value: CircuitSchemaProps) => (
+        <span className="whitespace-nowrap font-normal">{value.species}</span>
       ),
     },
     {
-      title: 'Created by',
-      key: 'createdBy',
-      render: (value: SingleCircuitListView) => (
+      title: 'Contributor',
+      key: 'contributorSimple',
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.metadata.createdBy}
+          {value.metadata.contributorSimple}
         </a>
       ),
     },
     {
-      title: 'Creation date',
-      key: 'creationDate',
-      render: (value: SingleCircuitListView) => (
+      title: 'Registration date',
+      key: 'registrationDate',
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.metadata.creationDate}
+          {value.metadata.registrationDate}
         </a>
       ),
     },
     {
       title: 'Subcircuits',
       key: 'hasSubcircuits',
-      render: (value: SingleCircuitListView, index?: number) => {
+      render: (value: CircuitSchemaProps, index?: number) => {
         const isExpanded = expandedRowKeys.includes(value.key);
 
         return (
@@ -142,7 +140,7 @@ export default function ExploreCircuitTable() {
   ];
 
   // SUBCIRCUIT TABLE - LEVEL 1
-  const expandedRowRender = (circuit: SingleCircuitListView): JSX.Element => {
+  const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
     return (
       <div className="relative flex flex-col pl-[17px]">
         <div className="relative flex flex-row pl-[48px]">
@@ -151,7 +149,7 @@ export default function ExploreCircuitTable() {
             Subcircuits
           </span>
         </div>
-        <Table<SingleCircuitListView>
+        <Table<CircuitSchemaProps>
           className={classNames(
             '[&_.ant-table-tbody]:bg-[#FAFAFA]',
             '[&_.ant-table-row]:bg-[#FAFAFA]',
@@ -170,13 +168,13 @@ export default function ExploreCircuitTable() {
           pagination={false}
           rowSelection={{
             selectedRowKeys,
-            onChange: (newSelectedRow: Key[], _selectedRow: SingleCircuitListView[]) => {
+            onChange: (newSelectedRow: Key[], _selectedRow: CircuitSchemaProps[]) => {
               const parentKey = circuit.key;
               const updatedKeys = selectedRowKeys
                 .filter(
                   (key) =>
                     !circuit.subcircuits?.find(
-                      (subcircuit: SingleCircuitListView) => subcircuit.key === key
+                      (subcircuit: CircuitSchemaProps) => subcircuit.key === key
                     )
                 )
                 .concat(newSelectedRow as string[]);
@@ -187,7 +185,7 @@ export default function ExploreCircuitTable() {
           expandable={{
             expandedRowRender,
             expandedRowKeys,
-            onExpand: (expanded: boolean, row: SingleCircuitListView) => {
+            onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
               const rowKey = row.key;
               setExpandedRowKeys((prev) =>
                 expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)
@@ -200,36 +198,24 @@ export default function ExploreCircuitTable() {
     );
   };
 
-  const handleFileDownload = (format: string) => {
-    const selectedRowKeyObjects = CIRCUIT_PLACHOLDER_DATA.filter((circuit) =>
+  const handleFileDownload = () => {
+    const selectedRowKeyObjects = HARD_CODED_CONTENT.filter((circuit) =>
       selectedRowKeys.includes(circuit.key)
     );
 
-    selectedRowKeyObjects.forEach((circuit: SingleCircuitListView) => {
+    selectedRowKeyObjects.forEach((circuit: CircuitSchemaProps) => {
       const fileName = circuit.name;
-      let url;
+      circuit.files.forEach((file) => {
+        const { url } = file;
 
-      if (circuit === null) return;
+        const link = document.createElement('a');
 
-      switch (format) {
-        case 'sonataFile':
-          url = circuit.files?.[0]?.key;
-          break;
-        case 'connectomeUtilitiesFile':
-          url = circuit.files?.[1]?.key;
-          break;
-        default:
-          url = circuit.files?.[0].key;
-          break;
-      }
+        link.href = url || '';
+        link.download = fileName;
+        link.target = '_blank';
 
-      const link = document.createElement('a');
-
-      link.href = url || '';
-      link.download = fileName;
-      link.target = '_blank';
-
-      link.click();
+        link.click();
+      });
     });
   };
 
@@ -250,14 +236,14 @@ export default function ExploreCircuitTable() {
           '[&_.ant-table-expand-icon-col]:hidden'
         )}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={CIRCUIT_PLACHOLDER_DATA}
+        dataSource={HARD_CODED_CONTENT}
         columns={columns}
         pagination={false}
         rowSelection={rowSelection}
         expandable={{
           expandedRowRender,
           expandedRowKeys,
-          onExpand: (expanded: boolean, row: SingleCircuitListView) => {
+          onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
             const rowKey = row.key;
             setExpandedRowKeys((prev) =>
               expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)

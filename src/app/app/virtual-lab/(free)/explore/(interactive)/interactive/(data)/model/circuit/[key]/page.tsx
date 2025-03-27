@@ -6,7 +6,7 @@ import CIRCUIT_PLACHOLDER_DATA from '@/components/explore-section/Circuit/conten
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import CircuitDetailViewMain from '@/components/explore-section/Circuit/DetailView';
-import { SingleCircuitListView } from '@/components/explore-section/Circuit/type';
+import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 
 type Params = {
   params: {
@@ -15,7 +15,7 @@ type Params = {
 };
 
 export default function CircuitDetailViewPage({ params }: Params) {
-  const content: SingleCircuitListView =
+  const content: CircuitSchemaProps =
     CIRCUIT_PLACHOLDER_DATA.find((circuit) => circuit.key === params.key) ??
     (() => {
       throw new Error(`Circuit with key "${params.key}" not found`);

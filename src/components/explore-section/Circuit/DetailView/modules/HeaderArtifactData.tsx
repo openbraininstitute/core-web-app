@@ -1,7 +1,7 @@
-import { SingleCircuitListView } from '../../content/CIRCUITS_PLACEHOLDER';
+import { CircuitSchemaProps } from '../../content/CIRCUITS_PLACEHOLDER';
 import TitleAndPropertyBloc from './blocs/TitleAndPropertyBloc';
 
-export default function HeaderArtifactData({ content }: { content: SingleCircuitListView }) {
+export default function HeaderArtifactData({ content }: { content: CircuitSchemaProps }) {
   return (
     <div className="relative grid grid-cols-3">
       <div className="relative flex w-full flex-col gap-y-4">
