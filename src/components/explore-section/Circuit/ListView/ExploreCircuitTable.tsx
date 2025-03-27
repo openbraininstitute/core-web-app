@@ -14,6 +14,7 @@ import { TableDownloadButtonLight } from './TableDownloadButton';
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
+import styles from './ExploreCircuitTable.module.css';
 
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
@@ -50,6 +51,7 @@ export default function ExploreCircuitTable() {
     {
       title: 'Name',
       key: 'name',
+      fixed: 'left',
       render: (value: SingleCircuitListView) => (
         <a href={value.key} className="whitespace-nowrap">
           {value.name}
@@ -151,6 +153,7 @@ export default function ExploreCircuitTable() {
         </div>
         <Table<SingleCircuitListView>
           className={classNames(
+            '[&_.ant-table-tbody]:bg-[#FAFAFA]',
             '[&_.ant-table-row]:bg-[#FAFAFA]',
             '[&_.ant-table-thead_th]:!text-sm',
             '[&_.ant-table-thead_th]:!font-normal',
@@ -234,6 +237,8 @@ export default function ExploreCircuitTable() {
     <div className="relative h-full w-full w-full bg-primary-9 bg-white text-2xl font-bold text-primary-9 text-white">
       <Table
         className={classNames(
+          '[&_.ant-table-tbody]:bg-[#FAFAFA]',
+          '[&_.ant-table-row]:bg-[#FAFAFA]',
           '[&_.ant-table-thead_th]:!text-sm',
           '[&_.ant-table-thead_th]:!font-normal',
           '[&_.ant-table-thead_th]:!text-[#8C8C8C]',

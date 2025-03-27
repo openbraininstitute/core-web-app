@@ -80,6 +80,7 @@ export type CircuitColumn = {
   key?: string;
   render?: (value: SingleCircuitListView) => ReactNode;
   width?: number;
+  fixed?: 'left';
 };
 
 export type InteractiveImageProps = {
