@@ -1,1 +1,1 @@
-export * from "./terms-of-use-acceptance"
+export * from './terms-of-use-acceptance';
