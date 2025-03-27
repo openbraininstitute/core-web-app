@@ -10,6 +10,5 @@ export type ColumnType = {
 };
 
 export default function ExploreModelCircuitListingPage() {
-  console.log('here \n\n');
   return <ExploreCircuitTable />;
 }

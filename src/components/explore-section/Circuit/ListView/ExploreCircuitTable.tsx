@@ -248,7 +248,6 @@ export default function ExploreCircuitTable() {
         dataSource={CIRCUIT_PLACHOLDER_DATA}
         columns={columns}
         pagination={false}
-        //scroll={{ x: 'max-content' }}
         rowSelection={rowSelection}
         expandable={{
           expandedRowRender,
