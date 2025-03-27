@@ -288,6 +288,7 @@ export type StandalonePaymentResponse = {
 export type UserProfile = {
   first_name: string | null;
   last_name: string | null;
+  email: string | null;
   street: string | null;
   postal_code: string | null;
   locality: string | null;
