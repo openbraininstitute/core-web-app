@@ -44,8 +44,8 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
             ...MENU_LINKS,
             {
               index: EnumSection.ComingSoon,
-              caption: 'Login to the platform',
-              slug: 'coming-soon',
+              caption: 'Virtual Labs',
+              slug: 'app/virtual-lab',
             },
           ].map(({ caption, slug }) => (
             <Link
