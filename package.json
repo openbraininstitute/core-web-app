@@ -55,7 +55,7 @@
     "@react-three/drei": "^9.88.13",
     "@react-three/fiber": "^8.15.11",
     "@sanity/image-url": "^1.1.0",
-    "@sentry/nextjs": "^9.9.0",
+    "@sentry/nextjs": "^7.64.0",
     "@stripe/react-stripe-js": "^2.7.0",
     "@stripe/stripe-js": "^3.3.0",
     "@t3-oss/env-nextjs": "^0.7.1",

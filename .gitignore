@@ -208,6 +208,3 @@ notes.md
 *~
 
 .tool-versions
-
-# Sentry Config File
-.env.sentry-build-plugin
