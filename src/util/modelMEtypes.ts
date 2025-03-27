@@ -1,18 +1,19 @@
 import { EModel, NeuronMorphology } from '@/types/e-model';
 import { MEModel } from '@/types/me-model';
+import { ensureArray } from '@/util/nexus';
 
 // get m-type
 export function getMtypeFromMEModel(model: MEModel | undefined) {
   return (
-    model?.annotation?.find(({ '@type': type }) => type.includes('MTypeAnnotation'))?.hasBody
-      .label ?? model?.mType
+    ensureArray(model?.annotation)?.find(({ '@type': type }) => type.includes('MTypeAnnotation'))
+      ?.hasBody.label ?? model?.mType
   );
 }
 
 export function getMtypeFromMModel(model: NeuronMorphology | undefined) {
   return (
-    model?.annotation?.find(({ '@type': type }) => type.includes('MTypeAnnotation'))?.hasBody
-      .label ?? model?.mType
+    ensureArray(model?.annotation)?.find(({ '@type': type }) => type.includes('MTypeAnnotation'))
+      ?.hasBody.label ?? model?.mType
   );
 }
 
@@ -23,15 +24,15 @@ export function getMtype(meModel: MEModel | undefined, mModel: NeuronMorphology 
 // get e-type
 export function getEtypeFromMEModel(model: MEModel | undefined) {
   return (
-    model?.annotation?.find(({ '@type': type }) => type.includes('ETypeAnnotation'))?.hasBody
-      .label ?? model?.eType
+    ensureArray(model?.annotation)?.find(({ '@type': type }) => type.includes('ETypeAnnotation'))
+      ?.hasBody.label ?? model?.eType
   );
 }
 
 export function getEtypeFromEModel(model: EModel | undefined) {
   return (
-    model?.annotation?.find(({ '@type': type }) => type.includes('ETypeAnnotation'))?.hasBody
-      .label ?? model?.mType
+    ensureArray(model?.annotation)?.find(({ '@type': type }) => type.includes('ETypeAnnotation'))
+      ?.hasBody.label ?? model?.mType
   );
 }
 

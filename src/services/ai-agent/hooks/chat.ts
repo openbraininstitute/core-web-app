@@ -5,7 +5,7 @@ import { serviceAiAgentUrl } from '../api';
 export function useServiceAiAgentChat(threadId: string) {
   const session = useSession();
   const chat = useChat({
-    api: serviceAiAgentUrl('qa/chat_streamed', threadId),
+    api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
     headers: {
       Authorization: `Bearer ${session.data?.accessToken}`,
@@ -14,7 +14,7 @@ export function useServiceAiAgentChat(threadId: string) {
       const lastMessage = messages.at(-1);
       return {
         content: (lastMessage?.content ?? '').trim(),
-        tool_selection: ['literature-search-tool', 'web-search-tool'],
+        tool_selection: ['literature-search-tool', 'web-search-tool', 'now-tool'],
       };
     },
   });

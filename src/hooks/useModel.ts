@@ -29,6 +29,7 @@ export function useModel<T>({
         setLoading(true);
         const session = await getSession();
         if (!session) throw new Error('no session');
+
         const resourceObject = await fetchResourceById<T>(
           modelId,
           session,

@@ -48,7 +48,7 @@ export default function withVirtualLabUsers(
         <WrappedComponent
           ownerId={users.data.data.owner_id}
           users={users.data.data.users}
-          total={users.data.data.total}
+          total={users.data.data.total_active}
         />
       );
     }

@@ -19,6 +19,7 @@ export type Member = {
 export type MembersResponse = VlmResponse<{
   owner_id: string;
   users: Array<Member>;
+  total_active: number;
   total: number;
 }>;
 export type MemberResponse = VlmResponse<{
@@ -287,6 +288,7 @@ export type StandalonePaymentResponse = {
 export type UserProfile = {
   first_name: string | null;
   last_name: string | null;
+  email: string | null;
   street: string | null;
   postal_code: string | null;
   locality: string | null;

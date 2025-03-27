@@ -127,65 +127,65 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     [id]
   );
 
-  const settings = useMemo(
-    () =>
-      virtualLabDetail.state === 'hasData'
-        ? {
-            key: 'settings',
-            children: (
-              <FormPanel
-                className="grid grid-cols-2 gap-x-6"
-                initialValues={{
-                  name: virtualLabDetail.data?.virtual_lab.name,
-                  reference_email: virtualLabDetail.data?.virtual_lab.reference_email,
-                  entity: virtualLabDetail.data?.virtual_lab.entity,
-                  description: virtualLabDetail.data?.virtual_lab.description,
-                }}
-                items={[
-                  {
-                    className: 'col-span-2',
-                    children: renderInput,
-                    label: 'Lab Name',
-                    name: 'name',
-                    required: true,
-                    rules: [{ max: 250 }],
-                  },
-                  {
-                    className: 'col-span-2',
-                    children: renderTextArea,
-                    label: 'Description',
-                    name: 'description',
-                  },
-                  {
-                    children: renderInput,
-                    label: 'Reference email',
-                    name: 'reference_email',
-                    type: 'email',
-                    required: true,
-                    // TODO: Figure-out whether "rules" prop is actually useful.
-                    rules: [
-                      {
-                        required: true,
-                        pattern: VALID_EMAIL_REGEXP,
-                        message: 'Entered value is not the correct email format',
-                      },
-                    ],
-                  },
-                  {
-                    children: renderInput,
-                    label: 'Affiliated entity',
-                    name: 'entity',
-                  },
-                ]}
-                name="settings" // TODO: Check whether this prop is necessary.
-                onValuesChange={updateVirtualLab}
-              />
-            ),
-            label: 'Lab Settings',
-          }
-        : {},
-    [updateVirtualLab, virtualLabDetail]
-  );
+  // const settings = useMemo(
+  //   () =>
+  //     virtualLabDetail.state === 'hasData'
+  //       ? {
+  //           key: 'settings',
+  //           children: (
+  //             <FormPanel
+  //               className="grid grid-cols-2 gap-x-6"
+  //               initialValues={{
+  //                 name: virtualLabDetail.data?.virtual_lab.name,
+  //                 reference_email: virtualLabDetail.data?.virtual_lab.reference_email,
+  //                 entity: virtualLabDetail.data?.virtual_lab.entity,
+  //                 description: virtualLabDetail.data?.virtual_lab.description,
+  //               }}
+  //               items={[
+  //                 {
+  //                   className: 'col-span-2',
+  //                   children: renderInput,
+  //                   label: 'Lab Name',
+  //                   name: 'name',
+  //                   required: true,
+  //                   rules: [{ max: 250 }],
+  //                 },
+  //                 {
+  //                   className: 'col-span-2',
+  //                   children: renderTextArea,
+  //                   label: 'Description',
+  //                   name: 'description',
+  //                 },
+  //                 {
+  //                   children: renderInput,
+  //                   label: 'Reference email',
+  //                   name: 'reference_email',
+  //                   type: 'email',
+  //                   required: true,
+  //                   // TODO: Figure-out whether "rules" prop is actually useful.
+  //                   rules: [
+  //                     {
+  //                       required: true,
+  //                       pattern: VALID_EMAIL_REGEXP,
+  //                       message: 'Entered value is not the correct email format',
+  //                     },
+  //                   ],
+  //                 },
+  //                 {
+  //                   children: renderInput,
+  //                   label: 'Affiliated entity',
+  //                   name: 'entity',
+  //                 },
+  //               ]}
+  //               name="settings" // TODO: Check whether this prop is necessary.
+  //               onValuesChange={updateVirtualLab}
+  //             />
+  //           ),
+  //           label: 'Lab Settings',
+  //         }
+  //       : {},
+  //   [updateVirtualLab, virtualLabDetail]
+  // );
 
   // const dangerZone = useMemo(
   //   () =>
@@ -206,10 +206,10 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
 
   const collapseItems: CollapseProps['items'] = useMemo(
     () =>
-      [creditManagement, purchases, spendings, settings].filter(
+      [creditManagement, purchases, spendings].filter(
         (item) => Object.keys(item).length !== 0 // Filter-out any "empty" panels (ex. DangerZone when not admin).
       ),
-    [creditManagement, purchases, spendings, settings]
+    [creditManagement, purchases, spendings]
   );
 
   if (virtualLabDetail.state === 'loading') {

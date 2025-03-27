@@ -11,10 +11,11 @@
   --color-neutral-0: #000;
   --color-primary-0: #001;
   --color-primary-1: #004;
-  --color-primary-2: #007;
-  --color-primary-3: #00a;
-  --color-primary-4: #00d;
-  --color-primary-5: #00f;
+  --color-primary-3: #012766;
+  --color-primary-5: #003a8c;
+  --color-primary-2: color-mix(in srgb, var(--color-primary-1), var(--color-primary-3));
+  --color-primary-4: color-mix(in srgb, var(--color-primary-3), var(--color-primary-5));
+  --color-on-primary: #fffe;
   --color-secondary-5: #062;
 
   width: max(320px, 25vw);
