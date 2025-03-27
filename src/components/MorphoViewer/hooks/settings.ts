@@ -200,13 +200,13 @@ function loadSettings(): PersistentMorphoViewerSettings {
   } catch (ex) {
     const defaultValue = makeDefaultSettings();
     saveSettings(defaultValue);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultValue));
+    window?.localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultValue));
     return defaultValue;
   }
 }
 
 function saveSettings(data: PersistentMorphoViewerSettings) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  window?.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 function applySettingsToMorphologyCanvas(

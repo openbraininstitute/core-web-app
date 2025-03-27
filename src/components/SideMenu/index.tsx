@@ -2,9 +2,16 @@
 
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { DownOutlined, HomeOutlined, UpOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  DownOutlined,
+  HomeOutlined,
+  QuestionCircleOutlined,
+  UpOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import Link from 'next/link';
 
+import HelpMenu from '../HelpMenu';
 import UserMenu from '@/components/user-menu';
 import { LabItem, LinkItem, ProjectItem } from '@/components/VerticalLinks';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
@@ -92,6 +99,9 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
         </div>
 
         <div className="mb-5 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
+          <HelpMenu>
+            <QuestionCircleOutlined className="group-hover:text-white" />
+          </HelpMenu>
           <UserMenu>
             <UserOutlined className="group-hover:text-white" />
           </UserMenu>

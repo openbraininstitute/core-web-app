@@ -31,8 +31,28 @@ function extractJSON(error: unknown) {
 
 function renderError(error: unknown): React.ReactNode {
   const value = extractJSON(error);
+  if (isInsufficentFundsError(value)) return renderInsufficentFundsError();
   if (isRateLimitError(value)) return renderRateLimitError(value);
   return <pre>{JSON.stringify(value, null, '  ')}</pre>;
+}
+
+interface InsufficentFundsError {
+  message: 'Error: InsufficientFundsError';
+}
+
+function isInsufficentFundsError(data: unknown): data is InsufficentFundsError {
+  return isType(data, {
+    message: ['literal', 'Error: InsufficientFundsError'],
+  });
+}
+
+function renderInsufficentFundsError() {
+  return (
+    <div>
+      <div>We are sorry,</div>
+      <div>but you don&apos;t have sufficient funds to use the AI Assistant.</div>
+    </div>
+  );
 }
 
 interface RateLimitError {
@@ -42,7 +62,7 @@ interface RateLimitError {
   };
 }
 
-export function isRateLimitError(data: unknown): data is RateLimitError {
+function isRateLimitError(data: unknown): data is RateLimitError {
   return isType(data, {
     detail: {
       error: 'string',

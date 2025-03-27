@@ -7,6 +7,7 @@ interface QueryOptions<T> {
   method?: 'POST' | 'DELETE' | 'GET';
   path: string;
   query?: unknown;
+  params?: Record<string, string | null>;
   typeGuard: (data: unknown) => data is T;
 }
 
@@ -14,10 +15,11 @@ export async function fetchJSON<T>({
   accessToken = 'token-is-missing',
   method = 'POST',
   path,
+  params = {},
   query = {},
   typeGuard,
 }: QueryOptions<T>): Promise<T> {
-  const url = serviceAiAgentUrl(path);
+  const url = serviceAiAgentUrl(path, params);
   try {
     const resp = await fetch(url, {
       method,

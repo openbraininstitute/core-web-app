@@ -170,14 +170,16 @@ function TiersComparison({
         <div />
         {tiers.map((t) => {
           const isSelected = currentTier?.toLowerCase() === t.title.toLowerCase();
+          const isCurrentTier = currentTier?.toLowerCase() === t.title.toLowerCase();
           const isHovered = hoveredTier === t.app_id;
+          const isFree = t.title === 'Free' && (isCurrentTier || !currentTier);
 
           return (
             <div
               key={`${t.id}-bg`}
               className={classNames(
                 'rounded-lg',
-                isSelected && 'border-2 border-primary-3 bg-primary-8/90',
+                (isSelected || isFree) && 'border-2 border-primary-3 bg-primary-8/90',
                 isHovered && !isSelected && 'bg-primary-5/20'
               )}
             />
