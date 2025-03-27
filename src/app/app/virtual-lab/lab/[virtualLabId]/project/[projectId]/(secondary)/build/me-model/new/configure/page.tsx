@@ -28,7 +28,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 const DEFAULT_ERROR_MSG =
   'Something went wrong while creating the ME-model, please try again later';
 const LOW_FUNDS_ERROR_MSG =
-  'The project does not have enough credits to create a model, please add more and try again';
+  'The project does not have enough credits to create a model, please add credits and try again';
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
 type Params = {

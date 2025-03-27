@@ -49,7 +49,7 @@ import { OneshotSession } from '@/services/accounting';
 import { ServiceSubtype } from '@/types/accounting';
 
 const LOW_FUNDS_ERROR_MSG =
-  'The project does not have enough credits to create a model, please add more and try again';
+  'The project does not have enough credits to create a model, please add credits and try again';
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
 const label = (text: string) => (
