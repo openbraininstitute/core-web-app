@@ -1,10 +1,28 @@
 import { ReactNode } from "react";
 
+export type PaperLitteratureProps = {
+  title: string;
+  type: string;
+  authors: string[];
+  link: string;
+  doi: string;
+  publicationDate: string;
+  abstract: string;
+  category: string;
+}
+
 export type SingleFileProps = {
   type: string;
   url: string;
   key: string;
   isAvailable: boolean;
+}
+
+export type GraphDataImageProps = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
 }
 
 export type SingleCircuitListView = {
@@ -20,10 +38,14 @@ export type SingleCircuitListView = {
   provenance: {
       isASubcircuit: boolean;
       subcircuitOf: string | null;
+      literature: PaperLitteratureProps[]
   };
   hasSubcircuits: boolean;
   subcircuits: SingleCircuitListView[] | null;
   metadata: {
+      contributors?: string[];
+      contributorIndividual?: string;
+      contributingInstitution?: string;
       revision: number;
       createdBy: string;
       creationDate: string;
@@ -36,7 +58,11 @@ export type SingleCircuitListView = {
       low?: string;
       normal?: string;
       high: string;
-  }
+  },
+  overview: {
+    cellStatistics: GraphDataImageProps[];
+    networkStatistics: GraphDataImageProps[];
+  },
 }
 
 export type CircuitCellValue = {

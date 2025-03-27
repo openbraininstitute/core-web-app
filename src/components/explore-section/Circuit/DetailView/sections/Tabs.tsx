@@ -16,7 +16,7 @@ export default function CircuitSectionTabs({
 }) {
 
     return (
-        <div className="relative w-full grid grid-cols-4 border border-solid border-gray-400">
+        <div className="relative w-full grid grid-cols-4 border border-solid border-gray-400 mb-12">
             {
                 sections.map((section: string, index: number) => {
 

@@ -110,7 +110,7 @@ export default function HeroImageContainer({
                 }}
                 unoptimized
                 />
-                <div className="absolute top-3 right-3 z-50 flex flex-row items-center text-black font-normal text-base">
+                <div className="absolute top-3 right-3 z-40 flex flex-row items-center text-black font-normal text-base">
                     <div>
                         Zoom: {Math.round(scale * 100)}%
                     </div>

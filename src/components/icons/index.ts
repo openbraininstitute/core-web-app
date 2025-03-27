@@ -22,6 +22,7 @@ import FileIcon from './File';
 import GripDotsVerticalIcon from './GripDotsVerticalIcon';
 import HomeIcon from './Home';
 import HomeFillIcon from './HomeFillIcon';
+import InformationIcon from './InformationIcon';
 import InteractiveViewIcon from './InteractiveView';
 import LinkIcon from './Link';
 import LockIcon from './LockIcon';
@@ -62,6 +63,7 @@ export {
   GripDotsVerticalIcon,
   HomeFillIcon,
   HomeIcon,
+  InformationIcon,
   InteractiveViewIcon,
   LinkIcon,
   LockIcon,
