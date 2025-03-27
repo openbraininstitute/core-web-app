@@ -20,7 +20,6 @@ export default function StatItem({
   title: ReactNode;
   subtitle: ReactNode;
 }) {
-
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const onClick = async () => {

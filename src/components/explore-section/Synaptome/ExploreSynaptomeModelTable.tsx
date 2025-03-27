@@ -1,14 +1,18 @@
 import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 
-import { DataType } from '@/constants/explore-section/list-views';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { OnCellClick } from '../ExploreSectionListingView/ExploreSectionTable';
+import { RenderButtonProps } from '../ExploreSectionListingView/useRowSelection';
+
 import { detailUrlBuilder } from '@/util/common';
 import { getOrgAndProjectFromProjectId } from '@/util/nexus';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { OnCellClick } from '../ExploreSectionListingView/ExploreSectionTable';
-import { RenderButtonProps } from '../ExploreSectionListingView/useRowSelection';
+
+import { VirtualLabInfo } from '@/types/virtual-lab/common';
+
+import { ExploreDataScope } from '@/types/explore-section/application';
+
+import { DataType } from '@/constants/explore-section/list-views';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
@@ -17,7 +21,7 @@ export default function ExploreSynaptomeModelTable({
   dataScope,
   virtualLabInfo,
   renderButton,
-}:{
+}: {
   dataType: DataType;
   dataScope: ExploreDataScope;
   virtualLabInfo?: VirtualLabInfo;

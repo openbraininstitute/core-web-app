@@ -6,12 +6,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
-export default function ExploreCircuitListingView({
-  children,
-}: {
-  children: ReactNode;
-}) {
-
+export default function ExploreCircuitListingView({ children }: { children: ReactNode }) {
   const params = useParams();
 
   if (params?.id)
@@ -20,7 +15,7 @@ export default function ExploreCircuitListingView({
   return (
     <div className="flex w-full bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-          <div className="h-full w-full bg-primary-9 text-white">{children}</div>
+        <div className="h-full w-full bg-primary-9 text-white">{children}</div>
       </ErrorBoundary>
     </div>
   );

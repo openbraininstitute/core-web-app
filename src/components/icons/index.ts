@@ -53,7 +53,10 @@ export {
   CheckIcon,
   ChevronIcon,
   ChevronLeft,
-  ChevronRight, CloneStrokeIcon, CloseIcon, DocumentationIcon,
+  ChevronRight,
+  CloneStrokeIcon,
+  CloseIcon,
+  DocumentationIcon,
   DocumentIcon,
   DocumentPileIcon,
   DownloadIcon,
@@ -81,6 +84,5 @@ export {
   UserOutlinedIcon,
   VirtualLabIcon,
   ZoomInIcon,
-  ZoomOutIcon
+  ZoomOutIcon,
 };
-

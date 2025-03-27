@@ -1,16 +1,7 @@
-import { SingleCircuitListView } from "../../../type";
-
-export default function RelatedArtifactsContent({
-    content
-}:{
-    content: SingleCircuitListView
-}) {
-
-    return (
-        <div className="relative w-full h-[60vh] flex flex-col items-center justify-center">
-            <h2 className="relative text-6xl text-gray-400 uppercase font-normal">
-                Coming Soon
-            </h2>
-        </div>
-    )
+export default function RelatedArtifactsContent() {
+  return (
+    <div className="relative flex h-[60vh] w-full flex-col items-center justify-center">
+      <h2 className="relative text-6xl font-normal uppercase text-gray-400">Coming Soon</h2>
+    </div>
+  );
 }

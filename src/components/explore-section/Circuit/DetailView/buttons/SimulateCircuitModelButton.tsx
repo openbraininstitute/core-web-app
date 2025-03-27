@@ -1,34 +1,31 @@
-'use client'
+'use client';
 
-
-
-import { SimulateIcon } from "@/components/icons";
+import { SimulateIcon } from '@/components/icons';
 
 export type FormatOptionsProps = {
-    name: string;
-    key: string;
-}
+  name: string;
+  key: string;
+};
 
 export type FormatProps = {
-    sonataFile: string;
-    connectomeUtilitiesFile: string;
-}
+  sonataFile: string;
+  connectomeUtilitiesFile: string;
+};
 
 export default function SimulateCircuitModelButton() {
+  return (
+    <button
+      type="button"
+      aria-label="Open download format options"
+      className="relative flex h-12 flex-row items-center"
+    >
+      <span className="mr-3 block whitespace-nowrap text-base font-normal text-primary-8">
+        Simulate model
+      </span>
 
-    return (
-        <button
-            type="button"
-            aria-label="Open download format options"
-            className="relative h-12 flex flex-row items-center"
-            >
-                <span className="block font-normal text-base text-primary-8 mr-3 whitespace-nowrap">
-                    Simulate model
-                </span>
-
-                <div className="w-12 h-12 border border-gray-300 flex items-center justify-center">
-                    <SimulateIcon iconColor="#003a8c" className="w-4 h-auto" />
-                </div>
-        </button>
-    )
+      <div className="flex h-12 w-12 items-center justify-center border border-gray-300">
+        <SimulateIcon iconColor="#003a8c" className="h-auto w-4" />
+      </div>
+    </button>
+  );
 }

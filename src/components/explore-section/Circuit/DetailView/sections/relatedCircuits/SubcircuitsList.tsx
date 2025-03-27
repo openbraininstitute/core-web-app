@@ -4,15 +4,16 @@ import { Key, useState } from 'react';
 
 import { Table } from 'antd';
 
-import CIRCUIT_PLACHOLDER_DATA from '../content/CIRCUITS_PLACEHOLDER';
-import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
+import CIRCUIT_PLACHOLDER_DATA from '../../../content/CIRCUITS_PLACEHOLDER';
+import { ArrowSmall } from '../../../icon/ArrowSubcircuitIcon';
 
-import { CircuitColumn, SingleCircuitListView } from '../type';
+import { CircuitColumn, SingleCircuitListView } from '../../../type';
 
 import { ChevronRight } from '@/components/icons';
+import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
 
-export default function ExploreCircuitTable() {
+export default function SubcircuitsList() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
@@ -34,7 +35,7 @@ export default function ExploreCircuitTable() {
         .map((key) => key as string);
 
       const subRowKeys = selectedRows
-        .flatMap((row) => row.subcircuits?.map((sub) => sub.key) || [])
+        .flatMap((row) => row.subcircuits?.map((sub: SingleCircuitListView) => sub.key) || [])
         .filter(Boolean);
 
       setExpandedRowKeys(updatedExpandedKeys);
@@ -58,9 +59,10 @@ export default function ExploreCircuitTable() {
       key: 'description',
       render: (value: SingleCircuitListView) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.description}
+          {truncate(value.description, 60)}
         </a>
       ),
+      width: 200,
     },
     {
       title: 'Brain region',

@@ -2,9 +2,12 @@
 
 import { ConfigProvider, DatePicker, Input, Select } from 'antd';
 
+import { useMemo, useState } from 'react';
+
+import { getSorter } from './utils';
+
 import useSearch from '@/components/VirtualLab/Search';
 import { basePath } from '@/config';
-import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
 import { DeleteOutlined, LoadingOutlined, PlusOutlined, UndoOutlined } from '@ant-design/icons';
 import Table from 'antd/es/table';
 import { Popover } from 'antd/lib';
@@ -14,10 +17,10 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
 import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
-import { useMemo, useState } from 'react';
 import ContentModal from './ContentModal';
 import NotebookTabs from './NotebookTabs';
-import { getSorter } from './utils';
+
+import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
 
 import { notification } from '@/api/notifications';
 import { Column } from '@/components/FilterControls/ControlPanel';

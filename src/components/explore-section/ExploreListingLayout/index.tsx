@@ -66,7 +66,6 @@ export default function ExploreListingLayout({
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const activePath = pathname?.split('/').pop() || 'morphology';
 
-
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
     domEvent.preventDefault();
@@ -112,29 +111,24 @@ export default function ExploreListingLayout({
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
-
   return (
-    <div className="flex w-full h-screen overflow-auto bg-primary-9" id="interactive-data-layout">
+    <div className="flex h-screen w-full overflow-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        {
-          !pathname.includes('UID_Circuit') && (
-            <BackToInteractiveExplorationBtn href={interactivePageHref} />
-          )
-        }
+        {!pathname.includes('UID_Circuit') && (
+          <BackToInteractiveExplorationBtn href={interactivePageHref} />
+        )}
         <div className="flex-1">
-        {
-          !pathname.includes('UID_Circuit') && (
-          <Menu
-            onClick={onClick}
-            selectedKeys={[activePath]}
-            mode="horizontal"
-            theme="dark"
-            style={{ backgroundColor: '#002766' }}
-            className="flex w-full justify-start"
-            items={items}
-          />
-          )
-        }
+          {!pathname.includes('UID_Circuit') && (
+            <Menu
+              onClick={onClick}
+              selectedKeys={[activePath]}
+              mode="horizontal"
+              theme="dark"
+              style={{ backgroundColor: '#002766' }}
+              className="flex w-full justify-start"
+              items={items}
+            />
+          )}
           <div className="h-full w-full bg-primary-9 text-white">{children}</div>
         </div>
       </ErrorBoundary>

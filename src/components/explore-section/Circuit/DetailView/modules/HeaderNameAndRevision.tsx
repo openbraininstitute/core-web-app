@@ -1,39 +1,24 @@
-import { SingleCircuitListView } from "../../content/CIRCUITS_PLACEHOLDER";
+import { SingleCircuitListView } from '../../content/CIRCUITS_PLACEHOLDER';
 
-import { ChevronRight } from "@/components/icons";
+import { ChevronRight } from '@/components/icons';
 
-export default function HeaderNameAndRevision({
-    content
-}:{
-    content: SingleCircuitListView;
-}) {
+export default function HeaderNameAndRevision({ content }: { content: SingleCircuitListView }) {
+  return (
+    <div className="relative flex flex-row items-start">
+      <div className="relative mr-8 flex flex-col">
+        <div className="text-sm font-light uppercase text-neutral-5">Name</div>
+        <h1 className="text-3xl font-bold text-primary-8">{content.name}</h1>
+      </div>
 
-    return (
-        <div className="relative flex flex-row items-start">
-            
-            <div className="relative flex flex-col mr-8">
-                <div className="font-light text-neutral-5 text-sm uppercase">
-                    Name
-                </div>
-                <h1 className="font-bold text-primary-8 text-3xl">
-                    {
-                    content.name
-                    }
-                </h1>
-            </div>
+      <button
+        type="button"
+        aria-label="Toggle circuit revision"
+        className="relative top-2.5 flex h-10 w-36 flex-row items-center justify-between border border-solid border-primary-8 px-4"
+      >
+        <span className="block text-base text-primary-9">Revision {content.metadata.revision}</span>
 
-            <button
-                type="button"
-                aria-label="Toggle circuit revision"
-                className="relative top-2.5 flex flex-row items-center justify-between w-36 h-10 px-4 border border-solid border-primary-8"
-                >
-                <span className="block text-primary-9 text-base">
-                    Revision {content.metadata.revision}
-                </span>
-
-                <ChevronRight fill="#003A8C" className="w-auto h-3" />
-            </button>
-
-        </div>
-    )
+        <ChevronRight fill="#003A8C" className="h-3 w-auto" />
+      </button>
+    </div>
+  );
 }

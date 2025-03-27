@@ -13,9 +13,7 @@ const MEModelDetailView = dynamic(
 const SynaptomeDetailView = dynamic(
   () => import('@/components/explore-section/Synaptome/DetailView')
 );
-const CircuitDetailView = dynamic(
-  () => import('@/components/explore-section/Circuit/DetailView')
-);
+const CircuitDetailView = dynamic(() => import('@/components/explore-section/Circuit/DetailView'));
 
 type Params = {
   params: {
