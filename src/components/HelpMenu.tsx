@@ -47,7 +47,7 @@ export default function HelpMenu({ children, cls }: Props) {
             className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
           >
             <a href="mailto:support@openbraininstitute.org" className="!text-lg">
-              Contact Support
+              Contact support
             </a>
           </MenubarItem>
           <MenubarItem
