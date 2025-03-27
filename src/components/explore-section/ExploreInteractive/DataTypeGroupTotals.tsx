@@ -46,13 +46,6 @@ function DataTypeGroupTotal({
           text={`'Error loading experiment datasets for ${DATA_TYPES_TO_CONFIGS[dataType].title}.`}
         />
       )}
-      <StatItem
-        href={`${basePath}/circuit`} 
-        key='Circuit'
-        title='Circuit'
-        subtitle={10}
-        testId='experiment-dataset-Circuit'
-      />
       {total.state === 'hasData' && (
         <StatItem
           href={`${basePath}/${DATA_TYPES_TO_CONFIGS[dataType].name}`}
@@ -75,6 +68,9 @@ export default function DataTypeGroupTotals({
 }) {
   const { config, extensionPath } = DATA_TYPE_GROUPS_CONFIG[dataTypeGroup];
   const pathName = usePathname();
+
+  console.log(`${pathName}/model/circuit`);
+
   return (
     <>
       {Object.keys(config).map((dataType) => (
@@ -85,6 +81,14 @@ export default function DataTypeGroupTotals({
           virtualLabInfo={virtualLabInfo}
         />
       ))}
+
+      <StatItem
+        href={`${pathName}/model/circuit`}
+        key="Circuit"
+        title="Circuit"
+        subtitle={10}
+        testId="experiment-dataset-Circuit"
+      />
     </>
   );
 }

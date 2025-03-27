@@ -9,10 +9,11 @@ import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 
 import { CircuitColumn, SingleCircuitListView } from '../type';
 
+import { TableDownloadButtonLight } from './TableDownloadButton';
+
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
-import { TableDownloadButtonLight } from './TableDownloadButton';
 
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
@@ -63,7 +64,7 @@ export default function ExploreCircuitTable() {
           {truncate(value.description, 40)}
         </a>
       ),
-      width: 300
+      width: 300,
     },
     {
       title: 'Brain region',
