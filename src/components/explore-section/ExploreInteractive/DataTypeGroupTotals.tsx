@@ -69,8 +69,6 @@ export default function DataTypeGroupTotals({
   const { config, extensionPath } = DATA_TYPE_GROUPS_CONFIG[dataTypeGroup];
   const pathName = usePathname();
 
-  console.log(`${pathName}/model/circuit`);
-
   return (
     <>
       {Object.keys(config).map((dataType) => (

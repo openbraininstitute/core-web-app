@@ -14,7 +14,6 @@ import { TableDownloadButtonLight } from './TableDownloadButton';
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
-import styles from './ExploreCircuitTable.module.css';
 
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);

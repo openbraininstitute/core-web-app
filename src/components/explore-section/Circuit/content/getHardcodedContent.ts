@@ -24,7 +24,7 @@ async function getHardcodedContent(filePath: string): Promise<object[]> {
 
     return [];
   } catch (error) {
-    console.error('Error processing JSON file:', error);
+    console.error('Error processing JSON file:', error); // eslint-disable-line no-console
     return [];
   }
 }
