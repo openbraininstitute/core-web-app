@@ -2,7 +2,7 @@ import { Table } from 'antd';
 
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 
-import { SingleCircuitListView } from '../content/CIRCUITS_PLACEHOLDER';
+import { CircuitSchemaProps } from '../content/CIRCUITS_PLACEHOLDER';
 
 import { classNames } from '@/util/utils';
 
@@ -12,7 +12,7 @@ export default function ExploreSubcircuitLevel1({
   rowSelection,
 }: {
   columns: any;
-  circuit: SingleCircuitListView;
+  circuit: CircuitSchemaProps;
   rowSelection: any;
 }) {
   return (
@@ -23,7 +23,7 @@ export default function ExploreSubcircuitLevel1({
           Subcircuits
         </span>
       </div>
-      <Table<SingleCircuitListView>
+      <Table<CircuitSchemaProps>
         className={classNames(
           '[&_.ant-table-row]:bg-[#FAFAFA]',
           '[&_.ant-table-thead_th]:!text-sm',

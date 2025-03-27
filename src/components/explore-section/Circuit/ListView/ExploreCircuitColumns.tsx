@@ -1,4 +1,4 @@
-import { SingleCircuitListView } from '../type';
+import { CircuitSchemaProps } from '../type';
 
 import { ChevronRight } from '@/components/icons';
 import { classNames } from '@/util/utils';
@@ -7,63 +7,63 @@ const columns = ({
   handleExpandRow,
   expandedRowKeys,
 }: {
-  handleExpandRow: (row: SingleCircuitListView, index: number) => void;
+  handleExpandRow: (row: CircuitSchemaProps, index: number) => void;
   expandedRowKeys: string[];
 }) => {
   return [
     {
       title: 'Name',
       key: 'name',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap">{value.name}</span>
       ),
     },
     {
       title: 'Description',
       key: 'description',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.description}</span>
       ),
     },
     {
       title: 'Brain region',
       key: 'brainRegion',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.brainRegion}</span>
       ),
     },
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.numberOfNeurons}</span>
       ),
     },
     {
       title: 'Species',
       key: 'specie',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.specie}</span>
       ),
     },
     {
       title: 'Created by',
       key: 'createdBy',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.metadata.createdBy}</span>
       ),
     },
     {
       title: 'Creation date',
       key: 'creationDate',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.metadata.creationDate}</span>
       ),
     },
     {
       title: 'Subcircuits',
       key: 'hasSubcircuits',
-      render: (value: SingleCircuitListView, index?: number) => {
+      render: (value: CircuitSchemaProps, index?: number) => {
         const isExpanded = expandedRowKeys.includes(value.key);
 
         return (

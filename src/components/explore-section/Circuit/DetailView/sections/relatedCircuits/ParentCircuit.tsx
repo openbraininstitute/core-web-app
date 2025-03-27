@@ -1,6 +1,6 @@
 import { Table } from 'antd';
 import CIRCUIT_PLACHOLDER_DATA from '../../../content/CIRCUITS_PLACEHOLDER';
-import { CircuitColumn, SingleCircuitListView } from '../../../type';
+import { CircuitColumn, CircuitSchemaProps } from '../../../type';
 
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
@@ -10,7 +10,7 @@ export default function ParentCircuit() {
     {
       title: 'Name',
       key: 'name',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-bold">
           {value.name}
         </a>
@@ -20,7 +20,7 @@ export default function ParentCircuit() {
     {
       title: 'Description',
       key: 'description',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {truncate(value.description, 60)}
         </a>
@@ -30,7 +30,7 @@ export default function ParentCircuit() {
     {
       title: 'Brain region',
       key: 'brainRegion',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.brainRegion}
         </a>
@@ -39,7 +39,7 @@ export default function ParentCircuit() {
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.numberOfNeurons}
         </a>
@@ -48,14 +48,14 @@ export default function ParentCircuit() {
     {
       title: 'Species',
       key: 'specie',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.specie}</span>
       ),
     },
     {
       title: 'Created by',
       key: 'createdBy',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.metadata.createdBy}
         </a>
@@ -64,7 +64,7 @@ export default function ParentCircuit() {
     {
       title: 'Creation date',
       key: 'creationDate',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.metadata.creationDate}
         </a>
@@ -74,7 +74,7 @@ export default function ParentCircuit() {
 
   return (
     <div className="relative flex w-full max-w-full flex-col">
-      <Table<SingleCircuitListView>
+      <Table<CircuitSchemaProps>
         className={classNames(
           '[&_.ant-table-row]:bg-[#FAFAFA]',
           '[&_.ant-table-thead_th]:!text-sm',

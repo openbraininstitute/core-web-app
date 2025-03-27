@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 
-import { SingleCircuitListView } from '../../../type';
+import { CircuitSchemaProps } from '../../../type';
 import LiteratureContent from './LiteratureContent';
 import RelatedArtifactsContent from './RelatedArtifactsContent';
 import Subtabs from './Subtabs';
 
-export default function ProvenanceSection({ content }: { content: SingleCircuitListView }) {
+export default function ProvenanceSection({ content }: { content: CircuitSchemaProps }) {
   const [activeSubsection, setActiveSubsection] = useState<'Literature' | 'Related Artifacts'>(
     'Literature'
   );

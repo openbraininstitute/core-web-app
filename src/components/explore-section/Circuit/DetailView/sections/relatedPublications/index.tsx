@@ -1,10 +1,10 @@
-import { PaperLitteratureProps, SingleCircuitListView } from '../../../type';
+import { CircuitSchemaProps, PaperLitteratureProps } from '../../../type';
 import SingleArticleCard from '../provenance/SingleArticleCard';
 
 export default function RelatedPublicationsSection({
   content,
 }: {
-  content: SingleCircuitListView;
+  content: CircuitSchemaProps;
 }) {
   const sourceContent: PaperLitteratureProps[] = content.relatedPublications.filter(
     (publication: PaperLitteratureProps) => publication.category === 'Source'

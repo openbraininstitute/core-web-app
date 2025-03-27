@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { SingleCircuitListView } from '../../type';
+import { CircuitSchemaProps } from '../../type';
 import CircuitSectionTabs from './Tabs';
 import OverviewSection from './overview';
 import ProvenanceSection from './provenance';
@@ -12,7 +12,7 @@ import RelatedPublicationsSection from './relatedPublications';
 export default function CircuitDetailViewSectionContainer({
   content,
 }: {
-  content: SingleCircuitListView;
+  content: CircuitSchemaProps;
 }) {
   const [activeSection, setActiveSection] = useState<
     'overview' | 'provenance' | 'related publication' | 'Related circuits'

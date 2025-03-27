@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import { GraphDataImageProps, SingleCircuitListView } from '../../../type';
+import { CircuitSchemaProps, GraphDataImageProps } from '../../../type';
 
-export default function OverviewSection({ content }: { content: SingleCircuitListView }) {
+export default function OverviewSection({ content }: { content: CircuitSchemaProps }) {
   return (
     <div className="relative flex w-full flex-col">
       {content.overview.cellStatistics.length > 0 && (

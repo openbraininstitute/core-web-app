@@ -7,7 +7,7 @@ import { Table } from 'antd';
 import CIRCUIT_PLACHOLDER_DATA from '../../../content/CIRCUITS_PLACEHOLDER';
 import { ArrowSmall } from '../../../icon/ArrowSubcircuitIcon';
 
-import { CircuitColumn, SingleCircuitListView } from '../../../type';
+import { CircuitColumn, CircuitSchemaProps } from '../../../type';
 
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
@@ -17,7 +17,7 @@ export default function SubcircuitsList() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
-  const handleExpandRow = (row: SingleCircuitListView, _index: number) => {
+  const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
@@ -27,7 +27,7 @@ export default function SubcircuitsList() {
 
   const rowSelection = {
     selectedRowKeys,
-    onChange: (newSelectedRowKeys: Key[], selectedRows: SingleCircuitListView[]) => {
+    onChange: (newSelectedRowKeys: Key[], selectedRows: CircuitSchemaProps[]) => {
       const updatedExpandedKeys = newSelectedRowKeys
         .filter((key) =>
           CIRCUIT_PLACHOLDER_DATA.some((row) => row.key === key && row.hasSubcircuits)
@@ -35,7 +35,7 @@ export default function SubcircuitsList() {
         .map((key) => key as string);
 
       const subRowKeys = selectedRows
-        .flatMap((row) => row.subcircuits?.map((sub: SingleCircuitListView) => sub.key) || [])
+        .flatMap((row) => row.subcircuits?.map((sub: CircuitSchemaProps) => sub.key) || [])
         .filter(Boolean);
 
       setExpandedRowKeys(updatedExpandedKeys);
@@ -48,7 +48,7 @@ export default function SubcircuitsList() {
     {
       title: 'Name',
       key: 'name',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap">
           {value.name}
         </a>
@@ -57,7 +57,7 @@ export default function SubcircuitsList() {
     {
       title: 'Description',
       key: 'description',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {truncate(value.description, 60)}
         </a>
@@ -67,7 +67,7 @@ export default function SubcircuitsList() {
     {
       title: 'Brain region',
       key: 'brainRegion',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.brainRegion}
         </a>
@@ -76,7 +76,7 @@ export default function SubcircuitsList() {
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.numberOfNeurons}
         </a>
@@ -85,14 +85,14 @@ export default function SubcircuitsList() {
     {
       title: 'Species',
       key: 'specie',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap font-normal">{value.specie}</span>
       ),
     },
     {
       title: 'Created by',
       key: 'createdBy',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.metadata.createdBy}
         </a>
@@ -101,7 +101,7 @@ export default function SubcircuitsList() {
     {
       title: 'Creation date',
       key: 'creationDate',
-      render: (value: SingleCircuitListView) => (
+      render: (value: CircuitSchemaProps) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
           {value.metadata.creationDate}
         </a>
@@ -110,7 +110,7 @@ export default function SubcircuitsList() {
     {
       title: 'Subcircuits',
       key: 'hasSubcircuits',
-      render: (value: SingleCircuitListView, index?: number) => {
+      render: (value: CircuitSchemaProps, index?: number) => {
         const isExpanded = expandedRowKeys.includes(value.key);
 
         return (
@@ -138,7 +138,7 @@ export default function SubcircuitsList() {
   ];
 
   // SUBCIRCUIT TABLE - LEVEL 1
-  const expandedRowRender = (circuit: SingleCircuitListView): JSX.Element => {
+  const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
     return (
       <div className="relative flex flex-col pl-[17px]">
         <div className="relative flex flex-row pl-[48px]">
@@ -147,7 +147,7 @@ export default function SubcircuitsList() {
             Subcircuits
           </span>
         </div>
-        <Table<SingleCircuitListView>
+        <Table<CircuitSchemaProps>
           className={classNames(
             '[&_.ant-table-row]:bg-[#FAFAFA]',
             '[&_.ant-table-thead_th]:!text-sm',
@@ -165,13 +165,13 @@ export default function SubcircuitsList() {
           pagination={false}
           rowSelection={{
             selectedRowKeys,
-            onChange: (newSelectedRow: Key[], _selectedRow: SingleCircuitListView[]) => {
+            onChange: (newSelectedRow: Key[], _selectedRow: CircuitSchemaProps[]) => {
               const parentKey = circuit.key;
               const updatedKeys = selectedRowKeys
                 .filter(
                   (key) =>
                     !circuit.subcircuits?.find(
-                      (subcircuit: SingleCircuitListView) => subcircuit.key === key
+                      (subcircuit: CircuitSchemaProps) => subcircuit.key === key
                     )
                 )
                 .concat(newSelectedRow as string[]);
@@ -182,7 +182,7 @@ export default function SubcircuitsList() {
           expandable={{
             expandedRowRender,
             expandedRowKeys,
-            onExpand: (expanded: boolean, row: SingleCircuitListView) => {
+            onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
               const rowKey = row.key;
               setExpandedRowKeys((prev) =>
                 expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)
@@ -200,7 +200,7 @@ export default function SubcircuitsList() {
       selectedRowKeys.includes(circuit.key)
     );
 
-    selectedRowKeyObjects.forEach((circuit: SingleCircuitListView) => {
+    selectedRowKeyObjects.forEach((circuit: CircuitSchemaProps) => {
       const fileName = circuit.name;
       let url;
 
@@ -251,7 +251,7 @@ export default function SubcircuitsList() {
         expandable={{
           expandedRowRender,
           expandedRowKeys,
-          onExpand: (expanded: boolean, row: SingleCircuitListView) => {
+          onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
             const rowKey = row.key;
             setExpandedRowKeys((prev) =>
               expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)

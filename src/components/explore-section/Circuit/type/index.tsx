@@ -25,29 +25,23 @@ export type GraphDataImageProps = {
   height: number;
 };
 
-export type SingleCircuitListView = {
+export type CircuitSchemaProps = {
   key: string;
   name: string;
   description: string;
-  brainRegion: string;
-  specie: string;
-  numberOfNeurons: string;
-  numberOfConnections: string;
-  numberOfSynapses: string;
-  files: SingleFileProps[];
-  provenance: {
-    isASubcircuit: boolean;
-    subcircuitOf: string | null;
-    literature: PaperLitteratureProps[];
-  };
-  relatedPublications: PaperLitteratureProps[];
+  parent?: string;
   hasSubcircuits: boolean;
-  subcircuits: SingleCircuitListView[] | null;
+  brainRegion: string;
+  species: string;
+  numberOfNeurons: number;
+  numberOfConnections: number;
+  numberOfSynapses: number;
   metadata: {
-    contributors?: string[];
-    contributorIndividual?: string;
+    contributorSimple?: string;
+    contributor?: string;
     contributingInstitution?: string;
-    revision: number;
+    registrationDate?: string;
+    revision: number | null;
     createdBy: string;
     creationDate: string;
     license: {
@@ -55,10 +49,25 @@ export type SingleCircuitListView = {
       url: string;
     } | null;
   };
+  files: {
+    kind: string;
+    url: string;
+    key: string;
+    isAvailable: boolean;
+  }[];
+  subcircuits: CircuitSchemaProps[] | null;
+
+  // TO BE REVISED
+  provenance: {
+    isASubcircuit: boolean;
+    subcircuitOf: string | null;
+    literature: PaperLitteratureProps[];
+  };
+  relatedPublications: PaperLitteratureProps[];
   images: {
-    low?: string;
-    normal?: string;
-    high: string;
+    low?: string | null;
+    normal?: string | null;
+    high: string | null;
   };
   overview: {
     cellStatistics: GraphDataImageProps[];
@@ -78,7 +87,7 @@ export type CircuitCellValue = {
 export type CircuitColumn = {
   title: string;
   key?: string;
-  render?: (value: SingleCircuitListView) => ReactNode;
+  render?: (value: CircuitSchemaProps) => ReactNode;
   width?: number;
 };
 

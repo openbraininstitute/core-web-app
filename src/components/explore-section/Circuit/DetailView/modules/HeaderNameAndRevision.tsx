@@ -1,8 +1,8 @@
-import { SingleCircuitListView } from '../../content/CIRCUITS_PLACEHOLDER';
+import { CircuitSchemaProps } from '../../content/CIRCUITS_PLACEHOLDER';
 
 import { ChevronRight } from '@/components/icons';
 
-export default function HeaderNameAndRevision({ content }: { content: SingleCircuitListView }) {
+export default function HeaderNameAndRevision({ content }: { content: CircuitSchemaProps }) {
   return (
     <div className="relative flex flex-row items-start">
       <div className="relative mr-8 flex flex-col">

@@ -1,7 +1,8 @@
 'use client'
 
-import { InformationIcon } from "@/components/icons";
 import Link from "next/link";
+
+import { InformationIcon } from "@/components/icons";
 
 export function TableDownloadButtonLight({
     handleFileDownload,
