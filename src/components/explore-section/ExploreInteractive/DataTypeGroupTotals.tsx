@@ -46,13 +46,13 @@ function DataTypeGroupTotal({
           text={`'Error loading experiment datasets for ${DATA_TYPES_TO_CONFIGS[dataType].title}.`}
         />
       )}
-      {/* <StatItem
+      <StatItem
         href={`${basePath}/circuit`} 
         key='Circuit'
         title='Circuit'
         subtitle={10}
         testId='experiment-dataset-Circuit'
-      /> */}
+      />
       {total.state === 'hasData' && (
         <StatItem
           href={`${basePath}/${DATA_TYPES_TO_CONFIGS[dataType].name}`}

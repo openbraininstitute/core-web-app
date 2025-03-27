@@ -10,7 +10,9 @@ import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitColumn, SingleCircuitListView } from '../type';
 
 import { ChevronRight } from '@/components/icons';
+import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
+import { TableDownloadButtonLight } from './TableDownloadButton';
 
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
@@ -58,9 +60,10 @@ export default function ExploreCircuitTable() {
       key: 'description',
       render: (value: SingleCircuitListView) => (
         <a href={value.key} className="whitespace-nowrap font-normal">
-          {value.description}
+          {truncate(value.description, 40)}
         </a>
       ),
+      width: 300
     },
     {
       title: 'Brain region',
@@ -115,7 +118,7 @@ export default function ExploreCircuitTable() {
           value.hasSubcircuits && (
             <button
               type="button"
-              className="relative flex h-6 items-center justify-center text-base font-normal"
+              className="relative flex h-6 items-center justify-center text-base font-normal focus:outline-none"
               aria-label="Open subcircuit"
               onClick={() => handleExpandRow(value, index ?? -1)}
               disabled={!value.hasSubcircuits}
@@ -259,34 +262,10 @@ export default function ExploreCircuitTable() {
         }}
       />
 
-      <div
-        className="fixed bottom-6 right-24 z-50 flex h-16 w-[400px] flex-row items-center justify-between bg-primary-8 pl-8 transition-bottom duration-300 ease-in-out"
-        style={{
-          bottom: selectedRowKeys.length > 0 ? '24px' : '-60px',
-        }}
-      >
-        <div className="text-base font-normal text-primary-3">
-          Download ({selectedRowKeys.length})
-        </div>
-        <div className="relative flex h-full flex-row">
-          <button
-            type="button"
-            aria-label="Download sonata circuit"
-            className="bg-primary-8 px-5 text-base font-normal text-white transition-colors duration-300 ease-in hover:bg-primary-1 hover:text-primary-8"
-            onClick={() => handleFileDownload('sonataFile')}
-          >
-            Sonata
-          </button>
-          <button
-            type="button"
-            aria-label="Download connectome utilities"
-            className="bg-primary-8 px-5 text-base font-normal text-white transition-colors duration-300 ease-in hover:bg-primary-1 hover:text-primary-8"
-            onClick={() => handleFileDownload('connectomeUtilitiesFile')}
-          >
-            Connectome utilities
-          </button>
-        </div>
-      </div>
+      <TableDownloadButtonLight
+        handleFileDownload={handleFileDownload}
+        selectedRowKeys={selectedRowKeys}
+      />
     </div>
   );
 }

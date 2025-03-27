@@ -112,9 +112,9 @@ export default function ExploreListingLayout({
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
   return (
-    <div className="flex h-screen w-full overflow-auto bg-primary-9" id="interactive-data-layout">
+    <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        {!pathname.includes('UID_Circuit') && (
+        {!pathname.includes('UID_Circuit') || pathname.includes('circuit') && (
           <BackToInteractiveExplorationBtn href={interactivePageHref} />
         )}
         <div className="flex-1">
