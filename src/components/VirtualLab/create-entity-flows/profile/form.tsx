@@ -61,7 +61,12 @@ function Profile({ data }: Props) {
   const onSubmit = (values: UserProfileResponse) => {
     startTransition(async () => {
       const { error } = await tryCatch(
-        updateUserProfile(omit(values, ['email_verified', 'id', 'email']))
+        updateUserProfile(omit(values, ['email_verified', 'id'])),
+        undefined,
+        {
+          section: 'profile-page',
+          feature: 'update-user-profile',
+        }
       );
       if (error) {
         errorNotify(
@@ -160,14 +165,7 @@ function Profile({ data }: Props) {
               className="space-y-1 md:col-span-2"
               label={<Label title="Email" />}
             >
-              <XInput
-                id="email"
-                name="email"
-                type="email"
-                className="disabled:!text-white"
-                readOnly
-                disabled
-              />
+              <XInput id="email" name="email" type="email" className="disabled:!text-white" />
             </Form.Item>
             <div className="space-y-1 md:col-span-2">
               <Label title="Authentication service" />

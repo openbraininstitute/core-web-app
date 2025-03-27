@@ -1,45 +1,59 @@
 'use client';
 
-import React from 'react';
+import React, { AnchorHTMLAttributes } from 'react';
+import Link from 'next/link';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 import ReactMarkdown from 'react-markdown';
 
 import ToolArticles from './tools/articles/tool-articles';
 import ToolMorphologies from './tools/morphologies/tool-morphologies';
 import { classNames } from '@/util/utils';
-import { ChevronRight } from '@/components/icons';
 
 import styles from './message-item.module.css';
 
 export interface MessageItemProps {
   className?: string;
   value: UIMessage;
+  hideTools: boolean;
 }
 
-export default function MessageItem({ className, value }: MessageItemProps) {
+export default function MessageItem({ className, value, hideTools }: MessageItemProps) {
   const debug = useDebug();
   return (
-    <div className={classNames(className, styles.messageItem)}>{renderMessage(value, debug)}</div>
+    <div className={classNames(className, styles.messageItem)}>
+      {renderMessage(value, hideTools, debug)}
+    </div>
   );
 }
 
-function renderMessage(value: UIMessage, debug: boolean): React.ReactNode {
+function renderMessage(value: UIMessage, hideTools: boolean, debug: boolean): React.ReactNode {
   switch (value.role) {
     case 'user':
       return (
         <div className={styles.user}>
-          <div className={styles.userAvatar}>
-            <ChevronRight fill="currentColor" />
+          {/* <div className={styles.userAvatar}><ChevronRight fill="currentColor" /></div> */}
+          <div className={styles.userContent}>
+            <div>{value.content}</div>
           </div>
-          <div className={styles.userContent}>{value.content}</div>
         </div>
       );
     case 'assistant': {
       return (
         <>
-          <ToolArticles message={value} />
-          <ToolMorphologies message={value} />
-          <ReactMarkdown className={styles.markdown}>{value.content}</ReactMarkdown>
+          <ReactMarkdown
+            className={styles.markdown}
+            components={{
+              a: LinkWithExternalTarget,
+            }}
+          >
+            {value.content}
+          </ReactMarkdown>
+          {!hideTools && (
+            <>
+              <ToolArticles message={value} />
+              <ToolMorphologies message={value} />
+            </>
+          )}
           {debug && (
             <button
               type="button"
@@ -83,4 +97,14 @@ function useDebug(): boolean {
   const [debug, setDebug] = React.useState(false);
   React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
   return debug;
+}
+
+function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
+  if (!href) return null;
+
+  return (
+    <Link href={href} target="_blank">
+      {children}
+    </Link>
+  );
 }

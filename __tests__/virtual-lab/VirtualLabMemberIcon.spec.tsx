@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { Role } from '@/types/virtual-lab/members';
 import VirtualLabMemberIcon from '@/components/VirtualLab/VirtualLabMemberIcon';
 import colorDictionary from '@/components/VirtualLab/VirtualLabMemberIcon/availableColors';
+import { Role } from '@/api/virtual-lab-svc/queries/types';
 
 /* eslint-disable react/jsx-props-no-spreading */
 

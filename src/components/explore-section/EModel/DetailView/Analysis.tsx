@@ -23,7 +23,7 @@ export default function Analysis() {
 
   return (
     <div className="-mt-7 border border-primary-8 p-6">
-      <PDFViewerContainer distributions={ensureArray(detail.data.distribution)} />
+      <PDFViewerContainer distributions={ensureArray(detail.data.image)} />
     </div>
   );
 }

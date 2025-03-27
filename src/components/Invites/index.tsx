@@ -17,6 +17,8 @@ import sessionAtom from '@/state/session';
 
 import inviteBgImgSrc from '@/../public/images/invite/invite-bg.webp';
 import { isVlmError } from '@/types/virtual-lab/common';
+import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
+import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 
 function getInviteDestinationLabel(inviteDetails: InviteDetailsData) {
   return inviteDetails.origin === 'Lab'
@@ -31,7 +33,18 @@ export default function InviteLoader() {
   const session = useAtomValue(sessionAtom);
 
   const [inviteDetails, setInviteDetails] = useState<InviteDetailsData | null>(null);
+  const [subscription, setSubscription] = useState<UserActiveSubscriptionResponse | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
+
+  const hasPaidPlan = subscription?.subscription.type === 'paid';
+
+  const goToUpgrade = () => {
+    const planUpgradeSuccessRedirectUrl = `/app/invite?token=${inviteToken}`;
+    const planUpgradePageUrl = '/app/virtual-lab/account/subscription';
+    const params = new URLSearchParams({ planUpgradeSuccessRedirectUrl });
+
+    return router.push(`${planUpgradePageUrl}?${params}`);
+  };
 
   const acceptInvite = async () => {
     if (!session?.accessToken || !inviteToken) {
@@ -40,29 +53,29 @@ export default function InviteLoader() {
 
     setProcessing(true);
 
-    sendInviteAcceptRequest(session?.accessToken, inviteToken).then((response) => {
-      if (isVlmError(response)) {
-        router.push(getErrorUrl(response, session?.accessToken, inviteToken));
-        return;
-      }
+    const res = await sendInviteAcceptRequest(session?.accessToken, inviteToken);
 
-      switch (response.data.origin) {
-        case 'Lab':
-          router.push(getLabUrl(response.data));
-          return;
-        case 'Project':
-          router.push(getProjectUrl(response.data));
-          return;
-        default:
-          captureException(
-            new Error(
-              `User could not accept invite ${inviteToken} because unknown origin returned by server`
-            ),
-            { extra: response.data.origin }
-          );
-          router.push(getErrorUrl(response, session?.accessToken, inviteToken));
-      }
-    });
+    if (isVlmError(res)) {
+      router.push(getErrorUrl(res, session?.accessToken, inviteToken));
+      return;
+    }
+
+    switch (res.data.origin) {
+      case 'Lab':
+        router.push(getLabUrl(res.data));
+        return;
+      case 'Project':
+        router.push(getProjectUrl(res.data));
+        return;
+      default:
+        captureException(
+          new Error(
+            `User could not accept invite ${inviteToken} because unknown origin returned by server`
+          ),
+          { extra: res.data.origin }
+        );
+        router.push(getErrorUrl(res, session?.accessToken, inviteToken));
+    }
   };
 
   useEffect(() => {
@@ -70,25 +83,19 @@ export default function InviteLoader() {
       return router.push(getErrorUrl(null, session?.accessToken, inviteToken));
     }
 
-    if (!session.user.plan?.includes('paid')) {
-      const planUpgradeSuccessRedirectUrl = `/app/invite?token=${inviteToken}`;
-      // TODO: When the upgrade page is implemented, make sure the location and search params are correct.
-      const planUpgradePageUrl = '/app/virtual-lab/subscription/upgrade';
-      const params = new URLSearchParams({
-        planUpgradeSuccessRedirectUrl,
-        extraMsgCode: 'inviteRequiresUpgrade',
-      });
+    const init = async () => {
+      const currentSubscription = await getUserActiveSubscription();
 
-      return router.push(`${planUpgradePageUrl}?${params}`);
-    }
-
-    getInviteDetails(session?.accessToken, inviteToken).then((response) => {
-      if (isVlmError(response)) {
-        return router.push(getErrorUrl(response, session?.accessToken, inviteToken));
+      const inviteData = await getInviteDetails(session?.accessToken, inviteToken);
+      if (isVlmError(inviteData)) {
+        return router.push(getErrorUrl(inviteData, session?.accessToken, inviteToken));
       }
 
-      setInviteDetails(response.data);
-    });
+      setSubscription(currentSubscription);
+      setInviteDetails(inviteData.data);
+    };
+
+    init();
   }, [inviteToken, router, session?.accessToken, session?.user.plan]);
 
   return (
@@ -114,6 +121,12 @@ export default function InviteLoader() {
                 You have been invited to join the {getInviteDestinationLabel(inviteDetails)}
               </p>
 
+              {!hasPaidPlan && (
+                <p className="mt-4 text-xl text-primary-9">
+                  Only users with a paid subscription can join others&apos; {inviteDetails.origin}s.
+                </p>
+              )}
+
               <div className="mt-12 flex justify-center gap-8 text-lg">
                 <Link
                   className="border-gray-4 border border-solid px-12 py-8"
@@ -121,14 +134,25 @@ export default function InviteLoader() {
                 >
                   Browse platform
                 </Link>
-                <button
-                  onClick={acceptInvite}
-                  className="bg-secondary-2 px-12 py-8 text-white disabled:text-gray-400"
-                  type="button"
-                  disabled={processing}
-                >
-                  Join {inviteDetails.origin === 'Lab' ? 'Virtual Lab' : 'Project'}
-                </button>
+
+                {hasPaidPlan ? (
+                  <button
+                    onClick={acceptInvite}
+                    className="bg-secondary-2 px-12 py-8 text-white disabled:text-gray-400"
+                    type="button"
+                    disabled={processing}
+                  >
+                    Join {inviteDetails.origin === 'Lab' ? 'Virtual Lab' : 'Project'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={goToUpgrade}
+                    className="bg-primary-5 px-12 py-8 text-white disabled:text-gray-400"
+                    type="button"
+                  >
+                    Upgrade subscription
+                  </button>
+                )}
               </div>
             </div>
           </div>

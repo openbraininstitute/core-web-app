@@ -6,6 +6,7 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import SuggestedQuestions from './suggested-questions';
 import MessageItem from './message-item';
 import Prompt from './prompt';
+import ErrorPanel from './error';
 import { Spinner } from './spinner';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
@@ -33,8 +34,8 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
     [append]
   );
   React.useEffect(() => {
-    refChatBottom.current?.scrollIntoView();
-  }, [messages]);
+    globalThis.setTimeout(() => refChatBottom.current?.scrollIntoView(), 200);
+  }, [messages, error]);
   const handleClearChat = () => {
     clear();
     recreateThreadId();
@@ -53,38 +54,32 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
         type="button"
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
-        <h1>Explore AI</h1>
+        <h1 title={status}>AI Assistant</h1>
         {collapsedPanel ? <PlusOutlined /> : <MinusOutlined />}
       </button>
       {!collapsedPanel && (
         <>
           {threadId ? (
             <>
-              {error ? (
-                <div className={styles.error}>{JSON.stringify(error, null, '  ')}</div>
-              ) : (
-                <div className={styles.articles}>
-                  {messages.map((item) => (
-                    <MessageItem key={item.id} value={item} />
-                  ))}
-                  {status === 'ready' ? (
-                    messages.length > 0 && (
-                      <div className={styles.footerButtons}>
-                        <button
-                          type="button"
-                          className={styles.actionButton}
-                          onClick={handleClearChat}
-                        >
-                          Clear the Chat
-                        </button>
-                      </div>
-                    )
-                  ) : (
-                    <Spinner />
-                  )}
-                  <div ref={refChatBottom} className={styles.bottom} />
-                </div>
-              )}
+              <div className={styles.articles}>
+                {messages.map((item, messageIndex) => (
+                  <MessageItem
+                    key={item.id}
+                    value={item}
+                    hideTools={messageIndex === messages.length - 1 && status !== 'ready'}
+                  />
+                ))}
+                {status === 'ready' && messages.length > 0 && (
+                  <div className={styles.footerButtons}>
+                    <button type="button" className={styles.actionButton} onClick={handleClearChat}>
+                      Clear the Chat
+                    </button>
+                  </div>
+                )}
+                {error && <ErrorPanel value={error} />}
+                <div ref={refChatBottom} className={styles.bottom} />
+              </div>
+
               <footer>
                 {messages.length === 0 && (
                   <SuggestedQuestions
@@ -94,11 +89,14 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
                     }}
                   />
                 )}
-                <Prompt value={prompt} onChange={setPrompt} onClick={handleQuery} />
+                {(status === 'ready' || status === 'error') && (
+                  <Prompt value={prompt} onChange={setPrompt} onClick={handleQuery} />
+                )}
+                {status !== 'ready' && status !== 'error' && <Spinner />}
               </footer>
             </>
           ) : (
-            <Spinner />
+            status !== 'error' && <Spinner />
           )}
         </>
       )}

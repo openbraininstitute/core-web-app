@@ -4,13 +4,13 @@
   padding: 1em;
   border: 1px solid #777;
   border-radius: 0.5em;
-  background-color: #000;
+  background-color: #f7f7f7;
   transition: all 0.3s;
 }
 
 .articleCard:hover {
   border-radius: 0;
-  background-color: #222;
+  background-color: #eee;
 }
 
 .articleCard h2 {

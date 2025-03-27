@@ -5,7 +5,7 @@ import { serviceAiAgentUrl } from '../api';
 export function useServiceAiAgentChat(threadId: string) {
   const session = useSession();
   const chat = useChat({
-    api: serviceAiAgentUrl('qa/chat_streamed', threadId),
+    api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
     headers: {
       Authorization: `Bearer ${session.data?.accessToken}`,
@@ -18,6 +18,7 @@ export function useServiceAiAgentChat(threadId: string) {
       };
     },
   });
+
   return {
     messages: chat.messages,
     append: chat.append,

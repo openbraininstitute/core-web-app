@@ -10,8 +10,6 @@ import { CollapseProps } from 'antd/lib/collapse/Collapse';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQueryState } from 'nuqs';
 
-import Billing from '../Billing';
-import ProjectsPanel from './ProjectsPanel';
 import FormPanel, { renderInput, renderTextArea } from './FormPanel';
 import DangerZonePanel from './DangerZonePanel';
 import CreditManagement from './CreditManagement';
@@ -19,16 +17,16 @@ import SpendingsPanel from './Spendings';
 
 import BuyCredits from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/buy-credits';
 import PurchasesHistory from '@/components/VirtualLab/VirtualLabSettingsComponent/purchases-history';
+import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
+import Collapse, { ExpandIcon } from '@/components/Collapse';
 import { deleteVirtualLab } from '@/services/virtual-lab/labs';
 import {
   virtualLabBalanceAtomFamily,
   virtualLabDetailAtomFamily,
   virtualLabsOfUserAtom,
 } from '@/state/virtual-lab/lab';
-import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
 import { classNames, VALID_EMAIL_REGEXP } from '@/util/utils';
-import { VirtualLab } from '@/types/virtual-lab/lab';
-import Collapse, { ExpandIcon } from '@/components/Collapse';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
 
 function VirtualLabBlock({
@@ -129,107 +127,89 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     [id]
   );
 
-  const settings = useMemo(
-    () =>
-      virtualLabDetail.state === 'hasData'
-        ? {
-            key: 'settings',
-            children: (
-              <FormPanel
-                className="grid grid-cols-2 gap-x-6"
-                initialValues={{
-                  name: virtualLabDetail.data?.name,
-                  reference_email: virtualLabDetail.data?.reference_email,
-                  entity: virtualLabDetail.data?.entity,
-                  description: virtualLabDetail.data?.description,
-                }}
-                items={[
-                  {
-                    className: 'col-span-2',
-                    children: renderInput,
-                    label: 'Lab Name',
-                    name: 'name',
-                    required: true,
-                    rules: [{ max: 250 }],
-                  },
-                  {
-                    className: 'col-span-2',
-                    children: renderTextArea,
-                    label: 'Description',
-                    name: 'description',
-                  },
-                  {
-                    children: renderInput,
-                    label: 'Reference email',
-                    name: 'reference_email',
-                    type: 'email',
-                    required: true,
-                    // TODO: Figure-out whether "rules" prop is actually useful.
-                    rules: [
-                      {
-                        required: true,
-                        pattern: VALID_EMAIL_REGEXP,
-                        message: 'Entered value is not the correct email format',
-                      },
-                    ],
-                  },
-                  {
-                    children: renderInput,
-                    label: 'Affiliated entity',
-                    name: 'entity',
-                  },
-                ]}
-                name="settings" // TODO: Check whether this prop is necessary.
-                onValuesChange={updateVirtualLab}
-              />
-            ),
-            label: 'Lab Settings',
-          }
-        : {},
-    [updateVirtualLab, virtualLabDetail]
-  );
+  // const settings = useMemo(
+  //   () =>
+  //     virtualLabDetail.state === 'hasData'
+  //       ? {
+  //           key: 'settings',
+  //           children: (
+  //             <FormPanel
+  //               className="grid grid-cols-2 gap-x-6"
+  //               initialValues={{
+  //                 name: virtualLabDetail.data?.virtual_lab.name,
+  //                 reference_email: virtualLabDetail.data?.virtual_lab.reference_email,
+  //                 entity: virtualLabDetail.data?.virtual_lab.entity,
+  //                 description: virtualLabDetail.data?.virtual_lab.description,
+  //               }}
+  //               items={[
+  //                 {
+  //                   className: 'col-span-2',
+  //                   children: renderInput,
+  //                   label: 'Lab Name',
+  //                   name: 'name',
+  //                   required: true,
+  //                   rules: [{ max: 250 }],
+  //                 },
+  //                 {
+  //                   className: 'col-span-2',
+  //                   children: renderTextArea,
+  //                   label: 'Description',
+  //                   name: 'description',
+  //                 },
+  //                 {
+  //                   children: renderInput,
+  //                   label: 'Reference email',
+  //                   name: 'reference_email',
+  //                   type: 'email',
+  //                   required: true,
+  //                   // TODO: Figure-out whether "rules" prop is actually useful.
+  //                   rules: [
+  //                     {
+  //                       required: true,
+  //                       pattern: VALID_EMAIL_REGEXP,
+  //                       message: 'Entered value is not the correct email format',
+  //                     },
+  //                   ],
+  //                 },
+  //                 {
+  //                   children: renderInput,
+  //                   label: 'Affiliated entity',
+  //                   name: 'entity',
+  //                 },
+  //               ]}
+  //               name="settings" // TODO: Check whether this prop is necessary.
+  //               onValuesChange={updateVirtualLab}
+  //             />
+  //           ),
+  //           label: 'Lab Settings',
+  //         }
+  //       : {},
+  //   [updateVirtualLab, virtualLabDetail]
+  // );
 
-  const budget = useMemo(
-    () => ({
-      key: 'project-budget',
-      children: <ProjectsPanel expandIcon={ExpandIcon} virtualLabId={id} />,
-      label: 'Budgets',
-    }),
-    [id]
-  );
-
-  const billing = useMemo(
-    () => ({
-      key: 'billing',
-      children: <Billing virtualLabId={id} />,
-      label: 'Billing',
-    }),
-    [id]
-  );
-
-  const dangerZone = useMemo(
-    () =>
-      virtualLabDetail.state === 'hasData' && userIsAdmin
-        ? {
-            key: 'danger-zone',
-            children: (
-              <DangerZonePanel
-                onClick={onDeleteVirtualLab}
-                name={virtualLabDetail.data?.name || ''}
-              />
-            ),
-            label: 'Danger Zone',
-          }
-        : {},
-    [onDeleteVirtualLab, userIsAdmin, virtualLabDetail]
-  );
+  // const dangerZone = useMemo(
+  //   () =>
+  //     virtualLabDetail.state === 'hasData' && userIsAdmin
+  //       ? {
+  //           key: 'danger-zone',
+  //           children: (
+  //             <DangerZonePanel
+  //               onClick={onDeleteVirtualLab}
+  //               name={virtualLabDetail.data?.virtual_lab.name || ''}
+  //             />
+  //           ),
+  //           label: 'Danger Zone',
+  //         }
+  //       : {},
+  //   [onDeleteVirtualLab, userIsAdmin, virtualLabDetail]
+  // );
 
   const collapseItems: CollapseProps['items'] = useMemo(
     () =>
-      [creditManagement, purchases, spendings, settings, dangerZone].filter(
+      [creditManagement, purchases, spendings].filter(
         (item) => Object.keys(item).length !== 0 // Filter-out any "empty" panels (ex. DangerZone when not admin).
       ),
-    [creditManagement, purchases, spendings, settings, dangerZone]
+    [creditManagement, purchases, spendings]
   );
 
   if (virtualLabDetail.state === 'loading') {

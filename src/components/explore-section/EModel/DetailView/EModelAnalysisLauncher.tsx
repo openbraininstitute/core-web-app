@@ -75,6 +75,7 @@ export default function Launcher({ analysis }: { analysis?: Analysis }) {
           <RunningAnalysis createdAt={analysisStarted} />
         </div>
       )}
+      {/* @ts-ignore */}
       {analysisPDFUrl && <PDFViewer url={analysisPDFUrl} />}
     </>
   );

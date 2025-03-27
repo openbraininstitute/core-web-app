@@ -1,7 +1,6 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import Logout from '@/components/VirtualLab/side-bar/logout';
 
 export default function User() {
   const { data } = useSession();
@@ -25,7 +24,6 @@ export default function User() {
         </div>
         <h1 className="select-none text-2xl font-bold tracking-tight">{data?.user.name}</h1>
       </div>
-      <Logout />
     </div>
   );
 }

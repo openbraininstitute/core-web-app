@@ -619,3 +619,43 @@ export function FileDownloadFill(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function SignOutFill(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M4 5.4A1.4 1.4 0 0 1 5.4 4h6.2A1.4 1.4 0 0 1 13 5.4V8a1 1 0 1 0 2 0V5.4A3.4 3.4 0 0 0 11.6 2H5.4A3.4 3.4 0 0 0 2 5.4v13.2A3.4 3.4 0 0 0 5.4 22h6.2a3.4 3.4 0 0 0 3.4-3.4V16a1 1 0 1 0-2 0v2.6a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 18.6z"
+      />
+      <path
+        fill="currentColor"
+        d="M17.293 8.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 0 1-1.414-1.414L18.586 13H7a1 1 0 1 1 0-2h11.586l-1.293-1.293a1 1 0 0 1 0-1.414"
+      />
+    </svg>
+  );
+}
+
+export function PendingInvite({ width = 33, height = 32, ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={width}
+      height={height}
+      viewBox="0 0 33 32"
+      fill="none"
+      {...props}
+    >
+      <rect width={31} height={31} x={0.5} y={0.5} stroke="#096DD9" rx={15.5} />
+      <path
+        fill="#fff"
+        d="M10.333 12v8h11.333v-8H10.334ZM16 16.133l-3.2-2.8h6.433L16 16.133Zm-2.4-.333-1.933 1.933v-3.6L13.6 15.8Zm1 .867.967.833c.133.1.267.167.433.167.167 0 .3-.067.433-.167l.867-.767 1.933 1.933H12.6l2-2Zm3.733-.8 2-1.733V17.9l-2-2.034Z"
+      />
+      <path
+        stroke="#fff"
+        strokeLinecap="round"
+        strokeWidth={3}
+        d="M31.281 11.258a16 16 0 0 0-8.439-9.721"
+      />
+    </svg>
+  );
+}
