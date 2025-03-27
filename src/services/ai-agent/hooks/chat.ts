@@ -14,7 +14,7 @@ export function useServiceAiAgentChat(threadId: string) {
       const lastMessage = messages.at(-1);
       return {
         content: (lastMessage?.content ?? '').trim(),
-        tool_selection: ['literature-search-tool', 'web-search-tool'],
+        tool_selection: ['literature-search-tool', 'web-search-tool', 'now-tool'],
       };
     },
   });
