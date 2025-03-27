@@ -52,7 +52,7 @@ export const SIMULATION_PLOT_NAME = 'simulation-plot';
 const DEFAULT_ERROR_MSG =
   'Simulation encountered an error, please be sure that the configuration is correct and try again';
 const LOW_FUNDS_ERROR_MSG =
-  'The project does not have enough credits to run the simulation, please add more and try again';
+  'The project does not have enough credits to run the simulation, please add credits and try again';
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 export const createSingleNeuronSimulationAtom = atom<
