@@ -39,7 +39,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
             </Link>
           ))}
 
-          <Link href="/coming-soon" className={styles.loginButton}>
+          <Link href="/app/virtual-lab" className={styles.loginButton}>
             Virtual Labs
           </Link>
         </div>

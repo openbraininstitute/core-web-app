@@ -108,7 +108,7 @@ export default function InviteLoader() {
 
       <Logo className="absolute left-10 top-10 text-white" />
 
-      <div className="absolute left-0 top-0 h-screen w-screen content-center justify-items-center">
+      <div className="absolute left-0 top-0 flex h-screen w-screen items-center justify-center">
         {!inviteDetails ? (
           <Spin indicator={<LoadingOutlined style={{ color: '#fff', fontSize: 24 }} spin />} />
         ) : (
