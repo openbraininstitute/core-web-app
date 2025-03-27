@@ -13,7 +13,7 @@ const MEModelDetailView = dynamic(
 const SynaptomeDetailView = dynamic(
   () => import('@/components/explore-section/Synaptome/DetailView')
 );
-const CircuitDetailView = dynamic(() => import('@/components/explore-section/Circuit/DetailView'));
+// const CircuitDetailView = dynamic(() => import('@/components/explore-section/Circuit/DetailView'));
 
 type Params = {
   params: {
@@ -33,7 +33,8 @@ export default function DetailPage({ params }: Params) {
     case 'synaptome':
       return <SynaptomeDetailView params={params} />;
     case 'circuit':
-      return <CircuitDetailView params={params} />;
+      return null;
+    // return <CircuitDetailView params={params} />;
     default:
       break;
   }

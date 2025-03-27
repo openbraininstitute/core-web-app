@@ -8,6 +8,7 @@ import CircuitDetailViewSectionContainer from './sections';
 export default function CircuitDetailViewMain({ content }: { content: CircuitSchemaProps }) {
   const heroImage: InteractiveImageProps = {
     circuit: content.name,
+    // @ts-ignore TODO FIX
     src: content.images.high,
     alt: `Image of the circuit ${content.name}`,
     width: 1920,

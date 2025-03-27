@@ -33,7 +33,7 @@ export type CircuitSchemaProps = {
   hasSubcircuits: boolean;
   brainRegion: string;
   species: string;
-  numberOfNeurons: number;
+  numberOfNeurons: number | string;
   numberOfConnections: number;
   numberOfSynapses: number;
   metadata: {

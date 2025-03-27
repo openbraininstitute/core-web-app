@@ -112,15 +112,12 @@ export default function ExploreListingLayout({
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
-  // TODO: This is a hack, find a better way
-  const isCircuit = pathname.includes('/model/circuit');
-
   return (
     <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
-        <div className={classNames('flex-1', isCircuit ? 'overflow-y-hidden' : '')}>
+        <div className={classNames('flex-1 overflow-hidden')}>
           <Menu
             onClick={onClick}
             selectedKeys={[activePath]}
