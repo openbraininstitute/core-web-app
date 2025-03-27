@@ -22,6 +22,7 @@ import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-vi
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ensureString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 
 const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
 
@@ -111,12 +112,15 @@ export default function ExploreListingLayout({
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
+  // TODO: This is a hack, find a better way
+  const isCircuit = pathname.includes('/model/circuit');
+
   return (
     <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
-        <div className="flex-1">
+        <div className={classNames('flex-1', isCircuit ? 'overflow-y-hidden' : '')}>
           <Menu
             onClick={onClick}
             selectedKeys={[activePath]}

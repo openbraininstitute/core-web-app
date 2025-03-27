@@ -231,7 +231,7 @@ export default function ExploreCircuitTable() {
   };
 
   return (
-    <div className="relative h-full w-full bg-white py-10 text-2xl font-bold text-primary-9">
+    <div className="relative h-full w-full w-full bg-primary-9 bg-white text-2xl font-bold text-primary-9 text-white">
       <Table
         className={classNames(
           '[&_.ant-table-thead_th]:!text-sm',
