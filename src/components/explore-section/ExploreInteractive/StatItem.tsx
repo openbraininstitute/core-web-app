@@ -1,13 +1,13 @@
-import { ReactNode } from 'react';
-import { useAtomValue } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
+import { ReactNode } from 'react';
 
-import { classNames } from '@/util/utils';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
-import { ensureString } from '@/util/type-guards';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
+import { ensureString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 
 export default function StatItem({
   href,

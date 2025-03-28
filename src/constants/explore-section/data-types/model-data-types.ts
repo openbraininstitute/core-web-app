@@ -1,11 +1,12 @@
-import { DataType } from '@/constants/explore-section/list-views';
 import { Field } from '@/constants/explore-section/fields-config/enums';
+import { DataType } from '@/constants/explore-section/list-views';
 import { DataTypeConfig, DataTypeGroup } from '@/types/explore-section/data-types';
 
 export enum ModelTypeNames {
   E_MODEL = 'e-model',
   ME_MODEL = 'me-model',
   SINGLE_NEURON_SYNAPTOME = 'synaptome',
+  CIRCUIT = 'circuit',
 }
 
 export const MODEL_DATA_TYPES: { [key: string]: DataTypeConfig } = {
@@ -55,6 +56,20 @@ export const MODEL_DATA_TYPES: { [key: string]: DataTypeConfig } = {
       Field.SynatomeUsedMEModelName,
       Field.SynaptomeUsedMType,
       Field.SynaptomeUsedEType,
+      Field.BrainRegion,
+      Field.CreatedBy,
+      Field.CreationDate,
+    ],
+
+    curated: false,
+  },
+  [DataType.Circuit]: {
+    title: 'Circuit',
+    group: DataTypeGroup.ModelData,
+    name: ModelTypeNames.CIRCUIT,
+    columns: [
+      Field.Name,
+      Field.Description,
       Field.BrainRegion,
       Field.CreatedBy,
       Field.CreationDate,
