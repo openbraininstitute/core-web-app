@@ -2,18 +2,17 @@
 
 import { Key, useEffect, useState } from 'react';
 
-import { Table } from 'antd';
+import { Table, Tooltip } from 'antd';
 
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 
 import HARD_CODED_CONTENT from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
+import styles from './ExploreCircuiteTable.module.scss';
 
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
-import Link from '@/components/Link';
-import useNotification from '@/hooks/notifications';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   if (!Array.isArray(data)) return [];
@@ -47,19 +46,6 @@ export default function ExploreCircuitTable() {
     onChange: (newSelectedRows: Key[]) => {
       setSelectedRowKeys(newSelectedRows.length > 0 ? (newSelectedRows[0] as string) : null);
     },
-    // onChange: (newSelectedRowKeys: Key[], selectedRows: CircuitSchemaProps[]) => {
-    //   const updatedExpandedKeys = newSelectedRowKeys
-    //     .filter((key) => HARD_CODED_CONTENT.some((row) => row.key === key && row.hasSubcircuits))
-    //     .map((key) => key as string);
-
-    //   const subRowKeys = selectedRows
-    //     .flatMap((row) => row.subcircuits?.map((sub) => sub.key) || [])
-    //     .filter(Boolean);
-
-    //   setExpandedRowKeys(updatedExpandedKeys);
-
-    //   setSelectedRowKeys([...newSelectedRowKeys.map((k) => k as string), ...subRowKeys]);
-    // },
   };
 
   const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] => {
@@ -144,10 +130,7 @@ export default function ExploreCircuitTable() {
               onClick={() => handleExpandRow(value, index ?? -1)}
               disabled={!value.hasSubcircuits}
             >
-              <div className="relative mr-6 block ">
-                {totalSubcircuitsForParent}
-                {/* {value.subcircuits?.length} */}
-              </div>
+              <div className="relative mr-6 block ">{totalSubcircuitsForParent}</div>
               <ChevronRight
                 fill="#003A8C"
                 className={classNames(
@@ -165,10 +148,10 @@ export default function ExploreCircuitTable() {
   // SUBCIRCUIT TABLE - LEVEL 1
   const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
     return (
-      <div className="relative flex flex-col pl-[17px]">
-        <div className="relative flex flex-row pl-[48px]">
+      <div className="relative flex flex-col">
+        <div className="flex-row] relative flex pl-2">
           <ArrowSmall iconColor="#8C8C8C" className="relative -top-0.5" />
-          <span className="ml-3 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
+          <span className="ml-3 pb-2 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
             Subcircuits
           </span>
         </div>
@@ -184,7 +167,8 @@ export default function ExploreCircuitTable() {
             '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
             '[&_.ant-table-thead > tr > th]:border-b-0',
             '[&_.ant-table-expand-icon-col]:w-0',
-            '[&_.ant-table-expand-icon-col]:hidden'
+            '[&_.ant-table-expand-icon-col]:hidden',
+            styles.circuitTable
           )}
           columns={columns}
           dataSource={circuit.subcircuits || []}
@@ -219,35 +203,9 @@ export default function ExploreCircuitTable() {
     (row: CircuitSchemaProps) => selectedRowKeys?.includes(row.key) || false
   );
 
-  const notification = useNotification();
-
-  const handleFileDownload = () => {
-    if (typeof window === 'undefined') return;
-
-    const lastRow = selectedRows.at(-1);
-
-    if (!lastRow) {
-      notification.error('Cannot download, try again');
-      return;
-    }
-
-    const file = lastRow?.files[0];
-
-    if (!file || !file.url) {
-      notification.error('Cannot download, try again');
-      return;
-    }
-
-    const fileName = lastRow.name;
-
-    const { url } = file;
-    const link = document.createElement('a');
-    link.href = url || '';
-    link.download = fileName;
-    link.target = '_blank';
-    link.click();
-    link.remove();
-  };
+  const lastRow = selectedRows.at(-1);
+  const file = lastRow?.files[0];
+  const fileUrl = file?.url;
 
   return (
     <>
@@ -263,7 +221,8 @@ export default function ExploreCircuitTable() {
           '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
           '[&_.ant-table-thead > tr > th]:border-b-0',
           '[&_.ant-table-expand-icon-col]:w-0',
-          '[&_.ant-table-expand-icon-col]:hidden'
+          '[&_.ant-table-expand-icon-col]:hidden',
+          styles.circuitTable
         )}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
         dataSource={HARD_CODED_CONTENT}
@@ -283,27 +242,30 @@ export default function ExploreCircuitTable() {
         }}
       />
 
-      <button
-        onClick={handleFileDownload}
-        type="button"
-        className="left-50 fixed bottom-6 z-50 flex h-20 w-[700px] flex-row items-center justify-between bg-primary-8 pl-8 transition-bottom duration-300 ease-in-out"
-        style={{
-          visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
-        }}
-      >
-        <div className="relative flex flex-col gap-x-3 text-base font-normal">
-          <span className="block font-bold text-primary-3">Download</span>
-          <Link
-            href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
-            target="_blank"
-            className="relative flex flex-row gap-x-3"
+      {fileUrl && (
+        <a
+          href={fileUrl}
+          type="button"
+          className="absolute bottom-6 right-10 flex h-20 w-[150px] items-center justify-center bg-primary-8 text-xl transition-bottom duration-300 ease-in-out"
+          style={{
+            visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
+          }}
+        >
+          <Tooltip
+            title={
+              <a
+                href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+              >
+                The connectome will be downloaded in Connectome Utilities Format, see more here
+              </a>
+            }
           >
-            <p className="text-base leading-normal text-white">
-              The connectome will be downloaded in Connectome Utilities Format, see more here
-            </p>
-          </Link>
-        </div>
-      </button>
+            Download
+          </Tooltip>
+        </a>
+      )}
     </>
   );
 }
