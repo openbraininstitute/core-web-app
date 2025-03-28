@@ -207,7 +207,7 @@ export default function ExploreCircuitTable() {
   };
 
   return (
-    <div className="relative h-full w-full w-full bg-primary-9 bg-white text-2xl font-bold text-primary-9 text-white">
+    <>
       <Table
         className={classNames(
           '[&_.ant-table-tbody]:bg-[#FAFAFA]',
@@ -244,6 +244,6 @@ export default function ExploreCircuitTable() {
         handleFileDownload={handleFileDownload}
         selectedRowKeys={selectedRowKeys}
       />
-    </div>
+    </>
   );
 }
