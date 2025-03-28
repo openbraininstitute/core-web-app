@@ -44,7 +44,7 @@ export default function SinglePublicProjectCard({ value }: { value: ShowCaseProj
       </header>
 
       <div className="font-lg relative z-10 w-1/2 font-light leading-normal text-white">
-        <p>{value.introduction}</p>
+        <p className="line-clamp-2">{value.introduction}</p>
       </div>
 
       <Image

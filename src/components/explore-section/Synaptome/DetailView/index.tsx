@@ -31,6 +31,7 @@ type Props = {
     projectId: string;
     virtualLabId: string;
   };
+  showViewMode?: boolean;
 };
 
 type TabKeys = 'synaptome-configuration' | 'synaptome-simulation';
@@ -47,7 +48,10 @@ const TABS: Tab[] = [
   },
 ];
 
-export default function SynaptomeModelDetailPage({ params: { virtualLabId, projectId } }: Props) {
+export default function SynaptomeModelDetailPage({
+  params: { virtualLabId, projectId },
+  showViewMode = false,
+}: Props) {
   const info = useResourceInfoFromPath();
   const [activeTab, setActiveTab] = useState<TabKeys>('synaptome-configuration');
 
@@ -80,7 +84,8 @@ export default function SynaptomeModelDetailPage({ params: { virtualLabId, proje
           fields={SYNATOME_MODEL_FIELDS}
           commonFields={MODEL_DATA_COMMON_FIELDS}
           extraHeaderAction={
-            model && (
+            model &&
+            !showViewMode && (
               <Link
                 className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
                 href={getSimulationId(model['@id'])}

@@ -60,7 +60,7 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
         },
       ],
     ],
-    artifactType: 'string',
+    artifactType: ['|', 'null', ['array', 'string']],
     artifact: [
       '|',
       'null',
@@ -120,9 +120,9 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
       [
         'array',
         {
-          name: 'string',
+          name: ['|', 'null', 'string'],
           readMe: 'unknown',
-          url: 'string',
+          url: ['|', 'null', 'string'],
         },
       ],
     ],
