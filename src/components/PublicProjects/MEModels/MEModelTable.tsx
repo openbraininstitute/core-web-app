@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import {
   flexRender,
   getCoreRowModel,
@@ -47,10 +49,18 @@ const columns: Column[] = [
     size: 250,
   },
   {
-    accessorKey: 'file',
-    header: 'File',
-    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
-    size: 100,
+    accessorKey: 'trace',
+    header: 'Trace',
+    cell: ({ getValue }) => (
+      <Image
+        src={getValue()}
+        alt="Image of trace"
+        width={100}
+        height={100}
+        className="h-auto w-full"
+      />
+    ),
+    size: 116,
   },
   {
     accessorKey: 'brainRegion',
@@ -77,17 +87,23 @@ const columns: Column[] = [
     size: 112,
   },
   {
-    accessorKey: 'morphologyId',
-    header: 'Morphology File',
+    accessorKey: 'file',
+    header: 'File',
     cell: ({ getValue }) => <DownloadButton url={getValue()} />,
-    size: 112,
+    size: 100,
   },
-  {
-    accessorKey: 'traceFileId',
-    header: 'Trace File',
-    cell: ({ getValue }) => <DownloadButton url={getValue()} />,
-    size: 112,
-  },
+  // {
+  //   accessorKey: 'morphologyId',
+  //   header: 'Morphology File',
+  //   cell: ({ getValue }) => <DownloadButton url={getValue()} />,
+  //   size: 112,
+  // },
+  // {
+  //   accessorKey: 'traceFileId',
+  //   header: 'Trace File',
+  //   cell: ({ getValue }) => <DownloadButton url={getValue()} />,
+  //   size: 112,
+  // },
   // {
   //   accessorKey: 'morphology',
   //   header: 'Morphology',
@@ -95,20 +111,6 @@ const columns: Column[] = [
   //     <Image
   //       src={getValue()}
   //       alt="Image of morphology"
-  //       width={100}
-  //       height={100}
-  //       className="h-auto w-full"
-  //     />
-  //   ),
-  //   size: 116,
-  // },
-  // {
-  //   accessorKey: 'trace',
-  //   header: 'Trace',
-  //   cell: ({ getValue }) => (
-  //     <Image
-  //       src={getValue()}
-  //       alt="Image of trace"
   //       width={100}
   //       height={100}
   //       className="h-auto w-full"

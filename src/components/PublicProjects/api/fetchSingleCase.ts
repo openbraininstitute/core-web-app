@@ -19,7 +19,7 @@ const singleCaseQuery = (slug: string) =>
             useTimestamps,
             'captionTrack': captionTrack.asset->url
         },
-        artifactType,
+        artifactType[],
         artifact[] {
             title, 
             description,
