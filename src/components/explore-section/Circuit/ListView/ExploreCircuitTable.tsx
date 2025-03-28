@@ -1,6 +1,6 @@
 'use client';
 
-import { Key, useState } from 'react';
+import { Key, useEffect, useState } from 'react';
 
 import { Table } from 'antd';
 
@@ -15,9 +15,23 @@ import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
 
+const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
+  if (!Array.isArray(data)) return [];
+  return data.reduce((acc, row) => {
+    const subKeys = row.subcircuits ? getExpandableRowKeys(row.subcircuits) : [];
+    return row.hasSubcircuits ? [...acc, row.key, ...subKeys] : [...acc, ...subKeys];
+  }, [] as string[]);
+};
+
 export default function ExploreCircuitTable() {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(
+    getExpandableRowKeys(HARD_CODED_CONTENT)
+  );
   const [selectedRowKeys, setSelectedRowKeys] = useState<string | null>(null);
+
+  useEffect(() => {
+    setExpandedRowKeys(getExpandableRowKeys(HARD_CODED_CONTENT));
+  }, []);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
@@ -250,7 +264,6 @@ export default function ExploreCircuitTable() {
         expandable={{
           expandedRowRender,
           expandedRowKeys,
-          defaultExpandAllRows: true,
           onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
             const rowKey = row.key;
             setExpandedRowKeys((prev) =>

@@ -4,6 +4,8 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 
+import HARD_CODED_CONTENT from '../Circuit/content/circuits_tree';
+import { CircuitSchemaProps } from '../Circuit/type';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
 
 import { DATA_TYPE_GROUPS_CONFIG } from '@/constants/explore-section/data-type-groups';
@@ -69,6 +71,14 @@ export default function DataTypeGroupTotals({
   const { config, extensionPath } = DATA_TYPE_GROUPS_CONFIG[dataTypeGroup];
   const pathName = usePathname();
 
+  const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
+    const directSubcircuits = row.subcircuits?.length || 0;
+    const nestedSubcircuits = row.subcircuits
+      ? row.subcircuits.reduce((sum, sub) => sum + calculateSubcircuitsForParent(sub), 0)
+      : 0;
+    return directSubcircuits + nestedSubcircuits;
+  };
+
   return (
     <>
       {Object.keys(config).map((dataType) => {
@@ -90,7 +100,7 @@ export default function DataTypeGroupTotals({
           href={`${pathName}/model/circuit`}
           key="Circuit"
           title="Circuit"
-          subtitle={58}
+          subtitle={`${HARD_CODED_CONTENT.reduce((sum, row) => sum + calculateSubcircuitsForParent(row), 0)} records`}
           testId="experiment-dataset-Circuit"
         />
       )}
