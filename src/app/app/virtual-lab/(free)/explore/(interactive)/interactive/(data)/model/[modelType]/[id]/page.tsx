@@ -31,7 +31,7 @@ export default function DetailPage({ params }: Params) {
     case 'me-model':
       return <MEModelDetailView params={params} showViewMode />;
     case 'synaptome':
-      return <SynaptomeDetailView params={params} />;
+      return <SynaptomeDetailView params={params} showViewMode />;
     case 'circuit':
       return null;
     // return <CircuitDetailView params={params} />;
