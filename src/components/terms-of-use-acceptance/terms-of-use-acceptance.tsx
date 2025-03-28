@@ -14,15 +14,13 @@ export interface TermsOfUseAcceptanceProps {
 
 const STORAGE_ID = 'terms-of-use-acceptance';
 
-export function TermsOfUseAcceptance({ className }: TermsOfUseAcceptanceProps) {
+export default function TermsOfUseAcceptance({ className }: TermsOfUseAcceptanceProps) {
   const [accepted, setAccepted] = useAccepted();
   const { status } = useSession();
-  if (status === 'unauthenticated') return null;
+  if (status === 'unauthenticated' || accepted) return null;
 
   return (
-    <div
-      className={classNames(className, styles.termsOfUseAcceptance, accepted && styles.accepted)}
-    >
+    <div className={classNames(className, styles.termsOfUseAcceptance)}>
       <div className={styles.body}>
         <Logo />
         <p>
@@ -46,6 +44,7 @@ function useAccepted(): [boolean, () => void] {
   const [accepted, setAccepted] = React.useState(
     typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_ID) === 'yes'
   );
+
   return [
     accepted,
     () => {
