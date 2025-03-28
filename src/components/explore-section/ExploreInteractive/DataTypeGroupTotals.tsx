@@ -72,6 +72,7 @@ export default function DataTypeGroupTotals({
   return (
     <>
       {Object.keys(config).map((dataType) => {
+        // TODO: find a better way
         if (dataType === 'Circuit') return null;
 
         return (
