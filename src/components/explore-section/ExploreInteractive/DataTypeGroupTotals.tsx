@@ -4,14 +4,18 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 
+import HARD_CODED_CONTENT from '../Circuit/content/circuits_tree';
+import { CircuitSchemaProps } from '../Circuit/type';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
-import { DataType } from '@/constants/explore-section/list-views';
-import { DataTypeGroup } from '@/types/explore-section/data-types';
+
 import { DATA_TYPE_GROUPS_CONFIG } from '@/constants/explore-section/data-type-groups';
-import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
+import { DataType } from '@/constants/explore-section/list-views';
+import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { DataTypeGroup } from '@/types/explore-section/data-types';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { basePath as rootbasePath } from '@/config';
 
 function DataTypeGroupTotal({
   dataType,
@@ -45,7 +49,6 @@ function DataTypeGroupTotal({
           text={`'Error loading experiment datasets for ${DATA_TYPES_TO_CONFIGS[dataType].title}.`}
         />
       )}
-
       {total.state === 'hasData' && (
         <StatItem
           href={`${basePath}/${DATA_TYPES_TO_CONFIGS[dataType].name}`}
@@ -68,16 +71,40 @@ export default function DataTypeGroupTotals({
 }) {
   const { config, extensionPath } = DATA_TYPE_GROUPS_CONFIG[dataTypeGroup];
   const pathName = usePathname();
+
+  const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
+    const directSubcircuits = row.subcircuits?.length || 0;
+    const nestedSubcircuits = row.subcircuits
+      ? row.subcircuits.reduce((sum, sub) => sum + calculateSubcircuitsForParent(sub), 0)
+      : 0;
+    return directSubcircuits + nestedSubcircuits;
+  };
+
   return (
     <>
-      {Object.keys(config).map((dataType) => (
-        <DataTypeGroupTotal
-          key={dataType}
-          dataType={dataType as DataType}
-          basePath={`${pathName}/${extensionPath}`}
-          virtualLabInfo={virtualLabInfo}
+      {Object.keys(config).map((dataType) => {
+        // TODO: find a better way
+        if (dataType === 'Circuit') return null;
+
+        return (
+          <DataTypeGroupTotal
+            key={dataType}
+            dataType={dataType as DataType}
+            basePath={`${pathName}/${extensionPath}`}
+            virtualLabInfo={virtualLabInfo}
+          />
+        );
+      })}
+
+      {dataTypeGroup === DataTypeGroup.ModelData && (
+        <StatItem
+          href={`${rootbasePath}/app/virtual-lab/explore/interactive/model/circuit`}
+          key="Circuit"
+          title="Circuit"
+          subtitle={`${HARD_CODED_CONTENT.reduce((sum, row) => sum + calculateSubcircuitsForParent(row), 0)} records`}
+          testId="experiment-dataset-Circuit"
         />
-      ))}
+      )}
     </>
   );
 }

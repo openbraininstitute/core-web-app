@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 
+import { useSession } from 'next-auth/react';
 import { classNames } from '@/util/utils';
 
 import styles from './terms-of-use-acceptance.module.css';
@@ -13,12 +14,13 @@ export interface TermsOfUseAcceptanceProps {
 
 const STORAGE_ID = 'terms-of-use-acceptance';
 
-export function TermsOfUseAcceptance({ className }: TermsOfUseAcceptanceProps) {
+export default function TermsOfUseAcceptance({ className }: TermsOfUseAcceptanceProps) {
   const [accepted, setAccepted] = useAccepted();
+  const { status } = useSession();
+  if (status === 'unauthenticated' || accepted) return null;
+
   return (
-    <div
-      className={classNames(className, styles.termsOfUseAcceptance, accepted && styles.accepted)}
-    >
+    <div className={classNames(className, styles.termsOfUseAcceptance)}>
       <div className={styles.body}>
         <Logo />
         <p>
@@ -40,12 +42,13 @@ export function TermsOfUseAcceptance({ className }: TermsOfUseAcceptanceProps) {
 
 function useAccepted(): [boolean, () => void] {
   const [accepted, setAccepted] = React.useState(
-    globalThis.localStorage.getItem(STORAGE_ID) === 'yes'
+    typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_ID) === 'yes'
   );
+
   return [
     accepted,
     () => {
-      globalThis.localStorage.setItem(STORAGE_ID, 'yes');
+      if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_ID, 'yes');
       setAccepted(true);
     },
   ];

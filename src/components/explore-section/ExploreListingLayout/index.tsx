@@ -1,27 +1,28 @@
 'use client';
 
-import { ReactNode, useMemo } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import find from 'lodash/find';
-import type { MenuProps } from 'antd';
+import { useParams, usePathname, useRouter } from 'next/navigation';
+import { ReactNode, useMemo } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
-import { DataType } from '@/constants/explore-section/list-views';
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
 import { MODEL_DATA_TYPES } from '@/constants/explore-section/data-types/model-data-types';
+import { DataType } from '@/constants/explore-section/list-views';
 import { useLoadableValue } from '@/hooks/hooks';
-import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
+import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
+import { ExploreDataScope } from '@/types/explore-section/application';
+import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ensureString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 
 const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
 
@@ -112,10 +113,11 @@ export default function ExploreListingLayout({
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-primary-9" id="interactive-data-layout">
+    <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
-        <div className="flex-1">
+
+        <div className={classNames('flex-1 overflow-hidden')}>
           <Menu
             onClick={onClick}
             selectedKeys={[activePath]}
@@ -125,6 +127,7 @@ export default function ExploreListingLayout({
             className="flex w-full justify-start"
             items={items}
           />
+
           <div className="h-full w-full bg-primary-9 text-white">{children}</div>
         </div>
       </ErrorBoundary>

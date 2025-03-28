@@ -74,7 +74,7 @@ export type ShowCaseProjectQueryType = {
   authorsList: AuthorListProps[];
   description: PortableTextBlock[];
   videosList: PresentationVideoProps[];
-  artifactType: string;
+  artifactType: string[];
   artifact: LinkAndDownloadArtifactProps[];
   meModelsList: MEModelsProps[];
   eModelsList: EModelsProps[];
