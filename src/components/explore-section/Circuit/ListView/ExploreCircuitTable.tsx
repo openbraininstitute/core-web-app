@@ -289,7 +289,7 @@ export default function ExploreCircuitTable() {
         type="button"
         className="left-50 fixed bottom-6 z-50 flex h-20 w-[700px] flex-row items-center justify-between bg-primary-8 pl-8 transition-bottom duration-300 ease-in-out"
         style={{
-          bottom: selectedRowKeys && selectedRowKeys.length > 0 ? '24px' : '-60px',
+          visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
         }}
       >
         <div className="relative flex flex-col gap-x-3 text-base font-normal">
