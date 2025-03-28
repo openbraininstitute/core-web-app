@@ -15,9 +15,7 @@ export default function ExploreCircuitListingView({ children }: { children: Reac
   return (
     <div className="flex h-full w-full bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="h-full w-full overflow-y-hidden overflow-x-scroll bg-white text-white">
-          {children}
-        </div>
+        <div className="h-full w-full overflow-x-scroll bg-white text-white">{children}</div>
       </ErrorBoundary>
     </div>
   );
