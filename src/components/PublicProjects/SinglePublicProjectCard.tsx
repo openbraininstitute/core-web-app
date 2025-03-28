@@ -31,8 +31,6 @@ export default function SinglePublicProjectCard({ value }: { value: ShowCaseProj
       date = `${getDaysFromDate(value._updatedAt)} days ago`;
   }
 
-  console.log('Public project content:', value);
-
   return (
     <a
       href={`/app/virtual-lab/public-projects/${value.slug}?section=description`}
