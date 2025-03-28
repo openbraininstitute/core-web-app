@@ -1,14 +1,12 @@
 'use client';
 
 import { Key, useEffect, useState } from 'react';
-
 import { Table, Tooltip } from 'antd';
-
+import { InfoCircleOutlined } from '@ant-design/icons';
+import { flattenRows } from '../content/utils';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-
 import HARD_CODED_CONTENT from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
-
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
@@ -46,13 +44,6 @@ export default function ExploreCircuitTable() {
     onChange: (newSelectedRows: Key[]) => {
       setSelectedRowKeys(newSelectedRows);
     },
-  };
-
-  const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] => {
-    return data.reduce((acc, row) => {
-      const subcircuits = row.subcircuits ? flattenRows(row.subcircuits) : [];
-      return [...acc, row, ...subcircuits];
-    }, [] as CircuitSchemaProps[]);
   };
 
   const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
@@ -243,6 +234,7 @@ export default function ExploreCircuitTable() {
             visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
           }}
         >
+          <span>Download</span>
           <Tooltip
             title={
               <a
@@ -254,7 +246,7 @@ export default function ExploreCircuitTable() {
               </a>
             }
           >
-            Download
+            <InfoCircleOutlined className="ml-2" />
           </Tooltip>
         </a>
       )}
