@@ -138,7 +138,7 @@ function createFilterItemComponent(
                 updateFilterValues(filter.field, event.target.value)
               }
             />
-            <span>
+            <span className="text-white">
               Use the asterix character (<code className="text-semibold font-mono">*</code>) to
               specify a &quot;wildcard&quot; for your search. For example; to search for names{' '}
               <i>beginning with</i> &quot;AA11&quot;, specify{' '}
