@@ -71,22 +71,29 @@ export default function DataTypeGroupTotals({
 
   return (
     <>
-      {Object.keys(config).map((dataType) => (
-        <DataTypeGroupTotal
-          key={dataType}
-          dataType={dataType as DataType}
-          basePath={`${pathName}/${extensionPath}`}
-          virtualLabInfo={virtualLabInfo}
-        />
-      ))}
+      {Object.keys(config).map((dataType) => {
+        // TODO: find a better way
+        if (dataType === 'Circuit') return null;
 
-      <StatItem
-        href={`${pathName}/model/circuit`}
-        key="Circuit"
-        title="Circuit"
-        subtitle={10}
-        testId="experiment-dataset-Circuit"
-      />
+        return (
+          <DataTypeGroupTotal
+            key={dataType}
+            dataType={dataType as DataType}
+            basePath={`${pathName}/${extensionPath}`}
+            virtualLabInfo={virtualLabInfo}
+          />
+        );
+      })}
+
+      {dataTypeGroup === DataTypeGroup.ModelData && (
+        <StatItem
+          href={`${pathName}/model/circuit`}
+          key="Circuit"
+          title="Circuit"
+          subtitle={10}
+          testId="experiment-dataset-Circuit"
+        />
+      )}
     </>
   );
 }
