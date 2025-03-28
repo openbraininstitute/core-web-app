@@ -11,7 +11,7 @@ export interface LiteratureSearchToolItem {
   article_title: string;
   article_doi: string;
   article_authors: string[];
-  abstract: string;
+  abstract: string | null;
 }
 
 export function isLiteratureSearchToolResult(data: unknown): data is LiteratureSearchToolItem[] {
@@ -21,7 +21,7 @@ export function isLiteratureSearchToolResult(data: unknown): data is LiteratureS
       article_title: 'string',
       article_doi: 'string',
       article_authors: ['array', 'string'],
-      abstract: 'string',
+      abstract: ['|', 'string', 'null'],
     },
   ]);
 }
