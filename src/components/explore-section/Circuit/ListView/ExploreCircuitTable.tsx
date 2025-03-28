@@ -81,7 +81,6 @@ export default function ExploreCircuitTable() {
     {
       title: 'Name',
       key: 'name',
-      fixed: 'left',
       render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap">{value.name}</span>
       ),
