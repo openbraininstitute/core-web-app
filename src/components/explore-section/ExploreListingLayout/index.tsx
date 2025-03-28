@@ -8,6 +8,8 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
+import { flattenRows } from '../Circuit/content/utils';
+import HARD_CODED_CONTENT from '../Circuit/content/circuits_tree';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
@@ -45,9 +47,23 @@ function MenuItemLabel({
       key: (virtualLabInfo?.projectId ?? '') + dataType,
     })
   );
-  return `${label} ${
-    totalByExperimentAndRegions.state === 'hasData' ? `(${totalByExperimentAndRegions.data})` : ''
-  }`;
+
+  let count = null;
+
+  if (dataType === DataType.Circuit) {
+    count = flattenRows(HARD_CODED_CONTENT).length;
+  }
+
+  if (
+    totalByExperimentAndRegions.state === 'hasData' &&
+    typeof totalByExperimentAndRegions.data === 'number'
+  ) {
+    count = totalByExperimentAndRegions.data;
+  }
+
+  if (count === null) return label;
+
+  return `${label} (${count})`;
 }
 
 export default function ExploreListingLayout({
