@@ -90,7 +90,7 @@ export default function DataTypeGroupTotals({
           href={`${pathName}/model/circuit`}
           key="Circuit"
           title="Circuit"
-          subtitle={10}
+          subtitle={58}
           testId="experiment-dataset-Circuit"
         />
       )}
