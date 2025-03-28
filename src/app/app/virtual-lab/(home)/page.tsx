@@ -24,6 +24,7 @@ export default async function Page() {
     undefined,
     {
       section: 'virtual-lab-home-page',
+      feature: 'list-virtual-labs',
     }
   );
 
