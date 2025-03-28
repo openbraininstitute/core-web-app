@@ -3,6 +3,7 @@
 import React, { ForwardedRef, useEffect, useState, useTransition } from 'react';
 import { Form, InputProps, InputRef, Input, Button } from 'antd';
 import omit from 'lodash/omit';
+import get from 'lodash/get';
 
 import countries from '../../../../../public/static/country';
 import useNotification from '@/hooks/notifications';
@@ -69,6 +70,16 @@ function Profile({ data }: Props) {
         }
       );
       if (error) {
+        if (get(error, 'cause.error_code') === 'ENTITY_UPDATE__ERROR') {
+          errorNotify(
+            `Unable to save your profile changes due to a server error. ${get(error, 'cause.message')}`,
+            undefined,
+            'topRight',
+            true,
+            'profile-update-error'
+          );
+          return;
+        }
         errorNotify(
           'Unable to save your profile changes due to a server error.\nPlease verify your information and try submitting again.',
           undefined,
