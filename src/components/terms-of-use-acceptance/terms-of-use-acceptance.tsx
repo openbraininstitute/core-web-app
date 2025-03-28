@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 
 import { useSession } from 'next-auth/react';
@@ -17,7 +17,7 @@ const STORAGE_ID = 'terms-of-use-acceptance';
 export function TermsOfUseAcceptance({ className }: TermsOfUseAcceptanceProps) {
   const [accepted, setAccepted] = useAccepted();
   const { status } = useSession();
-  if (status === 'unauthenticated') return null;
+  if (status === 'unauthenticated' || accepted) return null;
 
   return (
     <div
@@ -46,6 +46,12 @@ function useAccepted(): [boolean, () => void] {
   const [accepted, setAccepted] = React.useState(
     typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_ID) === 'yes'
   );
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_ID))
+      setAccepted(window.localStorage.getItem(STORAGE_ID) === 'yes');
+  }, []);
+
   return [
     accepted,
     () => {
