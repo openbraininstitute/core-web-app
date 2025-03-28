@@ -8,11 +8,11 @@ import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 
 import HARD_CODED_CONTENT from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
-import styles from './ExploreCircuiteTable.module.scss';
 
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
+import styles from './ExploreCircuiteTable.module.scss';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   if (!Array.isArray(data)) return [];
@@ -26,7 +26,7 @@ export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(
     getExpandableRowKeys(HARD_CODED_CONTENT)
   );
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
   useEffect(() => {
     setExpandedRowKeys(getExpandableRowKeys(HARD_CODED_CONTENT));
@@ -42,9 +42,9 @@ export default function ExploreCircuitTable() {
 
   const rowSelection = {
     type: 'radio' as const,
-    selectedRowKeys: selectedRowKeys ? [selectedRowKeys] : [],
+    selectedRowKeys,
     onChange: (newSelectedRows: Key[]) => {
-      setSelectedRowKeys(newSelectedRows.length > 0 ? (newSelectedRows[0] as string) : null);
+      setSelectedRowKeys(newSelectedRows);
     },
   };
 
@@ -173,15 +173,7 @@ export default function ExploreCircuitTable() {
           columns={columns}
           dataSource={circuit.subcircuits || []}
           pagination={false}
-          rowSelection={{
-            type: 'radio' as const,
-            selectedRowKeys: selectedRowKeys ? [selectedRowKeys] : undefined,
-            onChange: (newSelectedRowKeys: Key[]) => {
-              setSelectedRowKeys(
-                newSelectedRowKeys.length > 0 ? (newSelectedRowKeys[0] as string) : null
-              );
-            },
-          }}
+          rowSelection={rowSelection}
           expandable={{
             expandedRowRender,
             expandedRowKeys,
@@ -199,12 +191,12 @@ export default function ExploreCircuitTable() {
   };
 
   const allRows = flattenRows(HARD_CODED_CONTENT);
-  const selectedRows = allRows.filter(
-    (row: CircuitSchemaProps) => selectedRowKeys?.includes(row.key) || false
+  const selectedRows = allRows.filter((row: CircuitSchemaProps) =>
+    selectedRowKeys.includes(row.key)
   );
 
   const lastRow = selectedRows.at(-1);
-  const file = lastRow?.files[0];
+  const file = lastRow?.files?.[0];
   const fileUrl = file?.url;
 
   return (
