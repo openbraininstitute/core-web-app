@@ -9,11 +9,11 @@ import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import HARD_CODED_CONTENT from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
 
-import { TableDownloadButtonLight } from './TableDownloadButton';
-
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
+import Link from '@/components/Link';
+import useNotification from '@/hooks/notifications';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   if (!Array.isArray(data)) return [];
@@ -215,29 +215,39 @@ export default function ExploreCircuitTable() {
     );
   };
 
+  const allRows = flattenRows(HARD_CODED_CONTENT);
+  const selectedRows = allRows.filter(
+    (row: CircuitSchemaProps) => selectedRowKeys?.includes(row.key) || false
+  );
+
+  const notification = useNotification();
+
   const handleFileDownload = () => {
     if (typeof window === 'undefined') return;
 
-    const allRows = flattenRows(HARD_CODED_CONTENT);
+    const lastRow = selectedRows.at(-1);
 
-    const selectedRows = allRows.filter(
-      (row: CircuitSchemaProps) => selectedRowKeys?.includes(row.key) || false
-    );
+    if (!lastRow) {
+      notification.error('Cannot download, try again');
+      return;
+    }
 
-    selectedRows.forEach((row: CircuitSchemaProps) => {
-      const fileName = row.name;
-      (row.files || []).forEach((file) => {
-        if (file?.url) {
-          const { url } = file;
-          const link = document.createElement('a');
-          link.href = url || '';
-          link.download = fileName;
-          link.target = '_blank';
-          link.click();
-          link.remove();
-        }
-      });
-    });
+    const file = lastRow?.files[0];
+
+    if (!file || !file.url) {
+      notification.error('Cannot download, try again');
+      return;
+    }
+
+    const fileName = lastRow.name;
+
+    const { url } = file;
+    const link = document.createElement('a');
+    link.href = url || '';
+    link.download = fileName;
+    link.target = '_blank';
+    link.click();
+    link.remove();
   };
 
   return (
@@ -274,10 +284,27 @@ export default function ExploreCircuitTable() {
         }}
       />
 
-      <TableDownloadButtonLight
-        handleFileDownload={handleFileDownload}
-        selectedRowKeys={selectedRowKeys ? [selectedRowKeys] : []}
-      />
+      <button
+        onClick={handleFileDownload}
+        type="button"
+        className="left-50 fixed bottom-6 z-50 flex h-20 w-[700px] flex-row items-center justify-between bg-primary-8 pl-8 transition-bottom duration-300 ease-in-out"
+        style={{
+          bottom: selectedRowKeys && selectedRowKeys.length > 0 ? '24px' : '-60px',
+        }}
+      >
+        <div className="relative flex flex-col gap-x-3 text-base font-normal">
+          <span className="block font-bold text-primary-3">Download</span>
+          <Link
+            href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
+            target="_blank"
+            className="relative flex flex-row gap-x-3"
+          >
+            <p className="text-base leading-normal text-white">
+              The connectome will be downloaded in Connectome Utilities Format, see more here
+            </p>
+          </Link>
+        </div>
+      </button>
     </>
   );
 }
