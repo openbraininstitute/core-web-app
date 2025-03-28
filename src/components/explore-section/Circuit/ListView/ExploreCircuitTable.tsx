@@ -17,7 +17,7 @@ import { classNames } from '@/util/utils';
 
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string | null>(null);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
@@ -28,20 +28,42 @@ export default function ExploreCircuitTable() {
   };
 
   const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: Key[], selectedRows: CircuitSchemaProps[]) => {
-      const updatedExpandedKeys = newSelectedRowKeys
-        .filter((key) => HARD_CODED_CONTENT.some((row) => row.key === key && row.hasSubcircuits))
-        .map((key) => key as string);
-
-      const subRowKeys = selectedRows
-        .flatMap((row) => row.subcircuits?.map((sub) => sub.key) || [])
-        .filter(Boolean);
-
-      setExpandedRowKeys(updatedExpandedKeys);
-
-      setSelectedRowKeys([...newSelectedRowKeys.map((k) => k as string), ...subRowKeys]);
+    type: 'radio' as const,
+    selectedRowKeys: selectedRowKeys ? [selectedRowKeys] : [],
+    onChange: (newSelectedRows: Key[]) => {
+      setSelectedRowKeys(newSelectedRows.length > 0 ? (newSelectedRows[0] as string) : null);
     },
+    // onChange: (newSelectedRowKeys: Key[], selectedRows: CircuitSchemaProps[]) => {
+    //   const updatedExpandedKeys = newSelectedRowKeys
+    //     .filter((key) => HARD_CODED_CONTENT.some((row) => row.key === key && row.hasSubcircuits))
+    //     .map((key) => key as string);
+
+    //   const subRowKeys = selectedRows
+    //     .flatMap((row) => row.subcircuits?.map((sub) => sub.key) || [])
+    //     .filter(Boolean);
+
+    //   setExpandedRowKeys(updatedExpandedKeys);
+
+    //   setSelectedRowKeys([...newSelectedRowKeys.map((k) => k as string), ...subRowKeys]);
+    // },
+  };
+
+  const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] => {
+    return data.reduce((acc, row) => {
+      const subcircuits = row.subcircuits ? flattenRows(row.subcircuits) : [];
+      return [...acc, row, ...subcircuits];
+    }, [] as CircuitSchemaProps[]);
+  };
+
+  const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
+    const directSubcircuits = row.subcircuits?.length || 0;
+    const nestedSubcircuits = row.subcircuits
+      ? row.subcircuits.reduce(
+          (sum, sub) => sum + calculateSubcircuitsForParent(sub),
+          0
+        )
+      : 0;
+    return directSubcircuits + nestedSubcircuits;
   };
 
   const columns: CircuitColumn[] = [
@@ -101,6 +123,7 @@ export default function ExploreCircuitTable() {
       key: 'hasSubcircuits',
       render: (value: CircuitSchemaProps, index?: number) => {
         const isExpanded = expandedRowKeys.includes(value.key);
+        const totalSubcircuitsForParent = calculateSubcircuitsForParent(value);
 
         return (
           value.hasSubcircuits && (
@@ -111,7 +134,10 @@ export default function ExploreCircuitTable() {
               onClick={() => handleExpandRow(value, index ?? -1)}
               disabled={!value.hasSubcircuits}
             >
-              <div className="relative mr-6 block ">{value.subcircuits?.length}</div>
+              <div className="relative mr-6 block ">
+                {totalSubcircuitsForParent}
+                {/* {value.subcircuits?.length} */}
+              </div>
               <ChevronRight
                 fill="#003A8C"
                 className={classNames(
@@ -128,6 +154,7 @@ export default function ExploreCircuitTable() {
 
   // SUBCIRCUIT TABLE - LEVEL 1
   const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
+
     return (
       <div className="relative flex flex-col pl-[17px]">
         <div className="relative flex flex-row pl-[48px]">
@@ -154,19 +181,10 @@ export default function ExploreCircuitTable() {
           dataSource={circuit.subcircuits || []}
           pagination={false}
           rowSelection={{
-            selectedRowKeys,
-            onChange: (newSelectedRow: Key[], _selectedRow: CircuitSchemaProps[]) => {
-              const parentKey = circuit.key;
-              const updatedKeys = selectedRowKeys
-                .filter(
-                  (key) =>
-                    !circuit.subcircuits?.find(
-                      (subcircuit: CircuitSchemaProps) => subcircuit.key === key
-                    )
-                )
-                .concat(newSelectedRow as string[]);
-              if (!updatedKeys.includes(parentKey)) updatedKeys.push(parentKey);
-              setSelectedRowKeys(updatedKeys);
+            type: 'radio' as const,
+            selectedRowKeys: selectedRowKeys ? [selectedRowKeys] : undefined,
+            onChange: (newSelectedRowKeys: Key[]) => {
+              setSelectedRowKeys(newSelectedRowKeys.length > 0 ? (newSelectedRowKeys[0] as string) : null);
             },
           }}
           expandable={{
@@ -186,24 +204,29 @@ export default function ExploreCircuitTable() {
   };
 
   const handleFileDownload = () => {
-    const selectedRowKeyObjects = HARD_CODED_CONTENT.filter((circuit) =>
-      selectedRowKeys.includes(circuit.key)
-    );
 
-    selectedRowKeyObjects.forEach((circuit: CircuitSchemaProps) => {
-      const fileName = circuit.name;
-      circuit.files.forEach((file) => {
-        const { url } = file;
+    if (typeof window === 'undefined') return;
 
-        const link = document.createElement('a');
+    const allRows = flattenRows(HARD_CODED_CONTENT);
 
-        link.href = url || '';
-        link.download = fileName;
-        link.target = '_blank';
+    const selectedRows = allRows.filter((row: CircuitSchemaProps) =>
+      selectedRowKeys?.includes(row.key) || false
+    )
 
-        link.click();
+    selectedRows.forEach((row: CircuitSchemaProps) => {
+      const fileName = row.name;
+      (row.files || []).forEach((file) => {
+        if (file?.url) {
+          const { url } = file;
+          const link = document.createElement('a');
+          link.href = url || '';
+          link.download = fileName;
+          link.target = '_blank';
+          link.click();
+          link.remove();
+        }
       });
-    });
+    })
   };
 
   return (
@@ -230,6 +253,7 @@ export default function ExploreCircuitTable() {
         expandable={{
           expandedRowRender,
           expandedRowKeys,
+          defaultExpandAllRows: true,
           onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
             const rowKey = row.key;
             setExpandedRowKeys((prev) =>
@@ -242,8 +266,9 @@ export default function ExploreCircuitTable() {
 
       <TableDownloadButtonLight
         handleFileDownload={handleFileDownload}
-        selectedRowKeys={selectedRowKeys}
+        selectedRowKeys={selectedRowKeys ? [selectedRowKeys] : []}
       />
     </>
   );
 }
+
