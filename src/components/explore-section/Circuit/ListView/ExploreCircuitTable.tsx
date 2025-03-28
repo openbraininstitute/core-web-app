@@ -58,10 +58,7 @@ export default function ExploreCircuitTable() {
   const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
     const directSubcircuits = row.subcircuits?.length || 0;
     const nestedSubcircuits = row.subcircuits
-      ? row.subcircuits.reduce(
-          (sum, sub) => sum + calculateSubcircuitsForParent(sub),
-          0
-        )
+      ? row.subcircuits.reduce((sum, sub) => sum + calculateSubcircuitsForParent(sub), 0)
       : 0;
     return directSubcircuits + nestedSubcircuits;
   };
@@ -154,7 +151,6 @@ export default function ExploreCircuitTable() {
 
   // SUBCIRCUIT TABLE - LEVEL 1
   const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
-
     return (
       <div className="relative flex flex-col pl-[17px]">
         <div className="relative flex flex-row pl-[48px]">
@@ -184,7 +180,9 @@ export default function ExploreCircuitTable() {
             type: 'radio' as const,
             selectedRowKeys: selectedRowKeys ? [selectedRowKeys] : undefined,
             onChange: (newSelectedRowKeys: Key[]) => {
-              setSelectedRowKeys(newSelectedRowKeys.length > 0 ? (newSelectedRowKeys[0] as string) : null);
+              setSelectedRowKeys(
+                newSelectedRowKeys.length > 0 ? (newSelectedRowKeys[0] as string) : null
+              );
             },
           }}
           expandable={{
@@ -204,14 +202,13 @@ export default function ExploreCircuitTable() {
   };
 
   const handleFileDownload = () => {
-
     if (typeof window === 'undefined') return;
 
     const allRows = flattenRows(HARD_CODED_CONTENT);
 
-    const selectedRows = allRows.filter((row: CircuitSchemaProps) =>
-      selectedRowKeys?.includes(row.key) || false
-    )
+    const selectedRows = allRows.filter(
+      (row: CircuitSchemaProps) => selectedRowKeys?.includes(row.key) || false
+    );
 
     selectedRows.forEach((row: CircuitSchemaProps) => {
       const fileName = row.name;
@@ -226,7 +223,7 @@ export default function ExploreCircuitTable() {
           link.remove();
         }
       });
-    })
+    });
   };
 
   return (
@@ -271,4 +268,3 @@ export default function ExploreCircuitTable() {
     </>
   );
 }
-

@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 
-
 export function TableDownloadButtonLight({
   handleFileDownload,
   selectedRowKeys,
@@ -18,16 +17,16 @@ export function TableDownloadButtonLight({
       }}
     >
       <div className="relative flex flex-col gap-x-3 text-base font-normal">
-          <span className="block text-primary-3 font-bold">Download ({selectedRowKeys.length})</span>
-          <Link
-            href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
-            target="_blank"
-            className="relative flex flex-row gap-x-3"
-          >
-            <p className="text-base text-white leading-normal">
-              The connectome will be downloaded in Connectome Utilities Format, see more here
-            </p>  
-          </Link>
+        <span className="block font-bold text-primary-3">Download ({selectedRowKeys.length})</span>
+        <Link
+          href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
+          target="_blank"
+          className="relative flex flex-row gap-x-3"
+        >
+          <p className="text-base leading-normal text-white">
+            The connectome will be downloaded in Connectome Utilities Format, see more here
+          </p>
+        </Link>
       </div>
       <div className="relative flex h-full flex-row">
         <button
