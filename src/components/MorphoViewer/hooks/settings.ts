@@ -22,6 +22,24 @@ import { isServer } from '@/config';
 
 const STORAGE_KEY = 'MorphoViewer/settings';
 
+const DEFAULT_SETTINS: PersistentMorphoViewerSettings = {
+  darkMode: false,
+  darkColors: {
+    soma: DARK_SOMA,
+    basalDendrite: DARK_BASAL_DENDRITE,
+    apicalDendrite: DARK_APICAL_DENDRITE,
+    axon: DARK_AXON,
+  },
+  lightColors: {
+    soma: LIGHT_SOMA,
+    basalDendrite: LIGHT_BASAL_DENDRITE,
+    apicalDendrite: LIGHT_APICAL_DENDRITE,
+    axon: LIGHT_AXON,
+  },
+  radiusType: 0,
+  colorBy: 'section',
+};
+
 export interface MorphoViewerSettings {
   isDarkMode: boolean;
   /** CSS color for Soma */
@@ -153,24 +171,6 @@ function writeSettings({
 }
 
 const persistentSettingsAtom = atom(loadSettings());
-
-const DEFAULT_SETTINS: PersistentMorphoViewerSettings = {
-  darkMode: false,
-  darkColors: {
-    soma: DARK_SOMA,
-    basalDendrite: DARK_BASAL_DENDRITE,
-    apicalDendrite: DARK_APICAL_DENDRITE,
-    axon: DARK_AXON,
-  },
-  lightColors: {
-    soma: LIGHT_SOMA,
-    basalDendrite: LIGHT_BASAL_DENDRITE,
-    apicalDendrite: LIGHT_APICAL_DENDRITE,
-    axon: LIGHT_AXON,
-  },
-  radiusType: 0,
-  colorBy: 'section',
-};
 
 function assertPersistentMorphoViewerSettings(
   data: unknown
