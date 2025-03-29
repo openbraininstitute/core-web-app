@@ -1,6 +1,6 @@
 'use client';
 
-import { Key, useEffect, useState } from 'react';
+import { Key, useState } from 'react';
 import { Table, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { flattenRows } from '../content/utils';
@@ -13,7 +13,6 @@ import { classNames } from '@/util/utils';
 import styles from './ExploreCircuiteTable.module.scss';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
-  if (!Array.isArray(data)) return [];
   return data.reduce((acc, row) => {
     const subKeys = row.subcircuits ? getExpandableRowKeys(row.subcircuits) : [];
     return row.hasSubcircuits ? [...acc, row.key, ...subKeys] : [...acc, ...subKeys];
@@ -23,10 +22,6 @@ const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS));
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-
-  useEffect(() => {
-    setExpandedRowKeys(getExpandableRowKeys(CIRCUITS));
-  }, []);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;

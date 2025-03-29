@@ -193,7 +193,7 @@ function assertPersistentMorphoViewerSettings(
 
 function loadSettings(): PersistentMorphoViewerSettings {
   try {
-    const item = window.localStorage.getItem(STORAGE_KEY) ?? '';
+    const item = window?.localStorage.getItem(STORAGE_KEY) ?? '';
     const data = JSON.parse(item);
     assertPersistentMorphoViewerSettings(data);
     return data;
