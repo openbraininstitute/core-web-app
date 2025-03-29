@@ -2,6 +2,7 @@
 
 import { Key, useState } from 'react';
 import { Table, Tooltip } from 'antd';
+import { TableRowSelection } from 'antd/es/table/interface';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import circuitsFlat from '../content/circuits_flat';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
@@ -31,8 +32,8 @@ export default function ExploreCircuitTable() {
     );
   };
 
-  const rowSelection = {
-    type: 'radio' as const,
+  const rowSelection: TableRowSelection<CircuitSchemaProps> = {
+    type: 'radio',
     selectedRowKeys,
     onChange: (newSelectedRows: Key[]) => {
       setSelectedRowKeys(newSelectedRows);
