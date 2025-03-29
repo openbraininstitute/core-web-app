@@ -52,9 +52,7 @@ function MenuItemLabel({
 
   if (dataType === DataType.Circuit) {
     count = flattenRows(CIRCUITS).length;
-  }
-
-  if (
+  } else if (
     totalByExperimentAndRegions.state === 'hasData' &&
     typeof totalByExperimentAndRegions.data === 'number'
   ) {
