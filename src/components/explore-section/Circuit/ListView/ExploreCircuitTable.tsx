@@ -235,7 +235,7 @@ export default function ExploreCircuitTable() {
                 target="_blank"
                 onClick={(e) => e.stopPropagation()}
               >
-                The connectome will be downloaded in Connectome Utilities Format, see more here
+                The connectome will be downloaded in Connectome Utilities format, see more here.
               </a>
             }
           >

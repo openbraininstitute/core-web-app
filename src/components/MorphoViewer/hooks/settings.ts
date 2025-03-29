@@ -22,7 +22,7 @@ import { isServer } from '@/config';
 
 const STORAGE_KEY = 'MorphoViewer/settings';
 
-const DEFAULT_SETTINS: PersistentMorphoViewerSettings = {
+const DEFAULT_SETTINGS: PersistentMorphoViewerSettings = {
   darkMode: false,
   darkColors: {
     soma: DARK_SOMA,
@@ -100,7 +100,7 @@ export function useMorphoViewerSettings(
     setPersistentSettings(newPersistentSettings);
   };
   const reset = (darkMode?: boolean) => {
-    const defaultSettings = { ...DEFAULT_SETTINS };
+    const defaultSettings = { ...DEFAULT_SETTINGS };
     if (typeof darkMode === 'boolean') {
       defaultSettings.darkMode = darkMode;
     }
@@ -191,16 +191,16 @@ function assertPersistentMorphoViewerSettings(
 }
 
 function loadSettings(): PersistentMorphoViewerSettings {
-  if (isServer) return DEFAULT_SETTINS;
+  if (isServer) return DEFAULT_SETTINGS;
   try {
     const item = window.localStorage.getItem(STORAGE_KEY) ?? '';
     const data = JSON.parse(item);
     assertPersistentMorphoViewerSettings(data);
     return data;
   } catch (ex) {
-    saveSettings(DEFAULT_SETTINS);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINS));
-    return DEFAULT_SETTINS;
+    saveSettings(DEFAULT_SETTINGS);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
+    return DEFAULT_SETTINGS;
   }
 }
 
