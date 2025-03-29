@@ -189,7 +189,7 @@ export default function ExploreCircuitTable() {
   const fileUrl = file?.url;
 
   return (
-    <>
+    <div className="pt-10">
       <Table
         className={classNames(
           '[&_.ant-table-tbody]:bg-[#FAFAFA]',
@@ -248,6 +248,6 @@ export default function ExploreCircuitTable() {
           </Tooltip>
         </a>
       )}
-    </>
+    </div>
   );
 }
