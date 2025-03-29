@@ -5,7 +5,7 @@ import { Table, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { flattenRows } from '../content/utils';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-import HARD_CODED_CONTENT from '../content/circuits_tree';
+import CIRCUITS from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
@@ -21,13 +21,11 @@ const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
 };
 
 export default function ExploreCircuitTable() {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(
-    getExpandableRowKeys(HARD_CODED_CONTENT)
-  );
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS));
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
   useEffect(() => {
-    setExpandedRowKeys(getExpandableRowKeys(HARD_CODED_CONTENT));
+    setExpandedRowKeys(getExpandableRowKeys(CIRCUITS));
   }, []);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
@@ -181,7 +179,7 @@ export default function ExploreCircuitTable() {
     );
   };
 
-  const allRows = flattenRows(HARD_CODED_CONTENT);
+  const allRows = flattenRows(CIRCUITS);
   const selectedRows = allRows.filter((row: CircuitSchemaProps) =>
     selectedRowKeys.includes(row.key)
   );
@@ -208,7 +206,7 @@ export default function ExploreCircuitTable() {
           styles.circuitTable
         )}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={HARD_CODED_CONTENT}
+        dataSource={CIRCUITS}
         columns={columns}
         pagination={false}
         rowSelection={rowSelection}

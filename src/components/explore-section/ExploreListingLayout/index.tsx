@@ -9,7 +9,7 @@ import { ReactNode, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { flattenRows } from '../Circuit/content/utils';
-import HARD_CODED_CONTENT from '../Circuit/content/circuits_tree';
+import CIRCUITS from '../Circuit/content/circuits_tree';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
@@ -51,7 +51,7 @@ function MenuItemLabel({
   let count = null;
 
   if (dataType === DataType.Circuit) {
-    count = flattenRows(HARD_CODED_CONTENT).length;
+    count = flattenRows(CIRCUITS).length;
   }
 
   if (

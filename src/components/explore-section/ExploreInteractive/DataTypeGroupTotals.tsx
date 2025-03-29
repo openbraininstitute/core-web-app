@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 
-import HARD_CODED_CONTENT from '../Circuit/content/circuits_tree';
+import CIRCUITS from '../Circuit/content/circuits_tree';
 import { flattenRows } from '../Circuit/content/utils';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
 
@@ -91,7 +91,7 @@ export default function DataTypeGroupTotals({
           href={`${pathName}/model/circuit`}
           key="Circuit"
           title="Circuit"
-          subtitle={`${flattenRows(HARD_CODED_CONTENT).length} records`}
+          subtitle={`${flattenRows(CIRCUITS).length} records`}
           testId="experiment-dataset-Circuit"
         />
       )}
