@@ -3,7 +3,7 @@
 import { Key, useState } from 'react';
 import { Table, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { flattenRows } from '../content/utils';
+import circuitsFlat from '../content/circuits_flat';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import CIRCUITS from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
@@ -174,8 +174,7 @@ export default function ExploreCircuitTable() {
     );
   };
 
-  const allRows = flattenRows(CIRCUITS);
-  const selectedRows = allRows.filter((row: CircuitSchemaProps) =>
+  const selectedRows = circuitsFlat.filter((row: CircuitSchemaProps) =>
     selectedRowKeys.includes(row.key)
   );
 

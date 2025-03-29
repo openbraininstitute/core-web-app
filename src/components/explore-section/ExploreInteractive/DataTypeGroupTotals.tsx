@@ -4,10 +4,8 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 
-import CIRCUITS from '../Circuit/content/circuits_tree';
-import { flattenRows } from '../Circuit/content/utils';
+import circuitsFlat from '../Circuit/content/circuits_flat';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
-
 import { DATA_TYPE_GROUPS_CONFIG } from '@/constants/explore-section/data-type-groups';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -74,8 +72,6 @@ export default function DataTypeGroupTotals({
   return (
     <>
       {Object.keys(config).map((dataType) => {
-        if (dataType === DataType.Circuit) return null;
-
         return (
           <DataTypeGroupTotal
             key={dataType}
@@ -91,7 +87,7 @@ export default function DataTypeGroupTotals({
           href={`${pathName}/model/circuit`}
           key="Circuit"
           title="Circuit"
-          subtitle={`${flattenRows(CIRCUITS).length} records`}
+          subtitle={`${circuitsFlat.length} records`}
           testId="experiment-dataset-Circuit"
         />
       )}
