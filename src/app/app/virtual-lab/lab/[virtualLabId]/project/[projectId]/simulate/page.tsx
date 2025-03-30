@@ -24,6 +24,7 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
 import { classNames } from '@/util/utils';
+import { useLoadMore } from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import {
   scopeSelectorExpandedAtom,
   selectedSimTypeFamily,
@@ -35,8 +36,6 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import Styles from '@/styles/vlabs.module.scss';
-import { Button } from 'antd';
-import { useLoadMore } from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
