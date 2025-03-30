@@ -32,8 +32,8 @@ import {
   selectedSimTypeFamily,
   selectedTabFamily,
 } from '@/components/VirtualLab/ScopeSelector/state';
-import Styles from '@/styles/vlabs.module.scss';
 import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
+import Styles from '@/styles/vlabs.module.scss';
 
 type Params = {
   params: {
