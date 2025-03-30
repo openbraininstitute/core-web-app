@@ -35,7 +35,7 @@ export function useLoadMore(dataContext: {
 
   const [contentSize, setContentSize] = useAtom(pageSizeAtom);
 
-  const onLoadMore = useCallback(
+  const loadMore = useCallback(
     (load: boolean) => {
       if (res.state === 'loading' || res.state === 'hasError' || !load) return;
       if (res.data?.total && contentSize > res.data?.total.value) return null;
@@ -44,7 +44,7 @@ export function useLoadMore(dataContext: {
     [contentSize, setContentSize, res]
   );
 
-  return onLoadMore;
+  return { loadMore, loading: res.state === 'loading' };
 }
 
 export default function LoadMoreButton({

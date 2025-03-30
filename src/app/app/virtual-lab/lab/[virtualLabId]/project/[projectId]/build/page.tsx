@@ -33,6 +33,7 @@ import {
   selectedTabFamily,
 } from '@/components/VirtualLab/ScopeSelector/state';
 import Styles from '@/styles/vlabs.module.scss';
+import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
 
 type Params = {
   params: {
@@ -104,32 +105,18 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
-  // Note: Disabled temporarily until SFN
-  // const generateCloneUrl = () => {
-  //   const model = selectedRows[0];
-  //   if (model && selectedModelType) {
-  //     const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
-  //     const baseBuildUrl = `${vlProjectUrl}/${SupportedTypeToTabDetails[selectedModelType].newUrl}`;
-  //     return `${baseBuildUrl}?mode=clone&model=${to64(model._source['@id'])}`;
-  //   }
-  // };
-
-  // const onCloneModel = () => {
-  //   switch (selectedSimulationScope) {
-  //     case SimulationType.Synaptome: {
-  //       return generateCloneUrl();
-  //     }
-  //     default:
-  //       return undefined;
-  //   }
-  // };
-
   const navigateToDetailPage = (record: ExploreESHit<ExploreSectionResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
     const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
     const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLs[selectedSimType].viewUrl}`;
     router.push(`${baseExploreUrl}/${pathId}`);
   };
+
+  const loadMoreDiv = useInfiniteScroll(
+    virtualLabId,
+    projectId,
+    selectedModelType ?? DataType.CircuitMEModel
+  );
 
   return (
     <>
@@ -154,7 +141,10 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
               dataKey={projectId + 'build' + selectedModelType || DataType.CircuitMEModel}
+              showLoadingState={false}
             />
+
+            {loadMoreDiv}
 
             {selectedRows.length > 0 && (
               <div className="fixed bottom-12 right-[45px] flex items-center justify-end gap-2">

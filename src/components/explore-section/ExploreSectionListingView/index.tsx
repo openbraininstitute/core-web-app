@@ -33,6 +33,7 @@ export default function ExploreSectionListingView({
   containerClass = 'h-full',
   tableClass = 'h-full overflow-y-hidden',
   dataKey,
+  showLoadingState = true,
 }: {
   containerClass?: string;
   tableClass?: string;
@@ -47,6 +48,7 @@ export default function ExploreSectionListingView({
   controlsVisible?: boolean;
   style?: Record<'background', string>;
   dataKey: string;
+  showLoadingState?: boolean;
 }) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
 
@@ -109,7 +111,7 @@ export default function ExploreSectionListingView({
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{ virtualLabInfo, dataScope, dataType }}
                 dataSource={dataSource}
-                loading={data.state === 'loading'}
+                loading={showLoadingState && data.state === 'loading'}
                 onCellClick={onCellClick}
                 renderButton={renderButton}
                 selectionType={selectionType}
