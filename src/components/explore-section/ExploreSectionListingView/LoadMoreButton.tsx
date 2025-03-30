@@ -1,10 +1,10 @@
-import { HTMLProps } from 'react';
+import { HTMLProps, useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { pageSizeAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
 import { classNames } from '@/util/utils';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import { useUnwrappedValue } from '@/hooks/hooks';
+import { useLoadableValue, useUnwrappedValue } from '@/hooks/hooks';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonElement>) {
@@ -19,6 +19,32 @@ function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonEle
       {children}
     </button>
   );
+}
+
+export function useLoadMore(dataContext: {
+  virtualLabInfo?: VirtualLabInfo;
+  dataScope: ExploreDataScope;
+  dataType: DataType;
+}) {
+  const res = useLoadableValue(
+    dataAtom({
+      ...dataContext,
+      key: dataContext.virtualLabInfo?.projectId ?? '' + dataContext.dataType,
+    })
+  );
+
+  const [contentSize, setContentSize] = useAtom(pageSizeAtom);
+
+  const onLoadMore = useCallback(
+    (load: boolean) => {
+      if (res.state === 'loading' || res.state === 'hasError' || !load) return;
+      if (res.data?.total && contentSize > res.data?.total.value) return null;
+      setContentSize(contentSize + PAGE_SIZE);
+    },
+    [contentSize, setContentSize, res]
+  );
+
+  return onLoadMore;
 }
 
 export default function LoadMoreButton({

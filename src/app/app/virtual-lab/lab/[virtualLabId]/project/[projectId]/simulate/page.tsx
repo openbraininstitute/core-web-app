@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
-import { HTMLProps, useRef, useState } from 'react';
+import { HTMLProps, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   SimulationScopeToDataType,
@@ -35,6 +35,8 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import Styles from '@/styles/vlabs.module.scss';
+import { Button } from 'antd';
+import { useLoadMore } from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -166,22 +168,33 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
 
   const tableRef = useRef<HTMLDivElement>(null);
+  const loadMoreDivRef = useRef<HTMLDivElement>(null);
   const [buttonsVisible, setButtonsVisible] = useState(false);
 
-  function initializeIntersectionObserver() {
-    const intersectionObserver = new IntersectionObserver(
-      (entries) => {
-        setButtonsVisible(entries?.[0].isIntersecting ?? false);
-      },
-      { rootMargin: '-300px' }
-    );
+  const loadMore = useLoadMore(
+    useMemo(() => {
+      return {
+        virtualLabInfo: {
+          virtualLabId,
+          projectId,
+        },
+        dataType: modelType,
+        dataScope: ExploreDataScope.NoScope,
+      };
+    }, [projectId, modelType, virtualLabId])
+  );
 
-    if (tableRef.current) intersectionObserver.observe(tableRef.current);
+  useIntersectionObserver({
+    observedRef: tableRef,
+    onIntersect: setButtonsVisible,
+    rootMargin: '-300px',
+  });
 
-    return intersectionObserver;
-  }
-
-  useRef(initializeIntersectionObserver());
+  useIntersectionObserver({
+    observedRef: loadMoreDivRef,
+    onIntersect: loadMore,
+    rootMargin: '0px',
+  });
 
   return (
     <div>
@@ -206,7 +219,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
           dataKey={projectId + 'simulate' + modelType}
         />
         {buttonsVisible && selectedRows.length > 0 && (
-          <div className="fixed bottom-6 right-4 flex items-center justify-end gap-2">
+          <div className="fixed bottom-8 right-[50px] flex items-center justify-end gap-2">
             <Btn
               type="button"
               className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
@@ -222,6 +235,8 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
             </Btn>
           </div>
         )}
+        {/* Display load more when this is intersected */}
+        <div ref={loadMoreDivRef} />
       </div>
     </div>
   );
@@ -233,4 +248,35 @@ function customBookmarkButton({ onClick, children }: HTMLProps<HTMLButtonElement
       {children}
     </Btn>
   );
+}
+
+function useIntersectionObserver({
+  observedRef,
+  onIntersect,
+  rootMargin,
+}: {
+  observedRef: React.RefObject<HTMLElement | null>;
+  onIntersect: (intersecting: boolean) => void;
+  rootMargin: string;
+}) {
+  useEffect(() => {
+    const element = observedRef.current;
+    if (!element) return;
+
+    const intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        onIntersect(entries[0].isIntersecting);
+      },
+      {
+        rootMargin,
+      }
+    );
+
+    intersectionObserver.observe(element);
+
+    return () => {
+      intersectionObserver.unobserve(element);
+      intersectionObserver.disconnect();
+    };
+  }, [observedRef, onIntersect, rootMargin]);
 }
