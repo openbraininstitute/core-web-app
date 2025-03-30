@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
-import { HTMLProps } from 'react';
+import { HTMLProps, useRef, useState } from 'react';
 
 import {
   SimulationScopeToDataType,
@@ -165,50 +165,65 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
 
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
 
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [buttonsVisible, setButtonsVisible] = useState(false);
+
+  function initializeIntersectionObserver() {
+    const intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        setButtonsVisible(entries?.[0].isIntersecting ?? false);
+      },
+      { rootMargin: '-300px' }
+    );
+
+    if (tableRef.current) intersectionObserver.observe(tableRef.current);
+
+    return intersectionObserver;
+  }
+
+  useRef(initializeIntersectionObserver());
+
   return (
-    <>
+    <div>
       <ScopeSelector atomKey={atomKey} section="simulate" />
 
-      <div className="flex grow flex-col">
-        <div className="flex grow flex-col">
-          {/* TODO: replace this list with items saved in Model Library */}
-          <div
-            className="relative mb-5 flex w-full grow flex-col"
-            id="explore-table-container-for-observable"
-          >
-            <ExploreSectionListingView
-              containerClass="grow bg-primary-9 flex flex-col"
-              tableClass={classNames('grow', Styles.table)}
-              tableScrollable={false}
-              controlsVisible={false}
-              dataType={modelType}
-              dataScope={ExploreDataScope.NoScope}
-              virtualLabInfo={{ virtualLabId, projectId }}
-              selectionType="radio"
-              renderButton={() => null}
-              dataKey={projectId + 'simulate' + modelType}
-            />
-            {selectedRows.length > 0 && (
-              <div className="absolute bottom-6 right-4 flex items-center justify-end gap-2">
-                <Btn
-                  type="button"
-                  className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
-                  onClick={() => navigateToDetailPage(selectedRows[0])}
-                >
-                  View
-                </Btn>
-                <Btn
-                  className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
-                  onClick={() => onModelSelected(selectedRows[0])}
-                >
-                  New Simulation
-                </Btn>
-              </div>
-            )}
+      {/* TODO: replace this list with items saved in Model Library */}
+      <div
+        className="relative mb-5 flex w-full grow flex-col"
+        id="explore-table-container-for-observable"
+        ref={tableRef}
+      >
+        <ExploreSectionListingView
+          containerClass="grow bg-primary-9 flex flex-col"
+          tableClass={classNames('grow', Styles.table)}
+          tableScrollable={false}
+          controlsVisible={false}
+          dataType={modelType}
+          dataScope={ExploreDataScope.NoScope}
+          virtualLabInfo={{ virtualLabId, projectId }}
+          selectionType="radio"
+          renderButton={() => null}
+          dataKey={projectId + 'simulate' + modelType}
+        />
+        {buttonsVisible && selectedRows.length > 0 && (
+          <div className="fixed bottom-6 right-4 flex items-center justify-end gap-2">
+            <Btn
+              type="button"
+              className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
+              onClick={() => navigateToDetailPage(selectedRows[0])}
+            >
+              View
+            </Btn>
+            <Btn
+              className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
+              onClick={() => onModelSelected(selectedRows[0])}
+            >
+              New Simulation
+            </Btn>
           </div>
-        </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
