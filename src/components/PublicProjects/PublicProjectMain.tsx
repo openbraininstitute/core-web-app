@@ -98,6 +98,20 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
         },
       ],
     ],
+    minimalMeModel: [
+      '|',
+      'null',
+      [
+        'array',
+        {
+          name: 'string',
+          brainRegion: 'string',
+          mTtype: ['|', 'undefined', 'string'],
+          eType: 'string',
+          species: 'string',
+        },
+      ],
+    ],
     eModelsList: [
       '|',
       'null',
@@ -105,12 +119,17 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
         'array',
         {
           name: 'string',
-          response: 'string',
+          hasResponseThumbnail: 'boolean',
+          response: ['|', 'null', 'string'],
           brainRegion: 'string',
-          mType: 'string',
+          mType: ['|', 'null', 'string'],
           eType: 'string',
+          hasMorphologyThumbnail: 'boolean',
+          // morphology: 'string',
           modelCumulatedScore: 'number',
-          _type: 'string',
+          species: 'string',
+          contributor: ['|', 'null', 'string'],
+          creationDate: 'string',
         },
       ],
     ],
@@ -159,7 +178,7 @@ export default function PublicProjectMain({ slug }: { slug: string }) {
 
         <div className="flex flex-col">
           <NavigationSections activeSection={activeSection} setActiveSection={setActiveSection} />
-          <div className="flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8 text-primary-9">
+          <div className="scroll-behavior: smooth; flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8 text-primary-9">
             {activeSectionContent}
           </div>
         </div>
