@@ -13,7 +13,9 @@ import {
   ExperimentalTrace,
   ReconstructedNeuronMorphology,
 } from '@/types/explore-section/es-experiment';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
+import EXPLORE_FIELDS_CONFIG, {
+  ENTITY_CORE_FIELDS_CONFIG,
+} from '@/constants/explore-section/fields-config';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { isNeuronMorphologyFeatureAnnotation } from '@/util/explore-section/typeUnionTargetting';
 import { getGroupedCardFields } from '@/util/explore-section/cardViewUtils';
@@ -79,11 +81,16 @@ export default function CardView({ data, dataType, resourceId = '' }: CardViewPr
               key={group}
               className="m-0 truncate border-y border-solid p-0"
             >
-              {fields.map((item) => (
-                <div key={item.field} className="mb-2 ml-7 h-6 truncate font-thin text-neutral-4">
-                  {upperCase(EXPLORE_FIELDS_CONFIG[item.field].title)}
-                </div>
-              ))}
+              {fields.map((item) => {
+                return (
+                  <div key={item.field} className="mb-2 ml-7 h-6 truncate font-thin text-neutral-4">
+                    {upperCase(
+                      ENTITY_CORE_FIELDS_CONFIG[item.field]?.title ??
+                        EXPLORE_FIELDS_CONFIG[item.field]?.title
+                    )}
+                  </div>
+                );
+              })}
             </Panel>
           ))}
         </Collapse>

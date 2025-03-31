@@ -94,7 +94,7 @@ export enum EntityCoreFields {
   Description = 'description',
   Species = 'species',
   CreationDate = 'creation_date',
-  RegistrationDate = 'creation_date',
+  RegistrationDate = 'registration_date',
   UpdateDate = 'update_date',
   Contribution = 'contribution',
   Contributions = 'contributions',

@@ -15,6 +15,7 @@ import {
   Measurement,
   IMType,
   IContributor,
+  IAsset,
 } from '@/api/entitycore/types/shared/global';
 
 export type ReconstructionMorphologyExpandFields =
@@ -73,6 +74,7 @@ export interface IReconstructionMorphology extends AuditMetadata {
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
   type: 'reconstruction-morphology';
+  assets?: Array<IAsset>;
 }
 
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {
