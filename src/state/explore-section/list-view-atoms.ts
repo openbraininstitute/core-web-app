@@ -21,11 +21,7 @@ import {
   EXPERIMENTAL_DATATYPES,
   PAGE_NUMBER,
 } from '@/constants/explore-section/list-views';
-import {
-  ExploreESHit,
-  ExploreResource,
-  FlattenedExploreESResponse,
-} from '@/types/explore-section/es';
+import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
   selectedBrainRegionWithDescendantsAndAncestorsAtom,

@@ -76,7 +76,7 @@ export function useLoadMore(
       setPrevData(data);
       setPageNumber(pageNumber + 1);
     },
-    [pageNumber, setPageNumber, res]
+    [pageNumber, setPageNumber, res, data, setPrevData]
   );
 
   return { loadMore, loading: res.state === 'loading' };

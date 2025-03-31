@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode } from 'react';
 import { useAtom } from 'jotai';
 import { RowSelectionType } from 'antd/es/table/interface';
 
@@ -12,7 +12,7 @@ import ExploreSectionTable, {
 import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import NumericResultsInfo from '@/components/explore-section/ExploreSectionListingView/NumericResultsInfo';
 import useExploreColumns from '@/hooks/useExploreColumns';
-import { sortStateAtom, dataAtom, previousDataAtom } from '@/state/explore-section/list-view-atoms';
+import { sortStateAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -72,8 +72,6 @@ export default function ExploreSectionListingView({
     },
     dataKey
   );
-
-  console.log(hits.length);
 
   return (
     <div
