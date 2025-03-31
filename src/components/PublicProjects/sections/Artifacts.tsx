@@ -49,8 +49,8 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
 
   return (
     <div className="relative flex w-full flex-col gap-y-12 scroll-smooth" id="artifacts">
-      <header className="sticky mb-12 flex h-16 w-full flex-row items-center justify-between bg-white">
-        <div className="relative flex flex-row">
+      <header className="sticky top-0 z-50 mb-12 flex h-16 w-full flex-row items-center justify-between bg-white">
+        <div className="relative flex flex-row text-base">
           Total artifacts: <span className="font-bold">{allData()}</span>
         </div>
 
@@ -100,7 +100,7 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
 
       {content?.artifact && <LinkAndDownloadArtifactList content={content.artifact} />}
       {content?.meModelsList && showMeModels && (
-        <div className="flex w-full flex-col">
+        <div className="relative z-0 flex w-full flex-col">
           <div
             className="mb-8 flex w-full flex-row items-baseline gap-x-3 text-primary-9"
             id="meModelsFull"

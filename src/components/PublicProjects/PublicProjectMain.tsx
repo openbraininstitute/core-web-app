@@ -178,7 +178,7 @@ export default function PublicProjectMain({ slug }: { slug: string }) {
 
         <div className="flex flex-col">
           <NavigationSections activeSection={activeSection} setActiveSection={setActiveSection} />
-          <div className="flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8 text-primary-9">
+          <div className="flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8 text-primary-9 scroll-behavior: smooth;">
             {activeSectionContent}
           </div>
         </div>
