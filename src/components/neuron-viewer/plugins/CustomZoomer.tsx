@@ -66,7 +66,9 @@ export default function CustomZoomer({ renderer, placement = 'left' }: Props) {
 
     if (renderer.current) {
       setValue(renderer.current._camera.zoom);
-      renderer.current._renderer.domElement.addEventListener('wheel', updateZoom);
+      renderer.current._renderer.domElement.addEventListener('wheel', updateZoom, {
+        passive: false,
+      });
     }
 
     return () => {

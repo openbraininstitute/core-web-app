@@ -155,7 +155,7 @@ class ThreeContext {
         this.raycastMouse.x = (relX / this.renderer.domElement.clientWidth) * 2 - 1;
         this.raycastMouse.y = -(relY / this.renderer.domElement.clientHeight) * 2 + 1;
       },
-      false
+      { passive: true }
     );
 
     // when the 3D container resizes, calls the resize function to re-calculate the width

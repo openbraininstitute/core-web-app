@@ -6,7 +6,7 @@ type BrainRegionHierarchy = {
   children: number[];
 };
 
-export interface IBrainRegionHierarchy extends BrainRegionHierarchy, AuditMetadata { }
+export interface IBrainRegionHierarchy extends BrainRegionHierarchy, AuditMetadata {}
 
 // order of values: id: number, name: string, acronym: string, children: Array, level: number
 export type TemporaryFlatBrainRegionHierarchy = Array<

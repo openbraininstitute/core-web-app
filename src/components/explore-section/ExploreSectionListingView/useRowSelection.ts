@@ -7,10 +7,7 @@ import { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 
-type RowSelection<T> = Pick<
-  TableRowSelection<T>,
-  'selectedRowKeys' | 'onChange' | 'type'
->;
+type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
 
 export type RenderButtonProps<T> = {
   selectedRows: Array<T>;
@@ -35,9 +32,7 @@ export default function useRowSelection<T extends { id: string }>({
 
   return {
     rowSelection: {
-      selectedRowKeys: selectedRows.map(
-        (row: T) => row.id
-      ),
+      selectedRowKeys: selectedRows.map((row: T) => row.id),
       onChange: (_keys: Key[], rows: Array<T>) => {
         setSelectedRows(() => rows);
         onRowsSelected?.(rows);

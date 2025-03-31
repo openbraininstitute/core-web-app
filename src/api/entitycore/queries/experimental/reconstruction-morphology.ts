@@ -1,4 +1,3 @@
-
 import authApiClient from '@/api/apiClient';
 import {
   ExpandReconstructionMorphologyParm,
@@ -10,8 +9,7 @@ import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
-
-const baseUri = "/reconstruction-morphology/"
+const baseUri = '/reconstruction-morphology/';
 /**
  * Retrieves a list of reconstruction morphologies from the EntityCoreAPI.
  *
@@ -19,17 +17,20 @@ const baseUri = "/reconstruction-morphology/"
  * @param {IMorphologyFilter} [options.filters] - Optional filters to apply to the query
  * @returns {Promise<EntityCoreResponse<IReconstructionMorphology>>} A promise that resolves to the list of reconstruction morphologies
  */
-export async function getReconstructionMorphologies({ withFacets, filters }: { withFacets?: boolean; filters?: IMorphologyFilter }) {
+export async function getReconstructionMorphologies({
+  withFacets,
+  filters,
+}: {
+  withFacets?: boolean;
+  filters?: IMorphologyFilter;
+}) {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<EntityCoreResponse<IReconstructionMorphology>>(
-    baseUri,
-    {
-      queryParams: {
-        ...filters,
-        with_facets: withFacets,
-      },
-    }
-  );
+  return await api.get<EntityCoreResponse<IReconstructionMorphology>>(baseUri, {
+    queryParams: {
+      ...filters,
+      with_facets: withFacets,
+    },
+  });
 }
 
 /**

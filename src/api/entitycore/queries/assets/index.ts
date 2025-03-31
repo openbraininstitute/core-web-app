@@ -5,7 +5,6 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
 import { entityCoreUrl } from '@/config';
 
-
 /**
  * Retrieves assets for a specific entity from the EntityCoreAPI.
  *
@@ -15,19 +14,16 @@ import { entityCoreUrl } from '@/config';
  * @returns {Promise<EntityCoreResponse<IAsset>>} A promise that resolves to the list of assets
  */
 export async function getAssets({
-    entityType,
-    entityId,
+  entityType,
+  entityId,
 }: {
-    entityType: EntityCoreDataType,
-    entityId: string,
+  entityType: EntityCoreDataType;
+  entityId: string;
 }): Promise<EntityCoreResponse<IAsset>> {
-    const api = await authApiClient(entityCoreUrl);
-    return await api.get<EntityCoreResponse<IAsset>>(
-        `/${entityType}/${entityId}/assets`,
-        {
-            ...getEntityCoreContext(),
-        }
-    );
+  const api = await authApiClient(entityCoreUrl);
+  return await api.get<EntityCoreResponse<IAsset>>(`/${entityType}/${entityId}/assets`, {
+    ...getEntityCoreContext(),
+  });
 }
 
 /**
@@ -40,19 +36,16 @@ export async function getAssets({
  * @returns {Promise<IAsset>} A promise that resolves to the requested asset
  */
 export async function getAsset({
-    entityType,
-    entityId,
-    id,
+  entityType,
+  entityId,
+  id,
 }: {
-    entityType: EntityCoreDataType,
-    entityId: string,
-    id: string,
+  entityType: EntityCoreDataType;
+  entityId: string;
+  id: string;
 }) {
-    const api = await authApiClient(entityCoreUrl);
-    return await api.get<IAsset>(
-        `/${entityType}/${entityId}/assets/${id}`,
-        {
-            ...getEntityCoreContext(),
-        }
-    );
+  const api = await authApiClient(entityCoreUrl);
+  return await api.get<IAsset>(`/${entityType}/${entityId}/assets/${id}`, {
+    ...getEntityCoreContext(),
+  });
 }

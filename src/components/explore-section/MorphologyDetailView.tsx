@@ -60,7 +60,7 @@ export default function MorphologyDetailView() {
         </>
       )}
     </Summary>
-  )
+  );
 }
 
 function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology }) {
@@ -78,8 +78,8 @@ function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology 
         <MorphoViewer
           className="min-h-[75%]"
           swc={morphologyData.data}
-        // We disable enhanced somas until they are fixed on the backend.
-        // contentUrl={swcContentUrl}
+          // We disable enhanced somas until they are fixed on the backend.
+          // contentUrl={swcContentUrl}
         />
       ) : (
         <div>No data...</div>

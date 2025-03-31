@@ -18,7 +18,7 @@ export type ContributionFilter = {
   contribution_pref_label: string | null;
   contribution_pref_label__in: string | null;
   contribution__order_by: string | null;
-}
+};
 export type PaginationFilter = {
   page: number;
   page_size: number;

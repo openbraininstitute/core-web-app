@@ -29,32 +29,32 @@ type MtypeFilter = {
   mtype_pref_label: string | null;
   mtype_pref_label__in: string | null;
   mtype__order_by: string | null;
-}
+};
 type SpeciesFilter = {
   species__id: string | null;
   species__name: string | null;
   species__name__in: string | null;
   species__order_by: string | null;
-}
+};
 type StainFilter = {
   strain__id: string | null;
   strain__name: string | null;
   strain__name__in: string | null;
   strain__order_by: string | null;
-}
+};
 export type IMorphologyFilter = Partial<
   DateFilter &
-  BrainLocationFilter &
-  ContributionFilter &
-  BrainRegionFilter &
-  PaginationFilter &
-  MtypeFilter &
-  SpeciesFilter &
-  StainFilter & {
-    name__ilike: string | null;
-    order_by: string;
-    search: string | null;
-  }
+    BrainLocationFilter &
+    ContributionFilter &
+    BrainRegionFilter &
+    PaginationFilter &
+    MtypeFilter &
+    SpeciesFilter &
+    StainFilter & {
+      name__ilike: string | null;
+      order_by: string;
+      search: string | null;
+    }
 >;
 
 export type MorphologyFeatureAnnotation = {
@@ -72,7 +72,7 @@ export interface IReconstructionMorphology extends AuditMetadata {
   brain_region: IBrainRegion;
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
-  type: "reconstruction-morphology",
+  type: 'reconstruction-morphology';
 }
 
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {

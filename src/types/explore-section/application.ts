@@ -110,10 +110,10 @@ export type DetailViewUrlParams = Prettify<
     projectId?: string;
   } & (
     | {
-      experimentType?: ExperimentTypeNames;
-    }
+        experimentType?: ExperimentTypeNames;
+      }
     | {
-      modelType?: ModelTypeNames;
-    }
+        modelType?: ModelTypeNames;
+      }
   )
 >;

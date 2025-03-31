@@ -33,7 +33,10 @@ import {
 } from '@/state/brain-regions';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
-import { transformFiltersToQuery, transformQueryParamsArrayToString } from '@/api/entitycore/transformers';
+import {
+  transformFiltersToQuery,
+  transformQueryParamsArrayToString,
+} from '@/api/entitycore/transformers';
 import { ENTITY_CORE_DATA_TYPES } from '@/api/entitycore/types/shared/context';
 import * as entitycoreApi from '@/api/entitycore/queries';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -51,9 +54,8 @@ const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType)
 
 export const pageNumberAtom = atomFamily((_key: string) => atom<number>(PAGE_NUMBER));
 
-
-export const selectedRowsAtom = atomFamily((_key: string) =>
-  atom<Array<any>>([]) // FIXME: get the right type
+export const selectedRowsAtom = atomFamily(
+  (_key: string) => atom<Array<any>>([]) // FIXME: get the right type
 );
 
 export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
@@ -125,7 +127,6 @@ export const filtersAtom = atomFamily(
       ];
     }),
 
-
   isListAtomEqual
 );
 
@@ -162,12 +163,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-          ExploreDataScope.BuildSelectedBrainRegion
+        ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-            selectedBrainRegionWithDescendantsAndAncestorsFamily(
-              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-            )
-          )) || []
+              selectedBrainRegionWithDescendantsAndAncestorsFamily(
+                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+              )
+            )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));
@@ -212,7 +213,7 @@ export const dataAtom = atomFamily(
             page: pageNumber,
             search: isEmpty(searchString) ? null : searchString,
             ...queryParams,
-            order_by: `${sortState.order === "asc" ? "+" : "-"}${sortState.field}`,
+            order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
             // TODO: ask backend team to extend the brain region filter to support the children of the selected one
             // brain_region_id: selectedBrainRegion?.id
             //   ? Number(selectedBrainRegion?.id.split('/').pop())
@@ -220,21 +221,21 @@ export const dataAtom = atomFamily(
           },
         });
 
-        return ({
+        return {
           ...response,
-          data: response.data.map(o => ({
+          data: response.data.map((o) => ({
             ...o,
             type: ENTITY_CORE_DATA_TYPES.RECONSTRUCTION_MORPHOLOGY.type,
-          })) as T[]
-        });
+          })) as T[],
+        };
       }
       return {
         data: [],
         pagination: {
           total_items: 0,
           page: 1,
-          page_size: PAGE_SIZE
-        }
+          page_size: PAGE_SIZE,
+        },
       } as EntityCoreResponse<T | null>;
     }),
   isListAtomEqual

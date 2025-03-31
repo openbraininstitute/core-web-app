@@ -110,14 +110,14 @@ export const defaultBrainRegionOntologyViewAtom = selectAtom<
 export const brainRegionsAtom = selectAtom<
   Promise<BrainRegionOntology | null>,
   BrainRegion[] | null
->(
-  brainRegionOntologyAtom,
-  (brainRegionOntology) =>
+>(brainRegionOntologyAtom, (brainRegionOntology) => {
+  return (
     brainRegionOntology?.brainRegions.map(({ view, ...br }) => ({
       ...br,
       view: 'https://neuroshapes.org/BrainRegion',
     })) ?? null
-);
+  );
+});
 
 export const brainRegionsWithRepresentationAtom = selectAtom<
   Promise<BrainRegion[] | null>,
@@ -205,34 +205,14 @@ export const brainRegionsFilteredTreeAtom = atom<Promise<BrainRegion[] | null>>(
 
 export const selectedAlternateViews = atom<Record<string, BrainViewId>>({});
 
-export const brainRegionsAlternateTreeAtom = atom<Promise<BrainRegion[] | null | undefined>>(
-  async (get) => {
-    const brainRegions = await get(brainRegionsWithRepresentationAtom);
-    const defaultTree = await get(brainRegionsFilteredTreeAtom);
-    const views = await get(brainRegionOntologyViewsAtom);
-    const selectedViews = get(selectedAlternateViews);
-
-    const alternateTree = cloneDeep(defaultTree);
-
-    // iterate over the currently modified views and apply the alternative children
-    Object.entries(selectedViews).forEach(([brainRegionId, viewId]) => {
-      const view = views?.find((v) => v.id === viewId);
-      if (view && brainRegions && alternateTree) {
-        // first get the children of the brain region id based on the applied view
-        const alternateChildren = buildAlternateChildren(
-          brainRegionId,
-          view.parentProperty,
-          brainRegions,
-          viewId
-        );
-
-        // then replace the children of the changed node with the new ones
-        buildAlternateTree(alternateTree[0], brainRegionId, alternateChildren, viewId);
-      }
-    });
-    return alternateTree;
-  }
-);
+export const brainRegionsAlternateTreeAtom = atom<
+  Promise<
+    Array<ITemporaryBrainRegionHierarchy | TemporaryFlatBrainRegionHierarchy> | null | undefined
+  >
+>(async () => {
+  const alternateView = await getTemporaryBrainRegionHierarchy();
+  return [alternateView as ITemporaryBrainRegionHierarchy];
+});
 
 export const addOrRemoveSelectedAlternateView = atom(
   null,

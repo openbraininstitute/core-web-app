@@ -205,7 +205,7 @@ export default function useExploreColumns<T>(
           }),
         onHeaderCell: () => ({
           handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, dimColumn),
-          onClick: () => { },
+          onClick: () => {},
         }),
         sortOrder: getSortOrder(dimColumn),
       })),
@@ -218,7 +218,7 @@ export default function useExploreColumns<T>(
     return columns.sort((a, b) =>
       a.key && b.key
         ? DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(a.key as EntityCoreFields) -
-        DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(b.key as EntityCoreFields)
+          DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(b.key as EntityCoreFields)
         : -1
     );
   }

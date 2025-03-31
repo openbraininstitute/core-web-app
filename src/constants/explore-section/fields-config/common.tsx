@@ -33,7 +33,12 @@ import {
 } from '@/types/e-model';
 import { DisplayMessages } from '@/constants/display-messages';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
-import { renderDate, renderEmptyOrValue, renderPreview, renderTimestamp } from '@/constants/explore-section/fields-config/renderer';
+import {
+  renderDate,
+  renderEmptyOrValue,
+  renderPreview,
+  renderTimestamp,
+} from '@/constants/explore-section/fields-config/renderer';
 
 export const previewRender = ({
   distribution,
@@ -247,12 +252,12 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Names',
       singular: 'Name',
     },
-    constraint: "name__ilike",
+    constraint: 'name__ilike',
     isSortable: true,
     order: {
-      property: "order_by",
-      value: "name"
-    }
+      property: 'order_by',
+      value: 'name',
+    },
   },
   [EntityCoreFields.CreationDate]: {
     title: 'Creation date',
@@ -263,14 +268,14 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       singular: 'Date',
     },
     constraint: {
-      gte: "creation_date__gte",
-      lte: "creation_date__lte",
+      gte: 'creation_date__gte',
+      lte: 'creation_date__lte',
     },
     isSortable: true,
     order: {
-      property: "order_by",
-      value: "creation_date"
-    }
+      property: 'order_by',
+      value: 'creation_date',
+    },
   },
   [EntityCoreFields.RegistrationDate]: {
     title: 'Registration date',
@@ -281,14 +286,14 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       singular: 'Date',
     },
     constraint: {
-      gte: "creation_date__gte",
-      lte: "creation_date__lte",
+      gte: 'creation_date__gte',
+      lte: 'creation_date__lte',
     },
     isSortable: true,
     order: {
-      property: "order_by",
-      value: "creation_date"
-    }
+      property: 'order_by',
+      value: 'creation_date',
+    },
   },
   [EntityCoreFields.UpdateDate]: {
     title: 'Update date',
@@ -299,14 +304,14 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       singular: 'Date',
     },
     constraint: {
-      gte: "update_date__gte",
-      lte: "update_date__lte",
+      gte: 'update_date__gte',
+      lte: 'update_date__lte',
     },
     isSortable: true,
     order: {
-      property: "order_by",
-      value: "updated_at"
-    }
+      property: 'order_by',
+      value: 'updated_at',
+    },
   },
   [EntityCoreFields.Description]: {
     title: 'Description',
@@ -325,12 +330,12 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Contributors',
       singular: 'Contributor',
     },
-    constraint: "contribution__pref_label__in",
+    constraint: 'contribution__pref_label__in',
     isSortable: false,
     order: {
-      property: "contribution__order_by",
-      value: "pref_label"
-    }
+      property: 'contribution__order_by',
+      value: 'pref_label',
+    },
   },
   [EntityCoreFields.Contribution]: {
     title: 'Contributors',
@@ -340,11 +345,11 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       plural: 'Contributors',
       singular: 'Contributor',
     },
-    constraint: "contribution__pref_label__in",
+    constraint: 'contribution__pref_label__in',
     isSortable: false,
     order: {
-      property: "contribution__order_by",
-      value: "pref_label"
-    }
+      property: 'contribution__order_by',
+      value: 'pref_label',
+    },
   },
 };

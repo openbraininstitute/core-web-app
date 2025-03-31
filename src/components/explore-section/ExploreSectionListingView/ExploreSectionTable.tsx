@@ -18,11 +18,7 @@ import useScrollComplete from '@/hooks/useScrollComplete';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.scss';
 import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 
-export type OnCellClick<T> = (
-  basePath: string,
-  record: T,
-  type: DataType
-) => void;
+export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
 function CustomTH({
   children,
@@ -100,8 +96,6 @@ type AdditionalTableProps<T> = {
   onCellClick?: OnCellClick<T>;
 };
 
-
-
 export function BaseTable<T extends EntityCoreBase>({
   columns,
   dataContext,
@@ -128,8 +122,8 @@ export function BaseTable<T extends EntityCoreBase>({
   const parentElement =
     typeof document !== 'undefined'
       ? document.getElementById('interactive-data-layout') ||
-      document.getElementById('explore-table-container-for-observable') ||
-      document.getElementById('bookmark-list-container')
+        document.getElementById('explore-table-container-for-observable') ||
+        document.getElementById('bookmark-list-container')
       : undefined;
   const headerHeight =
     (tableElement?.getBoundingClientRect()?.y ?? 0) -
@@ -151,7 +145,10 @@ export function BaseTable<T extends EntityCoreBase>({
     callback: showLoadMore,
   });
 
-  const onCellRouteHandler = useOnCellRouteHandler<T>({ dataType: dataContext.dataType, onCellClick });
+  const onCellRouteHandler = useOnCellRouteHandler<T>({
+    dataType: dataContext.dataType,
+    onCellClick,
+  });
 
   if (hasError) return <div>Something went wrong</div>;
 
@@ -187,9 +184,9 @@ export function BaseTable<T extends EntityCoreBase>({
         scroll={
           scrollable
             ? {
-              x: 'fit-content',
-              y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
-            }
+                x: 'fit-content',
+                y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
+              }
             : { x: 'fit-content' }
         }
       />
@@ -212,8 +209,9 @@ function DefaultRenderButton<T>({
       clearSelectedRows={clearSelectedRows}
       data-testid="listing-view-download-button"
     >
-      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${selectedRows.length
-        })`}</span>
+      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${
+        selectedRows.length
+      })`}</span>
     </ExploreDownloadButton>
   );
 }
@@ -279,6 +277,8 @@ export default function ExploreSectionTable<T extends EntityCoreBase>({
     autohideControls?: boolean;
     dataKey: string;
   }) {
+  console.log('ᦨ #  ExploreSectionTable.tsx:283 #  columns2:', columns);
+
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
     selectionType,

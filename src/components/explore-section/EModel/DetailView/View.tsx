@@ -34,10 +34,7 @@ export default function EModelDetailView({ params }: Props) {
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Summary
-        dataType={DataType.CircuitEModel}
-        fields={E_MODEL_FIELDS}
-      >
+      <Summary dataType={DataType.CircuitEModel} fields={E_MODEL_FIELDS}>
         {() => (
           <>
             <SectionTabs />

@@ -30,14 +30,12 @@ export default function WithGeneralization({
   legacyId: string;
   dataType: DataType;
 }) {
-
   const resourceBasedResponseHits = useAtomValue(
     useMemo(
       () => loadable(resourceBasedResponseHitsAtom({ resourceId: legacyId, dataType })),
       [legacyId, dataType]
     )
   );
-
 
   let render: ReactNode;
 
@@ -70,4 +68,3 @@ export default function WithGeneralization({
 
   return render;
 }
-

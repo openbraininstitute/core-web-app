@@ -168,9 +168,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         semSelectorFn(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection
         ),
     },
     vocabulary: {
@@ -228,9 +228,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection,
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection,
           'mean',
           true
         ),
@@ -269,10 +269,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
         <LayerThicknessField
           detail={
             resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalNeuronDensity
-            | ExperimentalSynapsesPerConnection
+              | ExperimentalBoutonDensity
+              | ExperimentalLayerThickness
+              | ExperimentalNeuronDensity
+              | ExperimentalSynapsesPerConnection
           }
         />
       ),
@@ -328,10 +328,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
         <MeanStdField
           detail={
             resource as
-            | ExperimentalBoutonDensity
-            | ExperimentalLayerThickness
-            | ExperimentalNeuronDensity
-            | ExperimentalSynapsesPerConnection
+              | ExperimentalBoutonDensity
+              | ExperimentalLayerThickness
+              | ExperimentalNeuronDensity
+              | ExperimentalSynapsesPerConnection
           }
         />
       ),
@@ -358,9 +358,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection,
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection,
           'N'
         ),
     },
@@ -386,9 +386,9 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       deltaResourceViewFn: (resource) =>
         selectorFnStatisticDetail(
           resource as
-          | ExperimentalBoutonDensity
-          | ExperimentalLayerThickness
-          | ExperimentalSynapsesPerConnection,
+            | ExperimentalBoutonDensity
+            | ExperimentalLayerThickness
+            | ExperimentalSynapsesPerConnection,
           'N synapses'
         ),
     },
@@ -813,7 +813,7 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       plural: 'Brain Regions',
       singular: 'Brain Region',
     },
-    constraint: "brain_region_id",
+    constraint: 'brain_region_id',
   },
   [EntityCoreFields.Species]: {
     title: 'Species',
@@ -823,10 +823,10 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       plural: 'Species',
       singular: 'Species',
     },
-    constraint: "species__name__in",
+    constraint: 'species__name__in',
     order: {
-      property: "species__order_by",
-      value: "name"
+      property: 'species__order_by',
+      value: 'name',
     },
     isSortable: false,
   },
@@ -839,10 +839,10 @@ export const ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigPro
       plural: 'M-Types',
       singular: 'M-Type',
     },
-    constraint: "mtype__pref_label__in",
+    constraint: 'mtype__pref_label__in',
     order: {
-      property: "mtype__order_by",
-      value: "pref_label"
+      property: 'mtype__order_by',
+      value: 'pref_label',
     },
     isSortable: false,
   },
