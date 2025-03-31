@@ -16,11 +16,11 @@ export default function fetchDataQuery(
   descendantIds?: string[],
   bookmarkResourceIds?: string[]
 ): DataQuery {
-  const sortQuery = sortState && buildESSort(sortState);
+  // const sortQuery = sortState && buildESSort(sortState);
 
   return {
     size: PAGE_SIZE,
-    sort: sortQuery,
+    // sort: sortQuery,
     from: (currentPage - 1) * PAGE_SIZE,
     track_total_hits: true,
     query: buildFilters(

@@ -21,8 +21,9 @@ import {
   DataType,
   EXPERIMENTAL_DATATYPES,
   PAGE_NUMBER,
+  PAGE_SIZE,
 } from '@/constants/explore-section/list-views';
-import { ExploreESHit } from '@/types/explore-section/es';
+import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { Filter } from '@/features/listing-filter-panel/types';
 import {
   selectedBrainRegionAtom,
@@ -35,6 +36,7 @@ import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { transformFiltersToQuery, transformQueryParamsArrayToString } from '@/api/entitycore/transformers';
 import { ENTITY_CORE_DATA_TYPES } from '@/api/entitycore/types/shared/context';
 import * as entitycoreApi from '@/api/entitycore/queries';
+import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 type DataAtomFamilyScopeType = {
   dataType: DataType;
@@ -189,31 +191,24 @@ export const queryAtom = atomFamily(
 );
 
 export const previousDataAtom = atomFamily(
-  (_scope) => atom<ExploreESHit<ExploreResource>[]>([]),
+  <T>(_scope: DataAtomFamilyScopeType) => atom<Array<T>>([]),
   isListAtomEqual
 );
 
 export const dataAtom = atomFamily(
-  (scope) =>
-    atom(async (get) => {
+  <T>(scope: DataAtomFamilyScopeType) =>
+    atom<Promise<EntityCoreResponse<T | null>>>(async (get) => {
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
-      const pageSize = get(pageSizeAtom);
       const filters = await get(filtersAtom(scope));
-      const selectedBrainRegion = get(selectedBrainRegionAtom);
-
-      // TODO: sorting should be fixed at the end, it's related to too many changes that break things
       const sortState = get(sortStateAtom(scope));
-
-      console.log("ᦨ #  list-view-atoms.ts:216 #  atom #  sortState:", sortState);
-
       const queryParams = transformQueryParamsArrayToString(transformFiltersToQuery(filters));
 
       if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
         const response = await entitycoreApi.getReconstructionMorphologies({
           withFacets: true,
           filters: {
-            page_size: pageSize,
+            page_size: PAGE_SIZE,
             page: pageNumber,
             search: isEmpty(searchString) ? null : searchString,
             ...queryParams,
@@ -230,10 +225,17 @@ export const dataAtom = atomFamily(
           data: response.data.map(o => ({
             ...o,
             type: ENTITY_CORE_DATA_TYPES.RECONSTRUCTION_MORPHOLOGY.type,
-          }))
+          })) as T[]
         });
       }
-      return null;
+      return {
+        data: [],
+        pagination: {
+          total_items: 0,
+          page: 1,
+          page_size: PAGE_SIZE
+        }
+      } as EntityCoreResponse<T | null>;
     }),
   isListAtomEqual
 );
