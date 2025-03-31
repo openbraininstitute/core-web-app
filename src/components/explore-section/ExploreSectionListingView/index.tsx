@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAtom } from 'jotai';
 import { RowSelectionType } from 'antd/es/table/interface';
 
@@ -11,13 +11,14 @@ import ExploreSectionTable, {
 import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import NumericResultsInfo from '@/components/explore-section/ExploreSectionListingView/NumericResultsInfo';
 import useExploreColumns from '@/hooks/useExploreColumns';
-import { sortStateAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
+import { sortStateAtom, dataAtom, previousDataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
+import { useData } from './LoadMoreButton';
 
 export default function ExploreSectionListingView({
   dataType,
@@ -52,7 +53,6 @@ export default function ExploreSectionListingView({
 }) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
 
-  const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
 
   const data = useLoadableValue(
@@ -64,11 +64,16 @@ export default function ExploreSectionListingView({
     })
   );
 
-  useEffect(() => {
-    if (data.state === 'hasData' && !!data.data) {
-      setDataSource(data.data.hits as ExploreESHit<ExploreSectionResource>[]);
-    }
-  }, [data, setDataSource]);
+  const hits = useData(
+    {
+      dataType,
+      dataScope,
+      virtualLabInfo,
+    },
+    dataKey
+  );
+
+  console.log(hits.length);
 
   return (
     <div
@@ -110,7 +115,7 @@ export default function ExploreSectionListingView({
               <ExploreSectionTable
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{ virtualLabInfo, dataScope, dataType }}
-                dataSource={dataSource}
+                dataSource={hits}
                 loading={showLoadingState && data.state === 'loading'}
                 onCellClick={onCellClick}
                 renderButton={renderButton}

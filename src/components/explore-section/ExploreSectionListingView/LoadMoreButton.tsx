@@ -1,6 +1,10 @@
 import { HTMLProps, useCallback } from 'react';
 import { useAtom } from 'jotai';
-import { pageSizeAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
+import {
+  dataAtom,
+  pageNumberAtom,
+  previousDataAtom,
+} from '@/state/explore-section/list-view-atoms';
 import { classNames } from '@/util/utils';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType, PAGE_SIZE } from '@/constants/explore-section/list-views';
@@ -21,27 +25,58 @@ function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonEle
   );
 }
 
-export function useLoadMore(dataContext: {
-  virtualLabInfo?: VirtualLabInfo;
-  dataScope: ExploreDataScope;
-  dataType: DataType;
-}) {
-  const res = useLoadableValue(
+export function useData(
+  dataContext: {
+    virtualLabInfo?: VirtualLabInfo;
+    dataScope: ExploreDataScope;
+    dataType: DataType;
+  },
+  key: string
+) {
+  const [prevData] = useAtom(previousDataAtom({ ...dataContext, key }));
+
+  const data = useUnwrappedValue(
     dataAtom({
       ...dataContext,
-      key: dataContext.virtualLabInfo?.projectId ?? '' + dataContext.dataType,
+      key,
     })
   );
 
-  const [contentSize, setContentSize] = useAtom(pageSizeAtom);
+  return [...prevData, ...(data?.hits ?? [])];
+}
+
+export function useLoadMore(
+  dataContext: {
+    virtualLabInfo?: VirtualLabInfo;
+    dataScope: ExploreDataScope;
+    dataType: DataType;
+  },
+  key: string
+) {
+  const [, setPrevData] = useAtom(previousDataAtom({ ...dataContext, key }));
+
+  const res = useLoadableValue(
+    dataAtom({
+      ...dataContext,
+      key,
+    })
+  );
+
+  const data = useData(dataContext, key);
+
+  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
 
   const loadMore = useCallback(
-    (load: boolean) => {
+    (load: boolean = true) => {
       if (res.state === 'loading' || res.state === 'hasError' || !load) return;
-      if (res.data?.total && contentSize > res.data?.total.value) return null;
-      setContentSize(contentSize + PAGE_SIZE);
+
+      if (res.data && res.data.hits.length < PAGE_SIZE) return;
+
+      // Store previous hits before fetching next page
+      setPrevData(data);
+      setPageNumber(pageNumber + 1);
     },
-    [contentSize, setContentSize, res]
+    [pageNumber, setPageNumber, res]
   );
 
   return { loadMore, loading: res.state === 'loading' };
@@ -49,6 +84,7 @@ export function useLoadMore(dataContext: {
 
 export default function LoadMoreButton({
   dataContext,
+  dataKey,
   hide,
 }: HTMLProps<HTMLButtonElement> & {
   dataContext: {
@@ -56,26 +92,19 @@ export default function LoadMoreButton({
     dataScope: ExploreDataScope;
     dataType: DataType;
   };
+  dataKey: string;
   hide: () => void;
 }) {
-  const res = useUnwrappedValue(
-    dataAtom({
-      ...dataContext,
-      key: dataContext.virtualLabInfo?.projectId ?? '' + dataContext.dataType,
-    })
-  );
-
-  const [contentSize, setContentSize] = useAtom(pageSizeAtom);
-
-  const onLoadMore = () => {
-    setContentSize(contentSize + PAGE_SIZE);
-    hide();
-  };
-
-  if (res?.total && contentSize > res.total.value) return null;
+  const { loadMore } = useLoadMore(dataContext, dataKey);
 
   return (
-    <Btn className="bg-primary-8 text-white" onClick={onLoadMore}>
+    <Btn
+      className="bg-primary-8 text-white"
+      onClick={() => {
+        loadMore();
+        hide();
+      }}
+    >
       <span>Load {PAGE_SIZE} more results...</span>
     </Btn>
   );

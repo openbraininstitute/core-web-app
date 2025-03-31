@@ -8,7 +8,8 @@ import { DataType } from '@/constants/explore-section/list-views';
 export default function useInfiniteScroll(
   virtualLabId: string,
   projectId: string,
-  dataType: DataType
+  dataType: DataType,
+  dataKey: string
 ) {
   const loadMoreDivRef = useRef<HTMLDivElement>(null);
 
@@ -22,7 +23,8 @@ export default function useInfiniteScroll(
         dataType,
         dataScope: ExploreDataScope.NoScope,
       };
-    }, [projectId, virtualLabId, dataType])
+    }, [projectId, virtualLabId, dataType]),
+    dataKey
   );
 
   useIntersectionObserver({

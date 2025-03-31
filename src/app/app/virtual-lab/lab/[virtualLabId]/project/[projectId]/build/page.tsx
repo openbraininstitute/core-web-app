@@ -97,11 +97,9 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const atomKey = 'build' + selectedTab + projectId;
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
 
-  const selectedModelType = SimulationScopeToModelType[selectedSimType];
+  const selectedModelType = SimulationScopeToModelType[selectedSimType] ?? DataType.CircuitMEModel;
 
-  const selectedRows = useAtomValue(
-    selectedRowsAtom(projectId + 'build' + selectedModelType || DataType.CircuitMEModel)
-  );
+  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'build' + selectedModelType));
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
@@ -115,7 +113,8 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const loadMoreDiv = useInfiniteScroll(
     virtualLabId,
     projectId,
-    selectedModelType ?? DataType.CircuitMEModel
+    selectedModelType ?? DataType.CircuitMEModel,
+    projectId + 'build' + selectedModelType
   );
 
   return (
