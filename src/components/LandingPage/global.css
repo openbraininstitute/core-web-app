@@ -2,3 +2,7 @@
 div > div.ant-select-dropdown {
   z-index: 9999999;
 }
+
+html {
+  scroll-behavior: smooth;
+}
