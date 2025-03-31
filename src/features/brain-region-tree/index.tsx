@@ -29,15 +29,14 @@ import { useExpandRegionTree, useSetBrainRegionToQuery } from '@/hooks/brain-reg
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { atlasVisualizationAtom } from '@/state/atlas/atlas';
 import { NavValue } from '@/state/brain-regions/types';
-import { sectionAtom } from '@/state/application'
+import { sectionAtom } from '@/state/application';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-
 
 function NavTitle({
   className,
   colorCode,
   id,
-  onClick = () => { },
+  onClick = () => {},
   title,
   isExpanded,
   trigger, // A callback that returns the <Accordion.Trigger/>

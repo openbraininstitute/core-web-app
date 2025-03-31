@@ -16,10 +16,10 @@ export default function usePointerDown(elt: HTMLElement | null) {
 
     const handlePointerDown = () => {
       setPointerState({ isPointerDown: true, isPointerReleased: false });
-      eltRef?.addEventListener('pointerup', handlePointerUp);
+      eltRef?.addEventListener('pointerup', handlePointerUp, { passive: true });
     };
 
-    eltRef?.addEventListener('pointerdown', handlePointerDown);
+    eltRef?.addEventListener('pointerdown', handlePointerDown, { passive: true });
 
     return () => {
       if (eltRef) {

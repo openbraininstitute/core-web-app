@@ -35,15 +35,17 @@ export function transformToIlikePattern(str: string) {
 
 /**
  * Transforms query parameters that end with "__in" from arrays to comma-separated strings.
- * 
+ *
  * @param {Record<string, any>} queryParams -  query parameters object to transform
  * @returns {Record<string, any>}  transformed query parameters object
- * 
+ *
  * @example
  * // input: { "contribution_perf_label__in": ["A", "B", "C"],  }
  * // output: { "contribution_perf_label__in": "A,B,C", }
  */
-export function transformQueryParamsArrayToString(queryParams: Record<string, any>): Record<string, any> {
+export function transformQueryParamsArrayToString(
+  queryParams: Record<string, any>
+): Record<string, any> {
   const transformedParams: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(queryParams)) {
@@ -60,7 +62,7 @@ export function transformQueryParamsArrayToString(queryParams: Record<string, an
 /**
  * transforms an array of filters into a query object for API requests.
  * Uses the constraint field to determine the query parameter names.
- * 
+ *
  * @param {Array<Filter>} filters - The filters to transform
  * @returns {TransformFiltersToQueryReturnValue} The transformed query object
  */
@@ -134,13 +136,14 @@ export function transformAgentToNames(
   const agents = map(agentsWithRoles, 'agent');
   const processedAgents = map(agents, (agent) => ({
     // eslint-disable-next-line no-nested-ternary
-    name: agent.type === 'person'
-      // ? `${agent.givenName} ${agent.familyName}`
-      ? agent.pref_label
-      : agent.type === "organization"
-        ? agent.pref_label
-        : '',
-    type: agent.type === "organization" ? 0 : 1, // 0 for Org, 1 for Person
+    name:
+      agent.type === 'person'
+        ? // ? `${agent.givenName} ${agent.familyName}`
+          agent.pref_label
+        : agent.type === 'organization'
+          ? agent.pref_label
+          : '',
+    type: agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
   }));
 
   return map(sortBy(processedAgents, ['type', 'name']), 'name').join('\n');

@@ -34,7 +34,7 @@ export function CheckListOption({
   id: string;
   filterField: string;
   label: string;
-  type?: string | null
+  type?: string | null;
 }) {
   const onCheckedChange = () => handleCheckedChange(label);
   return (
@@ -59,30 +59,31 @@ export function CheckListOption({
   );
 }
 
-export const CheckListDescription = memo(function Description({
-  id,
-  filterField,
-  label,
-  type
-}: {
-  id: string;
-  filterField: string;
-  label: string;
-  type?: string | null
-}) {
-  const [definition, setDefinition] = useState<string | null>(null);
+export const CheckListDescription = memo(
+  function Description({
+    id,
+    filterField,
+    label,
+    type,
+  }: {
+    id: string;
+    filterField: string;
+    label: string;
+    type?: string | null;
+  }) {
+    const [definition, setDefinition] = useState<string | null>(null);
 
-  useEffect(() => {
-    // TODO: fetch based on the type
-    async function getDefinition() {
-      const { data, error } = await tryCatch(getMtype({ id }));
-      if (error) return null;
-      setDefinition(data.definition);
-    }
-    getDefinition();
-  }, [id])
+    useEffect(() => {
+      // TODO: fetch based on the type
+      async function getDefinition() {
+        const { data, error } = await tryCatch(getMtype({ id }));
+        if (error) return null;
+        setDefinition(data.definition);
+      }
+      getDefinition();
+    }, [id]);
 
-  return (
-    <span className="text-primary-1 text-justify text-balance">{definition}</span>
-  )
-}, ({ id }, { id: nextId }) => id !== nextId);
+    return <span className="text-balance text-justify text-primary-1">{definition}</span>;
+  },
+  ({ id }, { id: nextId }) => id !== nextId
+);

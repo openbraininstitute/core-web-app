@@ -39,7 +39,9 @@ export default function Detail<T extends DeltaResource>({
 
   const path = usePathname();
   const resourceInfo = useResourceInfoFromPath();
-  const detail = useLoadableValue(detailFamily({ ...resourceInfo, dataType })) as Loadable<ExtendsExperiment<T>>;
+  const detail = useLoadableValue(detailFamily({ ...resourceInfo, dataType })) as Loadable<
+    ExtendsExperiment<T>
+  >;
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);

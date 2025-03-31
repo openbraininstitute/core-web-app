@@ -1,7 +1,10 @@
 import { ReactNode, useState } from 'react';
 import { InfoCircleFilled } from '@ant-design/icons';
 
-import { FacetLabelValuePair, useOptions } from '@/features/listing-filter-panel/checklist/use-options';
+import {
+  FacetLabelValuePair,
+  useOptions,
+} from '@/features/listing-filter-panel/checklist/use-options';
 import { CheckListProps } from '@/features/listing-filter-panel/checklist/default-checklist';
 import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants/explore-section/list-views';
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
@@ -16,16 +19,9 @@ type Props = {
   filter: Filter;
   values: string[];
   onChange: (value: string[]) => void;
-}
+};
 
-export default function CheckList({
-  children,
-  data,
-  filter,
-  values,
-  onChange,
-}: Props) {
-
+export default function CheckList({ children, data, filter, values, onChange }: Props) {
   const [filtersRenderLength, setFiltersRenderLength] = useState(() => 5);
   const options = useOptions(values, data);
 

@@ -13,11 +13,7 @@ import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { classNames } from '@/util/utils';
 import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 
-export type OnCellClick<T> = (
-  basePath: string,
-  record: T,
-  type: DataType
-) => void;
+export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
 export function useOnCellRouteHandler<T extends EntityCoreBase>({
   dataType,
@@ -29,21 +25,17 @@ export function useOnCellRouteHandler<T extends EntityCoreBase>({
   const pathname = usePathname();
   const setBackToListPath = useSetAtom(backToListPathAtom);
 
-  const onCellRouteHandler = (
-    col:
-      | ColumnGroupType<T>
-      | ColumnType<T>
-  ) => {
+  const onCellRouteHandler = (col: ColumnGroupType<T> | ColumnType<T>) => {
     return {
       onCell: (record: T) =>
         col.key !== Field.Preview
           ? {
-            onClick: (e: MouseEvent<HTMLInputElement>) => {
-              e.preventDefault();
-              setBackToListPath(pathname);
-              onCellClick?.(pathname, record, dataType);
-            },
-          }
+              onClick: (e: MouseEvent<HTMLInputElement>) => {
+                e.preventDefault();
+                setBackToListPath(pathname);
+                onCellClick?.(pathname, record, dataType);
+              },
+            }
           : {},
     };
   };

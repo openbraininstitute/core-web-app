@@ -98,9 +98,12 @@ class ApiClient {
    * @param {CacheConfiguration} cacheConfig -  cache configuration
    * @returns {Promise<{ valid: boolean, response: Response | null }>} cache status and response
    */
-  private async checkCache(url: string, cacheConfig: CacheConfiguration): Promise<{
-    valid: boolean,
-    response: Response | null
+  private async checkCache(
+    url: string,
+    cacheConfig: CacheConfiguration
+  ): Promise<{
+    valid: boolean;
+    response: Response | null;
   }> {
     if (typeof caches === 'undefined') {
       return { valid: false, response: null };
@@ -127,7 +130,7 @@ class ApiClient {
 
       return {
         valid: ageInSeconds < cacheConfig.ttlInSeconds,
-        response: cachedResponse
+        response: cachedResponse,
       };
     } catch (e) {
       console.warn('Cache API access failed:', e);
@@ -143,7 +146,11 @@ class ApiClient {
    * @param {CacheConfiguration} cacheConfig - cache configuration
    * @returns {Promise<void>}
    */
-  private async storeInCache(url: string, response: Response, cacheConfig: CacheConfiguration): Promise<void> {
+  private async storeInCache(
+    url: string,
+    response: Response,
+    cacheConfig: CacheConfiguration
+  ): Promise<void> {
     if (typeof caches === 'undefined') return;
 
     try {
@@ -159,7 +166,7 @@ class ApiClient {
       const cachedResponseToStore = new Response(await responseToCache.blob(), {
         status: responseToCache.status,
         statusText: responseToCache.statusText,
-        headers: headers
+        headers: headers,
       });
 
       await cache.put(url, cachedResponseToStore);
@@ -202,12 +209,15 @@ class ApiClient {
 
     // determine if caching should be used for this request
     const requestCacheConfig = config.cache ?? this._cacheConfig;
-    const useCache = method.toLowerCase() === 'get' &&
-      this.shouldUseCache(urlString, requestCacheConfig);
+    const useCache =
+      method.toLowerCase() === 'get' && this.shouldUseCache(urlString, requestCacheConfig);
 
     // get from cache first for "get" requests
     if (useCache && requestCacheConfig) {
-      const { valid, response: cachedResponse } = await this.checkCache(urlString, requestCacheConfig);
+      const { valid, response: cachedResponse } = await this.checkCache(
+        urlString,
+        requestCacheConfig
+      );
 
       if (valid && cachedResponse) {
         console.debug(`[cached] ${urlString}`);
@@ -290,8 +300,6 @@ class ApiClient {
         });
       }
 
-
-
       return responseData;
     };
 
@@ -328,7 +336,7 @@ class ApiClient {
 
   /**
    * clears all cached responses or specific URL
-   * 
+   *
    * @param {string} [url] - optional specific url to clear from cache
    * @returns {Promise<boolean>} Whether the operation succeeded
    */
@@ -396,15 +404,12 @@ class ApiClient {
  * @param {CacheConfiguration} [cacheConfig] - optional cache configuration
  * @returns {Promise<ApiClient>} a promise that resolves to an instance of ApiClient
  */
-export default async function authApiClient(
-  rootUri: string,
-  cacheConfig?: CacheConfiguration
-) {
+export default async function authApiClient(rootUri: string, cacheConfig?: CacheConfiguration) {
   const session = await getSession();
 
   return new ApiClient({
     rootUri,
     token: session?.accessToken,
-    cache: cacheConfig
+    cache: cacheConfig,
   });
 }

@@ -3,7 +3,10 @@ import { ConfigProvider, Tag } from 'antd';
 import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
 
 import { Filter } from '@/features/listing-filter-panel/types';
-import { FacetLabelValuePair, useOptions } from '@/features/listing-filter-panel/checklist/use-options';
+import {
+  FacetLabelValuePair,
+  useOptions,
+} from '@/features/listing-filter-panel/checklist/use-options';
 import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 
 import Search from '@/components/Search';
@@ -20,7 +23,6 @@ export default function SearchFilter({
   values: string[];
   onChange: (newValues: string[]) => void;
 }) {
-
   const options = useOptions(values, data);
 
   const handleCheckedChange = (value: string, option: DefaultOptionType) => {
@@ -73,7 +75,7 @@ export default function SearchFilter({
         mode="multiple"
         placeholder={`Search for ${ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.plural}`}
         tagRender={(props) => {
-          return tagRender(props)
+          return tagRender(props);
         }}
         value={options.reduce(
           (acc: string[], { checked, label }) => (checked ? [...acc, label] : acc),

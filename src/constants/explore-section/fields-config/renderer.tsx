@@ -1,39 +1,30 @@
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
-import isNil from "lodash/isNil";
-import isEmpty from "lodash/isEmpty";
+import isNil from 'lodash/isNil';
+import isEmpty from 'lodash/isEmpty';
 
-import PreviewThumbnail from "@/features/thumbnail/preview";
-import type { EntityCoreResource } from "@/api/entitycore/types/shared/global";
-
+import PreviewThumbnail from '@/features/thumbnail/preview';
+import type {
+  EntityCoreResource,
+  EntityCoreResourceWithAssets,
+} from '@/api/entitycore/types/shared/global';
 
 export const renderEmptyOrValue = (value: any) => {
-    return isNil(value) || isEmpty(value) ? '—' : value;
+  return isNil(value) || isEmpty(value) ? '—' : value;
 };
 
 export const renderArray = (array: string[]) => {
-    return array.map((item) => (
-        <div key={item}>
-            {item}
-        </div>
-    ));
+  return array.map((item) => <div key={item}>{item}</div>);
 };
 
 export const renderDate = (isoDateString: string) => {
-    if (!isoDateString) return '—';
-    return format(parseISO(isoDateString), 'dd.MM.yyyy');
+  if (!isoDateString) return '—';
+  return format(parseISO(isoDateString), 'dd.MM.yyyy');
 };
 
-
 export const renderTimestamp = (timestamp: string) => {
-    if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true })
-}
+  if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
+};
 
-export async function renderPreview<T>(resource: T & EntityCoreResource) {
-    return (
-        <PreviewThumbnail
-            resource={resource}
-            height={118}
-            width={280}
-        />
-    )
+export function renderPreview<T>(resource: T & EntityCoreResourceWithAssets) {
+  return <PreviewThumbnail resource={resource} height={118} width={280} />;
 }

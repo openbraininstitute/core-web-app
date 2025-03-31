@@ -43,11 +43,7 @@ export default function DetailHeader<T extends { name: string }>({
 
   return (
     <div className="flex w-full flex-col gap-10">
-      <Header
-        detail={detail}
-        url={url}
-        extraHeaderAction={extraHeaderAction}
-      />
+      <Header detail={detail} url={url} extraHeaderAction={extraHeaderAction} />
       <div className="flex w-full flex-row gap-x-8">
         <div className="grid w-1/2 auto-rows-max grid-cols-3 gap-x-8 gap-y-6">
           {commonFields.map(({ className, field }) => (

@@ -97,7 +97,6 @@ export const serializeBrainRegionOntologyViews = (
  */
 const getBrainRegionOntology = async (): Promise<BrainRegionOntology> => {
   const { id, org, project, tag } = brainRegionOntologyResource;
-
   const url = composeUrl('resource', id, { org, project, source: true, tag });
   return authFetch(url, { headers: { 'Content-Type': 'application/json', Accept: '*/*' } })
     .then((response) => {

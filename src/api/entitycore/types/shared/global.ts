@@ -1,6 +1,6 @@
-import { ENTITY_CORE_DATA_TYPES } from "@/api/entitycore/types/shared/context";
-import { PaginationFilter } from "@/api/entitycore/types/shared/request";
-
+import { ENTITY_CORE_DATA_TYPES } from '@/api/entitycore/types/shared/context';
+import { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 
 // TODO: should be in global shared type file
 export type Nullish = null | undefined;
@@ -8,30 +8,34 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type EntityCoreDataType = typeof ENTITY_CORE_DATA_TYPES[keyof typeof ENTITY_CORE_DATA_TYPES]["type"];
+export type EntityCoreDataType =
+  (typeof ENTITY_CORE_DATA_TYPES)[keyof typeof ENTITY_CORE_DATA_TYPES]['type'];
 
 export type EntityCoreBase = {
   id: string;
   legacy_id: Array<string> | null;
-}
+};
 
 export type EntityCoreBaseType = {
   type: EntityCoreDataType;
-}
+};
 
-export interface EntityCoreResource extends EntityCoreBaseType, EntityCoreBase { }
+export interface EntityCoreResource extends EntityCoreBaseType, EntityCoreBase {}
+export interface EntityCoreResourceWithAssets extends EntityCoreResource {
+  assets: Array<IAsset>;
+}
 
 export interface AuditMetadata extends EntityCoreBase {
   creation_date: string; // ISO format
   update_date: string; // ISO format
-};
+}
 
 type BrainRegion = {
   ontology_id: string;
   name: string;
 };
 
-export interface IBrainRegion extends BrainRegion, AuditMetadata { }
+export interface IBrainRegion extends BrainRegion, AuditMetadata {}
 
 type Strain = {
   name: string;
@@ -39,14 +43,14 @@ type Strain = {
   species_id: number;
 };
 
-export interface IStrain extends Strain, AuditMetadata { }
+export interface IStrain extends Strain, AuditMetadata {}
 
 type Species = {
   name: string;
   taxonomy_id: string;
 };
 
-export interface ISpecies extends Species, AuditMetadata { }
+export interface ISpecies extends Species, AuditMetadata {}
 
 interface License {
   name: string;
@@ -54,7 +58,7 @@ interface License {
   label: string;
 }
 
-export interface ILicense extends License, AuditMetadata { }
+export interface ILicense extends License, AuditMetadata {}
 
 export interface IBrainLocation {
   x: number;
@@ -78,7 +82,7 @@ export type MTypeBase = {
   definition: string;
 };
 
-export interface IMType extends MTypeBase, AuditMetadata { }
+export interface IMType extends MTypeBase, AuditMetadata {}
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
@@ -91,24 +95,24 @@ type RoleBase = {
   role_id: string;
 };
 
-export interface IRole extends RoleBase, AuditMetadata { }
+export interface IRole extends RoleBase, AuditMetadata {}
 
 type OrganizationBase = {
-  type: "organization";
+  type: 'organization';
   pref_label: string;
   alternative_name?: string | null;
 };
 
-export interface IOrganization extends OrganizationBase, AuditMetadata { }
+export interface IOrganization extends OrganizationBase, AuditMetadata {}
 
 type PersonBase = {
-  type: "person";
+  type: 'person';
   givenName: string;
   familyName: string;
   pref_label: string;
 };
 
-export interface IPerson extends PersonBase, AuditMetadata { }
+export interface IPerson extends PersonBase, AuditMetadata {}
 export type Agent = IPerson | IOrganization;
 
 export interface IContributor extends AuditMetadata {
@@ -116,25 +120,22 @@ export interface IContributor extends AuditMetadata {
   role: IRole;
 }
 
-
-
 enum AssetStatus {
-  CREATED = "created",
-  DELETED = "deleted"
+  CREATED = 'created',
+  DELETED = 'deleted',
 }
 
 type AssetBase = {
   path: string;
-  fullPath: string;
-  bucketName: string;
-  isDirectory: boolean;
-  contentType: string;
+  full_path: string;
+  bucket_name: string;
+  is_directory: boolean;
+  content_type: string;
   size: number;
-  sha256Digest?: string | null;
-  meta: Record<string, unknown>;
-}
+  sha256_digest?: string | null;
+};
 
-export interface IAsset extends AssetBase {
+export interface IAsset extends AssetBase, AssetLegacyMeta {
   id: string;
   status: AssetStatus;
 }

@@ -20,10 +20,14 @@ import DateRange from '@/features/listing-filter-panel/date-range';
 import CheckList from '@/features/listing-filter-panel/checklist';
 import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 
-import { activeColumnsAtom, filtersAtom, searchStringAtom, } from '@/state/explore-section/list-view-atoms';
+import {
+  activeColumnsAtom,
+  filtersAtom,
+  searchStringAtom,
+} from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
-import { FilterGroup, } from '@/features/listing-filter-panel/filter-group';
+import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { DataType } from '@/constants/explore-section/list-views';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { Facets } from '@/api/entitycore/types/shared/response';
@@ -43,7 +47,6 @@ export type ListingFilterPanelProps = {
   showDisplayTrigger?: boolean;
   resourceId?: string;
 };
-
 
 function createFilterItemComponent(
   filter: Filter,
@@ -98,14 +101,17 @@ function createFilterItemComponent(
       case FilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
         const facetItems = map(facets[filter.field], ({ id, label, count, type }) => ({
-          id, label, type, count,
+          id,
+          label,
+          type,
+          count,
           value: label,
         }));
         return (
           <CheckList
             data={facetItems}
             filter={filter}
-            values={filterValues[filter.field] as string[] ?? []}
+            values={(filterValues[filter.field] as string[]) ?? []}
             onChange={(values: string[]) => updateFilterValues(filter.field, values)}
           >
             {defaultList}
@@ -145,7 +151,7 @@ function createFilterItemComponent(
       default:
         return null;
     }
-  }
+  };
 }
 
 export default function ListingFilterPanel({
@@ -202,25 +208,37 @@ export default function ListingFilterPanel({
   if (!activeColumns) return null;
 
   const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${activeColumnsLength === 1 ? 'column' : 'columns'
-    }`;
+  const activeColumnsText = `${activeColumnsLength} active ${
+    activeColumnsLength === 1 ? 'column' : 'columns'
+  }`;
 
-  const filterItems = useMemo(() => filters
-    ?.map((filter) => {
-      return {
-        content: filter.type
-          ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
-          : undefined,
-        display: activeColumns?.includes(filter.field),
-        label: fieldTitleSentenceCase(getFieldLabel(filter.field)),
-        type: filter.type,
-        toggleFunc: showDisplayTrigger
-          ? () => onToggleActive && onToggleActive(filter.field)
-          : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
-      };
-    })
-    .filter((item) => showDisplayTrigger || item.content !== undefined) // If showDisplayTrigger is false and content is undefined that filter is not needed.
-    , [filters, facets, filterValues, setFilterValues, activeColumns, showDisplayTrigger, onToggleActive]);
+  const filterItems = useMemo(
+    () =>
+      filters
+        ?.map((filter) => {
+          return {
+            content: filter.type
+              ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
+              : undefined,
+            display: activeColumns?.includes(filter.field),
+            label: fieldTitleSentenceCase(getFieldLabel(filter.field)),
+            type: filter.type,
+            toggleFunc: showDisplayTrigger
+              ? () => onToggleActive && onToggleActive(filter.field)
+              : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
+          };
+        })
+        .filter((item) => showDisplayTrigger || item.content !== undefined), // If showDisplayTrigger is false and content is undefined that filter is not needed.
+    [
+      filters,
+      facets,
+      filterValues,
+      setFilterValues,
+      activeColumns,
+      showDisplayTrigger,
+      onToggleActive,
+    ]
+  );
 
   // The columnKeyToFilter method receives a string (key)
   // and in this case it is the equivalent to a filters[x].field

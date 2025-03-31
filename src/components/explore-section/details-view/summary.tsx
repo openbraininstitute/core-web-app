@@ -18,7 +18,6 @@ import usePathname from '@/hooks/pathname';
 import type { EntityCoreBase } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
 
-
 export default function Summary<T extends EntityCoreBase & { name: string }>({
   fields,
   showViewMode,

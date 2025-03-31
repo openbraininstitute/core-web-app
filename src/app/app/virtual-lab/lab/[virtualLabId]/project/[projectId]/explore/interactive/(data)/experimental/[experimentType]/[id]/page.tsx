@@ -42,13 +42,22 @@ export default function ExperimentDetailViewPage() {
       );
       break;
     case DataType.ExperimentalBoutonDensity:
-      content = <Detail dataType={DataType.ExperimentalBoutonDensity} fields={BOUTON_DENSITY_FIELDS} />;
+      content = (
+        <Detail dataType={DataType.ExperimentalBoutonDensity} fields={BOUTON_DENSITY_FIELDS} />
+      );
       break;
     case DataType.ExperimentalNeuronDensity:
-      content = <Detail dataType={DataType.ExperimentalNeuronDensity} fields={NEURON_DENSITY_FIELDS} />;
+      content = (
+        <Detail dataType={DataType.ExperimentalNeuronDensity} fields={NEURON_DENSITY_FIELDS} />
+      );
       break;
     case DataType.ExperimentalSynapsePerConnection:
-      content = <Detail dataType={DataType.ExperimentalNeuronDensity} fields={SYNAPSE_PER_CONNECTION_FIELDS} />;
+      content = (
+        <Detail
+          dataType={DataType.ExperimentalNeuronDensity}
+          fields={SYNAPSE_PER_CONNECTION_FIELDS}
+        />
+      );
       break;
     default:
       content = null;

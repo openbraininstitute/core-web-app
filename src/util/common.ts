@@ -48,10 +48,8 @@ export const isValidBase64 = (str: string): boolean => {
   }
 };
 
-export const detailUrlBuilder = <T extends EntityCoreBase>(
-  basePath: string,
-  resource: T
-) => `${basePath}/${resource.id}`;
+export const detailUrlBuilder = <T extends EntityCoreBase>(basePath: string, resource: T) =>
+  `${basePath}/${resource.id}`;
 
 export const detailUrlWithinLab = (
   labId: string,

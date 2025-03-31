@@ -28,7 +28,7 @@ export type ExploreFieldConfig<T = EntityCoreBase> = {
   order?: {
     property: string;
     value: string;
-  },
+  };
   unit?: ReactNode;
   group?: MorphoMetricCompartment;
   render?: (resource: T) => ReactNode;

@@ -168,7 +168,10 @@ export const sessionAndInfoFamily = atomFamily(
 //   isEqual
 // );
 
-export const detailFamily = atomFamily<DetailViewUrlParams & { dataType: DataType }, Atom<Promise<any>>>(
+export const detailFamily = atomFamily<
+  DetailViewUrlParams & { dataType: DataType },
+  Atom<Promise<any>>
+>(
   (viewParams) =>
     atom(async () => {
       if (viewParams.dataType === DataType.ExperimentalNeuronMorphology) {

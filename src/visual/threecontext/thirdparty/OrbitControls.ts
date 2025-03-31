@@ -531,11 +531,11 @@ export default class OrbitControls extends ThreeEventDispatcher {
     this.domElement.addEventListener('contextmenu', this.onContextMenu, false);
 
     this.domElement.addEventListener('mousedown', this.onMouseDown, false);
-    this.domElement.addEventListener('wheel', this.onMouseWheel, false);
+    this.domElement.addEventListener('wheel', this.onMouseWheel, { passive: false });
 
-    this.domElement.addEventListener('touchstart', this.onTouchStart, false);
+    this.domElement.addEventListener('touchstart', this.onTouchStart, { passive: false });
     this.domElement.addEventListener('touchend', this.onTouchEnd, false);
-    this.domElement.addEventListener('touchmove', this.onTouchMove, false);
+    this.domElement.addEventListener('touchmove', this.onTouchMove, { passive: false });
 
     this.window.addEventListener('keydown', this.onKeyDown, false);
 

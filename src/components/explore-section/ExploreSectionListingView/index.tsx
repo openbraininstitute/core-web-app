@@ -3,7 +3,9 @@ import { useAtom } from 'jotai';
 import { RowSelectionType } from 'antd/es/table/interface';
 
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
-import ExploreSectionTable, { OnCellClick } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
+import ExploreSectionTable, {
+  OnCellClick,
+} from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
 import NumericResultsInfo from '@/components/explore-section/ExploreSectionListingView/NumericResultsInfo';
 import useExploreColumns from '@/hooks/useExploreColumns';

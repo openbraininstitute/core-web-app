@@ -4,8 +4,7 @@ import { EntityCountsResponse } from '@/api/entitycore/types/entities/stats';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
-const baseUri = "/entity-stats";
-
+const baseUri = '/entity-stats';
 
 /**
  * Retrieves counts for specified entity types from the EntityCoreAPI.
@@ -13,7 +12,7 @@ const baseUri = "/entity-stats";
  * @param {Object} options - The options object
  * @param {string[]} options.entityNames - Array of entity names to get counts for
  * @returns {Promise<EntityCountsResponse>} A promise that resolves to a record of entity names and their counts
- * 
+ *
  * @example
  * // Get counts for multiple entity types
  * getEntityCounts({
@@ -23,7 +22,7 @@ const baseUri = "/entity-stats";
  *     'experimental_bouton_density'
  *   ]
  * });
- * // Returns: 
+ * // Returns:
  * {
  *   "reconstruction_morphology": 4626,
  *   "experimental_neuron_density": 62,
@@ -31,23 +30,23 @@ const baseUri = "/entity-stats";
  * }
  */
 export async function getEntityCounts({
-    entityNames
+  entityNames,
 }: {
-    entityNames: string[]
+  entityNames: string[];
 }): Promise<EntityCountsResponse> {
-    const api = await authApiClient(entityCoreUrl);
-    const queryParams = entityNames.reduce((params, name) => {
-        return {
-            ...params,
-            entity_names: [...(params.entity_names || []), name]
-        };
-    }, { entity_names: [] as string[] });
+  const api = await authApiClient(entityCoreUrl);
+  const queryParams = entityNames.reduce(
+    (params, name) => {
+      return {
+        ...params,
+        entity_names: [...(params.entity_names || []), name],
+      };
+    },
+    { entity_names: [] as string[] }
+  );
 
-    return await api.get<EntityCountsResponse>(
-        `${baseUri}/counts`,
-        {
-            ...getEntityCoreContext(),
-            queryParams
-        }
-    );
+  return await api.get<EntityCountsResponse>(`${baseUri}/counts`, {
+    ...getEntityCoreContext(),
+    queryParams,
+  });
 }
