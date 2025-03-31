@@ -91,7 +91,8 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
   const loadMoreDiv = useInfiniteScroll(
     virtualLabId,
     projectId,
-    dataType ?? DataType.SingleNeuronSimulation
+    dataType ?? DataType.SingleNeuronSimulation,
+    projectId + 'simulate' + dataType
   );
 
   return (
@@ -178,7 +179,12 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
 
   const [buttonsVisible, setButtonsVisible] = useState(false);
 
-  const loadMoreDiv = useInfiniteScroll(virtualLabId, projectId, modelType);
+  const loadMoreDiv = useInfiniteScroll(
+    virtualLabId,
+    projectId,
+    modelType,
+    projectId + 'simulate' + modelType
+  );
 
   useIntersectionObserver({
     observedRef: tableRef,

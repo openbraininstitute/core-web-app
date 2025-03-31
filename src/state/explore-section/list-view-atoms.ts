@@ -20,9 +20,12 @@ import {
   DataType,
   EXPERIMENTAL_DATATYPES,
   PAGE_NUMBER,
-  PAGE_SIZE,
 } from '@/constants/explore-section/list-views';
-import { ExploreESHit } from '@/types/explore-section/es';
+import {
+  ExploreESHit,
+  ExploreResource,
+  FlattenedExploreESResponse,
+} from '@/types/explore-section/es';
 import { Filter } from '@/components/Filter/types';
 import {
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
@@ -42,8 +45,6 @@ type DataAtomFamilyScopeType = {
 
 const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
   a.key === b.key;
-
-export const pageSizeAtom = atom<number>(PAGE_SIZE);
 
 export const pageNumberAtom = atomFamily((_key: string) => atom<number>(PAGE_NUMBER));
 
@@ -130,15 +131,7 @@ export const totalByExperimentAndRegionsAtom = atomFamily(
         descendantAndAncestorIds =
           (await get(selectedBrainRegionWithDescendantsAndAncestorsAtom)) || [];
 
-      const query = fetchDataQuery(
-        0,
-        1,
-        [],
-        scope.dataType,
-        sortState,
-        '',
-        descendantAndAncestorIds
-      );
+      const query = fetchDataQuery(1, [], scope.dataType, sortState, '', descendantAndAncestorIds);
       const result =
         query && (await fetchTotalByExperimentAndRegions(query, undefined, scope.virtualLabInfo));
 
@@ -152,7 +145,6 @@ export const queryAtom = atomFamily(
     atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
-      const pageSize = get(pageSizeAtom);
       const sortState = get(sortStateAtom(scope));
       const bookmarkResourceIds = (
         scope.dataScope === ExploreDataScope.BookmarkedResources && scope.virtualLabInfo
@@ -177,7 +169,6 @@ export const queryAtom = atomFamily(
       }
 
       return fetchDataQuery(
-        pageSize,
         pageNumber,
         filters,
         scope.dataType,
@@ -188,6 +179,11 @@ export const queryAtom = atomFamily(
       );
     }),
 
+  isListAtomEqual
+);
+
+export const previousDataAtom = atomFamily(
+  (_scope) => atom<ExploreESHit<ExploreResource>[]>([]),
   isListAtomEqual
 );
 
