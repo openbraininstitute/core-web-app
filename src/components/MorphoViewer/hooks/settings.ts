@@ -18,8 +18,27 @@ import {
   LIGHT_SOMA,
 } from '../constants';
 import { TypeDef, assertType } from '@/util/type-guards';
+import { isServer } from '@/config';
 
 const STORAGE_KEY = 'MorphoViewer/settings';
+
+const DEFAULT_SETTINGS: PersistentMorphoViewerSettings = {
+  darkMode: false,
+  darkColors: {
+    soma: DARK_SOMA,
+    basalDendrite: DARK_BASAL_DENDRITE,
+    apicalDendrite: DARK_APICAL_DENDRITE,
+    axon: DARK_AXON,
+  },
+  lightColors: {
+    soma: LIGHT_SOMA,
+    basalDendrite: LIGHT_BASAL_DENDRITE,
+    apicalDendrite: LIGHT_APICAL_DENDRITE,
+    axon: LIGHT_AXON,
+  },
+  radiusType: 0,
+  colorBy: 'section',
+};
 
 export interface MorphoViewerSettings {
   isDarkMode: boolean;
@@ -81,7 +100,7 @@ export function useMorphoViewerSettings(
     setPersistentSettings(newPersistentSettings);
   };
   const reset = (darkMode?: boolean) => {
-    const defaultSettings = makeDefaultSettings();
+    const defaultSettings = { ...DEFAULT_SETTINGS };
     if (typeof darkMode === 'boolean') {
       defaultSettings.darkMode = darkMode;
     }
@@ -153,26 +172,6 @@ function writeSettings({
 
 const persistentSettingsAtom = atom(loadSettings());
 
-function makeDefaultSettings(): PersistentMorphoViewerSettings {
-  return {
-    darkMode: false,
-    darkColors: {
-      soma: DARK_SOMA,
-      basalDendrite: DARK_BASAL_DENDRITE,
-      apicalDendrite: DARK_APICAL_DENDRITE,
-      axon: DARK_AXON,
-    },
-    lightColors: {
-      soma: LIGHT_SOMA,
-      basalDendrite: LIGHT_BASAL_DENDRITE,
-      apicalDendrite: LIGHT_APICAL_DENDRITE,
-      axon: LIGHT_AXON,
-    },
-    radiusType: 0,
-    colorBy: 'section',
-  };
-}
-
 function assertPersistentMorphoViewerSettings(
   data: unknown
 ): asserts data is PersistentMorphoViewerSettings {
@@ -192,21 +191,22 @@ function assertPersistentMorphoViewerSettings(
 }
 
 function loadSettings(): PersistentMorphoViewerSettings {
+  if (isServer) return DEFAULT_SETTINGS;
   try {
     const item = window.localStorage.getItem(STORAGE_KEY) ?? '';
     const data = JSON.parse(item);
     assertPersistentMorphoViewerSettings(data);
     return data;
   } catch (ex) {
-    const defaultValue = makeDefaultSettings();
-    saveSettings(defaultValue);
-    window?.localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultValue));
-    return defaultValue;
+    saveSettings(DEFAULT_SETTINGS);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
+    return DEFAULT_SETTINGS;
   }
 }
 
 function saveSettings(data: PersistentMorphoViewerSettings) {
-  window?.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (isServer) return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 function applySettingsToMorphologyCanvas(

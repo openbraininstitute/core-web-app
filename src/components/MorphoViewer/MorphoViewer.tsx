@@ -4,6 +4,7 @@
 import { FullscreenOutlined } from '@ant-design/icons';
 import { GizmoCanvas, MorphologyCanvas } from '@bbp/morphoviewer';
 import { useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 
 import { ColorRamp } from './ColorRamp';
 import { Scalebar } from './Scalebar';
@@ -31,7 +32,7 @@ export interface MorphoViewerProps {
   // contentUrl?: string;
 }
 
-export function MorphoViewer({ className, swc, mode }: MorphoViewerProps) {
+function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
   const refDiv = useRef<HTMLDivElement | null>(null);
   const refMorphoCanvas = useRef(new MorphologyCanvas());
   const morphoCanvas = refMorphoCanvas.current;
@@ -112,3 +113,9 @@ export function MorphoViewer({ className, swc, mode }: MorphoViewerProps) {
     </div>
   );
 }
+
+const MorphoViewer = dynamic(() => Promise.resolve(MorphoViewerComponent), {
+  ssr: false,
+});
+
+export { MorphoViewer };
