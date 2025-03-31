@@ -16,7 +16,7 @@ type ExploreFieldConfigStyle = {
   width?: number;
 };
 
-export type ExploreFieldConfig<T = EntityCore> = {
+export type ExploreFieldConfig<T = EntityCoreBase> = {
   fieldType?: FieldType;
   className?: string;
   esTerms?: EsTermsConfig;

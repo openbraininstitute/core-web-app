@@ -36,6 +36,9 @@ function DataTypeGroupTotal({
     )
   );
 
+  console.log("ᦨ #  DataTypeGroupTotals.tsx:42 #  total:", total);
+
+
   const statValue = total.state === 'hasData' ? total?.data || 0 : 0;
   const records = `${statValue} record${statValue > 0 ? 's' : ''}`;
   return (

@@ -16,9 +16,6 @@ export async function geOrganizations() {
     const api = await authApiClient(entityCoreUrl);
     return await api.get<EntityCoreResponse<IOrganization>>(
         baseUri,
-        {
-            ...getEntityCoreContext(),
-        }
     );
 }
 
@@ -31,8 +28,5 @@ export async function geOrganization({ id }: { id: string }) {
     const api = await authApiClient(entityCoreUrl);
     return await api.get<IOrganization>(
         `${baseUri}/${id}`,
-        {
-            ...getEntityCoreContext(),
-        }
     );
 }

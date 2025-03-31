@@ -25,14 +25,14 @@ function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonEle
   );
 }
 
-export function useData(
+export function useData<T>(
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
     dataScope: ExploreDataScope;
     dataType: DataType;
   },
   key: string
-) {
+): Array<T> {
   const [prevData] = useAtom(previousDataAtom({ ...dataContext, key }));
 
   const data = useUnwrappedValue(
@@ -42,10 +42,10 @@ export function useData(
     })
   );
 
-  return [...prevData, ...(data?.hits ?? [])];
+  return [...prevData, ...(data?.data ?? [])] as Array<T>;
 }
 
-export function useLoadMore(
+export function useLoadMore<T>(
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
     dataScope: ExploreDataScope;
@@ -62,15 +62,13 @@ export function useLoadMore(
     })
   );
 
-  const data = useData(dataContext, key);
-
+  const data = useData<T>(dataContext, key);
   const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
 
   const loadMore = useCallback(
     (load: boolean = true) => {
       if (res.state === 'loading' || res.state === 'hasError' || !load) return;
-
-      if (res.data && res.data.hits.length < PAGE_SIZE) return;
+      if (res.data && res.data.data.length < PAGE_SIZE) return;
 
       // Store previous hits before fetching next page
       setPrevData(data);

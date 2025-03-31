@@ -2,7 +2,6 @@
 import authApiClient from '@/api/apiClient';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { IPerson } from '@/api/entitycore/types/shared/global';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
 
@@ -16,9 +15,6 @@ export async function getPersons() {
     const api = await authApiClient(entityCoreUrl);
     return await api.get<EntityCoreResponse<IPerson>>(
         baseUri,
-        {
-            ...getEntityCoreContext(),
-        }
     );
 }
 
@@ -27,12 +23,9 @@ export async function getPersons() {
 
  * @returns {Promise<IPerson>} A promise that resolves to the single person
  */
-export async function getMtype({ id }: { id: string }) {
+export async function getPerson({ id }: { id: string }) {
     const api = await authApiClient(entityCoreUrl);
     return await api.get<IPerson>(
         `${baseUri}/${id}`,
-        {
-            ...getEntityCoreContext(),
-        },
     );
 }
