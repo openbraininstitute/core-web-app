@@ -273,6 +273,9 @@ export async function listUserSubscriptionsHistory(): Promise<UserSubscriptionsR
       Authorization: `Bearer ${session?.accessToken}`,
     },
     cache: 'no-store',
+    next: {
+      tags: ['list-subscriptions'],
+    },
   });
 
   if (!response.ok) {
