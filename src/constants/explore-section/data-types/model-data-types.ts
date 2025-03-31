@@ -63,18 +63,4 @@ export const MODEL_DATA_TYPES: { [key: string]: DataTypeConfig } = {
 
     curated: false,
   },
-  [DataType.Circuit]: {
-    title: 'Circuit',
-    group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.CIRCUIT,
-    columns: [
-      Field.Name,
-      Field.Description,
-      Field.BrainRegion,
-      Field.CreatedBy,
-      Field.CreationDate,
-    ],
-
-    curated: false,
-  },
 } as const;

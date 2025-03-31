@@ -1,22 +1,19 @@
 'use client';
 
-import { Key, useEffect, useState } from 'react';
-
-import { Table } from 'antd';
-
+import { Key, useState } from 'react';
+import { Table, Tooltip } from 'antd';
+import { TableRowSelection } from 'antd/es/table/interface';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import circuitsFlat from '../content/circuits_flat';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-
-import HARD_CODED_CONTENT from '../content/circuits_tree';
+import CIRCUITS from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
-
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
-import Link from '@/components/Link';
-import useNotification from '@/hooks/notifications';
+import styles from './ExploreCircuiteTable.module.scss';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
-  if (!Array.isArray(data)) return [];
   return data.reduce((acc, row) => {
     const subKeys = row.subcircuits ? getExpandableRowKeys(row.subcircuits) : [];
     return row.hasSubcircuits ? [...acc, row.key, ...subKeys] : [...acc, ...subKeys];
@@ -24,14 +21,8 @@ const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
 };
 
 export default function ExploreCircuitTable() {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(
-    getExpandableRowKeys(HARD_CODED_CONTENT)
-  );
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string | null>(null);
-
-  useEffect(() => {
-    setExpandedRowKeys(getExpandableRowKeys(HARD_CODED_CONTENT));
-  }, []);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS));
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
@@ -41,32 +32,12 @@ export default function ExploreCircuitTable() {
     );
   };
 
-  const rowSelection = {
-    type: 'radio' as const,
-    selectedRowKeys: selectedRowKeys ? [selectedRowKeys] : [],
+  const rowSelection: TableRowSelection<CircuitSchemaProps> = {
+    type: 'radio',
+    selectedRowKeys,
     onChange: (newSelectedRows: Key[]) => {
-      setSelectedRowKeys(newSelectedRows.length > 0 ? (newSelectedRows[0] as string) : null);
+      setSelectedRowKeys(newSelectedRows);
     },
-    // onChange: (newSelectedRowKeys: Key[], selectedRows: CircuitSchemaProps[]) => {
-    //   const updatedExpandedKeys = newSelectedRowKeys
-    //     .filter((key) => HARD_CODED_CONTENT.some((row) => row.key === key && row.hasSubcircuits))
-    //     .map((key) => key as string);
-
-    //   const subRowKeys = selectedRows
-    //     .flatMap((row) => row.subcircuits?.map((sub) => sub.key) || [])
-    //     .filter(Boolean);
-
-    //   setExpandedRowKeys(updatedExpandedKeys);
-
-    //   setSelectedRowKeys([...newSelectedRowKeys.map((k) => k as string), ...subRowKeys]);
-    // },
-  };
-
-  const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] => {
-    return data.reduce((acc, row) => {
-      const subcircuits = row.subcircuits ? flattenRows(row.subcircuits) : [];
-      return [...acc, row, ...subcircuits];
-    }, [] as CircuitSchemaProps[]);
   };
 
   const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
@@ -81,7 +52,6 @@ export default function ExploreCircuitTable() {
     {
       title: 'Name',
       key: 'name',
-      fixed: 'left',
       render: (value: CircuitSchemaProps) => (
         <span className="whitespace-nowrap">{value.name}</span>
       ),
@@ -145,10 +115,7 @@ export default function ExploreCircuitTable() {
               onClick={() => handleExpandRow(value, index ?? -1)}
               disabled={!value.hasSubcircuits}
             >
-              <div className="relative mr-6 block ">
-                {totalSubcircuitsForParent}
-                {/* {value.subcircuits?.length} */}
-              </div>
+              <div className="relative mr-6 block ">{totalSubcircuitsForParent}</div>
               <ChevronRight
                 fill="#003A8C"
                 className={classNames(
@@ -166,10 +133,10 @@ export default function ExploreCircuitTable() {
   // SUBCIRCUIT TABLE - LEVEL 1
   const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
     return (
-      <div className="relative flex flex-col pl-[17px]">
-        <div className="relative flex flex-row pl-[48px]">
+      <div className="relative flex flex-col">
+        <div className="flex-row] relative flex pl-2">
           <ArrowSmall iconColor="#8C8C8C" className="relative -top-0.5" />
-          <span className="ml-3 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
+          <span className="ml-3 pb-2 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
             Subcircuits
           </span>
         </div>
@@ -185,20 +152,13 @@ export default function ExploreCircuitTable() {
             '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
             '[&_.ant-table-thead > tr > th]:border-b-0',
             '[&_.ant-table-expand-icon-col]:w-0',
-            '[&_.ant-table-expand-icon-col]:hidden'
+            '[&_.ant-table-expand-icon-col]:hidden',
+            styles.circuitTable
           )}
           columns={columns}
           dataSource={circuit.subcircuits || []}
           pagination={false}
-          rowSelection={{
-            type: 'radio' as const,
-            selectedRowKeys: selectedRowKeys ? [selectedRowKeys] : undefined,
-            onChange: (newSelectedRowKeys: Key[]) => {
-              setSelectedRowKeys(
-                newSelectedRowKeys.length > 0 ? (newSelectedRowKeys[0] as string) : null
-              );
-            },
-          }}
+          rowSelection={rowSelection}
           expandable={{
             expandedRowRender,
             expandedRowKeys,
@@ -215,43 +175,16 @@ export default function ExploreCircuitTable() {
     );
   };
 
-  const allRows = flattenRows(HARD_CODED_CONTENT);
-  const selectedRows = allRows.filter(
-    (row: CircuitSchemaProps) => selectedRowKeys?.includes(row.key) || false
+  const selectedRows = circuitsFlat.filter((row: CircuitSchemaProps) =>
+    selectedRowKeys.includes(row.key)
   );
 
-  const notification = useNotification();
-
-  const handleFileDownload = () => {
-    if (typeof window === 'undefined') return;
-
-    const lastRow = selectedRows.at(-1);
-
-    if (!lastRow) {
-      notification.error('Cannot download, try again');
-      return;
-    }
-
-    const file = lastRow?.files[0];
-
-    if (!file || !file.url) {
-      notification.error('Cannot download, try again');
-      return;
-    }
-
-    const fileName = lastRow.name;
-
-    const { url } = file;
-    const link = document.createElement('a');
-    link.href = url || '';
-    link.download = fileName;
-    link.target = '_blank';
-    link.click();
-    link.remove();
-  };
+  const lastRow = selectedRows.at(-1);
+  const file = lastRow?.files?.[0];
+  const fileUrl = file?.url;
 
   return (
-    <>
+    <div className="pt-10">
       <Table
         className={classNames(
           '[&_.ant-table-tbody]:bg-[#FAFAFA]',
@@ -264,10 +197,11 @@ export default function ExploreCircuitTable() {
           '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
           '[&_.ant-table-thead > tr > th]:border-b-0',
           '[&_.ant-table-expand-icon-col]:w-0',
-          '[&_.ant-table-expand-icon-col]:hidden'
+          '[&_.ant-table-expand-icon-col]:hidden',
+          styles.circuitTable
         )}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={HARD_CODED_CONTENT}
+        dataSource={CIRCUITS}
         columns={columns}
         pagination={false}
         rowSelection={rowSelection}
@@ -284,27 +218,31 @@ export default function ExploreCircuitTable() {
         }}
       />
 
-      <button
-        onClick={handleFileDownload}
-        type="button"
-        className="left-50 fixed bottom-6 z-50 flex h-20 w-[700px] flex-row items-center justify-between bg-primary-8 pl-8 transition-bottom duration-300 ease-in-out"
-        style={{
-          bottom: selectedRowKeys && selectedRowKeys.length > 0 ? '24px' : '-60px',
-        }}
-      >
-        <div className="relative flex flex-col gap-x-3 text-base font-normal">
-          <span className="block font-bold text-primary-3">Download</span>
-          <Link
-            href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
-            target="_blank"
-            className="relative flex flex-row gap-x-3"
+      {fileUrl && (
+        <a
+          href={fileUrl}
+          type="button"
+          className="absolute bottom-6 right-10 flex h-20 w-[150px] items-center justify-center bg-primary-8 text-xl transition-bottom duration-300 ease-in-out"
+          style={{
+            visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
+          }}
+        >
+          <span>Download</span>
+          <Tooltip
+            title={
+              <a
+                href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+              >
+                The connectome will be downloaded in Connectome Utilities format, see more here.
+              </a>
+            }
           >
-            <p className="text-base leading-normal text-white">
-              The connectome will be downloaded in Connectome Utilities Format, see more here
-            </p>
-          </Link>
-        </div>
-      </button>
-    </>
+            <InfoCircleOutlined className="ml-2" />
+          </Tooltip>
+        </a>
+      )}
+    </div>
   );
 }

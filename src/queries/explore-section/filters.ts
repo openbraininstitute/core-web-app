@@ -122,7 +122,7 @@ export default function buildFilters(
 
   if (dataType) {
     const dataConfig = DATA_TYPES_TO_CONFIGS[dataType];
-    // @ts-ignore TODO: Fix type
+
     filtersQuery.must(esb.termQuery('@type.keyword', DataTypeToNexusType[dataType]));
 
     if (dataConfig.curated) filtersQuery.must(esb.termQuery('curated', true));
