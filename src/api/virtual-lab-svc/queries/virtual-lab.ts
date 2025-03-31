@@ -89,6 +89,10 @@ export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
     },
+    cache: 'no-store',
+    next: {
+      tags: ['list-virtual-labs'],
+    },
   });
 
   if (!response.ok) {

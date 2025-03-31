@@ -7,7 +7,7 @@ import { basePath, isServer } from '@/config';
 export default function Page() {
   const searchParams = useSearchParams();
   const redirectURL = searchParams.get('callbackUrl');
-  // if (!isServer) signIn('keycloak', { callbackUrl: redirectURL || basePath });
+  if (!isServer) signIn('keycloak', { callbackUrl: redirectURL || basePath });
 
   return 'Logging in...';
 }

@@ -1,6 +1,6 @@
 import { CircuitSchemaProps } from '../type';
 
-const HARD_CODED_CONTENT: CircuitSchemaProps[] = [
+const CIRCUITS: CircuitSchemaProps[] = [
   {
     key: 'nbS1-O1',
     name: 'nbS1-O1',
@@ -2873,4 +2873,4 @@ const HARD_CODED_CONTENT: CircuitSchemaProps[] = [
   },
 ];
 
-export default HARD_CODED_CONTENT;
+export default CIRCUITS;

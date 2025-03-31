@@ -5,8 +5,10 @@ import { Menu } from 'antd';
 import { useAtomValue } from 'jotai';
 import find from 'lodash/find';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useMemo } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+
+import circuitsFlat from '../Circuit/content/circuits_flat';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
@@ -45,6 +47,7 @@ function MenuItemLabel({
       key: (virtualLabInfo?.projectId ?? '') + dataType,
     })
   );
+
   return `${label} ${
     totalByExperimentAndRegions.state === 'hasData' ? `(${totalByExperimentAndRegions.data})` : ''
   }`;
@@ -81,33 +84,49 @@ export default function ExploreListingLayout({
     router.push(key);
   };
 
-  const items = useMemo(
-    () =>
-      Object.keys(config).map((dataType) => {
-        const key = DATA_TYPES_TO_CONFIGS[dataType as DataType].name;
-        const active = DATA_TYPES_TO_CONFIGS[dataType as DataType].name === activePath;
-        const label = DATA_TYPES_TO_CONFIGS[dataType as DataType].title;
+  const items: {
+    key: string;
+    title: string;
+    label: ReactNode;
+    className: string;
+    style: CSSProperties;
+  }[] = Object.keys(config).map((dataType) => {
+    const key = DATA_TYPES_TO_CONFIGS[dataType as DataType].name;
+    const active = DATA_TYPES_TO_CONFIGS[dataType as DataType].name === activePath;
+    const label = DATA_TYPES_TO_CONFIGS[dataType as DataType].title;
 
-        return {
-          key,
-          title: label,
-          label: (
-            <MenuItemLabel
-              dataType={dataType as DataType}
-              label={label}
-              virtualLabInfo={virtualLabInfo}
-            />
-          ),
-          className: 'text-center font-semibold',
-          style: {
-            backgroundColor: active ? 'white' : '#002766',
-            color: active ? '#002766' : 'white',
-            flexBasis: menuItemWidth,
-          },
-        };
-      }),
-    [activePath, config, virtualLabInfo]
-  );
+    return {
+      key,
+      title: label,
+      label: (
+        <MenuItemLabel
+          dataType={dataType as DataType}
+          label={label}
+          virtualLabInfo={virtualLabInfo}
+        />
+      ),
+      className: 'text-center font-semibold',
+      style: {
+        backgroundColor: active ? 'white' : '#002766',
+        color: active ? '#002766' : 'white',
+        flexBasis: menuItemWidth,
+      },
+    };
+  });
+
+  const circuitActive = activePath === 'circuit';
+
+  items.push({
+    key: 'circuit',
+    title: 'Circuit',
+    label: `Circuit (${circuitsFlat.length})`,
+    className: 'text-center font-semibold',
+    style: {
+      backgroundColor: circuitActive ? 'white' : '#002766',
+      color: circuitActive ? '#002766' : 'white',
+      flexBasis: menuItemWidth,
+    },
+  });
 
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
