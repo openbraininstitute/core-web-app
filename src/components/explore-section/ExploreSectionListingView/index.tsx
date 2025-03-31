@@ -4,6 +4,7 @@ import { RowSelectionType } from 'antd/es/table/interface';
 
 import FilterControls from './FilterControls';
 import { RenderButtonProps } from './useRowSelection';
+import { useData } from './LoadMoreButton';
 import { ExploreESHit } from '@/types/explore-section/es';
 import ExploreSectionTable, {
   OnCellClick,
@@ -18,7 +19,6 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
-import { useData } from './LoadMoreButton';
 
 export default function ExploreSectionListingView({
   dataType,
