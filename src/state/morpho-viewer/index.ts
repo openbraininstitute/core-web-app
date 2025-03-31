@@ -1,41 +1,61 @@
 import { Atom, atom } from 'jotai';
-import matches from 'lodash/matches';
-import { composeUrl } from '@/util/nexus';
-import { fetchFileByUrl } from '@/api/nexus';
-import sessionAtom from '@/state/session';
-import { ReconstructedNeuronMorphology } from '@/types/explore-section/delta-experiment';
+import find from 'lodash/find';
+import get from 'lodash/get';
 
-const SHAPE = {
-  '@type': 'DataDownload',
-  encodingFormat: 'application/swc',
-};
+import sessionAtom from '@/state/session';
+import { composeUrl, ensureArray } from '@/util/nexus';
+import { fetchFileByUrl } from '@/api/nexus';
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
+
+function getContentUrlByEncoding(assets: Array<IAsset>, encodingFormat: string) {
+  const asset = find(
+    assets,
+    (asset) => get(asset, 'meta.legacy.encodingFormat') === encodingFormat
+  );
+  return get(asset, 'meta.legacy.contentUrl', null);
+}
+
+function extractOrgAndProject(url: string) {
+  const parts = url.split('/');
+  const index = parts.indexOf('files');
+
+  if (index !== -1 && parts.length > index + 2) {
+    return {
+      id: parts.at(-1),
+      org: get(parts, index + 1, null),
+      project: get(parts, index + 2, null),
+    };
+  }
+
+  return { org: null, project: null, id: null };
+}
 
 export default function createMorphologyDataAtom(
-  resource: ReconstructedNeuronMorphology
+  resource: IReconstructionMorphology
 ): Atom<Promise<string> | null> {
   return atom((get) => {
     const session = get(sessionAtom);
     if (!session) return null;
 
-    const distribution = Array.isArray(resource.distribution)
-      ? resource.distribution
-      : [resource.distribution];
-
-    const traceDistro = distribution.find(matches(SHAPE));
+    const assets = ensureArray(resource.assets);
+    const traceDistro = getContentUrlByEncoding(assets, 'application/swc');
 
     if (!traceDistro) {
-      throw new Error(`No distribution found for resource ${resource['@id']}`);
+      throw new Error(`No distribution found for resource ${resource.id}`);
     }
 
-    const [projectLabel, orgLabel] = resource._project.split('/').reverse();
-    const [id] = traceDistro.contentUrl.split('/').reverse();
-    const url = composeUrl('file', decodeURIComponent(id), {
-      org: orgLabel,
-      project: projectLabel,
-      idExpand: false,
-    });
-    return fetchFileByUrl(url, session)
-      .then((resp) => resp.text())
-      .then((fetchedData) => fetchedData);
+    const { org, project, id } = extractOrgAndProject(traceDistro);
+    if (org && project && id) {
+      const url = composeUrl('file', decodeURIComponent(id), {
+        org: org,
+        project: project,
+        idExpand: false,
+      });
+      return fetchFileByUrl(url, session)
+        .then((resp) => resp.text())
+        .then((fetchedData) => fetchedData);
+    }
+    return null;
   });
 }

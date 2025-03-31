@@ -3,9 +3,27 @@
 import { WarningOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
-export default function ErrorComponent({ error }: { error: Error & { cause?: unknown } }) {
+import { classNames } from '@/util/utils';
+interface ErrorComponentProps {
+  error: Error & { cause?: unknown };
+  cls?: { container: string };
+  showButtons?: boolean;
+  customError?: string;
+}
+
+export function ErrorComponent({
+  error,
+  cls = { container: '' },
+  customError = '',
+  showButtons = true,
+}: ErrorComponentProps) {
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-primary-9 p-6 text-white">
+    <div
+      className={classNames(
+        'flex h-screen w-full flex-col items-center justify-center bg-primary-9 p-6 text-white',
+        cls.container
+      )}
+    >
       <div className="mx-auto w-full max-w-md">
         <div className="mb-2 flex items-center justify-start gap-2">
           <WarningOutlined className="text-3xl text-[#f0c75e]" />
@@ -15,24 +33,46 @@ export default function ErrorComponent({ error }: { error: Error & { cause?: unk
         <div className="mb-2 w-full bg-white p-6">
           <h2 className="mb-2 select-none text-sm font-medium text-primary-8">DESCRIPTION</h2>
           <p className="text-xl font-bold text-primary-8">
-            {error?.message ||
+            {(customError ?? error?.message) ||
               'We apologize, but something unexpected went wrong. Please try again later.'}
           </p>
         </div>
 
-        <div className="flex w-full gap-2">
-          <Link href="/app/virtual-lab/explore/interactive" className="w-1/2">
-            <div className="border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white hover:bg-opacity-10">
-              Back to Explore
-            </div>
-          </Link>
-          <Link href="/app/virtual-lab" className="w-1/2">
-            <div className="border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white hover:bg-opacity-10">
-              Back to home
-            </div>
-          </Link>
-        </div>
+        {showButtons && (
+          <div className="flex w-full gap-2">
+            <Link href="/app/virtual-lab/explore/interactive" className="w-1/2">
+              <div className="border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white hover:bg-opacity-10">
+                Back to Explore
+              </div>
+            </Link>
+            <Link href="/app/virtual-lab" className="w-1/2">
+              <div className="border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white hover:bg-opacity-10">
+                Back to home
+              </div>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+// Higher Order Component
+export function withErrorConfig({
+  cls,
+  showButtons,
+  customError,
+}: {
+  cls?: { container: string };
+  showButtons?: boolean;
+  customError?: string;
+}) {
+  return function ({ error }: { error: Error & { cause?: unknown } }) {
+    return (
+      <ErrorComponent error={error} customError={customError} cls={cls} showButtons={showButtons} />
+    );
+  };
+}
+
+// Default export with original behavior
+export default ErrorComponent;

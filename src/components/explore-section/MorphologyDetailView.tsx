@@ -10,7 +10,7 @@ import { loadable } from 'jotai/utils';
 
 import createMorphologyDataAtom from '@/state/morpho-viewer';
 import GeneralizationControls from '@/components/explore-section/WithGeneralization/GeneralizationControls';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import SimpleErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
 import Morphometrics from '@/components/explore-section/Morphometrics';
 import Summary from '@/components/explore-section/details-view/summary';
 
@@ -39,17 +39,23 @@ export default function MorphologyDetailView() {
     >
       {(detail) => (
         <>
-          {detail.legacy_id && detail.legacy_id?.length > 0 && (
+          {ensureArray(detail.legacy_id).length > 0 && (
             <Morphometrics
               legacyId={ensureArray(detail.legacy_id).at(0)!}
               dataType={DataType.ExperimentalNeuronMorphology}
             />
           )}
           <MorphoViewerLoaderMemo resource={detail} />
-          <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
+          <ErrorBoundary
+            FallbackComponent={withErrorConfig({
+              cls: { container: 'bg-white' },
+              showButtons: false,
+              customError: 'Error while loading similarity filter controls',
+            })}
+          >
             <GeneralizationControls dataType={DataType.ExperimentalNeuronMorphology} />
           </ErrorBoundary>
-          {detail.legacy_id && detail.legacy_id?.length > 0 && (
+          {ensureArray(detail.legacy_id).length > 0 && (
             <GeneralizationContainer>
               <WithGeneralization
                 legacyId={ensureArray(detail.legacy_id).at(0)!}
@@ -87,7 +93,9 @@ function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology 
     case 'loading':
       return <div>Loading...</div>;
     case 'hasError':
-      return morphologyData.error ? <div>{morphologyData.error?.message}</div> : null;
+      return morphologyData.error ? (
+        <div>{(morphologyData.error as { message: string }).message}</div>
+      ) : null;
     default:
       throw Error(`Unknown state for morphologyData: "${state}"!`);
   }

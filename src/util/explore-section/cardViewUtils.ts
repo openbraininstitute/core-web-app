@@ -5,6 +5,7 @@ import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 
 export function getGroupedCardFields(dataType: DataType) {
   const cardFields = DATA_TYPES_TO_CONFIGS[dataType]?.cardViewFields || [];
-
-  return groupBy(cardFields, (item) => EXPLORE_FIELDS_CONFIG[item.field].group || 'Metadata');
+  return groupBy(cardFields, (item) => {
+    return EXPLORE_FIELDS_CONFIG[item.field]?.group || 'Metadata';
+  });
 }

@@ -14,7 +14,6 @@ export default function Morphometrics({
   legacyId: string;
 }) {
   const metrics = useUnwrappedValue(sourceMorphoMetricsAtom(legacyId));
-
   const { filteredGroupedCardFields, renderMetric } = useMorphometrics(dataType, metrics, true);
 
   return (
