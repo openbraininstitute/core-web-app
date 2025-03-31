@@ -1,9 +1,10 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { useAtom } from 'jotai';
 import { RowSelectionType } from 'antd/es/table/interface';
 
 import FilterControls from './FilterControls';
 import { RenderButtonProps } from './useRowSelection';
+import { useData } from './LoadMoreButton';
 import { ExploreESHit } from '@/types/explore-section/es';
 import ExploreSectionTable, {
   OnCellClick,
@@ -33,6 +34,7 @@ export default function ExploreSectionListingView({
   containerClass = 'h-full',
   tableClass = 'h-full overflow-y-hidden',
   dataKey,
+  showLoadingState = true,
 }: {
   containerClass?: string;
   tableClass?: string;
@@ -47,10 +49,10 @@ export default function ExploreSectionListingView({
   controlsVisible?: boolean;
   style?: Record<'background', string>;
   dataKey: string;
+  showLoadingState?: boolean;
 }) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
 
-  const [dataSource, setDataSource] = useState<ExploreESHit<ExploreSectionResource>[]>();
   const columns = useExploreColumns(setSortState, sortState, [], null, dataType);
 
   const data = useLoadableValue(
@@ -62,11 +64,14 @@ export default function ExploreSectionListingView({
     })
   );
 
-  useEffect(() => {
-    if (data.state === 'hasData' && !!data.data) {
-      setDataSource(data.data.hits as ExploreESHit<ExploreSectionResource>[]);
-    }
-  }, [data, setDataSource]);
+  const hits = useData(
+    {
+      dataType,
+      dataScope,
+      virtualLabInfo,
+    },
+    dataKey
+  );
 
   return (
     <div
@@ -108,8 +113,8 @@ export default function ExploreSectionListingView({
               <ExploreSectionTable
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{ virtualLabInfo, dataScope, dataType }}
-                dataSource={dataSource}
-                loading={data.state === 'loading'}
+                dataSource={hits}
+                loading={showLoadingState && data.state === 'loading'}
                 onCellClick={onCellClick}
                 renderButton={renderButton}
                 selectionType={selectionType}

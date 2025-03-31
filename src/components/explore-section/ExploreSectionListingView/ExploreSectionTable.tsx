@@ -319,7 +319,7 @@ export default function ExploreSectionTable({
           visible={controlsVisible}
         >
           {displayLoadMoreBtn && (
-            <LoadMoreButton dataContext={dataContext} hide={toggleDisplayMore} />
+            <LoadMoreButton dataContext={dataContext} dataKey={dataKey} hide={toggleDisplayMore} />
           )}
         </TableControls>
       )}
