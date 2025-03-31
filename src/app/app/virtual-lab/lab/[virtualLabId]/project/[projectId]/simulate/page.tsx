@@ -193,7 +193,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   });
 
   return (
-    <div>
+    <>
       <ScopeSelector atomKey={atomKey} section="simulate" />
 
       {/* TODO: replace this list with items saved in Model Library */}
@@ -234,7 +234,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
         )}
         {loadMoreDiv}
       </div>
-    </div>
+    </>
   );
 }
 
