@@ -72,7 +72,7 @@ function Profile({ data }: Props) {
       if (error) {
         if (get(error, 'cause.error_code') === 'ENTITY_UPDATE__ERROR') {
           errorNotify(
-            `Unable to save your profile changes due to a server error. ${get(error, 'cause.message')}`,
+            `We couldn’t update your information. Please check your input and try again.`,
             undefined,
             'topRight',
             true,
