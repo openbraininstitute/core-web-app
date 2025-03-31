@@ -50,14 +50,27 @@ export type MEModelsProps = {
   _type: string;
 };
 
+export type MinimalMeModelProps = {
+  name: string;
+  brainRegion: string;
+  mType: string;
+  eType: string;
+  species: string;
+};
+
 export type EModelsProps = {
   name: string;
+  hasResponseThumbnail: boolean;
   response: string;
   brainRegion: string;
   mType: string;
   eType: string;
+  hasMorphologyThumbnail: boolean;
+  morphology?: string;
   modelCumulatedScore: number;
-  _type: string;
+  species: string;
+  contributor: string;
+  creationDate: string;
 };
 
 export type NotebooksProps = {
@@ -79,5 +92,6 @@ export type ShowCaseProjectQueryType = {
   meModelsList: MEModelsProps[];
   eModelsList: EModelsProps[];
   notebook: NotebooksProps[];
+  minimalMeModel: MinimalMeModelProps[];
   _updatedAt: string;
 };
