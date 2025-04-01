@@ -5,7 +5,7 @@ export default function SubtitleBar({
 }) {
 
     return (
-        <div className="relative w-full flex flex-row p-4 bg-primary-8 text-white text-lg font-normal">
+        <div className="relative w-full flex flex-row px-6 py-4 bg-gray-100 text-primary-8 text-xl font-bold mb-4 mt-16">
             {
                 title
             }
