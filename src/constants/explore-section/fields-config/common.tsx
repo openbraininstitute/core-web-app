@@ -237,7 +237,7 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
     className: 'text-center',
     title: 'Preview',
     filter: null,
-    render: (resource) => renderPreview(resource),
+    render: (resource) => renderPreview(resource, { width: 184, height: 116 }),
     vocabulary: {
       plural: 'previews',
       singular: 'preview',

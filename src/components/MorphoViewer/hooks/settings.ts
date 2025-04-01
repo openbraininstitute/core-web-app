@@ -73,10 +73,10 @@ export interface MorphoViewerSettings {
 export function useMorphoViewerSettings(
   painter: MorphologyCanvas
 ): [
-    settings: MorphoViewerSettings,
-    update: (settings: Partial<MorphoViewerSettings>) => void,
-    reset: (darkMode?: boolean) => void,
-  ] {
+  settings: MorphoViewerSettings,
+  update: (settings: Partial<MorphoViewerSettings>) => void,
+  reset: (darkMode?: boolean) => void,
+] {
   const [persistentSettings, setPersistentSettings] = useAtom(persistentSettingsAtom);
   const settings = useMemo(() => readSettings(persistentSettings), [persistentSettings]);
 
@@ -89,13 +89,13 @@ export function useMorphoViewerSettings(
     const newPersistentSettings =
       darkMode === persistentSettings.darkMode
         ? writeSettings({
-          ...settings,
-          ...value,
-        })
+            ...settings,
+            ...value,
+          })
         : {
-          ...persistentSettings,
-          darkMode,
-        };
+            ...persistentSettings,
+            darkMode,
+          };
     saveSettings(newPersistentSettings);
     setPersistentSettings(newPersistentSettings);
   };

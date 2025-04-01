@@ -40,34 +40,21 @@ export default function CardVisualization({
 }: CardVisualizationProps) {
   const contentUrl = useSwcContentUrl(resource.distribution);
 
-  const swc = useAtomValue(useMemo(() => loadable(swcFileAtom(contentUrl)), [contentUrl]));
+  // const swc = useAtomValue(useMemo(() => loadable(swcFileAtom(contentUrl)), [contentUrl]));
 
   const renderSwc = () => {
-    switch (swc.state) {
-      case 'loading':
-        return (
-          <Spin
-            size="large"
-            className="flex h-full w-full items-center justify-center"
-            indicator={<LoadingOutlined />}
-          />
-        );
-      case 'hasData':
-        return (
-          !!contentUrl && (
-            <PreviewThumbnail
-              contentUrl={contentUrl}
-              className={className}
-              dpi={300}
-              height={height}
-              type={DataType.ExperimentalNeuronMorphology}
-              width={width}
-            />
-          )
-        );
-      default:
-        return <div>default</div>;
-    }
+    return (
+      !!contentUrl && (
+        <PreviewThumbnail
+          contentUrl={contentUrl}
+          className={className}
+          dpi={300}
+          height={height}
+          type={DataType.ExperimentalNeuronMorphology}
+          width={width}
+        />
+      )
+    );
   };
 
   if (dataType === DataType.ExperimentalNeuronMorphology) {

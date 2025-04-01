@@ -46,6 +46,7 @@ export default function createMorphologyDataAtom(
     }
 
     const { org, project, id } = extractOrgAndProject(traceDistro);
+
     if (org && project && id) {
       const url = composeUrl('file', decodeURIComponent(id), {
         org: org,

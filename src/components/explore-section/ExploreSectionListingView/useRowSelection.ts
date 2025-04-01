@@ -5,7 +5,7 @@ import { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
-import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
 
 type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
 

@@ -4,12 +4,12 @@ import { useAtomValue } from 'jotai';
 
 import sessionAtom from '@/state/session';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
-import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
 import { detailUrlBuilder } from '@/util/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
-export function useExploreTableOnClickHandler<T extends EntityCoreBase>() {
+export function useExploreTableOnClickHandler<T extends EntityCoreBaseId>() {
   const router = useRouter();
 
   return useCallback(

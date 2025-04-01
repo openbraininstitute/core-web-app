@@ -16,7 +16,7 @@ import { classNames } from '@/util/utils';
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.scss';
-import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
@@ -96,7 +96,7 @@ type AdditionalTableProps<T> = {
   onCellClick?: OnCellClick<T>;
 };
 
-export function BaseTable<T extends EntityCoreBase>({
+export function BaseTable<T extends EntityCoreBaseId>({
   columns,
   dataContext,
   dataSource,
@@ -253,7 +253,7 @@ function TableControls<T>({
   );
 }
 
-export default function ExploreSectionTable<T extends EntityCoreBase>({
+export default function ExploreSectionTable<T extends EntityCoreBaseId>({
   columns,
   dataContext,
   dataSource,

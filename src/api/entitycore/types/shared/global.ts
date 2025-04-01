@@ -11,7 +11,7 @@ export type Prettify<T> = {
 export type EntityCoreDataType =
   (typeof ENTITY_CORE_DATA_TYPES)[keyof typeof ENTITY_CORE_DATA_TYPES]['type'];
 
-export type EntityCoreBase = {
+export type EntityCoreBaseId = {
   id: string;
   legacy_id: Array<string> | null;
 };
@@ -20,12 +20,16 @@ export type EntityCoreBaseType = {
   type: EntityCoreDataType;
 };
 
-export interface EntityCoreResource extends EntityCoreBaseType, EntityCoreBase {}
-export interface EntityCoreResourceWithAssets extends EntityCoreResource {
+export interface EntityCoreBaseAsset {
   assets: Array<IAsset>;
 }
 
-export interface AuditMetadata extends EntityCoreBase {
+export interface EntityCoreResource
+  extends EntityCoreBaseId,
+    EntityCoreBaseType,
+    EntityCoreBaseAsset {}
+
+export interface DateMetadata extends EntityCoreBaseId {
   creation_date: string; // ISO format
   update_date: string; // ISO format
 }
@@ -35,7 +39,7 @@ type BrainRegion = {
   name: string;
 };
 
-export interface IBrainRegion extends BrainRegion, AuditMetadata {}
+export interface IBrainRegion extends BrainRegion, DateMetadata {}
 
 type Strain = {
   name: string;
@@ -43,14 +47,14 @@ type Strain = {
   species_id: number;
 };
 
-export interface IStrain extends Strain, AuditMetadata {}
+export interface IStrain extends Strain, DateMetadata {}
 
 type Species = {
   name: string;
   taxonomy_id: string;
 };
 
-export interface ISpecies extends Species, AuditMetadata {}
+export interface ISpecies extends Species, DateMetadata {}
 
 interface License {
   name: string;
@@ -58,7 +62,7 @@ interface License {
   label: string;
 }
 
-export interface ILicense extends License, AuditMetadata {}
+export interface ILicense extends License, DateMetadata {}
 
 export interface IBrainLocation {
   x: number;
@@ -82,7 +86,7 @@ export type MTypeBase = {
   definition: string;
 };
 
-export interface IMType extends MTypeBase, AuditMetadata {}
+export interface IMType extends MTypeBase, DateMetadata {}
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
@@ -95,7 +99,7 @@ type RoleBase = {
   role_id: string;
 };
 
-export interface IRole extends RoleBase, AuditMetadata {}
+export interface IRole extends RoleBase, DateMetadata {}
 
 type OrganizationBase = {
   type: 'organization';
@@ -103,7 +107,7 @@ type OrganizationBase = {
   alternative_name?: string | null;
 };
 
-export interface IOrganization extends OrganizationBase, AuditMetadata {}
+export interface IOrganization extends OrganizationBase, DateMetadata {}
 
 type PersonBase = {
   type: 'person';
@@ -112,10 +116,10 @@ type PersonBase = {
   pref_label: string;
 };
 
-export interface IPerson extends PersonBase, AuditMetadata {}
+export interface IPerson extends PersonBase, DateMetadata {}
 export type Agent = IPerson | IOrganization;
 
-export interface IContributor extends AuditMetadata {
+export interface IContributor extends DateMetadata {
   agent: Agent;
   role: IRole;
 }

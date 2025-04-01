@@ -108,6 +108,7 @@
     "sharp": "^0.33.5",
     "swiper": "^11.1.14",
     "three": "^0.152.2",
+    "ts-pattern": "^5.7.0",
     "typescript": "^5.5.4",
     "wavefront-obj-parser": "^2.0.1",
     "whatwg-fetch": "^3.6.19",

@@ -76,7 +76,9 @@ export default function CardView({ data, dataType, resourceId = '' }: CardViewPr
           {Object.entries(groupedCardFields).map(([group, fields]) => (
             <Panel
               header={
-                <span className="text-md font-semibold text-primary-8">{upperCase(group)}</span>
+                <span className="text-md whitespace-nowrap font-semibold text-primary-8">
+                  {upperCase(group)}
+                </span>
               }
               key={group}
               className="m-0 truncate border-y border-solid p-0"
