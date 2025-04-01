@@ -1,15 +1,16 @@
 'use client';
 
-import React from 'react';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import React from 'react';
 
-import SuggestedQuestions from './suggested-questions';
+import ErrorPanel from './error';
 import MessageItem from './message-item';
 import Prompt from './prompt';
-import ErrorPanel from './error';
 import { Spinner } from './spinner';
-import { classNames } from '@/util/utils';
+import SuggestedQuestions from './suggested-questions';
+
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
+import { classNames } from '@/util/utils';
 
 import styles from './literature-suggestions.module.css';
 
@@ -55,7 +56,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
         <h1 title={status}>AI Assistant</h1>
-        {collapsedPanel ? <PlusOutlined /> : <MinusOutlined />}
+        {collapsedPanel ? <PlusOutlined className="w-5 h-5" /> : <MinusOutlined />}
       </button>
       {!collapsedPanel && (
         <>
