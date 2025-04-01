@@ -1,12 +1,12 @@
 import { Suspense, ReactNode } from 'react';
-import Image from 'next/image';
 import WrapperBanner from '@/components/WrapperBanner';
 import { basePath } from '@/config';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <WrapperBanner>
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         width={176}
         height={56}
         className="absolute left-[35px] top-[35px] h-[56px] w-[176x] text-white"
