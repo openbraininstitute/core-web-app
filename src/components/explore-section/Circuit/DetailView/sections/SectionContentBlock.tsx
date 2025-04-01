@@ -21,10 +21,10 @@ export default function SectionContentBlock({
         case 'provenance':
             currentSection = <ProvenanceSection content={content} />;
             break;
-        case 'related-circuits':
+        case 'related-publications':
             currentSection = <RelatedPublicationssSection content={content} />;
             break;
-        case 'related-publications':
+        case 'related-circuits':
             currentSection = <RelatedCircuitsSection content={content} />;
             break;
         default:

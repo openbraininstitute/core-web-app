@@ -1,5 +1,8 @@
 import { CircuitSchemaProps } from "../../../type";
 import SubtitleBar from "../SubtitleBar";
+import DerivedCircuits from "./DerivedCircuit";
+import ParentCircuit from "./ParentCircuit";
+import Subcircuits from "./Subcircuit";
 
 export default function RelatedCircuitsSection({
     content
@@ -9,8 +12,24 @@ export default function RelatedCircuitsSection({
 
     return (
         <div className="relative w-full flex flex-col">
-            <SubtitleBar title="Source" />
-            <SubtitleBar title="Applications" />
+            {
+                !content.parent && (
+                    <>
+                        <SubtitleBar title="Parent circuit" />
+                        <ParentCircuit content={content} />
+                    </>
+                )
+            }
+            {
+                content.subcircuits && content.subcircuits.length > 0 && (
+                    <>
+                    <SubtitleBar title="Subcircuit" />
+                    <Subcircuits content={content} />
+                    </>
+                )
+            }
+            <SubtitleBar title="Derived from" />
+            <DerivedCircuits content={content} />
         </div>
     )
 }

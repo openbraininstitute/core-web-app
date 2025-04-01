@@ -59,7 +59,7 @@ export default function PublicationCard({
                 </div>
             </div>
 
-            <p className="w-full flex flex-col bg-gray-100 text-base leading-normal text-primary-8 p-12">
+            <p className="w-full flex flex-col bg-gray-100 text-base leading-normal text-primary-8 p-10">
                 { content.abstract }
             </p>
         </div>

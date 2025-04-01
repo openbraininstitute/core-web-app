@@ -65,7 +65,7 @@ export default function Visualiser({
                 <button
                     type="button"
                     aria-label="Activate image navigation"
-                    className="w-full h-full absolute top-0 left-0 bg-black/60 z-50 text-white text-6xl transition-all duration-300 ease-in-out"
+                    className="w-full h-full absolute top-0 left-0 bg-black/60 z-50 text-white text-4xl transition-all duration-300 ease-in-out"
                     style={{
                         opacity: isActive ? 0 : 1,
                         pointerEvents: isActive ? "none" : "auto",
