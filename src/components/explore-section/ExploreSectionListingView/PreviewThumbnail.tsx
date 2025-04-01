@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Empty, Skeleton } from 'antd';
 import { useInView } from 'react-intersection-observer';
+import isEmpty from 'lodash/isEmpty';
 
 import { thumbnailGenerationBaseUrl } from '@/config';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -44,7 +45,7 @@ export default function PreviewThumbnail({
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (inView) {
+    if (inView && isEmpty(thumbnail)) {
       setLoading(true);
 
       const encodedContentUrl = encodeURIComponent(contentUrl);

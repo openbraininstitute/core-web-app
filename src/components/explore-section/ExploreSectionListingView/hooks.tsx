@@ -11,11 +11,11 @@ import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import type { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { classNames } from '@/util/utils';
-import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
-export function useOnCellRouteHandler<T extends EntityCoreBase>({
+export function useOnCellRouteHandler<T extends EntityCoreBaseId>({
   dataType,
   onCellClick,
 }: {

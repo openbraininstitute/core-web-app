@@ -15,10 +15,10 @@ import { DataType } from '@/constants/explore-section/list-views';
 import Overview from '@/components/explore-section/details-view/overview';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import usePathname from '@/hooks/pathname';
-import type { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
 
-export default function Summary<T extends EntityCoreBase & { name: string }>({
+export default function Summary<T extends EntityCoreBaseId & { name: string }>({
   fields,
   showViewMode,
   commonFields = COMMON_FIELDS,

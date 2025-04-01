@@ -5,7 +5,7 @@ import { notFound, useParams } from 'next/navigation';
 
 import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DataType } from '@/constants/explore-section/list-views';
-import MorphologyDetailView from '@/components/explore-section/MorphologyDetailView';
+import MorphologyDetailView from '@/components/explore-section/reconstruction-morphology/detail-view';
 import Detail from '@/components/explore-section/Detail';
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
 import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';

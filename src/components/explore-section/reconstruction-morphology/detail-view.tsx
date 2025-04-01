@@ -9,48 +9,75 @@ import { loadable } from 'jotai/utils';
 // import { useSwcContentUrl } from '@/util/content-url';
 
 import createMorphologyDataAtom from '@/state/morpho-viewer';
-import { ReconstructedNeuronMorphology } from '@/types/explore-section/delta-experiment';
+import GeneralizationControls from '@/components/explore-section/WithGeneralization/GeneralizationControls';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import Morphometrics from '@/components/explore-section/Morphometrics';
+import Summary from '@/components/explore-section/details-view/summary';
+
 import WithGeneralization, {
   notFound,
   generalizationError,
 } from '@/components/explore-section/reconstruction-morphology/with-generalization-hoc';
 import { DataType } from '@/constants/explore-section/list-views';
 import { NEURON_MORPHOLOGY_FIELDS } from '@/constants/explore-section/detail-views-fields';
-import GeneralizationControls from '@/components/explore-section/reconstruction-morphology/with-generalization-hoc/generalization-controls';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import MorphoViewer from '@/components/explore-section/reconstruction-morphology/morpho-viewer';
-import Morphometrics from '@/components/explore-section/reconstruction-morphology/morphometrics';
-import Summary from '@/components/explore-section/details-view/summary';
+import { MorphoViewer } from '@/components/MorphoViewer';
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { ensureArray } from '@/util/nexus';
 
 function GeneralizationContainer({ children }: { children: ReactNode }) {
   if (children !== notFound && children !== generalizationError) {
-    return <div className="min-h-[1000px]">{children}</div>;
+    return <div className="max-h-max min-h-max">{children}</div>;
   }
   return <div className="min-h-auto">{children}</div>;
 }
 
 export default function MorphologyDetailView() {
   return (
-    <WithGeneralization dataType={DataType.ExperimentalNeuronMorphology}>
-      {({ render: renderSimilar }) => (
-        <Summary<ReconstructedNeuronMorphology> fields={NEURON_MORPHOLOGY_FIELDS}>
-          {(detail) => (
-            <>
-              <Morphometrics dataType={DataType.ExperimentalNeuronMorphology} resource={detail} />
-              <MorphoViewerLoaderMemo resource={detail} />
-              <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-                <GeneralizationControls dataType={DataType.ExperimentalNeuronMorphology} />
-              </ErrorBoundary>
-              <GeneralizationContainer>{renderSimilar}</GeneralizationContainer>
-            </>
+    <Summary<IReconstructionMorphology>
+      fields={NEURON_MORPHOLOGY_FIELDS}
+      dataType={DataType.ExperimentalNeuronMorphology}
+    >
+      {(detail) => (
+        <>
+          {ensureArray(detail.legacy_id).length > 0 && (
+            <Morphometrics
+              legacyId={ensureArray(detail.legacy_id).at(0)!}
+              dataType={DataType.ExperimentalNeuronMorphology}
+            />
           )}
-        </Summary>
+          <ErrorBoundary
+            FallbackComponent={withErrorConfig({
+              cls: { container: 'bg-white' },
+              showButtons: false,
+              customError: 'Error while loading morphology viewer',
+            })}
+          >
+            <MorphoViewerLoaderMemo resource={detail} />
+          </ErrorBoundary>
+          <ErrorBoundary
+            FallbackComponent={withErrorConfig({
+              cls: { container: 'bg-white' },
+              showButtons: false,
+              customError: 'Error while loading similarity filter controls',
+            })}
+          >
+            <GeneralizationControls dataType={DataType.ExperimentalNeuronMorphology} />
+          </ErrorBoundary>
+          {ensureArray(detail.legacy_id).length > 0 && (
+            <GeneralizationContainer>
+              <WithGeneralization
+                legacyId={ensureArray(detail.legacy_id).at(0)!}
+                dataType={DataType.ExperimentalNeuronMorphology}
+              />
+            </GeneralizationContainer>
+          )}
+        </>
       )}
-    </WithGeneralization>
+    </Summary>
   );
 }
 
-function MorphoViewerLoader({ resource }: { resource: ReconstructedNeuronMorphology }) {
+function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology }) {
   const morphologyDataAtom = useMemo(
     () => loadable(createMorphologyDataAtom(resource)),
     [resource]
@@ -58,7 +85,6 @@ function MorphoViewerLoader({ resource }: { resource: ReconstructedNeuronMorphol
   // We disable enhanced somas until they are fixed on the backend.
   // const swcContentUrl = useSwcContentUrl(resource.distribution);
   const morphologyData = useAtomValue(morphologyDataAtom);
-
   const { state } = morphologyData;
   switch (state) {
     case 'hasData':
@@ -75,7 +101,9 @@ function MorphoViewerLoader({ resource }: { resource: ReconstructedNeuronMorphol
     case 'loading':
       return <div>Loading...</div>;
     case 'hasError':
-      return <div>{JSON.stringify(morphologyData.error)}</div>;
+      return morphologyData.error ? (
+        <div>{(morphologyData.error as { message: string }).message}</div>
+      ) : null;
     default:
       throw Error(`Unknown state for morphologyData: "${state}"!`);
   }

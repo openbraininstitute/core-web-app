@@ -8,10 +8,10 @@ import { RenderButtonProps } from './ExploreSectionListingView/useRowSelection';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
 import { useExploreTableOnClickHandler } from '@/hooks/virtual-labs';
 
-export default function WithExploreExperiment<T extends EntityCoreBase>({
+export default function WithExploreExperiment<T extends EntityCoreBaseId>({
   dataType,
   dataScope,
   renderButton,

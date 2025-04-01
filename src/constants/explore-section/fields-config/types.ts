@@ -3,7 +3,7 @@ import { FilterType } from '@/features/listing-filter-panel/types';
 import { DeltaResource } from '@/types/explore-section/resources';
 import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
 import { EntityCore } from '@/types/explore-section/delta-experiment';
-import { EntityCoreBase } from '@/api/entitycore/types/shared/global';
+import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
 
 type TableCellAlign = 'left' | 'right' | 'center';
 
@@ -16,7 +16,7 @@ type ExploreFieldConfigStyle = {
   width?: number;
 };
 
-export type ExploreFieldConfig<T = EntityCoreBase> = {
+export type ExploreFieldConfig<T = EntityCoreBaseId> = {
   fieldType?: FieldType;
   className?: string;
   esTerms?: EsTermsConfig;
@@ -61,4 +61,4 @@ type NestedFieldConfig = {
 };
 
 // export type DetailType = DeltaResource;
-export type EntityCoreElement<T> = T extends EntityCoreBase ? T : never;
+export type EntityCoreElement<T> = T extends EntityCoreBaseId ? T : never;

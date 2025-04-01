@@ -11,11 +11,12 @@ import {
   ILicense,
   ISpecies,
   IStrain,
-  AuditMetadata,
+  DateMetadata,
   Measurement,
   IMType,
   IContributor,
   IAsset,
+  EntityCoreBaseAsset,
 } from '@/api/entitycore/types/shared/global';
 
 export type ReconstructionMorphologyExpandFields =
@@ -63,7 +64,7 @@ export type MorphologyFeatureAnnotation = {
   measurements: Array<Measurement>;
 };
 
-export interface IReconstructionMorphology extends AuditMetadata {
+export interface IReconstructionMorphology extends DateMetadata, EntityCoreBaseAsset {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
@@ -74,7 +75,6 @@ export interface IReconstructionMorphology extends AuditMetadata {
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
   type: 'reconstruction-morphology';
-  assets?: Array<IAsset>;
 }
 
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {

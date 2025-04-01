@@ -15,7 +15,7 @@ const spinStyles = {
   display: 'table',
   width: '100%',
   height: '200px',
-  paddingTop: 'calc(15vh - 27px)',
+  padding: 'calc(15vh - 27px) 0',
 };
 const loadingIconText = 'Searching for similar morphologies';
 const notFoundText = 'No similar morphologies were found';

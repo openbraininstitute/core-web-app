@@ -3,10 +3,7 @@ import isNil from 'lodash/isNil';
 import isEmpty from 'lodash/isEmpty';
 
 import PreviewThumbnail from '@/features/thumbnail/preview';
-import type {
-  EntityCoreResource,
-  EntityCoreResourceWithAssets,
-} from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 export const renderEmptyOrValue = (value: any) => {
   return isNil(value) || isEmpty(value) ? '—' : value;
@@ -25,6 +22,9 @@ export const renderTimestamp = (timestamp: string) => {
   if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
 };
 
-export function renderPreview<T>(resource: T & EntityCoreResourceWithAssets) {
-  return <PreviewThumbnail resource={resource} height={118} width={280} />;
+export function renderPreview<T>(
+  resource: T & EntityCoreResource,
+  size?: { height: number; width: number } | string
+) {
+  return <PreviewThumbnail resource={resource} size={size} />;
 }
