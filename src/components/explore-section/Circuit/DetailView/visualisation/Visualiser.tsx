@@ -14,27 +14,31 @@ export default function Visualiser({
 
     const [scale, setScale] = useState<number>(1);
     const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState<boolean>(false);
+    const [startPos, setStartPos] = useState<{x: number; y: number}>({ x: 0, y: 0 });
+    const [isActive, setIsActive] = useState<boolean>(false);
   
     const containerRef = useRef<HTMLDivElement>(null);
 
     // ZOOM
     const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-        e.preventDefault();
+        if (!isActive) return;
         const zoomFactor = 0.1;
         const newScale = scale + (e.deltaY > 0 ? -zoomFactor : zoomFactor);
         setScale(Math.max(0.5, Math.min(newScale, 5)));
       }; 
     
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-        e.preventDefault();
+        if (!isActive) {
+            setIsActive(true);
+            return;
+          }
         setIsDragging(true);
         setStartPos({ x: e.clientX - position.x, y: e.clientY - position.y });
     };
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!isDragging) return;
+        if (!isDragging || !isActive) return;
         setPosition({ x: e.clientX - startPos.x, y: e.clientY - startPos.y });
       };
     
@@ -48,13 +52,28 @@ export default function Visualiser({
     return (
         <div
             ref={containerRef}
-            className="relative w-full flex items-center justify-center my-24 cursor-move bg-white overflow-hidden"
+            className="relative w-full flex items-center justify-center my-24 bg-white overflow-hidden"
+            style={{
+                cursor: isActive ? "move" : "default",
+            }}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             >
+                <button
+                    type="button"
+                    aria-label="Activate image navigation"
+                    className="w-full h-full absolute top-0 left-0 bg-black/60 z-50 text-white text-6xl transition-all duration-300 ease-in-out"
+                    style={{
+                        opacity: isActive ? 0 : 1,
+                        pointerEvents: isActive ? "none" : "auto",
+                    }}
+                    onClick={() => setIsActive(!isActive)}
+                    >
+                        Start zooming and dragging
+                </button>
             <Image
                 src={placeholderImage}
                 width={1920}
