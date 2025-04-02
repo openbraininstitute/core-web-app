@@ -73,8 +73,8 @@ function ValidationInit({
         Initiating validation
       </h2>
       <p className="text-primary-8">
-        Once the validation process finishes, you can view the results in your project's Activity
-        section.
+        Once the validation process finishes, you can view the results in your project&apos;s
+        Activity section.
       </p>
 
       <CentralLoadingWheel
