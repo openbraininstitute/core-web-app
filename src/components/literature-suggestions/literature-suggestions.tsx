@@ -22,7 +22,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
-  const { messages, clear, status, append, error } = useServiceAiAgentChat(threadId ?? '');
+  const { messages, clear, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
   const handleQuery = React.useCallback(
     (content: string) => {
       append({
@@ -92,7 +92,16 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
                 {(status === 'ready' || status === 'error') && (
                   <Prompt value={prompt} onChange={setPrompt} onClick={handleQuery} />
                 )}
-                {status !== 'ready' && status !== 'error' && <Spinner />}
+                {status !== 'ready' && status !== 'error' && (
+                  <div className={styles.spinnerContainer}>
+                    <Spinner />
+                    {status === 'streaming' && (
+                      <button className={styles.cancelButton} type="button" onClick={stop}>
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
               </footer>
             </>
           ) : (
