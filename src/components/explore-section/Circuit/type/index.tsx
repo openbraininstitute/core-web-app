@@ -1,14 +1,14 @@
 import { ReactNode } from 'react';
 
 export type PaperLitteratureProps = {
+  category: string;
   title: string;
-  type: string;
-  authors: string[];
-  link: string;
-  doi: string;
+  authors: string;
+  url: string;
+  journal: string;
   publicationDate: string;
   abstract: string;
-  category: string;
+  doi: string;
 };
 
 export type SingleFileProps = {
@@ -29,7 +29,8 @@ export type CircuitSchemaProps = {
   key: string;
   name: string;
   description: string;
-  parent?: string;
+  parent?: string | null;
+  derivedFrom: string[]
   hasSubcircuits: boolean;
   brainRegion: string;
   species: string;
@@ -55,24 +56,33 @@ export type CircuitSchemaProps = {
     key: string;
     isAvailable: boolean;
   }[];
-  subcircuits: CircuitSchemaProps[] | null;
+  subcircuit: CircuitSchemaProps[] | [];
 
-  // TO BE REVISED
-  provenance: {
-    isASubcircuit: boolean;
-    subcircuitOf: string | null;
-    literature: PaperLitteratureProps[];
-  };
-  relatedPublications: PaperLitteratureProps[];
-  images: {
-    low?: string | null;
-    normal?: string | null;
-    high: string | null;
-  };
   overview: {
-    cellStatistics: GraphDataImageProps[];
-    networkStatistics: GraphDataImageProps[];
-  };
+    mainDisplay: {
+      name: string;
+      url: string;
+    }[],
+    cellStatistics: {
+      name: string;
+      url: string;
+    }[],
+    networkStatistics: {
+      name: string;
+      url: string;
+    }[],
+  },
+
+  literature: {
+    category: string;
+    title: string;
+    authors: string;
+    doi: string;
+    url: string;
+    journal: string;
+    publicationDate: string;
+    abstract: string;
+  }[];
 };
 
 export type CircuitCellValue = {

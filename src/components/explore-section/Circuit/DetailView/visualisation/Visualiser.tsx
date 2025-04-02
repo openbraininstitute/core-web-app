@@ -1,15 +1,14 @@
-''
+'use client'
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { CircuitSchemaProps } from "../../type";
 import placeholderImage from "./circuit-preview-image_01.jpg";
 
 export default function Visualiser({
-    src,
-    alt,
+    content
 }:{
-    src?: string;
-    alt: string;
+    content: CircuitSchemaProps;
 }) {
 
     const [scale, setScale] = useState<number>(1);
@@ -49,6 +48,8 @@ export default function Visualiser({
         setPosition({ x: 0, y: 0 });
     }
 
+    const imageUrl = content.overview.mainDisplay[0].url
+
     return (
         <div
             ref={containerRef}
@@ -75,10 +76,10 @@ export default function Visualiser({
                         Start zooming and dragging
                 </button>
             <Image
-                src={placeholderImage}
+                src={imageUrl || placeholderImage}
                 width={1920}
                 height={1080}
-                alt={alt}
+                alt={`Image of the circuit ${content.name}`}
                 className="relative z-10 select-none transition-all duration-300 ease-out"
                 style={{
                     transform: `scale(${scale}) translate(${position.x}px, ${position.y}px)`,

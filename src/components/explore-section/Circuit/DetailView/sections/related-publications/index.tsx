@@ -1,5 +1,4 @@
-import { PublicationCardProps } from "@/types/circuit/publication";
-import { CircuitSchemaProps } from "../../../type";
+import { CircuitSchemaProps, PaperLitteratureProps } from "../../../type";
 import PublicationCard from "../../literature/PublicationCard";
 import SubtitleBar from "../SubtitleBar";
 
@@ -72,15 +71,19 @@ export default function RelatedPublicationssSection({
     content: CircuitSchemaProps;
 }) {
 
+    const CIRCUIT_PROVENANCE_LITERATURE = content.literature.filter((publication: PaperLitteratureProps) => publication.category === 'circuit_source')
+    const CIRCUIT_APPLICATION_LITERATURE = content.literature.filter((publication: PaperLitteratureProps) => publication.category === 'application')
+
     return (
         <div className="relative w-full flex flex-col">
             <SubtitleBar title="Source" />
             <div className="relative w-full flex flex-col gap-y-12">
                 {
-                    placeholderLiteratureContent.map((publication: PublicationCardProps, index: number)=> (
+                    CIRCUIT_PROVENANCE_LITERATURE.map((publication: PaperLitteratureProps, index: number)=> (
                         <PublicationCard
-                        key={`Publication_${publication.doi.name}-${index}`}
+                            key={`Publication_${publication.doi}-${index}`}
                             content={publication}
+                            index={index}
                         />
                     ))
                 }
@@ -88,10 +91,11 @@ export default function RelatedPublicationssSection({
             <SubtitleBar title="Applications" />
             <div className="relative w-full flex flex-col gap-y-12">
                 {
-                    placeholderLiteratureContent.map((publication: PublicationCardProps, index: number)=> (
+                    CIRCUIT_APPLICATION_LITERATURE.map((publication: PaperLitteratureProps, index: number)=> (
                         <PublicationCard
-                            key={`Publication_${publication.doi.name}-${index}`}
+                            key={`Publication_${publication.doi}-${index}`}
                             content={publication}
+                            index={index}
                         />
                     ))
                 }

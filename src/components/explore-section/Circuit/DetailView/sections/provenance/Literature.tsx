@@ -1,70 +1,6 @@
-import { PublicationCardProps } from "@/types/circuit/publication";
-import { CircuitSchemaProps } from "../../../type";
+import { CircuitSchemaProps, PaperLitteratureProps } from "../../../type";
 import PublicationCard from "../../literature/PublicationCard";
 import SubtitleBar from "../SubtitleBar";
-
-export const placeholderLiteratureContent = [
-    {
-        title: "Early detection of axonal and neuronal lesions in prenatal-onset periventricular leukomalacia",
-        authors: ["S. Z. Meng", "S. Takashima", "K. Deguchi", "Y. Arai"],
-        link: "https://pubmed.ncbi.nlm.nih.gov/9408595/",
-        doi: {
-            name: "10.1016/s0387-7604(97)00068-5",
-            url: "https://doi.org/10.1016/s0387-7604(97)00068-5"
-        },
-        institution: "National Institute of Neuroscience",
-        publicationDate: "1997-11-01",
-        abstract: "The expression of beta-amyloid precursor protein (beta-APP) immunoreactivity was investigated in 16 cases of prenatal-onset periventricular leukomalacia (PVL). beta-APP positive axons were found in the early stage of prenatal PVL, which included coagulation necrosis, microglial activation, axonal swelling or astrogliosis, but were not detectable in the late stage of prenatal PVL. Furthermore, beta-APP immunoreactive neurons were also observed in the fifth layer of pyramidal neurons of the cerebral cortex, corresponding to the beta-APP positive axons in PVL. Thus, beta-APP is detected as an early sign of axonal and neuronal lesions in prenatal-onset PVL, and neuronal beta-APP in the cerebral cortex may function to repair cell damage. In addition, prenatal PVL occurred at various stages before birth."
-    },
-    {
-        title: "Early detection of axonal and neuronal lesions in prenatal-onset periventricular leukomalacia",
-        authors: ["S. Z. Meng", "S. Takashima", "K. Deguchi", "Y. Arai"],
-        link: "https://pubmed.ncbi.nlm.nih.gov/9408595/",
-        doi: {
-            name: "10.1016/s0387-7604(97)00068-5",
-            url: "https://doi.org/10.1016/s0387-7604(97)00068-5"
-        },
-        institution: "National Institute of Neuroscience",
-        publicationDate: "1997-11-01",
-        abstract: "The expression of beta-amyloid precursor protein (beta-APP) immunoreactivity was investigated in 16 cases of prenatal-onset periventricular leukomalacia (PVL). beta-APP positive axons were found in the early stage of prenatal PVL, which included coagulation necrosis, microglial activation, axonal swelling or astrogliosis, but were not detectable in the late stage of prenatal PVL. Furthermore, beta-APP immunoreactive neurons were also observed in the fifth layer of pyramidal neurons of the cerebral cortex, corresponding to the beta-APP positive axons in PVL. Thus, beta-APP is detected as an early sign of axonal and neuronal lesions in prenatal-onset PVL, and neuronal beta-APP in the cerebral cortex may function to repair cell damage. In addition, prenatal PVL occurred at various stages before birth."
-    },
-    {
-        title: "Early detection of axonal and neuronal lesions in prenatal-onset periventricular leukomalacia",
-        authors: ["S. Z. Meng", "S. Takashima", "K. Deguchi", "Y. Arai"],
-        link: "https://pubmed.ncbi.nlm.nih.gov/9408595/",
-        doi: {
-            name: "10.1016/s0387-7604(97)00068-5",
-            url: "https://doi.org/10.1016/s0387-7604(97)00068-5"
-        },
-        institution: "National Institute of Neuroscience",
-        publicationDate: "1997-11-01",
-        abstract: "The expression of beta-amyloid precursor protein (beta-APP) immunoreactivity was investigated in 16 cases of prenatal-onset periventricular leukomalacia (PVL). beta-APP positive axons were found in the early stage of prenatal PVL, which included coagulation necrosis, microglial activation, axonal swelling or astrogliosis, but were not detectable in the late stage of prenatal PVL. Furthermore, beta-APP immunoreactive neurons were also observed in the fifth layer of pyramidal neurons of the cerebral cortex, corresponding to the beta-APP positive axons in PVL. Thus, beta-APP is detected as an early sign of axonal and neuronal lesions in prenatal-onset PVL, and neuronal beta-APP in the cerebral cortex may function to repair cell damage. In addition, prenatal PVL occurred at various stages before birth."
-    },
-    {
-        title: "Early detection of axonal and neuronal lesions in prenatal-onset periventricular leukomalacia",
-        authors: ["S. Z. Meng", "S. Takashima", "K. Deguchi", "Y. Arai"],
-        link: "https://pubmed.ncbi.nlm.nih.gov/9408595/",
-        doi: {
-            name: "10.1016/s0387-7604(97)00068-5",
-            url: "https://doi.org/10.1016/s0387-7604(97)00068-5"
-        },
-        institution: "National Institute of Neuroscience",
-        publicationDate: "1997-11-01",
-        abstract: "The expression of beta-amyloid precursor protein (beta-APP) immunoreactivity was investigated in 16 cases of prenatal-onset periventricular leukomalacia (PVL). beta-APP positive axons were found in the early stage of prenatal PVL, which included coagulation necrosis, microglial activation, axonal swelling or astrogliosis, but were not detectable in the late stage of prenatal PVL. Furthermore, beta-APP immunoreactive neurons were also observed in the fifth layer of pyramidal neurons of the cerebral cortex, corresponding to the beta-APP positive axons in PVL. Thus, beta-APP is detected as an early sign of axonal and neuronal lesions in prenatal-onset PVL, and neuronal beta-APP in the cerebral cortex may function to repair cell damage. In addition, prenatal PVL occurred at various stages before birth."
-    },
-    {
-        title: "Early detection of axonal and neuronal lesions in prenatal-onset periventricular leukomalacia",
-        authors: ["S. Z. Meng", "S. Takashima", "K. Deguchi", "Y. Arai"],
-        link: "https://pubmed.ncbi.nlm.nih.gov/9408595/",
-        doi: {
-            name: "10.1016/s0387-7604(97)00068-5",
-            url: "https://doi.org/10.1016/s0387-7604(97)00068-5"
-        },
-        institution: "National Institute of Neuroscience",
-        publicationDate: "1997-11-01",
-        abstract: "The expression of beta-amyloid precursor protein (beta-APP) immunoreactivity was investigated in 16 cases of prenatal-onset periventricular leukomalacia (PVL). beta-APP positive axons were found in the early stage of prenatal PVL, which included coagulation necrosis, microglial activation, axonal swelling or astrogliosis, but were not detectable in the late stage of prenatal PVL. Furthermore, beta-APP immunoreactive neurons were also observed in the fifth layer of pyramidal neurons of the cerebral cortex, corresponding to the beta-APP positive axons in PVL. Thus, beta-APP is detected as an early sign of axonal and neuronal lesions in prenatal-onset PVL, and neuronal beta-APP in the cerebral cortex may function to repair cell damage. In addition, prenatal PVL occurred at various stages before birth."
-    },
-]
 
 export default function Literature({
     content
@@ -72,26 +8,31 @@ export default function Literature({
     content: CircuitSchemaProps;
 }) {
 
+    const CIRCUIT_PROVENANCE_LITERATURE = content.literature.filter((publication: PaperLitteratureProps) => publication.category === 'circuit_source')
+    const CIRCUIT_PROVENANCE_RELATED_ARTIFACTS = content.literature.filter((publication: PaperLitteratureProps) => publication.category === 'component_source')
+
     return (
         <div className="relative w-full flex flex-col">
-            <SubtitleBar title="Cell statistics" />
+            <SubtitleBar title="Circuit Provenance" />
             <div className="relative w-full flex flex-col gap-y-12">
                 {
-                    placeholderLiteratureContent.map((publication: PublicationCardProps, index: number)=> (
+                    CIRCUIT_PROVENANCE_LITERATURE.map((publication: PaperLitteratureProps, index: number)=> (
                         <PublicationCard
-                            key={`Publication_${publication.doi.name}-${index}`}
+                            key={`Publication_${publication.doi}-${index}`}
                             content={publication}
+                            index={index}
                         />
                     ))
                 }
             </div>
-            <SubtitleBar title="Network statistics" />
+            <SubtitleBar title="Related artifacts provenance" />
             <div className="relative w-full flex flex-col gap-y-12">
                 {
-                    placeholderLiteratureContent.map((publication: PublicationCardProps, index: number)=> (
+                    CIRCUIT_PROVENANCE_RELATED_ARTIFACTS.map((publication: PaperLitteratureProps, index: number)=> (
                         <PublicationCard
-                            key={`Publication_${publication.doi.name}-${index}`}
+                            key={`Publication_${publication.doi}-${index}`}
                             content={publication}
+                            index={index}
                         />
                     ))
                 }

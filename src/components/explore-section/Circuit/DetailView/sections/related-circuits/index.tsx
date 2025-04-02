@@ -10,10 +10,12 @@ export default function RelatedCircuitsSection({
     content: CircuitSchemaProps;
 }) {
 
+    console.log('Content circuit', content.subcircuit.length)
+
     return (
         <div className="relative w-full flex flex-col">
             {
-                !content.parent && (
+                content.parent !== null && (
                     <>
                         <SubtitleBar title="Parent circuit" />
                         <ParentCircuit content={content} />
@@ -21,15 +23,21 @@ export default function RelatedCircuitsSection({
                 )
             }
             {
-                content.subcircuits && content.subcircuits.length > 0 && (
+                content.subcircuit.length > 0 && (
                     <>
-                    <SubtitleBar title="Subcircuit" />
-                    <Subcircuits content={content} />
+                        <SubtitleBar title={content.subcircuit.length > 1 ? "Subcircuits" : "Subcircuit"} />
+                        <Subcircuits content={content} />
                     </>
                 )
             }
-            <SubtitleBar title="Derived from" />
-            <DerivedCircuits content={content} />
+            {
+                content.derivedFrom.length > 0 && (
+                    <>
+                        <SubtitleBar title="Derived from" />
+                        <DerivedCircuits content={content} />
+                    </>
+                )
+            }
         </div>
     )
 }

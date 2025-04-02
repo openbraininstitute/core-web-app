@@ -93,7 +93,7 @@ export default function DerivedCircuits({
             styles.circuitTable
           )}
           columns={columns}
-          dataSource={content.subcircuits || []}
+          dataSource={content.subcircuit || []}
           pagination={false}
           rowSelection={rowSelection}
         />

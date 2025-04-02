@@ -7,6 +7,28 @@ import { CircuitColumn, CircuitSchemaProps } from "../../../type";
 
 import styles from './ExploreCircuitTable.module.scss';
 
+import CIRCUITS from "../../../content/circuits_tree";
+
+export function findParentCircuitByName(parentName: string): CircuitSchemaProps | null {
+  function search(circuits: CircuitSchemaProps[]): CircuitSchemaProps | null {
+    
+    for (const circuit of circuits) {
+      
+      if (circuit.name === parentName) {
+        return circuit;
+      }
+
+      if (circuit.hasSubcircuits && circuit.subcircuit && circuit.subcircuit.length > 0) {
+        const found = search(circuit.subcircuit);
+        if (found) return found;
+      }
+    }
+    return null; // No match found in this branch
+  }
+
+  return search(CIRCUITS);
+}
+
 export default function ParentCircuit({
     content
 }:{
@@ -14,13 +36,13 @@ export default function ParentCircuit({
 }){
     const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
     
-      const rowSelection: TableRowSelection<CircuitSchemaProps> = {
-        type: 'radio',
-        selectedRowKeys,
-        onChange: (newSelectedRows: Key[]) => {
-          setSelectedRowKeys(newSelectedRows);
-        },
-      };
+    const rowSelection: TableRowSelection<CircuitSchemaProps> = {
+    type: 'radio',
+    selectedRowKeys,
+    onChange: (newSelectedRows: Key[]) => {
+        setSelectedRowKeys(newSelectedRows);
+    },
+    };
 
     const columns: CircuitColumn[] = [
         {
@@ -93,10 +115,10 @@ export default function ParentCircuit({
             styles.circuitTable
           )}
           columns={columns}
-          dataSource={content.subcircuits || []}
+          dataSource={findParentCircuitByName(content.name) ? [findParentCircuitByName(content.name)].filter(Boolean) as CircuitSchemaProps[] : []}
           pagination={false}
           rowSelection={rowSelection}
-        />
+        />w
         </div>
     ))
 }

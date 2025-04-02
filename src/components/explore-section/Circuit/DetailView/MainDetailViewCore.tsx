@@ -14,7 +14,7 @@ export default function MainDetailViewCore({
 
         <div className="relative w-full flex flex-col text-primary-9">
             <HeaderDetailView content={content} />
-            <Visualiser alt={`Image of the circuit ${content.name}`} />
+            <Visualiser content={content} />
             <SectionMainContainer content={content} /> 
         </div>
     )
