@@ -1,18 +1,21 @@
 import React from 'react';
 import { useSnapshot } from './snapshot';
-import { SuggestionsList } from './suggestions-list';
+import { SuggestionsListPerRegion, SuggestionsListFullBrain } from './suggestions-list';
 import { isString } from '@/util/type-guards';
 
 export function useHardcodedSuggestions(): string[] {
   const snapshot = useSnapshot();
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   React.useEffect(() => {
-    const questions = shuffle(SuggestionsList[snapshot?.artifact ?? ''])
+    const isBrainRoot = snapshot.region.toLowerCase().startsWith('basic cell');
+    const artifact = snapshot.artifact ?? '';
+    const list = isBrainRoot ? SuggestionsListFullBrain : SuggestionsListPerRegion;
+    const questions = shuffle(list[artifact])
       .filter(isNonEmptyString)
       .slice(0, 2)
       .map((question) =>
         question
-          .replace('{brain_region}', snapshot?.region ?? 'Midbrain')
+          .replace('{brain_region}', snapshot.region ?? 'Midbrain')
           .replace('{human}', 'human')
           .replace('{humans}', 'humans')
           .replace('{rodent}', 'rodent')
