@@ -54,7 +54,9 @@ export function useLoadMore<T>(
   key: string
 ) {
   const [, setPrevData] = useAtom(previousDataAtom({ ...dataContext, key }));
+  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
 
+  const data = useData<T>(dataContext, key);
   const res = useLoadableValue(
     dataAtom({
       ...dataContext,
@@ -62,8 +64,10 @@ export function useLoadMore<T>(
     })
   );
 
-  const data = useData<T>(dataContext, key);
-  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
+  const showLoadMore =
+    res.state === 'hasData' &&
+    res.data.data.length + (res.data.pagination.page - 1) * PAGE_SIZE <
+      res.data.pagination.total_items;
 
   const loadMore = useCallback(
     (load: boolean = true) => {
@@ -77,7 +81,7 @@ export function useLoadMore<T>(
     [pageNumber, setPageNumber, res, data, setPrevData]
   );
 
-  return { loadMore, loading: res.state === 'loading' };
+  return { loadMore, showLoadMore, loading: res.state === 'loading' };
 }
 
 export default function LoadMoreButton({
@@ -94,8 +98,8 @@ export default function LoadMoreButton({
   dataKey: string;
   hide: () => void;
 }) {
-  const { loadMore } = useLoadMore(dataContext, dataKey);
-
+  const { loadMore, showLoadMore } = useLoadMore(dataContext, dataKey);
+  if (!showLoadMore) return null;
   return (
     <Btn
       className="bg-primary-8 text-white"

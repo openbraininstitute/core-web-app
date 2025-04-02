@@ -38,7 +38,7 @@ import {
   transformQueryParamsArrayToString,
 } from '@/api/entitycore/transformers';
 import { ENTITY_CORE_DATA_TYPES } from '@/api/entitycore/types/shared/context';
-import * as entitycoreApi from '@/api/entitycore/queries';
+import * as entitycore from '@/api/entitycore/queries';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 type DataAtomFamilyScopeType = {
@@ -110,7 +110,6 @@ export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Filter[]>>(async (get) => {
       const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
-
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
         ...columns.map((colKey) => {
@@ -204,9 +203,10 @@ export const dataAtom = atomFamily(
       const filters = await get(filtersAtom(scope));
       const sortState = get(sortStateAtom(scope));
       const queryParams = transformQueryParamsArrayToString(transformFiltersToQuery(filters));
-
+      // TODO: after will have all the types implemented will have one function that aggregate the endpoints
+      // the function will be responsible to match the query based on the type
       if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
-        const response = await entitycoreApi.getReconstructionMorphologies({
+        const response = await entitycore.getReconstructionMorphologies({
           withFacets: true,
           filters: {
             page_size: PAGE_SIZE,
@@ -226,6 +226,52 @@ export const dataAtom = atomFamily(
           data: response.data.map((o) => ({
             ...o,
             type: ENTITY_CORE_DATA_TYPES.RECONSTRUCTION_MORPHOLOGY.type,
+          })) as T[],
+        };
+      }
+      if (scope.dataType === DataType.ExperimentalBoutonDensity) {
+        const response = await entitycore.getExperimentalBoutonDensities({
+          filters: {
+            page_size: PAGE_SIZE,
+            page: pageNumber,
+          },
+        });
+
+        return {
+          ...response,
+          data: response.data.map((o) => ({
+            ...o,
+            type: ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_BOUTON_DENSITY.type,
+          })) as T[],
+        };
+      }
+      if (scope.dataType === DataType.ExperimentalNeuronDensity) {
+        const response = await entitycore.getExperimentalNeuronDensities({
+          filters: {
+            page_size: PAGE_SIZE,
+            page: pageNumber,
+          },
+        });
+        return {
+          ...response,
+          data: response.data.map((o) => ({
+            ...o,
+            type: ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_NEURON_DENSITY.type,
+          })) as T[],
+        };
+      }
+      if (scope.dataType === DataType.ExperimentalSynapsePerConnection) {
+        const response = await entitycore.getExperimentalSynapsesPerConnections({
+          filters: {
+            page_size: PAGE_SIZE,
+            page: pageNumber,
+          },
+        });
+        return {
+          ...response,
+          data: response.data.map((o) => ({
+            ...o,
+            type: ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_SYNAPSES_PER_CONNECTION.type,
           })) as T[],
         };
       }
