@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { format } from 'date-fns';
 
 import BluePyEModelCls from '@/services/virtual-lab/build/me-model/bluepy-emodel';
 import { meModelSelfUrlAtom, selectedMEModelIdAtom } from '@/state/virtual-lab/build/me-model';
@@ -20,6 +19,20 @@ function getMEModelPageUrl(meModelId: string, virtualLabInfo: VirtualLabInfo) {
   return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}`;
 }
 
+// Format elapsed time as HH:mm:ss
+const formatElapsedTime = (ms: number) => {
+  const seconds = Math.floor(ms / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  return [
+    hours.toString().padStart(2, '0'),
+    minutes.toString().padStart(2, '0'),
+    remainingSeconds.toString().padStart(2, '0'),
+  ].join(':');
+};
+
 function ElapsedTime() {
   const [startTime] = useState(Date.now());
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -31,7 +44,7 @@ function ElapsedTime() {
   }, []);
 
   const elapsed = currentTime - startTime;
-  const elapsedStr = format(elapsed, 'HH:mm:ss');
+  const elapsedStr = formatElapsedTime(elapsed);
 
   return (
     <>
@@ -60,8 +73,8 @@ function ValidationInit({
         Initiating validation
       </h2>
       <p className="text-primary-8">
-        Once the validation process finishes, you can view the results in your project&apos;s
-        Activity section.
+        Once the validation process finishes, you can view the results in your project's Activity
+        section.
       </p>
 
       <CentralLoadingWheel
@@ -83,12 +96,14 @@ function ValidationInit({
 }
 
 function ValidationRunning({
-  onCancel,
+  meModelId,
   virtualLabInfo,
 }: {
-  onCancel?: () => void;
+  meModelId: string;
   virtualLabInfo: VirtualLabInfo;
 }) {
+  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
       <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">Running validation</h2>
@@ -97,15 +112,19 @@ function ValidationRunning({
         Activity section.
       </p>
 
+      <p className="text-primary-8">
+        You can close the window at any time now. Analysis results will appear under the
+        <Link className="ml-2 font-bold underline" href={meModelPageUrl}>
+          EModel details page
+        </Link>
+      </p>
+
       <CentralLoadingWheel
         text={<ElapsedTime />}
         style={{ display: 'table', width: '100%', height: '200px' }}
       />
 
       <div className="mt-10 flex flex-row gap-3">
-        <button type="button" className="text-neutral-7" onClick={onCancel}>
-          Cancel validation
-        </button>
         <a
           className="border border-primary-8 px-4 py-2 text-primary-8"
           href={`${generateVlProjectUrl(virtualLabInfo.virtualLabId, virtualLabInfo.projectId)}/activity`}
@@ -174,11 +193,9 @@ function ValidationError({
 export default function BluePyEModelContainer({
   virtualLabInfo,
   accessToken,
-  onClose,
 }: {
   virtualLabInfo: VirtualLabInfo;
   accessToken: string;
-  onClose: () => void;
 }) {
   const router = useRouter();
 
@@ -223,7 +240,7 @@ export default function BluePyEModelContainer({
   }
 
   if (analysisState === 'running') {
-    return <ValidationRunning onCancel={onClose} virtualLabInfo={virtualLabInfo} />;
+    return <ValidationRunning virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
   }
 
   if (analysisState === 'done') {
