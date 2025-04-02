@@ -114,3 +114,20 @@ button.cancelButton:active {
   background-color: var(--color-primary-4);
   color: #fffe;
 }
+
+.welcome {
+  display: grid;
+  place-items: center;
+}
+
+.welcome > div {
+  margin-top: 2em;
+  font-size: 120%;
+  padding: 1em;
+  box-shadow: 0 0.5em 1em #0005;
+  border-radius: 1em;
+}
+
+.welcome > div > p {
+  margin: 1em 0;
+}

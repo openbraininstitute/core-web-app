@@ -54,11 +54,22 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
         type="button"
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
-        <h1 title={status}>AI Assistant</h1>
+        <h1 title={status}>AI literature search</h1>
         {collapsedPanel ? <PlusOutlined /> : <MinusOutlined />}
       </button>
       {!collapsedPanel && (
         <>
+          {messages.length === 0 && (
+            <div className={styles.welcome}>
+              <div>
+                <p>Welcome to the OBI platform! </p>
+                <p>
+                  I&apos;m here to help with your literature searches, and soon, I&apos;ll assist
+                  you in exploring our database and setting up your own simulations.
+                </p>
+              </div>
+            </div>
+          )}
           {threadId ? (
             <>
               <div className={styles.articles}>
