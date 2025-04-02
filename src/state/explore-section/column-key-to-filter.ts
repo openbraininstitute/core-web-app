@@ -4,6 +4,7 @@ import { FilterTypeEnum } from '@/types/explore-section/filters';
 
 export default function columnKeyToFilter(key: string): Filter {
   const fieldConfig = ENTITY_CORE_FIELDS_CONFIG[key];
+
   switch (fieldConfig.filter) {
     case FilterTypeEnum.CheckList:
       return {

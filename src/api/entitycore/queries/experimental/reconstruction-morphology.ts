@@ -1,15 +1,13 @@
-import authApiClient from '@/api/apiClient';
-import {
+import { entityCoreApi } from '@/api/entitycore/utils';
+import type {
   ExpandReconstructionMorphologyParm,
   IMorphologyFilter,
   IReconstructionMorphology,
   IReconstructionMorphologyExpanded,
 } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { entityCoreUrl } from '@/config';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
-const baseUri = '/reconstruction-morphology/';
+const baseUri = '/reconstruction-morphology';
 /**
  * Retrieves a list of reconstruction morphologies from the EntityCoreAPI.
  *
@@ -24,7 +22,7 @@ export async function getReconstructionMorphologies({
   withFacets?: boolean;
   filters?: IMorphologyFilter;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IReconstructionMorphology>>(baseUri, {
     queryParams: {
       ...filters,
@@ -48,9 +46,9 @@ export async function getReconstructionMorphology({
   id: string;
   expand?: ExpandReconstructionMorphologyParm;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await entityCoreApi();
   return await api.get<IReconstructionMorphology | IReconstructionMorphologyExpanded>(
-    `${baseUri}${id}`,
+    `${baseUri}/${id}`,
     {
       queryParams: {
         expand,

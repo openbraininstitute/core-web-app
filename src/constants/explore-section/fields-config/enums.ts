@@ -101,6 +101,12 @@ export enum EntityCoreFields {
   License = 'license',
   BrainRegion = 'brain_region',
   MType = 'mtype',
+  EType = 'etype',
+  NeuronDensity = 'neuron_density', // TODO: to check new naming
+  NumberOfMeasurements = 'number_of_measurements', // TODO: to check new naming
+  SubjectAge = 'subject_age', // TODO: to check new naming
+  Sem = 'sem', // TODO: to check new naming
+  MeanSTD = 'meanstd', // TODO: to check new naming
   NeuronMorphologyWidth = 'neuronMorphologyWidth',
   NeuronMorphologyHeight = 'NeuronMorphologyHeight',
   NeuronMorphologyDepth = 'neuronMorphologyDepth',
