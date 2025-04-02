@@ -90,6 +90,5 @@ function renderRateLimitError(value: RateLimitError): React.ReactNode {
 function figureWhen(hours: number, minutes: number) {
   if (hours === 0) return `${minutes} minutes`;
   if (hours === 1) return `one hour and ${minutes} minutes`;
-  return `approximately {hours + 1} hours`;
+  return `approximately ${hours + 1} hours`;
 }
-
