@@ -9,7 +9,6 @@ import { getSession } from '@/authFetch';
 import { classNames } from '@/util/utils';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { fetchResourceByIdRaw } from '@/api/nexus';
-import { nexus } from '@/config';
 import { composeUrl } from '@/util/nexus';
 import styles from './styles.module.css';
 
