@@ -8,10 +8,11 @@ import { MEModel } from '@/types/me-model';
 
 const statusMessage: Record<MEModel['status'], string> = {
   initialized: 'No ME-Model analysis yet',
-  running: 'ME-Model analysis in progress',
+  running: 'ME-Model analysis is running',
   done: 'ME-Model analysis done',
-  error: 'ME-Model analysis failed',
+  failed: 'ME-Model analysis failed',
 };
+
 export default function AnalysisPreview() {
   const meModelResource = useAtomValue(meModelResourceAtom);
 
@@ -30,7 +31,7 @@ export default function AnalysisPreview() {
     ? statusMessage[meModelResource.status]
     : statusMessage.initialized;
 
-  if (!distributions || ['initialized', 'running', 'error'].includes(meModelResource.status)) {
+  if (!distributions || ['initialized', 'running', 'failed'].includes(meModelResource.status)) {
     return (
       <div className="flex h-full items-center justify-center text-4xl font-bold text-primary-9">
         {message}
