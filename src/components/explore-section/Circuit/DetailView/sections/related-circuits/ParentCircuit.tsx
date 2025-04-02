@@ -1,13 +1,13 @@
-import truncate from "@/util/truncate";
-import { classNames } from "@/util/utils";
 import { Table } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useState } from "react";
 import { CircuitColumn, CircuitSchemaProps } from "../../../type";
 
-import styles from './ExploreCircuitTable.module.scss';
 
+import truncate from "@/util/truncate";
+import { classNames } from "@/util/utils";
 import CIRCUITS from "../../../content/circuits_tree";
+import styles from './ExploreCircuitTable.module.scss';
 
 export function findParentCircuitByName(parentName: string): CircuitSchemaProps | null {
   function search(circuits: CircuitSchemaProps[]): CircuitSchemaProps | null {
@@ -118,7 +118,7 @@ export default function ParentCircuit({
           dataSource={findParentCircuitByName(content.name) ? [findParentCircuitByName(content.name)].filter(Boolean) as CircuitSchemaProps[] : []}
           pagination={false}
           rowSelection={rowSelection}
-        />w
+        />
         </div>
     ))
 }

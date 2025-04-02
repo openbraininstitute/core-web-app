@@ -1,12 +1,13 @@
 'use client'
 
-import { UserIcon } from "@/components/icons";
-import CalendarIcon from "@/components/icons/Calendar";
-import { classNames } from "@/util/utils";
 import Link from "next/link";
 import { useState } from "react";
 import { CopyIcon, LinkIcon } from "../../icon/ArticlesIcons";
 import { PaperLitteratureProps } from "../../type";
+
+import { UserIcon } from "@/components/icons";
+import CalendarIcon from "@/components/icons/Calendar";
+import { classNames } from "@/util/utils";
 
 
 export default function PublicationCard({
@@ -17,7 +18,7 @@ export default function PublicationCard({
     index: number;
 }) {
 
-    const abstract = content.abstract
+    const {abstract} = content
 
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
@@ -44,7 +45,7 @@ export default function PublicationCard({
                     </Link>
                     <button type="button" onClick={copyDOI} className="flex flex-row items-center text-base font-normal text-[#003A8C]">
                         <CopyIcon iconColor="#003A8C" className="w-4 h-4 mr-2" />
-                        <span>Copy DOI</span>
+                        <span className="whitespace-nowrap">Copy DOI</span>
                     </button>
                 </div>
             </header>

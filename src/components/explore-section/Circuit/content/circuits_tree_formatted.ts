@@ -1,6 +1,6 @@
 import { CircuitSchemaProps } from "../type";
 
-export const CIRCUITS_FULL: CircuitSchemaProps[] = [
+const CIRCUITS_FULL: CircuitSchemaProps[] = [
 	{
 		key: "nbS1-O1",
 		name: "nbS1-O1",
