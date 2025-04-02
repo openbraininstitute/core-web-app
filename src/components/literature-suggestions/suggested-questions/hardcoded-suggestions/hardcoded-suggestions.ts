@@ -1,13 +1,14 @@
 import React from 'react';
-import { ROOT_REGION_ID, useSnapshot } from './snapshot';
+import { useSnapshot } from './snapshot';
 import { SuggestionsListPerRegion, SuggestionsListFullBrain } from './suggestions-list';
 import { isString } from '@/util/type-guards';
+import { BASIC_CELL_GROUPS_AND_REGIONS_ID } from '@/constants/brain-hierarchy';
 
 export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): string[] {
   const snapshot = useSnapshot();
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   React.useEffect(() => {
-    const isBrainRoot = snapshot.regionId === ROOT_REGION_ID;
+    const isBrainRoot = snapshot.regionId === BASIC_CELL_GROUPS_AND_REGIONS_ID;
     const artifact = snapshot.artifact ?? '';
     const list = isBrainRoot ? SuggestionsListFullBrain : SuggestionsListPerRegion;
     const questions = shuffle(list[artifact])

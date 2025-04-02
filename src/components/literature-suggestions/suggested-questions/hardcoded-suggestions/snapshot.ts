@@ -10,8 +10,6 @@ interface Snapshot {
   artifact: string;
 }
 
-export const ROOT_REGION_ID = 'http://api.brain-map.org/api/v2/data/Structure/8';
-
 export function useSnapshot(): Snapshot {
   const [snapshot, setSnapshot] = React.useState<Snapshot>({
     regionId: '',
