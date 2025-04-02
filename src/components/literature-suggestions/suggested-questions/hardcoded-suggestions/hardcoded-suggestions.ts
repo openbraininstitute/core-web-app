@@ -1,21 +1,21 @@
 import React from 'react';
-import { useSnapshot } from './snapshot';
+import { ROOT_REGION_ID, useSnapshot } from './snapshot';
 import { SuggestionsListPerRegion, SuggestionsListFullBrain } from './suggestions-list';
 import { isString } from '@/util/type-guards';
 
-export function useHardcodedSuggestions(): string[] {
+export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): string[] {
   const snapshot = useSnapshot();
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   React.useEffect(() => {
-    const isBrainRoot = snapshot.region.toLowerCase().startsWith('basic cell');
+    const isBrainRoot = snapshot.regionId === ROOT_REGION_ID;
     const artifact = snapshot.artifact ?? '';
     const list = isBrainRoot ? SuggestionsListFullBrain : SuggestionsListPerRegion;
     const questions = shuffle(list[artifact])
       .filter(isNonEmptyString)
-      .slice(0, 2)
+      .slice(0, maxNumberOfQuestions)
       .map((question) =>
         question
-          .replace('{brain_region}', snapshot.region ?? 'Midbrain')
+          .replace('{brain_region}', snapshot.regionTitle ?? 'Midbrain')
           .replace('{human}', 'human')
           .replace('{humans}', 'humans')
           .replace('{rodent}', 'rodent')
@@ -24,7 +24,7 @@ export function useHardcodedSuggestions(): string[] {
           .replace('{rodents/humans}', 'rodents')
       );
     setSuggestions(questions);
-  }, [snapshot]);
+  }, [maxNumberOfQuestions, snapshot]);
   return suggestions;
 }
 
