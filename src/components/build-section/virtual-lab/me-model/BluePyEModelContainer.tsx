@@ -9,14 +9,19 @@ import CentralLoadingWheel from '@/components/CentralLoadingWheel';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
+import { EmodelTabKeys } from '@/components/explore-section/EModel/DetailView/SectionTabs';
 
-function getMEModelPageUrl(meModelId: string, virtualLabInfo: VirtualLabInfo) {
+function getMEModelPageUrl(meModelId: string, virtualLabInfo: VirtualLabInfo, tab?: EmodelTabKeys) {
   const { virtualLabId, projectId } = virtualLabInfo;
 
   const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
   const idSegment = to64(`${virtualLabId}/${projectId}!/!${meModelId}`);
 
-  return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}`;
+  const searchParams = new URLSearchParams();
+  if (tab) searchParams.set('tab', tab);
+  const searchStr = searchParams.toString();
+
+  return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}?${searchStr}`;
 }
 
 // Format elapsed time as HH:mm:ss
@@ -80,7 +85,7 @@ function ValidationInit({
       <CentralLoadingWheel
         text={
           <>
-            <div>Please don’t close the window</div>
+            <div>Please don&apos;t close the window</div>
             <span className="text-sm font-light">Validation is launching</span>
           </>
         }
@@ -115,8 +120,9 @@ function ValidationRunning({
       <p className="text-primary-8">
         You can close the window at any time now. Analysis results will appear under the
         <Link className="ml-2 font-bold underline" href={meModelPageUrl}>
-          EModel details page
+          ME-model details page
         </Link>
+        .
       </p>
 
       <CentralLoadingWheel
@@ -145,7 +151,7 @@ function ValidationSuccess({
 }) {
   const router = useRouter();
 
-  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo, 'analysis');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -160,10 +166,10 @@ function ValidationSuccess({
       <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">
         Validation finished successfully
       </h2>
-      <p className="text-primary-8">You will be redirected to ME-Model page shortly</p>
+      <p className="text-primary-8">You will be redirected to ME-model page shortly</p>
 
       <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
-        View EModel details
+        View ME-model details
       </Link>
     </div>
   );
@@ -184,7 +190,7 @@ function ValidationError({
       <p className="text-primary-8">An unexpected error occurred during the validation process.</p>
 
       <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
-        EModel details
+        ME-model details
       </Link>
     </div>
   );
