@@ -3,21 +3,41 @@ import { useAtomValue } from 'jotai';
 import { meModelResourceAtom } from '@/state/virtual-lab/build/me-model';
 import { PDFViewerContainer } from '@/components/explore-section/common/pdf/PDFViewerContainer';
 
-import { ensureArray } from '@/util/nexus';
+import { ensureArray, getOrgFromSelfUrl, getProjectFromSelfUrl } from '@/util/nexus';
+import { MEModel } from '@/types/me-model';
+
+const statusMessage: Record<MEModel['status'], string> = {
+  initialized: 'No ME-Model analysis yet',
+  running: 'ME-Model analysis is running',
+  done: 'ME-Model analysis done',
+  failed: 'ME-Model analysis failed',
+};
 
 export default function AnalysisPreview() {
   const meModelResource = useAtomValue(meModelResourceAtom);
-  const image = meModelResource?.image;
 
-  if (!image || meModelResource?.status !== 'done') {
+  if (!meModelResource) return null;
+
+  const nexusContext = {
+    org: getOrgFromSelfUrl(meModelResource._self),
+    project: getProjectFromSelfUrl(meModelResource._self),
+  };
+  const distributions = ensureArray(meModelResource?.image).map((image) => ({
+    ...image,
+    ...nexusContext,
+  })) as unknown as { '@id': string; about: string; org?: string; project?: string }[];
+
+  const message = meModelResource.status
+    ? statusMessage[meModelResource.status]
+    : statusMessage.initialized;
+
+  if (!distributions || ['initialized', 'running', 'failed'].includes(meModelResource.status)) {
     return (
       <div className="flex h-full items-center justify-center text-4xl font-bold text-primary-9">
-        No ME-Model analysis yet
+        {message}
       </div>
     );
   }
 
-  return (
-    <PDFViewerContainer distributions={ensureArray(image) as { '@id': string; about: string }[]} />
-  );
+  return <PDFViewerContainer distributions={distributions} />;
 }

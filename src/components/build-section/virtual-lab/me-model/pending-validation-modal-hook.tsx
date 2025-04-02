@@ -10,7 +10,6 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 export function usePendingValidationModal() {
   const [modal, contextHolder] = Modal.useModal();
   const destroyRef = useRef<() => void>();
-  const onClose = () => destroyRef?.current?.();
 
   function createModal(virtualLabInfo: VirtualLabInfo, accessToken: string) {
     const { destroy } = modal.confirm({
@@ -28,13 +27,7 @@ export function usePendingValidationModal() {
       },
       closeIcon: <CloseOutlined className="text-2xl text-primary-8" />,
       className: '![&>.ant-modal-content]:bg-red-500',
-      content: (
-        <BluePyEModelContainer
-          onClose={onClose}
-          virtualLabInfo={virtualLabInfo}
-          accessToken={accessToken}
-        />
-      ),
+      content: <BluePyEModelContainer virtualLabInfo={virtualLabInfo} accessToken={accessToken} />,
     });
     destroyRef.current = destroy;
     return destroy;
