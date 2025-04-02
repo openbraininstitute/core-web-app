@@ -198,12 +198,21 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
         )}
       </button>
       <button
-        className="fit-content ml-auto flex w-fit items-center bg-primary-8 p-4 font-bold hover:brightness-110"
+        className={classNames(
+          'fit-content ml-auto flex w-fit items-center p-4 font-bold hover:brightness-110',
+          meModelCreating ? 'bg-neutral-4' : 'bg-primary-8'
+        )}
         onClick={onClickWithValidation}
         type="button"
         disabled={meModelCreating}
       >
-        Launch validation
+        {meModelCreating ? (
+          <span className="flex flex-row gap-4">
+            Launch validation <Spin />
+          </span>
+        ) : (
+          'Launch validation'
+        )}
       </button>
     </div>
   );
