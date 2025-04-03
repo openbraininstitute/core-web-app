@@ -3,10 +3,10 @@ import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useState } from "react";
 import { CircuitColumn, CircuitSchemaProps } from "../../../type";
 
+import CIRCUITS from "../../../content/circuits_tree";
 
 import truncate from "@/util/truncate";
 import { classNames } from "@/util/utils";
-import CIRCUITS from "../../../content/circuits_tree";
 import styles from './ExploreCircuitTable.module.scss';
 
 export function findParentCircuitByName(parentName: string): CircuitSchemaProps | null {
@@ -23,7 +23,7 @@ export function findParentCircuitByName(parentName: string): CircuitSchemaProps 
         if (found) return found;
       }
     }
-    return null; // No match found in this branch
+    return null; 
   }
 
   return search(CIRCUITS);

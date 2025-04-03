@@ -1,3 +1,5 @@
+import { InfoCircleOutlined } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import Link from "next/link";
 
 export default function ActionButton({
@@ -8,7 +10,7 @@ export default function ActionButton({
     disabled,
     children,
 }:{
-    type: "button" | "link";
+    type: "button" | "link" | "download";
     label: string;
     action?: () => void;
     link?: string;
@@ -16,55 +18,75 @@ export default function ActionButton({
     children: React.ReactNode;
 }) {
 
-    return type === "link" ? (
-        <button
-            type="button"
-            className="relative flex flex-row gap-x-2 items-center"
-            style={{
-                color: disabled ? "#A0AEC0" : "#002766",
-                opacity: disabled ? 0.8 : 1,
-                pointerEvents: disabled ? "none" : "auto",
-                cursor: disabled ? "not-allowed" : "pointer",
-            }}
-            onClick={action}
-            disabled={disabled}
-            aria-label={label}
+
+    if (type === "button") {
+        return (
+            <button
+                type="button"
+                className="relative flex flex-row gap-x-2 items-center"
+                style={{
+                    color: disabled ? "#A0AEC0" : "#002766",
+                    opacity: disabled ? 0.8 : 1,
+                    pointerEvents: disabled ? "none" : "auto",
+                    cursor: disabled ? "not-allowed" : "pointer",
+                }}
+                onClick={action}
+                disabled={disabled}
+                aria-label={label}
             >
-            <span className="block text-sm font-normal mr-2">
-                {
-                    label
-                }
-            </span>
-            <div className="w-12 h-12 border border-solid border-gray-300 flex items-center justify-center">
-                {
-                    children
-                }
-            </div>
-        </button>
-    ) : (
-        <Link
-            href={link || "#"}
-            className="relative flex flex-row gap-x-2 items-center text-primary-9 disabled:text-gray-500 disabled:opacity-50"
-            style={{
-                color: disabled ? "#A0AEC0" : "#002766",
-                opacity: disabled ? 0.8 : 1,
-                pointerEvents: disabled ? "none" : "auto",
-                cursor: disabled ? "not-allowed" : "pointer",
-            }}
-            aria-label={label}
-            aria-disabled={disabled ? "true" : "false"}
-            target="_blank"
+                <span className="block text-sm font-normal mr-2">{label}</span>
+                <div className="w-12 h-12 border border-solid border-gray-300 flex items-center justify-center">
+                    {children}
+                </div>
+            </button>
+        );
+    }
+
+    if (type === "link") {
+        return (
+            <Link
+                href={link || "#"}
+                className="relative flex flex-row gap-x-2 items-center text-primary-9 disabled:text-gray-500 disabled:opacity-50"
+                style={{
+                    color: disabled ? "#A0AEC0" : "#002766",
+                    opacity: disabled ? 0.8 : 1,
+                    pointerEvents: disabled ? "none" : "auto",
+                    cursor: disabled ? "not-allowed" : "pointer",
+                }}
+                aria-label={label}
+                aria-disabled={disabled ? "true" : "false"}
+                target="_blank"
             >
-            <span className="block text-sm font-normal mr-1">
-                {
-                    label
-                }
-            </span>
-            <div className="w-12 h-12 border border-solid border-gray-300 flex items-center justify-center">
-                {
-                    children
-                }
-            </div>
-        </Link>
-    )
+                <span className="block text-sm font-normal mr-1">{label}</span>
+                <div className="w-12 h-12 border border-solid border-gray-300 flex items-center justify-center">
+                    {children}
+                </div>
+            </Link>
+        );
+    }
+
+    if (type === "download" && link) {
+        return (
+            <a
+                href={link}
+                type="button"
+                className="absolute bottom-6 right-10 flex h-20 w-[150px] items-center justify-center bg-primary-8 text-xl transition-bottom duration-300 ease-in-out"
+            >
+                <span>Download</span>
+                <Tooltip
+                    title={
+                        <a
+                            href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            The connectome will be downloaded in Connectome Utilities format, see more here.
+                        </a>
+                    }
+                >
+                    <InfoCircleOutlined className="ml-2" />
+                </Tooltip>
+            </a>
+        );
+    }
 }

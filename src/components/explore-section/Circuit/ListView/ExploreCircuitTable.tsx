@@ -1,28 +1,25 @@
 'use client';
 
-import { Key, useState } from 'react';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { Table, Tooltip } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
-import { InfoCircleOutlined } from '@ant-design/icons';
-import circuitsFlat from '../content/circuits_flat';
+import { useState } from 'react';
+import CIRCUITS_FULL from '../content/circuits_tree_formatted';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-import CIRCUITS from '../content/circuits_tree';
-import { CircuitColumn, CircuitSchemaProps } from '../type';
-import { ChevronRight } from '@/components/icons';
-import truncate from '@/util/truncate';
+import { CircuitSchemaProps } from '../type';
+import calculateSubcircuitsForParent from '../utils/calculateSubcircuitsForParent';
+import getExpandableRowKeys from '../utils/getExpandableRowKey';
+
+import columns from './Columns';
+
 import { classNames } from '@/util/utils';
+
 import styles from './ExploreCircuiteTable.module.scss';
 
-const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
-  return data.reduce((acc, row) => {
-    const subKeys = row.subcircuits ? getExpandableRowKeys(row.subcircuits) : [];
-    return row.hasSubcircuits ? [...acc, row.key, ...subKeys] : [...acc, ...subKeys];
-  }, [] as string[]);
-};
 
 export default function ExploreCircuitTable() {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS));
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS_FULL));
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
@@ -33,108 +30,20 @@ export default function ExploreCircuitTable() {
   };
 
   const rowSelection: TableRowSelection<CircuitSchemaProps> = {
-    type: 'radio',
+    type: "radio",
     selectedRowKeys,
-    onChange: (newSelectedRows: Key[]) => {
-      setSelectedRowKeys(newSelectedRows);
+    onChange: (newSelectedRowKeys: React.Key[], _selectedRows: CircuitSchemaProps[]) => {
+      const key = newSelectedRowKeys[0] as string; 
+       
+      const updatedKeys = selectedRowKeys[0] === key ? [] : [key];
+      setSelectedRowKeys(updatedKeys);
     },
   };
 
-  const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
-    const directSubcircuits = row.subcircuits?.length || 0;
-    const nestedSubcircuits = row.subcircuits
-      ? row.subcircuits.reduce((sum, sub) => sum + calculateSubcircuitsForParent(sub), 0)
-      : 0;
-    return directSubcircuits + nestedSubcircuits;
-  };
-
-  const columns: CircuitColumn[] = [
-    {
-      title: 'Name',
-      key: 'name',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap">{value.name}</span>
-      ),
-    },
-    {
-      title: 'Description',
-      key: 'description',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{truncate(value.description, 40)}</span>
-      ),
-      width: 300,
-    },
-    {
-      title: 'Brain region',
-      key: 'brainRegion',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.brainRegion}</span>
-      ),
-    },
-    {
-      title: '# Neurons',
-      key: 'numberOfNeurons',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.numberOfNeurons}</span>
-      ),
-    },
-    {
-      title: 'Species',
-      key: 'specie',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.species}</span>
-      ),
-    },
-    {
-      title: 'Contributor',
-      key: 'contributorSimple',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.metadata.contributorSimple}</span>
-      ),
-    },
-    {
-      title: 'Registration date',
-      key: 'registrationDate',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.metadata.registrationDate}</span>
-      ),
-    },
-    {
-      title: 'Subcircuits',
-      key: 'hasSubcircuits',
-      render: (value: CircuitSchemaProps, index?: number) => {
-        const isExpanded = expandedRowKeys.includes(value.key);
-        const totalSubcircuitsForParent = calculateSubcircuitsForParent(value);
-
-        return (
-          value.hasSubcircuits && (
-            <button
-              type="button"
-              className="relative flex h-6 items-center justify-center text-base font-normal focus:outline-none"
-              aria-label="Open subcircuit"
-              onClick={() => handleExpandRow(value, index ?? -1)}
-              disabled={!value.hasSubcircuits}
-            >
-              <div className="relative mr-6 block ">{totalSubcircuitsForParent}</div>
-              <ChevronRight
-                fill="#003A8C"
-                className={classNames(
-                  'relative top-px h-4 w-auto transition-transform duration-300 ease-in-out',
-                  isExpanded ? 'rotate-90' : 'rotate-0'
-                )}
-              />
-            </button>
-          )
-        );
-      },
-    },
-  ];
-
-  // SUBCIRCUIT TABLE - LEVEL 1
   const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
     return (
       <div className="relative flex flex-col">
-        <div className="flex-row] relative flex pl-2">
+        <div className="flex-row relative flex pl-2">
           <ArrowSmall iconColor="#8C8C8C" className="relative -top-0.5" />
           <span className="ml-3 pb-2 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
             Subcircuits
@@ -155,8 +64,8 @@ export default function ExploreCircuitTable() {
             '[&_.ant-table-expand-icon-col]:hidden',
             styles.circuitTable
           )}
-          columns={columns}
-          dataSource={circuit.subcircuits || []}
+          columns={columns(expandedRowKeys, calculateSubcircuitsForParent, handleExpandRow)}
+          dataSource={circuit.subcircuit || []}
           pagination={false}
           rowSelection={rowSelection}
           expandable={{
@@ -175,13 +84,14 @@ export default function ExploreCircuitTable() {
     );
   };
 
-  const selectedRows = circuitsFlat.filter((row: CircuitSchemaProps) =>
-    selectedRowKeys.includes(row.key)
+  const selectedRows = CIRCUITS_FULL.flatMap((circuit) =>
+    circuit.key === selectedRowKeys[0]
+      ? [circuit]
+      : (circuit.subcircuit || []).filter((sub) => sub.key === selectedRowKeys[0])
   );
 
-  const lastRow = selectedRows.at(-1);
-  const file = lastRow?.files?.[0];
-  const fileUrl = file?.url;
+  const lastRow = selectedRows[selectedRows.length - 1];
+  const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
     <div className="pt-10">
@@ -201,8 +111,8 @@ export default function ExploreCircuitTable() {
           styles.circuitTable
         )}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={CIRCUITS}
-        columns={columns}
+        dataSource={CIRCUITS_FULL}
+        columns={columns(expandedRowKeys, calculateSubcircuitsForParent, handleExpandRow)}
         pagination={false}
         rowSelection={rowSelection}
         expandable={{
