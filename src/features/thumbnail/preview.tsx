@@ -72,7 +72,7 @@ export default function PreviewThumbnail({
         rootClassName="!h-full !w-full"
       />
     ))
-    .with({ loading: false, thumbnail: P.string }, ({ thumbnail }) => (
+    .with({ loading: false, thumbnail: P.string.minLength(1).select() }, (thumbnail) => (
       <Image
         key={`thumbnail-${resource.id}`}
         alt={alt}

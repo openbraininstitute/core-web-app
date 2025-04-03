@@ -1,25 +1,30 @@
 import { entityCoreApi } from '@/api/entitycore/utils';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
+import type {
+  ExperimentalSynapsesPerConnectionFilter,
+  IExperimentalSynapsesPerConnection,
+} from '@/api/entitycore/types/entities/synapses-per-connection';
 
 const baseUri = '/experimental-synapses-per-connection';
 /**
  * Retrieves a list of synapses per connection morphologies from the EntityCoreAPI.
  *
  * @param {Object} options - The options object
- * @param {PaginationFilter} [options.filters] - Optional filters to apply to the query
+ * @param {ExperimentalSynapsesPerConnectionFilter} [options.filters] - Optional filters to apply to the query
  * @returns {Promise<EntityCoreResponse<IExperimentalSynapsesPerConnection>>} A promise that resolves to the list of synapses per connection
  */
 export async function getExperimentalSynapsesPerConnections({
+  withFacets,
   filters,
 }: {
-  filters?: PaginationFilter;
+  withFacets?: boolean;
+  filters?: ExperimentalSynapsesPerConnectionFilter;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IExperimentalSynapsesPerConnection>>(baseUri, {
     queryParams: {
       ...filters,
+      with_facets: withFacets,
     },
   });
 }

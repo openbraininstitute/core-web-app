@@ -143,7 +143,7 @@ export default function ExploreListingLayout({
             mode="horizontal"
             theme="dark"
             style={{ backgroundColor: '#002766' }}
-            className="flex h-[46px] w-full justify-start [&_.ant-menu-overflow-item]:!align-middle"
+            className="flex h-[46px] [&_.ant-menu-overflow-item]:!align-middle [&_li]:!whitespace-nowrap"
             items={items}
           />
 

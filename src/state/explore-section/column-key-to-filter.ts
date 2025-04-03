@@ -3,7 +3,14 @@ import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-co
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 
 export default function columnKeyToFilter(key: string): Filter {
+  console.log('ᦨ #  column-key-to-filter.ts:8 #  columnKeyToFilter #  key:', key);
   const fieldConfig = ENTITY_CORE_FIELDS_CONFIG[key];
+  console.log('ᦨ #  column-key-to-filter.ts:8 #  columnKeyToFilter #  fieldConfig:', fieldConfig);
+  console.log(
+    'ᦨ #  column-key-to-filter.ts:8 #  columnKeyToFilter #  fieldConfig:',
+    fieldConfig.filter
+  );
+  console.log('-----');
 
   switch (fieldConfig.filter) {
     case FilterTypeEnum.CheckList:
