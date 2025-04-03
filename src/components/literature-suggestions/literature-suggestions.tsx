@@ -56,7 +56,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
         <h1 title={status}>AI Assistant</h1>
-        {collapsedPanel ? <PlusOutlined className="w-5 h-5" /> : <MinusOutlined />}
+        {collapsedPanel ? <PlusOutlined className="h-5 w-5" /> : <MinusOutlined />}
       </button>
       {!collapsedPanel && (
         <>

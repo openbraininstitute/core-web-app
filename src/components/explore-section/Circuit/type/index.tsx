@@ -30,7 +30,7 @@ export type CircuitSchemaProps = {
   name: string;
   description: string;
   parent?: string | null;
-  derivedFrom: string[]
+  derivedFrom: string[];
   hasSubcircuits: boolean;
   brainRegion: string;
   species: string;
@@ -62,16 +62,16 @@ export type CircuitSchemaProps = {
     mainDisplay: {
       name: string;
       url: string;
-    }[],
+    }[];
     cellStatistics: {
       name: string;
       url: string;
-    }[],
+    }[];
     networkStatistics: {
       name: string;
       url: string;
-    }[],
-  },
+    }[];
+  };
 
   literature: {
     category: string;
@@ -108,4 +108,15 @@ export type InteractiveImageProps = {
   alt: string;
   width: number;
   height: number;
+};
+
+export type SingleGraphDataProps = {
+  label: string;
+  value: number;
+};
+
+export type GraphDataProps = {
+  name: string;
+  type: string;
+  data: SingleGraphDataProps[];
 };

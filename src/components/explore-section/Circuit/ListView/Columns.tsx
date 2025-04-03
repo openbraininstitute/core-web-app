@@ -1,30 +1,34 @@
-import Link from "next/link";
+import Link from 'next/link';
 
-import { CircuitColumn, CircuitSchemaProps } from "../type";
+import { CircuitColumn, CircuitSchemaProps } from '../type';
 
-import { classNames } from "@/util/utils";
+import { classNames } from '@/util/utils';
 
-import { ChevronRight } from "@/components/icons";
-import truncate from "@/util/truncate";
+import { ChevronRight } from '@/components/icons';
+import truncate from '@/util/truncate';
 
 const columns = (
-  expandedRowKeys: string | string[], 
+  expandedRowKeys: string | string[],
   calculateSubcircuitsForParent: (arg0: CircuitSchemaProps) => any,
-  handleExpandRow: (arg0: CircuitSchemaProps, arg1: number) => void): CircuitColumn[] => {
-  
+  handleExpandRow: (arg0: CircuitSchemaProps, arg1: number) => void
+): CircuitColumn[] => {
   return [
     {
       title: 'Name',
       key: 'name',
       render: (value: CircuitSchemaProps) => (
-        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap">{value.name}</Link>
+        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap">
+          {value.name}
+        </Link>
       ),
     },
     {
       title: 'Description',
       key: 'description',
       render: (value: CircuitSchemaProps) => (
-        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">{truncate(value.description, 40)}</Link>
+        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">
+          {truncate(value.description, 40)}
+        </Link>
       ),
       width: 300,
     },
@@ -32,35 +36,45 @@ const columns = (
       title: 'Brain region',
       key: 'brainRegion',
       render: (value: CircuitSchemaProps) => (
-        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">{value.brainRegion}</Link>
+        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">
+          {value.brainRegion}
+        </Link>
       ),
     },
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
       render: (value: CircuitSchemaProps) => (
-        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">{value.numberOfNeurons}</Link>
+        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">
+          {value.numberOfNeurons}
+        </Link>
       ),
     },
     {
       title: 'Species',
       key: 'specie',
       render: (value: CircuitSchemaProps) => (
-        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">{value.species}</Link>
+        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">
+          {value.species}
+        </Link>
       ),
     },
     {
       title: 'Contributor',
       key: 'contributorSimple',
       render: (value: CircuitSchemaProps) => (
-        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">{value.metadata.contributorSimple}</Link>
+        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">
+          {value.metadata.contributorSimple}
+        </Link>
       ),
     },
     {
       title: 'Registration date',
       key: 'registrationDate',
       render: (value: CircuitSchemaProps) => (
-        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">{value.metadata.registrationDate}</Link>
+        <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">
+          {value.metadata.registrationDate}
+        </Link>
       ),
     },
     {
@@ -93,7 +107,6 @@ const columns = (
       },
     },
   ];
-
-}
+};
 
 export default columns;

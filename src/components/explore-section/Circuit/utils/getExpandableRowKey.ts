@@ -1,4 +1,4 @@
-import { CircuitSchemaProps } from "../type";
+import { CircuitSchemaProps } from '../type';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   return data.reduce((acc, row) => {

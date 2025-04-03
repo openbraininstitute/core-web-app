@@ -84,9 +84,7 @@ export default function ExploreListingLayout({
     router.push(key);
   };
 
-  const isCircuitPage = pathname.startsWith(
-    "/app/virtual-lab/explore/interactive/model/circuit/"
-  );
+  const isCircuitPage = pathname.startsWith('/app/virtual-lab/explore/interactive/model/circuit/');
 
   const items: {
     key: string;
@@ -138,26 +136,20 @@ export default function ExploreListingLayout({
   return (
     <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-      {
-        !isCircuitPage && (
-          <BackToInteractiveExplorationBtn href={interactivePageHref} />
-        )
-      }
+        {!isCircuitPage && <BackToInteractiveExplorationBtn href={interactivePageHref} />}
 
         <div className={classNames('flex-1 overflow-hidden')}>
-          {
-            !isCircuitPage && (
-              <Menu
-                onClick={onClick}
-                selectedKeys={[activePath]}
-                mode="horizontal"
-                theme="dark"
-                style={{ backgroundColor: '#002766' }}
-                className="flex w-full justify-start"
-                items={items}
-              />
-            )
-          }
+          {!isCircuitPage && (
+            <Menu
+              onClick={onClick}
+              selectedKeys={[activePath]}
+              mode="horizontal"
+              theme="dark"
+              style={{ backgroundColor: '#002766' }}
+              className="flex w-full justify-start"
+              items={items}
+            />
+          )}
 
           <div className="h-full w-full bg-primary-9 text-white">{children}</div>
         </div>

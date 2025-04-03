@@ -1,21 +1,14 @@
-import { CircuitSchemaProps } from "../type";
-import HeaderDetailView from "./HeaderDetailView";
-import SectionMainContainer from "./sections/SectionMainContainer";
-import Visualiser from "./visualisation/Visualiser";
+import { CircuitSchemaProps } from '../type';
+import HeaderDetailView from './HeaderDetailView';
+import SectionMainContainer from './sections/SectionMainContainer';
+import Visualiser from './visualisation/Visualiser';
 
-export default function MainDetailViewCore({
-    content
-}:{
-    content: CircuitSchemaProps;
-}) {
-
-
-    return (
-
-        <div className="relative w-full flex flex-col text-primary-9">
-            <HeaderDetailView content={content} />
-            <Visualiser content={content} />
-            <SectionMainContainer content={content} /> 
-        </div>
-    )
+export default function MainDetailViewCore({ content }: { content: CircuitSchemaProps }) {
+  return (
+    <div className="relative flex w-full flex-col text-primary-9">
+      <HeaderDetailView content={content} />
+      <Visualiser content={content} />
+      <SectionMainContainer content={content} />
+    </div>
+  );
 }

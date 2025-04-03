@@ -1,16 +1,10 @@
-import { CircuitSchemaProps } from "../../../type";
-import SubtitleBar from "../SubtitleBar";
+import SubtitleBar from '../SubtitleBar';
 
-export default function OverviewSection({
-    content
-}:{
-    content: CircuitSchemaProps;
-}) {
-
-    return (
-        <div className="relative w-full flex flex-col">
-            <SubtitleBar title="Cell statistics" />
-            <SubtitleBar title="Network statistics" />
-        </div>
-    )
+export default function OverviewSection() {
+  return (
+    <div className="relative flex w-full flex-col">
+      <SubtitleBar title="Cell statistics" />
+      <SubtitleBar title="Network statistics" />
+    </div>
+  );
 }

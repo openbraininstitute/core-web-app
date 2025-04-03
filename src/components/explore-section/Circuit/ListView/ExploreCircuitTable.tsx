@@ -16,9 +16,10 @@ import { classNames } from '@/util/utils';
 
 import styles from './ExploreCircuiteTable.module.scss';
 
-
 export default function ExploreCircuitTable() {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS_FULL));
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(
+    getExpandableRowKeys(CIRCUITS_FULL)
+  );
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
@@ -30,11 +31,11 @@ export default function ExploreCircuitTable() {
   };
 
   const rowSelection: TableRowSelection<CircuitSchemaProps> = {
-    type: "radio",
+    type: 'radio',
     selectedRowKeys,
     onChange: (newSelectedRowKeys: React.Key[], _selectedRows: CircuitSchemaProps[]) => {
-      const key = newSelectedRowKeys[0] as string; 
-       
+      const key = newSelectedRowKeys[0] as string;
+
       const updatedKeys = selectedRowKeys[0] === key ? [] : [key];
       setSelectedRowKeys(updatedKeys);
     },
@@ -43,7 +44,7 @@ export default function ExploreCircuitTable() {
   const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
     return (
       <div className="relative flex flex-col">
-        <div className="flex-row relative flex pl-2">
+        <div className="relative flex flex-row pl-2">
           <ArrowSmall iconColor="#8C8C8C" className="relative -top-0.5" />
           <span className="ml-3 pb-2 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
             Subcircuits

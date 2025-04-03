@@ -105,9 +105,7 @@ const nextConfig = {
         pathname: '/images/**',
       },
     ],
-    domains: [
-      'openbluebrain.s3.us-west-2.amazonaws.com'
-    ]
+    domains: ['openbluebrain.s3.us-west-2.amazonaws.com'],
   },
 };
 
