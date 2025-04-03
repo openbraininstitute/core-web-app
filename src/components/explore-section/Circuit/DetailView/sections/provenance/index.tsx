@@ -25,7 +25,7 @@ export default function ProvenanceSection({ content }: { content: CircuitSchemaP
       displayedContent = <Literature content={content} />;
       break;
     case 'related artifacts':
-      displayedContent = <RelatedArtifacts content={content} />;
+      displayedContent = <RelatedArtifacts />;
       break;
     default:
       displayedContent = <Literature content={content} />;

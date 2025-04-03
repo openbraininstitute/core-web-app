@@ -1,3 +1,5 @@
+'use client';
+
 import { CircuitSchemaProps } from '../../../type';
 import SubtitleBar from '../SubtitleBar';
 import DerivedCircuits from './DerivedCircuit';

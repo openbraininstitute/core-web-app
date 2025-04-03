@@ -84,7 +84,8 @@ export default function ExploreListingLayout({
     router.push(key);
   };
 
-  const isCircuitPage = pathname.startsWith('/app/virtual-lab/explore/interactive/model/circuit/');
+  // eslint-disable-next-line
+  const isCircuitPage = /\/model\/circuit\/[^\/]+$/.test(pathname);
 
   const items: {
     key: string;

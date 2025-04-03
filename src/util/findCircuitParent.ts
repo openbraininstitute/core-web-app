@@ -18,8 +18,8 @@ const findCircuitParent = (circuit: CircuitSchemaProps[], key: string) => {
         result.parent = parentCircuit;
         return;
       }
-      if (circuits.subcircuits && circuits.subcircuits.length > 0) {
-        search(circuits.subcircuits, circuits);
+      if (circuits.subcircuit && circuits.subcircuit.length > 0) {
+        search(circuits.subcircuit, circuits);
       }
     }
   }
