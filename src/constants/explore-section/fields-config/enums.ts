@@ -120,5 +120,8 @@ export enum EntityCoreFields {
   ApicalDendtriteStrahlerNumber = 'apicalDendtriteStrahlerNumber',
   SomaDiameter = 'somaDiameter',
   ApicalArborAsymmetryIndex = 'apicalArborAsymmetryIndex',
-  SubjectSpecies = 'subjectSpecies',
+  PreSynapticBrainRegion = 'preSynapticBrainRegion',
+  PostSynapticBrainRegion = 'postSynapticBrainRegion',
+  PreSynapticCellType = 'preSynapticCellType',
+  PostSynapticCellType = 'postSynapticCellType',
 }

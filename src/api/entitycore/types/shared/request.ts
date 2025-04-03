@@ -23,3 +23,9 @@ export type PaginationFilter = {
   page: number;
   page_size: number;
 };
+
+export type SharedFilter = {
+  name__ilike: string | null;
+  order_by: string;
+  search: string | null;
+};

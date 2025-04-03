@@ -4,6 +4,7 @@ import {
   ContributionFilter,
   DateFilter,
   PaginationFilter,
+  SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 import {
   IBrainLocation,
@@ -15,7 +16,6 @@ import {
   Measurement,
   IMType,
   IContributor,
-  IAsset,
   EntityCoreBaseAsset,
 } from '@/api/entitycore/types/shared/global';
 
@@ -44,7 +44,7 @@ type StainFilter = {
   strain__name__in: string | null;
   strain__order_by: string | null;
 };
-export type IMorphologyFilter = Partial<
+export type ReconstructionMorphologyFilter = Partial<
   DateFilter &
     BrainLocationFilter &
     ContributionFilter &
@@ -52,11 +52,8 @@ export type IMorphologyFilter = Partial<
     PaginationFilter &
     MtypeFilter &
     SpeciesFilter &
-    StainFilter & {
-      name__ilike: string | null;
-      order_by: string;
-      search: string | null;
-    }
+    StainFilter &
+    SharedFilter
 >;
 
 export type MorphologyFeatureAnnotation = {

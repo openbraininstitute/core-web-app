@@ -5,6 +5,7 @@ import {
   ISpecies,
   IStrain,
 } from '@/api/entitycore/types/shared/global';
+import { DateFilter, PaginationFilter, SharedFilter } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalSynapsesPerConnection extends DateMetadata {
   name: string;
@@ -15,3 +16,7 @@ export interface IExperimentalSynapsesPerConnection extends DateMetadata {
   brain_region: IBrainRegion;
   type: 'experimental_synapses_per_connection';
 }
+
+export type ExperimentalSynapsesPerConnectionFilter = Partial<
+  DateFilter & PaginationFilter & SharedFilter
+>;

@@ -1,21 +1,30 @@
 import { entityCoreApi } from '@/api/entitycore/utils';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type {
+  ExperimentalBoutonDensityFilter,
+  IExperimentalBoutonDensity,
+} from '@/api/entitycore/types/entities/bouton-density';
 
 const baseUri = '/experimental-bouton-density';
 /**
  * Retrieves a list of bouton density morphologies from the EntityCoreAPI.
  *
  * @param {Object} options - The options object
- * @param {PaginationFilter} [options.filters] - Optional filters to apply to the query
+ * @param {ExperimentalBoutonDensityFilter} [options.filters] - Optional filters to apply to the query
  * @returns {Promise<EntityCoreResponse<IExperimentalBoutonDensity>>} A promise that resolves to the list of bouton density
  */
-export async function getExperimentalBoutonDensities({ filters }: { filters?: PaginationFilter }) {
+export async function getExperimentalBoutonDensities({
+  withFacets,
+  filters,
+}: {
+  withFacets?: boolean;
+  filters?: ExperimentalBoutonDensityFilter;
+}) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IExperimentalBoutonDensity>>(baseUri, {
     queryParams: {
       ...filters,
+      with_facets: withFacets,
     },
   });
 }

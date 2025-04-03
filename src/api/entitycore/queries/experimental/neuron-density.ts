@@ -1,21 +1,30 @@
 import { entityCoreApi } from '@/api/entitycore/utils';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
+import type {
+  ExperimentalNeuronDensityFilter,
+  IExperimentalNeuronDensity,
+} from '@/api/entitycore/types/entities/neuron-density';
 
 const baseUri = '/experimental-neuron-density';
 /**
  * Retrieves a list of neuron density from the EntityCoreAPI.
  *
  * @param {Object} options - The options object
- * @param {PaginationFilter} [options.filters] - Optional filters to apply to the query
+ * @param {ExperimentalNeuronDensityFilter} [options.filters] - Optional filters to apply to the query
  * @returns {Promise<EntityCoreResponse<IExperimentalNeuronDensity>>} A promise that resolves to the list of neuron density
  */
-export async function getExperimentalNeuronDensities({ filters }: { filters?: PaginationFilter }) {
+export async function getExperimentalNeuronDensities({
+  withFacets,
+  filters,
+}: {
+  withFacets?: boolean;
+  filters?: ExperimentalNeuronDensityFilter;
+}) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IExperimentalNeuronDensity>>(baseUri, {
     queryParams: {
       ...filters,
+      with_facets: withFacets,
     },
   });
 }

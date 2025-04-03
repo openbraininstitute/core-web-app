@@ -1,7 +1,7 @@
 import { entityCoreApi } from '@/api/entitycore/utils';
 import type {
   ExpandReconstructionMorphologyParm,
-  IMorphologyFilter,
+  ReconstructionMorphologyFilter,
   IReconstructionMorphology,
   IReconstructionMorphologyExpanded,
 } from '@/api/entitycore/types/entities/reconstruction-morphology';
@@ -12,7 +12,7 @@ const baseUri = '/reconstruction-morphology';
  * Retrieves a list of reconstruction morphologies from the EntityCoreAPI.
  *
  * @param {Object} options - The options object
- * @param {IMorphologyFilter} [options.filters] - Optional filters to apply to the query
+ * @param {ReconstructionMorphologyFilter} [options.filters] - Optional filters to apply to the query
  * @returns {Promise<EntityCoreResponse<IReconstructionMorphology>>} A promise that resolves to the list of reconstruction morphologies
  */
 export async function getReconstructionMorphologies({
@@ -20,7 +20,7 @@ export async function getReconstructionMorphologies({
   filters,
 }: {
   withFacets?: boolean;
-  filters?: IMorphologyFilter;
+  filters?: ReconstructionMorphologyFilter;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IReconstructionMorphology>>(baseUri, {

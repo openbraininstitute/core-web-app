@@ -2,6 +2,7 @@ import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEmpty from 'lodash/isEmpty';
+import pick from 'lodash/pick';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
@@ -110,6 +111,10 @@ export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Filter[]>>(async (get) => {
       const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
+      console.log(
+        'ᦨ #  list-view-atoms.ts:129 #  atomWithDefault<Promise<Filter[]>> #  columns:',
+        columns
+      );
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
         ...columns.map((colKey) => {
@@ -125,7 +130,6 @@ export const filtersAtom = atomFamily(
         ),
       ];
     }),
-
   isListAtomEqual
 );
 
@@ -195,6 +199,29 @@ export const previousDataAtom = atomFamily(
   isListAtomEqual
 );
 
+const FetcherMapper = {
+  [DataType.ExperimentalNeuronMorphology]: {
+    query: entitycore.getReconstructionMorphologies,
+    allowedFacets: true,
+    allowedParams: 'all',
+  },
+  [DataType.ExperimentalBoutonDensity]: {
+    query: entitycore.getExperimentalBoutonDensities,
+    allowedFacets: false,
+    allowedParams: ['page_size', 'page'],
+  },
+  [DataType.ExperimentalNeuronDensity]: {
+    query: entitycore.getExperimentalNeuronDensities,
+    allowedFacets: false,
+    allowedParams: ['page_size', 'page'],
+  },
+  [DataType.ExperimentalSynapsePerConnection]: {
+    query: entitycore.getExperimentalSynapsesPerConnections,
+    allowedFacets: false,
+    allowedParams: ['page_size', 'page'],
+  },
+};
+
 export const dataAtom = atomFamily(
   <T>(scope: DataAtomFamilyScopeType) =>
     atom<Promise<EntityCoreResponse<T | null>>>(async (get) => {
@@ -203,78 +230,38 @@ export const dataAtom = atomFamily(
       const filters = await get(filtersAtom(scope));
       const sortState = get(sortStateAtom(scope));
       const queryParams = transformQueryParamsArrayToString(transformFiltersToQuery(filters));
-      // TODO: after will have all the types implemented will have one function that aggregate the endpoints
-      // the function will be responsible to match the query based on the type
-      if (scope.dataType === DataType.ExperimentalNeuronMorphology) {
-        const response = await entitycore.getReconstructionMorphologies({
-          withFacets: true,
+
+      const queryParameters = {
+        page_size: PAGE_SIZE,
+        page: pageNumber,
+        search: isEmpty(searchString) ? null : searchString,
+        order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
+        ...queryParams,
+      };
+
+      if (scope.dataType in FetcherMapper) {
+        const subject = FetcherMapper[scope.dataType as keyof typeof FetcherMapper];
+        const response = await subject.query({
+          withFacets: subject.allowedFacets ? true : undefined,
           filters: {
-            page_size: PAGE_SIZE,
-            page: pageNumber,
-            search: isEmpty(searchString) ? null : searchString,
-            ...queryParams,
-            order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
-            // TODO: ask backend team to extend the brain region filter to support the children of the selected one
+            ...(subject.allowedParams === 'all'
+              ? queryParameters
+              : pick(queryParameters, subject.allowedParams)),
+            // TODO: extend the brain region (in EntityCore) filter to support the children of the selected one
             // brain_region_id: selectedBrainRegion?.id
             //   ? Number(selectedBrainRegion?.id.split('/').pop())
             //   : undefined,
           },
         });
+        return {
+          ...response,
+          data: response.data.map((o) => ({
+            ...o,
+            type: getEntityTypeForDataType(scope.dataType),
+          })) as T[],
+        };
+      }
 
-        return {
-          ...response,
-          data: response.data.map((o) => ({
-            ...o,
-            type: ENTITY_CORE_DATA_TYPES.RECONSTRUCTION_MORPHOLOGY.type,
-          })) as T[],
-        };
-      }
-      if (scope.dataType === DataType.ExperimentalBoutonDensity) {
-        const response = await entitycore.getExperimentalBoutonDensities({
-          filters: {
-            page_size: PAGE_SIZE,
-            page: pageNumber,
-          },
-        });
-
-        return {
-          ...response,
-          data: response.data.map((o) => ({
-            ...o,
-            type: ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_BOUTON_DENSITY.type,
-          })) as T[],
-        };
-      }
-      if (scope.dataType === DataType.ExperimentalNeuronDensity) {
-        const response = await entitycore.getExperimentalNeuronDensities({
-          filters: {
-            page_size: PAGE_SIZE,
-            page: pageNumber,
-          },
-        });
-        return {
-          ...response,
-          data: response.data.map((o) => ({
-            ...o,
-            type: ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_NEURON_DENSITY.type,
-          })) as T[],
-        };
-      }
-      if (scope.dataType === DataType.ExperimentalSynapsePerConnection) {
-        const response = await entitycore.getExperimentalSynapsesPerConnections({
-          filters: {
-            page_size: PAGE_SIZE,
-            page: pageNumber,
-          },
-        });
-        return {
-          ...response,
-          data: response.data.map((o) => ({
-            ...o,
-            type: ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_SYNAPSES_PER_CONNECTION.type,
-          })) as T[],
-        };
-      }
       return {
         data: [],
         pagination: {
@@ -289,4 +276,20 @@ export const dataAtom = atomFamily(
 
 function isExperimentalData(dataType: DataType) {
   return EXPERIMENTAL_DATATYPES.includes(dataType);
+}
+
+// TODO: build unified mapper for all kind of things
+function getEntityTypeForDataType(dataType: DataType): string {
+  switch (dataType) {
+    case DataType.ExperimentalNeuronMorphology:
+      return ENTITY_CORE_DATA_TYPES.RECONSTRUCTION_MORPHOLOGY.type;
+    case DataType.ExperimentalBoutonDensity:
+      return ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_BOUTON_DENSITY.type;
+    case DataType.ExperimentalNeuronDensity:
+      return ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_NEURON_DENSITY.type;
+    case DataType.ExperimentalSynapsePerConnection:
+      return ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_SYNAPSES_PER_CONNECTION.type;
+    default:
+      return '';
+  }
 }
