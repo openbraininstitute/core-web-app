@@ -3,7 +3,7 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { Table, Tooltip } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
-import { useState } from 'react';
+import { Key, useState } from 'react';
 import CIRCUITS_FULL from '../content/circuits_tree_formatted';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitSchemaProps } from '../type';
@@ -17,7 +17,7 @@ import { classNames } from '@/util/utils';
 import styles from './ExploreCircuiteTable.module.scss';
 
 export default function ExploreCircuitTable() {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>(
     getExpandableRowKeys(CIRCUITS_FULL)
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -33,7 +33,7 @@ export default function ExploreCircuitTable() {
   const rowSelection: TableRowSelection<CircuitSchemaProps> = {
     type: 'radio',
     selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[], _selectedRows: CircuitSchemaProps[]) => {
+    onChange: (newSelectedRowKeys: Key[], _selectedRows: CircuitSchemaProps[]) => {
       const key = newSelectedRowKeys[0] as string;
 
       const updatedKeys = selectedRowKeys[0] === key ? [] : [key];
@@ -75,7 +75,7 @@ export default function ExploreCircuitTable() {
             onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
               const rowKey = row.key;
               setExpandedRowKeys((prev) =>
-                expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)
+                expanded ? [...prev, rowKey] : prev.filter((key) => key !== rowKey)
               );
             },
             expandIcon: () => null,
@@ -91,7 +91,7 @@ export default function ExploreCircuitTable() {
       : (circuit.subcircuit || []).filter((sub) => sub.key === selectedRowKeys[0])
   );
 
-  const lastRow = selectedRows[selectedRows.length - 1];
+  const lastRow = selectedRows.at(-1);
   const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
@@ -122,7 +122,7 @@ export default function ExploreCircuitTable() {
           onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
             const rowKey = row.key;
             setExpandedRowKeys((prev) =>
-              expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)
+              expanded ? [...prev, rowKey] : prev.filter((key) => key !== rowKey)
             );
           },
           expandIcon: () => null,

@@ -27,7 +27,7 @@ export default function Subcircuits({ content }: { content: CircuitSchemaProps }
       : (circuit.subcircuit || []).filter((sub) => sub.key === selectedRowKeys[0])
   );
 
-  const lastRow = selectedRows[selectedRows.length - 1];
+  const lastRow = selectedRows.at(-1);
   const fileUrl = lastRow?.files?.[0]?.url;
 
   return (

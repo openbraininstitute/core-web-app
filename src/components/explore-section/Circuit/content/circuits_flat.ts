@@ -1,5 +1,5 @@
 import { CircuitSchemaProps } from '../type';
-import CIRCUITS_FULL from './circuits_tree';
+import CIRCUITS_FULL from './circuits_tree_formatted';
 
 export const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] => {
   return data.reduce((acc, row) => {

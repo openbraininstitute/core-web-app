@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Key } from 'react';
 
 import { CircuitColumn, CircuitSchemaProps } from '../type';
 
@@ -8,7 +9,7 @@ import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 
 const columns = (
-  expandedRowKeys: string | string[],
+  expandedRowKeys: Key | Key[],
   calculateSubcircuitsForParent: (arg0: CircuitSchemaProps) => any,
   handleExpandRow: (arg0: CircuitSchemaProps, arg1: number) => void
 ): CircuitColumn[] => {
@@ -81,7 +82,7 @@ const columns = (
       title: 'Subcircuits',
       key: 'hasSubcircuits',
       render: (value: CircuitSchemaProps, index?: number) => {
-        const isExpanded = expandedRowKeys.includes(value.key);
+        const isExpanded = Array.isArray(expandedRowKeys) && expandedRowKeys.includes(value.key);
         const totalSubcircuitsForParent = calculateSubcircuitsForParent(value);
 
         return (
