@@ -32,10 +32,10 @@ export default function SectionTabs({
                     return (
                         <button
                             key={section.id}
-                            className="w-full text-center text-lg transition-colors duration-300 ease-in-out py-4"
+                            className="w-full text-center text-xl transition-colors duration-300 ease-in-out py-4 text-primary-9"
                             style={{
-                                color: activeSection === section.id ? 'white' : '#003A8C',
-                                background: activeSection === section.id ? '#003A8C' : 'white',
+                                fontWeight: activeSection === section.id ? 'bold' : 'normal',
+                                background: activeSection === section.id ? 'white' : 'transparent',
                             }}
                             onClick={() => setActiveSection(section.id as 'overview' | 'provenance' | 'related-publications' | 'related-circuits')}
                             type="button"

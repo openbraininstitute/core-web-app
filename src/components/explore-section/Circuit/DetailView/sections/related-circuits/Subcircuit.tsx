@@ -1,10 +1,13 @@
-import truncate from "@/util/truncate";
-import { classNames } from "@/util/utils";
 import { Table } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useState } from "react";
-import { CircuitColumn, CircuitSchemaProps } from "../../../type";
+import CIRCUITS_FULL from "../../../content/circuits_tree_formatted";
 
+import { CircuitSchemaProps } from "../../../type";
+import CircuitDownloadButton from "./CircuitDownloadButton";
+import columns from "./columns";
+
+import { classNames } from "@/util/utils";
 import styles from './ExploreCircuitTable.module.scss';
 
 export default function Subcircuits({
@@ -22,81 +25,46 @@ export default function Subcircuits({
         },
       };
 
-    const columns: CircuitColumn[] = [
-        {
-          title: 'Name',
-          key: 'name',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap">{value.name}</span>
-          ),
-        },
-        {
-          title: 'Description',
-          key: 'description',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{truncate(value.description, 40)}</span>
-          ),
-          width: 300,
-        },
-        {
-          title: 'Brain region',
-          key: 'brainRegion',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.brainRegion}</span>
-          ),
-        },
-        {
-          title: '# Neurons',
-          key: 'numberOfNeurons',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.numberOfNeurons}</span>
-          ),
-        },
-        {
-          title: 'Species',
-          key: 'specie',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.species}</span>
-          ),
-        },
-        {
-          title: 'Contributor',
-          key: 'contributorSimple',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.metadata.contributorSimple}</span>
-          ),
-        },
-        {
-          title: 'Registration date',
-          key: 'registrationDate',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.metadata.registrationDate}</span>
-          ),
-        },
-      ];
+      const selectedRows = CIRCUITS_FULL.flatMap((circuit) =>
+        circuit.key === selectedRowKeys[0]
+          ? [circuit]
+          : (circuit.subcircuit || []).filter((sub) => sub.key === selectedRowKeys[0])
+      );
+
+      const lastRow = selectedRows[selectedRows.length - 1];
+      const fileUrl = lastRow?.files?.[0]?.url;
+    
 
     return ((
         <div className="relative w-full flex flex-col">
             <Table<CircuitSchemaProps>
-          className={classNames(
-            '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-            '[&_.ant-table-row]:bg-[#FAFAFA]',
-            '[&_.ant-table-thead_th]:!text-sm',
-            '[&_.ant-table-thead_th]:!font-normal',
-            '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
-            '[&_.ant-table-thead_th]:uppercase',
-            '[&_.ant-table-thead_th]:tracking-[0.05em]',
-            '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-            '[&_.ant-table-thead > tr > th]:border-b-0',
-            '[&_.ant-table-expand-icon-col]:w-0',
-            '[&_.ant-table-expand-icon-col]:hidden',
-            styles.circuitTable
-          )}
-          columns={columns}
-          dataSource={content.subcircuit || []}
-          pagination={false}
-          rowSelection={rowSelection}
-        />
+              className={classNames(
+                '[&_.ant-table-tbody]:bg-[#FAFAFA]',
+                '[&_.ant-table-row]:bg-[#FAFAFA]',
+                '[&_.ant-table-thead_th]:!text-sm',
+                '[&_.ant-table-thead_th]:!font-normal',
+                '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
+                '[&_.ant-table-thead_th]:uppercase',
+                '[&_.ant-table-thead_th]:tracking-[0.05em]',
+                '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
+                '[&_.ant-table-thead > tr > th]:border-b-0',
+                '[&_.ant-table-expand-icon-col]:w-0',
+                '[&_.ant-table-expand-icon-col]:hidden',
+                styles.circuitTable
+              )}
+              columns={columns}
+              dataSource={content.subcircuit || []}
+              pagination={false}
+              rowSelection={rowSelection}
+            />
+
+        {fileUrl && (
+            <CircuitDownloadButton
+              link={fileUrl} 
+              selectedRowKeys={selectedRowKeys}
+              />   
+              )
+          }
         </div>
     ))
 }

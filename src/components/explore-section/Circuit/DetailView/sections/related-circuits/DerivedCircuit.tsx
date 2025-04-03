@@ -1,10 +1,11 @@
-import truncate from "@/util/truncate";
-import { classNames } from "@/util/utils";
 import { Table } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useState } from "react";
-import { CircuitColumn, CircuitSchemaProps } from "../../../type";
 
+import { CircuitSchemaProps } from "../../../type";
+import columns from "./columns";
+
+import { classNames } from "@/util/utils";
 import styles from './ExploreCircuitTable.module.scss';
 
 export default function DerivedCircuits({
@@ -21,59 +22,6 @@ export default function DerivedCircuits({
           setSelectedRowKeys(newSelectedRows);
         },
       };
-
-    const columns: CircuitColumn[] = [
-        {
-          title: 'Name',
-          key: 'name',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap">{value.name}</span>
-          ),
-        },
-        {
-          title: 'Description',
-          key: 'description',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{truncate(value.description, 40)}</span>
-          ),
-          width: 300,
-        },
-        {
-          title: 'Brain region',
-          key: 'brainRegion',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.brainRegion}</span>
-          ),
-        },
-        {
-          title: '# Neurons',
-          key: 'numberOfNeurons',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.numberOfNeurons}</span>
-          ),
-        },
-        {
-          title: 'Species',
-          key: 'specie',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.species}</span>
-          ),
-        },
-        {
-          title: 'Contributor',
-          key: 'contributorSimple',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.metadata.contributorSimple}</span>
-          ),
-        },
-        {
-          title: 'Registration date',
-          key: 'registrationDate',
-          render: (value: CircuitSchemaProps) => (
-            <span className="whitespace-nowrap font-normal">{value.metadata.registrationDate}</span>
-          ),
-        },
-      ];
 
     return ((
         <div className="relative w-full flex flex-col">

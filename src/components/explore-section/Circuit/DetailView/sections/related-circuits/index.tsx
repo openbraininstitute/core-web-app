@@ -10,8 +10,6 @@ export default function RelatedCircuitsSection({
     content: CircuitSchemaProps;
 }) {
 
-    console.log('Content circuit', content.subcircuit.length)
-
     return (
         <div className="relative w-full flex flex-col">
             {

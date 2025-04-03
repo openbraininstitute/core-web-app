@@ -39,11 +39,11 @@ export type CircuitSchemaProps = {
   numberOfSynapses: number;
   metadata: {
     contributorSimple?: string;
-    contributor?: string;
+    contributor?: string | null;
     contributingInstitution?: string;
     registrationDate?: string;
     revision: number | null;
-    createdBy: string;
+    createdBy: string | null;
     creationDate: string;
     license: {
       name: string;

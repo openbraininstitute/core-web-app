@@ -15,11 +15,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 407127134,
 		metadata: {
 			contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "November, 2024",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -42,7 +42,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1network_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -335,11 +335,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 41299369,
 				metadata: {
 					contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -362,7 +362,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0network_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -655,11 +655,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 10929,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -682,7 +682,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L1network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L1/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -978,11 +978,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 4310007,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -1005,7 +1005,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L23network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L23/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -1301,11 +1301,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 2349346,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -1328,7 +1328,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L4network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L4/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -1624,11 +1624,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5240656,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -1651,7 +1651,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L5network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L5/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -1947,11 +1947,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 8637407,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -1974,7 +1974,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L6network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-L6/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -2272,11 +2272,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 40583896,
 				metadata: {
 					contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -2299,7 +2299,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1network_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -2592,11 +2592,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 19527,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -2619,7 +2619,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L1network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L1/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -2915,11 +2915,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 4750999,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -2942,7 +2942,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L23network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L23/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -3238,11 +3238,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 2191351,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -3265,7 +3265,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L4network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L4/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -3561,11 +3561,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5302359,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -3588,7 +3588,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L5network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L5/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -3884,11 +3884,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 7734906,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -3911,7 +3911,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L6network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX1-L6/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -4209,11 +4209,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 43837756,
 				metadata: {
 					contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -4236,7 +4236,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2network_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -4529,11 +4529,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 12302,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -4556,7 +4556,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L1network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L1/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -4852,11 +4852,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 4663990,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -4879,7 +4879,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L23network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L23/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -5175,11 +5175,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 2317008,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -5202,7 +5202,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L4network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L4/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -5498,11 +5498,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5446047,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -5525,7 +5525,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L5network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L5/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -5821,11 +5821,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 9815194,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -5848,7 +5848,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L6network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX2-L6/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -6146,11 +6146,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 41465996,
 				metadata: {
 					contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -6173,7 +6173,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3network_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -6466,11 +6466,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 17532,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -6493,7 +6493,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L1network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L1/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -6789,11 +6789,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 4700826,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -6816,7 +6816,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L23network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L23/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -7112,11 +7112,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 2190071,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -7139,7 +7139,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L4network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L4/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -7435,11 +7435,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5369952,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -7462,7 +7462,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L5network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L5/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -7758,11 +7758,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 8652164,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -7785,7 +7785,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L6network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX3-L6/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -8083,11 +8083,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 41439211,
 				metadata: {
 					contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -8110,7 +8110,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4network_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -8403,11 +8403,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 23306,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -8430,7 +8430,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L1network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L1/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -8726,11 +8726,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5332946,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -8753,7 +8753,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L23network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L23/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -9049,11 +9049,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 2328003,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -9076,7 +9076,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L4network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L4/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -9372,11 +9372,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5282245,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -9399,7 +9399,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L5network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L5/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -9695,11 +9695,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 7281873,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -9722,7 +9722,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L6network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX4-L6/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -10020,11 +10020,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 40349070,
 				metadata: {
 					contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -10047,7 +10047,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5network_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -10340,11 +10340,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 20958,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -10367,7 +10367,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L1network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L1/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -10663,11 +10663,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5491261,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -10690,7 +10690,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L23network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L23/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -10986,11 +10986,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 2480015,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -11013,7 +11013,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L4network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L4/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -11309,11 +11309,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 4859081,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -11336,7 +11336,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L5network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L5/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -11632,11 +11632,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 6671497,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -11659,7 +11659,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L6network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX5-L6/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -11957,11 +11957,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 41943686,
 				metadata: {
 					contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -11984,7 +11984,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6network_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -12277,11 +12277,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 13777,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -12304,7 +12304,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L1network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L1/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -12600,11 +12600,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5095580,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -12627,7 +12627,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L23network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L23/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -12923,11 +12923,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 2258912,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -12950,7 +12950,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L4network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L4/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -13246,11 +13246,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 5183194,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -13273,7 +13273,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L5network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L5/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -13569,11 +13569,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						numberOfSynapses: 8125675,
 						metadata: {
 							contributorSimple: "Reimann et al and Isbister et al, EPFL ",
-							contributor: "None",
+							contributor: null,
 							contributingInstitution: "EPFL ",
 							registrationDate: "November, 2024",
 							revision: null,
-							createdBy: "None",
+							createdBy: null,
 							creationDate: "27.03.2025",
 							license: {
 								name: "CC-BY",
@@ -13596,7 +13596,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 							networkStatistics: [
 								{
 									name: "network_global_stats",
-									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L6network_global_stats.png"
+									url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX6-L6/network_global_stats.png"
 								},
 								{
 									name: "network_pathway_stats",
@@ -13896,11 +13896,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 407127134,
 		metadata: {
 			contributorSimple: "Christoph Pokorny et al , EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "February, 2025",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -13923,7 +13923,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-betanetwork_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -14178,11 +14178,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 41299369,
 				metadata: {
 					contributorSimple: "Christoph Pokorny et al , EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "February, 2025",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -14205,7 +14205,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-betanetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -14465,11 +14465,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 402518201,
 		metadata: {
 			contributorSimple: "Christoph Pokorny et al , EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "February, 2025",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -14492,7 +14492,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-ERnetwork_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-ER/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -14747,11 +14747,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 36690436,
 				metadata: {
 					contributorSimple: "Christoph Pokorny et al , EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "February, 2025",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -14774,7 +14774,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-ERnetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-ER/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -15034,11 +15034,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 405187752,
 		metadata: {
 			contributorSimple: "Christoph Pokorny et al , EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "February, 2025",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -15061,7 +15061,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-DDnetwork_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-DD/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -15316,11 +15316,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 39359987,
 				metadata: {
 					contributorSimple: "Christoph Pokorny et al , EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "February, 2025",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -15343,7 +15343,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-DDnetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-DD/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -15603,11 +15603,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 406088376,
 		metadata: {
 			contributorSimple: "Christoph Pokorny et al , EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "February, 2025",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -15630,7 +15630,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-BIPnetwork_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-BIP/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -15885,11 +15885,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 40260611,
 				metadata: {
 					contributorSimple: "Christoph Pokorny et al , EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "February, 2025",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -15912,7 +15912,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-BIPnetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-BIP/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -16172,11 +16172,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 406247297,
 		metadata: {
 			contributorSimple: "Christoph Pokorny et al , EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "February, 2025",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -16199,7 +16199,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-OFFnetwork_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-OFF/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -16454,11 +16454,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 40419532,
 				metadata: {
 					contributorSimple: "Christoph Pokorny et al , EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "February, 2025",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -16481,7 +16481,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-OFFnetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-OFF/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -16741,11 +16741,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 407068355,
 		metadata: {
 			contributorSimple: "Christoph Pokorny et al , EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "February, 2025",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -16768,7 +16768,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-POSnetwork_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-O1-beta-POS/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -17023,11 +17023,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 41240590,
 				metadata: {
 					contributorSimple: "Christoph Pokorny et al , EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "February, 2025",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -17050,7 +17050,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-POSnetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/nbS1-HEX0-beta-POS/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -17308,11 +17308,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 		numberOfSynapses: 820867760,
 		metadata: {
 			contributorSimple: "Romani et al., EPFL ",
-			contributor: "None",
+			contributor: null,
 			contributingInstitution: "EPFL ",
 			registrationDate: "November, 2024",
 			revision: null,
-			createdBy: "None",
+			createdBy: null,
 			creationDate: "27.03.2025",
 			license: {
 				name: "CC-BY",
@@ -17335,7 +17335,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 			networkStatistics: [
 				{
 					name: "network_global_stats",
-					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/rCA1network_global_stats.png"
+					url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/rCA1/network_global_stats.png"
 				},
 				{
 					name: "network_pathway_stats",
@@ -17448,11 +17448,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 24530144,
 				metadata: {
 					contributorSimple: "Romani et al., EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -17475,7 +17475,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/rCA1-SLICE-REFnetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/rCA1-SLICE-REF/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -17573,9 +17573,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						isAvailable: true
 					}
 				],
-				subcircuit: [
-
-				]
+				subcircuit: []
 			},
 			{
 				key: "rCA1-CYLINDER-REF",
@@ -17591,11 +17589,11 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 				numberOfSynapses: 7115120,
 				metadata: {
 					contributorSimple: "Romani et al., EPFL ",
-					contributor: "None",
+					contributor: null,
 					contributingInstitution: "EPFL ",
 					registrationDate: "November, 2024",
 					revision: null,
-					createdBy: "None",
+					createdBy: null,
 					creationDate: "27.03.2025",
 					license: {
 						name: "CC-BY",
@@ -17618,7 +17616,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 					networkStatistics: [
 						{
 							name: "network_global_stats",
-							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/rCA1-CYLINDER-REFnetwork_global_stats.png"
+							url: "https://openbluebrain.s3.us-west-2.amazonaws.com/Simulatable_Circuit/Figures/rCA1-CYLINDER-REF/network_global_stats.png"
 						},
 						{
 							name: "network_pathway_stats",
@@ -17716,9 +17714,7 @@ const CIRCUITS_FULL: CircuitSchemaProps[] = [
 						isAvailable: true
 					}
 				],
-				subcircuit: [
-
-				]
+				subcircuit: []
 			}
 		]
 	}

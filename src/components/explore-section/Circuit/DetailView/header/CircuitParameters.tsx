@@ -1,6 +1,7 @@
-import formatNumberWithQuote from "@/util/formatNumberWithQuote";
 import { CircuitSchemaProps } from "../../type";
 import ParameterBox from "../global/ParameterBox";
+
+import formatNumberWithQuote from "@/util/formatNumberWithQuote";
 
 export default function CircuitParameters({
     content
@@ -9,7 +10,7 @@ export default function CircuitParameters({
 }) {
 
     return (
-        <div className="relative grid grid-cols-3 gap-y-12">
+        <div className="relative grid grid-cols-3 gap-12">
             <div className="relative flex flex-col gap-y-4">
                  <ParameterBox
                     name="Brain Region"
