@@ -119,7 +119,7 @@ function ValidationRunning({
 
       <p className="text-primary-8">
         You can close the window at any time now. Analysis results will appear under the
-        <Link className="ml-2 font-bold underline" href={meModelPageUrl}>
+        <Link className="white ml-2 text-nowrap font-bold underline" href={meModelPageUrl}>
           ME-model details page
         </Link>
         .

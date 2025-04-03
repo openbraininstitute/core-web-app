@@ -120,7 +120,9 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   );
 
   const createMEModel = useSetAtom(createMEModelAtom);
-  const [meModelCreating, setMeModelCreating] = useState<boolean>(false);
+  const [activeProcess, setActiveProcess] = useState<
+    null | 'modelCreation' | 'modelCreationWithValidation'
+  >(null);
 
   const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
 
@@ -141,17 +143,17 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   };
 
   const onClickWithValidation = () => {
-    setMeModelCreating(true);
+    setActiveProcess('modelCreationWithValidation');
 
     createMEModel({ virtualLabId, projectId })
       .then(fetchFreshAccessToken)
       .then((accessToken) => createValidationModal({ virtualLabId, projectId }, accessToken))
       .catch((err) => showErrorNotification(err))
-      .finally(() => setMeModelCreating(false));
+      .finally(() => setActiveProcess(null));
   };
 
   const onClickWithoutValidation = () => {
-    setMeModelCreating(true);
+    setActiveProcess('modelCreation');
 
     createMEModel({ virtualLabId, projectId })
       .then((meModel) => {
@@ -174,7 +176,7 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
         showErrorNotification(err);
       })
       .finally(() => {
-        setMeModelCreating(false);
+        setActiveProcess(null);
       });
   };
 
@@ -183,13 +185,13 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
       <button
         className={classNames(
           'fit-content ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',
-          meModelCreating ? 'bg-neutral-4' : 'bg-primary-8'
+          activeProcess ? 'bg-neutral-4' : 'bg-primary-8'
         )}
         onClick={onClickWithoutValidation}
         type="button"
-        disabled={meModelCreating}
+        disabled={!!activeProcess}
       >
-        {meModelCreating ? (
+        {activeProcess === 'modelCreation' ? (
           <span className="flex flex-row gap-4">
             Creating ME-model <Spin />
           </span>
@@ -200,13 +202,13 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
       <button
         className={classNames(
           'fit-content ml-auto flex w-fit items-center p-4 font-bold hover:brightness-110',
-          meModelCreating ? 'bg-neutral-4' : 'bg-primary-8'
+          activeProcess ? 'bg-neutral-4' : 'bg-primary-8'
         )}
         onClick={onClickWithValidation}
         type="button"
-        disabled={meModelCreating}
+        disabled={!!activeProcess}
       >
-        {meModelCreating ? (
+        {activeProcess === 'modelCreationWithValidation' ? (
           <span className="flex flex-row gap-4">
             Launch validation <Spin />
           </span>
