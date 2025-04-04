@@ -12,7 +12,10 @@ import { CircuitSchemaProps } from '../type';
 import getExpandableRowKeys from '../utils/getExpandableRowKey';
 
 import calculateSubcircuitsForParent from '../utils/calculateSubcircuitsForParent';
+import filterCircuits from '../utils/filterCircuits';
+
 import columns from './Columns';
+import SearchBar from './SearchBar';
 
 import { classNames } from '@/util/utils';
 
@@ -76,6 +79,9 @@ export default function ExploreCircuitTable() {
     registrationDate: 150,
     hasSubcircuits: 120,
   });
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const filteredData = searchQuery ? filterCircuits(CIRCUITS_FULL, searchQuery) : CIRCUITS_FULL;
 
   const handleResize =
     (key: string) =>
@@ -175,6 +181,7 @@ export default function ExploreCircuitTable() {
 
   return (
     <div className="pt-10">
+      <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <Table
         className={classNames(
           '[&_.ant-table-tbody]:bg-[#FAFAFA]',
@@ -196,7 +203,7 @@ export default function ExploreCircuitTable() {
           },
         }}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={CIRCUITS_FULL}
+        dataSource={filteredData}
         columns={mergedColumns}
         pagination={false}
         rowSelection={rowSelection}

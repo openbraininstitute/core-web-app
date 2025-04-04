@@ -32,6 +32,7 @@ import MissingData from './MissingData';
 import IconPlus from './Plus';
 import RangeIcon from './Range';
 import ResetIcon from './ResetIcon';
+import SearchIcon from './SearchIcon';
 import SettingsIcon from './Settings';
 import SimulateIcon from './SimulateIcon';
 import StatsEditIcon from './StatsEditIcon';
@@ -76,6 +77,7 @@ export {
   IconPlus as PlusIcon,
   RangeIcon,
   ResetIcon,
+  SearchIcon,
   SettingsIcon,
   SimulateIcon,
   StatsEditIcon,
