@@ -34,24 +34,24 @@ export function ResizableTitle(props: ResizableTitleProps) {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      e.stopPropagation()
+      e.stopPropagation();
     }
-  }
+  };
 
   return (
     <Resizable
       width={width}
       height={0}
       handle={
-        <span 
-          className="resize-handle" 
+        <span
+          className="resize-handle"
           role="button"
           tabIndex={0}
           aria-label={`Resize ${restProps.title || 'column'}`}
           onClick={(e) => e.stopPropagation()}
           onKeyDown={handleKeyDown}
-          />
-        }
+        />
+      }
       onResize={onResize}
     >
       {/* eslint-disable-next-line react/jsx-props-no-spreading */}
@@ -61,8 +61,7 @@ export function ResizableTitle(props: ResizableTitleProps) {
 }
 
 export default function ExploreCircuitTable() {
-
-  // STATES 
+  // STATES
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>(
     getExpandableRowKeys(CIRCUITS_FULL)
   );
@@ -78,14 +77,15 @@ export default function ExploreCircuitTable() {
     hasSubcircuits: 120,
   });
 
-  const handleResize = (key: string) => (e: React.SyntheticEvent, { size }: ResizeCallbackData) => {
-    setColumnWidths((prev) => ({
-      ...prev,
-      [key]: size.width
-    }))
-  }
+  const handleResize =
+    (key: string) =>
+    (e: React.SyntheticEvent, { size }: ResizeCallbackData) => {
+      setColumnWidths((prev) => ({
+        ...prev,
+        [key]: size.width,
+      }));
+    };
 
-  
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
     const rowKey = row.key;

@@ -20,7 +20,6 @@ export type ResizableColumnType = ColumnsType<CircuitSchemaProps>[number] & {
   };
 };
 
-
 const columns = (
   expandedRowKeys: Key | Key[],
   calculateSubcircuitsForParent: (row: CircuitSchemaProps) => number,
@@ -39,7 +38,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
@@ -56,7 +55,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
@@ -73,7 +72,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
@@ -90,7 +89,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
@@ -107,7 +106,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
@@ -124,7 +123,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
@@ -141,7 +140,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
@@ -178,7 +177,7 @@ const columns = (
     onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
       width: column.width as number,
       onResize: (e: React.SyntheticEvent) => {
-        const { size } = (e as unknown) as { size: { width: number } };
+        const { size } = e as unknown as { size: { width: number } };
         onResize(column.key as string, size.width);
       },
     }),
