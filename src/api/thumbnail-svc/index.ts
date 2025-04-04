@@ -2,13 +2,13 @@ import find from 'lodash/find';
 
 import { getSession } from '@/authFetch';
 import { thumbnailGenerationBaseUrl } from '@/config';
-import { ENTITY_CORE_DATA_TYPES } from '@/api/entitycore/types/shared/context';
+import { ENTITY_CORE_MAPPER } from '@/api/entitycore/types/shared/context';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import buildQueryString from '@/util/query-params-builder';
 
 function buildAssetUrl(resource: EntityCoreResource, options?: { dpi?: number }) {
   let queryParams = '';
-  const extension = find(Object.values(ENTITY_CORE_DATA_TYPES), {
+  const extension = find(Object.values(ENTITY_CORE_MAPPER), {
     type: resource.type,
   })?.assetExtension;
   const asset = find(resource.assets, { content_type: extension });

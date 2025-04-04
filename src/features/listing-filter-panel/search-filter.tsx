@@ -28,9 +28,9 @@ export default function SearchFilter({
   const handleCheckedChange = (value: string, option: DefaultOptionType) => {
     let newValues = [...values];
     if (values.includes(value)) {
-      newValues = values.filter((val) => val !== value);
+      newValues = values.filter((val) => val !== String(option.label));
     } else {
-      newValues.push(value);
+      newValues.push(String(option.label));
     }
     onChange(newValues);
   };

@@ -6,7 +6,7 @@ import pick from 'lodash/pick';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
-import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
 
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
@@ -24,7 +24,6 @@ import {
   PAGE_NUMBER,
   PAGE_SIZE,
 } from '@/constants/explore-section/list-views';
-import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { Filter } from '@/features/listing-filter-panel/types';
 import {
   selectedBrainRegionAtom,
@@ -38,8 +37,7 @@ import {
   transformFiltersToQuery,
   transformQueryParamsArrayToString,
 } from '@/api/entitycore/transformers';
-import { ENTITY_CORE_DATA_TYPES } from '@/api/entitycore/types/shared/context';
-import * as entitycore from '@/api/entitycore/queries';
+import { EntityCoreLegacyType, getEntityByLegacyType } from '@/api/entitycore/types/shared/context';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 type DataAtomFamilyScopeType = {
@@ -111,10 +109,6 @@ export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Filter[]>>(async (get) => {
       const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
-      console.log(
-        'ᦨ #  list-view-atoms.ts:129 #  atomWithDefault<Promise<Filter[]>> #  columns:',
-        columns
-      );
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
         ...columns.map((colKey) => {
@@ -199,29 +193,6 @@ export const previousDataAtom = atomFamily(
   isListAtomEqual
 );
 
-const FetcherMapper = {
-  [DataType.ExperimentalNeuronMorphology]: {
-    query: entitycore.getReconstructionMorphologies,
-    allowedFacets: true,
-    allowedParams: 'all',
-  },
-  [DataType.ExperimentalBoutonDensity]: {
-    query: entitycore.getExperimentalBoutonDensities,
-    allowedFacets: false,
-    allowedParams: ['page_size', 'page'],
-  },
-  [DataType.ExperimentalNeuronDensity]: {
-    query: entitycore.getExperimentalNeuronDensities,
-    allowedFacets: false,
-    allowedParams: ['page_size', 'page'],
-  },
-  [DataType.ExperimentalSynapsePerConnection]: {
-    query: entitycore.getExperimentalSynapsesPerConnections,
-    allowedFacets: false,
-    allowedParams: ['page_size', 'page'],
-  },
-};
-
 export const dataAtom = atomFamily(
   <T>(scope: DataAtomFamilyScopeType) =>
     atom<Promise<EntityCoreResponse<T | null>>>(async (get) => {
@@ -239,14 +210,14 @@ export const dataAtom = atomFamily(
         ...queryParams,
       };
 
-      if (scope.dataType in FetcherMapper) {
-        const subject = FetcherMapper[scope.dataType as keyof typeof FetcherMapper];
-        const response = await subject.query({
-          withFacets: subject.allowedFacets ? true : undefined,
+      const entity = getEntityByLegacyType(scope.dataType as EntityCoreLegacyType);
+      if (entity && entity.queryAll) {
+        const response = await entity.queryAll({
+          withFacets: entity.allowedFacets,
           filters: {
-            ...(subject.allowedParams === 'all'
+            ...(entity.allowedParams === 'all'
               ? queryParameters
-              : pick(queryParameters, subject.allowedParams)),
+              : pick(queryParameters, entity.allowedParams ?? [])),
             // TODO: extend the brain region (in EntityCore) filter to support the children of the selected one
             // brain_region_id: selectedBrainRegion?.id
             //   ? Number(selectedBrainRegion?.id.split('/').pop())
@@ -255,10 +226,10 @@ export const dataAtom = atomFamily(
         });
         return {
           ...response,
-          data: response.data.map((o) => ({
+          data: response.data.map((o: T) => ({
             ...o,
-            type: getEntityTypeForDataType(scope.dataType),
-          })) as T[],
+            type: entity.type,
+          })) as Array<T>,
         };
       }
 
@@ -276,20 +247,4 @@ export const dataAtom = atomFamily(
 
 function isExperimentalData(dataType: DataType) {
   return EXPERIMENTAL_DATATYPES.includes(dataType);
-}
-
-// TODO: build unified mapper for all kind of things
-function getEntityTypeForDataType(dataType: DataType): string {
-  switch (dataType) {
-    case DataType.ExperimentalNeuronMorphology:
-      return ENTITY_CORE_DATA_TYPES.RECONSTRUCTION_MORPHOLOGY.type;
-    case DataType.ExperimentalBoutonDensity:
-      return ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_BOUTON_DENSITY.type;
-    case DataType.ExperimentalNeuronDensity:
-      return ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_NEURON_DENSITY.type;
-    case DataType.ExperimentalSynapsePerConnection:
-      return ENTITY_CORE_DATA_TYPES.EXPERIMENTAL_SYNAPSES_PER_CONNECTION.type;
-    default:
-      return '';
-  }
 }
