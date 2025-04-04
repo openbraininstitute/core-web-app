@@ -92,8 +92,9 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               </div>
 
               <footer>
-                {messages.length === 0 && (
+                {status === 'ready' && (
                   <SuggestedQuestions
+                    messagesLength={messages.length}
                     onClick={(selectedPrompt) => {
                       setPrompt(selectedPrompt);
                       handleQuery(selectedPrompt);
