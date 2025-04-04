@@ -1,6 +1,7 @@
-import { getSession } from 'next-auth/react';
 import omitBy from 'lodash/omitBy';
 import isNil from 'lodash/isNil';
+
+import { getSession } from '@/authFetch';
 
 type BackoffStrategy = {
   type: 'exponential' | 'custom';
@@ -196,7 +197,7 @@ class ApiClient {
     let attempt = 0;
     const maxAttempts = config.attempts ?? this._attempts ?? 1;
 
-    const url = new URL(endpoint, this._rootUrl);
+    const url = new URL(`${this._rootUrl}${endpoint}`);
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         value.forEach((v) => url.searchParams.append(`${key}[]`, `${v}`));
@@ -405,6 +406,7 @@ class ApiClient {
  * @returns {Promise<ApiClient>} a promise that resolves to an instance of ApiClient
  */
 export default async function authApiClient(rootUri: string, cacheConfig?: CacheConfiguration) {
+  console.info('rootUri:', rootUri);
   const session = await getSession();
 
   return new ApiClient({
