@@ -8,6 +8,7 @@ import { useSetAtom } from 'jotai';
 import get from 'lodash/get';
 import find from 'lodash/find';
 import orderBy from 'lodash/orderBy';
+import compact from 'lodash/compact';
 
 import useNotification from '@/hooks/notifications';
 import useActiveSubscription from '@/hooks/useActiveSubscription';
@@ -283,9 +284,19 @@ export default function VirtualLabTeamTable({ users: initialUsers, total, ownerI
               email={record.email}
               role={record.role}
               pending={!record.invite_accepted}
-              name={record.id ? `${record.first_name} ${record.last_name}` : record.email}
+              name={
+                record.id
+                  ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+                    get(record, 'username') ||
+                    record.email
+                  : record.email
+              }
               initials={extractInitials(
-                record.id ? `${record.first_name} ${record.last_name}` : record.email
+                record.id
+                  ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+                      get(record, 'username') ||
+                      record.email
+                  : record.email
               )}
               cls={{
                 text: classNames(
