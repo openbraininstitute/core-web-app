@@ -1,5 +1,4 @@
-import authApiClient from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { entityCoreApi } from '@/api/entitycore/utils';
 import {
   IBrainRegionHierarchy,
   ITemporaryBrainRegionHierarchy,
@@ -17,11 +16,11 @@ export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
   { flat }: { flat?: T } = {} as { flat?: T }
 ): Promise<T extends true ? TemporaryFlatBrainRegionHierarchy : ITemporaryBrainRegionHierarchy> {
   // TODO: the caching could be also passed to a specific function
-  const api = await authApiClient(entityCoreUrl); // cached it for 1 day
+  const api = await entityCoreApi(); // cached it for 1 day
   return await api.get<
     T extends true ? TemporaryFlatBrainRegionHierarchy : ITemporaryBrainRegionHierarchy
   >(
-    '/brain-region/',
+    '/brain-region',
     {
       queryParams: {
         flat,
@@ -41,6 +40,6 @@ export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
  * @returns {Promise<BrainRegion>} A promise that resolves to the requested brain region
  */
 export async function getTemporaryBrainRegionById({ id }: { id: string }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await entityCoreApi();
   return await api.get<IBrainRegionHierarchy>(`/brain-region/${id}`);
 }
