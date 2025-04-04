@@ -2,26 +2,90 @@
 
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { Table, Tooltip } from 'antd';
-import { TableRowSelection } from 'antd/es/table/interface';
-import { Key, useState } from 'react';
+import { ColumnsType, TableRowSelection } from 'antd/es/table/interface';
+import React, { Key, useState } from 'react';
+import { Resizable, ResizeCallbackData } from 'react-resizable';
+
 import CIRCUITS_FULL from '../content/circuits_tree_formatted';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitSchemaProps } from '../type';
-import calculateSubcircuitsForParent from '../utils/calculateSubcircuitsForParent';
 import getExpandableRowKeys from '../utils/getExpandableRowKey';
 
+import calculateSubcircuitsForParent from '../utils/calculateSubcircuitsForParent';
 import columns from './Columns';
 
 import { classNames } from '@/util/utils';
 
 import styles from './ExploreCircuiteTable.module.scss';
 
+interface ResizableTitleProps {
+  onResize?: (e: React.SyntheticEvent, data: ResizeCallbackData) => void;
+  width?: number;
+  [key: string]: any;
+}
+
+export function ResizableTitle(props: ResizableTitleProps) {
+  const { onResize, width, ...restProps } = props;
+
+  if (!width) {
+    // eslint-disable-next-line react/jsx-props-no-spreading
+    return <th {...restProps} />;
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation()
+    }
+  }
+
+  return (
+    <Resizable
+      width={width}
+      height={0}
+      handle={
+        <span 
+          className="resize-handle" 
+          role="button"
+          tabIndex={0}
+          aria-label={`Resize ${restProps.title || 'column'}`}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={handleKeyDown}
+          />
+        }
+      onResize={onResize}
+    >
+      {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+      <th {...restProps} />
+    </Resizable>
+  );
+}
+
 export default function ExploreCircuitTable() {
+
+  // STATES 
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>(
     getExpandableRowKeys(CIRCUITS_FULL)
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+    name: 150,
+    description: 300,
+    brainRegion: 150,
+    numberOfNeurons: 100,
+    specie: 120,
+    contributorSimple: 150,
+    registrationDate: 150,
+    hasSubcircuits: 120,
+  });
 
+  const handleResize = (key: string) => (e: React.SyntheticEvent, { size }: ResizeCallbackData) => {
+    setColumnWidths((prev) => ({
+      ...prev,
+      [key]: size.width
+    }))
+  }
+
+  
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
     const rowKey = row.key;
@@ -29,6 +93,16 @@ export default function ExploreCircuitTable() {
       prev.includes(rowKey) ? prev.filter((key) => key !== rowKey) : [...prev, rowKey]
     );
   };
+
+  const mergedColumns: ColumnsType<CircuitSchemaProps> = columns(
+    expandedRowKeys,
+    calculateSubcircuitsForParent,
+    handleExpandRow,
+    handleResize
+  ).map((col) => ({
+    ...col,
+    width: columnWidths[col.key as string] || col.width, // Dynamically set width from state
+  }));
 
   const rowSelection: TableRowSelection<CircuitSchemaProps> = {
     type: 'radio',
@@ -65,7 +139,12 @@ export default function ExploreCircuitTable() {
             '[&_.ant-table-expand-icon-col]:hidden',
             styles.circuitTable
           )}
-          columns={columns(expandedRowKeys, calculateSubcircuitsForParent, handleExpandRow)}
+          components={{
+            header: {
+              cell: ResizableTitle,
+            },
+          }}
+          columns={mergedColumns}
           dataSource={circuit.subcircuit || []}
           pagination={false}
           rowSelection={rowSelection}
@@ -111,9 +190,14 @@ export default function ExploreCircuitTable() {
           '[&_.ant-table-expand-icon-col]:hidden',
           styles.circuitTable
         )}
+        components={{
+          header: {
+            cell: ResizableTitle,
+          },
+        }}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
         dataSource={CIRCUITS_FULL}
-        columns={columns(expandedRowKeys, calculateSubcircuitsForParent, handleExpandRow)}
+        columns={mergedColumns}
         pagination={false}
         rowSelection={rowSelection}
         expandable={{

@@ -1,0 +1,19 @@
+.react-resizable {
+    position: relative;
+    background-clip: padding-box;
+  }
+  
+  .react-resizable-handle {
+    position: absolute;
+    width: 10px;
+    height: 100%;
+    bottom: 0;
+    right: -5px;
+    cursor: col-resize;
+    z-index: 1;
+    background-color: transparent;
+  }
+  
+  .react-resizable-handle:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
