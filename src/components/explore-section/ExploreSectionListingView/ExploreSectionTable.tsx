@@ -277,8 +277,6 @@ export default function ExploreSectionTable<T extends EntityCoreBaseId>({
     autohideControls?: boolean;
     dataKey: string;
   }) {
-  console.log('ᦨ #  ExploreSectionTable.tsx:283 #  columns2:', columns);
-
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
     selectionType,
