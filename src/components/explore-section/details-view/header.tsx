@@ -4,7 +4,7 @@ import { ReactNode, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 
-import BookmarkButton from '@/components/Buttons/bookmark';
+import BookmarkButton from '@/components/explore-section/BookmarkButton';
 import usePathname from '@/hooks/pathname';
 import fetchArchive from '@/api/archive';
 import sessionAtom from '@/state/session';
