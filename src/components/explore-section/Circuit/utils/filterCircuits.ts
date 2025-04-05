@@ -5,7 +5,9 @@ const filterCircuits = (circuits: CircuitSchemaProps[], query: string): CircuitS
 
   return circuits
     .map((circuit: CircuitSchemaProps) => {
-      const matches = circuit.name?.toLowerCase().includes(lowerCaseQuery) ?? false;
+      const matches =
+        (circuit.name?.toLowerCase().includes(lowerCaseQuery) ?? false) ||
+        (circuit.brainRegion?.toLowerCase().includes(lowerCaseQuery) ?? false);
 
       const filteredSubcircuits = circuit.subcircuit
         ? filterCircuits(circuit.subcircuit, query)

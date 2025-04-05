@@ -11,8 +11,11 @@ import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitSchemaProps } from '../type';
 import getExpandableRowKeys from '../utils/getExpandableRowKey';
 
+import filterCircuitsByNumeric, { NumericFilterOptions } from '../utils/filterCircuitsByNumeric';
+
 import calculateSubcircuitsForParent from '../utils/calculateSubcircuitsForParent';
 import filterCircuits from '../utils/filterCircuits';
+import NumericFilters from './NumericFilters';
 
 import columns from './Columns';
 import SearchBar from './SearchBar';
@@ -79,9 +82,12 @@ export default function ExploreCircuitTable() {
     registrationDate: 150,
     hasSubcircuits: 120,
   });
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const filteredData = searchQuery ? filterCircuits(CIRCUITS_FULL, searchQuery) : CIRCUITS_FULL;
+  // FILTERING
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
+  const [minValue, setMinValue] = useState<number | undefined>(undefined);
+  const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
   const handleResize =
     (key: string) =>
@@ -107,8 +113,18 @@ export default function ExploreCircuitTable() {
     handleResize
   ).map((col) => ({
     ...col,
-    width: columnWidths[col.key as string] || col.width, // Dynamically set width from state
+    width: columnWidths[col.key as string] || col.width,
   }));
+
+  let filteredData = searchQuery ? filterCircuits(CIRCUITS_FULL, searchQuery) : CIRCUITS_FULL;
+  if (numericFilter) {
+    filteredData = filterCircuitsByNumeric(filteredData, {
+      property: numericFilter.property,
+      type: numericFilter.type,
+      min: minValue,
+      max: maxValue,
+    });
+  }
 
   const rowSelection: TableRowSelection<CircuitSchemaProps> = {
     type: 'radio',
@@ -180,8 +196,18 @@ export default function ExploreCircuitTable() {
   const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
-    <div className="pt-10">
-      <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+    <div className="relative flex w-full flex-col pt-10">
+      <div className="relative mb-8 flex w-full flex-row justify-between px-8">
+        <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <NumericFilters
+          filter={numericFilter}
+          minValue={minValue}
+          maxValue={maxValue}
+          onFilterChange={setNumericFilter}
+          onMinChange={setMinValue}
+          onMaxChange={setMaxValue}
+        />
+      </div>
       <Table
         className={classNames(
           '[&_.ant-table-tbody]:bg-[#FAFAFA]',

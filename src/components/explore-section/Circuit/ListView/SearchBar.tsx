@@ -28,20 +28,20 @@ export default function SearchBar({ searchQuery, onSearchChange }: SearchBarProp
   };
 
   return (
-    <div className="relative mb-6 flex flex-row items-center pl-8">
+    <div className="relative flex flex-row items-center">
       <span className="mr-2 block text-base text-primary-9">Search:</span>
       <div
-        className="relative flex h-8 flex-row items-center overflow-hidden rounded-full bg-white transition-all duration-[0.8s] ease-out"
+        className="relative flex h-10 flex-row items-center overflow-hidden rounded-full bg-white transition-all duration-500 ease-out"
         style={{
-          width: searchOpen ? 300 : 26,
-          paddingLeft: searchOpen ? 8 : 0,
+          width: searchOpen ? 400 : 36,
+          paddingLeft: searchOpen ? 10 : 0,
         }}
       >
         {searchOpen ? (
           <div className="relative flex w-full flex-row justify-between">
             <Input
               type="text"
-              placeholder="Search circuits by name..."
+              placeholder="Search circuits by name or brain region..."
               value={searchQuery}
               onChange={handleChange}
               id="search-input"
@@ -51,14 +51,16 @@ export default function SearchBar({ searchQuery, onSearchChange }: SearchBarProp
 
             <CloseOutlined
               onClick={handleClose}
-              className="relative right-[7px] h-auto w-4 cursor-pointer text-lg text-gray-600"
+              className="relative right-[10px] h-auto w-3.5 cursor-pointer text-lg text-gray-400"
             />
           </div>
         ) : (
-          <SearchOutlined
-            onClick={() => setSearchOpen(true)}
-            className="relative left-[6px] h-auto w-4 cursor-pointer text-lg text-primary-9"
-          />
+          <div className="relative flex h-full w-full items-center justify-center">
+            <SearchOutlined
+              onClick={() => setSearchOpen(true)}
+              className="relative h-auto w-4 cursor-pointer text-lg text-primary-9"
+            />
+          </div>
         )}
       </div>
     </div>
