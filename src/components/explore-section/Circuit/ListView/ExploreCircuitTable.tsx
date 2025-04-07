@@ -27,19 +27,11 @@ const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
 };
 
 const brainRegionFilter = memoize(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ({
-    brainRegionId,
-    brainRegionSet,
-  }: {
-    brainRegionId: string | undefined;
-    brainRegionSet: Set<string>;
-  }) =>
+  (brainRegions: { brainRegionId: string | undefined; brainRegionSet: Set<string> }) =>
     memoize((node: CircuitSchemaProps): boolean => {
       return (
-        brainRegionSet.has(node.brainRegion.trim().toLocaleLowerCase()) ||
-        (node.subcircuits?.some((sc) => brainRegionFilter({ brainRegionId, brainRegionSet })(sc)) ??
-          false)
+        brainRegions.brainRegionSet.has(node.brainRegion.trim().toLocaleLowerCase()) ||
+        (node.subcircuits?.some((sc) => brainRegionFilter(brainRegions)(sc)) ?? false)
       );
     }),
   (a) => `${a.brainRegionId}`
