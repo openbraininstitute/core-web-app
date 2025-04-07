@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
+import { Spin } from 'antd';
 import { ErrorBoundary } from 'react-error-boundary';
+import { LoadingOutlined } from '@ant-design/icons';
 
 import MembershipsVirtualLabsList from '@/components/VirtualLab/labs-listing/membership-list';
 import MyVirtualLabCard from '@/components/VirtualLab/labs-listing/my-virtual-lab';
@@ -77,12 +79,16 @@ export default async function Home({ searchParams }: Props) {
   if (!hasVirtualLabs) {
     return <VirtualSplashScreen />;
   }
-
+  const Loading = (
+    <div className="flex h-screen items-center justify-center">
+      <Spin indicator={<LoadingOutlined />} size="large" />
+    </div>
+  );
   return (
     <div className="container mx-auto p-4">
       <Tabs items={tabs} activeTabId={activeTabId} basePath="/app/virtual-lab" />
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={Loading}>
           {activeTabId === 'my-virtual-lab' && (
             <MyVirtualLabCard hasProSubscription={hasProSubscription} />
           )}

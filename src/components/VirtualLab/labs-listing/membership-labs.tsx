@@ -1,6 +1,7 @@
 'use client';
 
 import { List } from 'antd';
+import { useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
@@ -17,17 +18,21 @@ export default function MembershipLabsListing({ labs, total, currentPage, pageSi
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [pending, startTransition] = useTransition();
 
   const handlePageChange = (page: number, size: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', page.toString());
-    params.set('size', size.toString());
-    const queryString = params.toString();
-    router.push(`${pathname}?${queryString}`);
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams);
+      params.set('page', page.toString());
+      params.set('size', size.toString());
+      const queryString = params.toString();
+      router.push(`${pathname}?${queryString}`);
+    });
   };
 
   return (
     <List<VirtualLab>
+      loading={pending}
       dataSource={labs}
       renderItem={(item) => (
         <CardItem
