@@ -5,6 +5,7 @@ import {
   ProjectCreationResponse,
   ProjectExistsVerificationResponse,
   ProjectUsersCountResponse,
+  VlmAttachUsersToProjectResponse,
   VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
@@ -136,5 +137,44 @@ export async function listProjects({
   }
 
   const result = (await response.json()) as VlmProjectsResponse;
+  return result;
+}
+
+/**
+ * Add users to project
+ *
+ * @param {string} params.virtualLabId - The ID of the virtual lab
+ * @param {string} params.projectId - The ID of the project
+ * @param {Array<AddUserToProjectIn>} params.users - The list of emails to add
+ * @returns {Promise<VlmAttachUsersToProjectResponse>} - Returns the paginated projects data
+ * @throws {Error} - Throws an error if the API request fails
+ */
+export async function attachUsersToProject({
+  virtualLabId,
+  projectId,
+  users,
+}: {
+  virtualLabId: string;
+  projectId: string;
+  users: Array<{ email: string; role: string; id: string }>;
+}): Promise<VlmAttachUsersToProjectResponse> {
+  const session = await getSession();
+
+  const response = await fetch(`${BASE_URL}/${virtualLabId}/projects/${projectId}/users/attach`, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    body: JSON.stringify({
+      users,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Attaching users to project failed`, { cause: await response.json() });
+  }
+
+  const result = (await response.json()) as VlmAttachUsersToProjectResponse;
   return result;
 }

@@ -10,9 +10,10 @@ import find from 'lodash/find';
 import orderBy from 'lodash/orderBy';
 import compact from 'lodash/compact';
 
+import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
+import AddMembersModal from '@/components/VirtualLab/create-entity-flows/project/add-members';
+import useUserPermissions from '@/hooks/useUserPermission';
 import useNotification from '@/hooks/notifications';
-import useActiveSubscription from '@/hooks/useActiveSubscription';
-import InviteModal from '@/components/VirtualLab/create-entity-flows/invite';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import {
   cancelProjectInvite,
@@ -178,7 +179,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
   return user.invite_accepted ? (
     <div className="ml-auto text-right text-base text-white">
       <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
-        <div className="flex w-max flex-col items-center justify-center">
+        <div className="flex w-max flex-row items-center justify-center gap-2">
           <Select
             data-testid="role-select"
             className={classNames(
@@ -186,7 +187,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
               '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
               '[&_.ant-select-selector]:!border [&_.ant-select-selector]:!border-primary-7',
               '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
-              '[&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
+              'min-w-[140px] [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
             )}
             onChange={onChange}
             value={role}
@@ -215,7 +216,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
             <Button
               type="default"
               size="large"
-              className="w-full self-end rounded-none border border-t-0 border-primary-7 bg-transparent px-[11px] text-white hover:!border-t"
+              className="w-full self-end rounded-none border border-primary-7 bg-transparent px-[11px] text-white hover:!border-t"
               disabled={removeLoading}
               loading={removeLoading}
             >
@@ -248,6 +249,14 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
   const { virtualLabId, projectId } = useParams<{ virtualLabId: string; projectId: string }>();
   const [isOpen, setOpen] = useState(false);
   const [users, setUsers] = useState(initialUsers);
+  const [popoverOpen, setIsPopoverOpen] = useState<string | null>(null);
+
+  const { isAllowedBySubscription, isAdmin, isProjectAdmin, loading } = useUserPermissions({
+    virtualLabId,
+    projectId,
+  });
+  const allowedOperation = isAllowedBySubscription && (isAdmin || isProjectAdmin) && !loading;
+
   const onClose = () => setOpen(false);
   const onOpen = () => setOpen(true);
 
@@ -319,7 +328,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
       key: 'role',
       dataIndex: 'role',
       align: 'right',
-      width: '200px',
+      width: '450px',
       render: (_: Role, record) => (
         <RoleModifier
           virtualLabId={virtualLabId}
@@ -331,7 +340,22 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
       ),
     },
   ];
-  const { forbiddenOperation } = useActiveSubscription();
+
+  const onOpenChange = () => {
+    if (loading) return;
+    let message = "You don't have rights to add members to this virtual lab.";
+    if (!isAdmin || !isProjectAdmin)
+      message = "You don't have admin rights to add members to this virtual lab.";
+    if (!isAllowedBySubscription)
+      message = "You don't have a paid subscription to add members to this virtual lab.";
+    if (!isAllowedBySubscription && !isAdmin && !isProjectAdmin)
+      message =
+        "You don't have a paid subscription nor admin rights to add members to this virtual lab.";
+
+    if (!allowedOperation) setIsPopoverOpen(message);
+    else setIsPopoverOpen(null);
+  };
+
   return (
     <div className="flex h-full flex-col pb-8">
       <div className="flex h-8 flex-shrink-0 items-center px-3">
@@ -374,28 +398,34 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
         </ConfigProvider>
       </div>
       <div className="mt-auto flex flex-shrink-0 items-center justify-end">
-        <Button
-          key="add-member"
-          data-testid="add-member-btn"
-          className={classNames(
-            'h-14 rounded-none border border-white bg-white px-14 text-primary-9',
-            'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-            'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-            'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
-          )}
-          type="default"
-          size="large"
-          htmlType="button"
-          disabled={forbiddenOperation}
-          onClick={onOpen}
+        <CustomPopover
+          when={['hover']}
+          message="You don't have rights to add members to this project."
+          placement="topLeft"
+          visible={popoverOpen !== null}
+          onOpenChange={onOpenChange}
         >
-          Add member
-        </Button>
+          <Button
+            key="add-member"
+            data-testid="add-member-btn"
+            className={classNames(
+              'h-14 rounded-none border border-white bg-white px-14 text-primary-9',
+              'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
+              'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
+              'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
+            )}
+            type="default"
+            size="large"
+            htmlType="button"
+            disabled={!allowedOperation}
+            onClick={onOpen}
+          >
+            Add member
+          </Button>
+        </CustomPopover>
       </div>
-      <InviteModal
-        type="project"
+      <AddMembersModal
         key="invite-member-to-project"
-        title="Invite new members to project"
         isOpen={isOpen}
         onClose={onClose}
         context={{ virtualLabId, projectId }}

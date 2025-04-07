@@ -8,6 +8,8 @@ type Props = {
   when?: PopoverProps['trigger'];
   placement?: PopoverProps['placement'];
   onConfirm?: () => void;
+  visible?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export default function CustomPopover({
@@ -16,13 +18,17 @@ export default function CustomPopover({
   children,
   when = ['click'],
   placement = 'topRight',
+  visible,
+  onOpenChange,
 }: Props) {
   return (
     <Popover
+      open={visible}
       placement={placement}
       getPopupContainer={(trigger) => trigger.parentElement!}
       getTooltipContainer={(trigger) => trigger.parentElement!}
       trigger={when}
+      onOpenChange={onOpenChange}
       overlayClassName={classNames(
         '[&_.ant-popover-inner]:!p-0 [&_.ant-popover-inner]:!bg-primary-8 max-w-[260px]',
         '[&_.ant-popover-arrow:before]:bg-primary-8'

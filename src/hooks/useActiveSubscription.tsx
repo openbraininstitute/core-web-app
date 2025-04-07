@@ -5,6 +5,7 @@ import { SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
 import { tryCatch } from '@/api/utils';
 
 export default function useActiveSubscription() {
+  const [loading, setLoading] = useState(false);
   const [forbiddenOperation, setForbiddenOperation] = useState(false);
   const [data, setData] = useState<{
     status?: SubscriptionStatus;
@@ -15,10 +16,17 @@ export default function useActiveSubscription() {
 
   useEffect(() => {
     (async function getActiveSubscription() {
-      const { data: result, error } = await tryCatch(getUserActiveSubscription(), undefined, {
-        feature: 'get-user-active-subscription',
-        section: 'useActiveSubscription',
-      });
+      setLoading(true);
+      const { data: result, error } = await tryCatch(
+        getUserActiveSubscription(),
+        () => {
+          setLoading(false);
+        },
+        {
+          feature: 'get-user-active-subscription',
+          section: 'useActiveSubscription',
+        }
+      );
       setData({
         canceled_at: result?.subscription.canceled_at,
         next_billing_date: result?.subscription.next_billing_date,
@@ -31,6 +39,7 @@ export default function useActiveSubscription() {
   }, [setForbiddenOperation, setData]);
 
   return {
+    loading,
     data,
     forbiddenOperation,
   };
