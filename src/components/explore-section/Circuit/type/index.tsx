@@ -25,6 +25,23 @@ export type GraphDataImageProps = {
   height: number;
 };
 
+export type DownloadableFileProps = {
+  type: string;
+  extension: string;
+  name: string;
+  url: string;
+  description: string;
+  size: string;
+  children: {
+    type: string;
+    extension: string;
+    name: string;
+    url: string;
+    description: string;
+    size: string;
+  }[];
+};
+
 export type CircuitSchemaProps = {
   key: string;
   name: string;

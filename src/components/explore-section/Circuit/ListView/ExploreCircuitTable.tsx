@@ -23,6 +23,7 @@ import ResizableTitle from './ResizableTitle';
 import SubcircuitTable from './SubcircuitsTable';
 
 import { classNames } from '@/util/utils';
+
 import styles from './ExploreCircuiteTable.module.scss';
 
 export default function ExploreCircuitTable() {
@@ -51,10 +52,10 @@ export default function ExploreCircuitTable() {
   const handleResize = useCallback(
     (key: string) =>
       (e: React.SyntheticEvent, { size }: ResizeCallbackData) => {
-        setColumnWidths((prev) => ({
-          ...prev,
-          [key]: size.width,
-        }));
+        setColumnWidths((prev) => {
+          const newWidths = { ...prev, [key]: size.width };
+          return newWidths;
+        });
       },
     []
   );
@@ -73,15 +74,19 @@ export default function ExploreCircuitTable() {
     );
   }, []);
 
-  const mergedColumns: ColumnsType<CircuitSchemaProps> = columns(
-    expandedRowKeys,
-    calculateSubcircuitsForParent,
-    handleRowExpandClick,
-    handleResize
-  ).map((col) => ({
-    ...col,
-    width: columnWidths[col.key as string] || col.width,
-  }));
+  const mergedColumns: ColumnsType<CircuitSchemaProps> = useMemo(
+    () =>
+      columns(
+        expandedRowKeys,
+        calculateSubcircuitsForParent,
+        handleRowExpandClick,
+        handleResize
+      ).map((col) => ({
+        ...col,
+        width: columnWidths[col.key as string] || col.width,
+      })),
+    [expandedRowKeys, handleRowExpandClick, handleResize, columnWidths]
+  );
 
   let filteredData = searchQuery ? filterCircuits(CIRCUITS_FULL, searchQuery) : CIRCUITS_FULL;
   if (numericFilter) {

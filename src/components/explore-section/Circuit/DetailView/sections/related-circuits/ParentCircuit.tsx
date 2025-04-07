@@ -1,6 +1,7 @@
 import { Table } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
 import { Key, useState } from 'react';
+import { useAllCircuitMapping } from '../../../utils/allCircuitsMapping';
 
 import CIRCUITS_FULL from '../../../content/circuits_tree_formatted';
 import { CircuitSchemaProps } from '../../../type';
@@ -11,26 +12,14 @@ import columns from './columns';
 import { classNames } from '@/util/utils';
 import styles from './ExploreCircuitTable.module.scss';
 
-export function findParentCircuitByName(parentName: string): CircuitSchemaProps | null {
-  function search(circuits: CircuitSchemaProps[]): CircuitSchemaProps | null {
-    for (const circuit of circuits) {
-      if (circuit.name === parentName) {
-        return circuit;
-      }
-
-      if (circuit.hasSubcircuits && circuit.subcircuit && circuit.subcircuit.length > 0) {
-        const found = search(circuit.subcircuit);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
-  return search(CIRCUITS_FULL);
-}
-
 export default function ParentCircuit({ content }: { content: CircuitSchemaProps }) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+
+  const circuitsCompletelyFlatten = useAllCircuitMapping(CIRCUITS_FULL);
+  if (!content.parent) {
+    return <div>Loading...</div>;
+  }
+  const currentContent = circuitsCompletelyFlatten.get(content.parent);
 
   const rowSelection: TableRowSelection<CircuitSchemaProps> = {
     type: 'radio',
@@ -58,11 +47,7 @@ export default function ParentCircuit({ content }: { content: CircuitSchemaProps
           styles.circuitTable
         )}
         columns={columns}
-        dataSource={
-          findParentCircuitByName(content.name)
-            ? ([findParentCircuitByName(content.name)].filter(Boolean) as CircuitSchemaProps[])
-            : []
-        }
+        dataSource={currentContent ? [currentContent] : undefined}
         pagination={false}
         rowSelection={rowSelection}
       />

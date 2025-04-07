@@ -20,13 +20,19 @@ export default function ResizableTitle(props: ResizableTitleProps) {
     }
   };
 
+  const handleResizeEvent = (e: React.SyntheticEvent, data: ResizeCallbackData) => {
+    if (onResize) {
+      onResize(e, data);
+    }
+  };
+
   return (
     <Resizable
       width={width}
       height={0}
       handle={
         <span
-          className="resize-handle"
+          className="absolute -right-[5px] top-7 z-10 h-[16px] w-px cursor-col-resize bg-black/25 hover:bg-black/50"
           role="button"
           tabIndex={0}
           aria-label={`Resize ${restProps.title || 'column'}`}
@@ -34,7 +40,7 @@ export default function ResizableTitle(props: ResizableTitleProps) {
           onKeyDown={handleKeyDown}
         />
       }
-      onResize={onResize}
+      onResize={handleResizeEvent}
     >
       {/* eslint-disable-next-line react/jsx-props-no-spreading */}
       <th {...restProps} />

@@ -1,22 +1,17 @@
 import { ColumnsType } from 'antd/es/table';
 import Link from 'next/link';
-import { Key, ReactNode } from 'react';
+import { Key, SyntheticEvent } from 'react';
+import { ResizeCallbackData } from 'react-resizable';
+
 import { CircuitSchemaProps } from '../type';
 
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
 
-// Define a custom column type that includes title, key, width, render, and onHeaderCell
 export type ResizableColumnType = ColumnsType<CircuitSchemaProps>[number] & {
-  title: ReactNode;
-  key: string;
-  width: number;
-  render: (value: any, record: CircuitSchemaProps, index: number) => ReactNode;
-  onHeaderCell?: (
-    column: ColumnsType<CircuitSchemaProps>[number]
-  ) => React.HTMLAttributes<HTMLElement> & {
-    onResize: (e: React.SyntheticEvent, data: { size: { width: number } }) => void;
+  onHeaderCell?: (column: ResizableColumnType) => React.HTMLAttributes<HTMLElement> & {
+    onResize: (e: SyntheticEvent, data: ResizeCallbackData) => void;
   };
 };
 
@@ -24,7 +19,7 @@ const columns = (
   expandedRowKeys: Key | Key[],
   calculateSubcircuitsForParent: (row: CircuitSchemaProps) => number,
   handleExpandRow: (row: CircuitSchemaProps, index: number) => void,
-  onResize: (key: string, width: number) => void
+  handleResize: (key: string) => (e: SyntheticEvent, data: ResizeCallbackData) => void
 ): ResizableColumnType[] => [
   {
     title: 'Name',
@@ -35,12 +30,9 @@ const columns = (
         {record.name}
       </Link>
     ),
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
   {
@@ -52,12 +44,9 @@ const columns = (
         {truncate(record.description, 40)}
       </Link>
     ),
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
   {
@@ -69,29 +58,23 @@ const columns = (
         {record.brainRegion}
       </Link>
     ),
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
   {
     title: '# Neurons',
     key: 'numberOfNeurons',
-    width: 100,
+    width: 130,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <Link href={`./circuit/${record.key}`} className="whitespace-nowrap font-normal">
         {record.numberOfNeurons}
       </Link>
     ),
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
   {
@@ -103,12 +86,9 @@ const columns = (
         {record.species}
       </Link>
     ),
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
   {
@@ -120,12 +100,9 @@ const columns = (
         {record.metadata.contributorSimple}
       </Link>
     ),
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
   {
@@ -137,12 +114,9 @@ const columns = (
         {record.metadata.registrationDate}
       </Link>
     ),
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
   {
@@ -174,12 +148,9 @@ const columns = (
         )
       );
     },
-    onHeaderCell: (column: ColumnsType<CircuitSchemaProps>[number]) => ({
-      width: column.width as number,
-      onResize: (e: React.SyntheticEvent) => {
-        const { size } = e as unknown as { size: { width: number } };
-        onResize(column.key as string, size.width);
-      },
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
     }),
   },
 ];

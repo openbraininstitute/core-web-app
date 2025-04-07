@@ -6,6 +6,7 @@ export type CircuitWithCount = {
   subcircuitCount: number;
 };
 
+// FLATTEN ROWS OBJECT
 export const flattenRowsObj = (data: CircuitSchemaProps[]): { [key: string]: CircuitWithCount } => {
   return data.reduce(
     (acc, row) => {
@@ -31,6 +32,7 @@ export const flattenRowsObj = (data: CircuitSchemaProps[]): { [key: string]: Cir
   );
 };
 
+// FLATTERN ROWS JSON
 export const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] => {
   return data.reduce((acc, row) => {
     const subcircuits = row.subcircuit ? flattenRows(row.subcircuit) : [];

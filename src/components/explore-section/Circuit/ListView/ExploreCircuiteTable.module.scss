@@ -1,7 +1,27 @@
 .circuitTable {
+  table-layout: fixed;
   :global(.ant-table-cell) {
     padding-left: 10px !important;
   }
+}
+
+.circuitTable th {
+  width: auto !important;
+}
+
+.resize-handle {
+  position: absolute;
+  right: -5px;
+  top: 0;
+  height: 12px;
+  width: 10px;
+  cursor: col-resize;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+.resize-handle:hover {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .react-resizable {

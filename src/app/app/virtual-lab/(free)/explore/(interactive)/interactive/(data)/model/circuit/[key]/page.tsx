@@ -2,24 +2,7 @@
 
 import CIRCUITS_FULL from '@/components/explore-section/Circuit/content/circuits_tree_formatted';
 import MainDetailViewCore from '@/components/explore-section/Circuit/DetailView/MainDetailViewCore';
-import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
-
-export function findCircuitByKey(key: string): CircuitSchemaProps | null {
-  function search(circuits: CircuitSchemaProps[]): CircuitSchemaProps | null {
-    for (const circuit of circuits) {
-      if (circuit.key === key) {
-        return circuit;
-      }
-      if (circuit.hasSubcircuits && circuit.subcircuit.length > 0) {
-        const found = search(circuit.subcircuit);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
-  return search(CIRCUITS_FULL);
-}
+import { useAllCircuitMapping } from '@/components/explore-section/Circuit/utils/allCircuitsMapping';
 
 export default function CircuitDetailPage({
   params,
@@ -28,18 +11,19 @@ export default function CircuitDetailPage({
     key: string;
   };
 }) {
-  const content = findCircuitByKey(params.key);
-  if (!content) {
-    return (
-      <div className="relative flex w-full flex-col">
-        <p>Circuit not found</p>
-      </div>
-    );
+  const circuitsCompletelyFlatten = useAllCircuitMapping(CIRCUITS_FULL);
+
+  const currentContent = circuitsCompletelyFlatten.get(params.key);
+
+  if (!currentContent) {
+    return <div>Loading...</div>;
   }
+
+  console.log('circuitCompletelyFlatten', currentContent);
 
   return (
     <div className="relative flex w-full flex-col">
-      <MainDetailViewCore content={content} />
+      <MainDetailViewCore content={currentContent} />
     </div>
   );
 }
