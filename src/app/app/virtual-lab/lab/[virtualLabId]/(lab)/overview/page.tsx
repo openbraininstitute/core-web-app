@@ -16,7 +16,7 @@ export default function VirtualLab({ params }: ServerSideComponentProp<{ virtual
         subtitle="In order to start exploring brain regions, building models and simulate neuron, create a project"
       />
 
-      <DiscoverObpPanel withTitle />
+      <DiscoverObpPanel />
       <div className="flex flex-col">
         <div className="my-10 text-lg font-bold uppercase">Members</div>
         <UsersHorizontalList virtualLabId={virtualLabId} />
