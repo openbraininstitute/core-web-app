@@ -1,16 +1,22 @@
 'use client';
 
-import { Key, useState } from 'react';
+import { Key, useMemo, useState } from 'react';
 import { Table, Tooltip } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
 import { InfoCircleOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
 import circuitsFlat from '../content/circuits_flat';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import CIRCUITS from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
-import { classNames } from '@/util/utils';
+import { classNames, memoize } from '@/util/utils';
+import {
+  brainRegionByIdMapAtom,
+  selectedBrainRegionAtom,
+  selectedBrainRegionWithDescendantsAndAncestorsAtom,
+} from '@/state/brain-regions';
 import styles from './ExploreCircuiteTable.module.scss';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
@@ -20,9 +26,33 @@ const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   }, [] as string[]);
 };
 
+const brainRegionFilter = memoize(
+  (brainRegions: { brainRegionId: string | undefined; brainRegionSet: Set<string> }) =>
+    memoize((node: CircuitSchemaProps): boolean => {
+      return (
+        brainRegions.brainRegionSet.has(node.brainRegion.trim().toLocaleLowerCase()) ||
+        (node.subcircuits?.some((sc) => brainRegionFilter(brainRegions)(sc)) ?? false)
+      );
+    }),
+  (a) => `${a.brainRegionId}`
+);
+
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS));
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const selectedBrainRegions = useAtomValue(selectedBrainRegionWithDescendantsAndAncestorsAtom);
+  const brainRegionNotationById = useAtomValue(brainRegionByIdMapAtom);
+
+  const brainRegionSet = useMemo(() => {
+    return new Set(
+      selectedBrainRegions.map(
+        (br) => brainRegionNotationById?.get(br)?.title.toLocaleLowerCase().trim() ?? ''
+      )
+    );
+  }, [selectedBrainRegions, brainRegionNotationById]);
+
+  const filter = brainRegionFilter({ brainRegionId: selectedBrainRegion?.id, brainRegionSet });
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
@@ -131,7 +161,10 @@ export default function ExploreCircuitTable() {
   ];
 
   // SUBCIRCUIT TABLE - LEVEL 1
-  const expandedRowRender = (circuit: CircuitSchemaProps): JSX.Element => {
+  const expandedRowRender = (circuit: CircuitSchemaProps) => {
+    const subcircuits = circuit.subcircuits?.filter((sc) => filter(sc));
+    if (!subcircuits || subcircuits.length === 0) return null;
+
     return (
       <div className="relative flex flex-col">
         <div className="flex-row] relative flex pl-2">
@@ -156,7 +189,7 @@ export default function ExploreCircuitTable() {
             styles.circuitTable
           )}
           columns={columns}
-          dataSource={circuit.subcircuits || []}
+          dataSource={circuit.subcircuits?.filter((sc) => filter(sc)) || []}
           pagination={false}
           rowSelection={rowSelection}
           expandable={{
@@ -201,7 +234,7 @@ export default function ExploreCircuitTable() {
           styles.circuitTable
         )}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={CIRCUITS}
+        dataSource={CIRCUITS.filter((c) => filter(c))}
         columns={columns}
         pagination={false}
         rowSelection={rowSelection}
