@@ -145,7 +145,7 @@ export async function listProjects({
  *
  * @param {string} params.virtualLabId - The ID of the virtual lab
  * @param {string} params.projectId - The ID of the project
- * @param {Array<AddUserToProjectIn>} params.users - The list of emails to add
+ * @param {Array<AddUserToProjectIn>} params.users - The list of users to add
  * @returns {Promise<VlmAttachUsersToProjectResponse>} - Returns the paginated projects data
  * @throws {Error} - Throws an error if the API request fails
  */

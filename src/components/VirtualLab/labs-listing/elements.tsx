@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Empty } from 'antd';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-
 import { ExclamationCircleFilled } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
@@ -37,7 +36,7 @@ export function MembershipVirtualLabsEmpty() {
   return (
     <div
       data-testid="virtual-labs-memberships-empty"
-      className="mb-6 rounded-sm border border-white bg-primary-9 p-6 hover:shadow-sm"
+      className="mx-auto mb-6 w-full max-w-7xl rounded-sm border border-white bg-primary-9 p-6 hover:shadow-sm"
     >
       <div className="flex flex-col items-start justify-between gap-1">
         <h2 className="text-2xl font-bold text-white">
