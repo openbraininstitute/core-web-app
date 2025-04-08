@@ -8,7 +8,7 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import { CSSProperties, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import circuitsFlat from '../Circuit/content/circuits_flat';
+import { circuitCountAtom } from '../Circuit/content/circuits_flat';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
@@ -69,6 +69,7 @@ export default function ExploreListingLayout({
   const config = pathname.includes('experimental') ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const activePath = pathname?.split('/').pop() || 'morphology';
+  const circuitCount = useAtomValue(circuitCountAtom);
 
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
@@ -119,7 +120,7 @@ export default function ExploreListingLayout({
   items.push({
     key: 'circuit',
     title: 'Circuit',
-    label: `Circuit (${circuitsFlat.length})`,
+    label: `Circuit (${circuitCount})`,
     className: 'text-center font-semibold',
     style: {
       backgroundColor: circuitActive ? 'white' : '#002766',
