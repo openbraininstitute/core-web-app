@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { atomFamily, loadable, selectAtom } from 'jotai/utils';
+import { atomFamily, loadable, selectAtom, unwrap } from 'jotai/utils';
 import { Spin } from 'antd';
 import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -23,7 +23,7 @@ type CardVisualizationProps = {
 };
 
 const swcFileAtom = atomFamily((contentUrl?: string) =>
-  selectAtom(sessionAtom, (session) => {
+  selectAtom(unwrap(sessionAtom), (session) => {
     if (!session || !contentUrl) return null;
     return fetch(contentUrl, {
       headers: createHeaders(session.accessToken, { Accept: '*/*' }),

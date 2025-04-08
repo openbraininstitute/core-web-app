@@ -1,7 +1,7 @@
 'use client';
 
 import { atom } from 'jotai';
-import { selectAtom, atomWithStorage } from 'jotai/utils';
+import { selectAtom, atomWithStorage, unwrap } from 'jotai/utils';
 
 import sessionAtom from '@/state/session';
 import { BrainModelConfigResource } from '@/types/nexus';
@@ -50,9 +50,9 @@ export const updateConfigAtom = atom(null, async (get, set, config: BrainModelCo
   set(triggerRefetchAtom);
 });
 
-export const getNameAtom = selectAtom(configAtom, (config) => config?.name);
+export const getNameAtom = selectAtom(unwrap(configAtom), (config) => config?.name);
 
-export const getCreatedByAtom = selectAtom(configAtom, (config) => config?._createdBy);
+export const getCreatedByAtom = selectAtom(unwrap(configAtom), (config) => config?._createdBy);
 
 export const updateNameAtom = atom(null, async (get, set, name: string) => {
   const config = await get(configAtom);
@@ -64,7 +64,7 @@ export const updateNameAtom = atom(null, async (get, set, name: string) => {
   set(updateConfigAtom, updatedConfig);
 });
 
-export const getDescriptionAtom = selectAtom(configAtom, (config) => config?.description);
+export const getDescriptionAtom = selectAtom(unwrap(configAtom), (config) => config?.description);
 
 export const updateDescriptionAtom = atom(null, async (get, set, description: string) => {
   const config = await get(configAtom);
@@ -117,7 +117,7 @@ export const meModelConfigIdAtom = atom<Promise<string | null>>(async (get) => {
 });
 
 export const microConnectomeConfigIdAtom = selectAtom(
-  configAtom,
+  unwrap(configAtom),
   (config) => config?.configs.microConnectomeConfig?.['@id']
 );
 

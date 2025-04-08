@@ -1,5 +1,5 @@
 import { Atom, atom } from 'jotai';
-import { selectAtom } from 'jotai/utils';
+import { selectAtom, unwrap } from 'jotai/utils';
 import memoizeOne from 'memoize-one';
 import sessionAtom from '../session';
 import {
@@ -54,7 +54,7 @@ memoizeOne acts as an atomFamily with just one element
 */
 export const simCampaignDimensionsFamily = memoizeOne((path: string) =>
   selectAtom(
-    detailFamily(pathToResource(path)),
+    unwrap(detailFamily(pathToResource(path))),
     (simCamp) => (simCamp as SimulationCampaign)?.parameter?.coords // TODO: Improve type
   )
 );
