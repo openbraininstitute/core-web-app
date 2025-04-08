@@ -13,7 +13,7 @@ import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import { DataType } from '@/constants/explore-section/list-views';
 import ListingFilterPanel from '@/features/listing-filter-panel';
-import styles from './styles.module.scss';
+import styles from './styles.module.css';
 
 export const theme: ThemeConfig = {
   token: {

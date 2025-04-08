@@ -11,7 +11,7 @@ import { CircuitColumn, CircuitSchemaProps } from '../type';
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
-import styles from './ExploreCircuiteTable.module.scss';
+import styles from './ExploreCircuiteTable.module.css';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   return data.reduce((acc, row) => {

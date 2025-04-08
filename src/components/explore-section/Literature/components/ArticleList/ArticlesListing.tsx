@@ -16,7 +16,7 @@ import { classNames } from '@/util/utils';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { articleListFiltersAtom } from '@/state/explore-section/literature-filters';
 
-import './styles.scss';
+import './styles.css';
 import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
 
 type ListingState = {

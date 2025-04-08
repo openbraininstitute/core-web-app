@@ -33,7 +33,7 @@ import MicroConnectomePlot, {
 import { HemisphereDirection, PathwaySideSelection as Selection } from '@/types/connectome';
 import { useLoadable } from '@/hooks/hooks';
 
-import styles from '../connectome-definition-view.module.scss';
+import styles from '../connectome-definition-view.module.css';
 
 type PlotDataBase = {
   srcSelections: Selection[];

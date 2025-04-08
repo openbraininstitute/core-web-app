@@ -8,7 +8,7 @@ import { classNames } from '@/util/utils';
 import Link from '@/components/Link';
 import useResizeObserver from '@/hooks/useResizeObserver';
 
-import styles from '@/components/ListTable/list-table.module.scss';
+import styles from '@/components/ListTable/list-table.module.css';
 
 type Column = {
   dataIndex: string | string[];

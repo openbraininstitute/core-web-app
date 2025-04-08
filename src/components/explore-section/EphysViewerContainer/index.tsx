@@ -5,7 +5,7 @@ import { EPhysImageItem } from '@/types/explore-section/resources';
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
 import ImageViewContainer from '@/components/explore-section/EphysViewerContainer/ImageViewContainer';
 import GraphViewContainer from '@/components/explore-section/EphysViewerContainer/GraphViewContainer';
-import './styles/ephys-plugin-styles.scss';
+import './styles/ephys-plugin-styles.css';
 import { ensureArray } from '@/util/nexus';
 
 enum VIEWS {

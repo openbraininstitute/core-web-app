@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Skeleton, Spin, Image } from 'antd';
-import './styles/nexus-image.scss';
+import './styles/nexus-image.css';
 import { loadable } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import createNexusImageDataAtom from '@/components/explore-section/EphysViewerContainer/state/NexusImageDataAtom';

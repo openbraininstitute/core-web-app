@@ -14,7 +14,7 @@ import { ExploreESHit } from '@/types/explore-section/es';
 import { detailUrlBuilder } from '@/util/common';
 import { Field } from '@/constants/explore-section/fields-config/enums';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
-import styles from './styles.module.scss';
+import styles from './styles.module.css';
 
 type CardDataType = ReconstructedNeuronMorphology | ExperimentalTrace;
 

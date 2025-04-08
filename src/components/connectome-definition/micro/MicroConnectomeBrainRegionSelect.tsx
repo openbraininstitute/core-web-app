@@ -11,7 +11,7 @@ import { classNames } from '@/util/utils';
 
 import { brainRegionByNotationMapAtom, brainRegionsFilteredTreeAtom } from '@/state/brain-regions';
 
-import style from './brain-region-select.module.scss';
+import style from './brain-region-select.module.css';
 
 const DEFAULT_TAG_WIDTH = 220;
 

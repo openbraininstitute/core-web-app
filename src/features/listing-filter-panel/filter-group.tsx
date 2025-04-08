@@ -6,7 +6,7 @@ import { ChevronIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 import { Filter } from '@/features/listing-filter-panel/types';
 
-import styles from '@/features/listing-filter-panel/filters.module.scss';
+import styles from '@/features/listing-filter-panel/filters.module.css';
 
 type ContentProps = {
   filters: Filter[];

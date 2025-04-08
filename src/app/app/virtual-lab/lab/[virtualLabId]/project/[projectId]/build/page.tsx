@@ -33,7 +33,7 @@ import {
   selectedTabFamily,
 } from '@/components/VirtualLab/ScopeSelector/state';
 import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.scss';
+import Styles from '@/styles/vlabs.module.css';
 
 type Params = {
   params: Promise<{

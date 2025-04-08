@@ -35,7 +35,7 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.scss';
+import Styles from '@/styles/vlabs.module.css';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -48,11 +48,9 @@ const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   },
 };
 
-export default function VirtualLabProjectSimulatePage(
-  props: {
-    params: Promise<{ virtualLabId: string; projectId: string }>;
-  }
-) {
+export default function VirtualLabProjectSimulatePage(props: {
+  params: Promise<{ virtualLabId: string; projectId: string }>;
+}) {
   const params = use(props.params);
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + params.projectId));
 

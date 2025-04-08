@@ -5,7 +5,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { rulesAtom, selectedRulesAtom } from '@/state/explore-section/generalization';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import styles from './styles.module.scss';
+import styles from './styles.module.css';
 
 const theme = {
   components: {

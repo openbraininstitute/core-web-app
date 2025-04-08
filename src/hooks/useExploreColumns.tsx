@@ -10,7 +10,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
-import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.scss';
+import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
 type ResizeInit = {
   key: string | null;

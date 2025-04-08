@@ -31,7 +31,7 @@ import { loadingAtom, synapticModelsAtom, userRulesAtom, userTypesAtom } from '.
 import { classNames } from '@/util/utils';
 import { SynapticAssignmentRule, SynapticType } from '@/types/connectome-model-assignment';
 import { isConfigEditableAtom } from '@/state/brain-model-config';
-import styles from './connectome-model-assignment.module.scss';
+import styles from './connectome-model-assignment.module.css';
 
 const ACTIVE_TAB_CLASSNAME =
   'text-primary-8 bg-white inline-flex justify-center items-center font-bold text-primary-8 text-sm';

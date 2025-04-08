@@ -22,33 +22,60 @@ function getVersion() {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    config.resolve.alias.canvas = false;
-    config.resolve.alias.encoding = false;
-    /**
-     * Using WebGL shaders as modules.
-     */
-    config.module.rules.push(
-      {
-        test: /\.(vert|frag|groq)$/i,
-        // More information here https://webpack.js.org/guides/asset-modules/
-        type: 'asset/source',
+  experimental: {
+    turbo: {
+      rules: {
+        '*.groq': {
+          loaders: ['raw-loader'],
+          as: '*.js',
+        },
+        '*.vert': {
+          loaders: ['raw-loader'],
+          as: '*.js',
+        },
+        '*.frag': {
+          loaders: ['raw-loader'],
+          as: '*.js',
+        },
+        '*.mp4': {
+          loaders: ['file-loader'],
+          as: 'asset',
+        },
+        '*.pdf': {
+          loaders: ['file-loader'],
+          as: 'asset',
+        },
       },
-      {
-        test: /\.(mp4|pdf)$/i,
-        // More information here https://webpack.js.org/guides/asset-modules/
-        type: 'asset',
-      }
-    );
-    return config;
+    },
   },
+  // https://github.com/vercel/next.js/issues/42113
+
+  // webpack: (config) => {
+  //   config.resolve.alias.canvas = false;
+  //   config.resolve.alias.encoding = false;
+  //   /**
+  //    * Using WebGL shaders as modules.
+  //    */
+  //   config.module.rules.push(
+  //     {
+  //       test: /\.(vert|frag|groq)$/i,
+  //       // More information here https://webpack.js.org/guides/asset-modules/
+  //       type: 'asset/source',
+  //     },
+  //     {
+  //       test: /\.(mp4|pdf)$/i,
+  //       // More information here https://webpack.js.org/guides/asset-modules/
+  //       type: 'asset',
+  //     }
+  //   );
+  //   return config;
+  // },
   env: {
     applicationVersion: getVersion(),
   },
   basePath,
   assetPrefix: basePath ?? undefined,
   reactStrictMode: true,
-  swcMinify: true,
   compress: false,
   output: 'standalone',
   sentry: {
