@@ -1,6 +1,9 @@
 import { CircuitSchemaProps } from '../type';
 
-const filterCircuits = (circuits: CircuitSchemaProps[], query: string): CircuitSchemaProps[] => {
+export const filterCircuits = (
+  circuits: CircuitSchemaProps[],
+  query: string
+): CircuitSchemaProps[] => {
   const lowerCaseQuery = query.toLowerCase();
 
   return circuits
@@ -24,5 +27,3 @@ const filterCircuits = (circuits: CircuitSchemaProps[], query: string): CircuitS
     })
     .filter((circuit): circuit is CircuitSchemaProps => circuit !== null);
 };
-
-export default filterCircuits;

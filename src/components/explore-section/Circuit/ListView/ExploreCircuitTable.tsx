@@ -10,9 +10,9 @@ import { CircuitSchemaProps } from '../type';
 import getExpandableRowKeys from '../utils/getExpandableRowKey';
 
 import filterCircuitsByNumeric, { NumericFilterOptions } from '../utils/filterCircuitsByNumeric';
+import { useFilteredData } from '../utils/useFilteredData';
 
 import calculateSubcircuitsForParent from '../utils/calculateSubcircuitsForParent';
-import filterCircuits from '../utils/filterCircuits';
 import NumericFilters from './NumericFilters';
 
 import columns from './Columns';
@@ -88,7 +88,8 @@ export default function ExploreCircuitTable() {
     [expandedRowKeys, handleRowExpandClick, handleResize, columnWidths]
   );
 
-  let filteredData = searchQuery ? filterCircuits(CIRCUITS_FULL, searchQuery) : CIRCUITS_FULL;
+  let filteredData = useFilteredData(CIRCUITS_FULL, { searchQuery, numericFilter });
+
   if (numericFilter) {
     filteredData = filterCircuitsByNumeric(filteredData, {
       property: numericFilter.property,

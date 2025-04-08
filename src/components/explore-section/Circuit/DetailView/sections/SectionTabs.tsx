@@ -1,3 +1,8 @@
+type SectionProps = {
+  name: string;
+  id: 'overview' | 'provenance' | 'related-publications' | 'related-circuits';
+};
+
 export default function SectionTabs({
   activeSection,
   setActiveSection,
@@ -7,7 +12,7 @@ export default function SectionTabs({
     section: 'overview' | 'provenance' | 'related-publications' | 'related-circuits'
   ) => void;
 }) {
-  const sections = [
+  const sections: SectionProps[] = [
     {
       name: 'Overview',
       id: 'overview',
@@ -28,7 +33,7 @@ export default function SectionTabs({
 
   return (
     <div className="relative grid w-full grid-cols-4">
-      {sections.map((section: { name: string; id: string }) => {
+      {sections.map((section: SectionProps) => {
         return (
           <button
             key={section.id}
@@ -37,15 +42,7 @@ export default function SectionTabs({
               fontWeight: activeSection === section.id ? 'bold' : 'normal',
               background: activeSection === section.id ? 'white' : 'transparent',
             }}
-            onClick={() =>
-              setActiveSection(
-                section.id as
-                  | 'overview'
-                  | 'provenance'
-                  | 'related-publications'
-                  | 'related-circuits'
-              )
-            }
+            onClick={() => setActiveSection(section.id)}
             type="button"
             aria-label={`Go to ${section.name} section`}
           >

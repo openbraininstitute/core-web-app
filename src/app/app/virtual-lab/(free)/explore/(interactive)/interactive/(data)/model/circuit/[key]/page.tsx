@@ -19,8 +19,6 @@ export default function CircuitDetailPage({
     return <div>Loading...</div>;
   }
 
-  console.log('circuitCompletelyFlatten', currentContent);
-
   return (
     <div className="relative flex w-full flex-col">
       <MainDetailViewCore content={currentContent} />

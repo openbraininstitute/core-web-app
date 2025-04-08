@@ -1,13 +1,23 @@
+import { useMemo } from 'react';
 import { CircuitSchemaProps, PaperLitteratureProps } from '../../../type';
 import PublicationCard from '../../literature/PublicationCard';
 import SubtitleBar from '../SubtitleBar';
 
 export default function Literature({ content }: { content: CircuitSchemaProps }) {
-  const CIRCUIT_PROVENANCE_LITERATURE = content.literature.filter(
-    (publication: PaperLitteratureProps) => publication.category === 'circuit_source'
+  const CIRCUIT_PROVENANCE_LITERATURE = useMemo(
+    () =>
+      content.literature.filter(
+        (publication: PaperLitteratureProps) => publication.category === 'circuit_source'
+      ),
+    [content.literature]
   );
-  const CIRCUIT_PROVENANCE_RELATED_ARTIFACTS = content.literature.filter(
-    (publication: PaperLitteratureProps) => publication.category === 'component_source'
+
+  const CIRCUIT_PROVENANCE_RELATED_ARTIFACTS = useMemo(
+    () =>
+      content.literature.filter(
+        (publication: PaperLitteratureProps) => publication.category === 'component_source'
+      ),
+    [content.literature]
   );
 
   return (

@@ -73,7 +73,7 @@ export type CircuitSchemaProps = {
     key: string;
     isAvailable: boolean;
   }[];
-  subcircuit: CircuitSchemaProps[] | [];
+  subcircuit: CircuitSchemaProps[];
 
   overview: {
     mainDisplay: {

@@ -5,6 +5,10 @@ import { DownloadIcon, SimulateIcon } from '@/components/icons';
 import CloneIcon from '@/components/icons/Clone';
 
 export default function Heading({ content }: { content: CircuitSchemaProps }) {
+  const futureActionsForButton = () => {
+    return 'Hello';
+  };
+
   return (
     <div className="relative flex w-full flex-row justify-between">
       <div className="relative flex flex-col">
@@ -16,9 +20,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
         <ActionButton
           type="button"
           label="Simulate"
-          action={() => {
-            console.log('simulate');
-          }}
+          action={futureActionsForButton}
           disabled
           link={content.files[0].url}
         >
@@ -27,9 +29,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
         <ActionButton
           type="button"
           label="Clone model"
-          action={() => {
-            console.log('Cloned model');
-          }}
+          action={futureActionsForButton}
           disabled
           link={content.files[0].url}
         >
@@ -38,9 +38,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
         <ActionButton
           type="button"
           label="Save to Library"
-          action={() => {
-            console.log('Added to the library');
-          }}
+          action={futureActionsForButton}
           disabled
           link={content.files[0].url}
         >

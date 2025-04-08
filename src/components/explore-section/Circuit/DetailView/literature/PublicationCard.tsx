@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { CopyIcon, LinkIcon } from '../../icon/ArticlesIcons';
 import { PaperLitteratureProps } from '../../type';
 
-import { UserIcon } from '@/components/icons';
+import { CheckIcon, UserIcon } from '@/components/icons';
 import CalendarIcon from '@/components/icons/Calendar';
 import { classNames } from '@/util/utils';
 
@@ -19,14 +19,24 @@ export default function PublicationCard({
   const { abstract } = content;
 
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
 
   const copyDOI = () => {
     navigator.clipboard.writeText(content.doi);
-    alert('DOI copied to clipboard');
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 2000);
   };
 
   return (
     <div className="relative flex w-full flex-col">
+      {showPopup && (
+        <div className="absolute left-[45%] top-0 z-50 flex transform flex-row items-center rounded-md bg-green-700 px-12 py-10 text-xl font-normal text-white">
+          <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full border-none bg-white text-green-700">
+            <CheckIcon className="h-auto w-4" />
+          </div>
+          DOI copied to clipboard
+        </div>
+      )}
       <header className="relative mb-2 flex w-full flex-row items-start justify-between">
         <div className="relative flex flex-row gap-x-2">
           <div className="relative top-px flex h-6 w-6 items-center justify-center bg-primary-8 text-base text-white">

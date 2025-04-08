@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { CircuitSchemaProps, PaperLitteratureProps } from '../../../type';
 import PublicationCard from '../../literature/PublicationCard';
 import SubtitleBar from '../SubtitleBar';
@@ -76,11 +77,20 @@ export const placeholderLiteratureContent = [
 ];
 
 export default function RelatedPublicationssSection({ content }: { content: CircuitSchemaProps }) {
-  const CIRCUIT_PROVENANCE_LITERATURE = content.literature.filter(
-    (publication: PaperLitteratureProps) => publication.category === 'circuit_source'
+  const CIRCUIT_PROVENANCE_LITERATURE = useMemo(
+    () =>
+      content.literature.filter(
+        (publication: PaperLitteratureProps) => publication.category === 'circuit_source'
+      ),
+    [content.literature]
   );
-  const CIRCUIT_APPLICATION_LITERATURE = content.literature.filter(
-    (publication: PaperLitteratureProps) => publication.category === 'application'
+
+  const CIRCUIT_APPLICATION_LITERATURE = useMemo(
+    () =>
+      content.literature.filter(
+        (publication: PaperLitteratureProps) => publication.category === 'application'
+      ),
+    [content.literature]
   );
 
   return (
@@ -89,7 +99,7 @@ export default function RelatedPublicationssSection({ content }: { content: Circ
       <div className="relative flex w-full flex-col gap-y-12">
         {CIRCUIT_PROVENANCE_LITERATURE.map((publication: PaperLitteratureProps, index: number) => (
           <PublicationCard
-            key={`Publication_${publication.doi}-${index + 1}`}
+            key={`Publication_${publication.doi}`}
             content={publication}
             index={index}
           />
@@ -99,7 +109,7 @@ export default function RelatedPublicationssSection({ content }: { content: Circ
       <div className="relative flex w-full flex-col gap-y-12">
         {CIRCUIT_APPLICATION_LITERATURE.map((publication: PaperLitteratureProps, index: number) => (
           <PublicationCard
-            key={`Publication_${publication.doi}-${index + 1}`}
+            key={`Publication_${publication.doi}`}
             content={publication}
             index={index}
           />
