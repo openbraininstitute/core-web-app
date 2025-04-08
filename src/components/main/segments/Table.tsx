@@ -3,7 +3,7 @@
  * this Table component need to added type precision for DATA accepted
  */
 
-import { CSSProperties, HTMLProps, isValidElement, useState } from 'react';
+import { CSSProperties, HTMLProps, isValidElement, useState, type JSX } from 'react';
 import { Empty } from 'antd';
 import {
   CaretDownOutlined,

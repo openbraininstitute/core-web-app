@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "npx eslint src __tests__ && npx tsc --noEmit",
@@ -84,7 +84,7 @@
     "lodash": "^4.17.21",
     "memoize-one": "^6.0.0",
     "morphoviewer": "^0.1.20",
-    "next": "^14.2.2",
+    "next": "15.2.4",
     "next-auth": "^4.24.7",
     "next-sanity": "^9.9.5",
     "next-sanity-client": "^1.0.8",
@@ -94,9 +94,9 @@
     "pako": "^2.1.0",
     "performant-array-to-tree": "^1.11.0",
     "plotly.js-dist-min": "^2.22.0",
-    "react": "18.3.1",
+    "react": "19.1.0",
     "react-canvas-confetti": "^2.0.7",
-    "react-dom": "18.3.1",
+    "react-dom": "19.1.0",
     "react-error-boundary": "^4.0.4",
     "react-intersection-observer": "^9.5.2",
     "react-ipynb-renderer": "^2.2.4",
@@ -115,7 +115,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^14.2.2",
+    "@next/bundle-analyzer": "15.2.4",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^15.0.2",
     "@types/file-saver": "^2.0.5",
@@ -123,8 +123,8 @@
     "@types/lodash": "^4.14.194",
     "@types/node": "^20.14.14",
     "@types/plotly.js-dist-min": "^2.3.1",
-    "@types/react": "^18.2.5",
-    "@types/react-dom": "^18.2.3",
+    "@types/react": "19.1.0",
+    "@types/react-dom": "19.1.1",
     "@types/react-plotly.js": "^2.6.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/three": "^0.152.1",
@@ -134,7 +134,7 @@
     "eslint": "^8.40.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
-    "eslint-config-next": "^14.2.2",
+    "eslint-config-next": "15.2.4",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jsx-a11y": "^6.7.1",
@@ -149,5 +149,9 @@
     "prettier-plugin-tailwindcss": "^0.5.11",
     "sass": "^1.62.1",
     "tailwindcss": "^3.3.2"
+  },
+  "overrides": {
+    "@types/react": "19.1.0",
+    "@types/react-dom": "19.1.1"
   }
 }

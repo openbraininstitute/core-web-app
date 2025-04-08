@@ -5,7 +5,8 @@ import VirtualLabHome from '@/components/VirtualLab/VirtualLabHomePage';
 import { UsersHorizontalList } from '@/components/VirtualLab/projects/VirtualLabProjectHomePage';
 import { ServerSideComponentProp } from '@/types/common';
 
-export default function VirtualLab({ params }: ServerSideComponentProp<{ virtualLabId: string }>) {
+export default async function VirtualLab(props: ServerSideComponentProp<{ virtualLabId: string }>) {
+  const params = await props.params;
   const { virtualLabId } = params;
   return (
     <div className="flex flex-col gap-2 pb-5">

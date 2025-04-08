@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, type JSX } from 'react';
 import type { DOMConversionMap, DOMExportOutput, EditorConfig, NodeKey } from 'lexical';
 
 import { DecoratorNode } from 'lexical';

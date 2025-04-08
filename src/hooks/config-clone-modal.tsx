@@ -208,7 +208,7 @@ export default function useCloneConfigModal<T extends SupportedConfigListTypes>(
   getConfigByNameQueryFn: GetConfigByNameQueryFnType
 ) {
   const [modal, contextHolder] = Modal.useModal();
-  const destroyRef = useRef<() => void>();
+  const destroyRef = useRef<() => void>(undefined);
   const onClose = () => destroyRef?.current?.();
 
   const createModal = (config: T, onCloneSuccess: (clonedConfig: T) => void) => {

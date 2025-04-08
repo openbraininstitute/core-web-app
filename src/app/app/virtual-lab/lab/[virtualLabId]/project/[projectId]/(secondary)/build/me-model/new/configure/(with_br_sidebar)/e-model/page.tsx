@@ -1,7 +1,7 @@
 'use client';
 
 import { useSetAtom } from 'jotai';
-import { useEffect, useId } from 'react';
+import { useEffect, useId, use } from 'react';
 import { useRouter } from 'next/navigation';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
@@ -15,13 +15,14 @@ import { detailUrlBuilder } from '@/util/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 
 type Params = {
-  params: {
+  params: Promise<{
     virtualLabId: string;
     projectId: string;
-  };
+  }>;
 };
 
-export default function ElectrophysiologyPage({ params }: Params) {
+export default function ElectrophysiologyPage(props: Params) {
+  const params = use(props.params);
   const setMEModelSection = useSetAtom(meModelSectionAtom);
   const setSelectedEModelId = useSetAtom(selectedEModelIdAtom);
 

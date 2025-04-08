@@ -1,4 +1,4 @@
-import { ComponentType, useRef } from 'react';
+import { ComponentType, useRef, type JSX } from 'react';
 import { ConfigProvider, Modal } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { classNames } from '@/util/utils';
@@ -13,7 +13,7 @@ export default function useSimulationModal<T extends {}>({
   Content: ComponentType<T>;
 }): UseSimulationModal<T & { id: string }> {
   const [modal, contextHolder] = Modal.useModal();
-  const destroyRef = useRef<() => void>();
+  const destroyRef = useRef<() => void>(undefined);
 
   return (props: T & { id: string }) => {
     return [

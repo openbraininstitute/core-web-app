@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
 import { Button, Form, Select } from 'antd';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type JSX } from 'react';
 import filter from 'lodash/filter';
 
 import { classNames } from '@/util/utils';

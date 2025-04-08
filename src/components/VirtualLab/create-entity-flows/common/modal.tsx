@@ -1,6 +1,8 @@
 import { ConfigProvider, Modal } from 'antd';
 import { classNames } from '@/util/utils';
 
+import type { JSX } from "react";
+
 type Props = {
   children: React.ReactNode;
   footer?: Array<JSX.Element> | null;

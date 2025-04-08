@@ -1,4 +1,5 @@
-'use client';
+'use client';;
+import { use } from "react";
 
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -7,7 +8,13 @@ import VirtualLabProjectSidebar from '@/components/VirtualLab/projects/VirtualLa
 import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 
-export default function VirtualLabProjectLayout({ children, params }: LabProjectLayoutProps) {
+export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
+  const params = use(props.params);
+
+  const {
+    children
+  } = props;
+
   return (
     <div className="flex bg-primary-9 pr-5 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>

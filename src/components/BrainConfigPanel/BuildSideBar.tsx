@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback } from 'react';
+import { Suspense, useCallback, type JSX } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Button } from 'antd';
 import { CalendarOutlined, LinkOutlined, RightOutlined, UserOutlined } from '@ant-design/icons';

@@ -32,7 +32,7 @@ export default function AutoCompleteSearch({
   const [fetching, setFetching] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string | null>();
 
-  const previousFetchController = useRef<AbortController>();
+  const previousFetchController = useRef<AbortController>(undefined);
 
   const cancelPreviousFetch = () => {
     if (previousFetchController.current) {

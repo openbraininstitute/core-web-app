@@ -1,4 +1,4 @@
-import { ChangeEventHandler, useState } from 'react';
+import { ChangeEventHandler, useState, type JSX } from 'react';
 import { Button, Image } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { $getNodeByKey, NodeKey } from 'lexical';

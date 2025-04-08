@@ -218,7 +218,7 @@ export default function useRenameConfigModal<T extends SupportedConfigListTypes>
   getConfigsByNameQueryFn: GetConfigsByNameQueryFnType
 ) {
   const [modal, contextHolder] = Modal.useModal();
-  const destroyRef = useRef<() => void>();
+  const destroyRef = useRef<() => void>(undefined);
 
   const onClose = () => destroyRef?.current?.();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useSetAtom } from 'jotai';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
@@ -22,11 +22,11 @@ import { MEModelResource } from '@/types/me-model';
 import { EModel, NeuronMorphology } from '@/types/e-model';
 
 type Props = {
-  params: {
+  params: Promise<{
     projectId: string;
     virtualLabId: string;
     simulationType: 'single-neuron-simulation' | 'synaptome-simulation';
-  };
+  }>;
 };
 
 export type SimulationWithLinkedData = DeltaResource &
@@ -36,7 +36,8 @@ export type SimulationWithLinkedData = DeltaResource &
     linkedEModel?: EModel;
   };
 
-export default function SimulationDetailPage({ params }: Props) {
+export default function SimulationDetailPage(props: Props) {
+  const params = use(props.params);
   const info = useResourceInfoFromPath();
   const setBackPath = useSetAtom(backToListPathAtom);
 

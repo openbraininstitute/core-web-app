@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState, type JSX } from 'react';
 import { ConfigProvider, Drawer } from 'antd';
 import { ArrowLeftOutlined, CloseOutlined } from '@ant-design/icons';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';

@@ -23,7 +23,7 @@ type Props = {
 export default function StimuliPreviewPlot({ modelSelfUrl, amplitudes, protocol }: Props) {
   const [stimuliPreviewPlotData, setStimuliPreviewPlotData] = useAtom(stimulusPreviewPlotDataAtom);
   const [loading, setLoading] = useState(false);
-  const previousFetchController = useRef<AbortController>();
+  const previousFetchController = useRef<AbortController>(undefined);
 
   const { error: notifyError } = useNotification();
 

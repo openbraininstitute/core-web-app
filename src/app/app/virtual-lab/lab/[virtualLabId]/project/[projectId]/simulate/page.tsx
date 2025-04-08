@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
-import { HTMLProps, useRef, useState } from 'react';
+import { HTMLProps, useRef, useState, use } from 'react';
 
 import {
   SimulationScopeToDataType,
@@ -48,11 +48,12 @@ const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   },
 };
 
-export default function VirtualLabProjectSimulatePage({
-  params,
-}: {
-  params: { virtualLabId: string; projectId: string };
-}) {
+export default function VirtualLabProjectSimulatePage(
+  props: {
+    params: Promise<{ virtualLabId: string; projectId: string }>;
+  }
+) {
+  const params = use(props.params);
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + params.projectId));
 
   const renderContent = () => {

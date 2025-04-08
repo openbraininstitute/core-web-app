@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, type JSX } from 'react';
 import Link from 'next/link';
 
 import { classNames } from '@/util/utils';

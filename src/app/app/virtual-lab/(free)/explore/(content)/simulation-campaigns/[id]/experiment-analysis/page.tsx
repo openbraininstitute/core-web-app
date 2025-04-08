@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, use } from 'react';
 import { ArrowRightOutlined, LineChartOutlined, RightOutlined } from '@ant-design/icons';
 import { Input, Modal, Form, Button } from 'antd';
 import { useAtomValue } from 'jotai';
@@ -17,11 +17,12 @@ import { SimulationCampaign } from '@/types/explore-section/delta-simulation-cam
 
 import { useSessionAtomValue } from '@/hooks/hooks';
 
-export default function ExperimentAnalyses({
-  searchParams,
-}: {
-  searchParams?: { targetEntity?: string };
-}) {
+export default function ExperimentAnalyses(
+  props: {
+    searchParams?: Promise<{ targetEntity?: string }>;
+  }
+) {
+  const searchParams = use(props.searchParams);
   const [analyses, setAnalyses] = useAnalyses(searchParams?.targetEntity);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);

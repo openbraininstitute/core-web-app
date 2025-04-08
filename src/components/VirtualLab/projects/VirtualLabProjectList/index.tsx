@@ -13,7 +13,7 @@ import { Project } from '@/api/virtual-lab-svc/queries/types';
 
 interface ProjectListContentProps {
   projects: Array<Project>;
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const ProjectListContent = memo(({ projects, containerRef }: ProjectListContentProps) => {

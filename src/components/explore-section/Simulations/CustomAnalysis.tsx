@@ -109,7 +109,7 @@ export function useCumulativeAnalysisReports(
   const session = useSessionAtomValue();
   const [report, setReport] = useState<ExtendedCumAnalysisReport>();
   const [fetching, setFetching] = useState(true);
-  const intervalRef = useRef<number>();
+  const intervalRef = useRef<number>(undefined);
   const fetchingRef = useRef<boolean>(false);
 
   useEffect(() => {

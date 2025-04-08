@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, type JSX } from 'react';
 import { CloseOutlined } from '@ant-design/icons';
 import { ConfigProvider, Modal } from 'antd';
 
@@ -63,7 +63,7 @@ function Content({ type, multiple, onUpload, onClose }: ContentProps) {
 }
 
 export default function useUploader({ onUpload }: UploaderProps): UseImageUploader {
-  const destroyRef = useRef<() => void>();
+  const destroyRef = useRef<() => void>(undefined);
   const [modal, contextHolder] = Modal.useModal();
   const onClose = () => destroyRef?.current?.();
 

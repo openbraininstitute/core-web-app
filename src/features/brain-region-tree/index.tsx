@@ -159,7 +159,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
     brainRegionHierarchyStateFamily(scope)
   );
 
-  const brainTreeNavRef: RefObject<HTMLDivElement> = useRef(null);
+  const brainTreeNavRef: RefObject<HTMLDivElement | null> = useRef(null);
   const brainModelConfigId = useAtomValue(brainModelConfigIdAtom);
   const [localSelectedBrainModelConfigId, setLocalSelectedBrainModelConfigId] = useState('');
   const setResetAtlasVisualization = useResetAtom(atlasVisualizationAtom);

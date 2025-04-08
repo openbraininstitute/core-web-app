@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import React, { useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Button } from 'antd';
 
 import { FormActiveLabel, FormError } from '../molecules/Form';
@@ -45,7 +45,7 @@ function FormActions() {
 
 export default function Form({ virtualLabId, projectId }: Props) {
   const [sourcesData, updateSourcesData] = useState<Array<SourceDataItem>>([]);
-  const [state, runPaperCreationAction] = useFormState<PaperCreationAction, FormData>(
+  const [state, runPaperCreationAction] = useActionState<PaperCreationAction, FormData>(
     initializePaperEntry,
     {
       error: null,

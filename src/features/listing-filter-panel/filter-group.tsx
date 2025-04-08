@@ -15,7 +15,7 @@ type ContentProps = {
 
 export type FilterGroupProps = {
   items: {
-    content?: (contentProps: ContentProps) => null | ReactElement;
+    content?: (contentProps: ContentProps) => null | ReactElement<any>;
     display?: boolean;
     label: string;
     toggleFunc?: () => void;

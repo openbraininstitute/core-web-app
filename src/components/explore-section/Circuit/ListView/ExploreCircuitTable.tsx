@@ -1,6 +1,6 @@
 'use client';
 
-import { Key, useState } from 'react';
+import { Key, useState, type JSX } from 'react';
 import { Table, Tooltip } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
 import { InfoCircleOutlined } from '@ant-design/icons';

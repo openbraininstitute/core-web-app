@@ -1,7 +1,7 @@
 'use client';
 
 import { ConfigProvider, Form, Spin } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -28,13 +28,20 @@ import SideMenu from '@/components/SideMenu';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 
 type Props = {
-  params: {
+  params: Promise<{
     projectId: string;
     virtualLabId: string;
-  };
+  }>;
 };
 
-function Synaptome({ params: { virtualLabId, projectId } }: Props) {
+function Synaptome(props: Props) {
+  const params = use(props.params);
+
+  const {
+    virtualLabId,
+    projectId
+  } = params;
+
   const [form] = Form.useForm();
   const { sessionValue } = useSessionStorage<{
     name: string;

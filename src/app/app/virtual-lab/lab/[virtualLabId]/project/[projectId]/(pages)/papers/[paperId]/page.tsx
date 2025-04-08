@@ -9,7 +9,15 @@ type Props = ServerSideComponentProp<{
   paperId: string;
 }>;
 
-export default async function Paper({ params: { virtualLabId, projectId, paperId } }: Props) {
+export default async function Paper(props: Props) {
+  const params = await props.params;
+
+  const {
+    virtualLabId,
+    projectId,
+    paperId
+  } = params;
+
   const session = await auth();
   if (!session) return;
 

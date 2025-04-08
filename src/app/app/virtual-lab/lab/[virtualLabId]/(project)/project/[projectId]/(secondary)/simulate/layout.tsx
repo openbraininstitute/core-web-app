@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, use } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { useAtomValue } from 'jotai';
@@ -12,13 +12,19 @@ import { selectedSimulationScopeAtom } from '@/state/simulate';
 
 type Props = {
   children: ReactNode;
-  params: {
+  params: Promise<{
     virtualLabId: string;
     projectId: string;
-  };
+  }>;
 };
 
-export default function SimulateSingleNeuronEditLayout({ children, params }: Props) {
+export default function SimulateSingleNeuronEditLayout(props: Props) {
+  const params = use(props.params);
+
+  const {
+    children
+  } = props;
+
   const labUrl = generateLabUrl(params.virtualLabId);
 
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;

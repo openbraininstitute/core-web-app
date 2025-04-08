@@ -61,7 +61,7 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
     }
   );
 
-  const previousFetchController = useRef<AbortController>();
+  const previousFetchController = useRef<AbortController>(undefined);
   const observerTarget = useRef<HTMLDivElement | null>(null);
 
   // calculate the numver of skeleton to display based on the skeleton height

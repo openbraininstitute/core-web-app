@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type JSX } from 'react';
 import { Divider } from 'antd';
 import { Color } from 'antd/es/color-picker';
 import { $isLinkNode } from '@lexical/link';

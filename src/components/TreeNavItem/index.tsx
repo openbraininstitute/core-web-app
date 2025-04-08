@@ -16,7 +16,7 @@ type TreeNavItemProps = {
   path: string[];
   children: (
     ...args: any[]
-  ) => ReactElement<{ children?: (...args: any[]) => ReactElement; isHidden?: boolean }>;
+  ) => ReactElement<{ children?: (...args: any[]) => ReactElement<any>; isHidden?: boolean }>;
   items?: TreeItem[];
   colorCode?: string;
   // All other props - https://stackoverflow.com/questions/40032592/typescript-workaround-for-rest-props-in-react
@@ -183,7 +183,7 @@ function TreeNav(
     value,
     colorCode,
   }: {
-    children: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement }>;
+    children: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
     className?: string;
     items: TreeItem[];
     onValueChange: (newValue: string[], path: string[]) => void;
