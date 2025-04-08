@@ -12,7 +12,7 @@ type Props = {
   memberCount?: number;
 };
 
-export default async function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
+export default function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
   return (
     <div
       id={id}
