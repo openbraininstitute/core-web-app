@@ -13,7 +13,7 @@ export default function VirtualLab({ params }: ServerSideComponentProp<{ virtual
 
       <NewProjectCTABanner
         title="Create a project"
-        subtitle="In order to start exploring brain regions, building models and simulate neuron, create a project"
+        subtitle="In order to start exploring brain regions, building models and experiment neuron, create a project"
       />
 
       <DiscoverObpPanel />

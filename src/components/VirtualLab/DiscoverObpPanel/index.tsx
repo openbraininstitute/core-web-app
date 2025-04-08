@@ -58,7 +58,7 @@ const items: {
   },
   {
     image: `${basePath}/images/virtual-lab/obp_vl_simulate.png`,
-    title: 'Simulate',
+    title: 'Experiment',
     bulletPoints: [
       'Select an existing single-cell model.',
       'Define which protocol to use to stimulate the cell and configure it.',
