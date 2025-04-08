@@ -1,10 +1,12 @@
+import { Button, Checkbox, ConfigProvider, Empty, List } from 'antd';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { SearchOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { Button, Checkbox, List } from 'antd';
+import { useSession } from 'next-auth/react';
 import { unwrap } from 'jotai/utils';
 import compact from 'lodash/compact';
+import isEmpty from 'lodash/isEmpty';
 import reject from 'lodash/reject';
 import find from 'lodash/find';
 import get from 'lodash/get';
@@ -23,6 +25,7 @@ import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
 type AddMembersProps = {
+  query?: string;
   users: Array<Member>;
   selectedMembers: Array<Member>;
   onSelect: (record: Member) => (e: CheckboxChangeEvent) => void;
@@ -53,76 +56,98 @@ export function useFilteredMembers(members: Member[], query: string) {
   return filtered;
 }
 
-export function AddMembers({ users, selectedMembers, onSelect }: AddMembersProps) {
+export function AddMembers({ query, users, selectedMembers, onSelect }: AddMembersProps) {
   return (
-    <List
-      size="large"
-      header={null}
-      footer={null}
-      dataSource={users}
-      className="border-0"
-      rowKey={(record) => record.id}
-      renderItem={(record, indx) => {
-        const name = record.id
-          ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
-            get(record, 'username') ||
-            record.email
-          : record.email;
-        return (
-          <List.Item className="w-full !px-0">
-            <div className="flex w-full items-center justify-center gap-4">
-              <div className="flex w-full items-center gap-2">
-                <Checkbox
-                  title={record.name ?? record.username}
-                  id={record.id}
-                  value={record.id}
-                  defaultChecked={false}
-                  checked={find(selectedMembers, { id: record.id }) !== undefined}
-                  onChange={onSelect(record)}
-                />
-                <MemberAvatarCasual
-                  withEmail
-                  shape={record.role === 'admin' ? 'square' : 'circle'}
-                  pending={false}
-                  key={`vlab-avatar-${record.id ?? record.email}`}
-                  index={indx}
-                  size="small"
-                  layout="horizontal"
-                  id={record.id ?? record.email}
-                  email={record.email}
-                  role={record.role}
-                  name={name}
-                  initials={extractInitials(name)}
-                  cls={{
-                    text: classNames(
-                      'text-primary-8 wrap-text',
-                      record.invite_accepted ? 'font-bold' : 'font-light'
-                    ),
-                  }}
-                />
+    <ConfigProvider
+      renderEmpty={() => (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            isEmpty(query) ? (
+              <div className="font-light text-primary-9">
+                <div>No members found within your virtual lab</div>
+                <div>Please add some in the virtual lab team page</div>
               </div>
-              <div className="ml-auto flex content-end items-center justify-center">
-                <div className="">
-                  <Select
-                    defaultValue={record.role}
-                    placeholder="Select a role"
-                    className={classNames(
-                      'min-w-36 !border border-primary-8',
-                      'w-40 shadow-none ring-0 focus:border-2 focus:border-primary-8',
-                      '[&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:!border-0'
-                    )}
-                    options={[
-                      { value: 'member', label: 'Member' },
-                      { value: 'admin', label: 'Administrator' },
-                    ]}
-                  />
+            ) : (
+              <div className="font-light text-primary-9">
+                <div>
+                  No members found match <span className="font-bold">{query}</span>
                 </div>
               </div>
-            </div>
-          </List.Item>
-        );
-      }}
-    />
+            )
+          }
+        />
+      )}
+    >
+      <List
+        size="large"
+        header={null}
+        footer={null}
+        dataSource={users}
+        className="border-0"
+        rowKey={(record) => record.id}
+        renderItem={(record, indx) => {
+          const name = record.id
+            ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+              get(record, 'username') ||
+              record.email
+            : record.email;
+          return (
+            <List.Item className="w-full !px-0">
+              <div className="flex w-full items-center justify-center gap-4">
+                <div className="flex w-full items-center gap-2">
+                  <Checkbox
+                    title={record.name ?? record.username}
+                    id={record.id}
+                    value={record.id}
+                    defaultChecked={false}
+                    checked={find(selectedMembers, { id: record.id }) !== undefined}
+                    onChange={onSelect(record)}
+                  />
+                  <MemberAvatarCasual
+                    withEmail
+                    shape={record.role === 'admin' ? 'square' : 'circle'}
+                    pending={false}
+                    key={`vlab-avatar-${record.id ?? record.email}`}
+                    index={indx}
+                    size="small"
+                    layout="horizontal"
+                    id={record.id ?? record.email}
+                    email={record.email}
+                    role={record.role}
+                    name={name}
+                    initials={extractInitials(name)}
+                    cls={{
+                      text: classNames(
+                        'text-primary-8 wrap-text',
+                        record.invite_accepted ? 'font-bold' : 'font-light'
+                      ),
+                    }}
+                  />
+                </div>
+                <div className="ml-auto flex content-end items-center justify-center">
+                  <div className="">
+                    <Select
+                      defaultValue={record.role}
+                      placeholder="Select a role"
+                      className={classNames(
+                        'min-w-36 !border border-primary-8',
+                        'w-40 shadow-none ring-0 focus:border-2 focus:border-primary-8',
+                        '[&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:!border-0'
+                      )}
+                      options={[
+                        { value: 'member', label: 'Member' },
+                        { value: 'admin', label: 'Administrator' },
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
+            </List.Item>
+          );
+        }}
+      />
+    </ConfigProvider>
   );
 }
 
@@ -133,6 +158,7 @@ type Props = {
 };
 
 export default function AddMembersModal({ context, isOpen, onClose }: Props) {
+  const { data } = useSession();
   const notify = useNotification();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchValue] = useState('');
@@ -146,7 +172,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const usersAtom = virtualLabMembersAtomFamily(context.virtualLabId);
   const result = useAtomValue(useMemo(() => unwrap(usersAtom), [usersAtom]));
-  const users = result?.data?.users ?? [];
+  const users = reject(result?.data?.users, { id: data?.user.id }) ?? [];
   const filteredUsers = useFilteredMembers(users, searchQuery);
 
   const onSelectUser = (record: Member) => (e: CheckboxChangeEvent) => {
@@ -172,7 +198,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
 
   const onAttachUsers = async () => {
     setLoading(true);
-    const { data, error } = await tryCatch(
+    const { data: resultAttachment, error } = await tryCatch(
       attachUsersToProject({
         virtualLabId: context.virtualLabId,
         projectId: context.projectId,
@@ -192,7 +218,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
       }
     );
 
-    if (error || !data) {
+    if (error || !resultAttachment) {
       notify.error(
         'Failed to add users to the current project',
         undefined,
@@ -233,12 +259,14 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
               isSearchVisible ? 'w-60 opacity-100' : 'w-0 opacity-0'
             )}
             style={{ visibility: isSearchVisible ? 'visible' : 'hidden' }}
+            disabled={!users.length || loading}
           />
           <Button
             type="text"
             icon={<SearchOutlined className="text-xl text-primary-8" />}
             onClick={handleSearchClick}
             className="!p-1"
+            disabled={!users.length || loading}
           />
         </div>
       </div>
@@ -251,6 +279,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
           <div className="secondary-scrollbar flex h-[450px] flex-grow flex-col overflow-y-auto">
             <div className="w-full pr-4">
               <AddMembers
+                query={searchQuery}
                 users={filteredUsers}
                 selectedMembers={membersList}
                 onSelect={onSelectUser}
@@ -279,6 +308,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
           htmlType="button"
           onClick={onAttachUsers}
           loading={loading}
+          disabled={!membersList.length || loading}
         >
           Submit
         </Button>

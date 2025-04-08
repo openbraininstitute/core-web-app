@@ -33,7 +33,12 @@ export default function useActiveSubscription() {
         status: result?.subscription.status,
         type: result?.subscription.type,
       });
-      if (result?.subscription.type === 'free' || error) setForbiddenOperation(true);
+      if (
+        result?.subscription.type === 'free' ||
+        result?.subscription.status !== SubscriptionStatus.ACTIVE ||
+        error
+      )
+        setForbiddenOperation(true);
       else setForbiddenOperation(false);
     })();
   }, [setForbiddenOperation, setData]);

@@ -1,4 +1,3 @@
-import uniqBy from 'lodash/uniqBy';
 import { getSession } from '@/authFetch';
 
 import {
@@ -62,7 +61,7 @@ export async function createProject(
     body: JSON.stringify({
       name,
       description,
-      include_members: uniqBy(include_members, (o) => o.email.toLowerCase()),
+      include_members,
     }),
   });
 
