@@ -20,12 +20,6 @@ import { isVlmError } from '@/types/virtual-lab/common';
 import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 
-function getInviteDestinationLabel(inviteDetails: InviteDetailsData) {
-  return inviteDetails.origin === 'Lab'
-    ? `${inviteDetails.virtual_lab_name} Virtual Lab by ${inviteDetails.inviter_full_name}`
-    : `${inviteDetails.project_name} Project by ${inviteDetails.inviter_full_name}`;
-}
-
 export default function InviteLoader() {
   const inviteToken = useSearchParams().get('token');
   const router = useRouter();
@@ -118,12 +112,13 @@ export default function InviteLoader() {
             </div>
             <div className="bg-white p-12 text-center">
               <p className="text-xl text-primary-9">
-                You have been invited to join the {getInviteDestinationLabel(inviteDetails)}
+                {inviteDetails.inviter_full_name} has invited you to join the virtual lab, titled:
+                {inviteDetails.virtual_lab_name}
               </p>
 
               {!hasPaidPlan && (
                 <p className="mt-4 text-xl text-primary-9">
-                  Only users with a paid subscription can join others&apos; {inviteDetails.origin}s.
+                  Only users with a paid subscription can join other&apos;s Labs.
                 </p>
               )}
 
@@ -142,7 +137,7 @@ export default function InviteLoader() {
                     type="button"
                     disabled={processing}
                   >
-                    Join {inviteDetails.origin === 'Lab' ? 'Virtual Lab' : 'Project'}
+                    Join Virtual Lab
                   </button>
                 ) : (
                   <button
