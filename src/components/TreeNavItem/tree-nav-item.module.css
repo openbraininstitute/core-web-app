@@ -1,3 +1,5 @@
+@reference '../../styles/globals.css';
+
 .accordionChevron {
   @apply text-white opacity-50 transition-transform;
 }

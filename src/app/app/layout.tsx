@@ -1,13 +1,8 @@
 import { ReactNode, Suspense } from 'react';
-import dynamic from 'next/dynamic';
 
 import Providers from './providers';
 import { auth } from '@/auth';
-
-const TermsOfUseAcceptance = dynamic(
-  () => import('@/components/terms-of-use-acceptance/terms-of-use-acceptance'),
-  { ssr: false }
-);
+import TermsOfUseAcceptance from '@/components/terms-of-use-acceptance';
 
 type RootLayoutProps = {
   children: ReactNode;
