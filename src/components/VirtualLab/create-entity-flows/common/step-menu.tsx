@@ -27,9 +27,9 @@ export default function BasicStepMenu<T>({ steps, title, flowAtom }: StepMenuPro
   const currentStep = useAtomValue(flowAtom);
 
   return (
-    <div className="relative flex max-h-max w-full flex-grow items-center gap-4 bg-primary-9 px-4">
+    <div className="relative flex max-h-max w-full grow items-center gap-4 bg-primary-9 px-4">
       <div className="absolute left-4 top-4 py-2 text-xl font-bold text-white">{title}</div>
-      <div className="flex flex-grow justify-center">
+      <div className="flex grow justify-center">
         <Breadcrumb>
           <BreadcrumbList className="gap-4">
             {steps.map((step, index) => (
@@ -39,7 +39,7 @@ export default function BasicStepMenu<T>({ steps, title, flowAtom }: StepMenuPro
                     type="button"
                     aria-label={step.label}
                     className={classNames(
-                      '!cursor-default select-none px-6 py-6 text-lg uppercase tracking-wide hover:bg-white/15',
+                      'cursor-default! select-none px-6 py-6 text-lg uppercase tracking-wide hover:bg-white/15',
                       currentStep === step.id ? 'font-bold text-white' : 'font-light text-primary-3'
                     )}
                     style={{ cursor: 'default' }}

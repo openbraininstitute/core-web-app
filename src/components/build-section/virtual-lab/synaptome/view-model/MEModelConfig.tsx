@@ -56,7 +56,7 @@ export function MEModelConfiguration({
           </div>
         </div>
       </div>
-      <div className="mt-12 flex-grow">
+      <div className="mt-12 grow">
         <div className="font-thin uppercase text-neutral-4">NAME</div>
         <div className="my-1 text-3xl font-bold text-primary-8">{meModel.name}</div>
         <MeModelDetails meModel={meModel} eModel={eModel} mModel={mModel} />

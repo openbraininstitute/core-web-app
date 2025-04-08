@@ -36,7 +36,7 @@ export default function NumberParam({
         <div>{displayName}</div>
         <input
           type="number"
-          className="w-[40px] rounded border text-end font-bold text-primary-8"
+          className="w-[40px] rounded-sm border text-end font-bold text-primary-8"
           value={sanitize(paramValue)}
           step={step}
           onChange={(e) => onChange(sanitize(e.target.valueAsNumber))}

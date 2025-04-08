@@ -53,7 +53,7 @@ export default function ModelDetails({
   return (
     <div>
       <h1 className="mb-3 text-3xl font-bold text-primary-8">Model</h1>
-      <div className="relative flex max-h-fit items-start gap-4 rounded border border-neutral-200 px-8 py-6">
+      <div className="relative flex max-h-fit items-start gap-4 rounded-sm border border-neutral-200 px-8 py-6">
         <Link
           href={generateMeModelDetailView()}
           className="absolute right-8 top-6 flex items-center justify-center font-bold text-primary-8 hover:text-primary-7"

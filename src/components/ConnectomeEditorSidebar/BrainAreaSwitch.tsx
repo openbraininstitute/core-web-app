@@ -12,7 +12,7 @@ export default function BrainAreaSwitch() {
     <button
       type="button"
       className={classNames(
-        'relative w-full rounded bg-neutral-7 p-2',
+        'relative w-full rounded-sm bg-neutral-7 p-2',
         area === 'pre' ? 'text-highlightPost' : 'text-highlightPre'
       )}
       onClick={() => setArea(opposite(area))}

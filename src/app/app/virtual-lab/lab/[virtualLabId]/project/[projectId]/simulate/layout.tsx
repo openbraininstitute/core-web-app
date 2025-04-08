@@ -38,7 +38,7 @@ export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
       key: 'scope',
       href: '#',
       content: <>{scope.replace('-', ' ')}</>,
-      styles: 'text-primary-5 hover:!text-primary-5 cursor-default',
+      styles: 'text-primary-5 hover:text-primary-5! cursor-default',
     });
 
   return (

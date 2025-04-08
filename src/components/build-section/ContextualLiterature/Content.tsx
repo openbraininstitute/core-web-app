@@ -89,11 +89,11 @@ function ContextualContainer({ children }: { children: React.ReactNode }) {
         mask={false}
         maskClosable
         destroyOnClose
-        maskClassName="!bg-transparent"
+        maskClassName="bg-transparent!"
         open={drawerOpen}
         onClose={onDrawerClose}
         rootClassName="!primary-scrollbar [&>.ant-drawer-content-wrapper]:rounded-bl-2xl"
-        className="[&>.ant-drawer-wrapper-body>.ant-drawer-body]:!primary-scrollbar rounded-bl-2xl py-3 [&>.ant-drawer-wrapper-body]:flex [&>.ant-drawer-wrapper-body]:!h-[calc(100%-100px)] [&>.ant-drawer-wrapper-body]:flex-col-reverse"
+        className="[&>.ant-drawer-wrapper-body>.ant-drawer-body]:!primary-scrollbar rounded-bl-2xl py-3 [&>.ant-drawer-wrapper-body]:flex [&>.ant-drawer-wrapper-body]:h-[calc(100%-100px)]! [&>.ant-drawer-wrapper-body]:flex-col-reverse"
         title={null}
         closeIcon={null}
         width="40vw"

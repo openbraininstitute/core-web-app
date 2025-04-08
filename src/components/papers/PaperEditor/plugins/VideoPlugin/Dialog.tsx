@@ -106,12 +106,12 @@ export default function InsertVideoDialog({ onClose, onUpload }: Props) {
         className={classNames(
           'w-full',
           '[&_.ant-upload-select]:w-full',
-          '[&_.ant-upload-select]:!rounded-md [&_.ant-upload-select]:border-2 [&_.ant-upload-select]:border-dashed [&_.ant-upload-select]:border-gray-300',
+          '[&_.ant-upload-select]:rounded-md! [&_.ant-upload-select]:border-2 [&_.ant-upload-select]:border-dashed [&_.ant-upload-select]:border-gray-300',
           uploadStatus &&
             uploadStatus.source === 'binary' &&
             (uploadStatus.status === 'success'
-              ? '[&_.ant-upload-select]:!border-solid [&_.ant-upload-select]:!border-teal-600'
-              : '[&_.ant-upload-select]:!border-solid [&_.ant-upload-select]:!border-rose-600')
+              ? '[&_.ant-upload-select]:border-solid! [&_.ant-upload-select]:border-teal-600!'
+              : '[&_.ant-upload-select]:border-solid! [&_.ant-upload-select]:border-rose-600!')
         )}
         showUploadList={false}
         accept="video/*"
@@ -123,7 +123,7 @@ export default function InsertVideoDialog({ onClose, onUpload }: Props) {
               src={video.preview}
               preview={false}
               rootClassName="w-full h-full  absolute inset-0"
-              className="-z-10 !h-full w-full rounded-md object-cover object-center opacity-30"
+              className="-z-10 h-full! w-full rounded-md object-cover object-center opacity-30"
               alt="gallery thumbnail"
             />
           )}

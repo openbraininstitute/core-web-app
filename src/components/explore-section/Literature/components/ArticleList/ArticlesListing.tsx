@@ -243,7 +243,7 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
               </>
             }
             renderItem={(article, index) => (
-              <List.Item className="border-0! border-transparent! !border-b-0 !px-4">
+              <List.Item className="border-0! border-transparent! border-b-0! px-4!">
                 <ArticleListItem article={article} index={index} />
               </List.Item>
             )}

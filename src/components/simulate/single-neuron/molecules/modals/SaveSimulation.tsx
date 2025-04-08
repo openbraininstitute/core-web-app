@@ -112,7 +112,7 @@ export default function SaveSimulationModal({
             <Input
               placeholder="Simulation name"
               size="large"
-              className="rounded-none border-0 !border-b border-neutral-3 !font-bold  !text-primary-8"
+              className="rounded-none border-0 border-b! border-neutral-3 font-bold!  text-primary-8!"
             />
           </Form.Item>
           <div className="mb-2">{label('Description', 'secondary')}</div>
@@ -121,7 +121,7 @@ export default function SaveSimulationModal({
               rows={5}
               placeholder="Your description"
               size="large"
-              className="rounded-none border border-neutral-3 p-2 !font-bold !text-primary-8"
+              className="rounded-none border border-neutral-3 p-2 font-bold! text-primary-8!"
             />
           </Form.Item>
 

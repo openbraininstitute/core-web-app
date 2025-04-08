@@ -32,7 +32,7 @@ export default function FilterControls({
             onClick={() => setDisplayControlPanel(!displayControlPanel)}
           >
             <div className="flex items-center gap-1">
-              <span className="rounded bg-primary-8 px-2.5 py-1 text-sm font-bold text-white">
+              <span className="rounded-sm bg-primary-8 px-2.5 py-1 text-sm font-bold text-white">
                 {filtersCount}
               </span>
               <div className="flex items-center gap-2">

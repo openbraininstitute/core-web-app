@@ -43,7 +43,7 @@ export default function TopNavigation({ children }: TopNavigationProps) {
       }`}
     >
       <div className="flex h-full min-w-[290px]" ref={primaryDropdownRef} />
-      <div className="flex flex-grow" ref={pillNavigationRef} />
+      <div className="flex grow" ref={pillNavigationRef} />
       <div className="flex h-full min-w-[290px] justify-end" ref={secondaryDropdownRef} />
       {children}
     </div>

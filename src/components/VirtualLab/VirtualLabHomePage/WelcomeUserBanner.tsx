@@ -39,7 +39,7 @@ export default function WelcomeUserBanner({ title }: { title?: string }) {
             width="100%"
           />
         )}
-        <div className="relative z-10 mt-10 flex bg-gradient-to-r from-[#345D36] to-[#6DC371] p-8">
+        <div className="relative z-10 mt-10 flex bg-linear-to-r from-[#345D36] to-[#6DC371] p-8">
           <div
             className={styles.bannerImg}
             style={{

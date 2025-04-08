@@ -112,7 +112,7 @@ export default function AutoCompleteSearch({
         )
       }
       value={defaultValues}
-      className="min-w-[128px] rounded"
+      className="min-w-[128px] rounded-sm"
       variant="borderless"
       size="middle"
       popupMatchSelectWidth={false}

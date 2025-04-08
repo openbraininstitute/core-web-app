@@ -15,7 +15,7 @@ export default function SideBar({ children }: Props) {
     <aside
       className={classNames(
         'fixed left-5',
-        'flex h-[calc(100%-2.5rem)] flex-grow flex-col text-white',
+        'flex h-[calc(100%-2.5rem)] grow flex-col text-white',
         'w-72 transition-all duration-300 ease-in-out'
       )}
     >

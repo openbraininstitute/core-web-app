@@ -12,7 +12,7 @@ import { tryCatch } from '@/api/utils';
 
 function PurchasesEmpty() {
   return (
-    <div className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div className="mb-6 transform rounded-xs bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold">Purchases History</h2>

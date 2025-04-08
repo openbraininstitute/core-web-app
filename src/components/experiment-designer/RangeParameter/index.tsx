@@ -32,7 +32,7 @@ function ShowRangeResultsLive({ start, end, stepper }: RangeLiveProps) {
       <span className="text-gray-400">Steps used ({values.length})</span>
       <div className="flex flex-wrap gap-2">
         {values.map((step) => (
-          <div key={step} className="rounded border px-2 py-1 text-center text-gray-400">
+          <div key={step} className="rounded-sm border px-2 py-1 text-center text-gray-400">
             {round(step, 2)}
           </div>
         ))}

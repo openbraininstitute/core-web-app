@@ -202,7 +202,7 @@ export default function AmperageRange({
                 <span
                   className={classNames(
                     'mr-2 text-sm font-light text-primary-9',
-                    disableStepper && '!text-gray-400'
+                    disableStepper && 'text-gray-400!'
                   )}
                 >
                   Has steps
@@ -223,7 +223,7 @@ export default function AmperageRange({
             max={100}
             value={amperageState.start}
             size="small"
-            className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:!pr-8 [&_.ant-input-number-input]:!text-right [&_.ant-input-number-input]:!font-bold [&_.ant-input-number-input]:!text-primary-8"
+            className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
             onChange={(newVal) => dispatch({ type: 'constant-value', payload: newVal })}
             onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
             aria-label="constant amplitude"
@@ -241,7 +241,7 @@ export default function AmperageRange({
                 min={-100}
                 max={100}
                 size="small"
-                className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:!pr-8 [&_.ant-input-number-input]:!text-right [&_.ant-input-number-input]:!font-bold [&_.ant-input-number-input]:!text-primary-8"
+                className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
                 value={amperageState.start}
                 onChange={(newVal) => dispatch({ type: 'start', payload: newVal })}
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
@@ -258,7 +258,7 @@ export default function AmperageRange({
                 min={-100}
                 max={1000}
                 size="small"
-                className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:!pr-8 [&_.ant-input-number-input]:!text-right [&_.ant-input-number-input]:!font-bold [&_.ant-input-number-input]:!text-primary-8"
+                className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
                 value={amperageState.end}
                 onChange={(newVal) => dispatch({ type: 'end', payload: newVal })}
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
@@ -275,7 +275,7 @@ export default function AmperageRange({
               min={0}
               max={500}
               size="small"
-              className="mx-2 h-8 min-w-10 [&_.ant-input-number-handler-wrap]:!opacity-100 [&_.ant-input-number-input]:!pr-8 [&_.ant-input-number-input]:!text-right [&_.ant-input-number-input]:!font-bold [&_.ant-input-number-input]:!text-primary-8"
+              className="mx-2 h-8 min-w-10 [&_.ant-input-number-handler-wrap]:opacity-100! [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
               value={amperageState.stepValue}
               onChange={(newVal) => dispatch({ type: 'stepValue', payload: newVal })}
               onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}

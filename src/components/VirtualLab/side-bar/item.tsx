@@ -24,7 +24,7 @@ export default function Item({ title, url, icon, disabled, count, active = false
         disabled
           ? 'disabled cursor-not-allowed text-gray-400 hover:bg-transparent'
           : 'hover:bg-white hover:text-primary-8',
-        active && 'active bg-white !text-primary-9'
+        active && 'active bg-white text-primary-9!'
       )}
       aria-disabled={disabled}
     >

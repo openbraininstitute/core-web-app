@@ -82,14 +82,14 @@ export default function CreateVirtualLabForm() {
           type: 'tween',
           ease: 'easeInOut',
         }}
-        className="relative flex h-full flex-grow flex-col"
+        className="relative flex h-full grow flex-col"
       >
         <Form
           name="virtual-lab-creation-flow-step"
           form={form}
           layout="vertical"
           onFinish={onFormSubmit}
-          className="relative flex h-full flex-grow flex-col px-4 py-2"
+          className="relative flex h-full grow flex-col px-4 py-2"
           requiredMark={false}
           validateTrigger={['onChange']}
           initialValues={{

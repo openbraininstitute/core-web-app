@@ -34,7 +34,7 @@ export default function Overview({ allowAskCode }: Props) {
   return (
     <div
       data-testid="lab-overview-form"
-      className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12"
+      className="mx-auto h-full w-full max-w-5xl grow bg-white p-12"
     >
       <Form.Item
         validateDebounce={800}
@@ -91,7 +91,7 @@ export default function Overview({ allowAskCode }: Props) {
         <TextArea
           rows={4}
           placeholder="Enter your description here"
-          className="rounded-none !border border-primary-8"
+          className="rounded-none border! border-primary-8"
         />
       </Form.Item>
       <Form.Item
@@ -102,7 +102,7 @@ export default function Overview({ allowAskCode }: Props) {
               placement="top"
               trigger="hover"
               overlayClassName={classNames(
-                '[&_.ant-popover-inner]:!p-0 [&_.ant-popover-inner]:!bg-primary-8 max-w-[260px]',
+                '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
                 '[&_.ant-popover-arrow:before]:bg-primary-8'
               )}
               destroyTooltipOnHide

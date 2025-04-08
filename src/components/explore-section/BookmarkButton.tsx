@@ -179,7 +179,7 @@ export default function BookmarkButton({
   ) : (
     <Button
       type="text"
-      className="flex items-center gap-2 text-primary-7 hover:!bg-transparent"
+      className="flex items-center gap-2 text-primary-7 hover:bg-transparent!"
       onClick={saveToLibrary}
     >
       Save to library
@@ -192,7 +192,7 @@ export default function BookmarkButton({
   ) : (
     <Button
       type="text"
-      className="mr-3 flex h-[36px] items-center gap-2 px-1 text-gray-500 hover:!bg-transparent"
+      className="mr-3 flex h-[36px] items-center gap-2 px-1 text-gray-500 hover:bg-transparent!"
       onClick={removeFromLibrary}
     >
       Remove from library

@@ -8,7 +8,7 @@ export default function HeaderPublicProject({
   headerImage: string;
 }) {
   return (
-    <header className="relative flex !h-36 min-h-36 w-full flex-col justify-center gap-1 bg-primary-8 px-8 text-white">
+    <header className="relative flex h-36! min-h-36 w-full flex-col justify-center gap-1 bg-primary-8 px-8 text-white">
       <h2 className="relative z-10 text-base uppercase tracking-wider">Public Project</h2>
       <h1 className="relative z-10 text-4xl font-bold">{title}</h1>
 

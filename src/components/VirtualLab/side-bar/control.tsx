@@ -12,7 +12,7 @@ export default function Profile() {
     <div className="mt-auto flex flex-col gap-4">
       <HelpMenu
         cls={{
-          trigger: '!p-0',
+          trigger: 'p-0!',
         }}
       >
         <div
@@ -39,7 +39,7 @@ export default function Profile() {
       </Link>
       <UserMenu
         cls={{
-          trigger: '!p-0',
+          trigger: 'p-0!',
         }}
       >
         <div

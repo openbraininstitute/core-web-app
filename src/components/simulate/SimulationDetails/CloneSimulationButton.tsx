@@ -51,7 +51,7 @@ export default function CloneSimulationButton({
   return (
     <Button
       type="text"
-      className="flex items-center gap-2 text-primary-7 hover:!bg-transparent"
+      className="flex items-center gap-2 text-primary-7 hover:bg-transparent!"
       onClick={onCloneSimulation}
     >
       Clone simulation configuration

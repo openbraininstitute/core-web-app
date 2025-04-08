@@ -93,7 +93,7 @@ export default function FilterPanel() {
           >
             <RangePicker
               format="DD-MM-YYYY"
-              className="font-sm rounded border border-primary-4 bg-primary-9 py-2"
+              className="font-sm rounded-sm border border-primary-4 bg-primary-9 py-2"
               allowEmpty={[true, true]}
               value={[filter.value.gte as Date, filter.value.lte as Date]}
               onChange={(newValues: RangeValue<Date>) => {

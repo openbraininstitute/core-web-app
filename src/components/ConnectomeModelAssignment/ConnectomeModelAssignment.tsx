@@ -491,7 +491,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.gsyn}
           <ContextualTrigger
-            className=" ml-1 !text-gray-300 hover:!text-primary-8"
+            className=" ml-1 text-gray-300! hover:text-primary-8!"
             about="gsyn"
             subject="gsyn"
           />
@@ -499,7 +499,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.gsynSD}
           <ContextualTrigger
-            className=" ml-1 !text-gray-300 hover:!text-primary-8"
+            className=" ml-1 text-gray-300! hover:text-primary-8!"
             about="gsyn"
             subject="gsynSD"
           />
@@ -507,7 +507,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.nrrp}
           <ContextualTrigger
-            className=" ml-1 !text-gray-300 hover:!text-primary-8"
+            className=" ml-1 text-gray-300! hover:text-primary-8!"
             about="nrrp"
             subject="nrrp"
           />
@@ -515,7 +515,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.dtc}
           <ContextualTrigger
-            className=" ml-1 !text-gray-300 hover:!text-primary-8"
+            className=" ml-1 text-gray-300! hover:text-primary-8!"
             about="dtc"
             subject="dtc"
           />
@@ -523,7 +523,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.dtcSD}
           <ContextualTrigger
-            className="ml-1 !text-gray-300 hover:!text-primary-8"
+            className="ml-1 text-gray-300! hover:text-primary-8!"
             about="dtc"
             subject="dtcSD"
           />
@@ -531,7 +531,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.u}
           <ContextualTrigger
-            className="ml-1 !text-gray-300 hover:!text-primary-8"
+            className="ml-1 text-gray-300! hover:text-primary-8!"
             about="u"
             subject="u"
           />
@@ -539,7 +539,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.uSD}
           <ContextualTrigger
-            className="ml-1 !text-gray-300 hover:!text-primary-8"
+            className="ml-1 text-gray-300! hover:text-primary-8!"
             about="u"
             subject="uSD"
           />
@@ -547,7 +547,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.d}
           <ContextualTrigger
-            className="ml-1 !text-gray-300 hover:!text-primary-8"
+            className="ml-1 text-gray-300! hover:text-primary-8!"
             about="d"
             subject="d"
           />
@@ -555,7 +555,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.dSD}
           <ContextualTrigger
-            className="ml-1 !text-gray-300 hover:!text-primary-8"
+            className="ml-1 text-gray-300! hover:text-primary-8!"
             about="d"
             subject="dSD"
           />
@@ -563,7 +563,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.f}
           <ContextualTrigger
-            className="ml-1 !text-gray-300 hover:!text-primary-8"
+            className="ml-1 text-gray-300! hover:text-primary-8!"
             about="f"
             subject="f"
           />
@@ -571,7 +571,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.fSD}
           <ContextualTrigger
-            className="ml-1 !text-gray-300 hover:!text-primary-8"
+            className="ml-1 text-gray-300! hover:text-primary-8!"
             about="f"
             subject="fSD"
           />

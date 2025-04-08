@@ -13,7 +13,7 @@ type Props = {
 };
 
 function CollapseIcon({ isActive }: { isActive?: boolean }) {
-  return <RightOutlined rotate={isActive ? 90 : 0} className="!font-bold !text-primary-8" />;
+  return <RightOutlined rotate={isActive ? 90 : 0} className="font-bold! text-primary-8!" />;
 }
 
 export default function SimulationConfigurationTab({ simulation, type }: Props) {

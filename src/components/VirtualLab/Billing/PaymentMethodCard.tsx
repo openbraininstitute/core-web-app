@@ -36,15 +36,15 @@ type Props = Pick<
 export function PaymentMethodCardSkeleton() {
   return (
     <div className="flex h-14 w-full animate-pulse items-center rounded-lg bg-gray-100 p-4 transition-colors duration-300 ease-out">
-      <div className="mr-3 h-6 w-8 rounded bg-gray-200" />
+      <div className="mr-3 h-6 w-8 rounded-sm bg-gray-200" />
       <div className="flex w-full min-w-0 justify-between gap-2">
         <div className="flex w-2/4 items-center gap-2">
-          <div className="h-3 w-1/2 rounded bg-gray-200" />
-          <div className="h-3 w-1/2 rounded bg-gray-200" />
+          <div className="h-3 w-1/2 rounded-sm bg-gray-200" />
+          <div className="h-3 w-1/2 rounded-sm bg-gray-200" />
         </div>
         <div className="flex w-1/4 items-center gap-2">
-          <div className="h-3 w-1/2 rounded bg-gray-200" />
-          <div className="h-3 w-1/2 rounded bg-gray-200" />
+          <div className="h-3 w-1/2 rounded-sm bg-gray-200" />
+          <div className="h-3 w-1/2 rounded-sm bg-gray-200" />
         </div>
       </div>
     </div>

@@ -38,7 +38,7 @@ export default function SimulateSingleNeuronEditLayout(props: Props) {
             key: 'scope',
             href: '#',
             content: <>{scope.replace('-', ' ')}</>,
-            styles: 'text-primary-5 hover:!text-primary-5 cursor-default',
+            styles: 'text-primary-5 hover:text-primary-5! cursor-default',
           },
           {
             key: LinkItemKey.Simulate,

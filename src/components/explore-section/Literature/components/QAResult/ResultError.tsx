@@ -76,7 +76,7 @@ export default function ResultError({
             {showRemoveBtn && (
               <Button
                 type="default"
-                className="mt-4 rounded-none bg-transparent font-bold text-amber-500 hover:!border-amber-500 hover:!text-amber-500"
+                className="mt-4 rounded-none bg-transparent font-bold text-amber-500 hover:border-amber-500! hover:text-amber-500!"
                 onClick={onDelete}
               >
                 Remove question

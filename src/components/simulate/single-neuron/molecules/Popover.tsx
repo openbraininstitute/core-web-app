@@ -24,7 +24,7 @@ export default function CustomPopover({
       getTooltipContainer={(trigger) => trigger.parentElement!}
       trigger={when}
       overlayClassName={classNames(
-        '[&_.ant-popover-inner]:!p-0 [&_.ant-popover-inner]:!bg-primary-8 max-w-[260px]',
+        '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
         '[&_.ant-popover-arrow:before]:bg-primary-8'
       )}
       destroyTooltipOnHide

@@ -30,7 +30,7 @@ export default function useSimulationModal<T extends {}>({
           styles: { mask: { background: '#002766ba' }, body: { padding: '20px' } },
           closeIcon: showCloseIcon && <CloseOutlined className="text-2xl text-primary-8" />,
           className: classNames(
-            '[&_.ant-modal-confirm-body]:!w-full [&_.ant-modal-confirm-paragraph]:max-w-full'
+            '[&_.ant-modal-confirm-body]:w-full! [&_.ant-modal-confirm-paragraph]:max-w-full'
           ),
           content: (
             <Content

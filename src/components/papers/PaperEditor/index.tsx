@@ -71,7 +71,7 @@ function PaperEditorContentEditable() {
   return (
     <ContentEditable
       id="paper-editor__content_editable"
-      className="relative z-0 w-full flex-grow bg-white p-8 text-gray-950 focus-visible:outline-none focus-visible:outline-0"
+      className="relative z-0 w-full grow bg-white p-8 text-gray-950 focus-visible:outline-hidden focus-visible:outline-0"
     />
   );
 }

@@ -56,7 +56,7 @@ export default function BillingTable({ payments }: Props) {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
-        <span className={`rounded px-2 py-1 text-base capitalize ${getStatusColor(status)}`}>
+        <span className={`rounded-sm px-2 py-1 text-base capitalize ${getStatusColor(status)}`}>
           {status}
         </span>
       ),

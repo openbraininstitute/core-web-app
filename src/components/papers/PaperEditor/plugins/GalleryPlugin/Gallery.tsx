@@ -105,7 +105,7 @@ export default function Gallery({
                 key={img}
                 src={img}
                 rootClassName="w-full h-full"
-                className="!h-full w-full rounded-md object-cover object-center"
+                className="h-full! w-full rounded-md object-cover object-center"
                 alt="gallery thumbnail"
               />
               <Button
@@ -115,7 +115,7 @@ export default function Gallery({
                 icon={<DeleteOutlined />}
                 className={classNames(
                   'absolute left-2 top-2 border border-gray-200 shadow-md',
-                  editMode ? 'hidden !bg-white group-hover:block' : 'hidden'
+                  editMode ? 'hidden bg-white! group-hover:block' : 'hidden'
                 )}
                 onClick={onItemDelete(img)}
               />

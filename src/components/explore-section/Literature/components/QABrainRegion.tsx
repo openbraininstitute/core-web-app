@@ -30,7 +30,7 @@ function QAContextBrainRegion() {
   return (
     <div
       className={classNames(
-        'flex justify-between gap-2 rounded-sm px-4 py-4',
+        'flex justify-between gap-2 rounded-xs px-4 py-4',
         isSelectedBrainRegionExists ? 'bg-primary-0 text-primary-8' : 'bg-neutral-1 text-primary-8'
       )}
     >

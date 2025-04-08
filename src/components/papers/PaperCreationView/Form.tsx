@@ -78,20 +78,20 @@ export default function Form({ virtualLabId, projectId }: Props) {
             type="text"
             id="title"
             name="title"
-            className="block h-12 w-full rounded-none border border-gray-300 px-3 py-2 text-base text-gray-900 shadow-sm focus:outline-none"
+            className="block h-12 w-full rounded-none border border-gray-300 px-3 py-2 text-base text-gray-900 shadow-xs focus:outline-hidden"
             placeholder="Write your title..."
           />
         </div>
         {state?.validationErrors?.title && <FormError errors={state.validationErrors.title} />}
       </div>
-      <div className="mb-4 w-full flex-grow">
+      <div className="mb-4 w-full grow">
         <div className="flex h-full w-full flex-col items-start justify-start">
           <FormActiveLabel title="Summary" />
           <textarea
             id="summary"
             name="summary"
             rows={5}
-            className="block h-full w-full rounded-none border border-gray-300 px-3 py-2 text-base text-gray-900 shadow-sm focus:outline-none"
+            className="block h-full w-full rounded-none border border-gray-300 px-3 py-2 text-base text-gray-900 shadow-xs focus:outline-hidden"
             placeholder="Write your summary here..."
           />
         </div>
@@ -125,7 +125,7 @@ export default function Form({ virtualLabId, projectId }: Props) {
             type="checkbox"
             id="generate-outline"
             name="generate-outline"
-            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-primary-8 focus:ring-primary-8"
+            className="h-4 w-4 cursor-pointer rounded-sm border-gray-300 text-primary-8 focus:ring-primary-8"
           />
         </div>
         {state?.validationErrors?.generateOutline && (

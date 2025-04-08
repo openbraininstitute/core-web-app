@@ -18,7 +18,7 @@ export default function DisplayWholeBrainCheckbox() {
       </button>
 
       <Checkbox.Root
-        className="h-5 w-5 rounded border border-white bg-transparent"
+        className="h-5 w-5 rounded-sm border border-white bg-transparent"
         checked={isDisplayWholeBrainChecked}
         onCheckedChange={handleCheckedChange}
       >

@@ -41,11 +41,11 @@ export default function Card({ resource, dataType, activeKeys, metrics, score }:
   const { groupedCardFields, renderMetric } = useMorphometrics(dataType, metrics);
 
   return (
-    <div ref={ref} className="mr-0 h-fit w-[350px] flex-shrink-0 px-0 py-4">
+    <div ref={ref} className="mr-0 h-fit w-[350px] shrink-0 px-0 py-4">
       {score && <div className="mb-2 font-bold text-primary-7">{score}</div>}
       <div className="flex h-full min-h-[350px] min-w-[350px] flex-col border-x border-t">
         {inView && (
-          <div className="h-full w-full flex-grow">
+          <div className="h-full w-full grow">
             <Link href={resourceUrl} passHref className="block h-full w-full">
               <CardVisualization dataType={dataType} resource={resource._source} />
             </Link>

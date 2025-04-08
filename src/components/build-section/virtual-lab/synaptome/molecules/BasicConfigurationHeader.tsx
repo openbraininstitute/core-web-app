@@ -19,7 +19,7 @@ export default function BasicConfigurationHeader({ show }: { show: boolean }) {
       className={classNames(
         'opacity-0',
         show &&
-          'z-50 h-full animate-fade-in border-b border-neutral-2 bg-white opacity-100 shadow-sm'
+          'z-50 h-full animate-fade-in border-b border-neutral-2 bg-white opacity-100 shadow-xs'
       )}
     >
       {show && (

@@ -431,7 +431,7 @@ function NotebookTable({
 export default dynamic(() => Promise.resolve(NotebookTable), {
   ssr: false,
   loading: () => (
-    <div className="flex flex-grow items-center justify-center text-3xl text-white">
+    <div className="flex grow items-center justify-center text-3xl text-white">
       <LoadingOutlined />
     </div>
   ),

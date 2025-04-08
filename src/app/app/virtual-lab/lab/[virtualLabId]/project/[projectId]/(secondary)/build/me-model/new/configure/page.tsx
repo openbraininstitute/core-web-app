@@ -94,7 +94,7 @@ function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
   ];
 
   return (
-    <div className="grid max-w-screen-2xl grow grid-cols-6 gap-x-10 gap-y-4 break-words">
+    <div className="grid max-w-(--breakpoint-2xl) grow grid-cols-6 gap-x-10 gap-y-4 break-words">
       {fields.map(({ className, title, value }) => (
         <div key={title} className={classNames('text-primary-7', className)}>
           <div className="uppercase text-neutral-4">{title}</div>

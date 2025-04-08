@@ -67,8 +67,8 @@ export default function SelectView({
               key={value}
               onClick={() => onChangeViewSelection(value)}
               className={classNames(
-                '-mx-1 rounded-sm p-1 text-left',
-                'hover:bg-white/20 hover:font-semibold hover:shadow-sm hover:backdrop-blur-sm'
+                '-mx-1 rounded-xs p-1 text-left',
+                'hover:bg-white/20 hover:font-semibold hover:shadow-xs hover:backdrop-blur-xs'
               )}
             >
               {label}

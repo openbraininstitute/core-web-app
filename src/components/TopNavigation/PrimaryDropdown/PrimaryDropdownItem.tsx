@@ -84,7 +84,7 @@ export default function PrimaryDropdownItem({
     <DropdownMenu.Item asChild>
       <button
         type="button"
-        className={`flex flex-row items-center gap-3 px-5 py-3 text-left outline-none ${buttonClasses}`}
+        className={`flex flex-row items-center gap-3 px-5 py-3 text-left outline-hidden ${buttonClasses}`}
         onClick={handleClick}
       >
         <div className="flex-1">{label}</div>

@@ -33,7 +33,7 @@ function SubmitQuestion() {
       type="submit"
       disabled={isQuestionEmpty || isGenerating}
       title={isQuestionEmpty ? 'Please enter a question' : ''}
-      className="w-max rounded border border-gray-200 px-4 py-1.5 font-semibold text-primary-8 disabled:text-gray-400"
+      className="w-max rounded-sm border border-gray-200 px-4 py-1.5 font-semibold text-primary-8 disabled:text-gray-400"
       onClick={() => {
         updateLiterature((prev) => ({ ...prev, areQAParamsVisible: false }));
       }}
@@ -48,7 +48,7 @@ function FormButton({ icon, type, ...props }: FormButtonProps) {
     <button
       onClick={props.onClick}
       type={type === 'submit' ? 'submit' : 'button'}
-      className="rounded-lg text-sm font-medium text-white outline-none focus-within:shadow-none"
+      className="rounded-lg text-sm font-medium text-white outline-hidden focus-within:shadow-none"
     >
       {icon}
     </button>
@@ -189,7 +189,7 @@ export default function QAForm({
           tabIndex={0}
           rows={1}
           className={classNames(
-            'm-0 box-border max-h-52 min-h-[24px] w-full resize-none overflow-y-hidden border-b border-gray-200 p-0 pb-2 outline-none',
+            'm-0 box-border max-h-52 min-h-[24px] w-full resize-none overflow-y-hidden border-b border-gray-200 p-0 pb-2 outline-hidden',
             'bg-transparent text-base font-semibold text-primary-8 focus:shadow-none',
             'placeholder:text-base placeholder:font-semibold placeholder:leading-snug placeholder:text-blue-900'
           )}

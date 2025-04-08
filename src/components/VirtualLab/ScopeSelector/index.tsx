@@ -73,7 +73,7 @@ export function ScopeSelector({
       <div
         aria-hidden
         className={classNames(
-          'box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded border border-primary-4 p-6',
+          'box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded-sm border border-primary-4 p-6',
           tileStyle,
           !disabled && 'cursor-pointer'
         )}

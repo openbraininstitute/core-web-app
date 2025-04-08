@@ -45,14 +45,14 @@ function CustomTH({
     <th
       {...props} /* eslint-disable-line react/jsx-props-no-spreading */
       style={{ ...modifiedStyle, padding: '16px 16px 16px 0px' }}
-      className="before:!content-none"
+      className="before:content-none!"
       data-testid="column-header"
     >
       <div className="flex w-full">
         <button
           className={classNames(
             'inline-flex w-full flex-col items-start',
-            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:!items-start [&>.ant-table-column-sorters]:gap-2'
+            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2'
           )}
           onClick={onClick}
           type="button"

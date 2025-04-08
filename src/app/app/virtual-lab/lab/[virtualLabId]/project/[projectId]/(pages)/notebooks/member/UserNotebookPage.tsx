@@ -138,7 +138,7 @@ export default function UserNotebookPage({
               <div className="-mb-6 mt-5 flex justify-end gap-3">
                 <button
                   type="button"
-                  className="rounded bg-primary-8 p-2 text-white"
+                  className="rounded-sm bg-primary-8 p-2 text-white"
                   onClick={async () => {
                     try {
                       setLoading(true);
@@ -202,7 +202,7 @@ export default function UserNotebookPage({
               <div className="-mb-6 mt-5 flex justify-end gap-3">
                 <button
                   type="button"
-                  className="rounded bg-primary-8 px-3 py-2 text-white"
+                  className="rounded-sm bg-primary-8 px-3 py-2 text-white"
                   onClick={async () => {
                     if (!newNotebooks) return;
                     setLoading(true);

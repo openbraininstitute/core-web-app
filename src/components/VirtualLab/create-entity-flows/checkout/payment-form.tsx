@@ -140,10 +140,10 @@ export function Form({ onPrevious, successRedirectUrl }: Props) {
     <form
       data-testid="subscription-payment-from"
       name="stripe-payment-flow-step"
-      className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center"
+      className="mx-auto flex h-full w-full grow flex-col items-center justify-center"
       onSubmit={onSubmit}
     >
-      <div className="flex h-full w-full max-w-3xl flex-grow flex-col items-center justify-center">
+      <div className="flex h-full w-full max-w-3xl grow flex-col items-center justify-center">
         <PricingToggleCards />
         <div className="mx-auto flex w-full flex-col rounded-lg bg-white px-5 py-14">
           <div className="mx-auto w-full max-w-xl">
@@ -158,7 +158,7 @@ export function Form({ onPrevious, successRedirectUrl }: Props) {
             key="back-to-btn"
             className={classNames(
               'h-14 rounded-none px-6 text-white',
-              'hover:!border hover:!border-white hover:font-bold hover:!text-white'
+              'hover:border! hover:border-white! hover:font-bold hover:text-white!'
             )}
             type="text"
             size="large"
@@ -171,9 +171,9 @@ export function Form({ onPrevious, successRedirectUrl }: Props) {
             key="pay-subscription"
             className={classNames(
               'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
-              'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-              'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-              'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
+              'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+              'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
+              'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
             )}
             type="default"
             size="large"
@@ -233,13 +233,13 @@ export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
 
   if (loadingStripe || !setupIntent)
     return (
-      <div className="flex h-full flex-grow items-center justify-center py-7">
+      <div className="flex h-full grow items-center justify-center py-7">
         <Spin size="large" indicator={<LoadingOutlined />} />
       </div>
     );
 
   return (
-    <div className="flex h-full flex-grow flex-col">
+    <div className="flex h-full grow flex-col">
       <Elements stripe={stripePromise} options={buildStripeFormOptions(setupIntent?.client_secret)}>
         <Form onPrevious={onPrevious} successRedirectUrl={successRedirectUrl} />
       </Elements>

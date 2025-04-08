@@ -133,7 +133,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
                   'mb-4 max-w-max',
                   'bg-white [&_.ant-segmented-group]:gap-2',
                   '[&_.ant-segmented-item]:border [&_.ant-segmented-item]:border-gray-400 [&_.ant-segmented-item]:bg-white',
-                  '[&_.ant-segmented-item-selected]:!border-primary-8 [&_.ant-segmented-item-selected]:!bg-primary-8 [&_.ant-segmented-item-selected]:text-white [&_.ant-segmented-item-selected]:!shadow-md'
+                  '[&_.ant-segmented-item-selected]:border-primary-8! [&_.ant-segmented-item-selected]:bg-primary-8! [&_.ant-segmented-item-selected]:text-white [&_.ant-segmented-item-selected]:shadow-md!'
                 )}
                 onChange={(value) => setSimulationPlot(value)}
                 value={simultionPlot}

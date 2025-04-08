@@ -10,7 +10,7 @@ export default async function VirtualLabLayout({ children }: { children: ReactNo
       <div className="flex h-screen flex-col bg-primary-9 p-5 text-white">
         <div className="no-scrollbar h-full gap-12 overflow-y-auto overflow-x-hidden">
           <SideBar />
-          <div className="ml-80 flex h-full w-[calc(100%-20rem)] flex-grow flex-col">
+          <div className="ml-80 flex h-full w-[calc(100%-20rem)] grow flex-col">
             {children}
           </div>
         </div>

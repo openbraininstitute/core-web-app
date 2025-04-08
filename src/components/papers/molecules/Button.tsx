@@ -36,7 +36,7 @@ export default function EditorButton({
         'disabled:cursor-not-allowed',
         '[&>svg]:h-6 [&>svg]:w-6',
         'hover:bg-gray-200',
-        'hover:[&>svg]:text-blue-700',
+        '[&>svg]:hover:text-blue-700',
         active && 'bg-gray-200 [&>svg]:h-7 [&>svg]:w-7 [&>svg]:text-gray-900',
         className
       )}

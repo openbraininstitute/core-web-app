@@ -80,7 +80,7 @@ export default function useUploader({ onUpload }: UploaderProps): UseImageUpload
           centered: true,
           mask: false,
           className: classNames(
-            '[&_.ant-modal-confirm-body]:!w-full [&_.ant-modal-confirm-paragraph]:max-w-full'
+            '[&_.ant-modal-confirm-body]:w-full! [&_.ant-modal-confirm-paragraph]:max-w-full'
           ),
           styles: {
             body: { padding: '20px' },

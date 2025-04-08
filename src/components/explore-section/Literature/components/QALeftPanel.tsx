@@ -34,7 +34,7 @@ function IgnoreBrainContext() {
         className={classNames(
           'group relative flex h-[16px] w-8 items-center rounded-full border border-primary-8 bg-white',
           'data-[state=checked]:border data-[state=checked]:border-primary-8 data-[state=checked]:bg-primary-8',
-          'data-[disabled]:cursor-not-allowed data-[disabled]:border data-[disabled]:border-gray-500 data-[disabled]:bg-gray-300'
+          'data-disabled:cursor-not-allowed data-disabled:border data-disabled:border-gray-500 data-disabled:bg-gray-300'
         )}
         title={isNil(brainRegion) ? 'Search in ' : 'Search in all brain regions'}
         onCheckedChange={toggleBrainRegionContext}
@@ -79,7 +79,7 @@ function IgnoreContextualLiterature() {
         className={classNames(
           'group relative h-4 w-8 rounded-full border border-primary-8 bg-white',
           'data-[state=checked]:border data-[state=checked]:border-primary-8 data-[state=checked]:bg-primary-8',
-          'data-[disabled]:cursor-not-allowed data-[disabled]:border data-[disabled]:border-gray-500 data-[disabled]:bg-gray-300'
+          'data-disabled:cursor-not-allowed data-disabled:border data-disabled:border-gray-500 data-disabled:bg-gray-300'
         )}
         title="show questions relative to the context"
         onCheckedChange={returnDefaultView}

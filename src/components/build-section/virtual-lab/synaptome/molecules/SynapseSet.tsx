@@ -308,7 +308,7 @@ export default function SynapseSet({
             rules={[{ required: false, message: 'Please select a target!' }]}
             validateTrigger="onBlur"
             label={label('Target')}
-            className="!border-b-[1.8px] border-primary-8 [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-arrow]:text-primary-8 [&_.ant-select-selector]:!border-0"
+            className="border-b-[1.8px]! border-primary-8 [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-arrow]:text-primary-8 [&_.ant-select-selector]:border-0!"
           >
             <Select
               allowClear
@@ -325,7 +325,7 @@ export default function SynapseSet({
             rules={[{ required: true, message: 'Please select at least one type!' }]}
             label={label('Type')}
             validateTrigger="onBlur"
-            className="!border-b-[1.8px] border-primary-8 [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-arrow]:text-primary-8 [&_.ant-select-selector]:!border-0"
+            className="border-b-[1.8px]! border-primary-8 [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-arrow]:text-primary-8 [&_.ant-select-selector]:border-0!"
           >
             <Select
               allowClear

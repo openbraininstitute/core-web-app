@@ -10,9 +10,9 @@ export default function List() {
   return (
     <div
       data-testid="labs-dropdown-list"
-      className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12"
+      className="mx-auto h-full w-full max-w-5xl grow bg-white p-12"
     >
-      <div className="flex h-full flex-grow flex-col">
+      <div className="flex h-full grow flex-col">
         <Form.Item
           label={
             <div className="text-left">
@@ -35,7 +35,7 @@ export default function List() {
                 : []
             }
             loading={list.state === 'loading'}
-            className="!border"
+            className="border!"
           />
         </Form.Item>
       </div>

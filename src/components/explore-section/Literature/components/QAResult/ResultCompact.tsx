@@ -26,7 +26,7 @@ export default function ResultCompact({ id, question, articles, children }: Resu
                 <button
                   type="button"
                   onClick={toggleExpandArticles}
-                  className="relative inline-flex h-11 w-full cursor-pointer items-center justify-between gap-1.5  whitespace-nowrap rounded-md bg-blue-50 px-3 py-3 leading-tight text-white no-underline shadow-sm transition-all duration-200"
+                  className="relative inline-flex h-11 w-full cursor-pointer items-center justify-between gap-1.5  whitespace-nowrap rounded-md bg-blue-50 px-3 py-3 leading-tight text-white no-underline shadow-xs transition-all duration-200"
                   aria-controls="collapse-content"
                   aria-label="expand-articles"
                 >
@@ -58,7 +58,7 @@ export default function ResultCompact({ id, question, articles, children }: Resu
                   : 'hidden transition-all duration-100 ease-in-expo'
               }`}
             >
-              <div className="mb-28 mt-4 rounded">
+              <div className="mb-28 mt-4 rounded-sm">
                 <ArticlesTimeLine
                   {...{
                     articles,

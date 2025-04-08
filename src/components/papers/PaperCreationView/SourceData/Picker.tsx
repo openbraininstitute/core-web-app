@@ -135,8 +135,8 @@ export default function SourceDataPicker({
           <button
             type="button"
             className={classNames(
-              'flex min-w-max items-center justify-between gap-14 rounded-md border border-gray-300 px-3 py-4 text-base text-gray-900 shadow-sm',
-              'hover:bg-gray-100 focus:outline-none'
+              'flex min-w-max items-center justify-between gap-14 rounded-md border border-gray-300 px-3 py-4 text-base text-gray-900 shadow-xs',
+              'hover:bg-gray-100 focus:outline-hidden'
             )}
             onClick={toggleShowSourceDataList}
           >

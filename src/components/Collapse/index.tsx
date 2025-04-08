@@ -41,7 +41,7 @@ export default function Collapse({ className, items, activeKey, onChange }: Coll
         className={classNames(className)}
         items={items?.map((item) => ({
           style: { background: '#fff' },
-          headerClass: 'font-bold !items-center', // TODO: See whether there's a better way to align center.
+          headerClass: 'font-bold items-center!', // TODO: See whether there's a better way to align center.
           ...item,
         }))}
       />

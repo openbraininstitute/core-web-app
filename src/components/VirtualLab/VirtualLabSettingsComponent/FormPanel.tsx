@@ -31,7 +31,7 @@ export const renderInput = ({
   return (
     <Input
       // addonAfter={<Button ghost icon={<EditOutlined />} onClick={onClick} />}
-      className={classNames('!bg-white px-4 pl-3 pr-2 text-primary-9', disabled ? '' : 'font-bold')}
+      className={classNames('bg-white! px-4 pl-3 pr-2 text-primary-9', disabled ? '' : 'font-bold')}
       disabled={disabled}
       maxLength={maxLength} // Used in conjunction with "rules"
       placeholder={placeholder}
@@ -57,7 +57,7 @@ export const renderTextArea: (props: TextAreaProps) => ReactNode = ({
         <Input.TextArea
           autoSize
           className={classNames(
-            'grow resize-none overflow-hidden !bg-transparent ps-3 text-primary-9',
+            'grow resize-none overflow-hidden bg-transparent! ps-3 text-primary-9',
             disabled ? '' : 'font-bold'
           )}
           disabled={disabled}

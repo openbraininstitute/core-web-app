@@ -11,7 +11,7 @@ export default function Logout() {
       type="text"
       size="large"
       htmlType="button"
-      className="text-white hover:!text-white"
+      className="text-white hover:text-white!"
       onClick={signOut}
     >
       Logout

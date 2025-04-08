@@ -20,7 +20,7 @@ export default function TimeSlider() {
     return (
       <div
         role="alert"
-        className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+        className="relative rounded-sm border border-red-400 bg-red-100 px-4 py-3 text-red-700"
       >
         An error prevent us from loading the simulation report!
       </div>

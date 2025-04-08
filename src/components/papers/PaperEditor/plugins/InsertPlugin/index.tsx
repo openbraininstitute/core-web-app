@@ -130,7 +130,7 @@ export default function InsertPlugin({ paper }: Props) {
           <EditorButton
             title="Insert"
             aria-label="Insert Custom Elements"
-            className="!h-10 !w-10 !border border-primary-7 !bg-white text-primary-8"
+            className="h-10! w-10! border! border-primary-7 bg-white! text-primary-8"
             onClick={toggleShowMenu}
             icon={<PlusOutlined />}
           />

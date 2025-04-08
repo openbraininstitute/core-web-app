@@ -16,7 +16,7 @@ export default function PortalItem({ content }: { content: Portal }) {
     <Link
       href={content.url}
       className={classNames(
-        'relative flex h-48 w-full flex-row items-center justify-between rounded p-3 transition-background duration-300 ease-linear',
+        'relative flex h-48 w-full flex-row items-center justify-between rounded-sm p-3 transition-background duration-300 ease-linear',
         isMouseOver ? 'bg-primary-7' : 'bg-primary-8'
       )}
       onMouseOver={() => setIsMouseOver(true)}

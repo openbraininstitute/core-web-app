@@ -198,7 +198,7 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
           <Button
             type="text"
             icon={<CloneIcon className="text-primary-4" />}
-            className="px-0 text-base font-bold text-white hover:!bg-transparent hover:!text-primary-4"
+            className="px-0 text-base font-bold text-white hover:bg-transparent! hover:text-primary-4!"
             onClick={openCloneModal(brainModelConfig)}
           >
             Duplicate brain model
@@ -207,7 +207,7 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
         <CopyTextBtn
           icon={<LinkOutlined className="text-primary-4" />}
           text={brainModelConfig?.['@id'] ?? ''}
-          className="px-0 text-base font-bold text-white hover:!bg-transparent hover:!text-primary-4"
+          className="px-0 text-base font-bold text-white hover:bg-transparent! hover:text-primary-4!"
         >
           Copy brain model url
         </CopyTextBtn>
@@ -221,7 +221,7 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
         </div>
       </Collapsible>
 
-      <div className="!h-px w-full bg-primary-7" />
+      <div className="h-px! w-full bg-primary-7" />
 
       <Collapsible title="Recently used configurations">
         <div className="space-y-2">

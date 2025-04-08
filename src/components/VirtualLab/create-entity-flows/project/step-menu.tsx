@@ -21,7 +21,7 @@ const Title = (
     <Link href="/app/virtual-lab" className="text-xl font-bold text-white">
       <ArrowLeftOutlined />
     </Link>
-    <div className="flex flex-grow justify-center text-white">
+    <div className="flex grow justify-center text-white">
       <h1 className="select-none text-2xl font-bold uppercase tracking-wide">Project creation</h1>
     </div>
   </div>

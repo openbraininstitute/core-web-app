@@ -193,7 +193,7 @@ export function CreditForm({ virtualLabId }: Props) {
         <div className="relative w-full">
           <div
             className={classNames(
-              'group flex flex-grow items-center gap-2 rounded-lg border border-gray-300 p-4',
+              'group flex grow items-center gap-2 rounded-lg border border-gray-300 p-4',
               !!errors?.credit?.length &&
                 'border-rose-600 shadow-[0px_1px_1px_rgba(0,0,0,0.03),0px_3px_6px_rgba(0,0,0,0.02),0_0_0_1px_#df1b41]'
             )}
@@ -210,7 +210,7 @@ export function CreditForm({ virtualLabId }: Props) {
               onWheel={(e) => e.currentTarget.blur()}
               onChange={onChange}
               className={classNames(
-                'peer ml-2 flex-grow text-2xl font-bold text-primary-8 outline-none',
+                'peer ml-2 grow text-2xl font-bold text-primary-8 outline-hidden',
                 'placeholder:text-base placeholder:font-light placeholder:text-gray-600'
               )}
             />
@@ -240,7 +240,7 @@ function BalanceDetailsCard(
       }
 ) {
   return (
-    <div className="flex items-center justify-between border border-gray-300 bg-white px-8 py-8 shadow-sm">
+    <div className="flex items-center justify-between border border-gray-300 bg-white px-8 py-8 shadow-xs">
       <div>
         <div className="text-sm text-primary-7">Your current credit balance:</div>
         <div className="text-4xl font-bold text-primary-8">

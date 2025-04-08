@@ -30,7 +30,7 @@ export default function CreateEntityModal({ children, footer, isOpen, cls, onClo
         closable={false}
         classNames={{
           content: classNames(
-            '!rounded-none !py-10 !px-12 !min-h-[46rem] !flex !flex-col !w-full !h-full',
+            'rounded-none! py-10! px-12! min-h-[46rem]! flex! flex-col! w-full! h-full!',
             cls?.content
           ),
           body: classNames('flex flex-col h-full flex-1', cls?.body),

@@ -24,7 +24,7 @@ export default function Card({ content }: { content: SingleGallery }) {
     >
       <div
         className={classNames(
-          'block w-full origin-center overflow-hidden rounded-sm shadow-strongImage transition-transform duration-500 ease-in-out',
+          'block w-full origin-center overflow-hidden rounded-xs shadow-strongImage transition-transform duration-500 ease-in-out',
           mouseStatus ? 'scale-100' : 'scale-95'
         )}
       >
