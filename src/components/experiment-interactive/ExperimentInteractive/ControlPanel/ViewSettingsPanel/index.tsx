@@ -1,5 +1,5 @@
 import { Button } from 'antd';
-import { CloseIcon } from 'next/dist/client/components/react-dev-overlay/internal/icons/CloseIcon';
+import { CloseOutlined } from '@ant-design/icons';
 
 import DisplayWholeBrainCheckbox from './DisplayWholeBrainCheckbox';
 import ResetViewButton from './ResetViewButton';
@@ -25,7 +25,7 @@ export default function ViewSettingsPanel() {
           onClick={hideViewSettingsPanel}
           aria-label="Hide panel"
         >
-          <CloseIcon />
+          <CloseOutlined />
         </button>
       </div>
 

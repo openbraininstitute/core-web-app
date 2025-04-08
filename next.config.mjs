@@ -48,28 +48,26 @@ const nextConfig = {
       },
     },
   },
-  // https://github.com/vercel/next.js/issues/42113
-
-  // webpack: (config) => {
-  //   config.resolve.alias.canvas = false;
-  //   config.resolve.alias.encoding = false;
-  //   /**
-  //    * Using WebGL shaders as modules.
-  //    */
-  //   config.module.rules.push(
-  //     {
-  //       test: /\.(vert|frag|groq)$/i,
-  //       // More information here https://webpack.js.org/guides/asset-modules/
-  //       type: 'asset/source',
-  //     },
-  //     {
-  //       test: /\.(mp4|pdf)$/i,
-  //       // More information here https://webpack.js.org/guides/asset-modules/
-  //       type: 'asset',
-  //     }
-  //   );
-  //   return config;
-  // },
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+    config.resolve.alias.encoding = false;
+    /**
+     * Using WebGL shaders as modules.
+     */
+    config.module.rules.push(
+      {
+        test: /\.(vert|frag|groq)$/i,
+        // More information here https://webpack.js.org/guides/asset-modules/
+        type: 'asset/source',
+      },
+      {
+        test: /\.(mp4|pdf)$/i,
+        // More information here https://webpack.js.org/guides/asset-modules/
+        type: 'asset',
+      }
+    );
+    return config;
+  },
   env: {
     applicationVersion: getVersion(),
   },
