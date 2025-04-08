@@ -4,9 +4,16 @@
 
   https://github.com/tailwindlabs/tailwindcss/issues/6602
 */
-@import './tailwind-preflight.css' layer(base);
+/* @layer theme, base, components, utilities; */
 
-@import 'tailwindcss';
+@import './tailwind-preflight.css';
+
+@import 'tailwindcss/theme.css';
+@import 'tailwindcss/utilities.css';
+
+/* @import './tailwind-preflight.css' layer(base); */
+
+/* @import 'tailwindcss'; */
 
 @theme {
   --color-accent-dark: #389e0d;
