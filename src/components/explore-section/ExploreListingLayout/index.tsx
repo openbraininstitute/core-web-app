@@ -150,7 +150,7 @@ export default function ExploreListingLayout({
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
-        <div className="grow flex-col overflow-x-hidden">
+        <div className="flex grow flex-col overflow-x-hidden">
           <Menu
             onClick={onClick}
             selectedKeys={[activePath]}
