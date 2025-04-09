@@ -23,6 +23,7 @@ export default function CustomPopover({
 }: Props) {
   return (
     <Popover
+      destroyTooltipOnHide
       open={visible}
       placement={placement}
       getPopupContainer={(trigger) => trigger.parentElement!}
@@ -33,7 +34,6 @@ export default function CustomPopover({
         '[&_.ant-popover-inner]:!p-0 [&_.ant-popover-inner]:!bg-primary-8 max-w-[260px]',
         '[&_.ant-popover-arrow:before]:bg-primary-8'
       )}
-      destroyTooltipOnHide
       content={
         <div className="flex flex-col items-center justify-center gap-4 bg-primary-8 p-8">
           <p className="text-center text-base font-light text-white">{message}</p>

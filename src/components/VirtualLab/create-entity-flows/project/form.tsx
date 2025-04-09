@@ -8,7 +8,7 @@ import { Form, ConfigProvider, Button } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { unwrap } from 'jotai/utils';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import reject from 'lodash/reject';
 import find from 'lodash/find';
@@ -28,7 +28,7 @@ import {
 } from '@/components/VirtualLab/create-entity-flows/project/add-members';
 import { Input } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
-import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import { virtualLabDetailAtomFamily, virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { Member } from '@/api/virtual-lab-svc/queries/types';
@@ -54,7 +54,9 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
   const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const fields = Form.useWatch([], form);
-
+  const refreshProjects = useSetAtom(
+    virtualLabProjectsAtomFamily({ virtualLabId, page: 1, size: 20 })
+  );
   const disableNextProject = !!find(steps, { id: 'virtual-lab' }) && !fields?.virtual_lab_id;
   const disableNextMembers = !isFormValid || !fields?.name;
 
@@ -127,7 +129,8 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
           'topRight',
           undefined
         );
-        virtualLabProjectsAtomFamily.remove({ virtualLabId, page: 0, size: 20 });
+        refreshProjects();
+        virtualLabDetailAtomFamily.remove(virtualLabId);
         navigate(`${generateVlProjectUrl(id, resultCreation.data.project.id)}/home`);
       }
     });
