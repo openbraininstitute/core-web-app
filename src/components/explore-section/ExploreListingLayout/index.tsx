@@ -130,17 +130,18 @@ export default function ExploreListingLayout({
   if (showCircuitMenu) {
     const circuitActive = activePath === 'circuit';
 
-  items.push({
-    key: 'circuit',
-    title: 'Circuit',
-    label: `Circuit (${circuitCount})`,
-    className: 'text-center font-semibold',
-    style: {
-      backgroundColor: circuitActive ? 'white' : '#002766',
-      color: circuitActive ? '#002766' : 'white',
-      flexBasis: menuItemWidth,
-    },
-  });
+    items.push({
+      key: 'circuit',
+      title: 'Circuit',
+      label: `Circuit (${circuitCount})`,
+      className: 'text-center font-semibold',
+      style: {
+        backgroundColor: circuitActive ? 'white' : '#002766',
+        color: circuitActive ? '#002766' : 'white',
+        flexBasis: menuItemWidth,
+      },
+    });
+  }
 
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
