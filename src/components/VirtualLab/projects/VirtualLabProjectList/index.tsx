@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, memo, useMemo } from 'react';
+import { useRef, memo, useMemo, useState } from 'react';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { useAtomValue } from 'jotai';
@@ -10,6 +10,8 @@ import Link from 'next/link';
 import Item from '@/components/VirtualLab/item/project-item';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { Project } from '@/api/virtual-lab-svc/queries/types';
+import useUserPermissions from '@/hooks/useUserPermission';
+import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
 
 interface ProjectListContentProps {
   projects: Array<Project>;
@@ -24,6 +26,7 @@ const ProjectListContent = memo(({ projects, containerRef }: ProjectListContentP
           <Item
             key={project.id}
             id={project.id}
+            description={project.description}
             vlabId={project.virtual_lab_id}
             lastUpdate={project.updated_at}
             memberCount={project.user_count}
@@ -42,17 +45,43 @@ interface CreateProjectButtonProps {
 }
 
 const CreateProjectButton = memo(({ labId }: CreateProjectButtonProps) => {
+  const [popoverOpen, setIsPopoverOpen] = useState(false);
+  const { isAdmin, loading } = useUserPermissions({ virtualLabId: labId });
+  const allowedOperation = isAdmin && !loading;
+
+  const onOpenChange = (visible: boolean) => {
+    if (loading) return;
+    if (!allowedOperation || !visible) setIsPopoverOpen(true);
+    else setIsPopoverOpen(false);
+  };
   return (
     <div className="ml-auto mt-4 flex items-center gap-3 pr-3">
-      <Link
-        className="w-max rounded-none border-none font-bold text-primary-9"
-        href={`/app/virtual-lab/lab/${labId}/project/create`}
+      <CustomPopover
+        when={['hover']}
+        message="You must have Owner/Administrator role to create a project."
+        placement="topLeft"
+        visible={popoverOpen}
+        onOpenChange={onOpenChange}
       >
-        <div className="group flex h-12 items-center justify-between gap-8 bg-white px-4 py-2">
-          <span>Create project</span>
-          <PlusOutlined className="text-lg group-hover:scale-105" />
-        </div>
-      </Link>
+        <button
+          role="link"
+          type="button"
+          className="w-max rounded-none border-none font-bold text-primary-9"
+          aria-label="Create project"
+          disabled={!allowedOperation}
+          onMouseLeave={() => setIsPopoverOpen(false)}
+        >
+          <Link
+            href={`/app/virtual-lab/lab/${labId}/project/create`}
+            aria-disabled={!allowedOperation}
+          >
+            <div className="group flex h-12 items-center justify-between gap-8 bg-white px-4 py-2">
+              <span>Create project</span>
+              <PlusOutlined className="text-lg group-hover:scale-105" />
+            </div>
+          </Link>
+        </button>
+      </CustomPopover>
     </div>
   );
 });

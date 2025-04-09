@@ -3,16 +3,30 @@ import { ArrowRightOutlined } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
 import { dateColumnInfoToRender } from '@/util/date';
+import { useLastTruthyValue } from '@/hooks/hooks';
+import { projectBalanceAtomFamily } from '@/state/virtual-lab/projects';
 
 type Props = {
   id: string;
   vlabId: string;
   name: string;
+  description: string;
   lastUpdate: string;
   memberCount?: number;
 };
 
-export default async function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
+export default async function Item({
+  id,
+  description,
+  vlabId,
+  name,
+  lastUpdate,
+  memberCount,
+}: Props) {
+  const virtualLabBalance = useLastTruthyValue(
+    projectBalanceAtomFamily({ virtualLabId: vlabId, projectId: id })
+  );
+  const balance = virtualLabBalance?.balance ?? 0;
   return (
     <div
       id={id}
@@ -46,12 +60,23 @@ export default async function Item({ id, vlabId, name, lastUpdate, memberCount }
             />
           </Link>
         </div>
-        <div className="my-4 h-[.5px] w-1/2 bg-primary-2" />
-        <div className="mt-4 flex gap-6">
+
+        {description ? (
+          <p className="mb-4 mt-4 flex max-w-2xl gap-6 text-balance text-justify">{description}</p>
+        ) : (
+          <div className="my-4 h-[.5px] w-1/2 bg-primary-2" />
+        )}
+        <div className="flex gap-5">
           <div className="flex items-center gap-2">
             <span className="text-base text-primary-2">
               Members:
               <span className="ml-2 font-bold text-white">{memberCount}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-base text-primary-2">
+              Balance:
+              <span className="ml-2 font-bold text-white">{balance}</span>
             </span>
           </div>
         </div>

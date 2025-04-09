@@ -245,11 +245,11 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
   );
 }
 
-export default function VirtualLabTeamTable({ users: initialUsers, ownerId, total }: Props) {
+export default function TeamTable({ users: initialUsers, ownerId, total }: Props) {
   const { virtualLabId, projectId } = useParams<{ virtualLabId: string; projectId: string }>();
   const [isOpen, setOpen] = useState(false);
   const [users, setUsers] = useState(initialUsers);
-  const [popoverOpen, setIsPopoverOpen] = useState<string | null>(null);
+  const [popoverOpen, setIsPopoverOpen] = useState(false);
 
   const { isAllowedBySubscription, isAdmin, isProjectAdmin, loading } = useUserPermissions({
     virtualLabId,
@@ -341,19 +341,10 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
     },
   ];
 
-  const onOpenChange = () => {
+  const onOpenChange = (visible: boolean) => {
     if (loading) return;
-    let message = "You don't have rights to add members to this virtual lab.";
-    if (!isAdmin || !isProjectAdmin)
-      message = "You don't have admin rights to add members to this virtual lab.";
-    if (!isAllowedBySubscription)
-      message = "You don't have a paid subscription to add members to this virtual lab.";
-    if (!isAllowedBySubscription && !isAdmin && !isProjectAdmin)
-      message =
-        "You don't have a paid subscription nor admin rights to add members to this virtual lab.";
-
-    if (!allowedOperation) setIsPopoverOpen(message);
-    else setIsPopoverOpen(null);
+    if (!allowedOperation || !visible) setIsPopoverOpen(true);
+    else setIsPopoverOpen(false);
   };
 
   return (
@@ -400,9 +391,9 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
       <div className="mt-auto flex flex-shrink-0 items-center justify-end">
         <CustomPopover
           when={['hover']}
-          message="You don't have rights to add members to this project."
+          message="Only on Pro and Premium plans the Owner/Administrator can add members."
           placement="topLeft"
-          visible={popoverOpen !== null}
+          visible={popoverOpen}
           onOpenChange={onOpenChange}
         >
           <Button
@@ -418,6 +409,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
             size="large"
             htmlType="button"
             disabled={!allowedOperation}
+            onMouseLeave={() => setIsPopoverOpen(false)}
             onClick={onOpen}
           >
             Add member

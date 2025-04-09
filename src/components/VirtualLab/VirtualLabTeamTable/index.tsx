@@ -243,11 +243,11 @@ function RoleModifier({
   );
 }
 
-export default function VirtualLabTeamTable({ users: initialUsers, total, ownerId }: Props) {
+export default function TeamTable({ users: initialUsers, total, ownerId }: Props) {
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const [isOpen, setOpen] = useState(false);
   const [users, setUsers] = useState(initialUsers);
-  const [popoverOpen, setIsPopoverOpen] = useState<string | null>(null);
+  const [popoverOpen, setIsPopoverOpen] = useState(false);
 
   const { isAllowedBySubscription, isAdmin, loading } = useUserPermissions({ virtualLabId });
   const allowedOperation = isAllowedBySubscription && isAdmin && !loading;
@@ -338,18 +338,10 @@ export default function VirtualLabTeamTable({ users: initialUsers, total, ownerI
     [ownerId, virtualLabId]
   );
 
-  const onOpenChange = () => {
+  const onOpenChange = (visible: boolean) => {
     if (loading) return;
-    let message = "You don't have rights to add members to this virtual lab.";
-    if (!isAdmin) message = "You don't have admin rights to add members to this virtual lab.";
-    if (!isAllowedBySubscription)
-      message = "You don't have a paid subscription to add members to this virtual lab.";
-    if (!isAllowedBySubscription && !isAdmin)
-      message =
-        "You don't have a paid subscription nor admin rights to add members to this virtual lab.";
-
-    if (!allowedOperation) setIsPopoverOpen(message);
-    else setIsPopoverOpen(null);
+    if (!allowedOperation || !visible) setIsPopoverOpen(true);
+    else setIsPopoverOpen(false);
   };
 
   return (
@@ -396,9 +388,9 @@ export default function VirtualLabTeamTable({ users: initialUsers, total, ownerI
       <div className="mt-auto flex flex-shrink-0 items-center justify-end">
         <CustomPopover
           when={['hover']}
-          message="You don't have rights to add members to this virtual lab."
+          message="Only on Pro and Premium plans the Owner/Administrator can invite members."
           placement="topLeft"
-          visible={popoverOpen !== null}
+          visible={popoverOpen}
           onOpenChange={onOpenChange}
         >
           <Button
@@ -415,6 +407,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, total, ownerI
             htmlType="button"
             disabled={!allowedOperation}
             onClick={onOpen}
+            onMouseLeave={() => setIsPopoverOpen(false)}
           >
             Add member
           </Button>
