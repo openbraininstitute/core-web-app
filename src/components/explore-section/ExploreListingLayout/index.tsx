@@ -24,7 +24,6 @@ import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-vi
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ensureString } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
 
 const dataScope = ExploreDataScope.SelectedBrainRegion;
