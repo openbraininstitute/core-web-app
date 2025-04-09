@@ -25,8 +25,7 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
-
-const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
+import { DataTypeGroup } from '@/types/explore-section/data-types';
 
 const dataScope = ExploreDataScope.SelectedBrainRegion;
 
@@ -60,14 +59,24 @@ export default function ExploreListingLayout({
   children: ReactNode;
   virtualLabInfo?: VirtualLabInfo;
 }) {
-  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const pathname = usePathname();
-  const splittedPathname = pathname.split('/');
-  const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
   const router = useRouter();
   const params = useParams();
-  const config = pathname.includes('experimental') ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
+  const pathname = usePathname();
+
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
+
+  const splittedPathname = pathname.split('/');
+  const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
+
+  const dataTypeGroup = pathname.includes('experimental')
+    ? DataTypeGroup.ExperimentalData
+    : DataTypeGroup.ModelData;
+
+  const config =
+    dataTypeGroup === DataTypeGroup.ExperimentalData ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
+
+  const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
   const circuitCount = useAtomValue(circuitCountAtom);
 
@@ -84,6 +93,9 @@ export default function ExploreListingLayout({
     await userJourneyTracker.handleClick('artifact', artifact);
     router.push(key);
   };
+
+  const nMenuItems = Object.keys(config).length + (showCircuitMenu ? 1 : 0);
+  const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
   const items: {
     key: string;
@@ -115,7 +127,8 @@ export default function ExploreListingLayout({
     };
   });
 
-  const circuitActive = activePath === 'circuit';
+  if (showCircuitMenu) {
+    const circuitActive = activePath === 'circuit';
 
   items.push({
     key: 'circuit',
@@ -137,18 +150,18 @@ export default function ExploreListingLayout({
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
-        <div className={classNames('flex-1 overflow-hidden')}>
+        <div className="flex grow flex-col overflow-x-hidden">
           <Menu
             onClick={onClick}
             selectedKeys={[activePath]}
             mode="horizontal"
             theme="dark"
             style={{ backgroundColor: '#002766' }}
-            className="flex w-full justify-start"
+            className="flex w-[calc(100%+6px)] justify-start"
             items={items}
           />
 
-          <div className="h-full w-full bg-primary-9 text-white">{children}</div>
+          <div className="grow bg-primary-9 text-white">{children}</div>
         </div>
       </ErrorBoundary>
     </div>
