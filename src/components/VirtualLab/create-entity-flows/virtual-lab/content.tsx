@@ -25,6 +25,7 @@ export default function CreateVirtualLabForm() {
 
   const allowAskCode = Boolean(isFormValid && fields.email_status !== 'verified');
   const allowSubmit = Boolean(fields?.email_status === 'verified');
+  const useName = data?.user.name ?? data?.user.username;
 
   const resetForm = () => form.resetFields();
   const onCancel = () => navigate('/app/virtual-lab');
@@ -93,7 +94,7 @@ export default function CreateVirtualLabForm() {
           requiredMark={false}
           validateTrigger={['onChange']}
           initialValues={{
-            name: `${data?.user.name}'s virtual lab`,
+            name: `${useName}'s virtual lab`,
             description: '',
             entity: null,
             include_members: [],

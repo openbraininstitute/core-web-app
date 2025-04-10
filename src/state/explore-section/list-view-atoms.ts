@@ -160,12 +160,12 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+          ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
+            selectedBrainRegionWithDescendantsAndAncestorsFamily(
+              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+            )
+          )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));

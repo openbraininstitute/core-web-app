@@ -122,8 +122,8 @@ export function BaseTable<T extends EntityCoreBaseId>({
   const parentElement =
     typeof document !== 'undefined'
       ? document.getElementById('interactive-data-layout') ||
-        document.getElementById('explore-table-container-for-observable') ||
-        document.getElementById('bookmark-list-container')
+      document.getElementById('explore-table-container-for-observable') ||
+      document.getElementById('bookmark-list-container')
       : undefined;
   const headerHeight =
     (tableElement?.getBoundingClientRect()?.y ?? 0) -
@@ -184,9 +184,9 @@ export function BaseTable<T extends EntityCoreBaseId>({
         scroll={
           scrollable
             ? {
-                x: 'fit-content',
-                y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
-              }
+              x: 'fit-content',
+              y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
+            }
             : { x: 'fit-content' }
         }
       />
@@ -209,9 +209,8 @@ function DefaultRenderButton<T>({
       clearSelectedRows={clearSelectedRows}
       data-testid="listing-view-download-button"
     >
-      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${
-        selectedRows.length
-      })`}</span>
+      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${selectedRows.length
+        })`}</span>
     </ExploreDownloadButton>
   );
 }

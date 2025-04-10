@@ -1,14 +1,19 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Form, ConfigProvider } from 'antd';
-import { useParams, useRouter } from 'next/navigation';
+import { useMemo, useState, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams, useRouter } from 'next/navigation';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { Form, ConfigProvider, Button } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
+import { unwrap } from 'jotai/utils';
+import { useAtomValue, useSetAtom } from 'jotai';
+import uniqBy from 'lodash/uniqBy';
+import reject from 'lodash/reject';
 import find from 'lodash/find';
 
 import VirtualLabsList from '@/components/VirtualLab/create-entity-flows/project/vlabs-list';
-import MemberList from '@/components/VirtualLab/create-entity-flows/common/member-form';
 import Overview from '@/components/VirtualLab/create-entity-flows/project/overview';
 import Footer from '@/components/VirtualLab/create-entity-flows/project/footer';
 import useNotification from '@/hooks/notifications';
@@ -17,13 +22,19 @@ import type {
   ProjectFlowSteps,
   ProjectFlowStepsArray,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
-import { List } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { createProject } from '@/api/virtual-lab-svc/queries/project';
-import { ProjectPayload } from '@/api/virtual-lab-svc/types';
-import { extractInitials } from '@/util/slugify';
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { tryCatch } from '@/api/utils';
+import {
+  useFilteredMembers,
+  AddMembers,
+} from '@/components/VirtualLab/create-entity-flows/project/add-members';
+import { Input } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
+import { virtualLabDetailAtomFamily, virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
+import { createProject } from '@/api/virtual-lab-svc/queries/project';
+import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
+import { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+import { ProjectPayload } from '@/api/virtual-lab-svc/types';
+import { classNames } from '@/util/utils';
+import { tryCatch } from '@/api/utils';
 
 type Props = {
   step: ProjectFlowSteps;
@@ -32,40 +43,38 @@ type Props = {
   onStepChange: (t: ProjectFlowSteps) => void;
 };
 
-function Members() {
-  const { data } = useSession();
-  const id = data?.user.email!;
-  const name = data?.user.name!;
-  const email = data?.user.email!;
-  const initials = extractInitials(name);
-
-  return (
-    <List
-      members={[
-        {
-          id,
-          email,
-          role: 'admin',
-          name,
-          initials,
-        },
-      ]}
-    />
-  );
-}
-
 export default function CreationForm({ step, steps, onCancel, onStepChange }: Props) {
   const notify = useNotification();
+  const { data } = useSession();
+
   const { push: navigate } = useRouter();
   const [form] = Form.useForm<ProjectPayload & { virtual_lab_id: string }>();
   const [pending, startTransition] = useTransition();
   const [isFormValid, setIsFormValid] = useState(false);
+  const [searchQuery, setSearchValue] = useState('');
   const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const fields = Form.useWatch([], form);
-
+  const refreshProjects = useSetAtom(
+    virtualLabProjectsAtomFamily({ virtualLabId, page: 1, size: 20 })
+  );
   const disableNextProject = !!find(steps, { id: 'virtual-lab' }) && !fields?.virtual_lab_id;
   const disableNextMembers = !isFormValid || !fields?.name;
+
+  const usersAtom = virtualLabMembersAtomFamily(virtualLabId);
+  const result = useAtomValue(useMemo(() => unwrap(usersAtom), [usersAtom]));
+
+  const users = reject(
+    result?.data?.users,
+    (user) =>
+      user.id === result?.data?.owner_id ||
+      user.id === data?.user.id ||
+      user.invite_accepted === false
+  );
+
+  const filteredUsers = useFilteredMembers(users, searchQuery);
+  const [membersList, updateMembersList] = useState<Array<Member>>([]);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   const onNextStep = () => {
     onSlideDirectionChange('left');
@@ -104,11 +113,17 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
     startTransition(async () => {
       const formValues = {
         ...values,
-        include_members:
-          values.include_members?.map((o) => ({ email: o.email, role: o.role })) ?? null,
+        include_members: uniqBy(
+          membersList.map((member) => ({
+            id: member.id,
+            email: member.email,
+            role: member.role,
+          })),
+          'id'
+        ),
       };
-      const { data: result, error } = await tryCatch(createProject(id, formValues));
-      if (error || !result || !result.data) {
+      const { data: resultCreation, error } = await tryCatch(createProject(id, formValues));
+      if (error || !resultCreation || !resultCreation.data) {
         notify.error(
           'Project creation failed. Please check your details and try again.',
           undefined,
@@ -116,16 +131,50 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
           undefined
         );
       }
-      if (result && result.data) {
+      if (resultCreation && resultCreation.data) {
         notify.success(
           `Your Project ${values.name} has been created successfully and is now ready to use.`,
           undefined,
           'topRight',
           undefined
         );
-        virtualLabProjectsAtomFamily.remove({ virtualLabId, page: 0, size: 20 });
-        navigate(`${generateVlProjectUrl(id, result.data.project.id)}/home`);
+        refreshProjects();
+        virtualLabDetailAtomFamily.remove(virtualLabId);
+        navigate(`${generateVlProjectUrl(id, resultCreation.data.project.id)}/home`);
       }
+    });
+  };
+
+  const onSelectUser = (record: Member) => (e: CheckboxChangeEvent) => {
+    const { checked } = e.target;
+    if (checked) {
+      updateMembersList((prev) => [...prev, record]);
+    } else {
+      const filteredList = reject(membersList, { id: record.id });
+      updateMembersList(filteredList);
+    }
+  };
+
+  const handleSearchClick = () => {
+    setIsSearchVisible((prev) => !prev);
+    if (isSearchVisible) {
+      setSearchValue('');
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
+  const onRoleChange = (record: Member, role: Role) => {
+    updateMembersList((prev) => {
+      const existingMember = find(prev, { id: record.id });
+      if (existingMember) {
+        return prev.map((member) =>
+          member.id === existingMember.id ? { ...member, role } : member
+        );
+      }
+      return [...prev, { ...record, role }];
     });
   };
 
@@ -181,11 +230,49 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
               <Overview />
             </div>
             <div className={step !== 'members' ? 'hidden' : ''}>
-              <div className="mt-10 w-full">
-                <MemberList
-                  ListCompo={Members}
-                  cls={{ listContainer: 'max-h-[calc(100vh-500px)] mb-5 secondary-scrollbar' }}
-                />
+              <div className="mx-auto mt-10 w-full max-w-2xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <h1 className="text-xl font-bold text-primary-8">Add new members to project</h1>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      placeholder="Search members..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      className={classNames(
+                        'transition-all duration-300 ease-in-out',
+                        isSearchVisible ? 'w-60 opacity-100' : 'w-0 opacity-0'
+                      )}
+                      style={{ visibility: isSearchVisible ? 'visible' : 'hidden' }}
+                      disabled={!users.length || pending}
+                    />
+                    <Button
+                      type="text"
+                      icon={<SearchOutlined className="text-xl text-primary-8" />}
+                      onClick={handleSearchClick}
+                      className="!p-1"
+                      disabled={!users.length || pending}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex h-full flex-grow flex-col rounded-lg bg-white">
+                  <div
+                    data-testid="all-users-list"
+                    className="mx-auto h-full w-full max-w-5xl flex-grow bg-white"
+                  >
+                    <div className="secondary-scrollbar flex h-[450px] flex-grow flex-col overflow-y-auto">
+                      <div className="w-full pr-4">
+                        <AddMembers
+                          query={searchQuery}
+                          users={filteredUsers}
+                          selectedMembers={membersList}
+                          onSelect={onSelectUser}
+                          onRoleChange={onRoleChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

@@ -14,10 +14,10 @@ export default async function VirtualLab(props: ServerSideComponentProp<{ virtua
 
       <NewProjectCTABanner
         title="Create a project"
-        subtitle="In order to start exploring brain regions, building models and simulate neuron, create a project"
+        subtitle="In order to start exploring brain regions, building models and experiment neuron, create a project"
       />
 
-      <DiscoverObpPanel withTitle />
+      <DiscoverObpPanel />
       <div className="flex flex-col">
         <div className="my-10 text-lg font-bold uppercase">Members</div>
         <UsersHorizontalList virtualLabId={virtualLabId} />

@@ -1,3 +1,4 @@
+import { atom } from 'jotai';
 import { CircuitSchemaProps } from '../type';
 import CIRCUITS from './circuits_tree';
 
@@ -8,4 +9,8 @@ export const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] =>
   }, [] as CircuitSchemaProps[]);
 };
 
-export default flattenRows(CIRCUITS);
+const circuitsFlat = flattenRows(CIRCUITS);
+const circuitCountAtom = atom(circuitsFlat.length);
+
+export default circuitsFlat;
+export { circuitCountAtom };

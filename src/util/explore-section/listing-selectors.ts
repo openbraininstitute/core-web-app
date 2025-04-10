@@ -51,8 +51,13 @@ export const selectorFnContributors = (_text: string, record: Record): string | 
     return undefined;
   }
 
+  // Filter out contributors where label is an array.
+  // This is a workaround for the indexing issue in Nexus.
+  // TODO: Remove this after the migration to Entitycore.
+  const filteredContributors = contributors.filter((c) => !Array.isArray(c.label));
+
   return map(
-    normalizeContributors<ContributorEsProperty>(contributors, formatEsContributors),
+    normalizeContributors<ContributorEsProperty>(filteredContributors, formatEsContributors),
     'label'
   ).join(', ');
 };

@@ -28,7 +28,7 @@ export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
     {
       key: LinkItemKey.Simulate,
       href: `${labProjectUrl}/simulate`,
-      content: 'Simulate',
+      content: 'Experiment',
       styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
     },
   ];

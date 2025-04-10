@@ -2,31 +2,22 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useCallback, useMemo } from 'react';
-import { useSetAtom, useAtomValue } from 'jotai';
+import { useMemo } from 'react';
+import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { Spin } from 'antd';
 import { CollapseProps } from 'antd/lib/collapse/Collapse';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQueryState } from 'nuqs';
 
-import FormPanel, { renderInput, renderTextArea } from './FormPanel';
-import DangerZonePanel from './DangerZonePanel';
 import CreditManagement from './CreditManagement';
 import SpendingsPanel from './Spendings';
 
 import BuyCredits from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/buy-credits';
 import PurchasesHistory from '@/components/VirtualLab/VirtualLabSettingsComponent/purchases-history';
-import useUpdateVirtualLab from '@/hooks/useUpdateVirtualLab';
-import Collapse, { ExpandIcon } from '@/components/Collapse';
-import { deleteVirtualLab } from '@/services/virtual-lab/labs';
-import {
-  virtualLabBalanceAtomFamily,
-  virtualLabDetailAtomFamily,
-  virtualLabsOfUserAtom,
-} from '@/state/virtual-lab/lab';
-import { classNames, VALID_EMAIL_REGEXP } from '@/util/utils';
-import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import Collapse from '@/components/Collapse';
+import { virtualLabBalanceAtomFamily, virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
+import { classNames } from '@/util/utils';
 import { useLastTruthyValue } from '@/hooks/hooks';
 
 function VirtualLabBlock({
@@ -73,22 +64,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
     defaultValue: '',
   });
   const virtualLabDetail = useAtomValue(loadable(virtualLabDetailAtomFamily(id)));
-
-  const refreshVirtualLabsOfUser = useSetAtom(virtualLabsOfUserAtom);
-
-  const updateVirtualLab = useUpdateVirtualLab(id);
-
   const onChangePanel = (key: string | string[]) => setActivePanel(String(key));
-
-  const onDeleteVirtualLab = useCallback(async (): Promise<VirtualLab> => {
-    const { data } = await deleteVirtualLab(id);
-    const { virtual_lab: virtualLab } = data;
-
-    virtualLabDetailAtomFamily.remove(id);
-    refreshVirtualLabsOfUser();
-
-    return new Promise((resolve) => resolve(virtualLab)); // eslint-disable-line no-promise-executor-return
-  }, [id, refreshVirtualLabsOfUser]);
 
   const creditManagement = useMemo(
     () => ({

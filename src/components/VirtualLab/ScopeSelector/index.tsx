@@ -36,7 +36,7 @@ export function SectionTabs({
           onChange={() => setSelectedTab(tab)}
           type="radio"
         />
-        {capitalize(`${tab} ${label}`) + (tab === 'browse' ? 's' : '')}
+        {makeTitle(tab, label) + (tab === 'browse' ? 's' : '')}
       </label>
     );
   };
@@ -47,6 +47,14 @@ export function SectionTabs({
       {tabJSX('browse')}
     </div>
   );
+}
+
+/**
+ * Capitalize `words` and add a space between them.
+ * In the meantime, eerytime we find "simulation", we replace it with "experiment".
+ */
+function makeTitle(...words: string[]): string {
+  return words.map((word) => capitalize(word.replace('simulation', 'experiment'))).join(' ');
 }
 
 export function ScopeSelector({
@@ -112,7 +120,7 @@ export function ScopeSelector({
     <div>
       <div className="mt-12 text-[40px] font-bold text-primary-4">
         {section === 'build' && 'Select a scale for your model'}
-        {section === 'simulate' && 'Select a scale to choose models and simulations'}
+        {section === 'simulate' && 'Select a scale to choose models and experiments'}
       </div>
 
       <div className="mb-5 mt-8 grid grid-cols-3 gap-5">

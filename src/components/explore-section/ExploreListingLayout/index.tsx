@@ -8,7 +8,7 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import { CSSProperties, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import circuitsFlat from '../Circuit/content/circuits_flat';
+import { circuitCountAtom } from '../Circuit/content/circuits_flat';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
@@ -24,9 +24,7 @@ import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-vi
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ensureString } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
-
-const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
+import { DataTypeGroup } from '@/types/explore-section/data-types';
 
 const dataScope = ExploreDataScope.SelectedBrainRegion;
 
@@ -48,9 +46,8 @@ function MenuItemLabel({
     })
   );
 
-  return `${label} ${
-    totalByExperimentAndRegions.state === 'hasData' ? `(${totalByExperimentAndRegions.data})` : ''
-  }`;
+  return `${label} ${totalByExperimentAndRegions.state === 'hasData' ? `(${totalByExperimentAndRegions.data})` : ''
+    }`;
 }
 
 export default function ExploreListingLayout({
@@ -60,15 +57,26 @@ export default function ExploreListingLayout({
   children: ReactNode;
   virtualLabInfo?: VirtualLabInfo;
 }) {
-  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const pathname = usePathname();
-  const splittedPathname = pathname.split('/');
-  const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
   const router = useRouter();
   const params = useParams();
-  const config = pathname.includes('experimental') ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
+  const pathname = usePathname();
+
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
+
+  const splittedPathname = pathname.split('/');
+  const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
+
+  const dataTypeGroup = pathname.includes('experimental')
+    ? DataTypeGroup.ExperimentalData
+    : DataTypeGroup.ModelData;
+
+  const config =
+    dataTypeGroup === DataTypeGroup.ExperimentalData ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
+
+  const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
+  const circuitCount = useAtomValue(circuitCountAtom);
 
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
@@ -83,6 +91,9 @@ export default function ExploreListingLayout({
     await userJourneyTracker.handleClick('artifact', artifact);
     router.push(key);
   };
+
+  const nMenuItems = Object.keys(config).length + (showCircuitMenu ? 1 : 0);
+  const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
   const items: {
     key: string;
@@ -114,19 +125,21 @@ export default function ExploreListingLayout({
     };
   });
 
-  const circuitActive = activePath === 'circuit';
+  if (showCircuitMenu) {
+    const circuitActive = activePath === 'circuit';
 
-  items.push({
-    key: 'circuit',
-    title: 'Circuit',
-    label: `Circuit (${circuitsFlat.length})`,
-    className: 'text-center font-semibold',
-    style: {
-      backgroundColor: circuitActive ? 'white' : '#002766',
-      color: circuitActive ? '#002766' : 'white',
-      flexBasis: menuItemWidth,
-    },
-  });
+    items.push({
+      key: 'circuit',
+      title: 'Circuit',
+      label: `Circuit (${circuitCount})`,
+      className: 'text-center font-semibold',
+      style: {
+        backgroundColor: circuitActive ? 'white' : '#002766',
+        color: circuitActive ? '#002766' : 'white',
+        flexBasis: menuItemWidth,
+      },
+    });
+  }
 
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
@@ -136,18 +149,18 @@ export default function ExploreListingLayout({
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
-        <div className={classNames('flex-1 overflow-hidden')}>
+        <div className="flex grow flex-col overflow-x-hidden">
           <Menu
             onClick={onClick}
             selectedKeys={[activePath]}
             mode="horizontal"
             theme="dark"
             style={{ backgroundColor: '#002766' }}
-            className="flex h-[46px] [&_.ant-menu-overflow-item]:align-middle! [&_li]:whitespace-nowrap!"
+            className="flex w-[calc(100%+6px)] justify-start"
             items={items}
           />
 
-          <div className="h-full w-full bg-primary-9 text-white">{children}</div>
+          <div className="grow bg-primary-9 text-white">{children}</div>
         </div>
       </ErrorBoundary>
     </div>

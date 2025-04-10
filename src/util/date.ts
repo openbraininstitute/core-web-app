@@ -8,7 +8,7 @@ import { DateISOString } from '@/types/nexus';
  */
 export default function timeElapsedFromToday(stringDate?: DateISOString) {
   const date = validDate(stringDate);
-  return date ? formatDistanceToNow(date, { addSuffix: true }) : '-';
+  return date ? formatDistanceToNow(date, { addSuffix: true }).replace(/^about /, '') : '-';
 }
 
 export function dateColumnInfoToRender(createdAtStr: DateISOString) {

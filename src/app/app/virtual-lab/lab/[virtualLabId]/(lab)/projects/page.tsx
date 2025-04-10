@@ -1,12 +1,20 @@
-'use client';;
-import { use } from "react";
+'use client';
 
-import VirtualLabProjectList from '@/components/VirtualLab/projects/VirtualLabProjectList';
+import { use } from "react";
+import dynamic from 'next/dynamic';
+
 import { ServerSideComponentProp } from '@/types/common';
+
+
+const VirtualLabProjectList = dynamic(
+  () => import('@/components/VirtualLab/projects/VirtualLabProjectList'),
+  {
+    ssr: false,
+  }
+);
 
 export default function VirtualLabProjectsPage(props: ServerSideComponentProp<{ virtualLabId: string }>) {
   const params = use(props.params);
-  const { virtualLabId } = params;
 
   return <VirtualLabProjectList id={virtualLabId} />;
 }
