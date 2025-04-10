@@ -4,10 +4,11 @@ import { useMemo, useState } from 'react';
 import { Button, ConfigProvider, Select, Table, Popconfirm } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useSetAtom } from 'jotai';
 import get from 'lodash/get';
 import find from 'lodash/find';
-import orderBy from 'lodash/orderBy';
+import sortBy from 'lodash/sortBy';
 import compact from 'lodash/compact';
 
 import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
@@ -48,6 +49,7 @@ function RoleModifier({
   virtualLabId: string;
   onRemove: (email: string) => void;
 }) {
+  const { data } = useSession();
   const [role, updateRole] = useState(user.role);
   const [loading, setLoading] = useState(false);
   const [removeLoading, seRemoveLoading] = useState(false);
@@ -167,7 +169,7 @@ function RoleModifier({
     }
   };
 
-  if (user.id === ownerId) {
+  if (user.id === ownerId || user.id === data?.user.id) {
     return (
       <div className="flex w-full flex-col items-center justify-end pr-3 text-right">
         <div className="!w-max self-end font-bold text-white hover:!text-primary-2">
@@ -244,6 +246,7 @@ function RoleModifier({
 }
 
 export default function TeamTable({ users: initialUsers, total, ownerId }: Props) {
+  const { data } = useSession();
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const [isOpen, setOpen] = useState(false);
   const [users, setUsers] = useState(initialUsers);
@@ -344,6 +347,19 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
     else setIsPopoverOpen(false);
   };
 
+  const orderedUsers = useMemo(
+    () =>
+      sortBy(users, [
+        (member) => (member.id === ownerId ? 0 : 1),
+        (member) => (member.id === data?.user.id ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'admin' ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'member' ? 0 : 1),
+        (member) => (member.invite_accepted ? 0 : 1),
+        'created_at',
+      ]),
+    [users, ownerId, data?.user.id]
+  );
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-8 flex-shrink-0 items-center px-3">
@@ -368,7 +384,7 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
         >
           <Table
             bordered={false}
-            dataSource={orderBy(users, ['invite_accepted', 'role'], ['desc', 'asc'])}
+            dataSource={orderedUsers}
             pagination={false}
             columns={columns}
             showHeader={false}

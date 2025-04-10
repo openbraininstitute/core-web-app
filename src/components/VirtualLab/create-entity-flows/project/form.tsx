@@ -31,7 +31,7 @@ import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { virtualLabDetailAtomFamily, virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { Member } from '@/api/virtual-lab-svc/queries/types';
+import { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
@@ -46,6 +46,7 @@ type Props = {
 export default function CreationForm({ step, steps, onCancel, onStepChange }: Props) {
   const notify = useNotification();
   const { data } = useSession();
+
   const { push: navigate } = useRouter();
   const [form] = Form.useForm<ProjectPayload & { virtual_lab_id: string }>();
   const [pending, startTransition] = useTransition();
@@ -62,7 +63,15 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
 
   const usersAtom = virtualLabMembersAtomFamily(virtualLabId);
   const result = useAtomValue(useMemo(() => unwrap(usersAtom), [usersAtom]));
-  const users = reject(result?.data?.users, { id: data?.user.id }) ?? [];
+
+  const users = reject(
+    result?.data?.users,
+    (user) =>
+      user.id === result?.data?.owner_id ||
+      user.id === data?.user.id ||
+      user.invite_accepted === false
+  );
+
   const filteredUsers = useFilteredMembers(users, searchQuery);
   const [membersList, updateMembersList] = useState<Array<Member>>([]);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -157,6 +166,18 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
     setSearchValue(e.target.value);
   };
 
+  const onRoleChange = (record: Member, role: Role) => {
+    updateMembersList((prev) => {
+      const existingMember = find(prev, { id: record.id });
+      if (existingMember) {
+        return prev.map((member) =>
+          member.id === existingMember.id ? { ...member, role } : member
+        );
+      }
+      return [...prev, { ...record, role }];
+    });
+  };
+
   return (
     <ConfigProvider theme={{ hashed: false }}>
       <Form
@@ -246,6 +267,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
                           users={filteredUsers}
                           selectedMembers={membersList}
                           onSelect={onSelectUser}
+                          onRoleChange={onRoleChange}
                         />
                       </div>
                     </div>

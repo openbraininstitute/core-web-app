@@ -19,7 +19,7 @@ import { Select, Input } from '@/components/VirtualLab/create-entity-flows/commo
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { attachUsersToProject } from '@/api/virtual-lab-svc/queries/project';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
-import { Member } from '@/api/virtual-lab-svc/queries/types';
+import { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 import { extractInitials } from '@/util/slugify';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
@@ -29,6 +29,7 @@ type AddMembersProps = {
   users: Array<Member>;
   selectedMembers: Array<Member>;
   onSelect: (record: Member) => (e: CheckboxChangeEvent) => void;
+  onRoleChange: (record: Member, role: Role) => void;
 };
 type ProjectContext = { virtualLabId: string; projectId: string };
 
@@ -56,7 +57,13 @@ export function useFilteredMembers(members: Member[], query: string) {
   return filtered;
 }
 
-export function AddMembers({ query, users, selectedMembers, onSelect }: AddMembersProps) {
+export function AddMembers({
+  query,
+  users,
+  selectedMembers,
+  onSelect,
+  onRoleChange,
+}: AddMembersProps) {
   return (
     <ConfigProvider
       renderEmpty={() => (
@@ -135,6 +142,9 @@ export function AddMembers({ query, users, selectedMembers, onSelect }: AddMembe
                         'w-40 shadow-none ring-0 focus:border-2 focus:border-primary-8',
                         '[&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:!border-0'
                       )}
+                      onSelect={(value: Role) => {
+                        onRoleChange(record, value);
+                      }}
                       options={[
                         { value: 'member', label: 'Member' },
                         { value: 'admin', label: 'Administrator' },
@@ -172,7 +182,13 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const usersAtom = virtualLabMembersAtomFamily(context.virtualLabId);
   const result = useAtomValue(useMemo(() => unwrap(usersAtom), [usersAtom]));
-  const users = reject(result?.data?.users, { id: data?.user.id }) ?? [];
+  const users = reject(
+    result?.data?.users,
+    (user) =>
+      user.id === result?.data?.owner_id ||
+      user.id === data?.user.id ||
+      user.invite_accepted === false
+  );
   const filteredUsers = useFilteredMembers(users, searchQuery);
 
   const onSelectUser = (record: Member) => (e: CheckboxChangeEvent) => {
@@ -183,6 +199,18 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
       const filteredList = reject(membersList, { id: record.id });
       updateMembersList(filteredList);
     }
+  };
+
+  const onRoleChange = (record: Member, role: Role) => {
+    updateMembersList((prev) => {
+      const existingMember = find(prev, { id: record.id });
+      if (existingMember) {
+        return prev.map((member) =>
+          member.id === existingMember.id ? { ...member, role } : member
+        );
+      }
+      return [...prev, { ...record, role }];
+    });
   };
 
   const handleSearchClick = () => {
@@ -283,6 +311,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
                 users={filteredUsers}
                 selectedMembers={membersList}
                 onSelect={onSelectUser}
+                onRoleChange={onRoleChange}
               />
             </div>
           </div>
