@@ -97,20 +97,24 @@ export default async function Home({ searchParams }: Props) {
           )}
         </Suspense>
       </ErrorBoundary>
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold">Learn how to create your Virtual Lab, your first project and how to manage your credits.</h2>
-        <h2 className="text-lg font-semibold">Start your simulation journey now</h2>
-        <div className="mx-auto aspect-w-16 aspect-h-9">
-          <iframe
-            width="560"
-            height="315"
-            src="https://www.youtube.com/embed/mgyfaQhiRn0"
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-        </div>
+
+      <div className="mx-auto mt-8 max-w-7xl">
+        <h2 className="text-lg">
+          <p>
+            Learn how to create your Virtual Lab, your first project and how to manage your credits.
+          </p>
+          <p>Start your simulation journey now.</p>
+        </h2>
+
+        <iframe
+          className="mt-4"
+          width="850"
+          height="450"
+          src="https://www.youtube.com/embed/mgyfaQhiRn0"
+          title="YouTube video player"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
       </div>
     </div>
   );
