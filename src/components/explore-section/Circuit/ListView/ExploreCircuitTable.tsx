@@ -1,11 +1,11 @@
 'use client';
 
-import { Key, useMemo, useState } from 'react';
+import { Key, useEffect, useMemo, useState } from 'react';
 import { Table, Tooltip } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
-import circuitsFlat from '../content/circuits_flat';
+import { useAtomValue, useSetAtom } from 'jotai';
+import circuitsFlat, { circuitCountAtom } from '../content/circuits_flat';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import CIRCUITS from '../content/circuits_tree';
 import { CircuitColumn, CircuitSchemaProps } from '../type';
@@ -26,16 +26,42 @@ const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   }, [] as string[]);
 };
 
-const brainRegionFilter = memoize(
-  (brainRegions: { brainRegionId: string | undefined; brainRegionSet: Set<string> }) =>
-    memoize((node: CircuitSchemaProps): boolean => {
-      return (
-        brainRegions.brainRegionSet.has(node.brainRegion.trim().toLocaleLowerCase()) ||
-        (node.subcircuits?.some((sc) => brainRegionFilter(brainRegions)(sc)) ?? false)
-      );
-    }),
-  (a) => `${a.brainRegionId}`
-);
+function brainRegionFilterFunction({
+  circuits,
+  regionSet,
+}: {
+  circuits: CircuitSchemaProps[];
+  region: string | undefined;
+  regionSet: Set<string>;
+}) {
+  let count = 0;
+
+  function recurse(circuit: CircuitSchemaProps): CircuitSchemaProps | null {
+    const brainRegionMatches = regionSet.has(circuit.brainRegion.trim().toLowerCase());
+
+    const filteredSubs = (circuit.subcircuits?.map(recurse).filter(Boolean) ??
+      []) as CircuitSchemaProps[];
+
+    if (brainRegionMatches || filteredSubs.length > 0) {
+      count += 1;
+      return {
+        ...circuit,
+        subcircuits: filteredSubs,
+      };
+    }
+
+    return null;
+  }
+
+  const filteredTree = circuits.map(recurse).filter(Boolean) as CircuitSchemaProps[];
+
+  return {
+    filteredTree,
+    count,
+  };
+}
+
+const brainRegionFilter = memoize(brainRegionFilterFunction, (param) => param.region ?? '');
 
 export default function ExploreCircuitTable() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS));
@@ -43,6 +69,7 @@ export default function ExploreCircuitTable() {
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const selectedBrainRegions = useAtomValue(selectedBrainRegionWithDescendantsAndAncestorsAtom);
   const brainRegionNotationById = useAtomValue(brainRegionByIdMapAtom);
+  const setCircuitCount = useSetAtom(circuitCountAtom);
 
   const brainRegionSet = useMemo(() => {
     return new Set(
@@ -52,7 +79,15 @@ export default function ExploreCircuitTable() {
     );
   }, [selectedBrainRegions, brainRegionNotationById]);
 
-  const filter = brainRegionFilter({ brainRegionId: selectedBrainRegion?.id, brainRegionSet });
+  const filteredCircuits = brainRegionFilter({
+    region: selectedBrainRegion?.id,
+    regionSet: brainRegionSet,
+    circuits: CIRCUITS,
+  });
+
+  useEffect(() => {
+    setCircuitCount(filteredCircuits.count);
+  }, [filteredCircuits.count, setCircuitCount]);
 
   const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
     if (!row.hasSubcircuits) return;
@@ -162,8 +197,7 @@ export default function ExploreCircuitTable() {
 
   // SUBCIRCUIT TABLE - LEVEL 1
   const expandedRowRender = (circuit: CircuitSchemaProps) => {
-    const subcircuits = circuit.subcircuits?.filter((sc) => filter(sc));
-    if (!subcircuits || subcircuits.length === 0) return null;
+    if (!circuit.subcircuits || circuit.subcircuits.length === 0) return null;
 
     return (
       <div className="relative flex flex-col">
@@ -189,7 +223,7 @@ export default function ExploreCircuitTable() {
             styles.circuitTable
           )}
           columns={columns}
-          dataSource={circuit.subcircuits?.filter((sc) => filter(sc)) || []}
+          dataSource={circuit.subcircuits}
           pagination={false}
           rowSelection={rowSelection}
           expandable={{
@@ -234,7 +268,7 @@ export default function ExploreCircuitTable() {
           styles.circuitTable
         )}
         style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={CIRCUITS.filter((c) => filter(c))}
+        dataSource={filteredCircuits.filteredTree}
         columns={columns}
         pagination={false}
         rowSelection={rowSelection}
