@@ -112,7 +112,7 @@ export default function InviteLoader() {
             </div>
             <div className="bg-white p-12 text-center">
               <p className="text-xl text-primary-9">
-                {inviteDetails.inviter_full_name} has invited you to join the virtual lab, titled:
+                {inviteDetails.inviter_full_name} has invited you to join the virtual lab, titled:{' '}
                 {inviteDetails.virtual_lab_name}
               </p>
 
