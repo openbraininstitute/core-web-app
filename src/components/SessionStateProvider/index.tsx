@@ -10,5 +10,5 @@ type SessionStateWrapperProps = {
 export default function SessionStateProvider({ children }: SessionStateWrapperProps) {
   useSessionState();
 
-  return children as ReactElement;
+  return children as ReactElement<any>;
 }

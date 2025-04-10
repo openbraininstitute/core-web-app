@@ -136,7 +136,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
         form={form}
         layout="vertical"
         onFinish={onFormSubmit}
-        className="flex h-full flex-grow flex-col p-2"
+        className="flex h-full grow flex-col p-2"
         requiredMark={false}
         validateTrigger={['onChange']}
         initialValues={{
@@ -164,7 +164,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
               type: 'tween',
               ease: 'easeInOut',
             }}
-            className="relative flex h-full flex-grow flex-col"
+            className="relative flex h-full grow flex-col"
           >
             {virtualLabId && (
               <Form.Item hidden name="virtual_lab_id">

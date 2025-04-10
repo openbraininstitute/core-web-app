@@ -12,12 +12,12 @@ type Props = {
   memberCount?: number;
 };
 
-export default async function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
+export default function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
   return (
     <div
       id={id}
       className={classNames(
-        'animate-scale-in group overflow-hidden rounded-md border border-primary-5 bg-primary-9 shadow-sm',
+        'animate-scale-in group overflow-hidden rounded-md border border-primary-5 bg-primary-9 shadow-xs',
         'hover:bg-primary-8'
       )}
     >

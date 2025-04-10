@@ -33,7 +33,7 @@ export default function DefaultEModelTable<T extends SupportedDataTypes>({
         pagination={{ hideOnSinglePage: true }}
         rowKey="@id"
         columns={columns}
-        rowClassName="[&:last-child>td]:!border-b-0"
+        rowClassName="[&:last-child>td]:border-b-0!"
         scroll={{
           x: true,
         }}

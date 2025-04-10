@@ -60,7 +60,7 @@
 //   return meta ? (
 //     <div className="flex gap-5">
 //       {children}
-//       <div className="flex-grow">
+//       <div className="grow">
 //         {Object.entries(meta).map<ReactNode>(([k, v]) => {
 //           const value: ReactNode =
 //             typeof v === 'object' ? ( // ex. k === "range"
@@ -123,7 +123,7 @@ export default function Simulation() {
   //     </button>
   //     <FilterBtn disabled>
   //       <div className="flex items-center gap-1">
-  //         <span className="rounded bg-primary-8 px-2.5 py-1 text-sm font-bold text-white">1</span>
+  //         <span className="rounded-sm bg-primary-8 px-2.5 py-1 text-sm font-bold text-white">1</span>
   //         <div className="flex items-center gap-2">
   //           <span className="text-sm font-bold leading-5 text-primary-8">Filters</span>
   //           <span className="text-xs font-semibold leading-5 text-neutral-4">
@@ -180,7 +180,7 @@ export default function Simulation() {
   //             Open in Simulate
   //           </button>
   //         </div>
-  //         <div className="flex-grow">
+  //         <div className="grow">
   //           {charts.map(({ label, meta, value }) => (
   //             <div className="flex flex-col gap-3" key={label}>
   //               <div className="text-lg font-bold text-primary-8">{label}</div>

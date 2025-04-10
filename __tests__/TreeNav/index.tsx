@@ -50,8 +50,8 @@ function TestNavItem({
 }: {
   id: string;
   title: string;
-  content: (...args: any[]) => ReactElement;
-  trigger: (...args: any[]) => ReactElement;
+  content: (...args: any[]) => ReactElement<any>;
+  trigger: (...args: any[]) => ReactElement<any>;
 }) {
   return (
     <div>

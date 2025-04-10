@@ -42,7 +42,7 @@ export default function ApplyToAllMTypesPanel() {
 
       <div className="flex flex-row items-center justify-between gap-3 text-sm font-semibold text-white">
         <div className="pr-3">Apply to all M-types</div>
-        <div className="flex-grow">
+        <div className="grow">
           <DefaultLoadingSuspense>
             <ModelSelect onChange={handleModelSelectChange} value={activeModel} />
           </DefaultLoadingSuspense>

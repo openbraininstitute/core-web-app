@@ -16,7 +16,7 @@ export default function ExploreInteractivePanel({ virtualLabInfo }: ExploreInter
       <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-[#012766]">
         <div
           id="interactive-layout"
-          className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px,repeat(4,1fr),minmax(80px,max-content)] gap-y-4"
+          className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px_repeat(4,1fr)_minmax(80px,max-content)] gap-y-4"
         >
           <div id="interactive-header" style={{ gridArea: '1 / 1 / 2 / 6' }}>
             <DataTypeTabs />

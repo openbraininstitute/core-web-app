@@ -14,7 +14,7 @@ export default async function Flow({ virtualLabId }: Props) {
   const { data, error } = await tryCatch(getUserActiveSubscription());
   if (error) {
     return (
-      <div className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+      <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="mb-2 text-2xl font-bold text-red-200">
@@ -46,8 +46,8 @@ export default async function Flow({ virtualLabId }: Props) {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-white">
-      <div className="mx-auto flex h-full  w-full flex-grow flex-col">
-        <div className="flex h-full w-full flex-grow flex-col">
+      <div className="mx-auto flex h-full  w-full grow flex-col">
+        <div className="flex h-full w-full grow flex-col">
           <StepMenu steps={steps} />
           <Content steps={steps} />
         </div>

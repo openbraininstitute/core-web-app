@@ -1,5 +1,5 @@
 import { Button } from 'antd';
-import { CloseIcon } from 'next/dist/client/components/react-dev-overlay/internal/icons/CloseIcon';
+import { CloseOutlined } from '@ant-design/icons';
 
 import DisplayWholeBrainCheckbox from './DisplayWholeBrainCheckbox';
 import ResetViewButton from './ResetViewButton';
@@ -25,7 +25,7 @@ export default function ViewSettingsPanel() {
           onClick={hideViewSettingsPanel}
           aria-label="Hide panel"
         >
-          <CloseIcon />
+          <CloseOutlined />
         </button>
       </div>
 
@@ -39,7 +39,7 @@ export default function ViewSettingsPanel() {
           <Button type="text">
             <ZoomOutIcon className="h-[16px] w-[16px]" />
           </Button>
-          <div className="relative w-full flex-grow">
+          <div className="relative w-full grow">
             <div className="h-[1px] w-full bg-white text-center" />
             <div className="absolute left-1/2 h-[15px] w-[3px] -translate-y-1/2 bg-white" />
           </div>

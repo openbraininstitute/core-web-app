@@ -4,7 +4,7 @@ import { FullscreenExitOutlined, FullscreenOutlined } from '@ant-design/icons';
 export default function FullScreen({
   elementRef,
 }: {
-  elementRef?: RefObject<HTMLDivElement> | null;
+  elementRef?: RefObject<HTMLDivElement | null> | null;
 }) {
   const [isFullScreen, toggleFullScreen] = useReducer((value) => !value, false);
 

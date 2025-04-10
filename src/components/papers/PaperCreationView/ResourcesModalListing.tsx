@@ -81,10 +81,10 @@ export default function ResourcesListingModal({
         closable={false}
         footer={null}
         onCancel={onClose}
-        className="top-0 h-full !w-full max-w-full pb-0 duration-0"
+        className="top-0 h-full w-full! max-w-full pb-0 duration-0"
         wrapClassName="w-screen h-screen overflow-hidden"
         classNames={{
-          content: 'w-full h-full !rounded-none !p-0 overflow-hidden',
+          content: 'w-full h-full rounded-none! p-0! overflow-hidden',
           body: 'h-[calc(100vh-40px)] w-full',
         }}
         style={{ animationDuration: '0s' }}

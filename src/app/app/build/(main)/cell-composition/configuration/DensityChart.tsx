@@ -193,7 +193,7 @@ export default function DensityChart() {
   );
 
   // Prevent SVG from rendering whenever zoom changes
-  const chartRef: RefObject<SVGSVGElement & { reset: () => void; zoom: (value: number) => void }> =
+  const chartRef: RefObject<SVGSVGElement & { reset: () => void; zoom: (value: number) => void } | null> =
     useRef(null);
 
   const [dimensions, setDimensions] = useState<DOMRect | undefined>();

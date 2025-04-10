@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import dynamic from 'next/dynamic';
 import { useSetAtom } from 'jotai';
 
@@ -12,17 +12,24 @@ import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 
 type Props = {
-  params: {
+  params: Promise<{
     projectId: string;
     virtualLabId: string;
-  };
+  }>;
 };
 
 const SynaptomeDetailView = dynamic(
   () => import('@/components/explore-section/Synaptome/DetailView')
 );
 
-export default function Synaptome({ params: { virtualLabId, projectId } }: Props) {
+export default function Synaptome(props: Props) {
+  const params = use(props.params);
+
+  const {
+    virtualLabId,
+    projectId
+  } = params;
+
   const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
   const setBackToListPath = useSetAtom(backToListPathAtom);
   const setScope = useSetAtom(selectedSimulationScopeAtom);

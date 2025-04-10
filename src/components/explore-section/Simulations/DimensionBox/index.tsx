@@ -63,7 +63,7 @@ export default function DimensionBox({
         setStatus={setStatus}
       />
       <div
-        className={`h-28 gap-1 rounded border border-primary-1 px-3.5 py-2.5 text-primary-7 ${renderMargin()}`}
+        className={`h-28 gap-1 rounded-sm border border-primary-1 px-3.5 py-2.5 text-primary-7 ${renderMargin()}`}
       >
         {dimension ? (
           <AssignedDimensionBox dimension={dimension} isAxis={isAxis} />

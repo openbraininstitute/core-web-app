@@ -130,10 +130,10 @@ export default function InsertGalleryDialog({ onUpload, onClose }: Props) {
                 className={classNames(
                   'group relative flex h-40 w-48 flex-[20%] items-center gap-2 rounded-md border border-gray-200',
                   uploads.success.includes(image.id)
-                    ? '!rounded-lg border-2 border-teal-600 opacity-100'
+                    ? 'rounded-lg! border-2 border-teal-600 opacity-100'
                     : 'opacity-70',
                   uploads.failed.includes(image.id) &&
-                    '!rounded-lg border-2 border-rose-600 opacity-70'
+                    'rounded-lg! border-2 border-rose-600 opacity-70'
                 )}
               >
                 {image.preview && (
@@ -170,7 +170,7 @@ export default function InsertGalleryDialog({ onUpload, onClose }: Props) {
           accept="image/*"
           rootClassName="w-full"
           showUploadList={false}
-          className="block h-40 !w-48 [&_.ant-upload-drag]:!border-blue-600"
+          className="block h-40 w-48! [&_.ant-upload-drag]:border-blue-600!"
           beforeUpload={beforeUpload}
         >
           <div className="flex flex-col">

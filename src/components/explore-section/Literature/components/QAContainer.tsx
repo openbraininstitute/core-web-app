@@ -29,7 +29,7 @@ function QAContainer() {
         isBuildSection ? 'h-[calc(100vh-40px)]' : 'h-screen'
       )}
     >
-      <div className="mr-5 flex-shrink-0 overflow-hidden overflow-x-hidden">
+      <div className="mr-5 shrink-0 overflow-hidden overflow-x-hidden">
         <QALeftPanel />
       </div>
       <div className="flex h-full w-full flex-1">

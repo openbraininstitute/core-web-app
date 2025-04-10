@@ -3,9 +3,9 @@ import { BrainViewId, Mesh } from '@/types/ontologies';
 
 export type TitleComponentProps = {
   className?: string;
-  content: (...args: any[]) => ReactElement;
+  content: (...args: any[]) => ReactElement<any>;
   colorCode?: string;
-  trigger: (...args: any[]) => ReactElement;
+  trigger: (...args: any[]) => ReactElement<any>;
   distributions?: Mesh[] | null;
   id?: string;
   isExpanded: boolean;
@@ -17,6 +17,6 @@ export type TitleComponentProps = {
     leaves: string[] | null;
   } | null;
   viewId: BrainViewId;
-  children?: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement }>;
+  children?: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
   scope?: string;
 };

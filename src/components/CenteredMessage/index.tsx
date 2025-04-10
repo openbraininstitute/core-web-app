@@ -2,7 +2,7 @@ import { ReactElement } from 'react';
 
 type CenteredMessageProps = {
   message: string;
-  icon?: ReactElement;
+  icon?: ReactElement<any>;
 };
 
 export default function CenteredMessage({ message, icon }: CenteredMessageProps) {

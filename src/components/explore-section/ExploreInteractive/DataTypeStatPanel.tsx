@@ -5,6 +5,8 @@ import DataTypeGroupTotals from './DataTypeGroupTotals';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
+import type { JSX } from "react";
+
 type DataTypeStatsPanelProps = {
   virtualLabInfo?: VirtualLabInfo;
 };

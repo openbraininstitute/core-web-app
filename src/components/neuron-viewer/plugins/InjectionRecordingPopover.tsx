@@ -53,7 +53,7 @@ export default function NeuronMeshInjectionRecordingPopover({
     <div
       ref={ref}
       className={classNames(
-        'fixed rounded bg-white shadow-md',
+        'fixed rounded-sm bg-white shadow-md',
         "z-0 after:absolute after:-top-1 after:left-1/2 after:h-0 after:w-0 after:-translate-x-1/2 after:rotate-45 after:border-4 after:border-white after:content-['']"
       )}
       style={{

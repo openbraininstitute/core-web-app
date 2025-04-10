@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MorphologyCanvas } from '@bbp/morphoviewer';
-import { CloseIcon } from 'next/dist/client/components/react-dev-overlay/internal/icons/CloseIcon';
+import { CloseOutlined } from '@ant-design/icons';
 
 import { ColorsLegend } from './ColorsLegend';
 import { DendriteThickness } from './DendriteThickness';
@@ -27,7 +27,7 @@ export function Settings({ className, painter }: SettingsProps) {
       <div>
         <div>
           <button type="button" onClick={() => setExpand(false)} aria-label="Close settings">
-            <CloseIcon />
+            <CloseOutlined />
           </button>
         </div>
         <ColorsLegend className={styles.legend} painter={painter} />

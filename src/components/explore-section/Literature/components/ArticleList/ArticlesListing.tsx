@@ -16,7 +16,7 @@ import { classNames } from '@/util/utils';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { articleListFiltersAtom } from '@/state/explore-section/literature-filters';
 
-import './styles.scss';
+import './styles.css';
 import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
 
 type ListingState = {
@@ -61,7 +61,7 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
     }
   );
 
-  const previousFetchController = useRef<AbortController>();
+  const previousFetchController = useRef<AbortController>(undefined);
   const observerTarget = useRef<HTMLDivElement | null>(null);
 
   // calculate the numver of skeleton to display based on the skeleton height
@@ -243,7 +243,7 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
               </>
             }
             renderItem={(article, index) => (
-              <List.Item className="border-0! border-transparent! !border-b-0 !px-4">
+              <List.Item className="border-0! border-transparent! border-b-0! px-4!">
                 <ArticleListItem article={article} index={index} />
               </List.Item>
             )}

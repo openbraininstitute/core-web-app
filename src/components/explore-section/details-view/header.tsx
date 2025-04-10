@@ -73,7 +73,7 @@ export default function Header<T extends { name: string }>({
             )}
             <Button
               type="text"
-              className="flex items-center gap-2 text-primary-7 hover:!bg-transparent"
+              className="flex items-center gap-2 text-primary-7 hover:bg-transparent!"
               // disabling download button if currently fetching or if resource does not have a distribution
               disabled={fetching || !hasDistribution}
               onClick={() => {

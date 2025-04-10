@@ -1,3 +1,5 @@
+@reference '../../../../styles/globals.css';
+
 .CameraSwitchRoot {
   @apply rotate-180;
   border: 1px solid;

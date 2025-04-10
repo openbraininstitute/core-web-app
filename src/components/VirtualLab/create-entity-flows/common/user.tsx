@@ -6,7 +6,7 @@ export default function User() {
   const { data } = useSession();
   const userName = data?.user.name ?? data?.user.username;
   return (
-    <div className="sticky top-0 z-30 mb-6 flex w-full flex-grow items-center justify-between gap-3 bg-primary-9 py-2 pr-4">
+    <div className="sticky top-0 z-30 mb-6 flex w-full grow items-center justify-between gap-3 bg-primary-9 py-2 pr-4">
       <div className="flex max-w-max items-center justify-center gap-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-400/20 text-white">
           <svg

@@ -2,7 +2,7 @@ import { CloseCircleFilled } from '@ant-design/icons';
 
 export function ProfileError() {
   return (
-    <div className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold text-red-200">Profile error</h2>

@@ -34,7 +34,7 @@ export default function StatItem({
   return (
     <Link
       href={href}
-      className="flex h-[50px] w-full justify-between rounded-sm bg-[#013a8c] px-3 py-4 text-white hover:text-primary-4"
+      className="flex h-[50px] w-full justify-between rounded-xs bg-[#013a8c] px-3 py-4 text-white hover:text-primary-4"
       onClick={onClick}
       data-testid={testId}
     >
@@ -46,7 +46,7 @@ export default function StatItem({
 
 export function StatItemSkeleton() {
   return (
-    <div className="flex h-[50px] w-full animate-pulse justify-between rounded-sm bg-neutral-7 px-3 py-4 opacity-85" />
+    <div className="flex h-[50px] w-full animate-pulse justify-between rounded-xs bg-neutral-7 px-3 py-4 opacity-85" />
   );
 }
 
@@ -55,7 +55,7 @@ export function StatError({ text }: { text: string }) {
     <div
       className={classNames(
         'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
-        'flex h-[50px] items-center gap-3 rounded-sm bg-neutral-7 p-4 text-white'
+        'flex h-[50px] items-center gap-3 rounded-xs bg-neutral-7 p-4 text-white'
       )}
     >
       <WarningOutlined className="text-xl" />

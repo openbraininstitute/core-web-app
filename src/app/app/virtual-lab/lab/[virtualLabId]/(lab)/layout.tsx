@@ -10,12 +10,18 @@ import SideMenu from '@/components/SideMenu';
 
 type Props = {
   children: ReactNode;
-  params: {
+  params: Promise<{
     virtualLabId: string;
-  };
+  }>;
 };
 
-export default async function VirtualLabLayout({ children, params }: Props) {
+export default async function VirtualLabLayout(props: Props) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   return (
     <div className="flex h-screen overflow-y-auto bg-primary-9 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>

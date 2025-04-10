@@ -32,7 +32,7 @@ export default async function Page() {
     return (
       <div
         data-testid="virtual-labs-error"
-        className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
+        className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
       >
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
@@ -60,7 +60,7 @@ export default async function Page() {
             'relative',
             'mx-auto mb-6 h-32 w-full max-w-7xl rounded-lg p-6',
             'z-0 bg-[rgb(39,111,201)]',
-            'bg-gradient-to-r from-[rgba(39,111,201,1)] to-[rgba(0,34,77,1)]'
+            'bg-linear-to-r from-[rgba(39,111,201,1)] to-[rgba(0,34,77,1)]'
           )}
         >
           <div

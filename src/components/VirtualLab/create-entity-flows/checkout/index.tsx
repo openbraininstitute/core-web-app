@@ -56,7 +56,7 @@ export default function CheckoutFlow({ data }: Props) {
           type: 'tween',
           ease: 'easeInOut',
         }}
-        className="relative flex h-full flex-grow flex-col"
+        className="relative flex h-full grow flex-col"
       >
         <div className={flow.step !== 'select' ? 'hidden' : 'h-full'}>
           <TiersList subscriptionData={data} currentTier={data?.subscription.tier} />

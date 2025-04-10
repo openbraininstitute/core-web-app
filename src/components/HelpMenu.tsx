@@ -18,7 +18,7 @@ type Props = {
 };
 export default function HelpMenu({ children, cls }: Props) {
   return (
-    <Menubar className="border-none !p-0">
+    <Menubar className="border-none p-0!">
       <MenubarMenu>
         <MenubarTrigger
           className={classNames(
@@ -38,7 +38,7 @@ export default function HelpMenu({ children, cls }: Props) {
             asChild
             className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
           >
-            <Link href="/about" className="!text-lg">
+            <Link href="/about" className="text-lg!">
               About OBI
             </Link>
           </MenubarItem>
@@ -46,7 +46,7 @@ export default function HelpMenu({ children, cls }: Props) {
             asChild
             className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
           >
-            <a href="mailto:support@openbraininstitute.org" className="!text-lg">
+            <a href="mailto:support@openbraininstitute.org" className="text-lg!">
               Contact support
             </a>
           </MenubarItem>
@@ -54,7 +54,7 @@ export default function HelpMenu({ children, cls }: Props) {
             asChild
             className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
           >
-            <Link href="/terms" className="!text-lg">
+            <Link href="/terms" className="text-lg!">
               Terms and conditions
             </Link>
           </MenubarItem>

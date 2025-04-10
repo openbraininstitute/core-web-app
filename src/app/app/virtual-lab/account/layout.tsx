@@ -15,9 +15,9 @@ export default function layout({ children }: Props) {
       <div className="no-scrollbar h-full gap-12 overflow-y-auto overflow-x-hidden">
         <SideBar />
         <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-          <div className="ml-80 flex h-full w-[calc(100%-20rem)] flex-grow flex-col">
+          <div className="ml-80 flex h-full w-[calc(100%-20rem)] grow flex-col">
             <User />
-            <div className="h-full w-full flex-grow">{children}</div>
+            <div className="h-full w-full grow">{children}</div>
           </div>
         </ErrorBoundary>
       </div>

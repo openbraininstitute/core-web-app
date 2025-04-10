@@ -44,7 +44,7 @@ export function CheckListOption({
         <span className="flex items-center justify-between gap-2">
           {!!value && <span className="text-primary-5">{`${value} datasets`}</span>}
           <Checkbox.Root
-            className="h-[14px] w-[14px] rounded border border-white bg-transparent"
+            className="h-[14px] w-[14px] rounded-sm border border-white bg-transparent"
             checked={!!checked}
             onCheckedChange={onCheckedChange}
           >

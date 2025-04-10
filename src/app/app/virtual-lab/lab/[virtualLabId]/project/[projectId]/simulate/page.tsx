@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
-import { HTMLProps, useRef, useState } from 'react';
+import { HTMLProps, useRef, useState, use } from 'react';
 
 import {
   SimulationScopeToDataType,
@@ -35,7 +35,7 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.scss';
+import Styles from '@/styles/vlabs.module.css';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -48,11 +48,10 @@ const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   },
 };
 
-export default function VirtualLabProjectSimulatePage({
-  params,
-}: {
-  params: { virtualLabId: string; projectId: string };
+export default function VirtualLabProjectSimulatePage(props: {
+  params: Promise<{ virtualLabId: string; projectId: string }>;
 }) {
+  const params = use(props.params);
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + params.projectId));
 
   const renderContent = () => {
@@ -128,7 +127,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
               <div className="fixed bottom-12 right-[60px] flex h-12 items-center justify-end gap-2">
                 <Btn
                   type="button"
-                  className="h-12 bg-primary-9 text-white hover:!bg-primary-7"
+                  className="h-12 bg-primary-9 text-white hover:bg-primary-7!"
                   onClick={() => router.push(generateDetailUrl(selectedRows[0]))}
                 >
                   View
@@ -219,13 +218,13 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
           <div className="fixed bottom-8 right-[50px] flex items-center justify-end gap-2">
             <Btn
               type="button"
-              className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
+              className="h-12  bg-primary-9 text-white hover:bg-primary-7!"
               onClick={() => navigateToDetailPage(selectedRows[0])}
             >
               View
             </Btn>
             <Btn
-              className="h-12  bg-primary-9 text-white hover:!bg-primary-7"
+              className="h-12  bg-primary-9 text-white hover:bg-primary-7!"
               onClick={() => onModelSelected(selectedRows[0])}
             >
               New Simulation

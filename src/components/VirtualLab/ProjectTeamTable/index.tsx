@@ -168,7 +168,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
   if (user.id === ownerId) {
     return (
       <div className="flex w-full flex-col items-center justify-end pr-3 text-right">
-        <div className="!w-max self-end font-bold text-white hover:!text-primary-2">
+        <div className="w-max! self-end font-bold text-white hover:text-primary-2!">
           {get(find(roleOptions, { value: user.role }), 'label')}
         </div>
       </div>
@@ -182,16 +182,16 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
             data-testid="role-select"
             className={classNames(
               'w-full bg-transparent shadow-none ring-0 focus:border-2 focus:border-primary-8',
-              '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
-              '[&_.ant-select-selector]:!border [&_.ant-select-selector]:!border-primary-7',
-              '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
-              '[&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
+              '[&_.ant-select-selector]:rounded-none! [&_.ant-select-selector]:bg-transparent!',
+              '[&_.ant-select-selector]:border! [&_.ant-select-selector]:border-primary-7!',
+              '[&_.ant-select-selection-item]:font-bold! [&_.ant-select-selection-item]:text-white!',
+              '[&_.ant-select-arrow]:text-white! [&_.ant-select-selection-item]:text-left!'
             )}
             onChange={onChange}
             value={role}
             size="large"
             options={roleOptions}
-            popupClassName="!rounded-none"
+            popupClassName="rounded-none!"
             disabled={loading}
             loading={loading}
           />
@@ -204,17 +204,17 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
             cancelText="No"
             disabled={removeLoading}
             overlayClassName={classNames(
-              '[&_.ant-popover-inner]:!bg-primary-9 [&_.ant-popover-inner]:!text-white ',
-              '[&_.ant-popover-inner]:!rounded-none [&_.ant-popconfirm-description]:!text-white',
-              '[&_.ant-popconfirm-title]:!text-white',
-              '[&_.ant-popconfirm-buttons>button]:!rounded-none [&_.ant-popconfirm-buttons>button]:!px-5',
-              '[&_.ant-popover-arrow]:after:!bg-primary-9'
+              '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
+              '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
+              '[&_.ant-popconfirm-title]:text-white!',
+              '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
+              '[&_.ant-popover-arrow]:after:bg-primary-9!'
             )}
           >
             <Button
               type="default"
               size="large"
-              className="w-full self-end rounded-none border border-t-0 border-primary-7 bg-transparent px-[11px] text-white hover:!border-t"
+              className="w-full self-end rounded-none border border-t-0 border-primary-7 bg-transparent px-[11px] text-white hover:border-t!"
               disabled={removeLoading}
               loading={removeLoading}
             >
@@ -232,7 +232,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
         type="text"
         htmlType="button"
         size="middle"
-        className="!w-max self-end text-white hover:!text-primary-2"
+        className="w-max! self-end text-white hover:text-primary-2!"
         disabled={loading}
         loading={loading}
         onClick={onCancelInvite}
@@ -323,13 +323,13 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
   const { forbiddenOperation } = useActiveSubscription();
   return (
     <div className="flex h-full flex-col pb-8">
-      <div className="flex h-8 flex-shrink-0 items-center px-3">
+      <div className="flex h-8 shrink-0 items-center px-3">
         <div className="flex gap-2">
           <span className="text-lg text-primary-3">Total members</span>
           {total && <span className="text-lg font-bold">{total}</span>}
         </div>
       </div>
-      <div className="h-[calc(100vh-180px)] flex-grow overflow-hidden py-5">
+      <div className="h-[calc(100vh-180px)] grow overflow-hidden py-5">
         <ConfigProvider
           theme={{
             components: {
@@ -362,15 +362,15 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
           />
         </ConfigProvider>
       </div>
-      <div className="mt-auto flex flex-shrink-0 items-center justify-end">
+      <div className="mt-auto flex shrink-0 items-center justify-end">
         <Button
           key="add-member"
           data-testid="add-member-btn"
           className={classNames(
             'h-14 rounded-none border border-white bg-white px-14 text-primary-9',
-            'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-            'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-            'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
+            'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+            'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
+            'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
           )}
           type="default"
           size="large"

@@ -235,11 +235,11 @@ export default function SynapticInputItem({
               optionRender={OptionRender}
               options={options}
               className={classNames(
-                'text-left [&_.ant-select-dropdown]:relative [&_.ant-select-dropdown]:shadow-none [&_.ant-select-dropdown]:!outline-0',
-                '[&_.ant-select-dropdown]:!bottom-auto [&_.ant-select-dropdown]:!left-0 [&_.ant-select-dropdown]:!right-auto [&_.ant-select-dropdown]:!top-[4px]',
-                '[&_.ant-select-item]:border-b [&_.ant-select-item]:border-neutral-4 [&_.ant-select-item]:p-1 [&_.ant-select-item]:last:border-none',
+                'text-left [&_.ant-select-dropdown]:relative [&_.ant-select-dropdown]:shadow-none [&_.ant-select-dropdown]:outline-0!',
+                '[&_.ant-select-dropdown]:bottom-auto! [&_.ant-select-dropdown]:left-0! [&_.ant-select-dropdown]:right-auto! [&_.ant-select-dropdown]:top-[4px]!',
+                '[&_.ant-select-item]:border-b [&_.ant-select-item]:border-neutral-4 [&_.ant-select-item]:p-1 last:[&_.ant-select-item]:border-none',
                 synapticInputOpened &&
-                  '[&_.ant-select-selector]:!border-none [&_.ant-select-selector]:!shadow-none'
+                  '[&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
               )}
               onDropdownVisibleChange={setSynapticInputOpened}
             />
@@ -354,7 +354,7 @@ function FrequencyFormItem({
           <span
             className={classNames(
               'mr-2 text-sm font-light text-primary-9',
-              disableFrequencyStepper && '!text-gray-400'
+              disableFrequencyStepper && 'text-gray-400!'
             )}
           >
             Has steps
@@ -374,7 +374,7 @@ function FrequencyFormItem({
             rules={[{ required: true, message: 'Required field' }]}
           >
             <InputNumber
-              className="!rounded-sm border !border-neutral-4 font-bold [&_.ant-input-number-input]:!text-base [&_.ant-input-number-input]:!text-primary-8"
+              className="rounded-xs! border border-neutral-4! font-bold [&_.ant-input-number-input]:text-base! [&_.ant-input-number-input]:text-primary-8!"
               min={0}
               onChange={(newValue) =>
                 onChange({
@@ -402,7 +402,7 @@ function FrequencyFormItem({
                   min={0}
                   step={1}
                   size="small"
-                  className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:!pr-8 [&_.ant-input-number-input]:!text-right [&_.ant-input-number-input]:!font-bold [&_.ant-input-number-input]:!text-primary-8"
+                  className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
                 />
                 <span className="text-gray-400">[Hz]</span>
               </div>
@@ -421,7 +421,7 @@ function FrequencyFormItem({
                   min={1}
                   step={1}
                   size="small"
-                  className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:!pr-8 [&_.ant-input-number-input]:!text-right [&_.ant-input-number-input]:!font-bold [&_.ant-input-number-input]:!text-primary-8"
+                  className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
                 />
                 <span className="text-gray-400">[Hz]</span>
               </div>
@@ -441,7 +441,7 @@ function FrequencyFormItem({
                   onFrequencyStepChange(stepFrequencyState.start, stepFrequencyState.stop, v)
                 }
                 size="small"
-                className="mx-2 h-8 min-w-10 [&_.ant-input-number-handler-wrap]:!opacity-100 [&_.ant-input-number-input]:!pr-8 [&_.ant-input-number-input]:!text-right [&_.ant-input-number-input]:!font-bold [&_.ant-input-number-input]:!text-primary-8"
+                className="mx-2 h-8 min-w-10 [&_.ant-input-number-handler-wrap]:opacity-100! [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
               />
             </div>
           </div>

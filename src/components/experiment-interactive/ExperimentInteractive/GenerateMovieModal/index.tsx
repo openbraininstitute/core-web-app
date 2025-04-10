@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { CloseIcon } from 'next/dist/client/components/react-dev-overlay/internal/icons/CloseIcon';
+import { CloseOutlined } from '@ant-design/icons';
 
 import SelectSimulationsBox from './SelectSimulationsBox';
 import SimulationRangeInputs from './SimulationRangeInputs';
@@ -31,7 +31,7 @@ export default function GenerateMovieModal() {
 
         <Dialog.Close asChild>
           <button type="button" className="absolute right-3 top-3 text-white/50" aria-label="Close">
-            <CloseIcon />
+            <CloseOutlined />
           </button>
         </Dialog.Close>
       </Dialog.Content>

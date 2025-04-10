@@ -35,7 +35,7 @@ export default function ArticleSorter({ onChange }: SorterProps) {
   };
 
   return (
-    <div className="ml-[10px] flex items-center justify-between rounded border border-solid border-gray-200 pl-4">
+    <div className="ml-[10px] flex items-center justify-between rounded-sm border border-solid border-gray-200 pl-4">
       <span className="font-normal text-primary-8">Sort by:</span>
       <Select
         defaultValue={DefaultSortField}
@@ -44,7 +44,7 @@ export default function ArticleSorter({ onChange }: SorterProps) {
           'min-w-[130px]',
           '[&>.ant-select-selector]:px-2 [&>.ant-select-selector]:font-bold [&>.ant-select-selector]:text-primary-8'
         )}
-        popupClassName="!text-primary-8"
+        popupClassName="text-primary-8!"
         popupMatchSelectWidth={false}
         variant="borderless"
         suffixIcon={null}

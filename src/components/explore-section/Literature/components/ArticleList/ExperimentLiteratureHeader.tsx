@@ -53,7 +53,7 @@ function ExperimentLiteratureHeader({
 
   return (
     <If id="breadcrumb" condition={Boolean(brainRegionTitle)}>
-      <div className="sticky top-0 z-[2] m-auto flex w-full max-w-7xl items-center justify-between bg-white px-8 pb-6">
+      <div className="sticky top-0 z-2 m-auto flex w-full max-w-7xl items-center justify-between bg-white px-8 pb-6">
         <div className="flex w-full items-center gap-1">
           <span className="mr-4 min-w-fit text-base text-neutral-3">Search criteria: </span>
           <div className="flex items-center justify-center gap-1">

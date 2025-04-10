@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, use } from 'react';
 import { Button, Form, Input, Select } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
@@ -13,13 +13,20 @@ import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { selectedEModelIdAtom, selectedMModelIdAtom } from '@/state/virtual-lab/build/me-model';
 
 type Params = {
-  params: {
+  params: Promise<{
     virtualLabId: string;
     projectId: string;
-  };
+  }>;
 };
 
-export default function NewMEModelPage({ params: { projectId, virtualLabId } }: Params) {
+export default function NewMEModelPage(props: Params) {
+  const params = use(props.params);
+
+  const {
+    projectId,
+    virtualLabId
+  } = params;
+
   const setMEModelDetails = useSetAtom(meModelDetailsAtom);
   const setSelectedMModel = useSetAtom(selectedMModelIdAtom);
   const setSelectedEModel = useSetAtom(selectedEModelIdAtom);

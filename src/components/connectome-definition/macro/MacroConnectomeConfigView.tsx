@@ -34,7 +34,7 @@ import {
 import brainAreaAtom from '@/state/connectome-editor/sidebar';
 import { useDebouncedCallback, useLoadable } from '@/hooks/hooks';
 import { getFlatArrayValueIdx } from '@/util/connectome';
-import styles from '../connectome-definition-view.module.scss';
+import styles from '../connectome-definition-view.module.css';
 
 interface Rect extends Partial<Shape> {
   x0: number;

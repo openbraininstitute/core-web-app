@@ -20,12 +20,12 @@ function XInput({ placeholder, className, ...props }: InputProps, ref: Forwarded
       ref={ref}
       placeholder={placeholder}
       className={classNames(
-        'rounded-none border-0 border-b !border-primary-4 !bg-transparent px-1 font-bold tracking-wide text-white focus:ring-0',
-        'hover:!bg-transparent hover:!text-white focus:!bg-transparent focus:!text-white [&_.ant-input-outlined]:!bg-transparent',
+        'rounded-none border-0 border-b border-primary-4! bg-transparent! px-1 font-bold tracking-wide text-white focus:ring-0',
+        'hover:bg-transparent! hover:text-white! focus:bg-transparent! focus:text-white! [&_.ant-input-outlined]:bg-transparent!',
         'focus:border-pr placeholder:text-white hover:border-white focus:border-b-2',
-        'focus-within:!border-b-2 focus-within:!border-primary-4 focus-within:!ring-0',
-        '[&.ant-XInput-status-error]:!border-0 [&.ant-XInput-status-error]:!border-b-2 [&.ant-XInput-status-error]:!border-red-300',
-        '[&.ant-XInput-status-error]:focus:!ring-0 ',
+        'focus-within:border-b-2! focus-within:border-primary-4! focus-within:ring-0!',
+        '[&.ant-XInput-status-error]:border-0! [&.ant-XInput-status-error]:border-b-2! [&.ant-XInput-status-error]:border-red-300!',
+        '[&.ant-XInput-status-error]:focus:ring-0! ',
         className
       )}
       // eslint-disable-next-line react/jsx-props-no-spreading
@@ -150,12 +150,12 @@ function Profile({ data }: Props) {
                 id="country"
                 placeholder="Select a country"
                 className={classNames(
-                  'min-w-36 border-0 border-b !border-primary-4 ring-0 focus:!border-b-2 [&.ant-select-focused]:border-b-2',
-                  'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:!ring-0',
-                  '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:focus:!ring-0',
-                  '!bg-transparent hover:border-primary-4 hover:!bg-transparent [&_.ant-select-selection-item]:!text-white',
-                  '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-search-input]:!text-white',
-                  '[&_.ant-select-selection-placeholder]:!text-white'
+                  'min-w-36 border-0 border-b border-primary-4! ring-0 focus:border-b-2! [&.ant-select-focused]:border-b-2',
+                  'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:ring-0!',
+                  '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! focus:[&_.ant-select-selector]:ring-0!',
+                  'bg-transparent! hover:border-primary-4 hover:bg-transparent! [&_.ant-select-selection-item]:text-white!',
+                  '[&_.ant-select-selection-item]:font-bold! [&_.ant-select-selection-search-input]:text-white!',
+                  '[&_.ant-select-selection-placeholder]:text-white!'
                 )}
                 popupClassName="rounded-none shadow-md"
                 onSearch={(va) => {
@@ -176,7 +176,7 @@ function Profile({ data }: Props) {
               className="space-y-1 md:col-span-2"
               label={<Label title="Email" />}
             >
-              <XInput id="email" name="email" type="email" className="disabled:!text-white" />
+              <XInput id="email" name="email" type="email" className="disabled:text-white!" />
             </Form.Item>
             <div className="space-y-1 md:col-span-2">
               <Label title="Authentication service" />
@@ -200,9 +200,9 @@ function Profile({ data }: Props) {
               key="create-project-btn"
               className={classNames(
                 'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
-                'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-                'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-                'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
+                'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+                'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
+                'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
               )}
               type="default"
               size="large"

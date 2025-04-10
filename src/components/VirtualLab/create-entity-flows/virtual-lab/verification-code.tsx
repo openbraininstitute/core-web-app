@@ -103,7 +103,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
             className={classNames(
               'h-10 rounded-none border bg-white px-6 text-base font-bold',
               'border-primary-8 text-primary-8 ',
-              'hover:!border-primary-6 hover:!bg-white hover:!text-primary-6',
+              'hover:border-primary-6! hover:bg-white! hover:text-primary-6!',
               'disabled:border-gray-200 disabled:text-gray-400',
               fields?.email_status === 'verified' && 'hidden'
             )}

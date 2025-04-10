@@ -31,7 +31,7 @@ export default function Overview() {
   return (
     <div
       data-testid="project-overview"
-      className="mx-auto h-full w-full max-w-5xl flex-grow bg-white p-12"
+      className="mx-auto h-full w-full max-w-5xl grow bg-white p-12"
     >
       <Form.Item
         validateDebounce={800}
@@ -90,7 +90,7 @@ export default function Overview() {
         <TextArea
           rows={4}
           placeholder="Enter your description here"
-          className="rounded-none !border border-primary-8"
+          className="rounded-none border! border-primary-8"
         />
       </Form.Item>
     </div>

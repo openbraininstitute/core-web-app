@@ -3,7 +3,7 @@ import { Gabarito, Titillium_Web, DM_Serif_Text } from 'next/font/google';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
 
-import '@/styles/globals.scss';
+import '@/styles/globals.css';
 
 const titilliumWeb = Titillium_Web({
   weight: ['300', '400', '600', '700'],

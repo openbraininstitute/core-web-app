@@ -12,10 +12,7 @@ import { fetchResourceByIdRaw } from '@/api/nexus';
 import { composeUrl } from '@/util/nexus';
 import styles from './styles.module.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type Props = {
   distribution: Distribution;
@@ -147,8 +144,8 @@ function ImageViewer({
       {loading ? (
         <Skeleton.Image
           active={loading}
-          className="!h-full !w-full rounded-none"
-          rootClassName="!h-full !w-full"
+          className="h-full! w-full! rounded-none"
+          rootClassName="h-full! w-full!"
         />
       ) : (
         <Empty description="No thumbnail available" image={Empty.PRESENTED_IMAGE_SIMPLE} />

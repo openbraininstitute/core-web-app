@@ -25,7 +25,7 @@ export default function FrameMarker({ onClick, description }: FrameMarkerProps) 
         <Tooltip.Trigger
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          className="-translate-x-1/2 -translate-y-2.5 border-none bg-transparent p-3 focus-visible:outline-none"
+          className="-translate-x-1/2 -translate-y-2.5 border-none bg-transparent p-3 focus-visible:outline-hidden"
           onClick={onClick}
         >
           <svg
@@ -43,7 +43,7 @@ export default function FrameMarker({ onClick, description }: FrameMarkerProps) 
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="max-w-[150px] break-all bg-white p-2 text-xs text-black focus-visible:outline-none"
+            className="max-w-[150px] break-all bg-white p-2 text-xs text-black focus-visible:outline-hidden"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             side="top"

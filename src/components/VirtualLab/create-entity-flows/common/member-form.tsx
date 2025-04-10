@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
 import { Button, Form, Select } from 'antd';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type JSX } from 'react';
 import filter from 'lodash/filter';
 
 import { classNames } from '@/util/utils';
@@ -33,7 +33,7 @@ export default function Content({ ListCompo, cls }: Props) {
   return (
     <div
       className={classNames(
-        'mx-auto flex h-full w-full max-w-5xl flex-grow flex-col bg-white',
+        'mx-auto flex h-full w-full max-w-5xl grow flex-col bg-white',
         cls?.container
       )}
     >
@@ -105,7 +105,7 @@ export default function Content({ ListCompo, cls }: Props) {
                       className={classNames(
                         'min-w-36 border border-gray-300',
                         'w-40 shadow-none ring-0 focus:border-2 focus:border-primary-8',
-                        '[&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:!border-0'
+                        '[&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:border-0!'
                       )}
                       options={[
                         { value: 'member', label: 'Member' },
@@ -129,7 +129,7 @@ export default function Content({ ListCompo, cls }: Props) {
             </div>
             <Form.Item>
               <Button
-                className="h-14 rounded-none border-gray-400 bg-white px-10 text-gray-500 hover:bg-primary-8 hover:!text-white"
+                className="h-14 rounded-none border-gray-400 bg-white px-10 text-gray-500 hover:bg-primary-8 hover:text-white!"
                 type="default"
                 size="large"
                 onClick={add}

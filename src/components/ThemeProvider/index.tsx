@@ -7,5 +7,5 @@ interface ThemeProviderProps {
 
 export default function ThemeProvider({ children }: ThemeProviderProps) {
   useTheme();
-  return children as ReactElement;
+  return children as ReactElement<any>;
 }

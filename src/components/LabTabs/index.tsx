@@ -17,7 +17,7 @@ export default function BrainFactoryTabs({ children }: BrainFactoryTabsProps) {
               Build & Simulate
             </Popover.Trigger>
             <Popover.Portal>
-              <Popover.Content className="z-[100] flex flex-col text-white">
+              <Popover.Content className="z-100 flex flex-col text-white">
                 {children}
                 <Popover.Arrow className="fill-white" />
               </Popover.Content>

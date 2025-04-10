@@ -32,8 +32,8 @@ export default function DraggableTableRow({ children, ...props }: RowProps) {
   return (
     <tr {...props} key={id} ref={setNodeRef} style={style} {...attributes}>
       {ReactChildren.map(children, (child) => {
-        if ((child as React.ReactElement).key === 'sort') {
-          return ReactCloneElement(child as React.ReactElement, {
+        if ((child as React.ReactElement<any>).key === 'sort') {
+          return ReactCloneElement(child as React.ReactElement<any>, {
             children: (
               <MenuOutlined
                 ref={setActivatorNodeRef}

@@ -30,9 +30,9 @@ export default function GenericButton({
   const conditionalStyles = [
     className.includes('border-') ? 'border' : 'border-transparent',
     className.includes('bg-') ? '' : 'bg-transparent',
-    disabled ? '!text-black !bg-slate-100 opacity-60' : '',
-    className.includes('hover:') ? '' : 'hover:!text-black hover:!border-black',
-    href ? 'hover:!text-white hover:!border-white leading-9' : '',
+    disabled ? 'text-black! bg-slate-100! opacity-60' : '',
+    className.includes('hover:') ? '' : 'hover:text-black! hover:border-black!',
+    href ? 'hover:text-white! hover:border-white! leading-9' : '',
   ].join(' ');
 
   const getUrl = () => (href.startsWith('/') ? `${basePath}${href}` : `./${href}`);

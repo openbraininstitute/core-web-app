@@ -1,7 +1,7 @@
 'use client';
 
 function Placeholder({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded bg-gray-200 ${className}`} />;
+  return <div className={`animate-pulse rounded-sm bg-gray-200 ${className}`} />;
 }
 
 export default function TiersComparisonSkeleton() {

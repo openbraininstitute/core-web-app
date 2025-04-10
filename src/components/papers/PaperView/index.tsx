@@ -121,7 +121,7 @@ export default function PaperView({
           />
         </div>
         <ErrorBoundary fallback={EditorFallbackErrorComponent}>
-          <div className="w-full flex-grow bg-white px-8 py-4">
+          <div className="w-full grow bg-white px-8 py-4">
             <Editor {...{ config, paper }} />
           </div>
         </ErrorBoundary>

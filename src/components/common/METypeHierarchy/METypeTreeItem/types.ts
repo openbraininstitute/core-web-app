@@ -16,20 +16,20 @@ export type METypeTreeItemsProps = {
   isExpanded?: boolean;
   isEditable: boolean;
 
-  content: (...args: any[]) => ReactElement;
-  trigger: (...args: any[]) => ReactElement;
-  children?: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement }>;
+  content: (...args: any[]) => ReactElement<any>;
+  trigger: (...args: any[]) => ReactElement<any>;
+  children?: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
   onSliderChange?: (value: number) => void;
 };
 
 export type METypeItem = {
   about: string;
   composition: number;
-  content: (...args: any[]) => ReactElement;
+  content: (...args: any[]) => ReactElement<any>;
   id: string;
   title?: string;
   isExpanded: boolean;
   parentId: string;
-  trigger: (...args: any[]) => ReactElement;
+  trigger: (...args: any[]) => ReactElement<any>;
   path?: string[];
 };

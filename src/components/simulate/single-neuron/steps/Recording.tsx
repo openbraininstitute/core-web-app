@@ -44,7 +44,7 @@ function RecordItem({
               placeholder="Section name"
               onChange={(v) => onAddSource(index, { section: v })}
               options={sections.map((sec) => ({ label: sec, value: sec }))}
-              className="w-full [&_.ant-select-selection-item]:!text-left [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-item]:!text-primary-8"
+              className="w-full [&_.ant-select-selection-item]:text-left! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-item]:text-primary-8!"
               placement="bottomLeft"
               disabled={disable}
               size="large"
@@ -77,7 +77,7 @@ function RecordItem({
               min={0}
               max={1}
               step={0.01}
-              className="w-full [&_.ant-input-number-input]:font-bold [&_.ant-input-number-input]:!text-primary-8"
+              className="w-full [&_.ant-input-number-input]:font-bold [&_.ant-input-number-input]:text-primary-8!"
               onChange={(v) => {
                 if (!isNil(v)) {
                   onAddSource(index, { offset: v });

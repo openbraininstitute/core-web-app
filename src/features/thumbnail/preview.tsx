@@ -68,8 +68,8 @@ export default function PreviewThumbnail({
       <Skeleton.Image
         active
         key={`thumbnail-loader-${resource.id}`}
-        className="!h-full !w-full rounded-none"
-        rootClassName="!h-full !w-full"
+        className="h-full! w-full! rounded-none"
+        rootClassName="h-full! w-full!"
       />
     ))
     .with({ loading: false, thumbnail: P.string.minLength(1).select() }, (thumbnail) => (
@@ -87,7 +87,7 @@ export default function PreviewThumbnail({
         key={`thumbnail-error-${resource.id}`}
         description="Error loading thumbnail"
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        className="!h-full !w-full"
+        className="h-full! w-full!"
       />
     ))
     .otherwise(() => (
@@ -95,7 +95,7 @@ export default function PreviewThumbnail({
         key={`thumbnail-empty-${resource.id}`}
         description="No thumbnail available"
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        className="!h-full !w-full"
+        className="h-full! w-full!"
       />
     ));
 

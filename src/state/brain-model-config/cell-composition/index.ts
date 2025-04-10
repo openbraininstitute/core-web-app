@@ -1,7 +1,7 @@
 'use client';
 
 import { atom } from 'jotai';
-import { selectAtom } from 'jotai/utils';
+import { selectAtom, unwrap } from 'jotai/utils';
 
 import { cellCompositionConfigIdAtom } from '@/state/brain-model-config';
 import sessionAtom from '@/state/session';
@@ -27,7 +27,7 @@ export const configAtom = atom<Promise<CellCompositionConfigResource | null>>(as
   return fetchResourceById<CellCompositionConfigResource>(id, session);
 });
 
-const configPayloadUrlAtom = selectAtom(configAtom, (config) => config?.distribution.contentUrl);
+const configPayloadUrlAtom = selectAtom(unwrap(configAtom), (config) => config?.distribution.contentUrl);
 
 const remoteConfigPayloadAtom = atom<Promise<CellCompositionConfigPayload | null>>(async (get) => {
   const session = get(sessionAtom);
@@ -77,28 +77,28 @@ export const createGetVariantAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId].variantDefinition;
 
-  return selectAtom(configPayloadAtom, selectorFn);
+  return selectAtom(unwrap(configPayloadAtom), selectorFn);
 };
 
 export const createGetInputsAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId].inputs;
 
-  return selectAtom(configPayloadAtom, selectorFn);
+  return selectAtom(unwrap(configPayloadAtom), selectorFn);
 };
 
 export const createGetConfigurationAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId]?.configuration;
 
-  return selectAtom(configPayloadAtom, selectorFn);
+  return selectAtom(unwrap(configPayloadAtom), selectorFn);
 };
 
 export const createGetJobConfigAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId].jobConfiguration;
 
-  return selectAtom(configPayloadAtom, selectorFn);
+  return selectAtom(unwrap(configPayloadAtom), selectorFn);
 };
 
 const generatorTaskActivityAtom = atom<Promise<GeneratorTaskActivityResource | null>>(

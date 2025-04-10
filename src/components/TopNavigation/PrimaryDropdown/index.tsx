@@ -64,7 +64,7 @@ export default function PrimaryDropdown({
           <button
             type="button"
             onClick={(e) => e.preventDefault()}
-            className={`flex h-full w-full flex-row items-center justify-between gap-2 border-transparent px-5 font-bold outline-none ${
+            className={`flex h-full w-full flex-row items-center justify-between gap-2 border-transparent px-5 font-bold outline-hidden ${
               isLightThemeActive ? `bg-primary-9 text-white` : `bg-white text-black`
             }`}
           >

@@ -59,7 +59,7 @@ export default function ListItem({
         }`}
       >
         <div className="min-w-[130px] text-left font-bold">{label}</div>
-        <div className="flex-grow text-xs font-light">
+        <div className="grow text-xs font-light">
           {onlyPlaceholder && <div className="text-end">Placeholder</div>}
           {!onlyPlaceholder && (
             <DefaultLoadingSuspense>

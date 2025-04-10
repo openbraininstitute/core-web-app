@@ -177,8 +177,8 @@ export default function NewsletterForm({ cls }: Props) {
                 htmlType="submit"
                 className={classNames(
                   'w-auto rounded-full bg-white px-8 py-3 text-lg font-semibold text-primary-8',
-                  'mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:bg-primary-8 hover:!text-white',
-                  'disabled:text-primary-8 disabled:hover:bg-gray-100 disabled:hover:!text-primary-4',
+                  'mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:bg-primary-8 hover:text-white!',
+                  'disabled:text-primary-8 disabled:hover:bg-gray-100 disabled:hover:text-primary-4!',
                   cls?.btn
                 )}
                 disabled={disableForm}

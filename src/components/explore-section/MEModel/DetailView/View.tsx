@@ -104,7 +104,7 @@ export default function MEModelDetailView({ params, showViewMode = false }: Prop
             {/* Hiding button SfN */}
             {/* <GenericButton
               text="New model"
-              className="fixed bottom-10 right-10 w-[200px] bg-primary-9 font-bold text-white hover:!bg-primary-7"
+              className="fixed bottom-10 right-10 w-[200px] bg-primary-9 font-bold text-white hover:bg-primary-7!"
               href={`${vlProjectUrl}/build/me-model/new`}
             /> */}
           </>

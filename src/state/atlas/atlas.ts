@@ -1,5 +1,5 @@
 import { atom, useAtom, useAtomValue } from 'jotai';
-import { atomWithReset, selectAtom } from 'jotai/utils';
+import { atomWithReset, selectAtom, unwrap } from 'jotai/utils';
 import { SetStateAction, useMemo } from 'react';
 import sessionAtom from '@/state/session';
 import { meshDistributionsAtom } from '@/state/brain-regions';
@@ -97,7 +97,7 @@ export const resetAtlasVisualizationAtom = atom(null, (get, set) =>
 let atlasVisualizationManager: null | AtlasVisualizationManager = null;
 
 const visibleMeshesAtom = selectAtom(
-  atlasVisualizationAtom,
+  unwrap(atlasVisualizationAtom),
   (atlas) => atlas.visibleMeshes,
   (a: MeshType[], b: MeshType[]) =>
     a.map((item) => item.contentURL).join('\n') === b.map((item) => item.contentURL).join('\n')
@@ -108,7 +108,7 @@ export function useVisibleMeshes(): MeshType[] {
 }
 
 const visibleCellsAtom = selectAtom(
-  atlasVisualizationAtom,
+  unwrap(atlasVisualizationAtom),
   (atlas) => atlas.visibleCells,
   (a: CellType[], b: CellType[]) =>
     a.map((item) => item.regionID).join('\n') === b.map((item) => item.regionID).join('\n')

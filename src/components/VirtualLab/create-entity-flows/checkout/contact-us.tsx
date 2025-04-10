@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 export default function ContactUs({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} footer={null} cls={{ content: '!min-h-[4rem]' }}>
+    <Modal isOpen={isOpen} onClose={onClose} footer={null} cls={{ content: 'min-h-[4rem]!' }}>
       <div data-testid="contact-us-form" className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-primary-8">
           Upgrade to Premium – Tell Us Your Needs!
@@ -18,7 +18,7 @@ export default function ContactUs({ isOpen, onClose }: { isOpen: boolean; onClos
             key="cancel-btn"
             className={classNames(
               'h-14 rounded-none border-0 px-6 text-primary-8',
-              'hover:!border hover:!border-primary-8 hover:!bg-white hover:!text-primary-8'
+              'hover:border! hover:border-primary-8! hover:bg-white! hover:text-primary-8!'
             )}
             size="large"
             htmlType="button"
@@ -30,7 +30,7 @@ export default function ContactUs({ isOpen, onClose }: { isOpen: boolean; onClos
             key="confirm-btn"
             className={classNames(
               'flex h-14 max-w-max items-center justify-center rounded-none px-6 text-center align-middle text-primary-8',
-              '!border !border-primary-8 hover:!bg-primary-8 hover:font-bold hover:!text-white'
+              'border! border-primary-8! hover:bg-primary-8! hover:font-bold hover:text-white!'
             )}
             size="large"
             href="mailto:support@openbraininstitute.org?subject=Premium Subscription Inquiry"
@@ -40,7 +40,7 @@ export default function ContactUs({ isOpen, onClose }: { isOpen: boolean; onClos
           </Button>
         </div>
         {/* <div className="mt-3">
-          <TextArea rows={10} className="!border" />
+          <TextArea rows={10} className="border!" />
         </div> */}
       </div>
     </Modal>

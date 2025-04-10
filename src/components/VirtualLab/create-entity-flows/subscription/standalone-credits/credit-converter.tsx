@@ -40,7 +40,7 @@ export function CreditConverter({
 
   return (
     <div data-testid="credit-converter" className="mx-auto flex w-full flex-col items-center">
-      <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-xs">
         <div className="mb-4 w-full bg-white">
           <div className="flex w-full items-center justify-center">
             <span className="text-base font-semibold text-primary-8">Credits</span>
@@ -49,7 +49,7 @@ export function CreditConverter({
                 type="text"
                 value={formatInputValue(credits)}
                 onChange={handleCreditsChange}
-                className="w-full min-w-24 max-w-32 rounded border border-gray-200 px-4 py-2 text-center text-xl font-bold text-primary-8"
+                className="w-full min-w-24 max-w-32 rounded-sm border border-gray-200 px-4 py-2 text-center text-xl font-bold text-primary-8"
                 aria-label="Credit amount"
               />
             </div>
@@ -62,7 +62,7 @@ export function CreditConverter({
               key="back-to-btn"
               className={classNames(
                 'rounded-md bg-white px-6 text-primary-8',
-                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
               )}
               type="text"
               size="large"
@@ -75,7 +75,7 @@ export function CreditConverter({
               key="back-to-btn"
               className={classNames(
                 'rounded-md border-gray-300 bg-white px-6 text-primary-8',
-                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
               )}
               type="text"
               size="large"

@@ -63,21 +63,21 @@ const mModelFields = [
 
 function LoadingModel() {
   return (
-    <div className="w-full rounded-lg bg-white p-6 shadow-sm">
+    <div className="w-full rounded-lg bg-white p-6 shadow-xs">
       <div className="flex animate-pulse flex-col items-start gap-2">
-        <div className="mb-4 h-8 w-1/3 rounded bg-gray-300" />
+        <div className="mb-4 h-8 w-1/3 rounded-sm bg-gray-300" />
         <div className="flex w-full items-start">
-          <div className="mr-4 h-48 w-1/3 rounded bg-gray-300" />
+          <div className="mr-4 h-48 w-1/3 rounded-sm bg-gray-300" />
           <div className="flex w-2/3 flex-col gap-4">
             <div className="flex flex-col gap-3">
-              <div className="h-2 w-1/4 rounded bg-gray-300" />
-              <div className="h-8 w-2/3 rounded bg-gray-300" />
+              <div className="h-2 w-1/4 rounded-sm bg-gray-300" />
+              <div className="h-8 w-2/3 rounded-sm bg-gray-300" />
             </div>
             <div className="mt-4 grid w-full grid-cols-2 gap-x-8 gap-y-3">
               {new Array(4).fill('').map((v) => (
                 <div key={`sk-${v}`} className="">
-                  <div className="mb-4 h-2 w-1/3 rounded bg-gray-300" />
-                  <div className="mb-4 h-8 w-full rounded bg-gray-300" />
+                  <div className="mb-4 h-2 w-1/3 rounded-sm bg-gray-300" />
+                  <div className="mb-4 h-8 w-full rounded-sm bg-gray-300" />
                 </div>
               ))}
             </div>
@@ -111,7 +111,7 @@ export function EModelSummary({ id }: Props) {
   if (!eModel) return null;
 
   return (
-    <div className="flex items-start gap-4 rounded-md border border-gray-200 p-6 shadow-sm">
+    <div className="flex items-start gap-4 rounded-md border border-gray-200 p-6 shadow-xs">
       <div className="flex w-full flex-col">
         <h1 className="mb-4 text-2xl uppercase text-gray-500">e-model</h1>
         <div className="flex w-full gap-12">
@@ -123,7 +123,7 @@ export function EModelSummary({ id }: Props) {
               width={200}
             />
           </div>
-          <div className="flex min-w-0 flex-grow flex-col items-start overflow-x-hidden">
+          <div className="flex min-w-0 grow flex-col items-start overflow-x-hidden">
             <div className="mb-4 w-full">
               <p className="lin uppercase text-gray-500">Name</p>
               <h1 className="break-words text-xl font-bold text-primary-8" title={eModel.name}>
@@ -174,7 +174,7 @@ export function MModelSummary({ id }: Props) {
   if (!mModel) return null;
 
   return (
-    <div className="flex items-start gap-4 rounded-md border border-gray-200 p-6 shadow-sm">
+    <div className="flex items-start gap-4 rounded-md border border-gray-200 p-6 shadow-xs">
       <div className="flex w-full flex-col">
         <h1 className="mb-4 text-2xl uppercase text-gray-500">e-model</h1>
         <div className="flex w-full gap-12">
@@ -189,7 +189,7 @@ export function MModelSummary({ id }: Props) {
               />
             )}
           </div>
-          <div className="flex min-w-0 flex-grow flex-col items-start overflow-x-hidden">
+          <div className="flex min-w-0 grow flex-col items-start overflow-x-hidden">
             <div className="mb-4 w-full">
               <p className="lin uppercase text-gray-500">Name</p>
               <h1 className="break-words text-xl font-bold text-primary-8" title={mModel.name}>

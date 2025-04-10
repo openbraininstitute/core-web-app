@@ -1,3 +1,5 @@
+@reference '../../../styles/globals.css';
+
 .label {
   @apply min-w-fit text-lg font-bold text-primary-9;
 }

@@ -78,7 +78,7 @@ function ImageSetComponent({
               <div className="flex items-center justify-between">
                 <span className="indent-10 text-lg font-light text-dark">Repetition {repKey}</span>
                 <button
-                  className="flex items-center rounded bg-neutral-1 p-3 hover:bg-neutral-2"
+                  className="flex items-center rounded-sm bg-neutral-1 p-3 hover:bg-neutral-2"
                   onClick={onRepetitionClicked(stimulusType, repKey)}
                   type="button"
                   aria-label="Toggle selection"

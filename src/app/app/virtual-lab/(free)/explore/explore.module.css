@@ -1,3 +1,5 @@
+@reference '../../../../../styles/globals.css';
+
 .table a {
   @apply text-primary-7;
 }

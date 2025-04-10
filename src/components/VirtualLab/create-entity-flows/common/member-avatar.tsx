@@ -49,7 +49,7 @@ export default function MemberAvatar({
           className={classNames(
             'flex items-center justify-center text-center',
             '[&_.ant-avatar-string]:text-xl [&_.ant-avatar-string]:font-bold',
-            role === 'admin' && '!rounded-none',
+            role === 'admin' && 'rounded-none!',
             scale,
             cls?.avatar
           )}
@@ -157,7 +157,7 @@ export function MemberAvatarCasual({
               className={classNames(
                 'flex items-center justify-center text-center',
                 '[&_.ant-avatar-string]:text-xl [&_.ant-avatar-string]:font-bold',
-                shape === 'square' && '!rounded-none',
+                shape === 'square' && 'rounded-none!',
                 scale,
                 cls?.avatar
               )}

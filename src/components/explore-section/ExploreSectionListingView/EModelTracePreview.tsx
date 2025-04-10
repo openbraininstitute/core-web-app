@@ -64,8 +64,8 @@ export default function EModelTracePreview({
     return (
       <Skeleton.Image
         active={loading}
-        className="!h-full !w-full rounded-none"
-        rootClassName="!h-full !w-full"
+        className="h-full! w-full! rounded-none"
+        rootClassName="h-full! w-full!"
       />
     );
   }

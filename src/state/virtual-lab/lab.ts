@@ -87,7 +87,7 @@ export const virtualLabsOfUserAtom = atomWithRefresh<
   return response.data;
 });
 
-export const projectTopMenuRefAtom = atom<RefObject<HTMLDivElement> | null>(null);
+export const projectTopMenuRefAtom = atom<RefObject<HTMLDivElement | null> | null>(null);
 
 export const userVirtualLabTotalsAtom = atom<Promise<number | undefined>>(async (get) => {
   const session = get(sessionAtom);

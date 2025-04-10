@@ -80,8 +80,8 @@ export default function PreviewThumbnail({
       {loading ? (
         <Skeleton.Image
           active={loading}
-          className="!h-full !w-full rounded-none"
-          rootClassName="!h-full !w-full"
+          className="h-full! w-full! rounded-none"
+          rootClassName="h-full! w-full!"
         />
       ) : (
         <Empty description="No thumbnail available" image={Empty.PRESENTED_IMAGE_SIMPLE} />

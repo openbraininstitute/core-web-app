@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai';
 
@@ -15,10 +15,13 @@ import { Label, Content, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 
-export default function VirtualLabProjectInteractiveExploreLayout({
-  children,
-  params,
-}: LabProjectLayoutProps) {
+export default function VirtualLabProjectInteractiveExploreLayout(props: LabProjectLayoutProps) {
+  const params = use(props.params);
+
+  const {
+    children
+  } = props;
+
   const setConfigId = useSetAtom(brainModelConfigIdAtom);
   useSetBrainRegionFromQuery();
 

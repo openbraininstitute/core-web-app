@@ -8,7 +8,7 @@ import { classNames } from '@/util/utils';
 import Link from '@/components/Link';
 import useResizeObserver from '@/hooks/useResizeObserver';
 
-import styles from '@/components/ListTable/list-table.module.scss';
+import styles from '@/components/ListTable/list-table.module.css';
 
 type Column = {
   dataIndex: string | string[];
@@ -55,7 +55,7 @@ function CustomTH({
 }) {
   return (
     <th
-      className="before:!content-none"
+      className="before:content-none!"
       style={{
         ...style,
         background: 'white',
@@ -165,7 +165,7 @@ export function IndexColContent({
 
 export function ValueArray({ value }: { value?: string[] }) {
   return value ? (
-    <div className="flex w-fit gap-2 rounded bg-neutral-1 px-2 py-1 font-semibold text-primary-8">
+    <div className="flex w-fit gap-2 rounded-sm bg-neutral-1 px-2 py-1 font-semibold text-primary-8">
       {value.map((x, i, arr) => (
         <span key={x}>{i < arr.length - 1 ? `${x},` : x}</span>
       ))}

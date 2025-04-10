@@ -1,6 +1,6 @@
 'use client';
 
-import { Key, useState } from 'react';
+import { Key, useState, type JSX } from 'react';
 import { Table, Tooltip } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
 import { InfoCircleOutlined } from '@ant-design/icons';
@@ -11,7 +11,7 @@ import { CircuitColumn, CircuitSchemaProps } from '../type';
 import { ChevronRight } from '@/components/icons';
 import truncate from '@/util/truncate';
 import { classNames } from '@/util/utils';
-import styles from './ExploreCircuiteTable.module.scss';
+import styles from './ExploreCircuiteTable.module.css';
 
 const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
   return data.reduce((acc, row) => {
@@ -110,7 +110,7 @@ export default function ExploreCircuitTable() {
           value.hasSubcircuits && (
             <button
               type="button"
-              className="relative flex h-6 items-center justify-center text-base font-normal focus:outline-none"
+              className="relative flex h-6 items-center justify-center text-base font-normal focus:outline-hidden"
               aria-label="Open subcircuit"
               onClick={() => handleExpandRow(value, index ?? -1)}
               disabled={!value.hasSubcircuits}
@@ -144,9 +144,9 @@ export default function ExploreCircuitTable() {
           className={classNames(
             '[&_.ant-table-tbody]:bg-[#FAFAFA]',
             '[&_.ant-table-row]:bg-[#FAFAFA]',
-            '[&_.ant-table-thead_th]:!text-sm',
-            '[&_.ant-table-thead_th]:!font-normal',
-            '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
+            '[&_.ant-table-thead_th]:text-sm!',
+            '[&_.ant-table-thead_th]:font-normal!',
+            '[&_.ant-table-thead_th]:text-[#8C8C8C]!',
             '[&_.ant-table-thead_th]:uppercase',
             '[&_.ant-table-thead_th]:tracking-[0.05em]',
             '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
@@ -189,9 +189,9 @@ export default function ExploreCircuitTable() {
         className={classNames(
           '[&_.ant-table-tbody]:bg-[#FAFAFA]',
           '[&_.ant-table-row]:bg-[#FAFAFA]',
-          '[&_.ant-table-thead_th]:!text-sm',
-          '[&_.ant-table-thead_th]:!font-normal',
-          '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
+          '[&_.ant-table-thead_th]:text-sm!',
+          '[&_.ant-table-thead_th]:font-normal!',
+          '[&_.ant-table-thead_th]:text-[#8C8C8C]!',
           '[&_.ant-table-thead_th]:uppercase',
           '[&_.ant-table-thead_th]:tracking-[0.05em]',
           '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',

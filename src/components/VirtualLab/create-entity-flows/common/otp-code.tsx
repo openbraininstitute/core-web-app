@@ -13,7 +13,7 @@ export default function VerificationCode({ disabled = false, onComplete }: Props
     <OTPInput
       maxLength={6}
       disabled={disabled}
-      containerClassName="group flex items-center has-[:disabled]:opacity-50"
+      containerClassName="group flex items-center has-disabled:opacity-50"
       render={({ slots }) => (
         <div className="flex gap-1">
           {slots.slice(0, 6).map((slot, idx) => (

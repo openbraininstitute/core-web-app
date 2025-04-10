@@ -82,7 +82,7 @@ export default function CustomAnalysis({
         <div className="flex items-center justify-center" style={{ height: 200 }}>
           <button
             type="button"
-            className="max-w-sm rounded-lg bg-green-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75"
+            className="max-w-sm rounded-lg bg-green-500 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-green-400 focus:ring-opacity-75"
             onClick={async () => {
               setLaunchingAnalysis(true);
               if (!session) return;
@@ -109,7 +109,7 @@ export function useCumulativeAnalysisReports(
   const session = useSessionAtomValue();
   const [report, setReport] = useState<ExtendedCumAnalysisReport>();
   const [fetching, setFetching] = useState(true);
-  const intervalRef = useRef<number>();
+  const intervalRef = useRef<number>(undefined);
   const fetchingRef = useRef<boolean>(false);
 
   useEffect(() => {

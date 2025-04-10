@@ -62,7 +62,7 @@ export function PDFViewerContainer({ distributions }: Props) {
               <button
                 type="button"
                 key={option}
-                className={`cursor-pointer text-primary-8 focus:outline-none ${type === option ? 'font-bold' : ''}`}
+                className={`cursor-pointer text-primary-8 focus:outline-hidden ${type === option ? 'font-bold' : ''}`}
                 onClick={() => setType(option)}
               >
                 {typeLabel(option)}

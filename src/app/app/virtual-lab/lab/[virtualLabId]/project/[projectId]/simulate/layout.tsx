@@ -1,4 +1,5 @@
-'use client';
+'use client';;
+import { use } from "react";
 
 import { ErrorBoundary } from 'react-error-boundary';
 import { useAtomValue } from 'jotai';
@@ -12,7 +13,13 @@ import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { LinkItem } from '@/components/VerticalLinks';
 
-export default function VirtualLabProjectLayout({ children, params }: LabProjectLayoutProps) {
+export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
+  const params = use(props.params);
+
+  const {
+    children
+  } = props;
+
   const labUrl = generateLabUrl(params.virtualLabId);
 
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;
@@ -31,7 +38,7 @@ export default function VirtualLabProjectLayout({ children, params }: LabProject
       key: 'scope',
       href: '#',
       content: <>{scope.replace('-', ' ')}</>,
-      styles: 'text-primary-5 hover:!text-primary-5 cursor-default',
+      styles: 'text-primary-5 hover:text-primary-5! cursor-default',
     });
 
   return (

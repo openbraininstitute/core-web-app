@@ -5,6 +5,8 @@ import {
 } from '@/features/listing-filter-panel/checklist/option';
 import { FacetOptionsList } from '@/features/listing-filter-panel/checklist/use-options';
 
+import type { JSX } from "react";
+
 export type CheckListProps = {
   options: FacetOptionsList;
   renderLength: number;

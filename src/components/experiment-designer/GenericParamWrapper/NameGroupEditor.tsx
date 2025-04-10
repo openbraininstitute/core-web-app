@@ -10,7 +10,7 @@ type Props = {
   groupIndex: number;
 };
 
-const groupNameStyle = `mx-[10px] my-[5px] text-primary-7 bg-primary-1 p-2 font-bold grow truncate rounded`;
+const groupNameStyle = `mx-[10px] my-[5px] text-primary-7 bg-primary-1 p-2 font-bold grow truncate rounded-sm`;
 
 export default function NameGroupEditor({ paramAtom, namePrefix, groupIndex }: Props) {
   const [groupInfo, setGroupInfo] = useAtom(paramAtom);

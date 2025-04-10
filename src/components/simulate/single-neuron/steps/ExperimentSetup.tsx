@@ -72,7 +72,7 @@ function SetupInput({ name, text, unit, min, max, onChange }: SetupInputProps) {
           rules={[{ required: true, message: 'Required field' }]}
         >
           <InputNumber
-            className="w-full !rounded-sm border !border-neutral-4 font-bold [&_.ant-input-number-input]:!text-base [&_.ant-input-number-input]:!text-primary-8"
+            className="w-full rounded-xs! border border-neutral-4! font-bold [&_.ant-input-number-input]:text-base! [&_.ant-input-number-input]:text-primary-8!"
             min={min}
             max={max}
             onChange={(newValue) =>

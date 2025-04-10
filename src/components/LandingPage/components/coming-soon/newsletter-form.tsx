@@ -150,8 +150,8 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                 htmlType="submit"
                 className={classNames(
                   'w-full rounded-full bg-white px-8 py-3 text-lg font-semibold text-primary-8 md:w-auto',
-                  'mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:bg-primary-8 hover:!text-white',
-                  'disabled:text-primary-8 disabled:hover:bg-gray-100 disabled:hover:!text-primary-4',
+                  'mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:bg-primary-8 hover:text-white!',
+                  'disabled:text-primary-8 disabled:hover:bg-gray-100 disabled:hover:text-primary-4!',
                   cls?.btn
                 )}
                 disabled={disableForm}

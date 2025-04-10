@@ -32,7 +32,7 @@ export default function AutoCompleteSearch({
   const [fetching, setFetching] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string | null>();
 
-  const previousFetchController = useRef<AbortController>();
+  const previousFetchController = useRef<AbortController>(undefined);
 
   const cancelPreviousFetch = () => {
     if (previousFetchController.current) {
@@ -112,7 +112,7 @@ export default function AutoCompleteSearch({
         )
       }
       value={defaultValues}
-      className="min-w-[128px] rounded"
+      className="min-w-[128px] rounded-sm"
       variant="borderless"
       size="middle"
       popupMatchSelectWidth={false}

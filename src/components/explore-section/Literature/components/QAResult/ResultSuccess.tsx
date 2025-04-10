@@ -86,7 +86,7 @@ export default function ResultSuccess({
                   <button
                     type="button"
                     onClick={onExpandArticles}
-                    className="relative inline-flex h-11 w-[300px] cursor-pointer items-center justify-between gap-1.5  whitespace-nowrap rounded-md bg-primary-0 px-3 py-3 leading-tight text-white no-underline shadow-sm transition-all duration-200"
+                    className="relative inline-flex h-11 w-[300px] cursor-pointer items-center justify-between gap-1.5  whitespace-nowrap rounded-md bg-primary-0 px-3 py-3 leading-tight text-white no-underline shadow-xs transition-all duration-200"
                     aria-controls="collapse-content"
                     aria-label="expand-articles"
                   >
@@ -118,23 +118,23 @@ export default function ResultSuccess({
                 </div>
                 <button
                   type="button"
-                  className="flex w-48 cursor-pointer items-center justify-between gap-2 rounded border border-gray-200 px-3 py-1.5"
+                  className="flex w-48 cursor-pointer items-center justify-between gap-2 rounded-sm border border-gray-200 px-3 py-1.5"
                   onClick={selectQuestion}
                 >
                   <div className="text-base font-bold text-primary-8" data-testid="active-filters">
-                    <span className="mr-2 inline-block h-7 w-7 rounded bg-primary-8 text-white">
+                    <span className="mr-2 inline-block h-7 w-7 rounded-sm bg-primary-8 text-white">
                       {activeFilters}
                     </span>
                     filters
                   </div>
-                  <span className="group rounded-sm hover:bg-primary-8">
+                  <span className="group rounded-xs hover:bg-primary-8">
                     <SettingsIcon className="rotate-90 text-primary-8 group-hover:text-white" />
                   </span>
                 </button>
               </div>
               {expandArticles && (
                 <div className="mt-5 block overflow-hidden px-1 opacity-100 transition-all duration-300 ease-out-expo">
-                  <div className="mt-4 rounded">
+                  <div className="mt-4 rounded-sm">
                     <ArticlesTimeLine
                       {...{
                         articles: displayedArticles,

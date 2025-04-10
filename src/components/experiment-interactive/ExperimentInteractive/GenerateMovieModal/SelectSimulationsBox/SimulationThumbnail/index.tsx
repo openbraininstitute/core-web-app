@@ -50,7 +50,7 @@ export default function SimulationThumbnail({
 
       <div className="absolute left-1 top-1 flex flex-row items-center justify-start gap-2 font-bold">
         <Checkbox.Root
-          className="h-5 w-5 rounded border border-white bg-transparent"
+          className="h-5 w-5 rounded-sm border border-white bg-transparent"
           checked={isChecked}
           onCheckedChange={handleCheckedChange}
         >

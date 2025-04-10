@@ -16,7 +16,7 @@ import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/ex
 import { brainRegionsAtom, selectedBrainRegionAtom } from '@/state/brain-regions';
 
 export default function LiteratureForExperimentType() {
-  const previousFetchController = useRef<AbortController>();
+  const previousFetchController = useRef<AbortController>(undefined);
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const brainRegions = useAtomValue(useMemo(() => unwrap(brainRegionsAtom), []));
   const brainRegion = find(brainRegions, ['id', selectedBrainRegion?.id]);

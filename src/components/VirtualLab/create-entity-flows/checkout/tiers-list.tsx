@@ -107,7 +107,7 @@ function TiersComparison({
           {feature.tooltip && (
             <Tooltip
               title={feature.tooltip[0]}
-              overlayClassName="[&_.ant-tooltip-inner]:bg-primary-8 [&_.ant-tooltip-inner]:text-white [&_.ant-tooltip-inner]:rounded-none [&_.ant-tooltip-arrow]:before:bg-primary-8"
+              classNames={{ root: '[&_.ant-tooltip-inner]:bg-primary-8 [&_.ant-tooltip-inner]:text-white [&_.ant-tooltip-inner]:rounded-none [&_.ant-tooltip-arrow]:before:bg-primary-8'}}
             >
               <InfoCircleOutlined className="ml-1 text-green-500" />
             </Tooltip>
@@ -217,7 +217,7 @@ function TiersComparison({
                       checked={interval === 'year'}
                       name="interval"
                       thumbCls="bg-white"
-                      className="!border border-white p-1"
+                      className="border! border-white p-1"
                       onCheckedChange={onChangeInterval}
                     />
                     <span
@@ -277,7 +277,7 @@ function TiersComparison({
             <h3 className="mb-4 uppercase text-primary-4">
               <span className="text-base font-bold">{category.title}</span>
               {category.available === false && (
-                <span className="select ml-3 rounded-full border border-white px-2 py-1 text-xs !font-light text-white">
+                <span className="select ml-3 rounded-full border border-white px-2 py-1 text-xs font-light! text-white">
                   Future release
                 </span>
               )}
@@ -348,7 +348,7 @@ function TiersComparison({
                 className={classNames(
                   'relative z-20 h-10 w-full rounded-none',
                   'border-white bg-primary-9 text-white',
-                  isHovered && 'text-white hover:bg-primary-8 hover:!text-white'
+                  isHovered && 'text-white hover:bg-primary-8 hover:text-white!'
                 )}
                 onClick={controller}
                 data-testid={`select-${t.title.toLowerCase()}-btn`}
@@ -392,7 +392,7 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
   if (loading) return <TiersListSkeleton />;
   if ('error' in tiers)
     return (
-      <div className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+      <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="mb-2 text-2xl font-bold text-red-200">
@@ -409,7 +409,7 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
               type="text"
               size="large"
               onClick={() => window.location.reload()}
-              className="rounded-none px-6 py-2 text-white hover:!text-white"
+              className="rounded-none px-6 py-2 text-white hover:text-white!"
             >
               Refresh Page
             </Button>

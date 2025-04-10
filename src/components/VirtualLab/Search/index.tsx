@@ -1,6 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { classNames } from '@/util/utils';
 
 export default function useSearch(
@@ -41,7 +41,7 @@ function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: s
         <input
           {...rest} // eslint-disable-line react/jsx-props-no-spreading
           className={classNames(
-            'mr-2 bg-transparent text-primary-3 outline-none placeholder:text-primary-3',
+            'mr-2 bg-transparent text-primary-3 outline-hidden placeholder:text-primary-3',
             className
           )}
         />

@@ -13,7 +13,7 @@ type SearchProps = {
 export default function ExploreSectionNameSearch({ dataKey }: SearchProps) {
   const [searchString, setSearchString] = useAtom(searchStringAtom(dataKey ?? ''));
 
-  const searchInputRef: RefObject<HTMLInputElement> = useRef(null);
+  const searchInputRef: RefObject<HTMLInputElement | null> = useRef(null);
   useEffect(() => searchInputRef?.current?.focus(), []); // Auto-focus on render
 
   const debouncedUpdateAtom = useDebouncedCallback(

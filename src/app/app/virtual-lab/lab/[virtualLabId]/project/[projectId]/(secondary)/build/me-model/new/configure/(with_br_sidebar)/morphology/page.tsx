@@ -1,7 +1,7 @@
 'use client';
 
 import { useAtom, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useId } from 'react';
+import { useCallback, useEffect, useId, use } from 'react';
 import { useRouter } from 'next/navigation';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
@@ -18,13 +18,14 @@ import { detailUrlBuilder } from '@/util/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 
 type Params = {
-  params: {
+  params: Promise<{
     projectId: string;
     virtualLabId: string;
-  };
+  }>;
 };
 
-export default function ReconstrucedMorphologyPage({ params }: Params) {
+export default function ReconstrucedMorphologyPage(props: Params) {
+  const params = use(props.params);
   const setMorphologyType = useSetAtom(morphologyTypeAtom);
   const [meModelDetails, setMEModelDetails] = useAtom(meModelDetailsAtom);
 

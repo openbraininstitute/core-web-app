@@ -26,13 +26,13 @@ function ItemChildren() {
       <div className="flex items-baseline gap-12">
         <div className="flex gap-4">
           <div className="flex items-baseline gap-2">
-            <span className="items-center justify-center rounded bg-white p-2 font-mono text-primary-9">
+            <span className="items-center justify-center rounded-sm bg-white p-2 font-mono text-primary-9">
               N/A
             </span>
             <span className="font-light">Build</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="items-center justify-center rounded bg-white p-2 font-mono text-primary-9">
+            <span className="items-center justify-center rounded-sm bg-white p-2 font-mono text-primary-9">
               N/A
             </span>
             <span className="font-light">Simulate</span>

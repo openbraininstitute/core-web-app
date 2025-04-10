@@ -55,7 +55,7 @@ export default function Hero({ className, section }: HeroProps) {
             />
           </>
         )}
-        {backgroundType === 'image' && <img src={imageURL ?? ''} alt="Background" />}
+        {backgroundType === 'image' && imageURL && <img src={imageURL} alt="Background" />}
       </div>
       {section === EnumSection.ComingSoon ? (
         <div className={styles.comingSoon}>

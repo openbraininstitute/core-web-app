@@ -6,7 +6,7 @@ import { ChevronIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 import { Filter } from '@/features/listing-filter-panel/types';
 
-import styles from '@/features/listing-filter-panel/filters.module.scss';
+import styles from '@/features/listing-filter-panel/filters.module.css';
 
 type ContentProps = {
   filters: Filter[];
@@ -15,7 +15,7 @@ type ContentProps = {
 
 export type FilterGroupProps = {
   items: {
-    content?: (contentProps: ContentProps) => null | ReactElement;
+    content?: (contentProps: ContentProps) => null | ReactElement<any>;
     display?: boolean;
     label: string;
     toggleFunc?: () => void;

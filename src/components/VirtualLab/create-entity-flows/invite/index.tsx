@@ -130,15 +130,15 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
       isOpen={isOpen}
       footer={null}
       onClose={onModalClose}
-      cls={{ content: '!min-h-[30rem]' }}
+      cls={{ content: 'min-h-[30rem]!' }}
     >
       <h1 className="mb-4 text-xl font-bold text-primary-8">{title}</h1>
-      <div className="flex h-full flex-grow flex-col rounded-lg bg-white">
+      <div className="flex h-full grow flex-col rounded-lg bg-white">
         <Form
           form={form}
           layout="vertical"
           onFinish={onFormSubmit}
-          className="flex h-full flex-grow flex-col"
+          className="flex h-full grow flex-col"
           requiredMark={false}
           validateTrigger={['onChange']}
           onValuesChange={onValuesChange}
@@ -152,7 +152,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
             ],
           }}
         >
-          <MemberList cls={{ listContainer: '!max-h-[400px] !px-0' }} />
+          <MemberList cls={{ listContainer: 'max-h-[400px]! px-0!' }} />
           <div className="mt-auto flex items-end justify-end gap-3">
             <Button
               key="cancel-members-btn"
@@ -166,7 +166,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
             </Button>
             <Button
               key="invite-btn"
-              className="h-14 rounded-none border-primary-8 bg-primary-8 px-10 text-white hover:!text-white"
+              className="h-14 rounded-none border-primary-8 bg-primary-8 px-10 text-white hover:text-white!"
               type="default"
               size="large"
               htmlType="submit"

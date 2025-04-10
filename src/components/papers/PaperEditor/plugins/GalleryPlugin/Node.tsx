@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, type JSX } from 'react';
 import { DecoratorNode, EditorConfig, NodeKey } from 'lexical';
 
 // eslint-disable-next-line import/no-cycle

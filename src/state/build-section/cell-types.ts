@@ -1,4 +1,4 @@
-import { selectAtom } from 'jotai/utils';
+import { selectAtom, unwrap } from 'jotai/utils';
 import { Session } from 'next-auth';
 import esb from 'elastic-builder';
 import toLower from 'lodash/toLower';
@@ -17,7 +17,7 @@ type ClassESResponse = {
 
 // Returns cell types metadata
 export const cellTypesAtom = selectAtom<Session | null, Promise<any> | null>(
-  sessionAtom,
+  unwrap(sessionAtom),
   (session) => {
     if (!session) return null;
 
@@ -44,7 +44,7 @@ export const cellTypesAtom = selectAtom<Session | null, Promise<any> | null>(
 export const cellTypesByIdAtom = selectAtom<
   Promise<any> | null,
   Promise<Record<string, ClassNexus> | undefined> | null
->(cellTypesAtom, (cellTypes) => {
+>(unwrap(cellTypesAtom), (cellTypes) => {
   if (!cellTypes || !cellTypes.hits) return null;
   return cellTypes.hits.hits.reduce(
     (acc: Record<string, ClassNexus>, classObj: ClassESResponse) => {
@@ -59,7 +59,7 @@ export const cellTypesByIdAtom = selectAtom<
 export const cellTypesByLabelAtom = selectAtom<
   Promise<any> | null,
   Promise<Record<string, ClassNexus> | undefined> | null
->(cellTypesAtom, (cellTypes) => {
+>(unwrap(cellTypesAtom), (cellTypes) => {
   if (!cellTypes || !cellTypes.hits) return null;
 
   return cellTypes.hits.hits.reduce(

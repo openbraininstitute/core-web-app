@@ -47,7 +47,7 @@ export default function BrainConfigEntry({ baseHref, config }: BrainConfigEntryP
 
   return (
     <>
-      <div className="grid !w-full grid-cols-[1fr_max-content] items-start gap-2">
+      <div className="grid w-full! grid-cols-[1fr_max-content] items-start gap-2">
         <Link className="group inline-flex flex-col items-start" href={href}>
           <span title={config.name} className="line-clamp-1 group-hover:text-primary-3">
             {config.name}

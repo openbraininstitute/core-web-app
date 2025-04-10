@@ -1,6 +1,4 @@
-@import '~tailwindcss/base';
-@import '~tailwindcss/components';
-@import '~tailwindcss/utilities';
+@reference '../../../../../styles/globals.css';
 
 .article-list-scrollbar {
   scrollbar-color: theme('colors.primary.8') #f0f0f0;

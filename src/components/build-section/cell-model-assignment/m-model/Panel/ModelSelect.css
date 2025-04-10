@@ -1,5 +1,7 @@
+@reference '../../../../../styles/globals.css';
+
 .model-select__control {
-  @apply w-full rounded-none border border-white border-opacity-40 bg-none p-2;
+  @apply w-full rounded-none border border-white/40 bg-none p-2;
 }
 
 .model-select__menu {

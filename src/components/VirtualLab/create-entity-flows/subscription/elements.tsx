@@ -29,7 +29,7 @@ export function getStatusColor(status: string): string {
 
 export function HistoryError() {
   return (
-    <div className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold text-red-200">Subscription History</h2>
@@ -49,7 +49,7 @@ export function HistoryError() {
 
 export function HistoryEmpty() {
   return (
-    <div className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div className="mb-6 transform rounded-xs bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold">Subscription History</h2>
@@ -65,7 +65,7 @@ export function HistoryEmpty() {
 
 export function ErrorSubscriptionStatus() {
   return (
-    <div className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="mb-2 text-2xl font-bold text-red-200">Subscription Error</h2>
@@ -87,7 +87,7 @@ export function ErrorSubscriptionStatus() {
 export function NoSubscriptionFound() {
   return (
     <div className="w-full">
-      <div className="mb-3 transform rounded-sm border border-white/50 bg-transparent p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+      <div className="mb-3 transform rounded-xs border border-white/50 bg-transparent p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="mb-2 text-2xl font-bold text-white">No subscription</h2>
@@ -107,9 +107,9 @@ export function NoSubscriptionFound() {
           key="create-vlab-link"
           className={classNames(
             'flex h-14 items-center justify-center rounded-none border border-white bg-primary-9 px-14 text-lg text-white',
-            'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-            'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-            'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
+            'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+            'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
+            'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
           )}
         >
           Create virtual lab
@@ -123,7 +123,7 @@ export function FreeSubscriptionStatus() {
   return (
     <div
       data-testid="free-subscription-status"
-      className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
+      className="mb-6 transform rounded-xs bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
     >
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
@@ -146,7 +146,7 @@ export function PaidSubscriptionStatus({ data }: { data: UserActiveSubscriptionR
   return (
     <div
       data-testid="paid-subscription-status"
-      className="mb-6 transform rounded-sm bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
+      className="mb-6 transform rounded-xs bg-primary-8 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
     >
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
@@ -185,7 +185,7 @@ export function SubscriptionCheckoutError() {
   return (
     <div
       data-testid="subscription-checkout-error"
-      className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
+      className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
     >
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>

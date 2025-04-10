@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, Suspense, useEffect } from 'react';
+import { ReactNode, Suspense, useEffect, use } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai';
 
@@ -10,10 +10,16 @@ import { sectionAtom } from '@/state/application';
 
 type GenericLayoutProps = {
   children: ReactNode;
-  params: { virtualLabId: string; projectId: string };
+  params: Promise<{ virtualLabId: string; projectId: string }>;
 };
 
-export default function BuildMEModelLayout({ children, params }: GenericLayoutProps) {
+export default function BuildMEModelLayout(props: GenericLayoutProps) {
+  const params = use(props.params);
+
+  const {
+    children
+  } = props;
+
   const setSection = useSetAtom(sectionAtom);
 
   useEffect(() => setSection('build'), [setSection]);

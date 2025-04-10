@@ -125,10 +125,10 @@ function StimulusLocation({ stimulationId }: FormItemProps) {
           })
         }
         variant="borderless"
-        className="text-left [&>.ant-select-selector>.ant-select-selection-item]:!text-base [&>.ant-select-selector>.ant-select-selection-item]:!font-bold [&>.ant-select-selector>.ant-select-selection-item]:!text-primary-8"
+        className="text-left [&>.ant-select-selector>.ant-select-selection-item]:text-base! [&>.ant-select-selector>.ant-select-selection-item]:font-bold! [&>.ant-select-selector>.ant-select-selection-item]:text-primary-8!"
       >
         {secNames.map((secName) => (
-          <Select.Option key={secName} value={secName} className="[&_.prefix]:!hidden">
+          <Select.Option key={secName} value={secName} className="[&_.prefix]:hidden!">
             <div
               className="prefix mr-2 inline-block h-[10px] w-[10px] bg-primary-8"
               style={{ background: SIMULATION_COLORS[0] }}
@@ -160,7 +160,7 @@ function StimulationMode({ stimulationId }: FormItemProps) {
             newValue,
           })
         }
-        className="text-left [&>.ant-select-selector>.ant-select-selection-item]:!text-base [&>.ant-select-selector>.ant-select-selection-item]:!font-bold [&>.ant-select-selector>.ant-select-selection-item]:!text-primary-8"
+        className="text-left [&>.ant-select-selector>.ant-select-selection-item]:text-base! [&>.ant-select-selector>.ant-select-selection-item]:font-bold! [&>.ant-select-selector>.ant-select-selection-item]:text-primary-8!"
         variant="borderless"
       />
     </Form.Item>
@@ -201,7 +201,7 @@ function StimulationProtocol({ stimulationId }: FormItemProps) {
                 newValue,
               });
             }}
-            className="text-left [&>.ant-select-selector>.ant-select-selection-item]:!text-gray-400"
+            className="text-left [&>.ant-select-selector>.ant-select-selection-item]:text-gray-400!"
             variant="borderless"
             popupMatchSelectWidth={false}
             optionLabelProp="label"

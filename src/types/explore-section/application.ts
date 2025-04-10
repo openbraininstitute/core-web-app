@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, type JSX } from 'react';
 import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { IndexDataValue } from '@/types/explore-section/misc';
 import { FlattenedExploreESResponse, ExploreResource } from '@/types/explore-section/es';

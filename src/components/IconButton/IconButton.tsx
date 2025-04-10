@@ -2,7 +2,7 @@ import { Button } from 'antd';
 import React from 'react';
 import { ButtonProps } from 'antd/lib/button';
 
-import styles from './icon-button.module.scss';
+import styles from './icon-button.module.css';
 
 export default function IconButton({ children, ...props }: ButtonProps) {
   return (

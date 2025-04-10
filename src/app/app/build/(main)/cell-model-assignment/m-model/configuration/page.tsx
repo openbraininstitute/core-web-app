@@ -48,7 +48,7 @@ export default function ConfigurationPage() {
         <div className="m-5 flex">
           <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
             <ParametersContainer />
-            <SynthesisPreview className="relative ml-5 flex h-[80vh] flex-grow overflow-y-auto" />
+            <SynthesisPreview className="relative ml-5 flex h-[80vh] grow overflow-y-auto" />
           </ErrorBoundary>
         </div>
       );

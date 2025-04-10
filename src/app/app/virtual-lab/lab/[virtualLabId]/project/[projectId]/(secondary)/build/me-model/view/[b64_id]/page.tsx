@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useSetAtom } from 'jotai';
 
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
@@ -10,15 +10,16 @@ import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 
 type Params = {
-  params: {
+  params: Promise<{
     id: string;
     modelType: ModelTypeNames;
     projectId: string;
     virtualLabId: string;
-  };
+  }>;
 };
 
-export default function MEModelViewPage({ params }: Params) {
+export default function MEModelViewPage(props: Params) {
+  const params = use(props.params);
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
   const setBackToListPath = useSetAtom(backToListPathAtom);
 

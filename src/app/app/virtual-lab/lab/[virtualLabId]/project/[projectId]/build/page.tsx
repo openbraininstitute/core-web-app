@@ -1,6 +1,6 @@
 'use client';
 
-import { HTMLProps } from 'react';
+import { HTMLProps, use } from 'react';
 
 import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
@@ -33,13 +33,13 @@ import {
   selectedTabFamily,
 } from '@/components/VirtualLab/ScopeSelector/state';
 import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.scss';
+import Styles from '@/styles/vlabs.module.css';
 
 type Params = {
-  params: {
+  params: Promise<{
     projectId: string;
     virtualLabId: string;
-  };
+  }>;
 };
 
 type SimURLs = {
@@ -58,7 +58,8 @@ const SimTypeURLs: { [key: string]: SimURLs } = {
   },
 };
 
-export default function VirtualLabProjectBuildPage({ params }: Params) {
+export default function VirtualLabProjectBuildPage(props: Params) {
+  const params = use(props.params);
   const router = useRouter();
   const [selectedTab] = useAtom(selectedTabFamily('build' + params.projectId));
   const atomKey = 'build' + selectedTab + params.projectId;

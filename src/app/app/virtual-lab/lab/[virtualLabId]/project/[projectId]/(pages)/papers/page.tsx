@@ -6,9 +6,16 @@ import { ServerSideComponentProp } from '@/types/common';
 import retrievePapersList from '@/services/paper-ai/retrievePapersList';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 
-export default async function PapersListing({
-  params: { virtualLabId, projectId },
-}: ServerSideComponentProp<{ virtualLabId: string; projectId: string }>) {
+export default async function PapersListing(
+  props: ServerSideComponentProp<{ virtualLabId: string; projectId: string }>
+) {
+  const params = await props.params;
+
+  const {
+    virtualLabId,
+    projectId
+  } = params;
+
   const session = await auth();
   if (!session) return;
 

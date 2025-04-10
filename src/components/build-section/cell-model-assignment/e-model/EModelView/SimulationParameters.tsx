@@ -120,7 +120,7 @@ function Item({ error, name, value, readOnly, onChange }: ItemProps) {
           type="number"
           value={value}
           onChange={(e) => onChange(name, e.target.valueAsNumber)}
-          className="w-[50px] rounded border-2 text-right font-bold"
+          className="w-[50px] rounded-sm border-2 text-right font-bold"
         />
       )}
     </>

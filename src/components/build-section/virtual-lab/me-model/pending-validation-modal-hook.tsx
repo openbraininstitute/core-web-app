@@ -9,7 +9,7 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 export function usePendingValidationModal() {
   const [modal, contextHolder] = Modal.useModal();
-  const destroyRef = useRef<() => void>();
+  const destroyRef = useRef<() => void>(undefined);
 
   function createModal(virtualLabInfo: VirtualLabInfo, accessToken: string) {
     const { destroy } = modal.confirm({

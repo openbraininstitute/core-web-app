@@ -1,6 +1,6 @@
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, useActionState } from 'react';
 import { Button } from 'antd';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import { parseAsString, useQueryState } from 'nuqs';
 
 import {
@@ -67,7 +67,7 @@ export default function PaperDetails({ paper, onCompleteEdit }: PaperDetailsProp
   );
   const { success: successNotify, error: errorNotify } = useNotification();
 
-  const [state, runPaperUpdateAction] = useFormState<PaperUpdateAction, FormData>(
+  const [state, runPaperUpdateAction] = useActionState<PaperUpdateAction, FormData>(
     updatePaperDetails,
     {
       type: null,

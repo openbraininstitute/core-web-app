@@ -90,7 +90,7 @@ export default function SimulationCard({
   const pathName = usePathname();
   return (
     <div
-      className={`simulation-card border-b-none w-[405px] rounded rounded-b-none border border-neutral-2 ${backgroundColor()}`}
+      className={`simulation-card border-b-none w-[405px] rounded-sm rounded-b-none border border-neutral-2 ${backgroundColor()}`}
     >
       <div className="p-4">
         <div className="mb-3 flex">{renderOtherDimensions()}</div>

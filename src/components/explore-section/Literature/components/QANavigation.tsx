@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, MouseEvent, useCallback } from 'react';
+import { useEffect, useRef, useState, MouseEvent, useCallback, type JSX } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
   AppstoreOutlined,

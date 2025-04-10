@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { atomFamily, atomWithDefault, selectAtom } from 'jotai/utils';
+import { atomFamily, atomWithDefault, selectAtom, unwrap } from 'jotai/utils';
 import { arrayToTree } from 'performant-array-to-tree';
 import cloneDeep from 'lodash/cloneDeep';
 import uniqBy from 'lodash/uniqBy';
@@ -93,24 +93,24 @@ export const brainRegionOntologyAtom = atom(getBrainRegionOntology);
 export const brainRegionOntologyViewsAtom = selectAtom<
   Promise<BrainRegionOntology | null>,
   BrainRegionOntologyView[] | null
->(brainRegionOntologyAtom, (brainRegionOntology) => brainRegionOntology?.views ?? null);
+>(unwrap(brainRegionOntologyAtom), (brainRegionOntology) => brainRegionOntology?.views ?? null);
 
 export const brainRegionOntologyVolumesAtom = selectAtom<
   Promise<BrainRegionOntology | null>,
   { [key: string]: number } | null
->(brainRegionOntologyAtom, (brainRegionOntology) => brainRegionOntology?.volumes ?? null);
+>(unwrap(brainRegionOntologyAtom), (brainRegionOntology) => brainRegionOntology?.volumes ?? null);
 
 export const defaultBrainRegionOntologyViewAtom = selectAtom<
   Promise<BrainRegionOntologyView[] | null>,
   BrainRegionOntologyView | null | undefined
->(brainRegionOntologyViewsAtom, (views) =>
+>(unwrap(brainRegionOntologyViewsAtom), (views) =>
   views ? views.find((view) => view.id === 'https://neuroshapes.org/BrainRegion') : views
 );
 
 export const brainRegionsAtom = selectAtom<
   Promise<BrainRegionOntology | null>,
   BrainRegion[] | null
->(brainRegionOntologyAtom, (brainRegionOntology) => {
+>(unwrap(brainRegionOntologyAtom), (brainRegionOntology) => {
   return (
     brainRegionOntology?.brainRegions.map(({ view, ...br }) => ({
       ...br,
@@ -122,7 +122,7 @@ export const brainRegionsAtom = selectAtom<
 export const brainRegionsWithRepresentationAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   BrainRegionWithRepresentation[] | null
->(brainRegionsAtom, (brainRegions) => {
+>(unwrap(brainRegionsAtom), (brainRegions) => {
   const inAnnotationBrainRegionsReducer = brainRegions
     ? getInAnnotationBrainRegionsReducer(brainRegions)
     : null;
@@ -139,7 +139,7 @@ export const brainRegionIdByNotationMapAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Map<string, string> | null
 >(
-  brainRegionsAtom,
+  unwrap(brainRegionsAtom),
   (brainRegions) =>
     brainRegions?.reduce(
       (idByNotationMap, brainRegion) => idByNotationMap.set(brainRegion.notation, brainRegion.id),
@@ -151,7 +151,7 @@ export const brainRegionByNotationMapAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Map<BrainRegionNotation, BrainRegion> | null
 >(
-  brainRegionsAtom,
+  unwrap(brainRegionsAtom),
   (brainRegions) =>
     brainRegions?.reduce(
       (map, brainRegion) => map.set(brainRegion.notation, brainRegion),
@@ -163,7 +163,7 @@ export const brainRegionNotationByIdMapAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Map<BrainRegionId, BrainRegionNotation> | null
 >(
-  brainRegionsAtom,
+  unwrap(brainRegionsAtom),
   (brainRegions) =>
     brainRegions?.reduce(
       (map, brainRegion) => map.set(brainRegion.id, brainRegion.notation),
@@ -175,7 +175,7 @@ export const brainRegionByIdMapAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Map<BrainRegionNotation, BrainRegion> | null
 >(
-  brainRegionsAtom,
+  unwrap(brainRegionsAtom),
   (brainRegions) =>
     brainRegions?.reduce((map, brainRegion) => map.set(brainRegion.id, brainRegion), new Map()) ??
     null
@@ -239,13 +239,13 @@ export const addOrRemoveSelectedAlternateView = atom(
 export const brainRegionsUnsortedArrayAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   BrainRegion[] | null
->(brainRegionsFilteredTreeAtom, (tree) => flattenBrainRegionsTree(tree));
+>(unwrap(brainRegionsFilteredTreeAtom), (tree) => flattenBrainRegionsTree(tree));
 
 export const brainRegionIdxByNotationMapAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Map<BrainRegionId, number> | null
 >(
-  brainRegionsUnsortedArrayAtom,
+  unwrap(brainRegionsUnsortedArrayAtom),
   (brainRegionsUnsorted) =>
     brainRegionsUnsorted?.reduce(
       (idxByNotationMap, brainRegion, idx) => idxByNotationMap.set(brainRegion.notation, idx),
@@ -257,7 +257,7 @@ export const leafIdsByRegionIdAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   { [id: string]: string[] }
 >(
-  brainRegionsUnsortedArrayAtom,
+  unwrap(brainRegionsUnsortedArrayAtom),
   (brainRegions) =>
     brainRegions?.reduce(
       (map, br) => ({
@@ -275,7 +275,7 @@ export const brainRegionLeavesUnsortedArrayAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   BrainRegion[] | null
 >(
-  brainRegionsUnsortedArrayAtom,
+  unwrap(brainRegionsUnsortedArrayAtom),
   (brainRegionsUnsorted) =>
     brainRegionsUnsorted?.filter((brainRegion) => !brainRegion.leaves) ?? null
 );
@@ -284,7 +284,7 @@ export const brainRegionLeaveIdxByNotationMapAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Map<BrainRegionId, number> | null
 >(
-  brainRegionLeavesUnsortedArrayAtom,
+  unwrap(brainRegionLeavesUnsortedArrayAtom),
   (brainRegionLeaves) =>
     brainRegionLeaves?.reduce(
       (idxByNotationMap, brainRegion, idx) => idxByNotationMap.set(brainRegion.notation, idx),
@@ -296,7 +296,7 @@ export const brainRegionLeaveIdxByIdAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Record<BrainRegionId, number> | null
 >(
-  brainRegionLeavesUnsortedArrayAtom,
+  unwrap(brainRegionLeavesUnsortedArrayAtom),
   (brainRegionLeaves) =>
     brainRegionLeaves?.reduce(
       (idxByNotation, brainRegion, idx) => Object.assign(idxByNotation, { [brainRegion.id]: idx }),
@@ -310,7 +310,7 @@ export const brainRegionLeaveIdxByIdAtom = selectAtom<
 export const brainRegionsFilteredArrayAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   BrainRegion[] | null | undefined
->(brainRegionsUnsortedArrayAtom, (flattenedRegions) =>
+>(unwrap(brainRegionsUnsortedArrayAtom), (flattenedRegions) =>
   flattenedRegions ? [...flattenedRegions].sort((a, b) => a.id.localeCompare(b.id)) : null
 );
 

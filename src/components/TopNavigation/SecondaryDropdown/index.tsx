@@ -70,11 +70,11 @@ export default function SecondaryDropdown({
           <button
             type="button"
             onClick={(e) => e.preventDefault()}
-            className={`flex h-full min-w-[190px] flex-row items-center justify-between gap-2 px-5 font-bold outline-none ${
+            className={`flex h-full min-w-[190px] flex-row items-center justify-between gap-2 px-5 font-bold outline-hidden ${
               isLightThemeActive ? `bg-white text-primary-9` : `bg-black text-white`
             }`}
           >
-            <div className="flex flex-grow flex-row items-center justify-center gap-x-2">
+            <div className="flex grow flex-row items-center justify-center gap-x-2">
               {activeItem?.icon}
               {activeItem?.label}
             </div>

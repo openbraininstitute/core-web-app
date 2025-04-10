@@ -1,4 +1,4 @@
-import { ComponentType, useRef } from 'react';
+import { ComponentType, useRef, type JSX } from 'react';
 import { ConfigProvider, Modal } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { classNames } from '@/util/utils';
@@ -13,7 +13,7 @@ export default function useSimulationModal<T extends {}>({
   Content: ComponentType<T>;
 }): UseSimulationModal<T & { id: string }> {
   const [modal, contextHolder] = Modal.useModal();
-  const destroyRef = useRef<() => void>();
+  const destroyRef = useRef<() => void>(undefined);
 
   return (props: T & { id: string }) => {
     return [
@@ -30,7 +30,7 @@ export default function useSimulationModal<T extends {}>({
           styles: { mask: { background: '#002766ba' }, body: { padding: '20px' } },
           closeIcon: showCloseIcon && <CloseOutlined className="text-2xl text-primary-8" />,
           className: classNames(
-            '[&_.ant-modal-confirm-body]:!w-full [&_.ant-modal-confirm-paragraph]:max-w-full'
+            '[&_.ant-modal-confirm-body]:w-full! [&_.ant-modal-confirm-paragraph]:max-w-full'
           ),
           content: (
             <Content

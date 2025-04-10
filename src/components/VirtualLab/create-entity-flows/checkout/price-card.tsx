@@ -39,8 +39,8 @@ function PricingCard({
       onClick={() => onSelect(interval)}
       type="button"
       className={classNames(
-        'border-0.5 relative flex flex-grow flex-col items-start rounded-lg border-gray-100  p-6',
-        selectedInterval === interval ? 'bg-primary-8 !text-white' : 'bg-white text-primary-8'
+        'border-0.5 relative flex grow flex-col items-start rounded-lg border-gray-100  p-6',
+        selectedInterval === interval ? 'bg-primary-8 text-white!' : 'bg-white text-primary-8'
       )}
     >
       <div className="flex w-full items-center justify-between">

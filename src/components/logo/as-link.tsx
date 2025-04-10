@@ -25,7 +25,7 @@ export default function ObiLogoLink({
     <Link
       href={href}
       className={classNames(
-        'z-10 flex h-auto flex-col justify-center outline-none',
+        'z-10 flex h-auto flex-col justify-center outline-hidden',
         color,
         cls?.container
       )}

@@ -1,5 +1,7 @@
 import { BuildQuestionInput } from '@/types/literature';
 
+import type { JSX } from "react";
+
 const propertyElement = (property?: string) =>
   property && <b className="rounded-md bg-secondary-0 px-2 py-px text-teal-600">{property}</b>;
 const subjectElement = (subject?: string) =>

@@ -22,6 +22,37 @@ function getVersion() {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    turbo: {
+      rules: {
+        '*.groq': {
+          loaders: ['raw-loader'],
+          as: '*.js',
+        },
+        '*.vert': {
+          loaders: ['raw-loader'],
+          as: '*.js',
+        },
+        '*.frag': {
+          loaders: ['raw-loader'],
+          as: '*.js',
+        },
+        '*.mp4': {
+          loaders: ['file-loader'],
+          as: 'asset',
+        },
+        '*.pdf': {
+          loaders: ['file-loader'],
+          as: 'asset',
+        },
+      },
+
+      // This is required by react-pdf module. See https://www.npmjs.com/package/react-pdf
+      resolveAlias: {
+        canvas: './empty-module.ts',
+      },
+    },
+  },
   webpack: (config) => {
     config.resolve.alias.canvas = false;
     config.resolve.alias.encoding = false;
@@ -48,7 +79,6 @@ const nextConfig = {
   basePath,
   assetPrefix: basePath ?? undefined,
   reactStrictMode: true,
-  swcMinify: true,
   compress: false,
   output: 'standalone',
   sentry: {

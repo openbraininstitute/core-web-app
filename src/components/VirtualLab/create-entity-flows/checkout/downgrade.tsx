@@ -60,7 +60,7 @@ export default function DowngradeFree({ isOpen, onClose }: Props) {
   };
 
   return (
-    <Modal onClose={onClose} isOpen={isOpen} cls={{ content: '!min-h-[8rem]' }} footer={null}>
+    <Modal onClose={onClose} isOpen={isOpen} cls={{ content: 'min-h-[8rem]!' }} footer={null}>
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-primary-8">Downgrading</h1>
         <p className="text-lg font-light">
@@ -72,13 +72,13 @@ export default function DowngradeFree({ isOpen, onClose }: Props) {
           <label htmlFor="reason" className="mb-1 text-lg font-bold text-primary-8">
             Reason <span className="text-sm font-light text-gray-400">(Optional):</span>
           </label>
-          <TextArea name="reason" rows={10} className="!border" />
+          <TextArea name="reason" rows={10} className="border!" />
           <div className="flex items-center justify-end gap-3 pt-4">
             <Button
               key="cancel-btn"
               className={classNames(
                 'h-14 rounded-none border-0 px-6 text-primary-8',
-                'hover:!border hover:!border-primary-8 hover:!bg-white hover:!text-primary-8'
+                'hover:border! hover:border-primary-8! hover:bg-white! hover:text-primary-8!'
               )}
               size="large"
               htmlType="button"
@@ -90,7 +90,7 @@ export default function DowngradeFree({ isOpen, onClose }: Props) {
               key="confirm-btn"
               className={classNames(
                 'h-14 rounded-none px-6 text-primary-8',
-                '!border !border-primary-8 hover:!bg-primary-8 hover:font-bold hover:!text-white'
+                'border! border-primary-8! hover:bg-primary-8! hover:font-bold hover:text-white!'
               )}
               size="large"
               htmlType="submit"

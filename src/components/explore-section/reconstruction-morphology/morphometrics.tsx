@@ -19,7 +19,7 @@ export default function Morphometrics({
   const { filteredGroupedCardFields, renderMetric } = useMorphometrics(dataType, metrics, true);
 
   return (
-    <div className="flex max-w-screen-2xl flex-col gap-10 pl-2">
+    <div className="flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2">
       <Divider className="w-full" />
       <h1 className="text-xl font-bold text-primary-8">Morphometrics</h1>
       <div className="grid grid-cols-5 gap-4 break-words">

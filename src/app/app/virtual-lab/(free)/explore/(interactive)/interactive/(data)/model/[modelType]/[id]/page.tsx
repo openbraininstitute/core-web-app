@@ -1,4 +1,5 @@
-'use client';
+'use client';;
+import { use } from "react";
 
 import dynamic from 'next/dynamic';
 
@@ -16,15 +17,16 @@ const SynaptomeDetailView = dynamic(
 // const CircuitDetailView = dynamic(() => import('@/components/explore-section/Circuit/DetailView'));
 
 type Params = {
-  params: {
+  params: Promise<{
     id: string;
     modelType: ModelTypeNames;
     projectId: string;
     virtualLabId: string;
-  };
+  }>;
 };
 
-export default function DetailPage({ params }: Params) {
+export default function DetailPage(props: Params) {
+  const params = use(props.params);
   switch (params.modelType) {
     case 'e-model':
       return <EModelDetailView params={params} />;

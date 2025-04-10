@@ -39,7 +39,7 @@ function FormWidget({ virtualLabId }: Props) {
     <button
       type="button"
       className={classNames(
-        'mt-2 flex h-16 w-full items-center justify-between gap-3 rounded-md border border-neutral-3 !p-5 text-primary-7',
+        'mt-2 flex h-16 w-full items-center justify-between gap-3 rounded-md border border-neutral-3 p-5! text-primary-7',
         'transition-colors duration-300 ease-out hover:border-primary-0 hover:bg-primary-0'
       )}
       onClick={openStripeForm}

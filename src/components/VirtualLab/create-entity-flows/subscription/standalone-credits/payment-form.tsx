@@ -154,9 +154,9 @@ function Form({ onClose }: { onClose: () => void }) {
   return (
     <div
       data-testid="stripe-payment-form"
-      className="mx-auto flex h-full w-full flex-grow flex-col items-center justify-center"
+      className="mx-auto flex h-full w-full grow flex-col items-center justify-center"
     >
-      <div className="flex h-full w-full flex-grow flex-col items-center justify-center">
+      <div className="flex h-full w-full grow flex-col items-center justify-center">
         <CreditConverter showActions={false} onClose={onClose} />
         <div className="mx-auto  flex w-full flex-col rounded-lg bg-white">
           <PaymentElement id="credits-form" onReady={onReady} />
@@ -170,7 +170,7 @@ function Form({ onClose }: { onClose: () => void }) {
               key="cancel-btn"
               className={classNames(
                 'rounded-md bg-white px-6 text-primary-8',
-                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
               )}
               type="text"
               size="large"
@@ -183,7 +183,7 @@ function Form({ onClose }: { onClose: () => void }) {
               key="add-credits-btn"
               className={classNames(
                 'rounded-md border-gray-300 bg-white px-6 text-primary-8',
-                'hover:!border hover:border-primary-8 hover:!bg-white hover:font-bold hover:!text-primary-8'
+                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
               )}
               type="text"
               size="large"
@@ -253,10 +253,10 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
         onClose={onClearAndClose}
         footer={null}
         cls={{
-          content: classNames('!rounded-md !min-h-[4rem]'),
+          content: classNames('rounded-md! min-h-[4rem]!'),
         }}
       >
-        <div className="flex h-full flex-grow items-center justify-center py-7">
+        <div className="flex h-full grow items-center justify-center py-7">
           <Spin size="large" indicator={<LoadingOutlined />} />
         </div>
       </Modal>
@@ -268,11 +268,11 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
       onClose={onClearAndClose}
       footer={null}
       cls={{
-        parent: '!w-[550px] [&_.ant-modal-content]:!rounded-md [&_.ant-modal-content]:!px-8',
+        parent: 'w-[550px]! [&_.ant-modal-content]:rounded-md! [&_.ant-modal-content]:px-8!',
         content: classNames(
-          '!rounded-md',
-          step === 'overview' && '!min-h-[4rem]',
-          step === 'pay' && '!min-h-[9rem]'
+          'rounded-md!',
+          step === 'overview' && 'min-h-[4rem]!',
+          step === 'pay' && 'min-h-[9rem]!'
         ),
       }}
     >

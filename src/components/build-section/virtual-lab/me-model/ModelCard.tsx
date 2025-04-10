@@ -69,7 +69,7 @@ export default function ModelCard({
 
       <div className="mt-2 flex gap-10">
         {thumbnail}
-        <div className="flex-grow">
+        <div className="grow">
           <div className={subtitleStyle}>NAME</div>
           <div className="my-1 text-3xl font-bold text-primary-8">{model.name}</div>
           <ModelDetails details={modelDetails} />

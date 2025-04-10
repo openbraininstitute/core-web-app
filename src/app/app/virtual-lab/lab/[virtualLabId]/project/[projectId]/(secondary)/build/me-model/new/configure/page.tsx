@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useState, use } from 'react';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { notification, Spin } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -32,10 +32,10 @@ const LOW_FUNDS_ERROR_MSG =
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
 type Params = {
-  params: {
+  params: Promise<{
     virtualLabId: string;
     projectId: string;
-  };
+  }>;
 };
 
 function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
@@ -94,7 +94,7 @@ function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
   ];
 
   return (
-    <div className="grid max-w-screen-2xl grow grid-cols-6 gap-x-10 gap-y-4 break-words">
+    <div className="grid max-w-(--breakpoint-2xl) grow grid-cols-6 gap-x-10 gap-y-4 break-words">
       {fields.map(({ className, title, value }) => (
         <div key={title} className={classNames('text-primary-7', className)}>
           <div className="uppercase text-neutral-4">{title}</div>
@@ -105,7 +105,14 @@ function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
   );
 }
 
-export default function NewMEModelPage({ params: { projectId, virtualLabId } }: Params) {
+export default function NewMEModelPage(props: Params) {
+  const params = use(props.params);
+
+  const {
+    projectId,
+    virtualLabId
+  } = params;
+
   const router = useRouter();
   const selectedMModel = useAtomValue(selectedMModelAtom);
   const selectedEModel = useAtomValue(selectedEModelAtom);
