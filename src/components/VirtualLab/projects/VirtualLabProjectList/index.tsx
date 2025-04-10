@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef, memo, useMemo, useState } from 'react';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
+import { memo, useMemo, useState } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import Link from 'next/link';
@@ -15,12 +14,11 @@ import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover
 
 interface ProjectListContentProps {
   projects: Array<Project>;
-  containerRef: React.RefObject<HTMLDivElement>;
 }
 
-const ProjectListContent = memo(({ projects, containerRef }: ProjectListContentProps) => {
+const ProjectListContent = memo(({ projects }: ProjectListContentProps) => {
   return (
-    <div ref={containerRef} className="primary-scrollbar h-full overflow-y-auto pr-5">
+    <div className="primary-scrollbar h-full overflow-y-auto pr-5">
       <div className="flex flex-col gap-4 pb-2">
         {projects.map((project) => (
           <Item
@@ -28,7 +26,7 @@ const ProjectListContent = memo(({ projects, containerRef }: ProjectListContentP
             id={project.id}
             description={project.description}
             vlabId={project.virtual_lab_id}
-            lastUpdate={project.updated_at}
+            creationDate={project.created_at}
             memberCount={project.user_count}
             name={project.name}
           />
@@ -54,6 +52,7 @@ const CreateProjectButton = memo(({ labId }: CreateProjectButtonProps) => {
     if (!allowedOperation || !visible) setIsPopoverOpen(true);
     else setIsPopoverOpen(false);
   };
+
   return (
     <div className="ml-auto mt-4 flex items-center gap-3 pr-3">
       <CustomPopover
@@ -89,15 +88,17 @@ const CreateProjectButton = memo(({ labId }: CreateProjectButtonProps) => {
 CreateProjectButton.displayName = 'CreateProjectButton';
 
 export default function VirtualLabProjectList({ id }: { id: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
   const currentProjects = useAtomValue(
-    unwrap(
-      virtualLabProjectsAtomFamily({
-        virtualLabId: id,
-        page: 1,
-        size: 20, // Fixed size of 20
-      })
+    useMemo(
+      () =>
+        unwrap(
+          virtualLabProjectsAtomFamily({
+            virtualLabId: id,
+            page: 1,
+            size: 20, // Fixed size of 20
+          })
+        ),
+      [id]
     )
   );
 
@@ -106,18 +107,10 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
     [currentProjects?.data?.results]
   );
 
-  if (!currentProjects?.data) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Spin size="large" indicator={<LoadingOutlined />} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full w-full flex-col">
       <div className="h-[calc(100%-80px)] overflow-hidden">
-        <ProjectListContent projects={projects} containerRef={containerRef} />
+        <ProjectListContent projects={projects} />
       </div>
       <div className="ml-auto mt-auto">
         <CreateProjectButton labId={id} />
