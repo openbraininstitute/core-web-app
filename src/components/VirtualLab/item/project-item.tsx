@@ -68,7 +68,7 @@ export default function Item({ id, description, vlabId, name, creationDate, memb
           </div>
           <div className="flex items-center gap-2">
             <span className="text-base text-primary-2">
-              Balance:
+              Credit balance:
               <span className="ml-2 font-bold text-white">{balance}</span>
             </span>
           </div>
