@@ -11,18 +11,11 @@ type Props = {
   vlabId: string;
   name: string;
   description: string;
-  lastUpdate: string;
+  creationDate: string;
   memberCount?: number;
 };
 
-export default async function Item({
-  id,
-  description,
-  vlabId,
-  name,
-  lastUpdate,
-  memberCount,
-}: Props) {
+export default function Item({ id, description, vlabId, name, creationDate, memberCount }: Props) {
   const virtualLabBalance = useLastTruthyValue(
     projectBalanceAtomFamily({ virtualLabId: vlabId, projectId: id })
   );
@@ -40,8 +33,8 @@ export default async function Item({
           <div>
             <h3 className="mb-1 text-3xl font-bold">{name}</h3>
             <p className="text-base text-primary-2">
-              Project&#39;s latest update:{' '}
-              <span className="text-white">{dateColumnInfoToRender(lastUpdate).text}</span>
+              Project&#39;s creation date:{' '}
+              <span className="text-white">{dateColumnInfoToRender(creationDate).text}</span>
             </p>
           </div>
 

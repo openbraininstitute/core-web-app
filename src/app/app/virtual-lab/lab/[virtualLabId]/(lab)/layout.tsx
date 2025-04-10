@@ -15,7 +15,7 @@ type Props = {
   };
 };
 
-export default async function VirtualLabLayout({ children, params }: Props) {
+export default function VirtualLabLayout({ children, params }: Props) {
   return (
     <div className="flex h-screen overflow-y-auto bg-primary-9 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
