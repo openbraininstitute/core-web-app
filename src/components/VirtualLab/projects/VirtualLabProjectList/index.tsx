@@ -43,9 +43,9 @@ interface CreateProjectButtonProps {
 
 const CreateProjectButton = memo(({ labId }: CreateProjectButtonProps) => {
   return (
-    <div className="ml-auto mt-4 flex items-center gap-3 pr-3">
+    <div className="mt-4 ml-auto flex items-center gap-3 pr-3">
       <Link
-        className="w-max rounded-none border-none font-bold text-primary-9"
+        className="text-primary-9 w-max rounded-none border-none font-bold"
         href={`/app/virtual-lab/lab/${labId}/project/create`}
       >
         <div className="group flex h-12 items-center justify-between gap-8 bg-white px-4 py-2">
@@ -90,7 +90,7 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
       <div className="h-[calc(100%-80px)] overflow-hidden">
         <ProjectListContent projects={projects} containerRef={containerRef} />
       </div>
-      <div className="ml-auto mt-auto">
+      <div className="mt-auto ml-auto">
         <CreateProjectButton labId={id} />
       </div>
     </div>

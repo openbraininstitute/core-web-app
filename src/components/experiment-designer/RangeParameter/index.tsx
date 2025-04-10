@@ -101,7 +101,7 @@ export default function RangeParameter({ paramAtom, className, onChangeParamType
   ) : (
     <div className="flex items-baseline">
       <div className={classNames('w-[100px]', titleStyle)}>{data.name}</div>
-      <div className="text-xs text-primary-7">
+      <div className="text-primary-7 text-xs">
         Range {startValue} - {endValue}
       </div>
     </div>

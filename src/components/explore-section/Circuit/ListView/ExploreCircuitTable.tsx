@@ -60,7 +60,7 @@ export default function ExploreCircuitTable() {
       title: 'Description',
       key: 'description',
       render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{truncate(value.description, 40)}</span>
+        <span className="font-normal whitespace-nowrap">{truncate(value.description, 40)}</span>
       ),
       width: 300,
     },
@@ -68,35 +68,35 @@ export default function ExploreCircuitTable() {
       title: 'Brain region',
       key: 'brainRegion',
       render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.brainRegion}</span>
+        <span className="font-normal whitespace-nowrap">{value.brainRegion}</span>
       ),
     },
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
       render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.numberOfNeurons}</span>
+        <span className="font-normal whitespace-nowrap">{value.numberOfNeurons}</span>
       ),
     },
     {
       title: 'Species',
       key: 'specie',
       render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.species}</span>
+        <span className="font-normal whitespace-nowrap">{value.species}</span>
       ),
     },
     {
       title: 'Contributor',
       key: 'contributorSimple',
       render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.metadata.contributorSimple}</span>
+        <span className="font-normal whitespace-nowrap">{value.metadata.contributorSimple}</span>
       ),
     },
     {
       title: 'Registration date',
       key: 'registrationDate',
       render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap font-normal">{value.metadata.registrationDate}</span>
+        <span className="font-normal whitespace-nowrap">{value.metadata.registrationDate}</span>
       ),
     },
     {
@@ -115,7 +115,7 @@ export default function ExploreCircuitTable() {
               onClick={() => handleExpandRow(value, index ?? -1)}
               disabled={!value.hasSubcircuits}
             >
-              <div className="relative mr-6 block ">{totalSubcircuitsForParent}</div>
+              <div className="relative mr-6 block">{totalSubcircuitsForParent}</div>
               <ChevronRight
                 fill="#003A8C"
                 className={classNames(
@@ -136,7 +136,7 @@ export default function ExploreCircuitTable() {
       <div className="relative flex flex-col">
         <div className="flex-row] relative flex pl-2">
           <ArrowSmall iconColor="#8C8C8C" className="relative -top-0.5" />
-          <span className="ml-3 pb-2 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
+          <span className="ml-3 pb-2 text-base font-semibold tracking-wider text-[#8C8C8C] uppercase">
             Subcircuits
           </span>
         </div>
@@ -222,7 +222,7 @@ export default function ExploreCircuitTable() {
         <a
           href={fileUrl}
           type="button"
-          className="absolute bottom-6 right-10 flex h-20 w-[150px] items-center justify-center bg-primary-8 text-xl transition-bottom duration-300 ease-in-out"
+          className="bg-primary-8 transition-bottom absolute right-10 bottom-6 flex h-20 w-[150px] items-center justify-center text-xl duration-300 ease-in-out"
           style={{
             visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
           }}

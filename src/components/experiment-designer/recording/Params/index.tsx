@@ -82,7 +82,7 @@ const getDescription = () => (
     >
       <button
         type="button"
-        className="mt-2 flex items-center gap-2 bg-neutral-1 p-2 text-primary-8"
+        className="bg-neutral-1 text-primary-8 mt-2 flex items-center gap-2 p-2"
       >
         <DocumentationIcon />A guide to Sonata
       </button>

@@ -48,7 +48,7 @@ export default function SimulationThumbnail({
         role="presentation"
       />
 
-      <div className="absolute left-1 top-1 flex flex-row items-center justify-start gap-2 font-bold">
+      <div className="absolute top-1 left-1 flex flex-row items-center justify-start gap-2 font-bold">
         <Checkbox.Root
           className="h-5 w-5 rounded-sm border border-white bg-transparent"
           checked={isChecked}

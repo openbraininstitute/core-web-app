@@ -112,9 +112,9 @@ export default function UserNotebookPage({
       </div>
       <Modal open={openModal} onCancel={resetModal} footer={false} width="35vw">
         <div className="p-4">
-          <div className="text-xl font-bold text-primary-8">Register notebooks</div>
+          <div className="text-primary-8 text-xl font-bold">Register notebooks</div>
           {step === 0 && (
-            <div className="mb-5 mt-5">
+            <div className="mt-5 mb-5">
               <p className="mb-5">
                 Contribute and share your own analysis notebooks with your collaborators. Provide
                 the url of a code repository containing the notebooks and they will be available in
@@ -129,16 +129,16 @@ export default function UserNotebookPage({
                   specifications.
                 </a>
               </p>
-              <div className="mb-3 font-bold text-primary-8">Github url</div>
+              <div className="text-primary-8 mb-3 font-bold">Github url</div>
               <Input
                 onChange={(e) => setRepoUrl(e.currentTarget.value)}
                 onInput={(e) => setRepoUrl(e.currentTarget.value)}
                 placeholder="Paste your url here"
               />
-              <div className="-mb-6 mt-5 flex justify-end gap-3">
+              <div className="mt-5 -mb-6 flex justify-end gap-3">
                 <button
                   type="button"
-                  className="rounded-sm bg-primary-8 p-2 text-white"
+                  className="bg-primary-8 rounded-sm p-2 text-white"
                   onClick={async () => {
                     try {
                       setLoading(true);
@@ -167,7 +167,7 @@ export default function UserNotebookPage({
           )}
 
           {step === 1 && (
-            <div className="mb-5 mt-5">
+            <div className="mt-5 mb-5">
               {newNotebooks?.map((notebook, i) => {
                 return (
                   <div key={notebook.key} className="mb-10">
@@ -175,7 +175,7 @@ export default function UserNotebookPage({
                     <div className="mb-3 flex justify-between">
                       <div className="flex-1">
                         <div className="text-sm text-gray-400">Name</div>
-                        <div className="max-w-fit font-bold text-primary-8">{notebook?.name}</div>
+                        <div className="text-primary-8 max-w-fit font-bold">{notebook?.name}</div>
                       </div>
 
                       <div className="flex-1">
@@ -183,7 +183,7 @@ export default function UserNotebookPage({
                         <div>
                           {notebook?.objectOfInterest.split(',').map((t) => (
                             <span
-                              className="mr-1 max-w-fit rounded-3xl border border-gray-200 px-2 py-1 text-xs text-primary-8"
+                              className="text-primary-8 mr-1 max-w-fit rounded-3xl border border-gray-200 px-2 py-1 text-xs"
                               key={notebook.path + t}
                             >
                               {t}
@@ -199,10 +199,10 @@ export default function UserNotebookPage({
                   </div>
                 );
               })}
-              <div className="-mb-6 mt-5 flex justify-end gap-3">
+              <div className="mt-5 -mb-6 flex justify-end gap-3">
                 <button
                   type="button"
-                  className="rounded-sm bg-primary-8 px-3 py-2 text-white"
+                  className="bg-primary-8 rounded-sm px-3 py-2 text-white"
                   onClick={async () => {
                     if (!newNotebooks) return;
                     setLoading(true);
@@ -246,7 +246,7 @@ export default function UserNotebookPage({
                   }}
                 >
                   Register{' '}
-                  <span className="ml-1 text-sm text-primary-3">({newNotebooks?.length})</span>
+                  <span className="text-primary-3 ml-1 text-sm">({newNotebooks?.length})</span>
                   {loading && <LoadingOutlined />}
                 </button>
 
@@ -270,7 +270,7 @@ export default function UserNotebookPage({
       </Modal>
       <button
         type="button"
-        className="fixed bottom-10 right-10 h-[50px] w-[200px] bg-white text-primary-8"
+        className="text-primary-8 fixed right-10 bottom-10 h-[50px] w-[200px] bg-white"
         onClick={() => setOpenModal(true)}
       >
         <span className="mr-5 font-semibold">Register notebooks</span>

@@ -65,7 +65,7 @@ export default function SynaptomeModelDetailPage({
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="font-light text-primary-9">Loading synaptome model...</h2>
+        <h2 className="text-primary-9 font-light">Loading synaptome model...</h2>
       </div>
     );
   }
@@ -106,7 +106,7 @@ export default function SynaptomeModelDetailPage({
                       key={key}
                       className={classNames(
                         'w-1/3 flex-[1_1_33%] border py-3 text-center text-xl font-semibold transition-all duration-200 ease-out',
-                        activeTab === key ? 'bg-primary-9 text-white' : 'bg-white text-primary-9'
+                        activeTab === key ? 'bg-primary-9 text-white' : 'text-primary-9 bg-white'
                       )}
                     >
                       <button

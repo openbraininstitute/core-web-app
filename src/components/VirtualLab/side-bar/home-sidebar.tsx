@@ -37,7 +37,7 @@ export default function SideBar() {
   return (
     <Base>
       <nav className="flex max-h-max flex-1 flex-col py-4">
-        <div className="mt-20 border border-primary-5">
+        <div className="border-primary-5 mt-20 border">
           {labsCount && labsCount >= 1 ? (
             <Fragment key="labs">
               {withLabsMenuItems.map(({ url, title, disabled }) => (
@@ -61,13 +61,13 @@ export default function SideBar() {
         </div>
         <Link
           href="/app/virtual-lab/explore/interactive"
-          className="relative mt-4 h-44 rounded-md bg-primary-8 px-4 py-2 opacity-90 hover:opacity-100"
+          className="bg-primary-8 relative mt-4 h-44 rounded-md px-4 py-2 opacity-90 hover:opacity-100"
           style={{
             background: `url(/images/multiple-brains.webp) #003A8C no-repeat bottom -122px right -108px`,
             backgroundSize: '294px 294px',
           }}
         >
-          <div className="absolute inset-0 h-full w-full rounded-md bg-primary-8/50" />
+          <div className="bg-primary-8/50 absolute inset-0 h-full w-full rounded-md" />
           <div className="relative h-full">
             <div className="flex h-full flex-col justify-between p-4">
               <h3 className="mb-2 text-xl font-bold">Explore</h3>

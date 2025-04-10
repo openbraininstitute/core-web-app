@@ -72,7 +72,7 @@ export default function MorphologyCard({ reselectLink = false }: Props) {
       thumbnail={
         selectedMModel && (
           <CardVisualization
-            className="border border-neutral-3"
+            className="border-neutral-3 border"
             dataType={DataType.ExperimentalNeuronMorphology}
             resource={selectedMModel}
             height={200}

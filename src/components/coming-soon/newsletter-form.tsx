@@ -79,7 +79,7 @@ export default function NewsletterForm({ cls }: Props) {
   return (
     <div
       className={classNames(
-        'flex w-full max-w-full  flex-col bg-white',
+        'flex w-full max-w-full flex-col bg-white',
         'p-4 sm:max-w-3xl md:p-8',
         cls?.container
       )}
@@ -110,7 +110,7 @@ export default function NewsletterForm({ cls }: Props) {
               label={
                 <span
                   className={classNames(
-                    'text-base font-bold text-primary-8 md:text-lg',
+                    'text-primary-8 text-base font-bold md:text-lg',
                     cls?.formItem?.label
                   )}
                 >
@@ -126,11 +126,11 @@ export default function NewsletterForm({ cls }: Props) {
             </Form.Item>
             <Form.Item
               name="email"
-              className="mb-7 h-[64.5px] w-full  min-w-full"
+              className="mb-7 h-[64.5px] w-full min-w-full"
               label={
                 <span
                   className={classNames(
-                    'text-base font-bold text-primary-8 md:text-lg',
+                    'text-primary-8 text-base font-bold md:text-lg',
                     cls?.formItem?.label
                   )}
                 >
@@ -142,7 +142,7 @@ export default function NewsletterForm({ cls }: Props) {
             >
               <Input
                 placeholder="Enter your email"
-                className={classNames('h-10 w-full  min-w-0', cls?.formItem?.input)}
+                className={classNames('h-10 w-full min-w-0', cls?.formItem?.input)}
                 size={isWide ? 'large' : 'small'}
               />
             </Form.Item>
@@ -154,11 +154,11 @@ export default function NewsletterForm({ cls }: Props) {
             >
               <Checkbox
                 className={classNames(
-                  'mr-3 [&_.ant-checkbox-inner]:rounded-none ',
+                  'mr-3 [&_.ant-checkbox-inner]:rounded-none',
                   '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8'
                 )}
               >
-                <span className="text-base font-semibold text-primary-8 md:text-lg">
+                <span className="text-primary-8 text-base font-semibold md:text-lg">
                   I have read and accept
                   <Link
                     target="_blank"
@@ -171,14 +171,14 @@ export default function NewsletterForm({ cls }: Props) {
                 </span>
               </Checkbox>
             </Form.Item>
-            <Form.Item className="mb-0 mt-auto">
+            <Form.Item className="mt-auto mb-0">
               <Button
                 loading={subscribing}
                 htmlType="submit"
                 className={classNames(
-                  'w-auto rounded-full bg-white px-8 py-3 text-lg font-semibold text-primary-8',
-                  'mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:bg-primary-8 hover:text-white!',
-                  'disabled:text-primary-8 disabled:hover:bg-gray-100 disabled:hover:text-primary-4!',
+                  'text-primary-8 w-auto rounded-full bg-white px-8 py-3 text-lg font-semibold',
+                  'hover:bg-primary-8 mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:text-white!',
+                  'disabled:text-primary-8 disabled:hover:text-primary-4! disabled:hover:bg-gray-100',
                   cls?.btn
                 )}
                 disabled={disableForm}
@@ -192,7 +192,7 @@ export default function NewsletterForm({ cls }: Props) {
             status="success"
             title="You’re all set! Some great news will be coming your way soon!"
             className={classNames(
-              'font-serif  [&_.ant-result-title]:font-bold [&_.ant-result-title]:text-primary-8',
+              '[&_.ant-result-title]:text-primary-8 font-serif [&_.ant-result-title]:font-bold',
               'mx-auto max-w-full sm:max-w-[80%] lg:max-w-[60%]',
               '[&_.ant-result-title]:text-2xl sm:[&_.ant-result-title]:text-4xl'
             )}

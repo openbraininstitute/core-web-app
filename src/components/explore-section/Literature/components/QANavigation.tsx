@@ -100,7 +100,7 @@ function QAHistoryNavigationItem({
       role="button"
       onClick={onClick}
       className={classNames(
-        'gqa-nav-item group relative inline-flex cursor-pointer list-none items-center rounded-r-sm py-4 pr-2 text-neutral-8 first:mt-auto last:mb-auto hover:bg-gray-50',
+        'gqa-nav-item group text-neutral-8 relative inline-flex cursor-pointer list-none items-center rounded-r-sm py-4 pr-2 first:mt-auto last:mb-auto hover:bg-gray-50',
         isDeleting && 'animate-scale-down overflow-hidden bg-gray-100 py-4',
         isBuildSection ? 'pl-16' : 'pl-7',
         showExpandedView ? 'w-full' : 'w-max'
@@ -111,7 +111,7 @@ function QAHistoryNavigationItem({
           {isActive && (
             <div
               className={classNames(
-                'absolute top-6 inline-flex h-[3.5px] transform rounded-full bg-primary-8 transition-all duration-200 ease-in-expo',
+                'bg-primary-8 ease-in-expo absolute top-6 inline-flex h-[3.5px] transform rounded-full transition-all duration-200',
                 isDeleting && 'hidden',
                 isBuildSection ? 'left-3 w-10' : 'left-0 w-4'
               )}
@@ -120,16 +120,16 @@ function QAHistoryNavigationItem({
 
           <div className="flex w-full flex-col items-start justify-start">
             <div className="inline-flex w-full items-center justify-between gap-2">
-              <div className="text-sm font-medium capitalize text-neutral-3 group-hover:font-bold group-hover:text-neutral-4">
+              <div className="text-neutral-3 group-hover:text-neutral-4 text-sm font-medium capitalize group-hover:font-bold">
                 question {index}
               </div>
               <DeleteOutlined
-                className="text-sm text-neutral-3 hover:scale-110 hover:transform hover:text-primary-8 hover:transition-all group-hover:text-primary-8"
+                className="text-neutral-3 hover:text-primary-8 group-hover:text-primary-8 text-sm hover:scale-110 hover:transform hover:transition-all"
                 onClick={onDelete}
               />
             </div>
             {showParameters && (
-              <div className="my-2 flex w-3/4 flex-col items-start border-b border-t border-gray-200 py-2">
+              <div className="my-2 flex w-3/4 flex-col items-start border-t border-b border-gray-200 py-2">
                 {extra && extra.buildStep && (
                   <IndicationIcon
                     icon={<AppstoreOutlined />}
@@ -150,9 +150,9 @@ function QAHistoryNavigationItem({
               <div
                 data-testid="question-navigation-item"
                 className={classNames(
-                  'line-clamp-2 w-4/5 text-xl group-hover:text-primary-8',
+                  'group-hover:text-primary-8 line-clamp-2 w-4/5 text-xl',
                   isNotFound && isActive && 'text-amber-500',
-                  isActive ? 'font-extrabold text-primary-8' : 'font-medium text-neutral-3'
+                  isActive ? 'text-primary-8 font-extrabold' : 'text-neutral-3 font-medium'
                 )}
               >
                 {question}

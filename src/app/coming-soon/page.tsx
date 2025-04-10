@@ -16,7 +16,7 @@ export default function Page() {
 
   if (!hydrated) return null;
   return (
-    <div className="relative min-h-screen overflow-hidden bg-primary-9" style={{ height }}>
+    <div className="bg-primary-9 relative min-h-screen overflow-hidden" style={{ height }}>
       <Header />
       <div className="relative min-h-screen">
         <Hero />

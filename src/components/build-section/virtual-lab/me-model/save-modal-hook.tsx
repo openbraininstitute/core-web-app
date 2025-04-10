@@ -37,7 +37,7 @@ function ModalContent({ onClose }: { onClose: () => void }) {
     <>
       <div className="flex flex-col items-start justify-start gap-y-3">
         <div className="inline-flex items-center gap-x-2">
-          <h2 className="text-2xl font-bold text-primary-8">Save single neuron model</h2>
+          <h2 className="text-primary-8 text-2xl font-bold">Save single neuron model</h2>
         </div>
         <p className="text-primary-8">Save single neuron model.</p>
       </div>
@@ -53,27 +53,27 @@ function ModalContent({ onClose }: { onClose: () => void }) {
         <Form.Item
           id="name"
           name="name"
-          label={<span className="text-base font-bold text-primary-8">Name</span>}
+          label={<span className="text-primary-8 text-base font-bold">Name</span>}
           rules={[{ required: true, message: 'Please define a name' }]}
         >
           <Input
-            className="!focus:shadow-none mt-2 rounded-none border-0 border-b border-primary-8 text-xl"
+            className="!focus:shadow-none border-primary-8 mt-2 rounded-none border-0 border-b text-xl"
             placeholder="Name your model..."
           />
         </Form.Item>
         <Form.Item
           id="description"
           name="description"
-          label={<span className="text-base font-bold text-primary-8">Description</span>}
+          label={<span className="text-primary-8 text-base font-bold">Description</span>}
           rules={[{ required: true, message: 'Please define a description' }]}
         >
           <Input
-            className="!focus:shadow-none mt-2 rounded-none border-0 border-b border-primary-8 text-xl"
+            className="!focus:shadow-none border-primary-8 mt-2 rounded-none border-0 border-b text-xl"
             placeholder="Write your description here..."
           />
         </Form.Item>
 
-        <div className="mr-[-34px] mt-8 text-right">
+        <div className="mt-8 mr-[-34px] text-right">
           <Button
             onClick={onClose}
             className="inline-flex items-center justify-center rounded-none border-none px-5 py-6 shadow-none"
@@ -82,7 +82,7 @@ function ModalContent({ onClose }: { onClose: () => void }) {
           </Button>
           <Button
             type="primary"
-            className="ml-2 inline-flex items-center justify-center rounded-none bg-primary-8 px-8 py-6"
+            className="bg-primary-8 ml-2 inline-flex items-center justify-center rounded-none px-8 py-6"
             disabled={!formValid}
             onClick={save}
             loading={isSaving}
@@ -114,7 +114,7 @@ export function useSaveModal() {
         mask: { background: '#002766' },
         body: { padding: '60px 40px 20px' },
       },
-      closeIcon: <CloseOutlined className="text-2xl text-primary-8" />,
+      closeIcon: <CloseOutlined className="text-primary-8 text-2xl" />,
       className: '![&>.ant-modal-content]:bg-red-500',
       content: <ModalContent onClose={onClose} />,
     });

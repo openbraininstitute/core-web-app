@@ -35,7 +35,7 @@ export default function WelcomeUserBanner({ title }: { title?: string }) {
           <Realistic
             autorun={{ speed: 0.3, duration: 3 }}
             decorateOptions={(options) => ({ ...options, origin: { y: 0.2 }, spread: 270 })}
-            className="absolute left-0 top-0 h-full w-full"
+            className="absolute top-0 left-0 h-full w-full"
             width="100%"
           />
         )}
@@ -57,7 +57,7 @@ export default function WelcomeUserBanner({ title }: { title?: string }) {
               setShow(false);
             }}
             ghost
-            className="absolute right-4 top-4 cursor-pointer border-none"
+            className="absolute top-4 right-4 cursor-pointer border-none"
           />
         </div>
       </>

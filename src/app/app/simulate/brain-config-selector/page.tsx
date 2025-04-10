@@ -33,7 +33,7 @@ export default function BrainConfigSelectorPage() {
             onChange={(e) => setCampaignName(e.target.value)}
             type="text"
             placeholder="My campaign name..."
-            className="block h-7 w-full border-b border-b-primary-1 bg-primary-9 py-5 placeholder-primary-3"
+            className="border-b-primary-1 bg-primary-9 placeholder-primary-3 block h-7 w-full border-b py-5"
           />
           <RequiredMessage text={campaignName} fieldName="name" />
         </div>

@@ -144,7 +144,7 @@ export default function ExperimentDesignerLayout({ children }: ExperimentDesigne
             </div>
           </ErrorBoundary>
 
-          <div className="absolute bottom-5 right-5 flex gap-5">
+          <div className="absolute right-5 bottom-5 flex gap-5">
             <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
               <ActionButtons
                 isConfigUsedInSim={isConfigUsedInSim}

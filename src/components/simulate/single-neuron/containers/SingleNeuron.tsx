@@ -28,7 +28,7 @@ function SingleNeuron({ projectId, virtualLabId }: Props) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="font-light text-primary-9">Loading Configuration ...</h2>
+        <h2 className="text-primary-9 font-light">Loading Configuration ...</h2>
       </div>
     );
   }
@@ -36,7 +36,7 @@ function SingleNeuron({ projectId, virtualLabId }: Props) {
   return (
     <>
       <SimulationConfiguration meModelUrl={resource._self} type={SIMULATION_TYPE} />
-      <div className="fixed bottom-4 right-4 z-20 mt-auto">
+      <div className="fixed right-4 bottom-4 z-20 mt-auto">
         <SimulationButton
           modelSelfUrl={resource._self}
           vLabId={virtualLabId}

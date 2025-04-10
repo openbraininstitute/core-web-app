@@ -5,7 +5,7 @@ import { ConfigProvider } from 'antd';
 import { SessionProvider } from 'next-auth/react';
 import { Provider as JotaiProvider } from 'jotai';
 import { DevTools } from 'jotai-devtools';
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import commonAntdTheme from '@/theme/antd';
 import SessionStateProvider from '@/components/SessionStateProvider';
@@ -23,16 +23,16 @@ export default function Providers({ children, session }: ProvidersProps) {
     <ConfigProvider theme={commonAntdTheme}>
       <AtomProvider>
         <NuqsAdapter>
-        <JotaiProvider>
-          {process.env.NEXT_PUBLIC_JOTAI_DEVTOOLS_ENABLED && (
-            <DevTools {...{ isInitialOpen: false }} />
-          )}
-          <ThemeProvider>
-            <SessionProvider session={session} refetchInterval={2 * 60}>
-              <SessionStateProvider>{children}</SessionStateProvider>
-            </SessionProvider>
-          </ThemeProvider>
-        </JotaiProvider>
+          <JotaiProvider>
+            {process.env.NEXT_PUBLIC_JOTAI_DEVTOOLS_ENABLED && (
+              <DevTools {...{ isInitialOpen: false }} />
+            )}
+            <ThemeProvider>
+              <SessionProvider session={session} refetchInterval={2 * 60}>
+                <SessionStateProvider>{children}</SessionStateProvider>
+              </SessionProvider>
+            </ThemeProvider>
+          </JotaiProvider>
         </NuqsAdapter>
       </AtomProvider>
     </ConfigProvider>

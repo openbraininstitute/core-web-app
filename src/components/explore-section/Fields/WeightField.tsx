@@ -23,7 +23,7 @@ export default function WeightField({ detail }: WeightFieldProps) {
   return (
     <>
       {value}
-      <span className="ml-1 text-neutral-4">{detail.subject.weight.unitCode}</span>
+      <span className="text-neutral-4 ml-1">{detail.subject.weight.unitCode}</span>
     </>
   );
 }

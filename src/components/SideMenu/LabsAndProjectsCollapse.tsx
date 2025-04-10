@@ -24,7 +24,7 @@ function VirtualLabProjects({ labId }: { labId: string }) {
   ) {
     return (
       <div className="w-[16.1rem]">
-        <h1 className="text-md mb-2 font-thin uppercase text-primary-4">Projects</h1>
+        <h1 className="text-md text-primary-4 mb-2 font-thin uppercase">Projects</h1>
         {virtualLabProjectsLoadable.data?.data.results.map((project) => (
           <Link
             href={`${generateVlProjectUrl(labId, project.id)}/home`}
@@ -32,7 +32,7 @@ function VirtualLabProjects({ labId }: { labId: string }) {
             className="flex items-center justify-between text-lg font-semibold text-white"
           >
             <span>{project.name}</span>
-            <ArrowRightOutlined className="text-sm font-thin text-primary-3" />
+            <ArrowRightOutlined className="text-primary-3 text-sm font-thin" />
           </Link>
         ))}
       </div>
@@ -54,7 +54,7 @@ function ExpandIcon({ isActive }: { isActive?: boolean }) {
   return (
     <RightOutlined
       rotate={isActive ? 90 : 0}
-      className="relative right-[2.2rem] top-2/3"
+      className="relative top-2/3 right-[2.2rem]"
       style={{ color: 'white' }}
     />
   );

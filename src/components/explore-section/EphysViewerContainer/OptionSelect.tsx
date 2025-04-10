@@ -1,6 +1,6 @@
 import { Select } from 'antd';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 interface OptionSelectProps {
   label: {
@@ -25,7 +25,7 @@ function OptionSelect({
   }
   return (
     <div className="flex flex-col gap-3">
-      <label className="font-bold text-dark" htmlFor="optionSelect">
+      <label className="text-dark font-bold" htmlFor="optionSelect">
         {title}
         <small className="text-sm font-light">
           {numberOfAvailable > 1 && <>&nbsp;({numberOfAvailable} available)</>}

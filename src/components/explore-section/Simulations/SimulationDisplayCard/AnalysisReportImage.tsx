@@ -37,11 +37,11 @@ export default function AnalysisReportImage({
 
   return (
     <div className="mt-4">
-      <div className="mb-3 flex items-center justify-between text-primary-7">
+      <div className="text-primary-7 mb-3 flex items-center justify-between">
         <Checkbox
           onChange={() => setShowDimensionValue(!showDimensionValue)}
           checked={showDimensionValue}
-          className="font-semibold text-primary-7"
+          className="text-primary-7 font-semibold"
         >
           {title}
         </Checkbox>
@@ -53,7 +53,7 @@ export default function AnalysisReportImage({
         </Link>
       </div>
       <Image alt={id} src={URL.createObjectURL(blob)} height={260} width={425} />
-      <div className="mt-3 flex items-center justify-between text-primary-7">
+      <div className="text-primary-7 mt-3 flex items-center justify-between">
         <div className="flex gap-3">
           <div>
             <UserOutlined />

@@ -80,7 +80,7 @@ function PaperEditorPlaceholder() {
   return (
     <div
       id="paper-editor__placeholder"
-      className="pointer-events-none absolute inset-x-8 top-[5.5rem] inline-block select-none overflow-hidden text-ellipsis whitespace-nowrap pl-1 text-base text-gray-400"
+      className="pointer-events-none absolute inset-x-8 top-[5.5rem] inline-block overflow-hidden pl-1 text-base text-ellipsis whitespace-nowrap text-gray-400 select-none"
     >
       Enter your paper details here...
     </div>

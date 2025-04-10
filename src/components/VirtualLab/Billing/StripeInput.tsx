@@ -27,7 +27,7 @@ export default function StripeInput({
           name={name}
           value={value}
           className={classNames(
-            'h-[44px] w-full rounded-[5px] border  border-solid bg-white p-3',
+            'h-[44px] w-full rounded-[5px] border border-solid bg-white p-3',
             error
               ? 'border-rose-600 shadow-[0px_1px_1px_rgba(0,0,0,0.03),0px_3px_6px_rgba(0,0,0,0.02),0_0_0_1px_#df1b41]'
               : 'border-neutral-200 shadow-[0px_1px_1px_rgba(0,0,0,0.03),0px_3px_6px_rgba(0,0,0,0.02)]'

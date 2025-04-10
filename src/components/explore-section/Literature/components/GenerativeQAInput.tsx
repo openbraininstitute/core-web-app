@@ -20,7 +20,7 @@ function QASettings() {
         {!isGenerating && (
           <button
             onClick={() => updateLiterature((prev) => ({ ...prev, areQAParamsVisible: true }))}
-            className="hover:bg-primary-0! ml-4 flex items-center p-0 font-semibold text-primary-8"
+            className="hover:bg-primary-0! text-primary-8 ml-4 flex items-center p-0 font-semibold"
             type="button"
           >
             Filter <SettingsIcon className="ml-2 rotate-90" />
@@ -49,20 +49,20 @@ function GenerativeQABar() {
         'flex w-full flex-col items-center justify-center pr-4',
         !isChatBarMustSlideInDown && !isBuildSection && 'fixed top-1/2 -translate-y-1/2',
         isBuildSection && !isChatBarMustSlideInDown && 'absolute top-1/2 -translate-y-1/2',
-        isChatBarMustSlideInDown && 'absolute bottom-0 left-0 right-0'
+        isChatBarMustSlideInDown && 'absolute right-0 bottom-0 left-0'
       )}
     >
       <div
         className={classNames(
-          'left-0 right-4 z-50 mx-auto w-full max-w-4xl gap-2.5 rounded-2xl border border-gray-200 bg-white p-4',
+          'right-4 left-0 z-50 mx-auto w-full max-w-4xl gap-2.5 rounded-2xl border border-gray-200 bg-white p-4',
           'inline-flex flex-col items-start justify-start',
           isChatBarMustSlideInDown &&
-            'rounded-b-none pb-0 transition-all duration-300 ease-out-expo'
+            'ease-out-expo rounded-b-none pb-0 transition-all duration-300'
         )}
       >
         <div
           className={classNames(
-            'inline-flex w-full flex-col items-start justify-start px-2 pb-8 pt-4',
+            'inline-flex w-full flex-col items-start justify-start px-2 pt-4 pb-8',
             isChatBarMustSlideInDown ? 'rounded-b-none' : 'rounded-lg'
           )}
         >

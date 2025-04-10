@@ -163,7 +163,7 @@ export function CreditForm({ virtualLabId }: Props) {
 
   return (
     <div className="inline-flex w-full min-w-full items-center bg-white py-4">
-      <div className="mr-4 min-w-max text-base font-bold text-primary-7">Add credit:</div>
+      <div className="text-primary-7 mr-4 min-w-max text-base font-bold">Add credit:</div>
       <form
         noValidate
         id={BILLING_FORM_NAME}
@@ -210,7 +210,7 @@ export function CreditForm({ virtualLabId }: Props) {
               onWheel={(e) => e.currentTarget.blur()}
               onChange={onChange}
               className={classNames(
-                'peer ml-2 grow text-2xl font-bold text-primary-8 outline-hidden',
+                'peer text-primary-8 ml-2 grow text-2xl font-bold outline-hidden',
                 'placeholder:text-base placeholder:font-light placeholder:text-gray-600'
               )}
             />
@@ -242,15 +242,15 @@ function BalanceDetailsCard(
   return (
     <div className="flex items-center justify-between border border-gray-300 bg-white px-8 py-8 shadow-xs">
       <div>
-        <div className="text-sm text-primary-7">Your current credit balance:</div>
-        <div className="text-4xl font-bold text-primary-8">
+        <div className="text-primary-7 text-sm">Your current credit balance:</div>
+        <div className="text-primary-8 text-4xl font-bold">
           {/* eslint-disable-next-line react/destructuring-assignment */}
           {'loading' in props ? <Skeleton.Button active /> : formatCurrency(props.budget)}
         </div>
       </div>
       <div>
-        <div className="text-sm text-neutral-4">Total spent:</div>
-        <div className="text-4xl font-bold text-neutral-4">
+        <div className="text-neutral-4 text-sm">Total spent:</div>
+        <div className="text-neutral-4 text-4xl font-bold">
           {/* eslint-disable-next-line react/destructuring-assignment */}
           {'loading' in props ? <Skeleton.Button active /> : formatCurrency(props.totalSpent)}
         </div>
@@ -316,7 +316,7 @@ export function SubmitCredit({ virtualLabId }: Props) {
         size="large"
         loading={loading}
         disabled={disableProceedPayment}
-        className="rounded-none border-primary-8 bg-primary-8 text-white"
+        className="border-primary-8 bg-primary-8 rounded-none text-white"
       >
         Proceed to payment
       </Button>

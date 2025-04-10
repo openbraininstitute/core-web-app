@@ -11,7 +11,7 @@ export function FormActiveLabel({
   className?: HTMLProps<HTMLElement>['className'];
 }) {
   return (
-    <span className={classNames('mb-1 text-base font-bold text-primary-8', className)}>
+    <span className={classNames('text-primary-8 mb-1 text-base font-bold', className)}>
       {title}
     </span>
   );
@@ -25,7 +25,7 @@ export function FormStaleLabel({
   className?: HTMLProps<HTMLElement>['className'];
 }) {
   return (
-    <h3 className={classNames('mb-2 text-base font-bold text-neutral-4', className)}>{title}</h3>
+    <h3 className={classNames('text-neutral-4 mb-2 text-base font-bold', className)}>{title}</h3>
   );
 }
 

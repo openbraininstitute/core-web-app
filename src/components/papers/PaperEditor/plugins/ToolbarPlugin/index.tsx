@@ -232,11 +232,11 @@ export default function ToolbarPlugin(): JSX.Element {
         <BlockFormat disabled={!isEditable} blockType={blockType} editor={editor} />
         <Divider type="vertical" className="h-full" />
         {showAutoSavedFlush.show && (
-          <div className="flex select-none items-center justify-center gap-2 rounded-full px-2 py-px pr-3">
+          <div className="flex items-center justify-center gap-2 rounded-full px-2 py-px pr-3 select-none">
             {showAutoSavedFlush.state === 'saving' ? (
               <DataSyncInit className="h-5 w-5 text-gray-500" />
             ) : (
-              <DataSync className="h-5 w-5 text-primary-9" />
+              <DataSync className="text-primary-9 h-5 w-5" />
             )}
             <span className="text-sm font-light text-gray-500">{showAutoSavedFlush.state}</span>
           </div>

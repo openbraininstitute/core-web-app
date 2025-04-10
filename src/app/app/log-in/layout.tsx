@@ -9,7 +9,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <img
         width={176}
         height={56}
-        className="absolute left-[35px] top-[35px] h-[56px] w-[176x] text-white"
+        className="absolute top-[35px] left-[35px] h-[56px] w-[176x] text-white"
         alt="OBP"
         src={`${basePath}/images/obi_logo.svg`}
       />

@@ -31,7 +31,7 @@ export const renderInput = ({
   return (
     <Input
       // addonAfter={<Button ghost icon={<EditOutlined />} onClick={onClick} />}
-      className={classNames('bg-white! px-4 pl-3 pr-2 text-primary-9', disabled ? '' : 'font-bold')}
+      className={classNames('text-primary-9 bg-white! px-4 pr-2 pl-3', disabled ? '' : 'font-bold')}
       disabled={disabled}
       maxLength={maxLength} // Used in conjunction with "rules"
       placeholder={placeholder}
@@ -57,7 +57,7 @@ export const renderTextArea: (props: TextAreaProps) => ReactNode = ({
         <Input.TextArea
           autoSize
           className={classNames(
-            'grow resize-none overflow-hidden bg-transparent! ps-3 text-primary-9',
+            'text-primary-9 grow resize-none overflow-hidden bg-transparent! ps-3',
             disabled ? '' : 'font-bold'
           )}
           disabled={disabled}
@@ -109,7 +109,7 @@ function SettingsFormItem({
     >
       <div
         className={classNames(
-          `border-b-1 flex w-full items-center justify-between gap-4 border border-x-0 border-t-0 pt-8`,
+          `flex w-full items-center justify-between gap-4 border border-x-0 border-t-0 border-b-1 pt-8`,
           disabled ? 'border-primary-3' : 'border-white',
           className
         )}
@@ -273,7 +273,7 @@ export default function FormPanel({
       >
         {formItems}
       </SettingsForm>
-      {!!serverError && <p className="self-end px-8 text-xl text-error">{serverError}</p>}
+      {!!serverError && <p className="text-error self-end px-8 text-xl">{serverError}</p>}
     </div>
   );
 }

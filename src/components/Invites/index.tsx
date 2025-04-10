@@ -103,12 +103,12 @@ export default function InviteLoader() {
       <Image
         src={inviteBgImgSrc}
         alt="Invite background image"
-        className="h-screen w-screen bg-primary-9 object-cover"
+        className="bg-primary-9 h-screen w-screen object-cover"
       />
 
-      <Logo className="absolute left-10 top-10 text-white" />
+      <Logo className="absolute top-10 left-10 text-white" />
 
-      <div className="absolute left-0 top-0 flex h-screen w-screen items-center justify-center">
+      <div className="absolute top-0 left-0 flex h-screen w-screen items-center justify-center">
         {!inviteDetails ? (
           <Spin indicator={<LoadingOutlined style={{ color: '#fff', fontSize: 24 }} spin />} />
         ) : (
@@ -117,12 +117,12 @@ export default function InviteLoader() {
               Welcome to the Open Brain Platform
             </div>
             <div className="bg-white p-12 text-center">
-              <p className="text-xl text-primary-9">
+              <p className="text-primary-9 text-xl">
                 You have been invited to join the {getInviteDestinationLabel(inviteDetails)}
               </p>
 
               {!hasPaidPlan && (
-                <p className="mt-4 text-xl text-primary-9">
+                <p className="text-primary-9 mt-4 text-xl">
                   Only users with a paid subscription can join others&apos; {inviteDetails.origin}s.
                 </p>
               )}

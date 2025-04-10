@@ -43,7 +43,7 @@ export default function FrameMarker({ onClick, description }: FrameMarkerProps) 
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="max-w-[150px] break-all bg-white p-2 text-xs text-black focus-visible:outline-hidden"
+            className="max-w-[150px] bg-white p-2 text-xs break-all text-black focus-visible:outline-hidden"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             side="top"

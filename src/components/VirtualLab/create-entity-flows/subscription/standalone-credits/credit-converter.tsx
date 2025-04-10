@@ -43,17 +43,17 @@ export function CreditConverter({
       <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-xs">
         <div className="mb-4 w-full bg-white">
           <div className="flex w-full items-center justify-center">
-            <span className="text-base font-semibold text-primary-8">Credits</span>
+            <span className="text-primary-8 text-base font-semibold">Credits</span>
             <div className="mx-4 py-2">
               <input
                 type="text"
                 value={formatInputValue(credits)}
                 onChange={handleCreditsChange}
-                className="w-full min-w-24 max-w-32 rounded-sm border border-gray-200 px-4 py-2 text-center text-xl font-bold text-primary-8"
+                className="text-primary-8 w-full max-w-32 min-w-24 rounded-sm border border-gray-200 px-4 py-2 text-center text-xl font-bold"
                 aria-label="Credit amount"
               />
             </div>
-            <span className="text-base font-bold text-primary-8">CHF {money}</span>
+            <span className="text-primary-8 text-base font-bold">CHF {money}</span>
           </div>
         </div>
         {showActions && (
@@ -61,8 +61,8 @@ export function CreditConverter({
             <Button
               key="back-to-btn"
               className={classNames(
-                'rounded-md bg-white px-6 text-primary-8',
-                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
+                'text-primary-8 rounded-md bg-white px-6',
+                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
               )}
               type="text"
               size="large"
@@ -74,8 +74,8 @@ export function CreditConverter({
             <Button
               key="back-to-btn"
               className={classNames(
-                'rounded-md border-gray-300 bg-white px-6 text-primary-8',
-                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
+                'text-primary-8 rounded-md border-gray-300 bg-white px-6',
+                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
               )}
               type="text"
               size="large"

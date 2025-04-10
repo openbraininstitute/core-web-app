@@ -33,7 +33,7 @@ export default function Tabs() {
           key={key}
           className={classNames(
             'w-1/3 flex-[1_1_33%] border py-3 text-center text-xl font-semibold transition-all duration-200 ease-out',
-            activeTab === key ? 'bg-primary-9 text-white' : 'bg-white text-primary-9'
+            activeTab === key ? 'bg-primary-9 text-white' : 'text-primary-9 bg-white'
           )}
         >
           <button type="button" className="w-full" onClick={onClick(key)} onKeyDown={onClick(key)}>

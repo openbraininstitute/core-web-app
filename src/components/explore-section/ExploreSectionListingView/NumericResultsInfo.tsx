@@ -26,7 +26,7 @@ function NumericResultsInfo({
   return (
     <div className="flex w-full justify-start">
       <div
-        className="flex items-center gap-1 text-primary-9"
+        className="text-primary-9 flex items-center gap-1"
         role="status"
         aria-label="listing-view-title"
       >

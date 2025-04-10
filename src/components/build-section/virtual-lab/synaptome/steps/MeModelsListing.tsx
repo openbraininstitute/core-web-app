@@ -92,7 +92,7 @@ export default function MeModelsListing({
         <input name="modelUrl" aria-hidden hidden defaultValue={getFieldValue('modelUrl')} />
       </Form.Item>
       <div className="mb-4">
-        <h1 className="text-xl font-bold text-primary-8">
+        <h1 className="text-primary-8 text-xl font-bold">
           Select a single neuron model to build a synaptome model
         </h1>
         {modelNotSelectedError && (
@@ -119,7 +119,7 @@ export default function MeModelsListing({
       </div>
       <button
         type="button"
-        className="fixed bottom-10 right-10 rounded-none bg-primary-8 px-7 py-4 text-white disabled:bg-neutral-400"
+        className="bg-primary-8 fixed right-10 bottom-10 rounded-none px-7 py-4 text-white disabled:bg-neutral-400"
         onClick={proceed}
         disabled={!selectedRows.length}
       >

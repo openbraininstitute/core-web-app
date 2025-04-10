@@ -22,7 +22,7 @@ export default function SynapseGroupList({ modelUrl }: { modelUrl: string }) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="font-light text-primary-9">Loading Synaptome Model configuration ...</h2>
+        <h2 className="text-primary-9 font-light">Loading Synaptome Model configuration ...</h2>
       </div>
     );
 
@@ -30,13 +30,13 @@ export default function SynapseGroupList({ modelUrl }: { modelUrl: string }) {
 
   return (
     <div className="w-full">
-      <h2 className="mb-8 text-2xl font-bold text-primary-8">Synapse groups</h2>
+      <h2 className="text-primary-8 mb-8 text-2xl font-bold">Synapse groups</h2>
       <div className="flex flex-row flex-wrap gap-4">
         {configuration?.synapses?.map(
           ({ id, name, formula, target, type, color, soma_synapse_count }, indx) => (
             <div
               key={id}
-              className="flex w-max min-w-96 max-w-max flex-1 flex-col items-start justify-start"
+              className="flex w-max max-w-max min-w-96 flex-1 flex-col items-start justify-start"
             >
               <div
                 className="flex items-center justify-center px-4 py-2 text-base text-white"

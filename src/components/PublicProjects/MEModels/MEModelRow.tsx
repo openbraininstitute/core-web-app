@@ -12,8 +12,8 @@ export default function MEModelRow({ content, index }: { content: MEModelsProps;
 
   return (
     <div className="flex w-full flex-col">
-      {index !== 0 && <div className="my-4 h-px w-full bg-neutral-2" />}
-      <div className="relative flex w-full flex-row items-center text-base text-primary-9">
+      {index !== 0 && <div className="bg-neutral-2 my-4 h-px w-full" />}
+      <div className="text-primary-9 relative flex w-full flex-row items-center text-base">
         <div className="w-[350px]">{name(content.name, 40)}</div>
         <div className="w-[116px]">
           <Image
@@ -21,7 +21,7 @@ export default function MEModelRow({ content, index }: { content: MEModelsProps;
             width={400}
             height={400}
             alt={`Image of the morphology of ${content.name}`}
-            className="h-20 w-auto border border-solid border-neutral-2"
+            className="border-neutral-2 h-20 w-auto border border-solid"
           />
         </div>
         <div className="w-[116px]">
@@ -30,7 +30,7 @@ export default function MEModelRow({ content, index }: { content: MEModelsProps;
             width={400}
             height={400}
             alt={`Image of the trace of ${content.name}`}
-            className="h-20 w-auto border border-solid border-neutral-2"
+            className="border-neutral-2 h-20 w-auto border border-solid"
           />
         </div>
         <div className="w-24">{content.validated ? 'True' : 'False'}</div>

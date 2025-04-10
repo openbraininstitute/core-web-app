@@ -23,7 +23,7 @@ export function Actions({ uploading, onClose, onTriggerUpload }: ActionsProps) {
         size="large"
         type="primary"
         htmlType="button"
-        className="rounded-none bg-primary-8 px-6 text-lg"
+        className="bg-primary-8 rounded-none px-6 text-lg"
         onClick={onTriggerUpload}
         disabled={uploading}
         loading={uploading}

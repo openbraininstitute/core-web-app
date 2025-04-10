@@ -69,7 +69,7 @@ export default function ResultError({
           )}
         >
           <div className="flex w-full flex-col items-center justify-center bg-orange-50 px-5 py-4">
-            <p className="mb-px w-full whitespace-pre-line text-center text-base font-medium text-amber-500">
+            <p className="mb-px w-full text-center text-base font-medium whitespace-pre-line text-amber-500">
               {GENERATIVE_QA_ERRORS_MAP[statusCode as keyof typeof GENERATIVE_QA_ERRORS_MAP] ??
                 GENERATIVE_QA_ERRORS_MAP.default}
             </p>

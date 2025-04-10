@@ -183,7 +183,9 @@ function TreeNav(
     value,
     colorCode,
   }: {
-    children: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
+    children: (
+      ...args: any[]
+    ) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
     className?: string;
     items: TreeItem[];
     onValueChange: (newValue: string[], path: string[]) => void;

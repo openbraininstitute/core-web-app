@@ -13,7 +13,7 @@ export default function VirtualLabExploreMainPage() {
           className="object-center"
         />
       </div>
-      <div className="absolute left-10 top-10 flex flex-col items-start justify-center">
+      <div className="absolute top-10 left-10 flex flex-col items-start justify-center">
         <h1 className="mb-3 text-3xl font-bold text-white">Atlas based exploration</h1>
         <p className="w-1/4 text-lg text-white">
           Browse in a 3D atlas environment to find experimental data related to the selected model
@@ -22,17 +22,17 @@ export default function VirtualLabExploreMainPage() {
           discovery button.
         </p>
       </div>
-      <div className="absolute bottom-[30px] right-[30px]">
+      <div className="absolute right-[30px] bottom-[30px]">
         <div className="flex flex-col items-center justify-center gap-3">
           <Link
             href="explore/interactive"
-            className="relative w-full flex-1 border border-white px-7 py-2 text-center text-base text-white hover:bg-white hover:font-bold hover:text-primary-8 lg:text-lg xl:py-4 2xl:text-2xl"
+            className="hover:text-primary-8 relative w-full flex-1 border border-white px-7 py-2 text-center text-base text-white hover:bg-white hover:font-bold lg:text-lg xl:py-4 2xl:text-2xl"
           >
             Start exploring
           </Link>
           <Link
             href="explore/interactive/literature/morphology"
-            className="relative w-full flex-1 border border-white px-7 py-2 text-center text-base text-white hover:bg-white hover:font-bold hover:text-primary-8 lg:text-lg xl:py-4 2xl:text-2xl"
+            className="hover:text-primary-8 relative w-full flex-1 border border-white px-7 py-2 text-center text-base text-white hover:bg-white hover:font-bold lg:text-lg xl:py-4 2xl:text-2xl"
           >
             Literature discovery
           </Link>

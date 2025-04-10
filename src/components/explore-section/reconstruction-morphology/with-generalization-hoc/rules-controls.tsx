@@ -41,7 +41,7 @@ function RulesControls() {
   if (!allRules) return null;
 
   const menu = (
-    <Menu className="fixed right-[-36.5rem] top-0 w-[46rem]">
+    <Menu className="fixed top-0 right-[-36.5rem] w-[46rem]">
       {allRules.map((rule) => (
         <Menu.Item key={rule.modelName} className={styles.menuItem}>
           <Tooltip
@@ -60,7 +60,7 @@ function RulesControls() {
                 selectedRules.length === 1 &&
                 selectedRules.includes(rule.modelName)
               }
-              className="font-semibold text-primary-9"
+              className="text-primary-9 font-semibold"
             >
               {rule.name}
             </Checkbox>
@@ -74,12 +74,12 @@ function RulesControls() {
   );
 
   const selectedRulesDropdownContent = (
-    <span className="mr-2 font-semibold text-primary-9">
+    <span className="text-primary-9 mr-2 font-semibold">
       {selectedRules?.length === 1 ? (
         allRules.find((rule) => rule.modelName === selectedRules[0])?.name
       ) : (
         <>
-          <span className="rounded-full bg-primary-9 px-2 text-white">
+          <span className="bg-primary-9 rounded-full px-2 text-white">
             {selectedRules?.length ? selectedRules.length : 0}
           </span>{' '}
           similarity rules
@@ -97,7 +97,7 @@ function RulesControls() {
           overlay={menu}
           trigger={['click']}
           placement="bottomRight"
-          className="ml-5	flex max-h-[56px] cursor-pointer items-center justify-between gap-10 rounded-md border border-gray-200 bg-white p-5"
+          className="ml-5 flex max-h-[56px] cursor-pointer items-center justify-between gap-10 rounded-md border border-gray-200 bg-white p-5"
         >
           <span className="flex items-center">
             {selectedRulesDropdownContent}

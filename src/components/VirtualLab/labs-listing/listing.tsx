@@ -26,7 +26,7 @@ export default function VirtualLabDashboard({ virtualLab, pendingLabs, membershi
           </div>
           {Boolean(membership_labs?.length) && (
             <div className="flex flex-col">
-              <div className="my-5 text-xl font-bold text-primary-1">Virtual Lab I am a member</div>
+              <div className="text-primary-1 my-5 text-xl font-bold">Virtual Lab I am a member</div>
               <div className="flex flex-col gap-3">
                 {membership_labs?.map((vl) => (
                   <Item

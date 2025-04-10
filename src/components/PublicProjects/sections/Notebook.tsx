@@ -9,7 +9,7 @@ export default function NotebookSection({ content }: { content: ShowCaseProjectQ
           <SingleNotebook key={`Notebook-${notebook.name}`} content={notebook} index={index} />
         ))
       ) : (
-        <div className="text-2xl font-semibold text-neutral-4">No Notebooks available</div>
+        <div className="text-neutral-4 text-2xl font-semibold">No Notebooks available</div>
       )}
     </div>
   );

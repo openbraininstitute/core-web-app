@@ -132,7 +132,7 @@ export default function ExploreListingLayout({
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
   return (
-    <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
+    <div className="bg-primary-9 flex h-screen w-full overflow-x-auto" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
@@ -147,7 +147,7 @@ export default function ExploreListingLayout({
             items={items}
           />
 
-          <div className="h-full w-full bg-primary-9 text-white">{children}</div>
+          <div className="bg-primary-9 h-full w-full text-white">{children}</div>
         </div>
       </ErrorBoundary>
     </div>

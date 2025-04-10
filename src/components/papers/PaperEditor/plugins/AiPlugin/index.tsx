@@ -44,7 +44,7 @@ function AiCommandButton({ title, icon, onClick, className }: AiCommandButtonPro
       )}
     >
       {icon}
-      <span className="text-base text-primary-8 group-hover:font-bold">{title}</span>
+      <span className="text-primary-8 text-base group-hover:font-bold">{title}</span>
     </button>
   );
 }
@@ -110,7 +110,7 @@ const AiCommands = forwardRef<HTMLDivElement, AiCommandsProps>(({ pos }, ref) =>
             isExpanding ? (
               <Spin indicator={<LoadingOutlined className="text-sm" spin />} />
             ) : (
-              <TextdirectionVertical className="h-5 w-5 text-primary-9" />
+              <TextdirectionVertical className="text-primary-9 h-5 w-5" />
             )
           }
           className="w-24 min-w-max"
@@ -123,7 +123,7 @@ const AiCommands = forwardRef<HTMLDivElement, AiCommandsProps>(({ pos }, ref) =>
             IsSummarizing ? (
               <Spin indicator={<LoadingOutlined className="text-sm" spin />} />
             ) : (
-              <TextdirectionLToR className="h-5 w-5 text-primary-9" />
+              <TextdirectionLToR className="text-primary-9 h-5 w-5" />
             )
           }
           className="w-24 min-w-max"

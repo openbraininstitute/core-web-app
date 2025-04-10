@@ -14,25 +14,25 @@ export default function BasicConfigurationHeader() {
   const description: string = getFieldValue('description')?.trim() ?? '';
 
   return (
-    <div className="w-full gap-5 border-b border-neutral-2">
-      <div className="flex w-full flex-col gap-4 px-10 pb-10 pt-4">
+    <div className="border-neutral-2 w-full gap-5 border-b">
+      <div className="flex w-full flex-col gap-4 px-10 pt-4 pb-10">
         <div className="grid grid-cols-2 gap-14">
           <div className="">
             {label('name')}
-            <div className="text-2xl font-bold text-primary-8">{name}</div>
+            <div className="text-primary-8 text-2xl font-bold">{name}</div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-14">
           <div className="">
             {label('description')}
-            <div className="text-justify font-normal text-primary-8">
+            <div className="text-primary-8 text-justify font-normal">
               {description.length > 0 ? description : DisplayMessages.NO_DATA_STRING}
             </div>
           </div>
           <div className="grid grid-cols-2 items-start justify-between gap-2">
             <div className="flex flex-col items-start gap-1">
               {label('contributors', 'secondary')}
-              <div className="flex items-center justify-center gap-2 text-primary-8">
+              <div className="text-primary-8 flex items-center justify-center gap-2">
                 <UserOutlined className="h-3 w-3" />
                 {session?.user.name}
               </div>

@@ -88,8 +88,8 @@ export default function ConfirmBtn({
     <GenericButton
       onClick={createSimCamUiConfig}
       className={classNames(
-        allowed ? 'bg-secondary-2 ' : 'cursor-not-allowed bg-slate-400',
-        'fixed bottom-4 right-4 flex items-center text-white'
+        allowed ? 'bg-secondary-2' : 'cursor-not-allowed bg-slate-400',
+        'fixed right-4 bottom-4 flex items-center text-white'
       )}
       text={processing ? 'Processing' : 'Confirm'}
     />

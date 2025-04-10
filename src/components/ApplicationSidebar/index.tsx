@@ -50,7 +50,7 @@ export function NavigationItem({ url, name, description, bgcolor }: NavigationIt
     <li
       key={url}
       className={classNames(
-        'relative mx-auto flex w-full cursor-pointer p-4 hover:bg-primary-7',
+        'hover:bg-primary-7 relative mx-auto flex w-full cursor-pointer p-4',
         bgcolor
       )}
     >
@@ -58,7 +58,7 @@ export function NavigationItem({ url, name, description, bgcolor }: NavigationIt
         <h1 className="text-xl font-bold text-white">{name}</h1>
         <p
           title={description}
-          className="mt-1 line-clamp-1 select-none text-left text-sm font-thin text-primary-4"
+          className="text-primary-4 mt-1 line-clamp-1 text-left text-sm font-thin select-none"
         >
           {description}
         </p>
@@ -78,7 +78,7 @@ export function AppNavigationItem({
   if (!expanded && showIconOnCollapse) {
     return (
       <Link href={url}>
-        <Icon component={icon} title={title} className="my-2 text-primary-4" />
+        <Icon component={icon} title={title} className="text-primary-4 my-2" />
       </Link>
     );
   }
@@ -86,7 +86,7 @@ export function AppNavigationItem({
     <Link
       href={url}
       className={classNames(
-        'inline-flex w-full flex-row items-center justify-between px-3 py-3 hover:bg-primary-7',
+        'hover:bg-primary-7 inline-flex w-full flex-row items-center justify-between px-3 py-3',
         bgcolor ?? 'bg-transparent',
         !expanded && 'hidden'
       )}
@@ -120,29 +120,29 @@ export function DefaultAccountPanel({ expanded }: { expanded: boolean }) {
   const userName = data?.user.name ?? data?.user.username ?? data?.user.email ?? '';
 
   if (!expanded) {
-    return <UserOutlined title={userName} className="cursor-pointer text-base text-primary-4" />;
+    return <UserOutlined title={userName} className="text-primary-4 cursor-pointer text-base" />;
   }
   return (
     <div
       className={classNames(
-        'my-0 w-full border border-primary-7 bg-primary-9',
+        'border-primary-7 bg-primary-9 my-0 w-full border',
         !expanded && 'hidden',
         'hover:shadow-xl'
       )}
     >
       <div className="flex flex-col gap-y-2 p-5">
         <div className="inline-flex items-center justify-center gap-2 self-start">
-          <UserOutlined title={userName} className="text-base text-primary-4" />
+          <UserOutlined title={userName} className="text-primary-4 text-base" />
           <span className="font-bold text-white">{userName}</span>
         </div>
         <div className="inline-flex flex-row items-center justify-between gap-2">
-          <Link href="/account" className="text-base font-normal text-primary-4 hover:text-white">
+          <Link href="/account" className="text-primary-4 text-base font-normal hover:text-white">
             Account
           </Link>
           <button
             type="button"
             onClick={signOut}
-            className="cursor-pointer text-base font-normal text-primary-4 hover:text-white"
+            className="text-primary-4 cursor-pointer text-base font-normal hover:text-white"
           >
             Log out
           </button>
@@ -166,7 +166,7 @@ function ApplicationSidebarHeader({
     >
       <div
         className={classNames(
-          'order-1 w-[21px] rounded-2xl bg-primary-5 py-3 text-base font-semibold text-primary-9',
+          'bg-primary-5 text-primary-9 order-1 w-[21px] rounded-2xl py-3 text-base font-semibold',
           !expanded && 'relative top-3 -scale-100 transform [writing-mode:vertical-lr]'
         )}
       >
@@ -203,7 +203,7 @@ export default function ApplicationSidebar({ title, children }: ApplicationSideb
     <div
       ref={ref}
       className={classNames(
-        'relative h-screen w-[45px] bg-primary-9 text-light transition-transform ease-in-out',
+        'bg-primary-9 text-light relative h-screen w-[45px] transition-transform ease-in-out',
         expanded
           ? 'flex w-80 flex-col items-start justify-start px-5 shadow-[0px_5px_15px_rgba(0,0,0,.35)]'
           : 'flex w-10 flex-col items-center justify-between transition-transform ease-in-out will-change-auto'
@@ -223,7 +223,7 @@ export default function ApplicationSidebar({ title, children }: ApplicationSideb
             'group inline-flex w-full flex-row items-center justify-between px-3 py-3'
           )}
         >
-          <HomeOutlined className="cursor-pointer text-primary-2 group-hover:text-white" />
+          <HomeOutlined className="text-primary-2 cursor-pointer group-hover:text-white" />
         </Link>
       </div>
       {/* {(account || navigation) && (

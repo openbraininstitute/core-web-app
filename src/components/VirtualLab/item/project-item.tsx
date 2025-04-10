@@ -17,7 +17,7 @@ export default function Item({ id, vlabId, name, lastUpdate, memberCount }: Prop
     <div
       id={id}
       className={classNames(
-        'animate-scale-in group overflow-hidden rounded-md border border-primary-5 bg-primary-9 shadow-xs',
+        'animate-scale-in group border-primary-5 bg-primary-9 overflow-hidden rounded-md border shadow-xs',
         'hover:bg-primary-8'
       )}
     >
@@ -25,7 +25,7 @@ export default function Item({ id, vlabId, name, lastUpdate, memberCount }: Prop
         <div className="flex items-start justify-between">
           <div>
             <h3 className="mb-1 text-3xl font-bold">{name}</h3>
-            <p className="text-base text-primary-2">
+            <p className="text-primary-2 text-base">
               Project&#39;s latest update:{' '}
               <span className="text-white">{dateColumnInfoToRender(lastUpdate).text}</span>
             </p>
@@ -46,10 +46,10 @@ export default function Item({ id, vlabId, name, lastUpdate, memberCount }: Prop
             />
           </Link>
         </div>
-        <div className="my-4 h-[.5px] w-1/2 bg-primary-2" />
+        <div className="bg-primary-2 my-4 h-[.5px] w-1/2" />
         <div className="mt-4 flex gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-base text-primary-2">
+            <span className="text-primary-2 text-base">
               Members:
               <span className="ml-2 font-bold text-white">{memberCount}</span>
             </span>

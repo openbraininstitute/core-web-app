@@ -158,7 +158,7 @@ function Form({ onClose }: { onClose: () => void }) {
     >
       <div className="flex h-full w-full grow flex-col items-center justify-center">
         <CreditConverter showActions={false} onClose={onClose} />
-        <div className="mx-auto  flex w-full flex-col rounded-lg bg-white">
+        <div className="mx-auto flex w-full flex-col rounded-lg bg-white">
           <PaymentElement id="credits-form" onReady={onReady} />
         </div>
       </div>
@@ -169,8 +169,8 @@ function Form({ onClose }: { onClose: () => void }) {
             <Button
               key="cancel-btn"
               className={classNames(
-                'rounded-md bg-white px-6 text-primary-8',
-                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
+                'text-primary-8 rounded-md bg-white px-6',
+                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
               )}
               type="text"
               size="large"
@@ -182,8 +182,8 @@ function Form({ onClose }: { onClose: () => void }) {
             <Button
               key="add-credits-btn"
               className={classNames(
-                'rounded-md border-gray-300 bg-white px-6 text-primary-8',
-                'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
+                'text-primary-8 rounded-md border-gray-300 bg-white px-6',
+                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
               )}
               type="text"
               size="large"

@@ -55,14 +55,14 @@ export default function Simulation({ params }: { params: LocationParams }) {
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="font-light text-primary-9">Loading simulations...</h2>
+        <h2 className="text-primary-9 font-light">Loading simulations...</h2>
       </div>
     );
   }
 
   if (!simulations || !simulations.length) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-2xl font-bold text-primary-9">
+      <div className="text-primary-9 flex h-full flex-col items-center justify-center text-2xl font-bold">
         <h2>No simulations available</h2>
         <p className="mt-4 max-w-2xl text-center text-sm font-light text-gray-500">
           It looks like you haven’t run any simulations yet. To view your simulations here, please
@@ -75,7 +75,7 @@ export default function Simulation({ params }: { params: LocationParams }) {
 
   if (error) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-2xl font-bold text-primary-9">
+      <div className="text-primary-9 flex h-full flex-col items-center justify-center text-2xl font-bold">
         <h2>Failed to Load Simulations</h2>
         <p className="mt-4 max-w-2xl text-center text-sm font-light text-gray-500">
           An error occurred while fetching your simulations. Please check your connection and try

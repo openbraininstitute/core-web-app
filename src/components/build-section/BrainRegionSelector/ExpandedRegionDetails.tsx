@@ -145,10 +145,10 @@ function UnitsToggle({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-row gap-2 border-y border-primary-6 py-4">
+      <div className="border-primary-6 flex flex-row gap-2 border-y py-4">
         <div className="flex flex-row gap-3">
           <VerticalSwitch isChecked={isChecked} onChange={onChange} />
-          <div className="flex flex-col gap-1 text-primary-1">
+          <div className="text-primary-1 flex flex-col gap-1">
             <div>Densities [{metricToUnit.density}]</div>
             <div>Counts [{metricToUnit.count}]</div>
           </div>

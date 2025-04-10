@@ -97,7 +97,7 @@ export default function ExemplarTraces({ params }: { params: Params }) {
   ];
   return (
     <>
-      <div className="text-2xl font-bold text-primary-8">Exemplar Traces</div>
+      <div className="text-primary-8 text-2xl font-bold">Exemplar Traces</div>
 
       {eModelExemplarTraces ? (
         <>

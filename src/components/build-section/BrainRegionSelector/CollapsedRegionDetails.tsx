@@ -35,7 +35,7 @@ export default function CollapsedRegionDetails({
         <div className="text-sm">
           <span className="font-bold">{densityOrCountLabel}</span>
         </div>
-        <div className="text-lg font-bold text-secondary-4">{title}</div>
+        <div className="text-secondary-4 text-lg font-bold">{title}</div>
       </div>
     </div>
   );

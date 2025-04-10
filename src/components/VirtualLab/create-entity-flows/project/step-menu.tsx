@@ -22,7 +22,7 @@ const Title = (
       <ArrowLeftOutlined />
     </Link>
     <div className="flex grow justify-center text-white">
-      <h1 className="select-none text-2xl font-bold uppercase tracking-wide">Project creation</h1>
+      <h1 className="text-2xl font-bold tracking-wide uppercase select-none">Project creation</h1>
     </div>
   </div>
 );

@@ -20,7 +20,7 @@ export function ErrorComponent({
   return (
     <div
       className={classNames(
-        'flex h-screen w-full flex-col items-center justify-center bg-primary-9 p-6 text-white',
+        'bg-primary-9 flex h-screen w-full flex-col items-center justify-center p-6 text-white',
         cls.container
       )}
     >
@@ -31,8 +31,8 @@ export function ErrorComponent({
         </div>
 
         <div className="mb-2 w-full bg-white p-6">
-          <h2 className="mb-2 select-none text-sm font-medium text-primary-8">DESCRIPTION</h2>
-          <p className="text-xl font-bold text-primary-8">
+          <h2 className="text-primary-8 mb-2 text-sm font-medium select-none">DESCRIPTION</h2>
+          <p className="text-primary-8 text-xl font-bold">
             {(customError ?? error?.message) ||
               'We apologize, but something unexpected went wrong. Please try again later.'}
           </p>
@@ -41,12 +41,12 @@ export function ErrorComponent({
         {showButtons && (
           <div className="flex w-full gap-2">
             <Link href="/app/virtual-lab/explore/interactive" className="w-1/2">
-              <div className="border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white hover:bg-opacity-10">
+              <div className="hover:bg-opacity-10 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
                 Back to Explore
               </div>
             </Link>
             <Link href="/app/virtual-lab" className="w-1/2">
-              <div className="border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white hover:bg-opacity-10">
+              <div className="hover:bg-opacity-10 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
                 Back to home
               </div>
             </Link>

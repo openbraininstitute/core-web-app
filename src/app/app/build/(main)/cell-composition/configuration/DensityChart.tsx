@@ -193,8 +193,9 @@ export default function DensityChart() {
   );
 
   // Prevent SVG from rendering whenever zoom changes
-  const chartRef: RefObject<SVGSVGElement & { reset: () => void; zoom: (value: number) => void } | null> =
-    useRef(null);
+  const chartRef: RefObject<
+    (SVGSVGElement & { reset: () => void; zoom: (value: number) => void }) | null
+  > = useRef(null);
 
   const [dimensions, setDimensions] = useState<DOMRect | undefined>();
 
@@ -264,13 +265,13 @@ export default function DensityChart() {
       <ColorBox
         color={classObjects?.[value]?.color ?? (palette as Record<string, string>)[value]}
       />
-      <span className="text-lg text-primary-9">{label}</span>
+      <span className="text-primary-9 text-lg">{label}</span>
     </Tag>
   );
 
   return (
     <div className="flex h-full w-full flex-col gap-5">
-      <h1 className="flex items-baseline gap-1 text-3xl font-bold text-primary-9">
+      <h1 className="text-primary-9 flex items-baseline gap-1 text-3xl font-bold">
         {selectedBrainRegion?.title ?? 'Please select a brain region.'}
         {!!selectedBrainRegion?.title && (
           <small className="text-sm font-light">{densityOrCountLabel}</small>

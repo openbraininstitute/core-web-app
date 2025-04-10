@@ -164,7 +164,7 @@ function NotebookTable({
               </div>
 
               {onDelete && (
-                <div className="flex gap-4 text-error">
+                <div className="text-error flex gap-4">
                   <DeleteOutlined className="text-error" />
                   <button
                     type="button"
@@ -196,7 +196,7 @@ function NotebookTable({
       key: 'name',
       render: (name: string, notebook: Notebook) => (
         <button
-          className="cursor-pointer text-left hover:text-primary-5"
+          className="hover:text-primary-5 cursor-pointer text-left"
           aria-label="preview"
           type="button"
           onClick={() => {

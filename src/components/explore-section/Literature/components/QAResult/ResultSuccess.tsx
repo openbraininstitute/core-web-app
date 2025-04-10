@@ -86,26 +86,26 @@ export default function ResultSuccess({
                   <button
                     type="button"
                     onClick={onExpandArticles}
-                    className="relative inline-flex h-11 w-[300px] cursor-pointer items-center justify-between gap-1.5  whitespace-nowrap rounded-md bg-primary-0 px-3 py-3 leading-tight text-white no-underline shadow-xs transition-all duration-200"
+                    className="bg-primary-0 relative inline-flex h-11 w-[300px] cursor-pointer items-center justify-between gap-1.5 rounded-md px-3 py-3 leading-tight whitespace-nowrap text-white no-underline shadow-xs transition-all duration-200"
                     aria-controls="collapse-content"
                     aria-label="expand-articles"
                   >
                     <div className="inline-flex items-center justify-start gap-1">
-                      <div className="text-base font-normal leading-snug text-primary-8">
+                      <div className="text-primary-8 text-base leading-snug font-normal">
                         Based on
                       </div>
-                      <div className="inline-flex flex-col items-center justify-start rounded-[3px] bg-primary-8 px-1 py-[.2px]">
+                      <div className="bg-primary-8 inline-flex flex-col items-center justify-start rounded-[3px] px-1 py-[.2px]">
                         <span className="text-sm font-bold tracking-tight text-blue-50">
                           {articles.length}
                         </span>
                       </div>
-                      <div className="text-base font-normal leading-snug text-primary-8">
+                      <div className="text-primary-8 text-base leading-snug font-normal">
                         paragraphs
                       </div>
                     </div>
                     <ChevronIcon
                       className={classNames(
-                        'fill-current text-primary-8',
+                        'text-primary-8 fill-current',
                         expandArticles ? '-rotate-90' : 'rotate-90'
                       )}
                     />
@@ -121,19 +121,19 @@ export default function ResultSuccess({
                   className="flex w-48 cursor-pointer items-center justify-between gap-2 rounded-sm border border-gray-200 px-3 py-1.5"
                   onClick={selectQuestion}
                 >
-                  <div className="text-base font-bold text-primary-8" data-testid="active-filters">
-                    <span className="mr-2 inline-block h-7 w-7 rounded-sm bg-primary-8 text-white">
+                  <div className="text-primary-8 text-base font-bold" data-testid="active-filters">
+                    <span className="bg-primary-8 mr-2 inline-block h-7 w-7 rounded-sm text-white">
                       {activeFilters}
                     </span>
                     filters
                   </div>
-                  <span className="group rounded-xs hover:bg-primary-8">
-                    <SettingsIcon className="rotate-90 text-primary-8 group-hover:text-white" />
+                  <span className="group hover:bg-primary-8 rounded-xs">
+                    <SettingsIcon className="text-primary-8 rotate-90 group-hover:text-white" />
                   </span>
                 </button>
               </div>
               {expandArticles && (
-                <div className="mt-5 block overflow-hidden px-1 opacity-100 transition-all duration-300 ease-out-expo">
+                <div className="ease-out-expo mt-5 block overflow-hidden px-1 opacity-100 transition-all duration-300">
                   <div className="mt-4 rounded-sm">
                     <ArticlesTimeLine
                       {...{

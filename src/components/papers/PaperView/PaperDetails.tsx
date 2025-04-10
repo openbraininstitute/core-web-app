@@ -122,12 +122,12 @@ export default function PaperDetails({ paper, onCompleteEdit }: PaperDetailsProp
                 id="title"
                 name="title"
                 defaultValue={paper.name}
-                className="h-14 w-full border border-gray-200 px-4 py-2 font-bold text-primary-8"
+                className="text-primary-8 h-14 w-full border border-gray-200 px-4 py-2 font-bold"
               />
               {state.validationErrors?.title && <FormError errors={state.validationErrors.title} />}
             </div>
           ) : (
-            <h1 className="text-2xl font-bold text-primary-8">{paper.name}</h1>
+            <h1 className="text-primary-8 text-2xl font-bold">{paper.name}</h1>
           )}
         </div>
         <div className="flex flex-col">
@@ -138,7 +138,7 @@ export default function PaperDetails({ paper, onCompleteEdit }: PaperDetailsProp
                 id="summary"
                 name="summary"
                 className={classNames(
-                  'h-full w-full text-primary-8',
+                  'text-primary-8 h-full w-full',
                   editable && 'h-full resize-y overflow-y-auto border border-gray-200 px-4 py-2'
                 )}
                 rows={4}

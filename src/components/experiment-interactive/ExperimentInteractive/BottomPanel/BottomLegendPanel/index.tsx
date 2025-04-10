@@ -11,7 +11,7 @@ export default function BottomLegendPanel() {
       {displayedSimulationParamsConfig.map(({ paramKey, color }) => (
         <div className="flex items-center justify-start gap-1.5" key={paramKey}>
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-          <div className="max-w-[100px] truncate text-xs font-semibold leading-none tracking-tight text-white">
+          <div className="max-w-[100px] truncate text-xs leading-none font-semibold tracking-tight text-white">
             {paramKey}
           </div>
         </div>

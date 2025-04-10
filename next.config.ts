@@ -1,3 +1,4 @@
+import type { NextConfig } from 'next';
 import NextBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 
@@ -20,37 +21,34 @@ function getVersion() {
   return commit ? `${version} (${commit})` : version;
 }
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  experimental: {
-    turbo: {
-      rules: {
-        '*.groq': {
-          loaders: ['raw-loader'],
-          as: '*.js',
-        },
-        '*.vert': {
-          loaders: ['raw-loader'],
-          as: '*.js',
-        },
-        '*.frag': {
-          loaders: ['raw-loader'],
-          as: '*.js',
-        },
-        '*.mp4': {
-          loaders: ['file-loader'],
-          as: 'asset',
-        },
-        '*.pdf': {
-          loaders: ['file-loader'],
-          as: 'asset',
-        },
+const nextConfig: NextConfig = {
+  turbopack: {
+    rules: {
+      '*.groq': {
+        loaders: ['raw-loader'],
+        as: '*.js',
       },
+      '*.vert': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      '*.frag': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      '*.mp4': {
+        loaders: ['file-loader'],
+        as: 'asset',
+      },
+      '*.pdf': {
+        loaders: ['file-loader'],
+        as: 'asset',
+      },
+    },
 
-      // This is required by react-pdf module. See https://www.npmjs.com/package/react-pdf
-      resolveAlias: {
-        canvas: './empty-module.ts',
-      },
+    // This is required by react-pdf module. See https://www.npmjs.com/package/react-pdf
+    resolveAlias: {
+      canvas: './empty-module.ts',
     },
   },
   webpack: (config) => {
@@ -81,9 +79,6 @@ const nextConfig = {
   reactStrictMode: true,
   compress: false,
   output: 'standalone',
-  sentry: {
-    hideSourceMaps: false,
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },

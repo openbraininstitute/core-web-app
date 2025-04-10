@@ -38,10 +38,10 @@ function Row({
 }: RowProps) {
   return (
     <div className="grid w-full grid-cols-[2fr_repeat(2,1fr)] gap-3 border-b border-gray-100 px-3 py-3 last:border-none hover:bg-gray-100">
-      <div className="line-clamp-1 font-bold text-primary-8" title={resource.name}>
+      <div className="text-primary-8 line-clamp-1 font-bold" title={resource.name}>
         {resource.name}
       </div>
-      <div className="font-normal text-primary-8">{SourceDataGroupTabsEnum[resource.category]}</div>
+      <div className="text-primary-8 font-normal">{SourceDataGroupTabsEnum[resource.category]}</div>
       <div className="flex items-center justify-end gap-2">
         <Button
           key="view"
@@ -157,7 +157,7 @@ export default function SourceDataListing({
             className="rounded-full border border-gray-300 bg-white"
             onClick={onLoadMore}
           >
-            <div className="px-4 py-2 text-sm font-bold text-primary-8">
+            <div className="text-primary-8 px-4 py-2 text-sm font-bold">
               Load more{' '}
               <span className="ml-4 font-light text-gray-400">({remainingChunk.length})</span>
             </div>
@@ -171,7 +171,7 @@ export default function SourceDataListing({
             className="rounded-full border border-gray-300 bg-white"
             onClick={onCollapse}
           >
-            <div className="px-14 py-2 text-sm font-bold text-primary-8">Close</div>
+            <div className="text-primary-8 px-14 py-2 text-sm font-bold">Close</div>
           </button>
         </div>
       )}

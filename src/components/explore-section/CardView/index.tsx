@@ -62,9 +62,9 @@ export default function CardView({ data, dataType, resourceId = '' }: CardViewPr
       className="grid min-h-fit grid-cols-6 gap-0 pb-2"
       data-testid="explore-section-listing-card-view"
     >
-      <div className="w-min-[70rem] col-span-1 w-full flex-col break-words pt-[1rem]">
-        <div className="pr-4 font-thin text-neutral-4">SCORE</div>
-        <div className="mt-1 pr-4 font-thin text-neutral-4">PREVIEW</div>
+      <div className="w-min-[70rem] col-span-1 w-full flex-col pt-[1rem] break-words">
+        <div className="text-neutral-4 pr-4 font-thin">SCORE</div>
+        <div className="text-neutral-4 mt-1 pr-4 font-thin">PREVIEW</div>
         <Collapse
           activeKey={activeKeys}
           expandIcon={ExpandIcon}
@@ -76,7 +76,7 @@ export default function CardView({ data, dataType, resourceId = '' }: CardViewPr
           {Object.entries(groupedCardFields).map(([group, fields]) => (
             <Panel
               header={
-                <span className="text-md whitespace-nowrap font-semibold text-primary-8">
+                <span className="text-md text-primary-8 font-semibold whitespace-nowrap">
                   {upperCase(group)}
                 </span>
               }
@@ -85,7 +85,7 @@ export default function CardView({ data, dataType, resourceId = '' }: CardViewPr
             >
               {fields.map((item) => {
                 return (
-                  <div key={item.field} className="mb-2 ml-7 h-6 truncate font-thin text-neutral-4">
+                  <div key={item.field} className="text-neutral-4 mb-2 ml-7 h-6 truncate font-thin">
                     {upperCase(
                       ENTITY_CORE_FIELDS_CONFIG[item.field]?.title ??
                         EXPLORE_FIELDS_CONFIG[item.field]?.title

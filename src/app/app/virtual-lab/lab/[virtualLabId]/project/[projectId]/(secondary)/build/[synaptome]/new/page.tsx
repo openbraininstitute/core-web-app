@@ -37,10 +37,7 @@ type Props = {
 function Synaptome(props: Props) {
   const params = use(props.params);
 
-  const {
-    virtualLabId,
-    projectId
-  } = params;
+  const { virtualLabId, projectId } = params;
 
   const [form] = Form.useForm();
   const { sessionValue } = useSessionStorage<{
@@ -94,7 +91,7 @@ function Synaptome(props: Props) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="font-light text-primary-9">Loading current configuration ...</h2>
+        <h2 className="text-primary-9 font-light">Loading current configuration ...</h2>
       </div>
     );
   }

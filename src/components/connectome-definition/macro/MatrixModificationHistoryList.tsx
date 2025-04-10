@@ -29,7 +29,7 @@ export default function MatrixModificationHistoryList() {
         Modified connections
         {edits.length > 0 && (
           <span className="ml-3 inline-block text-base">
-            {edits.length} <span className="ml-0.5 inline-block text-neutral-4">modifications</span>
+            {edits.length} <span className="text-neutral-4 ml-0.5 inline-block">modifications</span>
           </span>
         )}
       </div>

@@ -25,10 +25,7 @@ const SynaptomeDetailView = dynamic(
 export default function Synaptome(props: Props) {
   const params = use(props.params);
 
-  const {
-    virtualLabId,
-    projectId
-  } = params;
+  const { virtualLabId, projectId } = params;
 
   const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
   const setBackToListPath = useSetAtom(backToListPathAtom);

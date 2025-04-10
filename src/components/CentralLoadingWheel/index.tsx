@@ -26,7 +26,7 @@ function CentralLoadingWheel({
         <IconComponent style={{ height: '300px' }} />
         {text && (
           <div
-            className="max-w-[25rem] text-2xl font-semibold text-primary-9"
+            className="text-primary-9 max-w-[25rem] text-2xl font-semibold"
             style={{
               position: 'absolute',
               top: '50%',

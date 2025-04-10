@@ -112,7 +112,7 @@ export default function SimulationPlotAsImage({
           height={size ? size.h : undefined}
           objectFit="contains"
           alt="plot"
-          className="border border-neutral-2"
+          className="border-neutral-2 border"
           src={image}
         />
       </div>

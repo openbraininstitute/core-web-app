@@ -5,7 +5,7 @@
 }
 
 .model-select__menu {
-  @apply w-full border border-primary-8 bg-primary-8 p-0 font-normal;
+  @apply border-primary-8 bg-primary-8 w-full border p-0 font-normal;
 }
 
 .model-select__indicator {
@@ -21,12 +21,12 @@
 }
 
 .compact-model-select__control {
-  @apply w-full whitespace-nowrap rounded-none border-none bg-none p-0 text-right;
+  @apply w-full rounded-none border-none bg-none p-0 text-right whitespace-nowrap;
   min-height: 0 !important;
 }
 
 .compact-model-select__menu {
-  @apply w-full whitespace-nowrap border border-primary-8 bg-primary-8 p-0 text-left font-normal;
+  @apply border-primary-8 bg-primary-8 w-full border p-0 text-left font-normal whitespace-nowrap;
 }
 
 .compact-model-select__indicator {

@@ -11,7 +11,7 @@ type Props = {
 
 function ErrorContainer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-10 mb-2 mt-12 flex h-screen w-full max-w-7xl items-start gap-x-4">
+    <div className="mx-10 mt-12 mb-2 flex h-screen w-full max-w-7xl items-start gap-x-4">
       <div className="mx-10 mt-12 flex w-full flex-col">{children}</div>
     </div>
   );

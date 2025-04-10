@@ -97,7 +97,7 @@ function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
     <div className="grid max-w-(--breakpoint-2xl) grow grid-cols-6 gap-x-10 gap-y-4 break-words">
       {fields.map(({ className, title, value }) => (
         <div key={title} className={classNames('text-primary-7', className)}>
-          <div className="uppercase text-neutral-4">{title}</div>
+          <div className="text-neutral-4 uppercase">{title}</div>
           <div className="mt-2">{value}</div>
         </div>
       ))}
@@ -108,10 +108,7 @@ function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
 export default function NewMEModelPage(props: Params) {
   const params = use(props.params);
 
-  const {
-    projectId,
-    virtualLabId
-  } = params;
+  const { projectId, virtualLabId } = params;
 
   const router = useRouter();
   const selectedMModel = useAtomValue(selectedMModelAtom);
@@ -188,7 +185,7 @@ export default function NewMEModelPage(props: Params) {
   };
 
   const validateTrigger = modelsAreSelected && (
-    <div className="fixed bottom-10 right-10 flex flex-row gap-4 text-white">
+    <div className="fixed right-10 bottom-10 flex flex-row gap-4 text-white">
       <button
         className={classNames(
           'fit-content ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',

@@ -177,17 +177,17 @@ export default function AmperageRange({
 
   return (
     <>
-      <div className="mb-3 mt-8 flex items-center justify-between text-left text-base">
-        <span className="ml-2 uppercase text-gray-400">Amperage</span>
+      <div className="mt-8 mb-3 flex items-center justify-between text-left text-base">
+        <span className="ml-2 text-gray-400 uppercase">Amperage</span>
         {amperageState.error && (
-          <i className="ml-2 text-base font-light text-error">{amperageState.error}</i>
+          <i className="text-error ml-2 text-base font-light">{amperageState.error}</i>
         )}
 
         {synapsesConfig?.length ? (
           <div className="flex">
             {disableStepper && (
               <CustomPopover message={disableStepperContent} when="hover">
-                <div className="mr-2  text-sm text-primary-9">
+                <div className="text-primary-9 mr-2 text-sm">
                   <WarningFilled className="mr-2" />
                   Stepper already assigned
                 </div>
@@ -201,7 +201,7 @@ export default function AmperageRange({
               <div className="flex">
                 <span
                   className={classNames(
-                    'mr-2 text-sm font-light text-primary-9',
+                    'text-primary-9 mr-2 text-sm font-light',
                     disableStepper && 'text-gray-400!'
                   )}
                 >
@@ -223,7 +223,7 @@ export default function AmperageRange({
             max={100}
             value={amperageState.start}
             size="small"
-            className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
+            className="[&_.ant-input-number-input]:text-primary-8! mx-2 h-8 min-w-18 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold!"
             onChange={(newVal) => dispatch({ type: 'constant-value', payload: newVal })}
             onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
             aria-label="constant amplitude"
@@ -234,14 +234,14 @@ export default function AmperageRange({
         <div className="ml-2 flex items-center justify-between gap-6 text-base">
           <div className="flex items-center">
             <div>
-              <span className="font-bold text-primary-8">Start</span>
+              <span className="text-primary-8 font-bold">Start</span>
               <InputNumber
                 placeholder="start"
                 step={0.1}
                 min={-100}
                 max={100}
                 size="small"
-                className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
+                className="[&_.ant-input-number-input]:text-primary-8! mx-2 h-8 min-w-18 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold!"
                 value={amperageState.start}
                 onChange={(newVal) => dispatch({ type: 'start', payload: newVal })}
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
@@ -251,14 +251,14 @@ export default function AmperageRange({
             </div>
             <hr className="mx-4 w-8 border border-gray-200" />
             <div>
-              <span className="font-bold text-primary-8">Stop</span>
+              <span className="text-primary-8 font-bold">Stop</span>
               <InputNumber
                 placeholder="end"
                 step={0.1}
                 min={-100}
                 max={1000}
                 size="small"
-                className="min-w-18 mx-2 h-8 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
+                className="[&_.ant-input-number-input]:text-primary-8! mx-2 h-8 min-w-18 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold!"
                 value={amperageState.end}
                 onChange={(newVal) => dispatch({ type: 'end', payload: newVal })}
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
@@ -268,14 +268,14 @@ export default function AmperageRange({
           </div>
 
           <div>
-            <span className="font-bold text-primary-8">N° of steps</span>
+            <span className="text-primary-8 font-bold">N° of steps</span>
             <InputNumber
               placeholder="step size"
               step={1}
               min={0}
               max={500}
               size="small"
-              className="mx-2 h-8 min-w-10 [&_.ant-input-number-handler-wrap]:opacity-100! [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-8!"
+              className="[&_.ant-input-number-input]:text-primary-8! mx-2 h-8 min-w-10 [&_.ant-input-number-handler-wrap]:opacity-100! [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold!"
               value={amperageState.stepValue}
               onChange={(newVal) => dispatch({ type: 'stepValue', payload: newVal })}
               onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}

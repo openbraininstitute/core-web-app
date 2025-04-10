@@ -34,7 +34,9 @@ html {
   -webkit-text-size-adjust: 100%; /* 2 */
   -moz-tab-size: 4; /* 3 */
   tab-size: 4; /* 3 */
-  font-family: var(--font-sans, ui-sans-serif,
+  font-family: var(
+    --font-sans,
+    ui-sans-serif,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -123,7 +125,9 @@ code,
 kbd,
 samp,
 pre {
-  font-family: var(--font-mono, ui-monospace,
+  font-family: var(
+    --font-mono,
+    ui-monospace,
     SFMono-Regular,
     Menlo,
     Monaco,

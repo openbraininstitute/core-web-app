@@ -21,7 +21,7 @@
 }
 
 .dragIcons {
-  @apply absolute right-0 ml-auto rotate-90 cursor-col-resize text-2xl font-light text-neutral-3;
+  @apply text-neutral-3 absolute right-0 ml-auto rotate-90 cursor-col-resize text-2xl font-light;
   opacity: 0;
 }
 
@@ -126,7 +126,7 @@
     word-spacing: 100vw;
   }
   button {
-    @apply border border-primary-4 text-primary-4;
+    @apply border-primary-4 text-primary-4 border;
     > span {
       @apply mr-5;
     }
@@ -150,6 +150,6 @@
 .columnTitle {
   @apply relative pl-2;
   &::before {
-    @apply absolute end-0 left-0 top-0 h-full w-px bg-[#d9d9d9] content-[""];
+    @apply absolute end-0 top-0 left-0 h-full w-px bg-[#d9d9d9] content-[""];
   }
 }

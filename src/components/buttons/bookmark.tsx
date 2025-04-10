@@ -169,7 +169,7 @@ export default function BookmarkButton({
     return (
       <WarningFilled
         title="Bookmark status could not be loaded"
-        className="mx-2 w-max px-2 text-warning"
+        className="text-warning mx-2 w-max px-2"
       />
     );
   }
@@ -179,11 +179,11 @@ export default function BookmarkButton({
   ) : (
     <Button
       type="text"
-      className="flex items-center gap-2 text-primary-7 hover:bg-transparent!"
+      className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
       onClick={saveToLibrary}
     >
       Save to library
-      <PlusOutlined className="border border-neutral-2 px-4 py-3" />
+      <PlusOutlined className="border-neutral-2 border px-4 py-3" />
     </Button>
   );
 

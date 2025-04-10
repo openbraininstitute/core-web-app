@@ -53,7 +53,7 @@ export default function Content({ ListCompo, cls }: Props) {
               {fields.map(({ key, name, ...restField }) => (
                 <div
                   key={key}
-                  className="my-5 flex w-full animate-fade-in items-center justify-between gap-5"
+                  className="animate-fade-in my-5 flex w-full items-center justify-between gap-5"
                 >
                   <Form.Item
                     {...restField}
@@ -63,7 +63,7 @@ export default function Content({ ListCompo, cls }: Props) {
                       '[&_.ant-form-item-row]:flex-row [&_.ant-form-item-row]:flex-nowrap [&_.ant-form-item-row]:items-center'
                     )}
                     label={
-                      <span className="whitespace-nowrap pr-4 font-semibold text-primary-8">
+                      <span className="text-primary-8 pr-4 font-semibold whitespace-nowrap">
                         Invite:
                       </span>
                     }
@@ -92,7 +92,7 @@ export default function Content({ ListCompo, cls }: Props) {
                     {...restField}
                     labelAlign="left"
                     label={
-                      <span className="whitespace-nowrap pr-4 font-semibold text-gray-400">
+                      <span className="pr-4 font-semibold whitespace-nowrap text-gray-400">
                         As a:
                       </span>
                     }
@@ -104,7 +104,7 @@ export default function Content({ ListCompo, cls }: Props) {
                     <Select
                       className={classNames(
                         'min-w-36 border border-gray-300',
-                        'w-40 shadow-none ring-0 focus:border-2 focus:border-primary-8',
+                        'focus:border-primary-8 w-40 shadow-none ring-0 focus:border-2',
                         '[&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:border-0!'
                       )}
                       options={[
@@ -129,7 +129,7 @@ export default function Content({ ListCompo, cls }: Props) {
             </div>
             <Form.Item>
               <Button
-                className="h-14 rounded-none border-gray-400 bg-white px-10 text-gray-500 hover:bg-primary-8 hover:text-white!"
+                className="hover:bg-primary-8 h-14 rounded-none border-gray-400 bg-white px-10 text-gray-500 hover:text-white!"
                 type="default"
                 size="large"
                 onClick={add}

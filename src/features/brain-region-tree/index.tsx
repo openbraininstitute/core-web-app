@@ -99,7 +99,7 @@ function NavTitle({
           className={classNames(
             'flex w-full items-center justify-between gap-x-1 rounded-full py-1',
             'will-change-[transform,height] [&:has(.brain-regions-views-open)]:items-start [&:has(.brain-regions-views-open)]:rounded-md',
-            '[&:has(.brain-regions-views-open)]:py-3 [&:has(.brain-regions-views-open)]:transition-background [&:has(.brain-regions-views-open)]:ease-out',
+            '[&:has(.brain-regions-views-open)]:transition-background [&:has(.brain-regions-views-open)]:py-3 [&:has(.brain-regions-views-open)]:ease-out',
             selected && 'px-2 transition-all duration-200 ease-out hover:shadow-md'
           )}
           style={selected ? { backgroundColor: colorCode } : {}}
@@ -112,11 +112,11 @@ function NavTitle({
             <span
               title={title}
               className={classNames(
-                'mr-auto whitespace-pre-wrap text-left',
+                'mr-auto text-left whitespace-pre-wrap',
                 isExpanded || selectedBrainRegion?.id === id
-                  ? !selected && 'font-medium text-primary-4'
-                  : !selected && 'font-light text-primary-1',
-                selected && 'line-clamp-1 font-bold text-primary-8',
+                  ? !selected && 'text-primary-4 font-medium'
+                  : !selected && 'text-primary-1 font-light',
+                selected && 'text-primary-8 line-clamp-1 font-bold',
                 className
               )}
             >
@@ -183,7 +183,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
   }, [brainModelConfigId, localSelectedBrainModelConfigId]);
 
   return brainRegionsTree ? (
-    <div className="flex h-screen flex-col bg-primary-8">
+    <div className="bg-primary-8 flex h-screen flex-col">
       {isCollapsed ? (
         <CollapsedBrainRegionsSidebar setIsCollapsed={setIsCollapsed} />
       ) : (
@@ -231,7 +231,7 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
       )}
     </div>
   ) : (
-    <div className="flex h-screen w-[300px] items-center justify-center bg-primary-8 text-3xl text-neutral-1">
+    <div className="bg-primary-8 text-neutral-1 flex h-screen w-[300px] items-center justify-center text-3xl">
       <LoadingOutlined />
     </div>
   );

@@ -101,7 +101,7 @@ export default function BookmarkTabs({ labId, projectId }: Props) {
             'data-testid': `${t}-tab`,
             label: (
               <div>
-                <span className="text-center text-xl font-bold leading-7 text-primary-8">
+                <span className="text-primary-8 text-center text-xl leading-7 font-bold">
                   {resourceTypes[t].title}
                 </span>
                 <span className="ml-2 text-sm font-normal text-gray-600">
@@ -133,7 +133,7 @@ export default function BookmarkTabs({ labId, projectId }: Props) {
           <Spin indicator={<LoadingOutlined />} className="w-full" />
         )}
         {bookmarks.state === 'hasError' && (
-          <p className="text-center font-bold text-primary-8">
+          <p className="text-primary-8 text-center font-bold">
             Library resources could not be loaded
           </p>
         )}
@@ -152,7 +152,7 @@ export default function BookmarkTabs({ labId, projectId }: Props) {
               }}
             />
           ) : (
-            <p className="text-center font-bold text-primary-8">
+            <p className="text-primary-8 text-center font-bold">
               There are no {tab} resources in the library
             </p>
           ))}
@@ -227,7 +227,7 @@ export default function BookmarkTabs({ labId, projectId }: Props) {
                     className={
                       node.key === tabBarProps.activeKey
                         ? 'bg-white'
-                        : 'border border-primary-4 bg-transparent'
+                        : 'border-primary-4 border bg-transparent'
                     }
                   >
                     {node}

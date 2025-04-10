@@ -190,7 +190,7 @@ function DefaultCellRenderer({
     <span
       title={data}
       className={csx(
-        'line-clamp-2 whitespace-pre-wrap break-words text-sm text-primary-8',
+        'text-primary-8 line-clamp-2 text-sm break-words whitespace-pre-wrap',
         className
       )}
     >
@@ -363,7 +363,7 @@ function PaginationPoint({
     return (
       <li
         className={csx(
-          'flex h-10 cursor-auto select-none items-center justify-center px-4 leading-tight'
+          'flex h-10 cursor-auto items-center justify-center px-4 leading-tight select-none'
         )}
       >
         <span>{value}</span>
@@ -378,7 +378,7 @@ function PaginationPoint({
         onClick={onClick}
         className={csx(
           'flex h-10 items-center justify-center border border-gray-300 px-4 leading-tight',
-          'cursor-pointer select-none hover:bg-primary-4 hover:text-white',
+          'hover:bg-primary-4 cursor-pointer select-none hover:text-white',
           isCurrent && 'bg-primary-8 text-white',
           isDisabled && 'pointer-events-none cursor-not-allowed'
         )}
@@ -471,7 +471,7 @@ export default function Table<T extends TableObject>({
   if (loading) {
     return (
       <div className="flex w-full items-center justify-center py-3">
-        <LoadingOutlined className="h-4 w-4 text-primary-8" />
+        <LoadingOutlined className="text-primary-8 h-4 w-4" />
       </div>
     );
   }
@@ -492,7 +492,7 @@ export default function Table<T extends TableObject>({
           classNames && classNames.table
         )}
       >
-        <thead className={csx('w-full bg-gray-50 text-xs text-gray-700 ', classNames?.header)}>
+        <thead className={csx('w-full bg-gray-50 text-xs text-gray-700', classNames?.header)}>
           <tr>
             {columns.map(
               ({ key, name, description, sortable, sortFn, sortPosition, width: w }, ind) => {
@@ -534,7 +534,7 @@ export default function Table<T extends TableObject>({
                     >
                       <div className="flex flex-col items-start justify-between gap-1">
                         {typeof name === 'string' ? (
-                          <span className="select-none text-sm font-bold text-neutral-4">
+                          <span className="text-neutral-4 text-sm font-bold select-none">
                             {name}
                           </span>
                         ) : (
@@ -573,7 +573,7 @@ export default function Table<T extends TableObject>({
                 ? row[rowKey as keyof T]
                 : kebabCase(`${tableName}-row${index}`);
             return (
-              <tr key={reactRowkey} className="border-b bg-white hover:bg-primary-0">
+              <tr key={reactRowkey} className="hover:bg-primary-0 border-b bg-white">
                 {columns.map(
                   ({ key, cellRenderer: columnCellRenderer, transformer }, columIndex) => {
                     let Comp = (
@@ -597,14 +597,14 @@ export default function Table<T extends TableObject>({
                       <th
                         scope="row"
                         key={reactColumnKey}
-                        className="whitespace-pre-wrap px-6 py-4 font-medium text-gray-900"
+                        className="px-6 py-4 font-medium whitespace-pre-wrap text-gray-900"
                       >
                         {Comp}
                       </th>
                     ) : (
                       <td
                         key={reactColumnKey}
-                        className={csx('relative whitespace-pre-wrap px-6 py-4')}
+                        className={csx('relative px-6 py-4 whitespace-pre-wrap')}
                       >
                         {Comp}
                       </td>

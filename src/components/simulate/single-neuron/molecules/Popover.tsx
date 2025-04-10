@@ -29,12 +29,12 @@ export default function CustomPopover({
       )}
       destroyTooltipOnHide
       content={
-        <div className="flex flex-col items-center justify-center gap-4 bg-primary-8 p-8">
+        <div className="bg-primary-8 flex flex-col items-center justify-center gap-4 p-8">
           <p className="text-center text-base font-light text-white">{message}</p>
           {onConfirm && (
             <button
               type="button"
-              className="border border-white bg-primary-8 px-7 py-3 font-bold text-white"
+              className="bg-primary-8 border border-white px-7 py-3 font-bold text-white"
               onClick={onConfirm}
             >
               Confirm

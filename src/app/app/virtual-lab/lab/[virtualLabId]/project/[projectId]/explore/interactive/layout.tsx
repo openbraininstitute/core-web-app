@@ -18,9 +18,7 @@ import { generateLabUrl } from '@/util/virtual-lab/urls';
 export default function VirtualLabProjectInteractiveExploreLayout(props: LabProjectLayoutProps) {
   const params = use(props.params);
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   const setConfigId = useSetAtom(brainModelConfigIdAtom);
   useSetBrainRegionFromQuery();

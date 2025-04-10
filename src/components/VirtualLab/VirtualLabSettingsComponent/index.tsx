@@ -41,14 +41,14 @@ function VirtualLabBlock({
   return (
     <div
       className={classNames(
-        'flex w-full justify-between border-2 border-primary-3 p-6 text-white',
+        'border-primary-3 flex w-full justify-between border-2 p-6 text-white',
         className
       )}
     >
       <h2 className="text-2xl font-bold">Virtual Lab</h2>
 
-      <div className="flex items-center gap-2 border border-primary-3 px-4 py-2">
-        <span className="text-sm text-primary-2">Credit balance</span>
+      <div className="border-primary-3 flex items-center gap-2 border px-4 py-2">
+        <span className="text-primary-2 text-sm">Credit balance</span>
         <span className="text-lg font-semibold">{virtualLabBalance?.data.balance ?? ''}</span>
       </div>
     </div>
@@ -239,7 +239,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
       <VirtualLabBlock className="mt-8" virtualLabId={id} />
 
       <Collapse
-        className="my-10 flex flex-col gap-1 text-primary-8"
+        className="text-primary-8 my-10 flex flex-col gap-1"
         items={collapseItems}
         activeKey={activePanelKey}
         onChange={onChangePanel}

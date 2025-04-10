@@ -34,7 +34,7 @@ export default function CheckboxFilter({
       />
       <Link
         href={link}
-        className="relative flex flex-row gap-x-3 text-base font-normal text-primary-9"
+        className="text-primary-9 relative flex flex-row gap-x-3 text-base font-normal"
         style={{
           color: isDisabled ? 'gray' : '#002766',
         }}

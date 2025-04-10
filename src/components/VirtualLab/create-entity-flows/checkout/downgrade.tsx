@@ -62,14 +62,14 @@ export default function DowngradeFree({ isOpen, onClose }: Props) {
   return (
     <Modal onClose={onClose} isOpen={isOpen} cls={{ content: 'min-h-[8rem]!' }} footer={null}>
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-primary-8">Downgrading</h1>
+        <h1 className="text-primary-8 text-3xl font-bold">Downgrading</h1>
         <p className="text-lg font-light">
           If you choose to downgrade from Pro plan to the free plan you will loose access to your
           virtual lab and invited virtual labs
         </p>
         <form name="downgrade-form" className="mt-3" onSubmit={onDowngradeSubmit}>
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label htmlFor="reason" className="mb-1 text-lg font-bold text-primary-8">
+          <label htmlFor="reason" className="text-primary-8 mb-1 text-lg font-bold">
             Reason <span className="text-sm font-light text-gray-400">(Optional):</span>
           </label>
           <TextArea name="reason" rows={10} className="border!" />
@@ -77,8 +77,8 @@ export default function DowngradeFree({ isOpen, onClose }: Props) {
             <Button
               key="cancel-btn"
               className={classNames(
-                'h-14 rounded-none border-0 px-6 text-primary-8',
-                'hover:border! hover:border-primary-8! hover:bg-white! hover:text-primary-8!'
+                'text-primary-8 h-14 rounded-none border-0 px-6',
+                'hover:border-primary-8! hover:text-primary-8! hover:border! hover:bg-white!'
               )}
               size="large"
               htmlType="button"
@@ -89,8 +89,8 @@ export default function DowngradeFree({ isOpen, onClose }: Props) {
             <Button
               key="confirm-btn"
               className={classNames(
-                'h-14 rounded-none px-6 text-primary-8',
-                'border! border-primary-8! hover:bg-primary-8! hover:font-bold hover:text-white!'
+                'text-primary-8 h-14 rounded-none px-6',
+                'border-primary-8! hover:bg-primary-8! border! hover:font-bold hover:text-white!'
               )}
               size="large"
               htmlType="submit"

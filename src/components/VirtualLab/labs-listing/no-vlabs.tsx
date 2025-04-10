@@ -28,7 +28,7 @@ function ActionCard({ href, title, description, icon, className }: ActionCardPro
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="absolute inset-0 bg-primary-8/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <div className="bg-primary-8/5 absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         <div className="flex items-start justify-between">
           <div>
             <h2 className="mb-1 text-2xl font-semibold text-white">{title}</h2>
@@ -54,7 +54,7 @@ function HeroSection() {
     <motion.div
       className={classNames(
         'relative mx-auto flex w-full flex-col items-start justify-center',
-        'z-10 h-80 bg-primary-8 p-6 opacity-100'
+        'bg-primary-8 z-10 h-80 p-6 opacity-100'
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

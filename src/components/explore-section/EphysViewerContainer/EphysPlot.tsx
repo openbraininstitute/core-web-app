@@ -131,7 +131,7 @@ function EphysPlot({ options, index, defaultStimulusType, defaultRepetition }: E
         {sweeps.length > 1 && (
           <button
             type="button"
-            className="bg-transparant h-[32px] self-end text-dark"
+            className="bg-transparant text-dark h-[32px] self-end"
             onClick={() => {
               setReset(!reset);
               setSelectedSweeps([]);

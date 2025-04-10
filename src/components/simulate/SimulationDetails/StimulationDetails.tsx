@@ -25,8 +25,8 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={classNames('mb-4 mr-10 text-primary-7', className)}>
-      <div className="text-sm uppercase text-neutral-4">{label}</div>
+    <div className={classNames('text-primary-7 mr-10 mb-4', className)}>
+      <div className="text-neutral-4 text-sm uppercase">{label}</div>
       <div>
         <span className="mr-2 font-bold">{value}</span>
         {unit && <span>[{unit}]</span>}
@@ -40,12 +40,12 @@ export default function StimulationDetails({ currentInjection, stimulusData }: P
   return (
     <div className="flex flex-wrap">
       <div className="w-[500px] border border-neutral-200 p-4">
-        <div className="mb-6 flex items-center border-b border-neutral-200 font-semibold text-neutral-4">
+        <div className="text-neutral-4 mb-6 flex items-center border-b border-neutral-200 font-semibold">
           Stimulation
         </div>
 
-        <div className="mr-10 text-primary-7">
-          <div className="text-sm uppercase text-neutral-4">Location</div>
+        <div className="text-primary-7 mr-10">
+          <div className="text-neutral-4 text-sm uppercase">Location</div>
           <div className="mb-4">
             <span
               className="mr-4 inline-block h-[11px] w-[11px] border"

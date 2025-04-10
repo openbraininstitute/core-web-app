@@ -132,7 +132,7 @@ export default function NeuronViewer({
   return (
     <div className="relative h-full w-full">
       {loading && (
-        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
+        <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
           <NeuronLoader text="Loading Neuron" />
         </div>
       )}
@@ -146,7 +146,7 @@ export default function NeuronViewer({
       />
       <canvas
         ref={labelsCanvasRef}
-        className="pointer-events-none absolute left-0 top-0 size-full"
+        className="pointer-events-none absolute top-0 left-0 size-full"
       />
       {children?.({
         useZoomer,

@@ -312,13 +312,13 @@ export default function MicroConnectomeConfigView() {
         <h3 className="mb-2">Hemispheres</h3>
         <HemisphereDropdown value={hemisphereDirection} onChange={setHemisphereDirection} />
 
-        <h3 className="mb-2 mt-4">Pre-synaptic brain regions:</h3>
+        <h3 className="mt-4 mb-2">Pre-synaptic brain regions:</h3>
         <BrainRegionSelect value={srcSelections} onChange={setSrc} extraPadding />
 
-        <h3 className="mb-2 mt-4">Post-synaptic brain regions:</h3>
+        <h3 className="mt-4 mb-2">Post-synaptic brain regions:</h3>
         <BrainRegionSelect value={dstSelections} onChange={setDst} extraPadding />
 
-        <h3 className="mb-3 mt-4">View:</h3>
+        <h3 className="mt-4 mb-3">View:</h3>
         <ViewSelector
           value={view}
           onChange={setView}

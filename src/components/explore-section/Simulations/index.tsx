@@ -42,7 +42,7 @@ export default function Simulations({ resource }: { resource: SimulationCampaign
 
   return (
     <div className="mt-4 flex flex-col gap-4">
-      <div className="flex items-center justify-end gap-4 text-primary-7">
+      <div className="text-primary-7 flex items-center justify-end gap-4">
         <div className="mr-auto flex items-baseline gap-2">
           <span className="text-xl font-bold">Simulations</span>
           <span className="text-xs">
@@ -50,7 +50,7 @@ export default function Simulations({ resource }: { resource: SimulationCampaign
           </span>
         </div>
         <div>
-          <span className="mr-2 font-light text-primary-8">Show:</span>
+          <span className="text-primary-8 mr-2 font-light">Show:</span>
           <SimulationOptionsDropdown
             options={showOnlyOptions}
             setSelectedValue={setShowStatus}
@@ -58,7 +58,7 @@ export default function Simulations({ resource }: { resource: SimulationCampaign
           />
         </div>
         <div>
-          <span className="mr-2 font-light text-primary-8">Display:</span>
+          <span className="text-primary-8 mr-2 font-light">Display:</span>
           <SimulationOptionsDropdown
             setSelectedValue={setSelectedDisplay}
             selectedValue={selectedDisplay}
@@ -69,10 +69,10 @@ export default function Simulations({ resource }: { resource: SimulationCampaign
           />
           <Link
             href={`${path}/experiment-analysis?targetEntity=SimulationCampaign`}
-            className="ml-3 font-light text-primary-8"
+            className="text-primary-8 ml-3 font-light"
           >
             Register new analysis
-            <PlusOutlined className="ml-2 translate-y-[2px] border border-gray-200 text-2xl " />
+            <PlusOutlined className="ml-2 translate-y-[2px] border border-gray-200 text-2xl" />
           </Link>
         </div>
       </div>

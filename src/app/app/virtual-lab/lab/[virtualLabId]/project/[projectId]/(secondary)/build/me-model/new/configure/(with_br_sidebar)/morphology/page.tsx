@@ -84,7 +84,7 @@ export default function ReconstrucedMorphologyPage(props: Params) {
         selectionType="radio"
         renderButton={({ selectedRows }) => (
           <Btn
-            className="fit-content sticky bottom-0 ml-auto w-fit bg-primary-8"
+            className="fit-content bg-primary-8 sticky bottom-0 ml-auto w-fit"
             onClick={() => onMorphPicked(selectedRows)}
           >
             Select m-model

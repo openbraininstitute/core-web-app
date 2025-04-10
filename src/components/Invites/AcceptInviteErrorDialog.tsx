@@ -75,18 +75,18 @@ export default function AcceptInviteErrorDialog({ errorCode }: { errorCode: stri
     <Modal centered open={open} closeIcon={null} footer={null}>
       <div className="flex flex-col">
         <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-          <h2 className="text-2xl font-bold text-primary-8">{title}</h2>
+          <h2 className="text-primary-8 text-2xl font-bold">{title}</h2>
           <button
             type="button"
             aria-label="close"
             onClick={onClose}
-            className="p-2  hover:bg-gray-100"
+            className="p-2 hover:bg-gray-100"
           >
             <CloseOutlined className="h-5 w-5 text-gray-500" />
           </button>
         </div>
         <p className="mt-4 text-lg text-gray-700">{message}</p>
-        <div className="ml-auto mt-5 justify-end">
+        <div className="mt-5 ml-auto justify-end">
           {isInviteAcceptedError && <InviteRedirectButton />}
         </div>
       </div>
@@ -108,7 +108,7 @@ function InviteRedirectButton() {
         type="primary"
         size="large"
         onClick={() => push(`${generateLabUrl(labId)}/overview`)}
-        className="rounded-none bg-primary-8 text-white"
+        className="bg-primary-8 rounded-none text-white"
       >
         Go to virtual lab
       </Button>
@@ -122,7 +122,7 @@ function InviteRedirectButton() {
         type="primary"
         size="large"
         onClick={() => push(`${generateVlProjectUrl(labId, projectId)}/home`)}
-        className="rounded-none bg-primary-8 text-white"
+        className="bg-primary-8 rounded-none text-white"
       >
         Go to project
       </Button>

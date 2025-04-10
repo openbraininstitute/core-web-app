@@ -72,7 +72,7 @@ export default function VirtualLabTopMenu({ className, extraItems, ghost = true 
             <div
               className={classNames(
                 getMenuButtonClassName(expanded ? false : ghost),
-                'flex cursor-pointer flex-row  justify-between border border-primary-7 transition-all ease-in-out'
+                'border-primary-7 flex cursor-pointer flex-row justify-between border transition-all ease-in-out'
               )}
               style={{ padding: '13px', transitionDuration: '1000ms' }}
               onMouseEnter={() => {
@@ -82,7 +82,7 @@ export default function VirtualLabTopMenu({ className, extraItems, ghost = true 
               ref={menuRef}
             >
               <span className="font-bold">{session?.user.name}</span>
-              <UserOutlined className="mr-2 text-primary-4" />
+              <UserOutlined className="text-primary-4 mr-2" />
             </div>
 
             <div
@@ -103,7 +103,7 @@ export default function VirtualLabTopMenu({ className, extraItems, ghost = true 
                 type="button"
                 className={classNames(
                   getMenuButtonClassName(false),
-                  'flex flex-row justify-between  border border-t-0 border-primary-7'
+                  'border-primary-7 flex flex-row justify-between border border-t-0'
                 )}
                 onClick={expanded ? signOut : undefined}
               >

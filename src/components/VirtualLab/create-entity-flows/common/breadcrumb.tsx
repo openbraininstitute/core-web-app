@@ -19,7 +19,7 @@ function BreadcrumbListBase(
     <ol
       ref={ref}
       className={classNames(
-        'text-muted-foreground flex flex-wrap items-center gap-1.5 break-words text-sm',
+        'text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words',
         className
       )}
       {...props}

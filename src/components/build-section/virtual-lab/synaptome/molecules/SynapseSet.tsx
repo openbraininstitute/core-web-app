@@ -42,7 +42,7 @@ type Props = {
 };
 
 const label = (text: string, cls?: string) => (
-  <span className={classNames('text-base font-bold capitalize text-gray-500', cls)}>{text}</span>
+  <span className={classNames('text-base font-bold text-gray-500 capitalize', cls)}>{text}</span>
 );
 
 export default function SynapseSet({
@@ -252,7 +252,7 @@ export default function SynapseSet({
             {index + 1}
           </div>
           {synapsesPlacement?.[config?.id]?.count && (
-            <span className="text-base font-light text-primary-7">
+            <span className="text-primary-7 text-base font-light">
               {synapsesPlacement?.[config?.id]?.count} synapses generated
             </span>
           )}
@@ -284,7 +284,7 @@ export default function SynapseSet({
               aria-label="Delete Synapse"
               title="Delete Synapse"
             >
-              <DeleteOutlined className="px-2 text-primary-8" />
+              <DeleteOutlined className="text-primary-8 px-2" />
             </button>
           )}
         </div>
@@ -299,7 +299,7 @@ export default function SynapseSet({
           <Input
             placeholder="Name your set"
             size="large"
-            className="border-0 border-b-[1.8px] border-primary-8 text-base font-bold text-primary-8"
+            className="border-primary-8 text-primary-8 border-0 border-b-[1.8px] text-base font-bold"
           />
         </Form.Item>
         <div className="grid grid-cols-2 gap-4">
@@ -308,13 +308,13 @@ export default function SynapseSet({
             rules={[{ required: false, message: 'Please select a target!' }]}
             validateTrigger="onBlur"
             label={label('Target')}
-            className="border-b-[1.8px]! border-primary-8 [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-arrow]:text-primary-8 [&_.ant-select-selector]:border-0!"
+            className="border-primary-8 [&_.ant-select-arrow]:text-primary-8 border-b-[1.8px]! [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
           >
             <Select
               allowClear
               placeholder="Select a target"
               size="large"
-              className="[&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-item]:text-primary-8"
+              className="[&_.ant-select-selection-item]:text-primary-8 [&_.ant-select-selection-item]:font-bold"
               disabled={!targetOptions.length}
               options={targetOptions}
               onChange={onTargetChange}
@@ -325,13 +325,13 @@ export default function SynapseSet({
             rules={[{ required: true, message: 'Please select at least one type!' }]}
             label={label('Type')}
             validateTrigger="onBlur"
-            className="border-b-[1.8px]! border-primary-8 [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-arrow]:text-primary-8 [&_.ant-select-selector]:border-0!"
+            className="border-primary-8 [&_.ant-select-arrow]:text-primary-8 border-b-[1.8px]! [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
           >
             <Select
               allowClear
               placeholder="Select"
               size="large"
-              className="[&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-item]:text-primary-8"
+              className="[&_.ant-select-selection-item]:text-primary-8 [&_.ant-select-selection-item]:font-bold"
               options={[
                 { value: 110, label: 'Excitatory Synapses' },
                 { value: 10, label: 'Inhibitory Synapses' },
@@ -359,7 +359,7 @@ export default function SynapseSet({
                 >
                   <InputNumber
                     size="large"
-                    className="w-full border-0 border-b-[1.8px] border-primary-8 text-base font-bold text-primary-8"
+                    className="border-primary-8 text-primary-8 w-full border-0 border-b-[1.8px] text-base font-bold"
                     min={0}
                     max={1000}
                   />
@@ -433,13 +433,13 @@ export default function SynapseSet({
                   placeholder="0.03*x*x + 0.004"
                   size="large"
                   className={classNames(
-                    'text-base font-bold italic [&_.ant-input]:text-primary-8',
-                    '[&_.ant-input]:border [&_.ant-input]:border-r-0 [&_.ant-input]:border-neutral-2 [&_.ant-input]:py-4',
-                    '[&_.ant-input-group-addon]:border [&_.ant-input-group-addon]:border-neutral-2 [&_.ant-input-group-addon]:py-4',
+                    '[&_.ant-input]:text-primary-8 text-base font-bold italic',
+                    '[&_.ant-input]:border-neutral-2 [&_.ant-input]:border [&_.ant-input]:border-r-0 [&_.ant-input]:py-4',
+                    '[&_.ant-input-group-addon]:border-neutral-2 [&_.ant-input-group-addon]:border [&_.ant-input-group-addon]:py-4',
                     '[&_.ant-input-group-addon]: [&_.ant-input-group-addon]:border-l-0 [&_.ant-input-group-addon]:bg-white'
                   )}
                   addonAfter={
-                    <span className="w-max min-w-max not-italic text-gray-400">Synapses/µm</span>
+                    <span className="w-max min-w-max text-gray-400 not-italic">Synapses/µm</span>
                   }
                 />
               </Form.Item>
@@ -450,7 +450,7 @@ export default function SynapseSet({
         <div
           className={classNames(
             'mt-5 border border-gray-300',
-            displayExclusionRules ? 'p-4 text-gray-400' : 'px-4 py-2 text-primary-8'
+            displayExclusionRules ? 'p-4 text-gray-400' : 'text-primary-8 px-4 py-2'
           )}
         >
           <button
@@ -476,7 +476,7 @@ export default function SynapseSet({
               {displayExclusionRules ? (
                 <CloseOutlined />
               ) : (
-                <SettingAdjustment className="h-5 w-5 text-primary-8" />
+                <SettingAdjustment className="text-primary-8 h-5 w-5" />
               )}
             </div>
           </button>
@@ -494,24 +494,24 @@ export default function SynapseSet({
                     return (
                       <div key={f.key} className="w-full border border-gray-400 p-4">
                         <div className="flex items-center justify-between gap-4">
-                          <div className="text-lg font-light capitalize text-gray-400">
+                          <div className="text-lg font-light text-gray-400 capitalize">
                             rule {indx + 1}
                           </div>
                           <Button
                             aria-label="Delete rule"
                             onClick={() => removeRule(indx)}
-                            icon={<DeleteOutlined className="h-5 w-5 text-primary-8" />}
+                            icon={<DeleteOutlined className="text-primary-8 h-5 w-5" />}
                             type="text"
                             className="h-[40px] w-[40px] rounded-md"
                           />
                         </div>
-                        <div className="mb-4 text-left text-xl font-bold text-primary-8">
+                        <div className="text-primary-8 mb-4 text-left text-xl font-bold">
                           Exclude synapses that are:
                           <p className="font-light">where the distance from soma is:</p>
                         </div>
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-start justify-center gap-2">
-                            <div className="font-lightw-full flex h-[40px] min-w-max max-w-max items-center justify-center text-primary-8">
+                            <div className="font-lightw-full text-primary-8 flex h-[40px] max-w-max min-w-max items-center justify-center">
                               greater or equal to
                             </div>
                             <Form.Item className="mb-2" name={[f.name, 'distance_soma_gte']}>
@@ -524,7 +524,7 @@ export default function SynapseSet({
                             </Form.Item>
                           </div>
                           <div className="flex items-start justify-center gap-2">
-                            <div className="font-lightw-full flex h-[40px] min-w-max max-w-max items-center justify-center text-primary-8">
+                            <div className="font-lightw-full text-primary-8 flex h-[40px] max-w-max min-w-max items-center justify-center">
                               less or equal to
                             </div>
                             <Form.Item className="mb-2" name={[f.name, 'distance_soma_lte']}>
@@ -547,7 +547,7 @@ export default function SynapseSet({
               aria-label="Add new rule"
               onClick={addNewExclusionRule}
               type="button"
-              className="mt-4 w-max border border-primary-8 bg-white px-7 py-3 text-base font-bold text-primary-8"
+              className="border-primary-8 text-primary-8 mt-4 w-max border bg-white px-7 py-3 text-base font-bold"
             >
               Add rule
             </button>
@@ -562,7 +562,7 @@ export default function SynapseSet({
             loading={visualizeLoading}
             size="large"
             className={classNames(
-              'h-14 cursor-pointer self-end bg-primary-8 text-lg font-bold text-white',
+              'bg-primary-8 h-14 cursor-pointer self-end text-lg font-bold text-white',
               'disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-neutral-400'
             )}
             icon={<PlusCircleOutlined />}

@@ -21,7 +21,7 @@ export default function ParameterView({ meModelSelf, type }: Props) {
 
   return (
     <div className="relative h-full w-full px-8 py-6">
-      <div className="my-5 text-3xl font-bold capitalize text-primary-8">
+      <div className="text-primary-8 my-5 text-3xl font-bold capitalize">
         {currentSimulationStep.title}
       </div>
       <div className="flex h-full w-full flex-col items-center text-center text-2xl">

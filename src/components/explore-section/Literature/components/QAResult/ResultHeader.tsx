@@ -21,12 +21,12 @@ export default function ResultHeader({
   return (
     <>
       <div className="inline-flex w-full items-center gap-2">
-        <div className="h-px w-auto flex-[1_1] bg-neutral-3" />
-        <span className="w-max pl-2 text-sm text-neutral-4">
+        <div className="bg-neutral-3 h-px w-auto flex-[1_1]" />
+        <span className="text-neutral-4 w-max pl-2 text-sm">
           Asked {format(new Date(askedAt), 'dd.MM.yyyy - kk:mm')}
         </span>
       </div>
-      <div className="mb-2 grid w-full grid-cols-[2fr_1fr] items-center  justify-between gap-2">
+      <div className="mb-2 grid w-full grid-cols-[2fr_1fr] items-center justify-between gap-2">
         <div className="my-5 inline-flex w-full flex-[70%] items-center justify-start gap-2">
           <BrainLight />
           <span
@@ -51,7 +51,7 @@ export default function ResultHeader({
           >
             <ChevronIcon
               className={classNames(
-                'fill-current text-primary-8 transition-transform duration-300 ease-in-out',
+                'text-primary-8 fill-current transition-transform duration-300 ease-in-out',
                 collpaseQuestion ? 'rotate-0' : 'rotate-90'
               )}
             />

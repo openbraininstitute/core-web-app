@@ -131,8 +131,8 @@ export default function PaymentMethodCard({
       role="button"
       onClick={onSelect(id)}
       className={classNames(
-        'group my-2 flex h-16 w-full items-center gap-5 rounded-md border border-neutral-3 p-5',
-        'transition-colors duration-300 ease-out hover:border-primary-0 hover:bg-primary-0',
+        'group border-neutral-3 my-2 flex h-16 w-full items-center gap-5 rounded-md border p-5',
+        'hover:border-primary-0 hover:bg-primary-0 transition-colors duration-300 ease-out',
         containerStyle
       )}
     >
@@ -155,11 +155,11 @@ export default function PaymentMethodCard({
         </div>
       </div>
       <div className="flex items-center gap-1">
-        <UserOutlined className="text-base text-neutral-3" />
+        <UserOutlined className="text-neutral-3 text-base" />
         <span className="text-base">{cardholderName}</span>
       </div>
       {isSelected && (
-        <div className="ml-auto select-none text-base text-white group-hover:hidden">Selected</div>
+        <div className="ml-auto text-base text-white select-none group-hover:hidden">Selected</div>
       )}
       <div
         className={classNames(
@@ -168,7 +168,7 @@ export default function PaymentMethodCard({
         )}
       >
         {isDefault ? (
-          <div className="select-none text-base text-primary-8">Default</div>
+          <div className="text-primary-8 text-base select-none">Default</div>
         ) : (
           <Button
             type="text"

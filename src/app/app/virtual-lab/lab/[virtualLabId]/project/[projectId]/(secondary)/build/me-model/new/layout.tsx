@@ -16,9 +16,7 @@ type GenericLayoutProps = {
 export default function BuildMEModelLayout(props: GenericLayoutProps) {
   const params = use(props.params);
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   const setSection = useSetAtom(sectionAtom);
 

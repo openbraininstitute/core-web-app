@@ -19,7 +19,7 @@ export default function PlaybackPanel() {
         </button>
       </div>
       <PlaybackSpeed />
-      <div className="flex-0 flex flex-col justify-between">
+      <div className="flex flex-0 flex-col justify-between">
         <StepSize />
         <StepNavigator />
       </div>

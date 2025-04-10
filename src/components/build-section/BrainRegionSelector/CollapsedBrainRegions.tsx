@@ -32,10 +32,10 @@ export default function CollapsedBrainRegionsSidebar({
         role="presentation"
         onClick={() => setIsCollapsed(false)}
       >
-        <div className="whitespace-nowrap text-sm text-secondary-4">
+        <div className="text-secondary-4 text-sm whitespace-nowrap">
           {selectedBrainRegion?.title}
         </div>
-        <div className="whitespace-nowrap text-lg font-bold">Brain region</div>
+        <div className="text-lg font-bold whitespace-nowrap">Brain region</div>
       </div>
     </div>
   );

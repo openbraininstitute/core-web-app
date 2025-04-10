@@ -38,9 +38,9 @@ export default function ExploreSectionNameSearch({ dataKey }: SearchProps) {
   }, [searchString, setSearchStringLocal]);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl items-center border-b border-neutral-2 focus-within:border-b-primary-8">
+    <div className="border-neutral-2 focus-within:border-b-primary-8 mx-auto flex w-full max-w-2xl items-center border-b">
       <input
-        className="w-full bg-transparent py-2 text-primary-7 placeholder:text-neutral-3"
+        className="text-primary-7 placeholder:text-neutral-3 w-full bg-transparent py-2"
         style={{ outline: 'unset' }}
         onInput={(e: ChangeEvent<HTMLInputElement>) => setSearchStringLocal(e.target.value)}
         ref={searchInputRef}
@@ -49,7 +49,7 @@ export default function ExploreSectionNameSearch({ dataKey }: SearchProps) {
         value={searchStringLocal}
         aria-label="Search for resources"
       />
-      <SearchOutlined className="py-2 text-primary-8" />
+      <SearchOutlined className="text-primary-8 py-2" />
     </div>
   );
 }

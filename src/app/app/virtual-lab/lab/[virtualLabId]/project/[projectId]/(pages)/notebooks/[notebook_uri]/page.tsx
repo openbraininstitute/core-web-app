@@ -3,9 +3,7 @@ import { ServerSideComponentProp } from '@/types/common';
 export default async function VirtualLab(props: ServerSideComponentProp<{ notebook_uri: string }>) {
   const params = await props.params;
 
-  const {
-    notebook_uri
-  } = params;
+  const { notebook_uri } = params;
 
   return (
     <div className="h-full w-full bg-white">

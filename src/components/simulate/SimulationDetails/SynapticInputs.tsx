@@ -17,8 +17,8 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={classNames('mb-4 mr-10 text-primary-7', className)}>
-      <div className="text-sm uppercase text-neutral-4">{label}</div>
+    <div className={classNames('text-primary-7 mr-10 mb-4', className)}>
+      <div className="text-neutral-4 text-sm uppercase">{label}</div>
       <div>
         <span className="mr-2 font-bold">{value}</span>
         {unit && <span>[{unit}]</span>}

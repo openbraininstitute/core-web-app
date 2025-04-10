@@ -36,8 +36,8 @@ export default function Footer({
         <Button
           key="cancel-btn"
           className={classNames(
-            'h-14 rounded-none bg-white px-6 text-primary-8',
-            'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
+            'text-primary-8 h-14 rounded-none bg-white px-6',
+            'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
           )}
           type="text"
           size="large"
@@ -50,8 +50,8 @@ export default function Footer({
           <Button
             key="back-to-btn"
             className={classNames(
-              'h-14 rounded-none bg-white px-6 text-primary-8',
-              'hover:border! hover:border-primary-8 hover:bg-white! hover:font-bold hover:text-primary-8!'
+              'text-primary-8 h-14 rounded-none bg-white px-6',
+              'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
             )}
             type="text"
             size="large"
@@ -65,8 +65,8 @@ export default function Footer({
           <Button
             key="next-to-btn"
             className={classNames(
-              'h-14 rounded-none border border-primary-8 bg-white px-14 text-primary-8',
-              'hover:border! hover:border-primary-5! hover:font-bold hover:shadow-xs',
+              'border-primary-8 text-primary-8 h-14 rounded-none border bg-white px-14',
+              'hover:border-primary-5! hover:border! hover:font-bold hover:shadow-xs',
               'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
               'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
             )}
@@ -83,8 +83,8 @@ export default function Footer({
           <Button
             key="create-project-btn"
             className={classNames(
-              'h-14 rounded-none border border-white bg-primary-9 px-14 text-white',
-              'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+              'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
+              'hover:border-primary-8! hover:bg-primary-8 hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
               'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
               'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
             )}

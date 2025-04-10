@@ -65,7 +65,7 @@ function createFilterItemComponent(
     };
 
     const emptyFilter = (
-      <div className="pl-9 font-light italic text-white">
+      <div className="pl-9 font-light text-white italic">
         No filter available for this property yet
       </div>
     );
@@ -250,19 +250,19 @@ export default function ListingFilterPanel({
   return (
     <div
       data-testid="listing-view-filter-panel"
-      className="fixed right-0 top-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 px-8 pt-6"
+      className="bg-primary-8 fixed top-0 right-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6"
     >
       <div className="mb-auto">
         <div className="mb-2 flex items-center justify-between gap-4">
           <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
             Filters
-            <small className="text-base font-light text-primary-3">{activeColumnsText}</small>
+            <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
           </span>
           <button
             autoFocus // eslint-disable-line jsx-a11y/no-autofocus
             type="button"
             onClick={toggleDisplay}
-            className="rounded-md px-2 py-1 text-white hover:bg-neutral-1 hover:bg-opacity-30"
+            className="hover:bg-neutral-1 hover:bg-opacity-30 rounded-md px-2 py-1 text-white"
             aria-label="Close"
           >
             <CloseOutlined />
@@ -280,12 +280,12 @@ export default function ListingFilterPanel({
         </div>
       </div>
 
-      <div className="sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between bg-primary-8 py-6">
+      <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
         <ClearFilters onClick={clearFilters} />
         <button
           type="submit"
           onClick={submitValues}
-          className="bg-primary-2 px-8 py-3 text-primary-9"
+          className="bg-primary-2 text-primary-9 px-8 py-3"
         >
           Apply
         </button>

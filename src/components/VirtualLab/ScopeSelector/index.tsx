@@ -23,8 +23,8 @@ export function SectionTabs({
     return (
       <label
         className={classNames(
-          'flex grow cursor-pointer items-center justify-center text-xl font-bold transition-all hover:bg-primary-8 hover:text-white',
-          isSelected && 'bg-white text-primary-9'
+          'hover:bg-primary-8 flex grow cursor-pointer items-center justify-center text-xl font-bold transition-all hover:text-white',
+          isSelected && 'text-primary-9 bg-white'
         )}
         htmlFor={`scope-filter-${tab}`}
       >
@@ -42,7 +42,7 @@ export function SectionTabs({
   };
 
   return (
-    <div className="-mt-[67px] inline-flex min-h-[50px] w-[55%] divide-x divide-primary-3 border border-primary-3">
+    <div className="divide-primary-3 border-primary-3 -mt-[67px] inline-flex min-h-[50px] w-[55%] divide-x border">
       {tabJSX('new')}
       {tabJSX('browse')}
     </div>
@@ -73,7 +73,7 @@ export function ScopeSelector({
       <div
         aria-hidden
         className={classNames(
-          'box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded-sm border border-primary-4 p-6',
+          'border-primary-4 box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded-sm border p-6',
           tileStyle,
           !disabled && 'cursor-pointer'
         )}
@@ -99,7 +99,7 @@ export function ScopeSelector({
         {!showImage && (
           <button
             type="button"
-            className="h-[55px] min-w-[100px] self-center  bg-primary-9 text-xl font-bold text-white"
+            className="bg-primary-9 h-[55px] min-w-[100px] self-center text-xl font-bold text-white"
             onClick={handleBuildClick}
           >
             Build
@@ -110,15 +110,15 @@ export function ScopeSelector({
   };
   return (
     <div>
-      <div className="mt-12 text-[40px] font-bold text-primary-4">
+      <div className="text-primary-4 mt-12 text-[40px] font-bold">
         {section === 'build' && 'Select a scale for your model'}
         {section === 'simulate' && 'Select a scale to choose models and simulations'}
       </div>
 
-      <div className="mb-5 mt-8 grid grid-cols-3 gap-5">
-        <div className="text-4xl text-primary-4">CELLULAR</div>
-        <div className="text-4xl text-primary-4">CIRCUIT</div>
-        <div className="text-4xl text-primary-4">SYSTEM</div>
+      <div className="mt-8 mb-5 grid grid-cols-3 gap-5">
+        <div className="text-primary-4 text-4xl">CELLULAR</div>
+        <div className="text-primary-4 text-4xl">CIRCUIT</div>
+        <div className="text-primary-4 text-4xl">SYSTEM</div>
         {tileJSX(SimulationType.IonChannel, 'Coming soon.', imageUrl('ionChannel'), true)}
         {tileJSX(
           SimulationType.PairedNeuron,
@@ -165,8 +165,8 @@ export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
       className={classNames(
         'flex h-[40px] items-center border pl-5 font-semibold',
         selectedSimType === type
-          ? 'border-none bg-primary-8 text-white'
-          : 'border-gray-300 text-primary-9'
+          ? 'bg-primary-8 border-none text-white'
+          : 'text-primary-9 border-gray-300'
       )}
     >
       {capitalize(type.replace('-', ' '))}
@@ -179,11 +179,11 @@ export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
     <>
       <button
         type="button"
-        className="w-1/2 bg-white px-10  py-4 text-left text-2xl"
+        className="w-1/2 bg-white px-10 py-4 text-left text-2xl"
         onClick={() => setExpanded(!expanded)}
       >
         <span className={classNames('text-gray-400', expanded && 'opacity-40')}>Scale</span>
-        <span className={classNames('ml-3 font-bold text-primary-9', expanded && 'opacity-40')}>
+        <span className={classNames('text-primary-9 ml-3 font-bold', expanded && 'opacity-40')}>
           {capitalize(selectedSimType.replace('-', ' '))}
         </span>
 

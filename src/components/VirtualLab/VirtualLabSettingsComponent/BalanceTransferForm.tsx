@@ -129,7 +129,7 @@ export default function BalanceTransferForm({
         </span>
       </div>
 
-      <div className="mr-[-34px] mt-8 text-right">
+      <div className="mt-8 mr-[-34px] text-right">
         <Button
           onClick={onClose}
           className="inline-flex items-center justify-center rounded-none border-none px-5 py-6 shadow-none"
@@ -138,7 +138,7 @@ export default function BalanceTransferForm({
         </Button>
         <Button
           type="primary"
-          className="ml-2 inline-flex items-center justify-center rounded-none bg-primary-8 px-8 py-6"
+          className="bg-primary-8 ml-2 inline-flex items-center justify-center rounded-none px-8 py-6"
           disabled={!amount}
           onClick={transfer}
           loading={loading}

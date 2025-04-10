@@ -21,8 +21,8 @@ function Upgrade() {
       href="/app/virtual-lab/account/subscription"
       key="upgrade-link"
       className={classNames(
-        'flex h-14 items-center justify-center rounded-none border border-white bg-primary-9 px-14 text-lg text-white',
-        'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+        'bg-primary-9 flex h-14 items-center justify-center rounded-none border border-white px-14 text-lg text-white',
+        'hover:border-primary-8! hover:bg-primary-8 hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
         'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
         'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
       )}
@@ -38,8 +38,8 @@ export function ChangeTier() {
       href="/app/virtual-lab/account/subscription"
       key="upgrade-link"
       className={classNames(
-        'flex h-14 w-max items-center justify-center rounded-none border border-white bg-primary-9 px-14 text-lg text-white',
-        'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+        'bg-primary-9 flex h-14 w-max items-center justify-center rounded-none border border-white px-14 text-lg text-white',
+        'hover:border-primary-8! hover:bg-primary-8 hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
         'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
         'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
       )}
@@ -54,8 +54,8 @@ function Downgrade({ onClick }: { onClick: () => void }) {
     <Button
       key="downgrade-link"
       className={classNames(
-        'h-14 rounded-none border border-white bg-primary-9 px-14 text-lg text-white',
-        'hover:border! hover:border-primary-8! hover:bg-primary-8 hover:font-bold hover:text-white! hover:shadow-xs',
+        'bg-primary-9 h-14 rounded-none border border-white px-14 text-lg text-white',
+        'hover:border-primary-8! hover:bg-primary-8 hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
         'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
         'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
       )}
@@ -137,14 +137,14 @@ export function PaidSubscriptionFlow({ data }: { data: UserActiveSubscriptionRes
         footer={null}
       >
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-primary-8">Downgrading</h1>
+          <h1 className="text-primary-8 text-3xl font-bold">Downgrading</h1>
           <p className="text-lg font-light">
             If you choose to downgrade from Pro plan to the free plan you will loose access to your
             virtual lab and invited virtual labs
           </p>
           <form name="downgrade-form" className="mt-3" onSubmit={onDowngradeSubmit}>
             {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-            <label htmlFor="reason" className="mb-1 text-lg font-bold text-primary-8">
+            <label htmlFor="reason" className="text-primary-8 mb-1 text-lg font-bold">
               Reason <span className="text-sm font-light text-gray-400">(Optional):</span>
             </label>
             <TextArea name="reason" rows={10} className="border!" />
@@ -152,8 +152,8 @@ export function PaidSubscriptionFlow({ data }: { data: UserActiveSubscriptionRes
               <Button
                 key="cancel-btn"
                 className={classNames(
-                  'h-14 rounded-none border-0 px-6 text-primary-8',
-                  'hover:border! hover:border-primary-8! hover:bg-white! hover:text-primary-8!'
+                  'text-primary-8 h-14 rounded-none border-0 px-6',
+                  'hover:border-primary-8! hover:text-primary-8! hover:border! hover:bg-white!'
                 )}
                 size="large"
                 htmlType="button"
@@ -164,8 +164,8 @@ export function PaidSubscriptionFlow({ data }: { data: UserActiveSubscriptionRes
               <Button
                 key="confirm-btn"
                 className={classNames(
-                  'h-14 rounded-none px-6 text-primary-8',
-                  'border! border-primary-8! hover:bg-primary-8! hover:font-bold hover:text-white!'
+                  'text-primary-8 h-14 rounded-none px-6',
+                  'border-primary-8! hover:bg-primary-8! border! hover:font-bold hover:text-white!'
                 )}
                 size="large"
                 htmlType="submit"
