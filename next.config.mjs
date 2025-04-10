@@ -46,6 +46,11 @@ const nextConfig = {
           as: 'asset',
         },
       },
+
+      // This is required by react-pdf module. See https://www.npmjs.com/package/react-pdf
+      resolveAlias: {
+        canvas: './empty-module.ts',
+      },
     },
   },
   webpack: (config) => {

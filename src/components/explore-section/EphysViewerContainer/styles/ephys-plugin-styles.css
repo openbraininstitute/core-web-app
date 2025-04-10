@@ -1,3 +1,5 @@
+@reference '../../../../styles/globals.css';
+
 .trace-selector-group.ant-checkbox-wrapper {
   padding-right: 4px;
   padding-left: 4px;

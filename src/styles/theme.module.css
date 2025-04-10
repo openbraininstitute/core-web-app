@@ -1,3 +1,5 @@
+@reference '../styles/globals.css';
+
 .colorAccentDark {
   @apply bg-accent-dark;
   @apply text-dark;

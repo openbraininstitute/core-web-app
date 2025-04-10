@@ -1,18 +1,18 @@
 .outerContainer {
   width: 100%;
 
-  :global(.ant-select-arrow),
-  :global(.ant-select-clear) {
+  & :global(.ant-select-arrow),
+  & :global(.ant-select-clear) {
     top: 16px;
   }
 }
 
 .outerContainer.extraPadding {
-  :global .ant-select-selection-overflow {
+  & :global .ant-select-selection-overflow {
     margin-top: 1.8rem;
   }
 
-  :global .ant-select-selection-overflow-item {
+  & :global .ant-select-selection-overflow-item {
     margin-top: 0.5rem;
   }
 }
