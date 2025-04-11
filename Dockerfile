@@ -5,10 +5,13 @@ FROM node:23-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10 --activate
+
 # Install dependencies based on the preferred package manager
-COPY package.json package-lock.json ./
-RUN npm ci
-RUN npm install sharp
+COPY pnpm-lock.yaml package.json ./
+RUN pnpm install --frozen-lockfile
+RUN pnpm add sharp
 
 
 # Rebuild the source code only when needed
@@ -18,6 +21,9 @@ ARG DEPLOYMENT_ENV
 
 ENV NODE_OPTIONS="--max_old_space_size=7168"
 
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10 --activate
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -25,7 +31,7 @@ COPY . .
 # Copy correct .env file according to the deployment environment
 RUN cp .deployment-envs/.env.$DEPLOYMENT_ENV .env.production
 
-RUN npm run build
+RUN pnpm run build
 
 
 # Production image, copy all the files and run next
