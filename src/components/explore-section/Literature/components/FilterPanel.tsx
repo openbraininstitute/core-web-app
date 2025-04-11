@@ -93,7 +93,7 @@ export default function FilterPanel() {
           >
             <RangePicker
               format="DD-MM-YYYY"
-              className="font-sm rounded-sm border border-primary-4 bg-primary-9 py-2"
+              className="font-sm border-primary-4 bg-primary-9 rounded-sm border py-2"
               allowEmpty={[true, true]}
               value={[filter.value.gte as Date, filter.value.lte as Date]}
               onChange={(newValues: RangeValue<Date>) => {
@@ -125,7 +125,7 @@ export default function FilterPanel() {
       destroyOnClose
       maskClosable
       closeIcon={
-        <CloseOutlined className="absolute left-[-30px] top-[0px] h-[30px] w-[40px] cursor-pointer rounded-bl-[22px] rounded-tl-[22px] bg-primary-9 pl-3 text-xs text-white" />
+        <CloseOutlined className="bg-primary-9 absolute top-[0px] left-[-30px] h-[30px] w-[40px] cursor-pointer rounded-tl-[22px] rounded-bl-[22px] pl-3 text-xs text-white" />
       }
       width="20vw"
       styles={{
@@ -155,14 +155,14 @@ export default function FilterPanel() {
           onClick={() => updateLiterature('filterValues', null)}
           className="flex items-center justify-center"
         >
-          <span className="mr-1 text-primary-2">Clear filters</span>
+          <span className="text-primary-2 mr-1">Clear filters</span>
           <ReloadIcon className="text-primary-2" />
         </button>
 
         <button
           type="submit"
           onClick={onApplyFilters}
-          className="float-right mt-4 bg-primary-2 px-8 py-3 text-primary-9"
+          className="bg-primary-2 text-primary-9 float-right mt-4 px-8 py-3"
         >
           Apply
         </button>

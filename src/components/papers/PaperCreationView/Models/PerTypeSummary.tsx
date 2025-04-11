@@ -113,11 +113,11 @@ export function EModelSummary({ id }: Props) {
   return (
     <div className="flex items-start gap-4 rounded-md border border-gray-200 p-6 shadow-xs">
       <div className="flex w-full flex-col">
-        <h1 className="mb-4 text-2xl uppercase text-gray-500">e-model</h1>
+        <h1 className="mb-4 text-2xl text-gray-500 uppercase">e-model</h1>
         <div className="flex w-full gap-12">
           <div className="w-full max-w-52">
             <EModelTracePreview
-              className="border border-neutral-2"
+              className="border-neutral-2 border"
               images={eModel.image}
               height={200}
               width={200}
@@ -125,15 +125,15 @@ export function EModelSummary({ id }: Props) {
           </div>
           <div className="flex min-w-0 grow flex-col items-start overflow-x-hidden">
             <div className="mb-4 w-full">
-              <p className="lin uppercase text-gray-500">Name</p>
-              <h1 className="break-words text-xl font-bold text-primary-8" title={eModel.name}>
+              <p className="lin text-gray-500 uppercase">Name</p>
+              <h1 className="text-primary-8 text-xl font-bold break-words" title={eModel.name}>
                 {eModel.name}
               </h1>
             </div>
-            <div className="grid w-full grid-cols-2 gap-x-8 gap-y-3 text-primary-8">
+            <div className="text-primary-8 grid w-full grid-cols-2 gap-x-8 gap-y-3">
               {eModelFields.map(({ label, value }) => (
                 <div key={label}>
-                  <div className="uppercase text-gray-500">{label}</div>
+                  <div className="text-gray-500 uppercase">{label}</div>
                   <div className="line-clamp-1">{get(eModel, value, <DefaultEmptyParam />)}</div>
                 </div>
               ))}
@@ -176,7 +176,7 @@ export function MModelSummary({ id }: Props) {
   return (
     <div className="flex items-start gap-4 rounded-md border border-gray-200 p-6 shadow-xs">
       <div className="flex w-full flex-col">
-        <h1 className="mb-4 text-2xl uppercase text-gray-500">e-model</h1>
+        <h1 className="mb-4 text-2xl text-gray-500 uppercase">e-model</h1>
         <div className="flex w-full gap-12">
           <div className="w-full max-w-64">
             {swcUrl && (
@@ -191,15 +191,15 @@ export function MModelSummary({ id }: Props) {
           </div>
           <div className="flex min-w-0 grow flex-col items-start overflow-x-hidden">
             <div className="mb-4 w-full">
-              <p className="lin uppercase text-gray-500">Name</p>
-              <h1 className="break-words text-xl font-bold text-primary-8" title={mModel.name}>
+              <p className="lin text-gray-500 uppercase">Name</p>
+              <h1 className="text-primary-8 text-xl font-bold break-words" title={mModel.name}>
                 {mModel.name}
               </h1>
             </div>
-            <div className="grid w-full grid-cols-2 gap-x-8 gap-y-3 text-primary-8">
+            <div className="text-primary-8 grid w-full grid-cols-2 gap-x-8 gap-y-3">
               {mModelFields.map(({ label, value, renderer }) => (
                 <div key={label}>
-                  <div className="uppercase text-gray-500">{label}</div>
+                  <div className="text-gray-500 uppercase">{label}</div>
                   {renderer ? (
                     renderer(get(mModel, value, ''))
                   ) : (

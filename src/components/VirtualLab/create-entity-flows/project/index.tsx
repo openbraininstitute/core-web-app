@@ -46,7 +46,7 @@ export default async function Flow({ virtualLabId }: Props) {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-white">
-      <div className="mx-auto flex h-full  w-full grow flex-col">
+      <div className="mx-auto flex h-full w-full grow flex-col">
         <div className="flex h-full w-full grow flex-col">
           <StepMenu steps={steps} />
           <Content steps={steps} />

@@ -90,7 +90,7 @@ export default function VirtualLabProjectAdmin({
 
   return (
     <Collapse
-      className="my-10 flex flex-col gap-1 text-primary-8"
+      className="text-primary-8 my-10 flex flex-col gap-1"
       items={collapseItems}
       activeKey={activePanelKey}
       onChange={onChangePanel}

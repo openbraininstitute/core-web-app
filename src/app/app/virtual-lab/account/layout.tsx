@@ -11,8 +11,8 @@ type Props = {
 
 export default function layout({ children }: Props) {
   return (
-    <div className="flex h-screen flex-col bg-primary-9 p-5 text-white">
-      <div className="no-scrollbar h-full gap-12 overflow-y-auto overflow-x-hidden">
+    <div className="bg-primary-9 flex h-screen flex-col p-5 text-white">
+      <div className="no-scrollbar h-full gap-12 overflow-x-hidden overflow-y-auto">
         <SideBar />
         <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
           <div className="ml-80 flex h-full w-[calc(100%-20rem)] grow flex-col">

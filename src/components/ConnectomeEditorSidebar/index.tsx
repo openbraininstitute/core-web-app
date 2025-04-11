@@ -72,7 +72,7 @@ function NavTitle({
           >
             <span
               className={classNames(
-                'mr-auto whitespace-pre-wrap text-left font-bold text-white',
+                'mr-auto text-left font-bold whitespace-pre-wrap text-white',
                 className
               )}
             >
@@ -151,11 +151,11 @@ function CollapsedSidebar() {
           role="presentation"
         >
           Post-synaptic{' '}
-          <span className="capitalize text-highlightPost">{topSelectedPostRegion || 'Brain'}</span>
+          <span className="text-highlightPost capitalize">{topSelectedPostRegion || 'Brain'}</span>
         </div>
         <div className="cursor-pointer text-lg" onClick={() => setArea('pre')} role="presentation">
           Pre-synaptic{' '}
-          <span className="capitalize text-highlightPre">{topSelectedPreRegion || 'Brain'}</span>
+          <span className="text-highlightPre capitalize">{topSelectedPreRegion || 'Brain'}</span>
         </div>
       </div>
     </div>
@@ -214,9 +214,9 @@ export default function ConnectomeEditorSidebar() {
               <div className="flex items-center justify-start space-x-2 text-2xl font-bold text-white">
                 <Header>
                   {area === 'post' ? (
-                    <div className="text-xl text-highlightPost">Post-synaptic area</div>
+                    <div className="text-highlightPost text-xl">Post-synaptic area</div>
                   ) : (
-                    <div className="text-xl text-highlightPre">Pre-synaptic area</div>
+                    <div className="text-highlightPre text-xl">Pre-synaptic area</div>
                   )}
                 </Header>
               </div>

@@ -99,7 +99,7 @@ export default function SynthesisPreview({ className }: Props) {
         <PlotRenderer plotResponse={imgSources} plotName="synthesis" title="Synthesized neuron" />
       </div>
       {isLoading && (
-        <div className="absolute flex h-full w-full items-center justify-center text-2xl text-primary-8">
+        <div className="text-primary-8 absolute flex h-full w-full items-center justify-center text-2xl">
           Fetching data...
         </div>
       )}

@@ -23,14 +23,14 @@ export default function ExploreInteractivePanel({ virtualLabInfo }: ExploreInter
           </div>
           <div
             id="neurons-panel"
-            className="relative ml-4 mr-2 rounded-md"
+            className="relative mr-2 ml-4 rounded-md"
             style={{ gridArea: '2 / 1 / 6 / 3' }}
           >
             <SelectedBrainRegionMETypes />
           </div>
           <div
             id="3d-area"
-            className="3d relative ml-2 mr-4 h-full rounded-md border border-[#0250b3] p-1"
+            className="3d relative mr-4 ml-2 h-full rounded-md border border-[#0250b3] p-1"
             style={{ gridArea: '2 / 3 / 6 / 6' }}
           >
             <ThreeDeeBrain />

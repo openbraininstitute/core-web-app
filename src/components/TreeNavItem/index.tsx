@@ -1,3 +1,5 @@
+'use client';
+
 import { ReactElement, ReactNode, ForwardedRef, forwardRef, useMemo } from 'react';
 import * as Accordion from '@radix-ui/react-accordion';
 import { TreeItem } from 'performant-array-to-tree';
@@ -49,10 +51,6 @@ export function TreeNavItem({
   ...props
 }: TreeNavItemProps) {
   const section = useAtomValue(sectionAtom);
-  if (!section) {
-    throw new Error('Section is not set');
-  }
-
   const renderedItems = items?.map(({ id: itemId, items: nestedItems, ...itemProps }) => {
     // children may return another render-prop
     const childRender = children({
@@ -131,10 +129,7 @@ export function TreeNavItem({
                 value={itemValue ? Object.keys(itemValue) : []}
                 asChild
               >
-                <>
-                  {/* eslint-disable-line react/jsx-no-useless-fragment */}
-                  {renderedItems}
-                </>
+                <>{renderedItems}</>
               </Accordion.Root>
               {renderAfter}
             </Accordion.Content>
@@ -155,12 +150,14 @@ export function TreeNavItem({
       colorCode,
       ...props,
     });
+
+  if (!section) {
+    // throw new Error('Section is not set');
+    return null;
+  }
   return !render.props.isHidden ? (
     <Accordion.Item value={id} className={className} data-tree-id={id}>
-      <Accordion.Header asChild>
-        {/* eslint-disable-next-line react/jsx-no-useless-fragment */}
-        <>{render}</>
-      </Accordion.Header>
+      <Accordion.Header asChild>{render}</Accordion.Header>
     </Accordion.Item>
   ) : null;
 }
@@ -183,7 +180,9 @@ function TreeNav(
     value,
     colorCode,
   }: {
-    children: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
+    children: (
+      ...args: any[]
+    ) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
     className?: string;
     items: TreeItem[];
     onValueChange: (newValue: string[], path: string[]) => void;

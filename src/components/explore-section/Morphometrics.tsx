@@ -19,11 +19,11 @@ export default function Morphometrics({
   return (
     <div className="flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2">
       <Divider className="w-full" />
-      <h1 className="text-xl font-bold text-primary-8">Morphometrics</h1>
+      <h1 className="text-primary-8 text-xl font-bold">Morphometrics</h1>
       <div className="grid grid-cols-5 gap-4 break-words">
         {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
           <div key={group}>
-            <h2 className="mb-8 text-lg font-semibold text-primary-8">{startCase(group)}</h2>
+            <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
             {fields.map((field) => {
               switch (group) {
                 case MorphoMetricCompartment.NeuronMorphology:

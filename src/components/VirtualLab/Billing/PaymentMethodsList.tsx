@@ -39,8 +39,8 @@ function FormWidget({ virtualLabId }: Props) {
     <button
       type="button"
       className={classNames(
-        'mt-2 flex h-16 w-full items-center justify-between gap-3 rounded-md border border-neutral-3 p-5! text-primary-7',
-        'transition-colors duration-300 ease-out hover:border-primary-0 hover:bg-primary-0'
+        'border-neutral-3 text-primary-7 mt-2 flex h-16 w-full items-center justify-between gap-3 rounded-md border p-5!',
+        'hover:border-primary-0 hover:bg-primary-0 transition-colors duration-300 ease-out'
       )}
       onClick={openStripeForm}
     >
@@ -125,8 +125,8 @@ export default function PaymentMethodsWidget({ virtualLabId }: Props) {
     return (
       <div className="my-7 w-full">
         <div className="mb-5">
-          <h3 className="text-lg font-bold text-primary-8">Add a New Payment Method</h3>
-          <p className="text-base font-normal text-neutral-4">
+          <h3 className="text-primary-8 text-lg font-bold">Add a New Payment Method</h3>
+          <p className="text-neutral-4 text-base font-normal">
             {ADDING_NEW_PAYMENT_METHOD_DESCRIPTION}
           </p>
         </div>

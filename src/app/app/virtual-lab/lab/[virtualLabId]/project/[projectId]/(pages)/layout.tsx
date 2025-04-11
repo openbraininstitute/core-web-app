@@ -11,15 +11,13 @@ import { generateLabUrl } from '@/util/virtual-lab/urls';
 export default async function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
   const params = await props.params;
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   const labUrl = generateLabUrl(params.virtualLabId);
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;
 
   return (
-    <div className="grid h-screen grid-cols-[1fr_3fr] grid-rows-1 bg-primary-9 pr-5 text-white">
+    <div className="bg-primary-9 grid h-screen grid-cols-[1fr_3fr] grid-rows-1 pr-5 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <div className="flex flex-row gap-4">
           <SideMenu
@@ -45,7 +43,7 @@ export default async function VirtualLabProjectLayout(props: LabProjectLayoutPro
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="mt-8 flex w-full flex-col gap-10 overflow-y-auto overflow-x-hidden pr-3">
+        <div className="mt-8 flex w-full flex-col gap-10 overflow-x-hidden overflow-y-auto pr-3">
           {children}
         </div>
       </ErrorBoundary>

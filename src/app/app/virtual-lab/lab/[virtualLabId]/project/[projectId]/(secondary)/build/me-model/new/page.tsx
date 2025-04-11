@@ -22,10 +22,7 @@ type Params = {
 export default function NewMEModelPage(props: Params) {
   const params = use(props.params);
 
-  const {
-    projectId,
-    virtualLabId
-  } = params;
+  const { projectId, virtualLabId } = params;
 
   const setMEModelDetails = useSetAtom(meModelDetailsAtom);
   const setSelectedMModel = useSetAtom(selectedMModelIdAtom);
@@ -81,7 +78,7 @@ export default function NewMEModelPage(props: Params) {
 
   return (
     <div className="m-10 flex h-full flex-col gap-5">
-      <div className="text-3xl font-bold text-primary-8">Build a new single neuron model</div>
+      <div className="text-primary-8 text-3xl font-bold">Build a new single neuron model</div>
       <div className="flex flex-row gap-4">
         <div className="flex-1 grow flex-col gap-4">
           <Form
@@ -123,14 +120,14 @@ export default function NewMEModelPage(props: Params) {
             </Form.Item>
           </Form>
         </div>
-        <div className="mr-10 flex-1 text-primary-7">
-          <div className="uppercase text-neutral-4">Created by</div>
+        <div className="text-primary-7 mr-10 flex-1">
+          <div className="text-neutral-4 uppercase">Created by</div>
           <div className="mt-2">
             <ul>{contributors?.map(({ id, name }) => <li key={id}>{name}</li>)}</ul>
           </div>
         </div>
-        <div className="mr-10 flex-1  text-primary-7">
-          <div className="uppercase text-neutral-4">Creation Date</div>
+        <div className="text-primary-7 mr-10 flex-1">
+          <div className="text-neutral-4 uppercase">Creation Date</div>
           <div className="mt-2">{new Intl.DateTimeFormat('fr-CH').format(new Date())}</div>
         </div>
       </div>
@@ -141,7 +138,7 @@ export default function NewMEModelPage(props: Params) {
           disabled={!isFormValid}
           size="large"
           onClick={onSubmit}
-          className=" absolute bottom-0 right-0 m-10 rounded-none bg-primary-8"
+          className="bg-primary-8 absolute right-0 bottom-0 m-10 rounded-none"
         >
           Start building
         </Button>

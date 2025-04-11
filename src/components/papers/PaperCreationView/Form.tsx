@@ -32,7 +32,7 @@ function FormActions() {
         htmlType="submit"
         type="primary"
         size="large"
-        className="rounded-none bg-primary-8 px-14"
+        className="bg-primary-8 rounded-none px-14"
         loading={pending}
         disabled={pending}
         form="create-project-paper-form"
@@ -125,7 +125,7 @@ export default function Form({ virtualLabId, projectId }: Props) {
             type="checkbox"
             id="generate-outline"
             name="generate-outline"
-            className="h-4 w-4 cursor-pointer rounded-sm border-gray-300 text-primary-8 focus:ring-primary-8"
+            className="text-primary-8 focus:ring-primary-8 h-4 w-4 cursor-pointer rounded-sm border-gray-300"
           />
         </div>
         {state?.validationErrors?.generateOutline && (

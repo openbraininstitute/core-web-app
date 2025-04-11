@@ -71,12 +71,12 @@ export function AddMembers({
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             isEmpty(query) ? (
-              <div className="font-light text-primary-9">
+              <div className="text-primary-9 font-light">
                 <div>No members found within your virtual lab</div>
                 <div>Please add some in the virtual lab team page</div>
               </div>
             ) : (
-              <div className="font-light text-primary-9">
+              <div className="text-primary-9 font-light">
                 <div>
                   No members found match <span className="font-bold">{query}</span>
                 </div>
@@ -138,8 +138,8 @@ export function AddMembers({
                       defaultValue={record.role}
                       placeholder="Select a role"
                       className={classNames(
-                        'min-w-36 !border border-primary-8',
-                        'w-40 shadow-none ring-0 focus:border-2 focus:border-primary-8',
+                        'border-primary-8 min-w-36 !border',
+                        'focus:border-primary-8 w-40 shadow-none ring-0 focus:border-2',
                         '[&_.ant-select-selector]:rounded-none [&_.ant-select-selector]:!border-0'
                       )}
                       onSelect={(value: Role) => {
@@ -276,7 +276,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
       cls={{ content: '!min-h-[30rem]' }}
     >
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-primary-8">Add new members to project</h1>
+        <h1 className="text-primary-8 text-xl font-bold">Add new members to project</h1>
         <div className="flex items-center space-x-2">
           <Input
             placeholder="Search members..."
@@ -291,7 +291,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
           />
           <Button
             type="text"
-            icon={<SearchOutlined className="text-xl text-primary-8" />}
+            icon={<SearchOutlined className="text-primary-8 text-xl" />}
             onClick={handleSearchClick}
             className="!p-1"
             disabled={!users.length || loading}
@@ -331,7 +331,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
         <Button
           key="invite-btn"
           data-testid="invite-btn"
-          className="h-14 rounded-none border-primary-8 bg-primary-8 px-10 text-white hover:!text-white"
+          className="border-primary-8 bg-primary-8 h-14 rounded-none px-10 text-white hover:!text-white"
           type="default"
           size="large"
           htmlType="button"

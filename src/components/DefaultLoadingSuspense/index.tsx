@@ -10,7 +10,7 @@ type Props = {
 
 function Loading() {
   return (
-    <div className="flex items-center justify-center text-3xl text-neutral-1">
+    <div className="text-neutral-1 flex items-center justify-center text-3xl">
       <LoadingOutlined />
     </div>
   );

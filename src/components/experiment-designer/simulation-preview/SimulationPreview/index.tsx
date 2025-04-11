@@ -237,7 +237,7 @@ export default function SimulationPreview({ targetsToDisplay }: SimulationPrevie
       <div className="flex h-full w-full items-center overflow-hidden" ref={threeDeeDiv} />
       {isReady && <PreviewMesh targetsToDisplay={targetsToDisplay} />}
 
-      <div className="absolute left-0 top-0 px-6 py-5 text-white">
+      <div className="absolute top-0 left-0 px-6 py-5 text-white">
         <CameraSwitch onChange={switchCamera} isChecked={isMovieCameraActive} />
       </div>
 
@@ -245,7 +245,7 @@ export default function SimulationPreview({ targetsToDisplay }: SimulationPrevie
         <ColorLegend targetsToDisplay={targetsToDisplay} />
       </div>
 
-      <div className="absolute right-0 top-0 px-6 py-5 text-white">
+      <div className="absolute top-0 right-0 px-6 py-5 text-white">
         <ResetViewButton onResetCamera={resetCamera} isDisabled={isResetViewButtonDisabled} />
       </div>
     </div>

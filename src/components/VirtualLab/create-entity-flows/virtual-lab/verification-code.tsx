@@ -88,7 +88,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
           <input name="email_status" value="none" type="text" hidden />
         </Form.Item>
         <Form.Item
-          label={<span className="font-semibold text-primary-8">Administrator&#39;s email</span>}
+          label={<span className="text-primary-8 font-semibold">Administrator&#39;s email</span>}
           name="reference_email"
           className="flex-1"
           rules={[
@@ -102,8 +102,8 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
           <Button
             className={classNames(
               'h-10 rounded-none border bg-white px-6 text-base font-bold',
-              'border-primary-8 text-primary-8 ',
-              'hover:border-primary-6! hover:bg-white! hover:text-primary-6!',
+              'border-primary-8 text-primary-8',
+              'hover:border-primary-6! hover:text-primary-6! hover:bg-white!',
               'disabled:border-gray-200 disabled:text-gray-400',
               fields?.email_status === 'verified' && 'hidden'
             )}
@@ -132,7 +132,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
       {sendCode && (
         <div
           data-testid="verification-code-form"
-          className="h-full w-4/5 animate-fade-in border border-gray-300 px-8 pt-3 text-primary-8"
+          className="animate-fade-in text-primary-8 h-full w-4/5 border border-gray-300 px-8 pt-3"
         >
           <h2 className="text-lg font-bold">
             Enter your code here

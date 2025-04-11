@@ -2,7 +2,7 @@ import StepTabs from './StepTabs';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 import { SimulationType } from '@/types/simulation/common';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 type Props = {
   viewer: JSX.Element | null;

@@ -64,7 +64,7 @@ export default function SimulationParameters() {
           return (
             <div
               key={paramKey}
-              className="flex w-[200px] items-center justify-between text-primary-7"
+              className="text-primary-7 flex w-[200px] items-center justify-between"
             >
               <Item
                 error={isRequired && !parameters[paramKey]}
@@ -96,7 +96,7 @@ function Item({ error, name, value, readOnly, onChange }: ItemProps) {
     return (
       <>
         {label}
-        <div className="font-bold text-error">No information available</div>
+        <div className="text-error font-bold">No information available</div>
       </>
     );
   }
@@ -105,7 +105,7 @@ function Item({ error, name, value, readOnly, onChange }: ItemProps) {
     return (
       <>
         {label}
-        <div className="font-bold text-neutral-4">No information available</div>
+        <div className="text-neutral-4 font-bold">No information available</div>
       </>
     );
   }

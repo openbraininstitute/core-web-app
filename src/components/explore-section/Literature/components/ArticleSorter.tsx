@@ -36,13 +36,13 @@ export default function ArticleSorter({ onChange }: SorterProps) {
 
   return (
     <div className="ml-[10px] flex items-center justify-between rounded-sm border border-solid border-gray-200 pl-4">
-      <span className="font-normal text-primary-8">Sort by:</span>
+      <span className="text-primary-8 font-normal">Sort by:</span>
       <Select
         defaultValue={DefaultSortField}
         options={SortFieldsOptions}
         className={classNames(
           'min-w-[130px]',
-          '[&>.ant-select-selector]:px-2 [&>.ant-select-selector]:font-bold [&>.ant-select-selector]:text-primary-8'
+          '[&>.ant-select-selector]:text-primary-8 [&>.ant-select-selector]:px-2 [&>.ant-select-selector]:font-bold'
         )}
         popupClassName="text-primary-8!"
         popupMatchSelectWidth={false}

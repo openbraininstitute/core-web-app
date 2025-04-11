@@ -16,7 +16,9 @@ export async function generateMetadata(props: ParamProps): Promise<Metadata> {
   return metadata;
 }
 
-export default async function SanityContentPage(props: { params: Promise<{ sanitySectionSlug: string }> }) {
+export default async function SanityContentPage(props: {
+  params: Promise<{ sanitySectionSlug: string }>;
+}) {
   const params = await props.params;
   const sanitySection = getSection(params.sanitySectionSlug);
 

@@ -33,7 +33,7 @@ export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabI
         <div className="flex justify-between">
           <span>Projects</span>
           {Boolean(totalProjects) && (
-            <span className="font-normal text-primary-3">{totalProjects}</span>
+            <span className="text-primary-3 font-normal">{totalProjects}</span>
           )}
         </div>
       ),
@@ -45,7 +45,7 @@ export default function VirtualLabSidebarContent({ virtualLabId }: { virtualLabI
         <div className="flex justify-between">
           <span>Team</span>
           {Boolean(totalMembers) && (
-            <span className="font-normal text-primary-3">{`${totalMembers} member${totalMembers !== 1 ? 's' : ''}`}</span>
+            <span className="text-primary-3 font-normal">{`${totalMembers} member${totalMembers !== 1 ? 's' : ''}`}</span>
           )}
         </div>
       ),

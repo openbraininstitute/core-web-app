@@ -2,7 +2,7 @@
 
 import { useSetAtom } from 'jotai/index';
 import dynamic from 'next/dynamic';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useLayoutEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
@@ -19,7 +19,9 @@ type GenericLayoutProps = {
 export default function ExploreLayout({ children }: GenericLayoutProps) {
   const setSection = useSetAtom(sectionAtom);
 
-  useEffect(() => setSection('explore'), [setSection]);
+  useLayoutEffect(() => {
+    setSection('explore');
+  }, []);
 
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>

@@ -4,7 +4,10 @@ import { accountingBaseUrl } from '@/config';
 import authFetch from '@/authFetch';
 import { assertApiResponse, RemoteAPIErrorResponse } from '@/util/utils';
 
-export const DELETE = async (request: Request, props: { params: Promise<{ reservationId: string }> }) => {
+export const DELETE = async (
+  request: Request,
+  props: { params: Promise<{ reservationId: string }> }
+) => {
   const params = await props.params;
   const session = await auth();
 

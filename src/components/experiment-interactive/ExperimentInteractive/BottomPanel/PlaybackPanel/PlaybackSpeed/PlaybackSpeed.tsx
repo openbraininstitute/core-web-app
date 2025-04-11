@@ -12,7 +12,7 @@ export default function PlaybackSpeed() {
     <div
       className={classNames(
         styles.playbackSpeed,
-        'flex-0 flex flex-col items-start justify-between'
+        'flex flex-0 flex-col items-start justify-between'
       )}
     >
       <div className="flex flex-row gap-2">

@@ -77,7 +77,7 @@ export default function ArticleListFilters({ values, onSubmit, onClearFilters }:
       destroyOnClose
       maskClosable
       closeIcon={
-        <CloseOutlined className="absolute left-[-30px] top-[0px] h-[30px] w-[40px] cursor-pointer rounded-bl-[22px] rounded-tl-[22px] bg-primary-9 pl-3 text-xs text-white" />
+        <CloseOutlined className="bg-primary-9 absolute top-[0px] left-[-30px] h-[30px] w-[40px] cursor-pointer rounded-tl-[22px] rounded-bl-[22px] pl-3 text-xs text-white" />
       }
       data-testid="article-list-filters"
       width="20vw"
@@ -139,7 +139,7 @@ export default function ArticleListFilters({ values, onSubmit, onClearFilters }:
                 updateFilters({ journals: [...selectedValues] })
               }
             />
-            <hr className="my-4 border-primary-2" />
+            <hr className="border-primary-2 my-4" />
           </div>
 
           <div data-testid="author-input">
@@ -154,7 +154,7 @@ export default function ArticleListFilters({ values, onSubmit, onClearFilters }:
                 updateFilters({ authors: selectedValues.map((v) => v.value) })
               }
             />
-            <hr className="my-4 border-primary-2" />
+            <hr className="border-primary-2 my-4" />
           </div>
 
           <div data-testid="article-type-input">
@@ -173,7 +173,7 @@ export default function ArticleListFilters({ values, onSubmit, onClearFilters }:
                 updateFilters({ articleTypes: selectedValues.map((v) => v.value) })
               }
             />
-            <hr className="my-4 border-primary-2" />
+            <hr className="border-primary-2 my-4" />
           </div>
         </ConfigProvider>
       </div>
@@ -182,10 +182,10 @@ export default function ArticleListFilters({ values, onSubmit, onClearFilters }:
         <button
           type="submit"
           onClick={onClearFilters}
-          className="mt-4 flex items-center py-3 text-primary-2"
+          className="text-primary-2 mt-4 flex items-center py-3"
         >
           Clear Filters
-          <ReloadIcon className="ml-2 text-primary-2" />
+          <ReloadIcon className="text-primary-2 ml-2" />
         </button>
 
         <button
@@ -194,7 +194,7 @@ export default function ArticleListFilters({ values, onSubmit, onClearFilters }:
             onSubmit(filters);
             setOpen(false);
           }}
-          className="mt-4 bg-primary-2 px-8 py-3 text-primary-9"
+          className="bg-primary-2 text-primary-9 mt-4 px-8 py-3"
         >
           Apply
         </button>

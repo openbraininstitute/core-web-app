@@ -76,7 +76,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
         )}
       </div>
       {displayControlPanel && filters && (
-        <div className="fixed right-0 top-0 z-50 h-screen">
+        <div className="fixed top-0 right-0 z-50 h-screen">
           <ListingFilterPanel
             // FIXME: identify the type of facets for generalization
             // TODO: make "ListingFilterPanel" as a generic component by type

@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import dynamic from 'next/dynamic';
 
 import SuggestedQuestions from './suggested-questions';
 import MessageItem from './message-item';
 import Prompt from './prompt';
 import ErrorPanel from './error';
-import { Spinner } from './spinner';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
@@ -16,6 +16,10 @@ import styles from './literature-suggestions.module.css';
 export interface LiteratureSuggestionsProps {
   className?: string;
 }
+
+const Spinner = dynamic(() => import('@/components/literature-suggestions/spinner/spinner'), {
+  ssr: false,
+});
 
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
   const [collapsedPanel, setCollapsedPanel] = React.useState(false);

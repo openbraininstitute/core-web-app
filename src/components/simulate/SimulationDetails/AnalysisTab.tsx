@@ -6,7 +6,7 @@ export default function AnalysisTab({ meModel }: { meModel: NexusMEModel | null 
 
   if (!image || meModel?.status !== 'done') {
     return (
-      <div className="flex h-full items-center justify-center py-12 text-4xl font-bold text-primary-9">
+      <div className="text-primary-9 flex h-full items-center justify-center py-12 text-4xl font-bold">
         No ME-Model analysis yet
       </div>
     );

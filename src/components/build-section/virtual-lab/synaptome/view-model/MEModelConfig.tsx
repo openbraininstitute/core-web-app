@@ -36,14 +36,14 @@ export function MEModelConfiguration({
     <div className="relative mt-2 flex gap-10 rounded-md border border-gray-400 p-4">
       <Link
         href={generateMeModelDetailView()}
-        className="absolute right-4 top-4 flex items-center justify-center font-bold text-primary-8 hover:text-primary-7"
+        className="text-primary-8 hover:text-primary-7 absolute top-4 right-4 flex items-center justify-center font-bold"
       >
         View details
       </Link>
       <div className="flex flex-col items-start gap-2">
-        <div className="mb-2 text-xl font-light uppercase text-gray-400">single neuron model</div>
+        <div className="mb-2 text-xl font-light text-gray-400 uppercase">single neuron model</div>
         <div className="flex items-start gap-2">
-          <div className="flex h-56 w-56 items-center justify-center border border-neutral-3">
+          <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
             <CardVisualization
               dataType={DataType.ExperimentalNeuronMorphology}
               resource={mModel}
@@ -51,14 +51,14 @@ export function MEModelConfiguration({
               width={200}
             />
           </div>
-          <div className="flex h-56 w-56 items-center justify-center border border-neutral-3">
+          <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
             <EModelThumbnail emodel={eModel} />
           </div>
         </div>
       </div>
       <div className="mt-12 grow">
-        <div className="font-thin uppercase text-neutral-4">NAME</div>
-        <div className="my-1 text-3xl font-bold text-primary-8">{meModel.name}</div>
+        <div className="text-neutral-4 font-thin uppercase">NAME</div>
+        <div className="text-primary-8 my-1 text-3xl font-bold">{meModel.name}</div>
         <MeModelDetails meModel={meModel} eModel={eModel} mModel={mModel} />
       </div>
     </div>
@@ -76,27 +76,27 @@ function MeModelDetails({ meModel, eModel, mModel }: ModelDetails) {
   const eType = getEtype(meModel, eModel) ?? DisplayMessages.NO_DATA_STRING;
 
   return (
-    <div className="mt-4 grid grid-cols-[max-content_max-content] gap-4 gap-x-12 text-primary-8">
+    <div className="text-primary-8 mt-4 grid grid-cols-[max-content_max-content] gap-4 gap-x-12">
       <div className="col-span-1">
-        <div className="font-thin uppercase text-neutral-4">m-model</div>
+        <div className="text-neutral-4 font-thin uppercase">m-model</div>
         <div className="line-clamp-1">{mModel.name || DisplayMessages.NO_DATA_STRING}</div>
       </div>
       <div className="col-span-1">
-        <div className="font-thin uppercase text-neutral-4">e-model</div>
+        <div className="text-neutral-4 font-thin uppercase">e-model</div>
         <div className="line-clamp-1">{eModel.name || DisplayMessages.NO_DATA_STRING}</div>
       </div>
       <div className="col-span-1">
-        <div className="font-thin uppercase text-neutral-4">Brain Region</div>
+        <div className="text-neutral-4 font-thin uppercase">Brain Region</div>
         <div className="line-clamp-1">
           {meModel.brainLocation?.brainRegion?.label || DisplayMessages.NO_DATA_STRING}
         </div>
       </div>
       <div className="col-span-1">
-        <div className="font-thin uppercase text-neutral-4">E-Type</div>
+        <div className="text-neutral-4 font-thin uppercase">E-Type</div>
         <div className="line-clamp-1">{eType}</div>
       </div>
       <div className="col-span-2">
-        <div className="font-thin uppercase text-neutral-4">M-Type</div>
+        <div className="text-neutral-4 font-thin uppercase">M-Type</div>
         <div className="line-clamp-1">{mType}</div>
       </div>
     </div>

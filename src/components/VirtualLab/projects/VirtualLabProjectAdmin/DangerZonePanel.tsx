@@ -73,7 +73,7 @@ function DeleteProjectConfirmation({
           <span className="bg-gray-100 px-2 text-gray-500">Delete &lt;your project name&gt;</span>
         </p>
 
-        <div className="border-b-500 mt-5 border-b">
+        <div className="mt-5 border-b border-b-500">
           <Input
             ref={inputRef}
             placeholder="Write your confirmation here..."
@@ -164,7 +164,7 @@ export default function DangerZonePanel({
         }}
       >
         <Button
-          className="ml-auto h-14 rounded-none bg-neutral-3 font-semibold text-neutral-7"
+          className="bg-neutral-3 text-neutral-7 ml-auto h-14 rounded-none font-semibold"
           danger
           onClick={() => {
             setShowConfirmationDialog(true);

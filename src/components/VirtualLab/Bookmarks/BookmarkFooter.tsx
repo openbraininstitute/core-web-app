@@ -1,7 +1,7 @@
 import { notification } from 'antd';
 import { useCallback } from 'react';
 import { useSetAtom } from 'jotai';
-import { Btn } from '@/components/Btn';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 import { DataType } from '@/constants/explore-section/list-views';
 import { bulkRemoveBookmarks } from '@/services/virtual-lab/bookmark';
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
@@ -84,7 +84,7 @@ export default function BookmarkFooter({
   return (
     <div className="-mr-5 flex justify-end">
       <Btn
-        className="fit-content sticky bottom-0 ml-2  w-fit animate-slide-up bg-primary-6"
+        className="fit-content animate-slide-up bg-primary-6 sticky bottom-0 ml-2 w-fit"
         onClick={removeFromLibrary}
       >
         Remove from library

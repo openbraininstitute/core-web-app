@@ -17,11 +17,9 @@ import { SimulationCampaign } from '@/types/explore-section/delta-simulation-cam
 
 import { useSessionAtomValue } from '@/hooks/hooks';
 
-export default function ExperimentAnalyses(
-  props: {
-    searchParams?: Promise<{ targetEntity?: string }>;
-  }
-) {
+export default function ExperimentAnalyses(props: {
+  searchParams?: Promise<{ targetEntity?: string }>;
+}) {
   const searchParams = use(props.searchParams);
   const [analyses, setAnalyses] = useAnalyses(searchParams?.targetEntity);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -87,10 +85,10 @@ export default function ExperimentAnalyses(
 
   return (
     <div className="flex">
-      <div className="stretch-self flex w-10 items-start justify-center bg-neutral-1 font-bold text-primary-8">
+      <div className="stretch-self bg-neutral-1 text-primary-8 flex w-10 items-start justify-center font-bold">
         {simCampaign && (
           <Link
-            className="mt-5 rotate-180 whitespace-pre text-sm"
+            className="mt-5 rotate-180 text-sm whitespace-pre"
             href={
               pathname?.replace(/\/experiment-analysis$/, '') || '/app/explore/simulation-campaigns'
             }
@@ -102,7 +100,7 @@ export default function ExperimentAnalyses(
         )}
         {!simCampaign && (
           <div
-            className="mt-5 rotate-180 cursor-pointer whitespace-pre text-sm"
+            className="mt-5 rotate-180 cursor-pointer text-sm whitespace-pre"
             style={{ writingMode: 'vertical-rl' }}
             onClick={() => window.history.back()}
           >
@@ -113,7 +111,7 @@ export default function ExperimentAnalyses(
       </div>
       <div className="min-h-screen flex-1 overflow-auto bg-white p-4">
         <div className="flex justify-between">
-          <div className="mb-4 text-2xl font-bold text-primary-8">Experiment Analyses</div>
+          <div className="text-primary-8 mb-4 text-2xl font-bold">Experiment Analyses</div>
 
           <div>
             <Input.Search
@@ -125,7 +123,7 @@ export default function ExperimentAnalyses(
             />
             <button
               onClick={() => setIsModalVisible(true)}
-              className="w-21 ml-2 h-9 border border-primary-8 bg-white px-4 py-2 text-sm font-bold text-primary-8 shadow-md"
+              className="border-primary-8 text-primary-8 ml-2 h-9 w-21 border bg-white px-4 py-2 text-sm font-bold shadow-md"
               type="button"
               disabled={loading}
             >
@@ -213,14 +211,14 @@ export default function ExperimentAnalyses(
 
             <Form.Item>
               <div className="float-right mt-2">
-                <Button type="primary" onClick={onCancel} className="bg-white text-primary-8">
+                <Button type="primary" onClick={onCancel} className="text-primary-8 bg-white">
                   Cancel
                 </Button>
                 <Button
                   type="primary"
                   htmlType="submit"
                   loading={loading}
-                  className="ml-3 bg-primary-8"
+                  className="bg-primary-8 ml-3"
                 >
                   Add Analysis
                 </Button>
@@ -263,7 +261,7 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
   return (
     <div className="self-start rounded-lg border bg-white p-4 shadow-md">
       <h3 className="mb-4 text-xl font-semibold">
-        <span className="mr-2 text-primary-8">
+        <span className="text-primary-8 mr-2">
           <LineChartOutlined style={{ fontSize: '16px', color: '#1890ff' }} />
         </span>
         {analysis.name}
@@ -277,7 +275,7 @@ function AnalysisCard({ analysis }: { analysis: Analysis }) {
         className="mt-2 flex cursor-pointer justify-between"
         onClick={() => setShowDetails(!showDetails)}
       >
-        <div className="font-bold text-primary-8">Details</div>
+        <div className="text-primary-8 font-bold">Details</div>
         <RightOutlined />
       </div>
       {showDetails && (

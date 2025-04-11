@@ -64,11 +64,14 @@
     rgba(33, 36, 77, 1) 100%
   );
 
-  --font-sans: var(--font-titillium-web), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+  --font-sans:
+    var(--font-titillium-web), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-title: var(--font-gabarito), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+  --font-title:
+    var(--font-gabarito), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-serif: var(--font-DMSerifText), ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-serif:
+    var(--font-DMSerifText), ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
   --transition-property-padding: padding;
   --transition-property-transform: transform;

@@ -51,7 +51,7 @@ export default function CheckList({ children, data, filter, values, onChange }: 
     !!remainingLength &&
     remainingLength > 0 && (
       <button
-        className="ml-auto w-fit rounded-sm bg-primary-9 px-8 py-3 text-white"
+        className="bg-primary-9 ml-auto w-fit rounded-sm px-8 py-3 text-white"
         type="button"
         onClick={() => updateRenderLength()}
       >

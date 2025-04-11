@@ -58,13 +58,13 @@ export default function SimulationDetailPage(props: Props) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="font-light text-primary-9">Loading simulation ...</h2>
+        <h2 className="text-primary-9 font-light">Loading simulation ...</h2>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-[min-content_auto] overflow-hidden bg-white text-primary-8">
+    <div className="text-primary-8 grid grid-cols-[min-content_auto] overflow-hidden bg-white">
       <Nav
         params={params}
         extraLinks={[
@@ -120,7 +120,7 @@ export default function SimulationDetailPage(props: Props) {
               ) : (
                 <div className="flex h-full min-h-96 w-full flex-col items-center justify-center gap-3">
                   <Spin indicator={<LoadingOutlined />} size="large" />
-                  <h2 className="font-light text-primary-9">
+                  <h2 className="text-primary-9 font-light">
                     Loading simulation configuration ...
                   </h2>
                 </div>

@@ -63,7 +63,7 @@ function TraceSelectorGroup({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="font-bold text-dark">
+      <span className="text-dark font-bold">
         Sweep <small className="text-sm font-light">({sweepsOptions.length} available)</small>
       </span>
       <div className="flex items-center gap-3">{sweeps}</div>

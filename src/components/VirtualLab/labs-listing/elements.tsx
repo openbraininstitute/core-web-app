@@ -36,7 +36,7 @@ export function MembershipVirtualLabsEmpty() {
   return (
     <div
       data-testid="virtual-labs-memberships-empty"
-      className="mx-auto mb-6 w-full max-w-7xl rounded-sm border border-white bg-primary-9 p-6 hover:shadow-sm"
+      className="bg-primary-9 mx-auto mb-6 w-full max-w-7xl rounded-sm border border-white p-6 hover:shadow-sm"
     >
       <div className="flex flex-col items-start justify-between gap-1">
         <h2 className="text-2xl font-bold text-white">
@@ -56,7 +56,7 @@ export function EmptySearchMembershipVirtualLabs({ searchValue }: { searchValue:
   return (
     <div
       data-testid="virtual-labs-memberships-empty"
-      className="mb-6 rounded-sm bg-primary-9 p-6 py-20 hover:shadow-sm"
+      className="bg-primary-9 mb-6 rounded-sm p-6 py-20 hover:shadow-sm"
     >
       <div className="flex flex-col items-center justify-center gap-1">
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={null} className="m-0" />
@@ -116,7 +116,7 @@ export function ActionCard({ href, title, description, icon, className }: Action
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="absolute inset-0 bg-primary-8/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <div className="bg-primary-8/5 absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         <div className="flex items-start justify-between">
           <div>
             <h2 className="mb-1 text-2xl font-semibold text-white">{title}</h2>
@@ -142,7 +142,7 @@ export function HeroSection() {
     <motion.div
       className={classNames(
         'relative mx-auto flex w-full flex-col items-start justify-center',
-        'z-10 bg-primary-8 px-6 py-10 opacity-100'
+        'bg-primary-8 z-10 px-6 py-10 opacity-100'
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

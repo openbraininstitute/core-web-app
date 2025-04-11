@@ -48,8 +48,8 @@ function ImageSetComponent({
   const repCount = Object.keys(repetitions).length;
 
   return (
-    <div className="flex flex-col gap-3 divide-y divide-neutral-2">
-      <div className="flex items-baseline gap-2 text-lg font-bold text-primary-9">
+    <div className="divide-neutral-2 flex flex-col gap-3 divide-y">
+      <div className="text-primary-9 flex items-baseline gap-2 text-lg font-bold">
         {stimulusType}
         <small className="font-light">{`${repCount} ${
           repCount === 1 ? 'repetition' : 'repetitions'
@@ -76,9 +76,9 @@ function ImageSetComponent({
           return (
             <div className="flex flex-col gap-2" key={`image-preview-${stimulusType}-${repKey}`}>
               <div className="flex items-center justify-between">
-                <span className="indent-10 text-lg font-light text-dark">Repetition {repKey}</span>
+                <span className="text-dark indent-10 text-lg font-light">Repetition {repKey}</span>
                 <button
-                  className="flex items-center rounded-sm bg-neutral-1 p-3 hover:bg-neutral-2"
+                  className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded-sm p-3"
                   onClick={onRepetitionClicked(stimulusType, repKey)}
                   type="button"
                   aria-label="Toggle selection"
@@ -92,7 +92,7 @@ function ImageSetComponent({
                   className="flex items-center"
                   key={`image-preview-${stimulusType}-${repKey}-${imgData.imageSrc}`}
                 >
-                  <span className="-rotate-90 text-neutral-4">
+                  <span className="text-neutral-4 -rotate-90">
                     {index === 0 ? 'Stimulus' : 'Recording'}
                   </span>
                   {imagePreview({ imageUrl: imgData.imageSrc })}

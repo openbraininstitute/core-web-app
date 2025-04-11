@@ -15,10 +15,10 @@ import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64, detailUrlBuilder } from '@/util/common';
 import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
-import BookmarkButton from '@/components/explore-section/BookmarkButton';
+import BookmarkButton from '@/components/buttons/variants/bookmark';
 import { SIMULATION_DATA_TYPES } from '@/constants/explore-section/data-types/simulation-data-types';
 import { isSimulation } from '@/types/virtual-lab/bookmark';
-import { Btn } from '@/components/Btn';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
@@ -62,7 +62,7 @@ export default function VirtualLabProjectSimulatePage(props: {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
+    <div className="flex min-h-screen w-full flex-col gap-5 pt-8 pr-5">
       <VirtualLabTopMenu />
       <SectionTabs projectId={params.projectId} section="simulate" />
       {renderContent()}
@@ -124,10 +124,10 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
               {loadMoreDiv}
             </div>
             {selectedRows.length > 0 && (
-              <div className="fixed bottom-12 right-[60px] flex h-12 items-center justify-end gap-2">
+              <div className="fixed right-[60px] bottom-12 flex h-12 items-center justify-end gap-2">
                 <Btn
                   type="button"
-                  className="h-12 bg-primary-9 text-white hover:bg-primary-7!"
+                  className="bg-primary-9 hover:bg-primary-7! h-12 text-white"
                   onClick={() => router.push(generateDetailUrl(selectedRows[0]))}
                 >
                   View
@@ -215,16 +215,16 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
           showLoadingState={false}
         />
         {buttonsVisible && selectedRows.length > 0 && (
-          <div className="fixed bottom-8 right-[50px] flex items-center justify-end gap-2">
+          <div className="fixed right-[50px] bottom-8 flex items-center justify-end gap-2">
             <Btn
               type="button"
-              className="h-12  bg-primary-9 text-white hover:bg-primary-7!"
+              className="bg-primary-9 hover:bg-primary-7! h-12 text-white"
               onClick={() => navigateToDetailPage(selectedRows[0])}
             >
               View
             </Btn>
             <Btn
-              className="h-12  bg-primary-9 text-white hover:bg-primary-7!"
+              className="bg-primary-9 hover:bg-primary-7! h-12 text-white"
               onClick={() => onModelSelected(selectedRows[0])}
             >
               New Simulation
@@ -239,7 +239,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
 
 function customBookmarkButton({ onClick, children }: HTMLProps<HTMLButtonElement>) {
   return (
-    <Btn className="h-12 bg-secondary-2 px-8" onClick={onClick}>
+    <Btn className="bg-secondary-2 h-12 px-8" onClick={onClick}>
       {children}
     </Btn>
   );

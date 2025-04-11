@@ -35,7 +35,7 @@ export function METypeTooltip({
         }
       >
         <span
-          className={`font-bold ${isLeaf ? 'whitespace-nowrap text-secondary-4' : 'text-white'}`}
+          className={`font-bold ${isLeaf ? 'text-secondary-4 whitespace-nowrap' : 'text-white'}`}
         >
           {title}
         </span>
@@ -61,8 +61,8 @@ function CompositionTooltip({ title, subclasses }: { title?: string; subclasses?
 
   return (
     <div className="flex items-center gap-2">
-      <div className="grow font-bold text-primary-8">{title}</div>
-      <div className="flex-none text-neutral-4">{renderType()}</div>
+      <div className="text-primary-8 grow font-bold">{title}</div>
+      <div className="text-neutral-4 flex-none">{renderType()}</div>
     </div>
   );
 }

@@ -1,26 +1,35 @@
 'use client';
 
-import { useEffect, use } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { useParams } from 'next/navigation';
 import { useSetAtom } from 'jotai';
-
+import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
+// import BrainRegionsTree from '@/features/brain-region-tree';
 import SideMenu from '@/components/SideMenu';
-import BrainRegionsTree from '@/features/brain-region-tree';
 
-import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
-import { defaultModelRelease } from '@/config';
-import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
 import { Label, Content, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
+import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
+import { defaultModelRelease } from '@/config';
 
-export default function VirtualLabProjectInteractiveExploreLayout(props: LabProjectLayoutProps) {
-  const params = use(props.params);
+type Props = {
+  children: React.ReactNode;
+  params: ServerSideComponentProp<WorkspaceContext, null>;
+};
 
-  const {
-    children
-  } = props;
+const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
+
+export default function VirtualLabProjectInteractiveExploreLayout(props: Props) {
+  const { virtualLabId, projectId } = useParams<{
+    virtualLabId: string;
+    projectId: string;
+  }>();
+
+  const { children } = props;
 
   const setConfigId = useSetAtom(brainModelConfigIdAtom);
   useSetBrainRegionFromQuery();
@@ -28,8 +37,8 @@ export default function VirtualLabProjectInteractiveExploreLayout(props: LabProj
   // set Release as the configuration of explore interactive
   useEffect(() => setConfigId(defaultModelRelease.id), [setConfigId]);
 
-  const labUrl = generateLabUrl(params.virtualLabId);
-  const labProjectUrl = `${labUrl}/project/${params.projectId}`;
+  const labUrl = generateLabUrl(virtualLabId);
+  const labProjectUrl = `${labUrl}/project/${projectId}`;
 
   return (
     <div className="grid h-screen grid-cols-[min-content_min-content_auto] grid-rows-1">
@@ -46,14 +55,14 @@ export default function VirtualLabProjectInteractiveExploreLayout(props: LabProj
             ]}
             lab={{
               key: LinkItemKey.VirtualLab,
-              id: params.virtualLabId,
+              id: virtualLabId,
               label: Label.VirtualLab,
               href: `${labUrl}/overview`,
             }}
             project={{
               key: LinkItemKey.Project,
-              id: params.projectId,
-              virtualLabId: params.virtualLabId,
+              virtualLabId,
+              id: projectId,
               label: Label.Project,
               href: `${labProjectUrl}/home`,
             }}

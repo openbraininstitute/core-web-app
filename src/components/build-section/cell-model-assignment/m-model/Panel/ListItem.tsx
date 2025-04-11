@@ -55,7 +55,7 @@ export default function ListItem({
     <button onClick={handleClick} type="button" className="m-0 border-none bg-none p-0">
       <div
         className={`flex flex-row items-center justify-between px-7 py-2 ${
-          isActive ? `ml-4 bg-white text-primary-7` : `text-primary-1`
+          isActive ? `text-primary-7 ml-4 bg-white` : `text-primary-1`
         }`}
       >
         <div className="min-w-[130px] text-left font-bold">{label}</div>

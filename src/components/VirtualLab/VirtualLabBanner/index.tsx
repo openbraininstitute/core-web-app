@@ -35,7 +35,7 @@ function BackgroundImg({
   style?: CSSProperties;
 }) {
   return (
-    <div className={classNames('relative min-h-[250px] overflow-hidden bg-primary-8', className)}>
+    <div className={classNames('bg-primary-8 relative min-h-[250px] overflow-hidden', className)}>
       <div
         className={styles.bannerImg}
         style={{

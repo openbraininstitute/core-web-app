@@ -20,7 +20,7 @@ function Section({
     <div
       className={classNames(
         'relative transition-colors',
-        'm-0 flex flex-row items-center gap-8 border-b border-neutral-2 p-0',
+        'border-neutral-2 m-0 flex flex-row items-center gap-8 border-b p-0',
         'after:absolute after:-bottom-1 after:left-0 after:h-1 after:w-full after:bg-white',
         'after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100',
         'hover:after:bg-primary-8',
@@ -30,7 +30,7 @@ function Section({
       <button
         type="button"
         onClick={() => setSection(section)}
-        className="cursor-pointer py-2 text-lg font-bold text-primary-8"
+        className="text-primary-8 cursor-pointer py-2 text-lg font-bold"
       >
         {children}
       </button>
@@ -44,21 +44,21 @@ function Social({ className }: { className?: string }) {
       <a
         aria-label="linkedin"
         href="https://www.linkedin.com/company/openbraininstitute/"
-        className="inline-flex cursor-pointer items-center border-b border-neutral-2 py-2 text-primary-8 hover:text-primary-9 hover:opacity-65 md:border-0"
+        className="border-neutral-2 text-primary-8 hover:text-primary-9 inline-flex cursor-pointer items-center border-b py-2 hover:opacity-65 md:border-0"
       >
         <LinkedinIn className="h-7 w-7 md:h-7 md:w-7" />
       </a>
       <a
         aria-label="x"
         href="https://x.com/OpenBrainInst"
-        className="inline-flex cursor-pointer items-center border-b border-neutral-2 py-2 text-primary-8 hover:text-primary-9 hover:opacity-65 md:border-0"
+        className="border-neutral-2 text-primary-8 hover:text-primary-9 inline-flex cursor-pointer items-center border-b py-2 hover:opacity-65 md:border-0"
       >
         <TwitterX className="h-7 w-7 md:h-7 md:w-7" />
       </a>
       <a
         aria-label="bluesky"
         href="https://bsky.app/profile/openbraininst.bsky.social"
-        className="inline-flex cursor-pointer items-center py-2 text-primary-8 hover:text-primary-9 hover:opacity-65 md:border-0"
+        className="text-primary-8 hover:text-primary-9 inline-flex cursor-pointer items-center py-2 hover:opacity-65 md:border-0"
       >
         <Bluesky className="h-7 w-7 md:h-7 md:w-7" />
       </a>
@@ -77,7 +77,7 @@ export default function Footer({ className }: { className?: string }) {
           className
         )}
       >
-        <div className="flex flex-col items-end justify-between bg-neutral-2 p-3">
+        <div className="bg-neutral-2 flex flex-col items-end justify-between p-3">
           <LogoAsLink color="text-primary-8" />
           <div className="mt-20 text-base text-[#595959] md:mt-0">
             Copyright &copy; {new Date().getFullYear()} – Open Brain Institute
@@ -103,8 +103,8 @@ export default function Footer({ className }: { className?: string }) {
           </div>
           <Social />
         </div>
-        <div className="border border-neutral-2 p-4">
-          <h2 className="p-2 font-serif text-3xl font-semibold leading-[2.7rem] text-primary-8 lg:text-4xl">
+        <div className="border-neutral-2 border p-4">
+          <h2 className="text-primary-8 p-2 font-serif text-3xl leading-[2.7rem] font-semibold lg:text-4xl">
             Subscribe to our <br /> newsletter
           </h2>
           <NewsletterForm key="footer-newsletter-form" cls={{ container: 'p-2!' }} />

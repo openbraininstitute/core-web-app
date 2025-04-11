@@ -1,3 +1,5 @@
+'use client';
+
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
 
@@ -11,7 +13,7 @@ export interface SpinnerProps {
   period?: number;
 }
 
-export function Spinner({ className, count = 32, period = 0.6 }: SpinnerProps) {
+export default function Spinner({ className, count = 32, period = 0.6 }: SpinnerProps) {
   const items = new Array(count).fill(0);
 
   return (

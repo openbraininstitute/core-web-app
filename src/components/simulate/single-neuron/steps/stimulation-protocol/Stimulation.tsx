@@ -70,7 +70,7 @@ export default function Stimulation({ modelSelfUrl }: Props) {
                     // ),
 
                     children: (
-                      <div className="mt-[-12px] border border-primary-8 p-6">
+                      <div className="border-primary-8 mt-[-12px] border p-6">
                         <StimulusLocation stimulationId={field.name} />
                         <StimulationMode stimulationId={field.name} />
                         <StimulationProtocol stimulationId={field.name} />
@@ -109,7 +109,7 @@ function StimulusLocation({ stimulationId }: FormItemProps) {
   return (
     <Form.Item
       name={[stimulationId, 'injectTo']}
-      label={<span className="ml-2 uppercase text-gray-400">Location</span>}
+      label={<span className="ml-2 text-gray-400 uppercase">Location</span>}
       rules={[{ required: true }]}
       labelAlign="left"
       className="mb-8 w-fit border-none"
@@ -125,12 +125,12 @@ function StimulusLocation({ stimulationId }: FormItemProps) {
           })
         }
         variant="borderless"
-        className="text-left [&>.ant-select-selector>.ant-select-selection-item]:text-base! [&>.ant-select-selector>.ant-select-selection-item]:font-bold! [&>.ant-select-selector>.ant-select-selection-item]:text-primary-8!"
+        className="[&>.ant-select-selector>.ant-select-selection-item]:text-primary-8! text-left [&>.ant-select-selector>.ant-select-selection-item]:text-base! [&>.ant-select-selector>.ant-select-selection-item]:font-bold!"
       >
         {secNames.map((secName) => (
           <Select.Option key={secName} value={secName} className="[&_.prefix]:hidden!">
             <div
-              className="prefix mr-2 inline-block h-[10px] w-[10px] bg-primary-8"
+              className="prefix bg-primary-8 mr-2 inline-block h-[10px] w-[10px]"
               style={{ background: SIMULATION_COLORS[0] }}
             />{' '}
             {secName}
@@ -147,7 +147,7 @@ function StimulationMode({ stimulationId }: FormItemProps) {
   return (
     <Form.Item
       name={[stimulationId, 'stimulus', 'stimulusType']}
-      label={<span className="ml-2 uppercase text-gray-400">Stimulation Mode</span>}
+      label={<span className="ml-2 text-gray-400 uppercase">Stimulation Mode</span>}
       rules={[{ required: true }]}
       labelAlign="left"
       className="mb-8"
@@ -160,7 +160,7 @@ function StimulationMode({ stimulationId }: FormItemProps) {
             newValue,
           })
         }
-        className="text-left [&>.ant-select-selector>.ant-select-selection-item]:text-base! [&>.ant-select-selector>.ant-select-selection-item]:font-bold! [&>.ant-select-selector>.ant-select-selection-item]:text-primary-8!"
+        className="[&>.ant-select-selector>.ant-select-selection-item]:text-primary-8! text-left [&>.ant-select-selector>.ant-select-selection-item]:text-base! [&>.ant-select-selector>.ant-select-selection-item]:font-bold!"
         variant="borderless"
       />
     </Form.Item>
@@ -172,11 +172,11 @@ function StimulationProtocol({ stimulationId }: FormItemProps) {
   const currentInjectionConfig = useAtomValue(currentInjectionSimulationConfigAtom);
   return (
     <div>
-      <div className="ml-2 text-left uppercase text-gray-400">Protocol</div>
-      <div className="ml-2 mt-4 flex items-baseline">
-        <div className="mr-16 flex items-center uppercase ">
+      <div className="ml-2 text-left text-gray-400 uppercase">Protocol</div>
+      <div className="mt-4 ml-2 flex items-baseline">
+        <div className="mr-16 flex items-center uppercase">
           <SelectedIcon fill="white" className="mr-2" />
-          <span className="font-bold text-primary-8">
+          <span className="text-primary-8 font-bold">
             {
               get(
                 PROTOCOL_DETAILS,
@@ -234,7 +234,7 @@ function Parameters({ protocol }: { protocol: StimulusModule }) {
           {
             key: '1',
             label: (
-              <span className="w-fit uppercase text-gray-400">
+              <span className="w-fit text-gray-400 uppercase">
                 Description <DownOutlined className="text-xs" />{' '}
               </span>
             ),
@@ -244,11 +244,11 @@ function Parameters({ protocol }: { protocol: StimulusModule }) {
         ]}
       />
 
-      <div className="ml-2 mt-8 flex">
-        <div className="mr-8 flex cursor-not-allowed  flex-col">
-          <span className="uppercase text-gray-400">Delay</span>
+      <div className="mt-8 ml-2 flex">
+        <div className="mr-8 flex cursor-not-allowed flex-col">
+          <span className="text-gray-400 uppercase">Delay</span>
           <div className="text-gray-400">
-            <div className="inline-block min-w-[80px] border border-gray-200 py-2 pr-2 text-right font-bold text-primary-8">
+            <div className="text-primary-8 inline-block min-w-[80px] border border-gray-200 py-2 pr-2 text-right font-bold">
               {protocolDescription.defaults.time.delay}
             </div>{' '}
             [ms]
@@ -256,9 +256,9 @@ function Parameters({ protocol }: { protocol: StimulusModule }) {
         </div>
 
         <div className="mr-8 flex cursor-not-allowed flex-col">
-          <span className="uppercase text-gray-400">Duration</span>
+          <span className="text-gray-400 uppercase">Duration</span>
           <div className="text-gray-400">
-            <div className="inline-block min-w-[80px] border border-gray-200 py-2 pr-2 text-right font-bold text-primary-8">
+            <div className="text-primary-8 inline-block min-w-[80px] border border-gray-200 py-2 pr-2 text-right font-bold">
               {protocolDescription.defaults.time.duration}
             </div>{' '}
             [ms]
@@ -266,9 +266,9 @@ function Parameters({ protocol }: { protocol: StimulusModule }) {
         </div>
 
         <div className="mr-8 flex cursor-not-allowed flex-col">
-          <span className="uppercase text-gray-400">Stop Time</span>
+          <span className="text-gray-400 uppercase">Stop Time</span>
           <div className="text-gray-400">
-            <div className="inline-block min-w-[80px] border border-gray-200 py-2 pr-2 text-right font-bold text-primary-8">
+            <div className="text-primary-8 inline-block min-w-[80px] border border-gray-200 py-2 pr-2 text-right font-bold">
               {protocolDescription.defaults.time.stopTime}
             </div>{' '}
             [ms]

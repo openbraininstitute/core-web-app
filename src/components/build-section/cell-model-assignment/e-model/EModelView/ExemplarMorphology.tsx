@@ -159,7 +159,7 @@ export default function ExemplarMorphology({ params }: { params: Params }) {
       {eModelEditMode && (
         <>
           <GenericButton
-            className="mt-2 border-primary-7 text-primary-7"
+            className="border-primary-7 text-primary-7 mt-2"
             text="Assign morphology"
             onClick={() => {
               setOpenPicker(true);

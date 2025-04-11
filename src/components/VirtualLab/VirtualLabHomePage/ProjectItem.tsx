@@ -8,7 +8,7 @@ type Props = {
 
 export default function ProjectItem({ title, description, buttonHref }: Props) {
   return (
-    <div className="flex grow flex-col gap-3 rounded-sm bg-white p-6 text-primary-8">
+    <div className="text-primary-8 flex grow flex-col gap-3 rounded-sm bg-white p-6">
       <div className="text-xl font-bold">{title}</div>
       <div className="truncate">{description}</div>
       {buttonHref && (

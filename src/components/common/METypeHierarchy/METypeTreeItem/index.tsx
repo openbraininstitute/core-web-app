@@ -45,7 +45,7 @@ export default function METypeTreeItem({
         key={id}
         className={classNames(
           'flex items-center justify-between whitespace-nowrap text-white',
-          isLeaf ? 'mt-5 gap-3 pb-0 text-secondary-4' : 'w-full gap-2 py-3 text-left text-primary-3'
+          isLeaf ? 'text-secondary-4 mt-5 gap-3 pb-0' : 'text-primary-3 w-full gap-2 py-3 text-left'
         )}
       >
         {sectionName === 'explore' ? (

@@ -37,7 +37,7 @@ export default function CreateBaseSynaptome({ configStep, onConfigStep }: Props)
         configStep !== 'basic-config' ? 'hidden' : 'h-[calc(100vh-51px)]'
       )}
     >
-      <h1 className="text-3xl font-bold text-primary-8">Build new synaptome model</h1>
+      <h1 className="text-primary-8 text-3xl font-bold">Build new synaptome model</h1>
       <div className="flex w-full flex-col">
         <div className="grid max-h-[50%] w-full grid-cols-2 gap-14">
           <Form.Item
@@ -49,7 +49,7 @@ export default function CreateBaseSynaptome({ configStep, onConfigStep }: Props)
             <Input
               placeholder="Your model name"
               size="large"
-              className="rounded-none border-0 border-b-[1.5px]!  border-primary-8! font-bold! text-primary-8!"
+              className="border-primary-8! text-primary-8! rounded-none border-0 border-b-[1.5px]! font-bold!"
             />
           </Form.Item>
         </div>
@@ -65,7 +65,7 @@ export default function CreateBaseSynaptome({ configStep, onConfigStep }: Props)
           <div className="grid grid-cols-2 items-start justify-between gap-2">
             <div className="flex flex-col items-start gap-1">
               {label('created by', 'secondary')}
-              <div className="flex items-center justify-center gap-2 text-primary-8">
+              <div className="text-primary-8 flex items-center justify-center gap-2">
                 <UserOutlined className="h-3 w-3" />
                 {session?.user.name}
               </div>
@@ -79,7 +79,7 @@ export default function CreateBaseSynaptome({ configStep, onConfigStep }: Props)
       </div>
       <button
         type="button"
-        className="fixed bottom-10 right-10 rounded-none bg-primary-8 px-7 py-4 text-white"
+        className="bg-primary-8 fixed right-10 bottom-10 rounded-none px-7 py-4 text-white"
         onClick={proceed}
       >
         Start building

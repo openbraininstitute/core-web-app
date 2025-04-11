@@ -67,7 +67,7 @@ export function useLoadMore<T>(
   const showLoadMore =
     res.state === 'hasData' &&
     res.data.data.length + (res.data.pagination.page - 1) * PAGE_SIZE <
-    res.data.pagination.total_items;
+      res.data.pagination.total_items;
 
   const loadMore = useCallback(
     (load: boolean = true) => {

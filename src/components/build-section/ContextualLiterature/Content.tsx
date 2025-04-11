@@ -34,9 +34,9 @@ function RedirectionButton({ title, onClick }: { title: string; onClick: () => v
     <button
       type="button"
       onClick={onClick}
-      className="group w-max border border-gray-400 bg-white px-5 py-3 hover:bg-primary-8"
+      className="group hover:bg-primary-8 w-max border border-gray-400 bg-white px-5 py-3"
     >
-      <span className="text-base font-bold text-primary-8 group-hover:text-white">{title}</span>
+      <span className="text-primary-8 text-base font-bold group-hover:text-white">{title}</span>
     </button>
   );
 }
@@ -239,19 +239,19 @@ function ContextualContent() {
 
   return (
     <div className="my-2 h-full w-full">
-      <div className="absolute -left-10 top-0 z-30 flex h-10 w-10 items-center justify-center rounded-bl-full rounded-tl-full bg-white">
+      <div className="absolute top-0 -left-10 z-30 flex h-10 w-10 items-center justify-center rounded-tl-full rounded-bl-full bg-white">
         <CloseOutlined
-          className="cursor-pointer text-base text-primary-8"
+          className="text-primary-8 cursor-pointer text-base"
           onClick={onDrawerClose}
         />
       </div>
-      <div className="mb-2 mt-4 px-2">About</div>
-      <div className="mb-6 mt-px px-2 text-3xl font-extrabold text-primary-8">{subject}</div>
+      <div className="mt-4 mb-2 px-2">About</div>
+      <div className="text-primary-8 mt-px mb-6 px-2 text-3xl font-extrabold">{subject}</div>
       <div className="relative w-full">
         <div
           id="parameter-questions"
           className={classNames(
-            'absolute left-0 right-0 h-full w-full transition-[visibility,opacity] duration-300',
+            'absolute right-0 left-0 h-full w-full transition-[visibility,opacity] duration-300',
             currentSlide === 'results'
               ? 'invisible z-0 opacity-0 ease-out'
               : 'visible z-10 opacity-100 ease-in'
@@ -262,7 +262,7 @@ function ContextualContent() {
         <div
           id="question-result"
           className={classNames(
-            'absolute left-0 right-0 h-full w-full bg-white transition-[visibility,opacity] duration-300',
+            'absolute right-0 left-0 h-full w-full bg-white transition-[visibility,opacity] duration-300',
             currentSlide === 'results'
               ? 'visible z-10 opacity-100 ease-in'
               : 'invisible z-0 opacity-0 ease-out'
@@ -278,7 +278,7 @@ function ContextualContent() {
               />
             </div>
           ) : (
-            <div className="left-0 right-0 z-50 mx-auto my-4 inline-flex w-full flex-col items-start justify-start gap-2.5 rounded-2xl border border-zinc-100 bg-white p-4">
+            <div className="right-0 left-0 z-50 mx-auto my-4 inline-flex w-full flex-col items-start justify-start gap-2.5 rounded-2xl border border-zinc-100 bg-white p-4">
               <div className="inline-flex w-full flex-col items-start justify-start px-2 py-3">
                 <QAForm
                   key={promptResponseNode.key}
@@ -303,7 +303,7 @@ function ContextualContent() {
           )}
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 z-50 mx-auto inline-flex w-full items-center justify-center gap-x-3 rounded-bl-2xl bg-white py-8">
+      <div className="absolute right-0 bottom-0 left-0 z-50 mx-auto inline-flex w-full items-center justify-center gap-x-3 rounded-bl-2xl bg-white py-8">
         {promptResponseNode.result && (
           <RedirectionButton title="More options" onClick={gotoOptionMode} />
         )}

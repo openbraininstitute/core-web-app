@@ -31,7 +31,7 @@ export default function WrapperBanner({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="flex h-screen w-screen items-center justify-center bg-primary-9 bg-left bg-no-repeat"
+      className="bg-primary-9 flex h-screen w-screen items-center justify-center bg-left bg-no-repeat"
       style={style}
     >
       {children}

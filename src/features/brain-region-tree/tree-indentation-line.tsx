@@ -9,7 +9,7 @@ export default function TreeIndentationLine({ show, height }: { show: boolean; h
   if (!show) return null;
   return (
     <div
-      className="absolute left-px w-px border-l border-dashed border-primary-4"
+      className="border-primary-4 absolute left-px w-px border-l border-dashed"
       style={
         height
           ? {

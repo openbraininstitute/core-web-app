@@ -14,9 +14,7 @@ type GenericLayoutProps = {
 export default function BuildMEModelSummaryLayout(props: GenericLayoutProps) {
   const params = use(props.params);
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   return (
     <div className="grid grid-cols-[min-content_auto]">

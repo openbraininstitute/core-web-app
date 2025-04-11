@@ -55,7 +55,7 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
         </div>
 
         <div className="relative flex items-center gap-x-4">
-          <div className="mr-3 text-base font-normal text-primary-9">Show Tables</div>
+          <div className="text-primary-9 mr-3 text-base font-normal">Show Tables</div>
           {content?.artifact && (
             <CheckboxFilter
               value={showDownloadAndLinks}
@@ -102,11 +102,11 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
       {content?.meModelsList && showMeModels && (
         <div className="relative z-0 flex w-full flex-col">
           <div
-            className="mb-8 flex w-full flex-row items-baseline gap-x-3 text-primary-9"
+            className="text-primary-9 mb-8 flex w-full flex-row items-baseline gap-x-3"
             id="meModelsFull"
           >
             <h3 className="text-2xl font-bold">ME models</h3>
-            <div className="text-base font-normal text-neutral-4">
+            <div className="text-neutral-4 text-base font-normal">
               Total {content.meModelsList.length}
             </div>
           </div>
@@ -116,11 +116,11 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
       {content?.minimalMeModel && showMinimalMeModels && (
         <div className="flex w-full flex-col">
           <div
-            className="mb-8 flex w-full flex-row items-baseline gap-x-3 text-primary-9"
+            className="text-primary-9 mb-8 flex w-full flex-row items-baseline gap-x-3"
             id="meModelsLight"
           >
             <h3 className="text-2xl font-bold">Others ME models</h3>
-            <div className="text-base font-normal text-neutral-4">
+            <div className="text-neutral-4 text-base font-normal">
               Total {content.minimalMeModel.length}
             </div>
           </div>
@@ -130,11 +130,11 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
       {content?.eModelsList && (
         <div className="flex w-full flex-col">
           <div
-            className="mb-8 flex w-full flex-row items-baseline gap-x-3 text-primary-9"
+            className="text-primary-9 mb-8 flex w-full flex-row items-baseline gap-x-3"
             id="eModels"
           >
             <h3 className="text-2xl font-bold">E models</h3>
-            <div className="text-base font-normal text-neutral-4">
+            <div className="text-neutral-4 text-base font-normal">
               Total {content.eModelsList.length}
             </div>
           </div>

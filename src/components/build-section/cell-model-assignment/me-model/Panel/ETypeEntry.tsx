@@ -41,7 +41,7 @@ export default function ETypeEntry({
         onClick={handleClick}
         className={`flex items-center justify-between px-4 py-2 ${
           isETypeSelected(selectedMEName, eType.name, mTypeName)
-            ? `bg-white text-primary-7`
+            ? `text-primary-7 bg-white`
             : `text-white`
         } ${availableEModels.length ? 'cursor-pointer' : 'cursor-not-allowed'}`}
       >

@@ -38,7 +38,7 @@ export default function useBalanceTransferModal() {
         mask: { background: '#002766' },
         body: { padding: '60px 40px 20px' },
       },
-      closeIcon: <CloseOutlined className="text-2xl text-primary-8" />,
+      closeIcon: <CloseOutlined className="text-primary-8 text-2xl" />,
       className: '![&>.ant-modal-content]:bg-red-500',
       content: (
         <BalanceTransferForm

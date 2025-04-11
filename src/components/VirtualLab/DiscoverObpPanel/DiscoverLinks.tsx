@@ -12,13 +12,13 @@ export default function DiscoverLinks({ topLink, topText, bottomLink, bottomText
     <div className="flex w-full flex-col gap-[2px]">
       <Link
         href={topLink}
-        className="inline-block w-full bg-white p-4 font-semibold text-primary-8"
+        className="text-primary-8 inline-block w-full bg-white p-4 font-semibold"
       >
         {topText}
       </Link>
       <Link
         href={bottomLink}
-        className="inline-block w-full bg-primary-7 p-4 font-semibold text-white"
+        className="bg-primary-7 inline-block w-full p-4 font-semibold text-white"
       >
         {bottomText}
       </Link>

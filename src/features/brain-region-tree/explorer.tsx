@@ -26,7 +26,9 @@ function BrainRegionExplorer(
     setValue,
     value,
   }: {
-    children: (...args: any[]) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
+    children: (
+      ...args: any[]
+    ) => ReactElement<{ children?: (...args: any[]) => ReactElement<any> }>;
     setValue: Dispatch<SetStateAction<NavValue>>;
     value: NavValue;
   },

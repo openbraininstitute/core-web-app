@@ -27,7 +27,7 @@ export default function NavigationSections({
         <button
           type="button"
           key={`Tab-${tab}`}
-          className="flex w-44 items-center justify-center py-3 text-lg font-semibold uppercase tracking-wider text-primary-9"
+          className="text-primary-9 flex w-44 items-center justify-center py-3 text-lg font-semibold tracking-wider uppercase"
           onClick={() => handleTabChange(tab)}
           style={{
             background: activeSection === tab ? '#fff' : 'transparent',

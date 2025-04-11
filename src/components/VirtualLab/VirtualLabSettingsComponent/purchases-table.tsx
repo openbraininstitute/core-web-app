@@ -118,7 +118,7 @@ export default function PurchasesTable({
         {total > pageSize && (
           <div className="mt-4 flex justify-end">
             <Pagination
-              className="[&_.ant-pagination-item-active]:bg-[#0050B3] [&_.ant-pagination-item-active]:text-white! [&_.ant-pagination-item-link]:text-white! [&_.ant-pagination-item_a]:text-white!"
+              className="[&_.ant-pagination-item_a]:text-white! [&_.ant-pagination-item-active]:bg-[#0050B3] [&_.ant-pagination-item-active]:text-white! [&_.ant-pagination-item-link]:text-white!"
               current={currentPage}
               pageSize={pageSize}
               total={total}

@@ -10,7 +10,7 @@ export default function TiersComparisonSkeleton() {
   const skeletonFeatures = [1, 2, 3];
 
   return (
-    <div className="w-full bg-primary-9 p-6 text-white">
+    <div className="bg-primary-9 w-full p-6 text-white">
       <div className="grid grid-cols-4 gap-6">
         <div />
         {skeletonTiers.map((tier) => (

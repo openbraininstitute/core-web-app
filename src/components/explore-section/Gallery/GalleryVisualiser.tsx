@@ -24,7 +24,7 @@ export default function GalleryVisualliser({ content }: { content: SingleGallery
 
   return (
     <div className="relative left-1/4 flex h-screen w-3/4 flex-col justify-between gap-y-4 p-6">
-      <div className="flex w-full items-center justify-center overflow-hidden border border-solid border-neutral-5">
+      <div className="border-neutral-5 flex w-full items-center justify-center overflow-hidden border border-solid">
         <Image
           src={`${basePath}/${content.images[currentActiveImage].src}`}
           alt={content.images[currentActiveImage].alt}
@@ -46,7 +46,7 @@ export default function GalleryVisualliser({ content }: { content: SingleGallery
               'self-stretch justify-self-stretch overflow-hidden border-solid transition-opacity duration-300 ease-linear hover:opacity-100',
               currentActiveImage === index
                 ? 'border-2 border-white opacity-100'
-                : 'border border-neutral-7 opacity-70'
+                : 'border-neutral-7 border opacity-70'
             )}
           >
             <Image

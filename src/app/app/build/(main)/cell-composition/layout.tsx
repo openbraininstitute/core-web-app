@@ -26,7 +26,7 @@ export default function CellCompositionLayout({ children }: CellCompositionLayou
 
     return createPortal(
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="overflow-y flex h-screen bg-primary-7">
+        <div className="overflow-y bg-primary-7 flex h-screen">
           {!isSidebarExpanded ? (
             <CollapsedRegionDetailsSidebar setIsSidebarExpanded={setIsSidebarExpanded} />
           ) : (

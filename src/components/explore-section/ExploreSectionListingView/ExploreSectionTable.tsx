@@ -6,8 +6,7 @@ import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 
 import LoadMoreButton from './LoadMoreButton';
 import useRowSelection, { RenderButtonProps } from './useRowSelection';
-import { useOnCellRouteHandler, useShowMore, useScrollNav } from './hooks';
-import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
+import { useOnCellRouteHandler, useShowMore } from './hooks';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
@@ -17,6 +16,7 @@ import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
+import TableControls from '@/components/listing-table/controls';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
@@ -122,8 +122,8 @@ export function BaseTable<T extends EntityCoreBaseId>({
   const parentElement =
     typeof document !== 'undefined'
       ? document.getElementById('interactive-data-layout') ||
-      document.getElementById('explore-table-container-for-observable') ||
-      document.getElementById('bookmark-list-container')
+        document.getElementById('explore-table-container-for-observable') ||
+        document.getElementById('bookmark-list-container')
       : undefined;
   const headerHeight =
     (tableElement?.getBoundingClientRect()?.y ?? 0) -
@@ -184,71 +184,13 @@ export function BaseTable<T extends EntityCoreBaseId>({
         scroll={
           scrollable
             ? {
-              x: 'fit-content',
-              y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
-            }
+                x: 'fit-content',
+                y: containerDimension.height - (headerHeight + 100), // 100 is to make space for load more button,
+              }
             : { x: 'fit-content' }
         }
       />
     </ConfigProvider>
-  );
-}
-
-function DefaultRenderButton<T>({
-  children,
-  clearSelectedRows,
-  selectedRows,
-}: RenderButtonProps<T> & {
-  children?: (props: RenderButtonProps<T>) => ReactNode;
-}) {
-  return children ? (
-    children({ selectedRows, clearSelectedRows })
-  ) : (
-    <ExploreDownloadButton
-      selectedRows={selectedRows}
-      clearSelectedRows={clearSelectedRows}
-      data-testid="listing-view-download-button"
-    >
-      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${selectedRows.length
-        })`}</span>
-    </ExploreDownloadButton>
-  );
-}
-
-function TableControls<T>({
-  clearSelectedRows,
-  children,
-  renderButton,
-  selectedRows,
-  visible,
-}: {
-  clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
-  children?: ReactNode;
-  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
-  selectedRows: RenderButtonProps<T>['selectedRows'];
-  visible: boolean;
-}) {
-  const { left, right } = useScrollNav(
-    typeof document !== 'undefined'
-      ? (document.querySelector('.ant-table-body') as HTMLDivElement)
-      : undefined
-  );
-
-  if (!visible) return null;
-
-  return (
-    <div className="flex h-[100px] shrink-0 items-center justify-between gap-5 px-5">
-      {left}
-      <div className="flex grow items-center">
-        <div className="flex grow justify-center">{children}</div>
-        <div className="ml-auto">{right}</div>
-      </div>
-      {!!selectedRows?.length && clearSelectedRows && (
-        <DefaultRenderButton clearSelectedRows={clearSelectedRows} selectedRows={selectedRows}>
-          {renderButton}
-        </DefaultRenderButton>
-      )}
-    </div>
   );
 }
 

@@ -56,10 +56,10 @@ export default function CustomAnalysisSelector({
         />
       )}
 
-      {!nodeSetsFound && <span className="ml-4 text-primary-7">No node_sets were found</span>}
+      {!nodeSetsFound && <span className="text-primary-7 ml-4">No node_sets were found</span>}
 
       <div>
-        <div className="mt-3 block pl-3 text-primary-8">
+        <div className="text-primary-8 mt-3 block pl-3">
           <Link
             className="block flex items-center"
             href={`${window.location.protocol}//${window.location.host}/mmb-beta/simulate/experiment-analysis?targetEntity=SimulationCampaign`}
@@ -116,8 +116,8 @@ function AnalysisSelector({
   if (!targetList) return null;
 
   return (
-    <div key={analysis.id} className="ml-4 mr-5 flex justify-between">
-      <div className="mr-3 text-primary-8">{analysis.name}</div>
+    <div key={analysis.id} className="mr-5 ml-4 flex justify-between">
+      <div className="text-primary-8 mr-3">{analysis.name}</div>
 
       <Select
         mode="multiple"

@@ -132,7 +132,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
       onClose={onModalClose}
       cls={{ content: 'min-h-[30rem]!' }}
     >
-      <h1 className="mb-4 text-xl font-bold text-primary-8">{title}</h1>
+      <h1 className="text-primary-8 mb-4 text-xl font-bold">{title}</h1>
       <div className="flex h-full grow flex-col rounded-lg bg-white">
         <Form
           form={form}
@@ -166,7 +166,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
             </Button>
             <Button
               key="invite-btn"
-              className="h-14 rounded-none border-primary-8 bg-primary-8 px-10 text-white hover:text-white!"
+              className="border-primary-8 bg-primary-8 h-14 rounded-none px-10 text-white hover:text-white!"
               type="default"
               size="large"
               htmlType="submit"

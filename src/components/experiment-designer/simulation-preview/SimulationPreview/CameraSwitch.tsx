@@ -21,7 +21,7 @@ export default function CameraSwitch({ isChecked, onChange }: CameraSwitchProps)
           >
             <Switch.Thumb className={styles.CameraSwitchThumb} />
           </Switch.Root>
-          <div className="flex flex-col gap-1 text-primary-1">
+          <div className="text-primary-1 flex flex-col gap-1">
             <button
               type="button"
               className={`w-full border-none bg-none text-left transition ease-in-out ${

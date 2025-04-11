@@ -33,7 +33,7 @@ function SubmitQuestion() {
       type="submit"
       disabled={isQuestionEmpty || isGenerating}
       title={isQuestionEmpty ? 'Please enter a question' : ''}
-      className="w-max rounded-sm border border-gray-200 px-4 py-1.5 font-semibold text-primary-8 disabled:text-gray-400"
+      className="text-primary-8 w-max rounded-sm border border-gray-200 px-4 py-1.5 font-semibold disabled:text-gray-400"
       onClick={() => {
         updateLiterature((prev) => ({ ...prev, areQAParamsVisible: false }));
       }}
@@ -190,15 +190,15 @@ export default function QAForm({
           rows={1}
           className={classNames(
             'm-0 box-border max-h-52 min-h-[24px] w-full resize-none overflow-y-hidden border-b border-gray-200 p-0 pb-2 outline-hidden',
-            'bg-transparent text-base font-semibold text-primary-8 focus:shadow-none',
-            'placeholder:text-base placeholder:font-semibold placeholder:leading-snug placeholder:text-blue-900'
+            'text-primary-8 bg-transparent text-base font-semibold focus:shadow-none',
+            'placeholder:text-base placeholder:leading-snug placeholder:font-semibold placeholder:text-blue-900'
           )}
         />
         <div className="inline-flex items-center justify-center gap-2">
           {!isGenerating && query && !!query.length && (
             <FormButton
               type="button"
-              icon={<CloseCircleOutlined className="text-base text-primary-8" />}
+              icon={<CloseCircleOutlined className="text-primary-8 text-base" />}
               onClick={onQuestionClear}
             />
           )}
@@ -206,7 +206,7 @@ export default function QAForm({
             <FormButton
               type="button"
               onClick={onAbort}
-              icon={<StopLoading className="h-6 w-6 text-primary-6" />}
+              icon={<StopLoading className="text-primary-6 h-6 w-6" />}
             />
           ) : (
             <SubmitQuestion />

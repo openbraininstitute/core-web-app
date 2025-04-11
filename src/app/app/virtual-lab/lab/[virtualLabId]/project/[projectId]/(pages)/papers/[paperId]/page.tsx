@@ -12,11 +12,7 @@ type Props = ServerSideComponentProp<{
 export default async function Paper(props: Props) {
   const params = await props.params;
 
-  const {
-    virtualLabId,
-    projectId,
-    paperId
-  } = params;
+  const { virtualLabId, projectId, paperId } = params;
 
   const session = await auth();
   if (!session) return;

@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import HydrateWrapper from '@/wrappers/hydrate-wrapper';
 
 import { RenderButtonProps } from './ExploreSectionListingView/useRowSelection';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -24,15 +25,17 @@ export default function WithExploreExperiment<T extends EntityCoreBaseId>({
 }) {
   const onCellClick = useExploreTableOnClickHandler<T>();
   return (
-    <ExploreSectionListingView<T>
-      {...{
-        dataType,
-        dataScope,
-        onCellClick,
-        renderButton,
-        virtualLabInfo,
-        dataKey: (virtualLabInfo?.projectId ?? '') + 'explore' + dataType,
-      }}
-    />
+    <HydrateWrapper>
+      <ExploreSectionListingView<T>
+        {...{
+          dataType,
+          dataScope,
+          onCellClick,
+          renderButton,
+          virtualLabInfo,
+          dataKey: (virtualLabInfo?.projectId ?? '') + 'explore' + dataType,
+        }}
+      />
+    </HydrateWrapper>
   );
 }

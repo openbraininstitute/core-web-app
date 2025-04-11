@@ -8,7 +8,7 @@ import ExploreSectionListingView from '@/components/explore-section/ExploreSecti
 import { OnCellClick } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import { DataType } from '@/constants/explore-section/list-views';
 import { selectedMModelIdAtom, morphologyTypeAtom } from '@/state/virtual-lab/build/me-model';
-import { Btn } from '@/components/Btn';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { ReconstructedNeuronMorphology } from '@/types/explore-section/es-experiment';
@@ -84,7 +84,7 @@ export default function ReconstrucedMorphologyPage(props: Params) {
         selectionType="radio"
         renderButton={({ selectedRows }) => (
           <Btn
-            className="fit-content sticky bottom-0 ml-auto w-fit bg-primary-8"
+            className="fit-content bg-primary-8 sticky bottom-0 ml-auto w-fit"
             onClick={() => onMorphPicked(selectedRows)}
           >
             Select m-model

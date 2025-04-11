@@ -40,10 +40,10 @@ export function DetailsPageSideBackLink() {
 
   return prevPath ? (
     <Link
-      className="fixed flex h-full w-[40px] flex-col items-center bg-neutral-1 pt-2 text-sm text-primary-8"
+      className="bg-neutral-1 text-primary-8 fixed flex h-full w-[40px] flex-col items-center pt-2 text-sm"
       href={prevPath}
     >
-      <ArrowRightOutlined className="mb-4 mt-1.5 rotate-180" />
+      <ArrowRightOutlined className="mt-1.5 mb-4 rotate-180" />
       <div style={{ writingMode: 'vertical-rl', rotate: '180deg' }}>Back to list</div>
     </Link>
   ) : null;
@@ -65,7 +65,7 @@ function ExploreNavigation({ expanded }: { expanded: boolean }) {
 }
 
 function ExploreSideBarHeader() {
-  return <div className="select-none">Explore</div>;
+  return <div className="flex items-center justify-center select-none">Explore</div>;
 }
 
 export default function ExploreSidebar() {

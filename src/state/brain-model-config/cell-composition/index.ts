@@ -27,7 +27,10 @@ export const configAtom = atom<Promise<CellCompositionConfigResource | null>>(as
   return fetchResourceById<CellCompositionConfigResource>(id, session);
 });
 
-const configPayloadUrlAtom = selectAtom(unwrap(configAtom), (config) => config?.distribution.contentUrl);
+const configPayloadUrlAtom = selectAtom(
+  unwrap(configAtom),
+  (config) => config?.distribution.contentUrl
+);
 
 const remoteConfigPayloadAtom = atom<Promise<CellCompositionConfigPayload | null>>(async (get) => {
   const session = get(sessionAtom);

@@ -69,7 +69,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
   return (
     <div
       className={classNames(
-        'flex w-full max-w-3xl animate-fade-in flex-col bg-white p-8',
+        'animate-fade-in flex w-full max-w-3xl flex-col bg-white p-8',
         cls?.container
       )}
     >
@@ -96,7 +96,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               className="mb-7 h-[64.5px] w-full"
               label={
                 <span
-                  className={classNames('text-lg font-bold text-primary-8', cls?.formItem?.label)}
+                  className={classNames('text-primary-8 text-lg font-bold', cls?.formItem?.label)}
                 >
                   Name
                 </span>
@@ -113,7 +113,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               className="mb-7 h-[64.5px] w-full"
               label={
                 <span
-                  className={classNames('text-lg font-bold text-primary-8', cls?.formItem?.label)}
+                  className={classNames('text-primary-8 text-lg font-bold', cls?.formItem?.label)}
                 >
                   Email
                 </span>
@@ -132,11 +132,11 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             >
               <Checkbox
                 className={classNames(
-                  'mr-3 [&_.ant-checkbox-inner]:rounded-none ',
+                  'mr-3 [&_.ant-checkbox-inner]:rounded-none',
                   '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8'
                 )}
               >
-                <span className="text-lg font-semibold text-primary-8">
+                <span className="text-primary-8 text-lg font-semibold">
                   I have read and accept
                   <Link key="/privacy-policy" href="/privacy-policy" className="ml-1 underline">
                     the privacy policy
@@ -144,14 +144,14 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                 </span>
               </Checkbox>
             </Form.Item>
-            <Form.Item className="mb-0 mt-auto">
+            <Form.Item className="mt-auto mb-0">
               <Button
                 loading={subscribing}
                 htmlType="submit"
                 className={classNames(
-                  'w-full rounded-full bg-white px-8 py-3 text-lg font-semibold text-primary-8 md:w-auto',
-                  'mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:bg-primary-8 hover:text-white!',
-                  'disabled:text-primary-8 disabled:hover:bg-gray-100 disabled:hover:text-primary-4!',
+                  'text-primary-8 w-full rounded-full bg-white px-8 py-3 text-lg font-semibold md:w-auto',
+                  'hover:bg-primary-8 mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:text-white!',
+                  'disabled:text-primary-8 disabled:hover:text-primary-4! disabled:hover:bg-gray-100',
                   cls?.btn
                 )}
                 disabled={disableForm}
@@ -165,7 +165,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             status="success"
             title="You’re all set! Some great news will be coming your way soon!"
             className={classNames(
-              'font-serif  [&_.ant-result-title]:font-bold [&_.ant-result-title]:text-primary-8',
+              '[&_.ant-result-title]:text-primary-8 font-serif [&_.ant-result-title]:font-bold',
               position === 'page' && '[&_.ant-result-title]:text-4xl',
               position === 'footer' && '[&_.ant-result-title]:text-2xl'
             )}

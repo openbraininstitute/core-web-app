@@ -33,7 +33,7 @@ export default function AnalysisPreview() {
 
   if (!distributions || ['initialized', 'running', 'failed'].includes(meModelResource.status)) {
     return (
-      <div className="flex h-full items-center justify-center text-4xl font-bold text-primary-9">
+      <div className="text-primary-9 flex h-full items-center justify-center text-4xl font-bold">
         {message}
       </div>
     );

@@ -69,7 +69,7 @@ export default function ETypeEntry({
           onClick={() => handleClick(eModel, selectedBrainRegion.id)}
           className={`self-end px-4 py-2 text-sm ${
             isEModelSelected(selectedEModel, eModel, mTypeName)
-              ? `bg-white text-primary-7`
+              ? `text-primary-7 bg-white`
               : `text-white`
           }`}
         >

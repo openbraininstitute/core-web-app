@@ -126,7 +126,7 @@ export default function ConnectomeModelAssignmentView() {
             {rulesTabActive && (
               <>
                 <RulesFilters rules={userRules} onFilterChange={setUserRulesFilter} />
-                <div className="mb-5 text-primary-8" style={{ width: '90%' }}>
+                <div className="text-primary-8 mb-5" style={{ width: '90%' }}>
                   <div className="flex w-1/2 justify-between" style={{ marginLeft: 8 }}>
                     <div>From ⭢</div>
                     <div>⭢ To</div>
@@ -146,7 +146,7 @@ export default function ConnectomeModelAssignmentView() {
               <>
                 <div className="sticky top-0 bg-white pt-4">
                   <div className="flex justify-between">
-                    <div className="font-bold text-primary-8">Total: {visibleTypesCount} types</div>
+                    <div className="text-primary-8 font-bold">Total: {visibleTypesCount} types</div>
                     <Input.Search
                       placeholder="Search for type"
                       className="mb-2 w-48 text-xs"
@@ -155,7 +155,7 @@ export default function ConnectomeModelAssignmentView() {
                       allowClear
                     />
                   </div>
-                  <div className={`${styles.synapseType} flex text-neutral-4`}>
+                  <div className={`${styles.synapseType} text-neutral-4 flex`}>
                     <div style={{ flex: 1.9 }}>Type</div>
                     <div style={{ flex: 2.5 }}>Synaptic Model</div>
                     <div>gsyn</div>
@@ -263,7 +263,7 @@ export default function ConnectomeModelAssignmentView() {
           },
         }}
       >
-        <div className="mb-8 w-1/2 text-center font-bold text-error">
+        <div className="text-error mb-8 w-1/2 text-center font-bold">
           {/* eslint-disable-next-line react/no-unescaped-entities */}
           You can't delete this type because it is used in{' '}
           <span className="bg-error text-white">{typeUsedinRules} pathways</span>
@@ -293,7 +293,7 @@ export default function ConnectomeModelAssignmentView() {
           },
         }}
       >
-        <div className="font-bold text-primary-8">
+        <div className="text-primary-8 font-bold">
           Are you sure you want to delete this synapse type?
         </div>
       </Modal>
@@ -313,7 +313,7 @@ export default function ConnectomeModelAssignmentView() {
       >
         <div className="flex justify-between">
           <div className="flex flex-col">
-            <div className="font-bold text-primary-8">Type</div>
+            <div className="text-primary-8 font-bold">Type</div>
             <Input
               style={{ marginTop: 2 }}
               placeholder="Write your type name"
@@ -324,7 +324,7 @@ export default function ConnectomeModelAssignmentView() {
             />
           </div>
           <div className="flex flex-col" style={{ marginRight: 5 }}>
-            <div className="font-bold text-primary-8" style={{ marginBottom: 5 }}>
+            <div className="text-primary-8 font-bold" style={{ marginBottom: 5 }}>
               Select Model
             </div>
             <Select
@@ -343,7 +343,7 @@ export default function ConnectomeModelAssignmentView() {
             </Select>
           </div>
         </div>
-        <div className="mt-10 text-neutral-4" style={{ fontSize: 11 }}>
+        <div className="text-neutral-4 mt-10" style={{ fontSize: 11 }}>
           <div className="flex">
             <div style={{ flex: 1 }}>PARAMETER</div>
             <div style={{ flex: 1 }}>VALUE</div>
@@ -491,7 +491,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.gsyn}
           <ContextualTrigger
-            className=" ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="gsyn"
             subject="gsyn"
           />
@@ -499,7 +499,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.gsynSD}
           <ContextualTrigger
-            className=" ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="gsyn"
             subject="gsynSD"
           />
@@ -507,7 +507,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.nrrp}
           <ContextualTrigger
-            className=" ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="nrrp"
             subject="nrrp"
           />
@@ -515,7 +515,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.dtc}
           <ContextualTrigger
-            className=" ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="dtc"
             subject="dtc"
           />
@@ -523,7 +523,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.dtcSD}
           <ContextualTrigger
-            className="ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="dtc"
             subject="dtcSD"
           />
@@ -531,7 +531,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.u}
           <ContextualTrigger
-            className="ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="u"
             subject="u"
           />
@@ -539,7 +539,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.uSD}
           <ContextualTrigger
-            className="ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="u"
             subject="uSD"
           />
@@ -547,7 +547,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.d}
           <ContextualTrigger
-            className="ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="d"
             subject="d"
           />
@@ -555,7 +555,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.dSD}
           <ContextualTrigger
-            className="ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="d"
             subject="dSD"
           />
@@ -563,7 +563,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.f}
           <ContextualTrigger
-            className="ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="f"
             subject="f"
           />
@@ -571,7 +571,7 @@ function SynapticTypeRow({
         <div className="flex items-end">
           {type.fSD}
           <ContextualTrigger
-            className="ml-1 text-gray-300! hover:text-primary-8!"
+            className="hover:text-primary-8! ml-1 text-gray-300!"
             about="f"
             subject="fSD"
           />

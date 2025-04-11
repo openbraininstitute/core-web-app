@@ -1,3 +1,5 @@
+'use client';
+
 import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useUnwrappedValue } from '@/hooks/hooks';
@@ -23,19 +25,20 @@ function NumericResultsInfo({
       )
     : '';
   const total = res ? res.pagination.total_items.toLocaleString('en-US') : '';
+
   return (
     <div className="flex w-full justify-start">
       <div
-        className="flex items-center gap-1 text-primary-9"
+        className="text-primary-9 flex items-center gap-1"
         role="status"
         aria-label="listing-view-title"
       >
         <span>Results </span>
-        {res && (
+        {res ? (
           <strong>
             {current}/{total}
           </strong>
-        )}
+        ) : null}
       </div>
     </div>
   );

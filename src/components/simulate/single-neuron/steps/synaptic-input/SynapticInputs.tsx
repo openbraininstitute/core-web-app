@@ -75,7 +75,7 @@ export default function SynapticInputs() {
           })}
           <button
             className={classNames(
-              'mt-2 w-max border border-primary-8 px-6 py-4 text-lg font-bold text-primary-8',
+              'border-primary-8 text-primary-8 mt-2 w-max border px-6 py-4 text-lg font-bold',
               'hover:border-neutral-4 hover:bg-neutral-4 hover:text-white'
             )}
             type="button"

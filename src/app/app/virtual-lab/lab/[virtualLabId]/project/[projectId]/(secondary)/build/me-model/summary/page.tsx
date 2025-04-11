@@ -12,14 +12,12 @@ import { initializeSummaryAtom } from '@/state/virtual-lab/build/me-model-setter
 import { useSessionAtomValue } from '@/hooks/hooks';
 import AnalysisPreview from '@/components/build-section/virtual-lab/me-model/AnalysisPreview';
 
-export default function MEModelSummaryPage(
-  props: {
-    params: Promise<{
-      projectId: string;
-      virtualLabId: string;
-    }>;
-  }
-) {
+export default function MEModelSummaryPage(props: {
+  params: Promise<{
+    projectId: string;
+    virtualLabId: string;
+  }>;
+}) {
   const params = use(props.params);
   const selectedEModel = useAtomValue(selectedEModelAtom);
   const selectedMModel = useAtomValue(selectedMModelAtom);
@@ -45,14 +43,14 @@ export default function MEModelSummaryPage(
 
   if (!meModelId)
     return (
-      <div className="flex h-full items-center justify-center text-2xl text-primary-8">
+      <div className="text-primary-8 flex h-full items-center justify-center text-2xl">
         No ME-Model found in URL
       </div>
     );
 
   return (
     <div className="flex h-full flex-col gap-10 p-10">
-      <div className="text-2xl font-bold text-primary-8">Single Neuron</div>
+      <div className="text-primary-8 text-2xl font-bold">Single Neuron</div>
       <MorphologyCard />
       <EModelCard />
 

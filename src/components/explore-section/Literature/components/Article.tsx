@@ -35,7 +35,7 @@ export function ArticlePreview({
     <button
       type="button"
       className={classNames(
-        'flex items-center justify-center gap-1 text-base font-normal text-primary-8',
+        'text-primary-8 flex items-center justify-center gap-1 text-base font-normal',
         className ?? ''
       )}
       title={altText ?? title}
@@ -59,7 +59,7 @@ export function ArticleAction({
     <button
       type="button"
       onClick={() => onClick()}
-      className="flex items-center justify-center gap-2 rounded-md px-2 py-1 text-base font-normal text-primary-8 transition-all ease-out hover:bg-gray-200"
+      className="text-primary-8 flex items-center justify-center gap-2 rounded-md px-2 py-1 text-base font-normal transition-all ease-out hover:bg-gray-200"
     >
       {icon}
       <span> {title} </span>
@@ -103,13 +103,13 @@ export default function Article({
 
   return (
     <li className="mb-10 ml-4" data-testid="article-item">
-      <div className="absolute -left-1 mt-1 flex h-2 w-2 items-center justify-center rounded-full bg-primary-8 first:mt-0" />
+      <div className="bg-primary-8 absolute -left-1 mt-1 flex h-2 w-2 items-center justify-center rounded-full first:mt-0" />
 
-      <div className="-mt-1 mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">
+      <div className="-mt-1 mb-1 text-sm leading-none font-normal text-gray-400 dark:text-gray-500">
         <div className="flex items-start justify-between">
           <h1
             title={title}
-            className="clear-right line-clamp-2 w-3/5 text-xl text-primary-8 hover:font-medium"
+            className="text-primary-8 clear-right line-clamp-2 w-3/5 text-xl hover:font-medium"
           >
             {title}
           </h1>

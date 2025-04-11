@@ -5,7 +5,7 @@ import { DownloadOutlined, DownOutlined, LoadingOutlined } from '@ant-design/ico
 import range from 'lodash/range';
 import { loadable } from 'jotai/utils';
 import { useParams } from 'next/navigation';
-import BookmarkButton from './BookmarkButton';
+import BookmarkButton from '@/components/buttons/variants/bookmark';
 import { latestRevisionFamily } from '@/state/explore-section/detail-view-atoms';
 import { DeltaResource } from '@/types/explore-section/resources';
 import Link from '@/components/Link';
@@ -77,7 +77,7 @@ export default function DetailHeaderName({
   };
 
   return (
-    <div className="flex flex-col text-primary-7">
+    <div className="text-primary-7 flex flex-col">
       <div className="text font-thin">Name</div>
       <div className="flex justify-between">
         <div className="grid grid-cols-6 items-center gap-5">
@@ -91,7 +91,7 @@ export default function DetailHeaderName({
             >
               <button
                 type="button"
-                className="flex w-fit items-center gap-2 border border-primary-7 px-4 py-2"
+                className="border-primary-7 flex w-fit items-center gap-2 border px-4 py-2"
               >
                 {latestRevision.state === 'loading' && <Spin indicator={<LoadingOutlined />} />}
                 {latestRevision.state === 'hasData' && (
@@ -117,7 +117,7 @@ export default function DetailHeaderName({
             )}
             <Button
               type="text"
-              className="flex items-center gap-2 text-primary-7 hover:bg-transparent!"
+              className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
               // disabling download button if currently fetching or if resource does not have a distribution
               disabled={fetching || !hasDistribution}
               onClick={() => {
@@ -128,11 +128,11 @@ export default function DetailHeaderName({
               Download
               {fetching ? (
                 <Spin
-                  className="border border-neutral-2 px-4 py-3"
+                  className="border-neutral-2 border px-4 py-3"
                   indicator={<LoadingOutlined />}
                 />
               ) : (
-                <DownloadOutlined className="border border-neutral-2 px-4 py-3" />
+                <DownloadOutlined className="border-neutral-2 border px-4 py-3" />
               )}
             </Button>
           </div>
@@ -142,7 +142,7 @@ export default function DetailHeaderName({
           <div className="flex gap-2">
             <Link href={`${path}/experiment-interactive`} className="flex items-center gap-2">
               Browse through interactive view
-              <div className="border border-neutral-4 p-2 text-primary-7">
+              <div className="border-neutral-4 text-primary-7 border p-2">
                 <InteractiveViewIcon />
               </div>
             </Link>

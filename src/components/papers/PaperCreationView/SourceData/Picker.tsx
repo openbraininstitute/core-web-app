@@ -28,7 +28,7 @@ function SourceDataItemButton({ id, name, onClick, active = true }: SourceDataIt
       type="button"
       className={classNames(
         'flex min-w-max items-center justify-between gap-3 rounded-md border border-gray-300 px-3 py-4',
-        active ? 'font-bold text-primary-8' : 'text-gray-400',
+        active ? 'text-primary-8 font-bold' : 'text-gray-400',
         'hover:bg-gray-100'
       )}
       onClick={onClick({ id, name, active })}
@@ -140,7 +140,7 @@ export default function SourceDataPicker({
             )}
             onClick={toggleShowSourceDataList}
           >
-            <span className="pr-16 font-bold text-primary-8">Add data</span>
+            <span className="text-primary-8 pr-16 font-bold">Add data</span>
             <PlusOutlined className="text-primary-8" />
           </button>
         )}

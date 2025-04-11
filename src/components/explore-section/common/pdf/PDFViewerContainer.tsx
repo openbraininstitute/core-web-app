@@ -62,11 +62,11 @@ export function PDFViewerContainer({ distributions }: Props) {
               <button
                 type="button"
                 key={option}
-                className={`cursor-pointer text-primary-8 focus:outline-hidden ${type === option ? 'font-bold' : ''}`}
+                className={`text-primary-8 cursor-pointer focus:outline-hidden ${type === option ? 'font-bold' : ''}`}
                 onClick={() => setType(option)}
               >
                 {typeLabel(option)}
-                <span className="pl-1 text-neutral-4">
+                <span className="text-neutral-4 pl-1">
                   {distributions.filter((d) => matchesType(d, option)).length}
                 </span>
               </button>

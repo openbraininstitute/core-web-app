@@ -67,9 +67,9 @@ export default function PaperView({
   return (
     <div
       id="editor-view-container"
-      className="secondary-scrollbar mt-4 flex h-full min-h-[calc(100vh-200px)] flex-col gap-y-2 overflow-y-auto bg-primary-9"
+      className="secondary-scrollbar bg-primary-9 mt-4 flex h-full min-h-[calc(100vh-200px)] flex-col gap-y-2 overflow-y-auto"
     >
-      <div className="flex h-full flex-col bg-primary-9">
+      <div className="bg-primary-9 flex h-full flex-col">
         <div className="w-full bg-white px-8 py-4">
           <div className="mt-4 flex items-center justify-end bg-white">
             <div className="flex items-center justify-center gap-4">
