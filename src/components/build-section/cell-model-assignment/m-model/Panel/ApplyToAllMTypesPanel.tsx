@@ -10,7 +10,7 @@ import { isConfigEditableAtom } from '@/state/brain-model-config';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
 function Separator() {
-  return <hr className="h-px w-full border-0 bg-primary-4" />;
+  return <hr className="bg-primary-4 h-px w-full border-0" />;
 }
 
 export default function ApplyToAllMTypesPanel() {
@@ -52,7 +52,7 @@ export default function ApplyToAllMTypesPanel() {
       <div className="flex flex-row items-center justify-end gap-3">
         <button
           type="button"
-          className={`bg-primary-1 p-1 px-6 font-semibold text-primary-7 ${
+          className={`bg-primary-1 text-primary-7 p-1 px-6 font-semibold ${
             isConfigEditable ? '' : 'cursor-not-allowed'
           }`}
           onClick={applyActiveModelToAll}

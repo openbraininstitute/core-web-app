@@ -10,9 +10,7 @@ export const metadata: Metadata = {
 export default async function Page(props: ServerSideComponentProp<{ virtualLabId: string }>) {
   const params = await props.params;
 
-  const {
-    virtualLabId
-  } = params;
+  const { virtualLabId } = params;
 
   return <CreateProjectFlow virtualLabId={virtualLabId} />;
 }

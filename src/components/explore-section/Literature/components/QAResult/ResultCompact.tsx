@@ -26,24 +26,24 @@ export default function ResultCompact({ id, question, articles, children }: Resu
                 <button
                   type="button"
                   onClick={toggleExpandArticles}
-                  className="relative inline-flex h-11 w-full cursor-pointer items-center justify-between gap-1.5  whitespace-nowrap rounded-md bg-blue-50 px-3 py-3 leading-tight text-white no-underline shadow-xs transition-all duration-200"
+                  className="relative inline-flex h-11 w-full cursor-pointer items-center justify-between gap-1.5 rounded-md bg-blue-50 px-3 py-3 leading-tight whitespace-nowrap text-white no-underline shadow-xs transition-all duration-200"
                   aria-controls="collapse-content"
                   aria-label="expand-articles"
                 >
                   <div className="inline-flex items-center justify-start gap-1">
-                    <div className="text-base font-normal leading-snug text-blue-900">Based on</div>
+                    <div className="text-base leading-snug font-normal text-blue-900">Based on</div>
                     <div className="inline-flex flex-col items-center justify-start rounded-[3px] bg-blue-900 px-1 py-[.2px]">
                       <span className="text-sm font-bold tracking-tight text-blue-50">
                         {articles.length}
                       </span>
                     </div>
-                    <div className="text-base font-normal leading-snug text-blue-900">
+                    <div className="text-base leading-snug font-normal text-blue-900">
                       paragraphs
                     </div>
                   </div>
                   <ChevronIcon
                     className={classNames(
-                      'fill-current text-primary-8',
+                      'text-primary-8 fill-current',
                       expandArticles ? '-rotate-90' : 'rotate-90'
                     )}
                   />
@@ -54,11 +54,11 @@ export default function ResultCompact({ id, question, articles, children }: Resu
               id="collapse-content"
               className={`mt-5 ${
                 expandArticles
-                  ? 'block overflow-hidden px-1 opacity-100 transition-all duration-300 ease-out-expo'
-                  : 'hidden transition-all duration-100 ease-in-expo'
+                  ? 'ease-out-expo block overflow-hidden px-1 opacity-100 transition-all duration-300'
+                  : 'ease-in-expo hidden transition-all duration-100'
               }`}
             >
-              <div className="mb-28 mt-4 rounded-sm">
+              <div className="mt-4 mb-28 rounded-sm">
                 <ArticlesTimeLine
                   {...{
                     articles,

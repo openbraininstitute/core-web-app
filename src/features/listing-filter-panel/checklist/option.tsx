@@ -83,7 +83,7 @@ export const CheckListDescription = memo(
       getDefinition();
     }, [id]);
 
-    return <span className="text-balance text-justify text-primary-1">{definition}</span>;
+    return <span className="text-primary-1 text-justify text-balance">{definition}</span>;
   },
   ({ id }, { id: nextId }) => id !== nextId
 );

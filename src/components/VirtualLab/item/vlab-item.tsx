@@ -71,18 +71,18 @@ export default function Item({
             />
           </Link>
         </div>
-        {(projectCount || memberCount) && <div className="my-4 h-[.5px] w-1/2 bg-primary-2" />}
+        {(projectCount || memberCount) && <div className="bg-primary-2 my-4 h-[.5px] w-1/2" />}
         <div
           className={classNames('mt-4 gap-6', !projectCount && !memberCount ? 'hidden' : 'flex')}
         >
           <div className="flex items-center gap-2">
-            <span className="text-base text-primary-2">
+            <span className="text-primary-2 text-base">
               Projects:
               <span className="ml-2 font-bold text-white">{projectCount ?? 0}</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-base text-primary-2">
+            <span className="text-primary-2 text-base">
               Members:
               <span className="ml-2 font-bold text-white">{memberCount ?? 0}</span>
             </span>

@@ -39,12 +39,12 @@ type ConfigInputProps = {
 function ConfigInput({ formName, name, text, min, max, index, unit, onChange }: ConfigInputProps) {
   return (
     <div className="flex flex-col items-start justify-start">
-      <div className="mb-2 text-left text-base font-light uppercase text-neutral-4">
+      <div className="text-neutral-4 mb-2 text-left text-base font-light uppercase">
         {text} {unit && <span className="normal-case">[{unit}]</span>}
       </div>
       <Form.Item name={[formName, name]} rules={[{ required: true, message: 'Required field' }]}>
         <InputNumber
-          className="w-full rounded-xs! border border-neutral-4! font-bold [&_.ant-input-number-input]:text-base! [&_.ant-input-number-input]:text-primary-8!"
+          className="border-neutral-4! [&_.ant-input-number-input]:text-primary-8! w-full rounded-xs! border font-bold [&_.ant-input-number-input]:text-base!"
           min={min}
           max={max}
           onChange={(newValue) =>

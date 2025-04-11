@@ -36,18 +36,18 @@ function ProjectLink({ project, lab }: { project: ProjectItem; lab: LabItem }) {
 
   return (
     projectInfo && (
-      <div className="mt-2 flex w-full flex-col items-center justify-center overflow-hidden">
+      <div className="flex w-full flex-col items-center justify-center overflow-hidden">
         <Link
           key={lab.id}
           href={project.href}
-          className="overflow-hidden text-ellipsis whitespace-nowrap text-center font-semibold capitalize hover:text-white"
+          className="overflow-hidden text-center font-semibold text-ellipsis whitespace-nowrap capitalize hover:text-white"
           style={{
             writingMode: 'vertical-rl',
             transform: 'rotate(180deg)',
           }}
         >
-          {projectInfo && <DownOutlined className="my-3 text-primary-3" />}
-          {projectInfo?.name}
+          {projectInfo && <DownOutlined className="text-primary-3 my-3" />}
+          <span className="px-2">{projectInfo?.name}</span>
         </Link>
       </div>
     )
@@ -57,9 +57,9 @@ function ProjectLink({ project, lab }: { project: ProjectItem; lab: LabItem }) {
 export default function SideMenu({ lab, project, links }: SideMenuProps) {
   const result = useAtomValue(unwrap(virtualLabDetailAtomFamily(lab.id)));
   return (
-    <div className="sticky top-0 flex h-screen w-[45px] flex-col items-center justify-center gap-2 border-r-[1px] border-primary-7 bg-primary-9 text-light transition-transform ease-in-out will-change-auto">
-      <div className="flex w-[45px] grow flex-col items-center justify-between gap-3 overflow-hidden">
-        <div className="mt-2 flex w-full flex-col items-center gap-3 overflow-hidden">
+    <div className="border-primary-7 bg-primary-9 text-light sticky top-0 flex h-screen w-[45px] flex-col items-center justify-center gap-2 border-r-[1px] transition-transform ease-in-out will-change-auto">
+      <div className="flex w-[45px] grow flex-col items-center justify-between overflow-hidden">
+        <div className="mt-2 flex w-full flex-col items-center overflow-hidden">
           {links
             .slice()
             .reverse()
@@ -68,22 +68,23 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
                 key={link.key}
                 href={link.href}
                 className={classNames(
-                  'mt-2 w-[21px] font-semibold capitalize hover:text-white',
-                  link.styles
+                  'flex h-[90px] w-[45px] items-center justify-center'
+                  // link.styles
                 )}
-                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
               >
-                {link.content}
+                <div className="bg-primary-5 origin-center -rotate-90 transform rounded-3xl px-4 py-1 whitespace-nowrap">
+                  <span className="text-base">{link.content}</span>
+                </div>
               </Link>
             ))}
-          {links.length > 0 && <UpOutlined className="ml-1 mt-2 text-primary-3" />}
+          {links.length > 0 && <UpOutlined className="text-primary-3" />}
           {project && <ProjectLink project={project} lab={lab} />}
           {!!result && (
-            <div className="mt-2 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
+            <div className="text-primary-3 mt-2 flex w-full flex-col items-center gap-2 overflow-hidden">
               <Link
                 key={`${lab.href}/${lab.id}`}
                 href={lab.href}
-                className="overflow-hidden text-ellipsis whitespace-nowrap text-center capitalize"
+                className="overflow-hidden text-center text-ellipsis whitespace-nowrap capitalize"
                 style={{
                   writingMode: 'vertical-rl',
                   transform: 'rotate(180deg)',
@@ -98,7 +99,7 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
           )}
         </div>
 
-        <div className="mb-5 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
+        <div className="text-primary-3 mb-5 flex w-full flex-col items-center gap-2 overflow-hidden">
           <HelpMenu>
             <QuestionCircleOutlined className="group-hover:text-white" />
           </HelpMenu>

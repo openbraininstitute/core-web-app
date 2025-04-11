@@ -90,7 +90,7 @@ export default function DiscoverObpPanel() {
             imagePath={obpItem.image}
             title={obpItem.title}
             body={
-              <ul className="list-inside list-square">
+              <ul className="list-square list-inside">
                 {obpItem.bulletPoints.map((bullet) => (
                   <li key={bullet}>{bullet}</li>
                 ))}

@@ -16,10 +16,7 @@ type Props = {
 export default function SingleNeuronSimulation(props: Props) {
   const params = use(props.params);
 
-  const {
-    projectId,
-    virtualLabId
-  } = params;
+  const { projectId, virtualLabId } = params;
 
   const resetSimulation = useResetAtom(resetSimulationAtom);
 

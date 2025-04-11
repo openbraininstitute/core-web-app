@@ -30,10 +30,10 @@ export async function fetchJSON<T>({
     });
     const data = await resp.json();
     if (!resp.ok) {
-      logError(`Error #${resp.status}`);
-      logError('URL:', url);
-      logError('Query:', query);
-      logError(`Output:`, data);
+      // logError(`Error #${resp.status}`);
+      // logError('URL:', url);
+      // logError('Query:', query);
+      // logError(`Output:`, data);
       throw new Error(`Query failed with error code #${resp.status}!`);
     }
     if (!typeGuard(data)) {

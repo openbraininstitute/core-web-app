@@ -36,7 +36,7 @@ export default function SelectView({
         type="button"
         onClick={toggleDropdown}
         className={classNames(
-          'flex w-full select-none items-center justify-between gap-4 border px-2 py-1 mix-blend-difference',
+          'flex w-full items-center justify-between gap-4 border px-2 py-1 mix-blend-difference select-none',
           openDropdown ? 'rounded-md rounded-b-none border-b-0' : 'rounded-full'
         )}
         style={{ borderColor: colorCode }}
@@ -56,7 +56,7 @@ export default function SelectView({
         style={{ borderColor: colorCode, color: colorCode }}
         className={classNames(
           'flex-col justify-center gap-y-px px-2 py-1 mix-blend-difference',
-          openDropdown ? 'flex rounded-md rounded-t-none  border border-t-0' : 'hidden'
+          openDropdown ? 'flex rounded-md rounded-t-none border border-t-0' : 'hidden'
         )}
       >
         {viewOptions

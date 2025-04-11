@@ -26,7 +26,7 @@ export default function UserMenu({ children, cls }: Props) {
       <MenubarMenu>
         <MenubarTrigger
           className={classNames(
-            'group cursor-pointer border-none text-primary-2 outline-0 outline-offset-0',
+            'group text-primary-2 cursor-pointer border-none outline-0 outline-offset-0',
             cls?.trigger
           )}
           style={{ outline: 'none' }}
@@ -36,15 +36,15 @@ export default function UserMenu({ children, cls }: Props) {
         <MenubarContent
           align="end"
           side="right"
-          className="rounded-none border border-primary-7 bg-primary-9 text-white"
+          className="border-primary-7 bg-primary-9 rounded-none border text-white"
         >
-          <MenubarItem asChild className="-m-[3.5px] h-14 select-none bg-primary-8 text-white">
+          <MenubarItem asChild className="bg-primary-8 -m-[3.5px] h-14 text-white select-none">
             <div className="text-lg! font-bold">{userName}</div>
           </MenubarItem>
 
           <MenubarItem
             asChild
-            className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
+            className="hover:text-primary-8 h-[40.5px] cursor-pointer hover:bg-white"
           >
             <Link href="/app/virtual-lab/account/profile" className="text-lg!">
               Profile
@@ -52,7 +52,7 @@ export default function UserMenu({ children, cls }: Props) {
           </MenubarItem>
           <MenubarItem
             asChild
-            className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
+            className="hover:text-primary-8 h-[40.5px] cursor-pointer hover:bg-white"
           >
             <Link href="/app/virtual-lab/account/subscription" className="text-lg!">
               Subscription
@@ -60,7 +60,7 @@ export default function UserMenu({ children, cls }: Props) {
           </MenubarItem>
           <MenubarItem
             asChild
-            className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
+            className="hover:text-primary-8 h-[40.5px] cursor-pointer hover:bg-white"
           >
             <Link href="/app/virtual-lab/account/invoices" className="text-lg!">
               Invoices
@@ -68,11 +68,11 @@ export default function UserMenu({ children, cls }: Props) {
           </MenubarItem>
           <MenubarItem
             asChild
-            className="h-[40.5px] cursor-pointer border-t border-t-primary-7 hover:bg-white hover:text-primary-8"
+            className="border-t-primary-7 hover:text-primary-8 h-[40.5px] cursor-pointer border-t hover:bg-white"
           >
             <Link href="/app/log-out" className="text-lg!">
               Logout
-              <SignOutFill className="ml-auto text-primary-2" />
+              <SignOutFill className="text-primary-2 ml-auto" />
             </Link>
           </MenubarItem>
         </MenubarContent>

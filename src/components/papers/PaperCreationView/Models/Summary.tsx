@@ -20,8 +20,8 @@ export default function ModelSummary({ model, onClose }: Props) {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="mb-2  flex w-full items-center justify-between">
-        <h1 className="break-words text-2xl font-bold text-primary-8">{model.name}</h1>
+      <div className="mb-2 flex w-full items-center justify-between">
+        <h1 className="text-primary-8 text-2xl font-bold break-words">{model.name}</h1>
         <Button
           icon={<CloseOutlined className="text-primary-8" />}
           type="text"

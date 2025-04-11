@@ -16,7 +16,7 @@ export default function InsertButton({
     <button
       type="button"
       className={classNames(
-        'flex h-11 w-40 min-w-max items-center justify-between gap-2 rounded-none px-3 py-2 text-primary-8',
+        'text-primary-8 flex h-11 w-40 min-w-max items-center justify-between gap-2 rounded-none px-3 py-2',
         'border border-gray-200 hover:bg-gray-200',
         className
       )}

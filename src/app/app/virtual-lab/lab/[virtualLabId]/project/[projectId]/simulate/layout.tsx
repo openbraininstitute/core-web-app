@@ -1,5 +1,5 @@
-'use client';;
-import { use } from "react";
+'use client';
+import { use } from 'react';
 
 import { ErrorBoundary } from 'react-error-boundary';
 import { useAtomValue } from 'jotai';
@@ -16,9 +16,7 @@ import { LinkItem } from '@/components/VerticalLinks';
 export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
   const params = use(props.params);
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   const labUrl = generateLabUrl(params.virtualLabId);
 
@@ -42,7 +40,7 @@ export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
     });
 
   return (
-    <div className="flex bg-primary-9 pr-5 text-white">
+    <div className="bg-primary-9 flex pr-5 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <div className="top-0 flex h-screen w-1/4 flex-row gap-4">
           <SideMenu

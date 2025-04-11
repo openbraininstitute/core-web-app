@@ -236,7 +236,7 @@ export default function ConnectomeConfigurationView() {
             />
 
             <Input value={editName} onChange={(e) => setEditName(e.currentTarget.value)} />
-            <div className="mb-3 mt-3 flex justify-between">
+            <div className="mt-3 mb-3 flex justify-between">
               Offset, synapses/μm³:
               <InputNumber value={offset} step={0.01} onChange={handleOffsetChange} />
             </div>

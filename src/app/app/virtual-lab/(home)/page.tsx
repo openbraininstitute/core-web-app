@@ -14,6 +14,7 @@ import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscri
 import { ErrorListing } from '@/components/VirtualLab/labs-listing/elements';
 import { getUserStats } from '@/api/virtual-lab-svc/queries/stats';
 import { tryCatch } from '@/api/utils';
+import { ServerSideComponentProp } from '@/types/common';
 
 const tabs = [
   {
@@ -26,11 +27,18 @@ const tabs = [
   },
 ];
 
-type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
-};
+type Props = ServerSideComponentProp<
+  null,
+  {
+    t: string;
+    page: string;
+    q: string;
+    size: string;
+  }
+>;
 
-export async function generateMetadata({ searchParams: { t } }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { t } = await props.searchParams;
   const activeTabId = t as string;
 
   let title = 'Virtual labs';
@@ -54,7 +62,8 @@ export async function generateMetadata({ searchParams: { t } }: Props): Promise<
 export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }: Props) {
-  const activeTabId = (searchParams?.t as string) || tabs[0].key;
+  const { t, page, q, size } = await searchParams;
+  const activeTabId = t || tabs[0].key;
   const { data, error } = await tryCatch(
     Promise.allSettled([getUserStats(), getUserActiveSubscription()]),
     undefined,
@@ -93,7 +102,7 @@ export default async function Home({ searchParams }: Props) {
             <MyVirtualLabCard hasProSubscription={hasProSubscription} />
           )}
           {activeTabId === 'membership-labs' && (
-            <MembershipsVirtualLabsList searchParams={searchParams} />
+            <MembershipsVirtualLabsList searchParams={{ page, q, size }} />
           )}
         </Suspense>
       </ErrorBoundary>

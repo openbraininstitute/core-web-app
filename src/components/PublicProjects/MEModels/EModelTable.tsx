@@ -15,7 +15,7 @@ export function DownloadButton({ url }: { url: string }) {
   return (
     <a
       href={url}
-      className="my-2 rounded-3xl border border-solid border-primary-9 bg-white px-6 py-2 text-base text-primary-9 transition-colors duration-300 ease-in-out hover:bg-primary-9 hover:text-white"
+      className="border-primary-9 text-primary-9 hover:bg-primary-9 my-2 rounded-3xl border border-solid bg-white px-6 py-2 text-base transition-colors duration-300 ease-in-out hover:text-white"
       download
     >
       Download
@@ -111,7 +111,7 @@ export default function EModelTable({ content }: { content: MinimalMeModelProps[
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="cursor-pointer p-2 text-left text-sm font-normal uppercase tracking-wide text-neutral-4"
+                  className="text-neutral-4 cursor-pointer p-2 text-left text-sm font-normal tracking-wide uppercase"
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   {flexRender(header.column.columnDef.header, header.getContext())}
@@ -128,7 +128,7 @@ export default function EModelTable({ content }: { content: MinimalMeModelProps[
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id} className="cursor-pointer border-b py-2">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="whitespace-nowrap p-5">
+                <td key={cell.id} className="p-5 whitespace-nowrap">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}

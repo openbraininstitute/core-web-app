@@ -6,7 +6,7 @@ import Logo from '@/components/logo/as-svg';
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <WrapperBanner>
-      <Logo className="absolute left-10 top-10 text-white" />
+      <Logo className="absolute top-10 left-10 text-white" />
       <div className="text-2xl font-bold text-white">
         <Suspense fallback="Logging out...">{children}</Suspense>
       </div>

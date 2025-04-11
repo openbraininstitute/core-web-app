@@ -6,7 +6,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
 
 import { DataType } from '@/constants/explore-section/list-views';
-import { Btn } from '@/components/Btn';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
 import { MODEL_DATA_TYPES } from '@/constants/explore-section/data-types/model-data-types';
@@ -15,7 +15,7 @@ import { SimulationScopeToModelType, SimulationType } from '@/types/virtual-lab/
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
-import BookmarkButton from '@/components/explore-section/BookmarkButton';
+import BookmarkButton from '@/components/buttons/variants/bookmark';
 
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
@@ -84,7 +84,7 @@ export default function VirtualLabProjectBuildPage(props: Params) {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
+    <div className="flex min-h-screen w-full flex-col gap-5 pt-8 pr-5">
       <VirtualLabTopMenu />
       <SectionTabs projectId={params.projectId} section="build" />
       {renderContent()}
@@ -147,10 +147,10 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
             {loadMoreDiv}
 
             {selectedRows.length > 0 && (
-              <div className="fixed bottom-12 right-[45px] flex items-center justify-end gap-2">
+              <div className="fixed right-[45px] bottom-12 flex items-center justify-end gap-2">
                 <Btn
                   type="button"
-                  className="h-12 bg-primary-9 px-8 text-white"
+                  className="bg-primary-9 h-12 px-8 text-white"
                   onClick={() => navigateToDetailPage(selectedRows[0])}
                 >
                   View
@@ -178,7 +178,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
 
 function customBookmarkButton({ onClick, children }: HTMLProps<HTMLButtonElement>) {
   return (
-    <Btn className="h-12 bg-secondary-2 px-8" onClick={onClick}>
+    <Btn className="bg-secondary-2 h-12 px-8" onClick={onClick}>
       {children}
     </Btn>
   );

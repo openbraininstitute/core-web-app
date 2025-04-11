@@ -2,7 +2,7 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
 
-import type { JSX } from "react";
+import type { JSX } from 'react';
 
 export type SubMenuList<TKeys> = {
   id: TKeys;
@@ -23,7 +23,7 @@ export function MainMenuItemHeader({ title, description, opened }: CollapsibleMe
     <div className="relative inline-flex w-full flex-col items-start justify-start">
       <h2
         className={classNames(
-          'text-xl font-bold text-primary-8',
+          'text-primary-8 text-xl font-bold',
           !opened && 'group-hover:text-white'
         )}
       >
@@ -40,14 +40,14 @@ export function MainMenuItemHeader({ title, description, opened }: CollapsibleMe
       {opened ? (
         <MinusOutlined
           className={classNames(
-            'absolute right-7 top-1/2 -translate-y-1/2 text-primary-8',
+            'text-primary-8 absolute top-1/2 right-7 -translate-y-1/2',
             !opened && 'group-hover:text-white'
           )}
         />
       ) : (
         <PlusOutlined
           className={classNames(
-            'absolute right-7 top-1/2 -translate-y-1/2 text-primary-8',
+            'text-primary-8 absolute top-1/2 right-7 -translate-y-1/2',
             !opened && 'group-hover:text-white'
           )}
         />

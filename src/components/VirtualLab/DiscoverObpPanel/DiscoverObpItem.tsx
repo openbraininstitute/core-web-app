@@ -23,8 +23,8 @@ export default function DiscoverObpItem({ imagePath, title, body, bottomElement 
         />
         <div className="rounded-none bg-white p-10 pt-20" style={{ height: '450px' }}>
           <div className="flex flex-col">
-            <div className="text-lg uppercase text-neutral-7">{title}</div>
-            <div className="my-8 text-primary-8">{body}</div>
+            <div className="text-neutral-7 text-lg uppercase">{title}</div>
+            <div className="text-primary-8 my-8">{body}</div>
           </div>
         </div>
         <div className="mt-[2px] flex flex-col gap-2">{bottomElement}</div>

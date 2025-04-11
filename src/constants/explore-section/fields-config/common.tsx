@@ -78,7 +78,7 @@ export const previewRender = ({
 
   return !!contentUrl && !!previewType ? (
     <PreviewThumbnail
-      className="max-h-[116px] border border-neutral-2"
+      className="border-neutral-2 max-h-[116px] border"
       contentUrl={contentUrl}
       height={116}
       type={previewType}

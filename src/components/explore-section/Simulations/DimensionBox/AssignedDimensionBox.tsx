@@ -26,14 +26,14 @@ export default function AssignedDimensionBox({ dimension, isAxis }: AssignedDime
   return (
     <button type="submit" onClick={changeEditMode}>
       <div className="flex flex-row justify-between">
-        <div className="font-semibold text-primary-7">{dimension?.id}</div>
+        <div className="text-primary-7 font-semibold">{dimension?.id}</div>
       </div>
       {editMode ? (
         <DimensionBoxEditForm dimension={dimension} setEditMode={setEditMode} isAxis={isAxis} />
       ) : (
-        <div className="mt-3 flex h-min w-fit border border-primary-2 px-3 py-1 font-bold">
+        <div className="border-primary-2 mt-3 flex h-min w-fit border px-3 py-1 font-bold">
           {dimensionValue()}
-          <span className="ml-3 text-primary-3">
+          <span className="text-primary-3 ml-3">
             <EditOutlined />
           </span>
         </div>

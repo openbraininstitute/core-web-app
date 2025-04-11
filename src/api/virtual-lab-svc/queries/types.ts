@@ -1,3 +1,5 @@
+import { DataType } from '@/constants/explore-section/list-views';
+
 export interface VlmResponse<T> {
   message: string;
   data: T | null;
@@ -394,6 +396,22 @@ export type AttachUsersToProject = {
 export interface UserGroupsResponse {
   groups: Array<UserGroup>;
 }
+export type BookmarkRequest = {
+  resource_id: string;
+  entity_id: string;
+  category: DataType;
+};
+
+export type DeleteBookmarksResponse = {
+  successfully_deleted: Array<BookmarkRequest>;
+  failed_to_delete: Array<BookmarkRequest>;
+};
+
+export interface AddBookmarkResponse extends BookmarkRequest {
+  id: string;
+}
+
+export type BookmarksByCategoryResponse = Record<DataType, Array<AddBookmarkResponse>>;
 
 export type VlmStandalonePaymentResponse = VlmResponse<StandalonePaymentResponse>;
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
@@ -415,3 +433,5 @@ export type VlmDeleteProjectMemberResponse = VlmResponse<DeleteProjectMember>;
 export type VlmUserGroupsResponse = VlmResponse<UserGroupsResponse>;
 export type VlmUserStatsResponse = VlmResponse<UserStats>;
 export type VlmAttachUsersToProjectResponse = VlmResponse<AttachUsersToProject>;
+export type VlmGetProjectBookmarkResponse = VlmResponse<BookmarksByCategoryResponse>;
+export type VlmAddBookmarkToProjectResponse = VlmResponse<AddBookmarkResponse>;

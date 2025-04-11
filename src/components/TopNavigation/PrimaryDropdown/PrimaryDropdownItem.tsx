@@ -58,7 +58,7 @@ export default function PrimaryDropdownItem({
     () =>
       typeof annotation !== 'undefined' ? (
         <div
-          className={`flex flex-row items-center gap-0.5 text-sm font-light text-error ${ANNOTATION_LABEL_MAP[annotation].textColor}`}
+          className={`text-error flex flex-row items-center gap-0.5 text-sm font-light ${ANNOTATION_LABEL_MAP[annotation].textColor}`}
         >
           <div className="scale-75">{ANNOTATION_LABEL_MAP[annotation].icon}</div>
           {ANNOTATION_LABEL_MAP[annotation].label}

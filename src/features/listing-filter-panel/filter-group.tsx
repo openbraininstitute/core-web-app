@@ -27,7 +27,7 @@ export type FilterGroupProps = {
 export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
   return (
     <Accordion.Root
-      className="flex flex-col space-y-5 divide-y divide-primary-7"
+      className="divide-primary-7 flex flex-col space-y-5 divide-y"
       defaultValue={['contributor', 'eType']}
       type="multiple"
     >
@@ -47,7 +47,7 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
 
         return content ? (
           <Accordion.Item className="pt-5" value={label} key={label}>
-            <div className="flex items-center gap-3 ">
+            <div className="flex items-center gap-3">
               {toggleFunc && displayTrigger}
               <Accordion.Trigger
                 className={classNames(

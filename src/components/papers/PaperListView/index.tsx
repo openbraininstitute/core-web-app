@@ -42,7 +42,7 @@ export default function PaperListView({ papers, total }: PaperListViewProps) {
       dataIndex: 'name',
       width: '50%',
       render: (_name: string, paper: PaperResource) => (
-        <Link href={paperHrefGenerator(paper)} className="line-clamp-1 font-bold text-primary-8">
+        <Link href={paperHrefGenerator(paper)} className="text-primary-8 line-clamp-1 font-bold">
           {paper.name}
         </Link>
       ),
@@ -107,12 +107,12 @@ export default function PaperListView({ papers, total }: PaperListViewProps) {
 
   return (
     <div className="h-full py-2">
-      <h3 className="text-3xl font-bold text-primary-8">
+      <h3 className="text-primary-8 text-3xl font-bold">
         <span className="mr-2">Your papers</span>
         <span className="text-lg font-normal">({total})</span>
       </h3>
       {!papers.length ? (
-        <p className="mt-4 text-lg font-light text-neutral-4">You have no paper yet.</p>
+        <p className="text-neutral-4 mt-4 text-lg font-light">You have no paper yet.</p>
       ) : (
         <ConfigProvider
           theme={{

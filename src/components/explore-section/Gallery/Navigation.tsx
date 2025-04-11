@@ -11,7 +11,7 @@ type NavigationProps = {
 export function SingleInfoBox({ content, label }: { content: string; label: string }) {
   return (
     <div className="flex flex-row">
-      <div className="block w-32 font-normal text-neutral-2">{label}</div>
+      <div className="text-neutral-2 block w-32 font-normal">{label}</div>
       <div className="block font-semibold text-white">{content}</div>
     </div>
   );
@@ -24,7 +24,7 @@ export default function Navigation({
   currentImage,
 }: NavigationProps) {
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex w-15vw flex-col">
+    <div className="w-15vw fixed bottom-6 left-6 z-50 flex flex-col">
       <header className="mb-12 flex w-full flex-col text-white">
         <div className="flex w-full flex-row items-center justify-between">
           <button
@@ -38,7 +38,7 @@ export default function Navigation({
 
           <div className="flex flex-row items-center text-base">
             <div className="font-bold">{currentImage + 1}</div>
-            <div className="mx-2 h-px w-6 bg-neutral-4" />
+            <div className="bg-neutral-4 mx-2 h-px w-6" />
             <div className="font-light">{totalImages}</div>
           </div>
           <button
@@ -51,16 +51,16 @@ export default function Navigation({
           </button>
         </div>
 
-        <div className="mt-2 text-xl font-bold leading-tight text-white">
+        <div className="mt-2 text-xl leading-tight font-bold text-white">
           {currentImageContent.name}
         </div>
       </header>
 
       <div className="flex flex-col gap-y-1">
         <SingleInfoBox label="Credits" content={currentImageContent.credit} />
-        <div className="block h-px w-full bg-neutral-5" />
+        <div className="bg-neutral-5 block h-px w-full" />
         <SingleInfoBox label="Year" content={currentImageContent.year} />
-        <div className="block h-px w-full bg-neutral-5" />
+        <div className="bg-neutral-5 block h-px w-full" />
         <SingleInfoBox label="Software" content={currentImageContent.software} />
       </div>
     </div>

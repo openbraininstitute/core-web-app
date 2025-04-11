@@ -74,7 +74,7 @@ function ValidationInit({
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
-      <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">
+      <h2 className="text-primary-8 items-start gap-x-2 text-4xl font-bold">
         Initiating validation
       </h2>
       <p className="text-primary-8">
@@ -93,7 +93,7 @@ function ValidationInit({
         style={{ display: 'table', width: '100%', height: '200px' }}
       />
 
-      <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
+      <Link className="border-primary-8 text-primary-8 border px-4 py-2" href={meModelPageUrl}>
         Cancel Validation
       </Link>
     </div>
@@ -111,7 +111,7 @@ function ValidationRunning({
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
-      <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">Running validation</h2>
+      <h2 className="text-primary-8 items-start gap-x-2 text-4xl font-bold">Running validation</h2>
       <p className="text-primary-8">
         Once the validation process finishes, you can view the results in your project&apos;s
         Activity section.
@@ -119,7 +119,7 @@ function ValidationRunning({
 
       <p className="text-primary-8">
         You can close the window at any time now. Analysis results will appear under the
-        <Link className="ml-2 text-nowrap font-bold underline" href={meModelPageUrl}>
+        <Link className="ml-2 font-bold text-nowrap underline" href={meModelPageUrl}>
           ME-model details page
         </Link>
         .
@@ -132,7 +132,7 @@ function ValidationRunning({
 
       <div className="mt-10 flex flex-row gap-3">
         <a
-          className="border border-primary-8 px-4 py-2 text-primary-8"
+          className="border-primary-8 text-primary-8 border px-4 py-2"
           href={`${generateVlProjectUrl(virtualLabInfo.virtualLabId, virtualLabInfo.projectId)}/activity`}
         >
           View activity
@@ -163,12 +163,12 @@ function ValidationSuccess({
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
-      <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">
+      <h2 className="text-primary-8 items-start gap-x-2 text-4xl font-bold">
         Validation finished successfully
       </h2>
       <p className="text-primary-8">You will be redirected to ME-model page shortly</p>
 
-      <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
+      <Link className="border-primary-8 text-primary-8 border px-4 py-2" href={meModelPageUrl}>
         View ME-model details
       </Link>
     </div>
@@ -186,10 +186,10 @@ function ValidationError({
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
-      <h2 className="items-start gap-x-2 text-4xl font-bold text-warning">Validation error</h2>
+      <h2 className="text-warning items-start gap-x-2 text-4xl font-bold">Validation error</h2>
       <p className="text-primary-8">An unexpected error occurred during the validation process.</p>
 
-      <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
+      <Link className="border-primary-8 text-primary-8 border px-4 py-2" href={meModelPageUrl}>
         ME-model details
       </Link>
     </div>

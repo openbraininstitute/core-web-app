@@ -20,7 +20,7 @@ type CardFieldProps = {
 function CardField({ title, value }: CardFieldProps) {
   return (
     <div className="flex-1">
-      <div className="text-xs font-light text-neutral-4">{title}</div>
+      <div className="text-neutral-4 text-xs font-light">{title}</div>
       <div>{value}</div>
     </div>
   );
@@ -61,7 +61,7 @@ export default function SimulationCard({
     Object.entries(simulation.dimensions).map(([key, value]) => {
       if (key !== xDimension && key !== yDimension) {
         return (
-          <div key={key} className="flex-2 mr-4">
+          <div key={key} className="mr-4 flex-2">
             <div>{key}</div>
             <InlineDimension
               value={value as number} // TODO: Confirm that FormattedSimulation["dimensions"]["coords"] can also be just a number
@@ -90,7 +90,7 @@ export default function SimulationCard({
   const pathName = usePathname();
   return (
     <div
-      className={`simulation-card border-b-none w-[405px] rounded-sm rounded-b-none border border-neutral-2 ${backgroundColor()}`}
+      className={`simulation-card border-b-none border-neutral-2 w-[405px] rounded-sm rounded-b-none border ${backgroundColor()}`}
     >
       <div className="p-4">
         <div className="mb-3 flex">{renderOtherDimensions()}</div>
@@ -101,7 +101,7 @@ export default function SimulationCard({
         </div>
         <hr />
         <div className="mt-2 flex w-full">
-          <div className="w-64 flex-auto text-xs font-light text-neutral-4">ACTIONS</div>
+          <div className="text-neutral-4 w-64 flex-auto text-xs font-light">ACTIONS</div>
           <div className="w-16 flex-auto">
             Log <FileTextOutlined />
           </div>
@@ -113,7 +113,7 @@ export default function SimulationCard({
           </Link>
         </div>
       </div>
-      <div className="bottom-border h-3 bg-primary-5" style={{ background: renderStrapStyles() }} />
+      <div className="bottom-border bg-primary-5 h-3" style={{ background: renderStrapStyles() }} />
     </div>
   );
 }

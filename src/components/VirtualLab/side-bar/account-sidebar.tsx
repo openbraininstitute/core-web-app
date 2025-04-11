@@ -25,7 +25,7 @@ export default function SideBar() {
   return (
     <Base>
       <nav className="flex max-h-full flex-1 flex-col py-4">
-        <div className="mt-20 border border-primary-5">
+        <div className="border-primary-5 mt-20 border">
           {menuItems.map(({ url, title, disabled }) => (
             <Item
               key={url}

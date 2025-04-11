@@ -41,7 +41,7 @@ export const SINGLE_NEURON_FIELDS_CONFIG: ExploreFieldsConfigProps<SingleNeuronS
         }
         return (
           <PreviewThumbnail
-            className="max-h-[116px] border border-neutral-2"
+            className="border-neutral-2 max-h-[116px] border"
             contentUrl={distribution.contentUrl}
             height={116}
             type={DataType.SingleNeuronSimulation}
@@ -74,7 +74,7 @@ export const SINGLE_NEURON_FIELDS_CONFIG: ExploreFieldsConfigProps<SingleNeuronS
         }
         return (
           <PreviewThumbnail
-            className="max-h-[116px] border border-neutral-2"
+            className="border-neutral-2 max-h-[116px] border"
             contentUrl={distribution.contentUrl}
             height={116}
             type={DataType.SingleNeuronSimulation}
@@ -164,7 +164,7 @@ export const SINGLE_NEURON_FIELDS_CONFIG: ExploreFieldsConfigProps<SingleNeuronS
         }
         return (
           <PreviewThumbnail
-            className="max-h-[116px] border border-neutral-2"
+            className="border-neutral-2 max-h-[116px] border"
             contentUrl={distribution.contentUrl}
             height={116}
             type={DataType.SingleNeuronSynaptomeSimulation}
@@ -195,7 +195,7 @@ export const SINGLE_NEURON_FIELDS_CONFIG: ExploreFieldsConfigProps<SingleNeuronS
         }
         return (
           <PreviewThumbnail
-            className="max-h-[116px] border border-neutral-2"
+            className="border-neutral-2 max-h-[116px] border"
             contentUrl={distribution.contentUrl}
             height={116}
             type={DataType.SingleNeuronSynaptomeSimulation}

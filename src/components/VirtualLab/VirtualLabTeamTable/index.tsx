@@ -172,7 +172,7 @@ function RoleModifier({
   if (user.id === ownerId || user.id === data?.user.id) {
     return (
       <div className="flex w-full flex-col items-center justify-end pr-3 text-right">
-        <div className="w-max! self-end font-bold text-white hover:text-primary-2!">
+        <div className="hover:text-primary-2! w-max! self-end font-bold text-white">
           {get(find(roleOptions, { value: user.role }), 'label')}
         </div>
       </div>
@@ -184,9 +184,9 @@ function RoleModifier({
         <Select
           data-testid="role-select"
           className={classNames(
-            'w-full bg-transparent shadow-none ring-0 focus:border-2 focus:border-primary-8',
+            'focus:border-primary-8 w-full bg-transparent shadow-none ring-0 focus:border-2',
             '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
-            '[&_.ant-select-selector]:!border [&_.ant-select-selector]:!border-primary-7',
+            '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
             '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
             '!min-w-[140px] [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
           )}
@@ -217,7 +217,7 @@ function RoleModifier({
           <Button
             type="default"
             size="large"
-            className="w-full self-end rounded-none border border-primary-7 bg-transparent px-[11px] text-white hover:!border-t"
+            className="border-primary-7 w-full self-end rounded-none border bg-transparent px-[11px] text-white hover:!border-t"
             disabled={removeLoading}
             loading={removeLoading}
           >
@@ -227,14 +227,14 @@ function RoleModifier({
       </div>
     </div>
   ) : (
-    <div className="flex w-full flex-col items-center justify-end text-right ">
+    <div className="flex w-full flex-col items-center justify-end text-right">
       <Button
         data-testid="cancel-invite-btn"
         key="cancel-invite"
         type="text"
         htmlType="button"
         size="middle"
-        className="w-max! self-end text-white hover:text-primary-2!"
+        className="hover:text-primary-2! w-max! self-end text-white"
         disabled={loading}
         loading={loading}
         onClick={onCancelInvite}
@@ -295,15 +295,15 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
               name={
                 record.id
                   ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
-                  get(record, 'username') ||
-                  record.email
+                    get(record, 'username') ||
+                    record.email
                   : record.email
               }
               initials={extractInitials(
                 record.id
                   ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
-                  get(record, 'username') ||
-                  record.email
+                      get(record, 'username') ||
+                      record.email
                   : record.email
               )}
               cls={{
@@ -364,7 +364,7 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
     <div className="flex h-full flex-col">
       <div className="flex h-8 shrink-0 items-center px-3">
         <div className="flex gap-2">
-          <span className="text-lg text-primary-3">Total members</span>
+          <span className="text-primary-3 text-lg">Total members</span>
           {total && <span className="text-lg font-bold">{total}</span>}
         </div>
       </div>
@@ -413,8 +413,8 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
             key="add-member"
             data-testid="add-member-btn"
             className={classNames(
-              'h-14 rounded-none border border-white bg-white px-14 text-primary-9',
-              'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
+              'text-primary-9 h-14 rounded-none border border-white bg-white px-14',
+              'hover:!border-primary-8 hover:bg-primary-8 hover:!border hover:font-bold hover:!text-white hover:shadow-sm',
               'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
               'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
             )}

@@ -76,7 +76,7 @@ function GeneralizationControls({ dataType }: { dataType: DataType }) {
         )}
       </div>
       {displayControlPanel && filters && (
-        <div className="fixed right-0 top-0 z-50 h-screen">
+        <div className="fixed top-0 right-0 z-50 h-screen">
           <ListingFilterPanel
             // TODO: fix this
             facets={facets}

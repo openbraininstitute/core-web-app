@@ -47,7 +47,7 @@ export default function StepItem({ name, statusAtom }: Props) {
 
   return (
     <>
-      <div className="text-lg text-primary-7">{name}</div>
+      <div className="text-primary-7 text-lg">{name}</div>
       <StatusComponent wasBuilt={wasBuilt} />
     </>
   );

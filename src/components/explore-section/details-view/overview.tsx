@@ -17,9 +17,9 @@ type FieldProps = {
 export function Field({ field, className, data }: FieldProps) {
   const fieldObj = ENTITY_CORE_FIELDS_CONFIG[field];
   return (
-    <div className={classNames('mr-10 text-primary-7', className)}>
-      <div className="uppercase text-neutral-4">{fieldObj?.title}</div>
-      <div className={classNames('mt-2 break-words ', fieldObj?.className)}>
+    <div className={classNames('text-primary-7 mr-10', className)}>
+      <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>
+      <div className={classNames('mt-2 break-words', fieldObj?.className)}>
         {fieldObj?.render && fieldObj.render(data)}
       </div>
     </div>

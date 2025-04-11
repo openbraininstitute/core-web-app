@@ -51,15 +51,15 @@ export default function Tabs({ items, activeTabId, basePath }: TabsProps) {
 
   return (
     <div className="relative mx-auto mb-6 flex w-full max-w-7xl items-center justify-between">
-      <div className="sticky left-0 right-0 top-0 z-10 flex">
+      <div className="sticky top-0 right-0 left-0 z-10 flex">
         {items.map((tab) => (
           <Link
             key={tab.key}
             href={`${basePath}?t=${tab.key}`}
             className={`px-4 py-2 transition-colors duration-150 ease-in-out focus:outline-none ${
               activeTabId === tab.key
-                ? 'border-primary-9 bg-white font-semibold text-primary-8' // Active tab styles
-                : 'bg-primary-9 text-white hover:bg-primary-7' // Inactive tab styles
+                ? 'border-primary-9 text-primary-8 bg-white font-semibold' // Active tab styles
+                : 'bg-primary-9 hover:bg-primary-7 text-white' // Inactive tab styles
             }`}
           >
             {tab.label}

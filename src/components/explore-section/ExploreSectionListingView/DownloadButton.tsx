@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import fetchArchive from '@/api/archive';
 import sessionAtom from '@/state/session';
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
-import { Btn } from '@/components/Btn';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 
 export function ExploreDownloadButton({
   children,
@@ -16,7 +16,7 @@ export function ExploreDownloadButton({
 
   return session ? (
     <Btn
-      className="fit-content w-fit bg-primary-8"
+      className="fit-content bg-primary-8 w-fit"
       loading={fetching}
       ariaLabel="download-resources-button"
       onClick={() => {

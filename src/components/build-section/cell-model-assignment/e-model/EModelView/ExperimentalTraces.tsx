@@ -134,7 +134,7 @@ export default function ExperimentalTraces() {
           {eModelEditMode && (
             <>
               <GenericButton
-                className="mt-2 border-primary-7 text-primary-7"
+                className="border-primary-7 text-primary-7 mt-2"
                 text="Add trace"
                 onClick={() => {
                   setOpenPicker(true);

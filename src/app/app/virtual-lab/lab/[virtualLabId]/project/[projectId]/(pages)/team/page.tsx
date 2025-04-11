@@ -1,5 +1,5 @@
-'use client';;
-import { use } from "react";
+'use client';
+import { use } from 'react';
 
 import ProjectTeamTable from '@/components/VirtualLab/ProjectTeamTable';
 import withVirtualLabUsers from '@/components/VirtualLab/data/WithVirtualLabUsers';

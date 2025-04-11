@@ -11,7 +11,7 @@ export default function SimulationReports() {
 
   if (reports) {
     return (
-      <div className="mt-7 text-primary-7">
+      <div className="text-primary-7 mt-7">
         <div className="text-primary-7">
           <span className="text-2xl font-bold">Reports</span>
           <span className="ml-3 text-xs">({reports.length})</span>

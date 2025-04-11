@@ -44,18 +44,18 @@ export default function ModelCard({
         onClick={() => {
           router.push(selectUrl);
         }}
-        className="flex h-48 w-full items-center rounded-lg border border-neutral-2 pl-32 text-4xl text-neutral-4 hover:bg-primary-7 hover:text-white"
+        className="border-neutral-2 text-neutral-4 hover:bg-primary-7 flex h-48 w-full items-center rounded-lg border pl-32 text-4xl hover:text-white"
       >
         Select {modelType.toLowerCase()}
       </button>
     );
 
   const cardLink = reselectLink ? (
-    <Link href={selectUrl} className="font-bold text-primary-8">
+    <Link href={selectUrl} className="text-primary-8 font-bold">
       Select a different {modelType.toLowerCase()}
     </Link>
   ) : (
-    <Link href={generateDetailUrl()} target="_blank" className="font-bold text-primary-8">
+    <Link href={generateDetailUrl()} target="_blank" className="text-primary-8 font-bold">
       More details
     </Link>
   );
@@ -71,7 +71,7 @@ export default function ModelCard({
         {thumbnail}
         <div className="grow">
           <div className={subtitleStyle}>NAME</div>
-          <div className="my-1 text-3xl font-bold text-primary-8">{model.name}</div>
+          <div className="text-primary-8 my-1 text-3xl font-bold">{model.name}</div>
           <ModelDetails details={modelDetails} />
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function ModelCard({
 
 export function ModelDetails({ details }: ModelDetailsProps) {
   return (
-    <div className="mt-4 grid grid-cols-3 gap-4 text-primary-8">
+    <div className="text-primary-8 mt-4 grid grid-cols-3 gap-4">
       {details.map((detail) => (
         <div key={`${detail.label}-${detail.value?.toString()}`}>
           <div className={subtitleStyle}>{detail.label}</div>

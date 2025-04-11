@@ -28,7 +28,7 @@ export default function FullScreen({
   }, []);
 
   return (
-    <div className="absolute left-4 top-4 z-50 cursor-pointer text-white">
+    <div className="absolute top-4 left-4 z-50 cursor-pointer text-white">
       {isFullScreen ? (
         <FullscreenExitOutlined className="h-5 w-5 text-xl" onClick={onFullScreenExit} />
       ) : (

@@ -43,7 +43,7 @@ export default function VirtualLabMemberIcon({
         <div
           className={classNames(
             'absolute',
-            memberRole === 'admin' ? 'right-0 top-0' : '-top-px right-[3px]'
+            memberRole === 'admin' ? 'top-0 right-0' : '-top-px right-[3px]'
           )}
         >
           <CheckCircleFilled className="p-1" style={{ mixBlendMode: 'difference' }} />
@@ -52,7 +52,7 @@ export default function VirtualLabMemberIcon({
         <div
           className={classNames(
             'absolute',
-            memberRole === 'admin' ? 'right-0 top-0' : '-top-px right-[3px]'
+            memberRole === 'admin' ? 'top-0 right-0' : '-top-px right-[3px]'
           )}
         >
           <ClockCircleFilled className="p-1" style={{ mixBlendMode: 'difference' }} />

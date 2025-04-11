@@ -24,7 +24,7 @@ export default function FeatureSelectionContainer() {
     <div className="flex flex-col gap-4">
       <PresetSelector />
 
-      <div className="border border-neutral-3 p-4">
+      <div className="border-neutral-3 border p-4">
         <FeatureSelectionItem featureCategory="Spike shape" featureGroup={featureParameters} />
         <FeatureSelectionItem featureCategory="Spike event" featureGroup={featureParameters} />
         <FeatureSelectionItem featureCategory="Voltage" featureGroup={featureParameters} />

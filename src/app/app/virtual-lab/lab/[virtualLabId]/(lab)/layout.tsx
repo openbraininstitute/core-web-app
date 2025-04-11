@@ -18,12 +18,10 @@ type Props = {
 export default async function VirtualLabLayout(props: Props) {
   const params = await props.params;
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   return (
-    <div className="flex h-screen overflow-y-auto bg-primary-9 text-white">
+    <div className="bg-primary-9 flex h-screen overflow-y-auto text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <SideMenu
           links={[]}
@@ -34,7 +32,7 @@ export default async function VirtualLabLayout(props: Props) {
             href: `/app/virtual-lab/lab/${params.virtualLabId}/overview`,
           }}
         />
-        <div className="flex h-screen w-full overflow-y-scroll bg-primary-9 p-8 text-white">
+        <div className="bg-primary-9 flex h-screen w-full overflow-y-scroll p-8 text-white">
           <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
             <div className="m-w-3/12 flex flex-row gap-4" style={{ width: '25%' }}>
               <VirtualLabSidebar virtualLabId={params.virtualLabId} />

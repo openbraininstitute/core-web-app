@@ -37,7 +37,7 @@ export default function QAResultList() {
   return (
     <div
       id="result-container"
-      className="h-full max-h-screen w-full transition-height duration-700 ease-linear"
+      className="transition-height h-full max-h-screen w-full duration-700 ease-linear"
     >
       <div
         ref={qaListRef}

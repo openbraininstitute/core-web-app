@@ -35,7 +35,7 @@ export default function BuildModelBtn({ className }: BuildModelBtnProps) {
     <>
       <GenericButton
         onClick={() => setModalIsOpen(true)}
-        className={classNames('flex-auto bg-secondary-2 text-white', className)}
+        className={classNames('bg-secondary-2 flex-auto text-white', className)}
         text="Build"
       />
 

@@ -21,9 +21,7 @@ type Props = {
 export default function SimulateSingleNeuronEditLayout(props: Props) {
   const params = use(props.params);
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   const labUrl = generateLabUrl(params.virtualLabId);
 

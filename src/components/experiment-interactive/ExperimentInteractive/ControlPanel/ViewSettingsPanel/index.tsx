@@ -13,7 +13,7 @@ export default function ViewSettingsPanel() {
 
   return (
     <div
-      className={`absolute right-0 top-0 flex w-[250px] flex-col rounded-bl-3xl rounded-tl-3xl bg-black px-3 py-5 text-white ${
+      className={`absolute top-0 right-0 flex w-[250px] flex-col rounded-tl-3xl rounded-bl-3xl bg-black px-3 py-5 text-white ${
         isViewSettingsPanelVisible ? `` : `hidden`
       }`}
     >

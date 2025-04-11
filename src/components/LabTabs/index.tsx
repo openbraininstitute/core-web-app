@@ -13,7 +13,7 @@ export default function BrainFactoryTabs({ children }: BrainFactoryTabsProps) {
       <TopNavigation.Main>
         <div className="flex">
           <Popover.Root>
-            <Popover.Trigger className="flex-auto bg-secondary-2 px-8 text-white">
+            <Popover.Trigger className="bg-secondary-2 flex-auto px-8 text-white">
               Build & Experiment
             </Popover.Trigger>
             <Popover.Portal>

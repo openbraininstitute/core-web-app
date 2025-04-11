@@ -24,7 +24,7 @@ function Radio({
             type="radio"
             value={value}
           />
-          <span className="capitalize text-white">{label}</span>
+          <span className="text-white capitalize">{label}</span>
         </span>
       </label>
       {children}
@@ -106,7 +106,7 @@ export default function ValueOrRange({
         <div className="flex items-center justify-between gap-2">
           <input
             type="number"
-            className="flex grow gap-2 rounded-md border border-primary-6 bg-transparent px-2 py-2 text-sm"
+            className="border-primary-6 flex grow gap-2 rounded-md border bg-transparent px-2 py-2 text-sm"
             onChange={updateValue}
             value={value}
           />
@@ -121,7 +121,7 @@ export default function ValueOrRange({
       >
         <div className="flex items-center gap-2 text-sm">
           <input
-            className="min-w-0 rounded-md border border-primary-6 bg-transparent px-2 py-2 text-center"
+            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center"
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               updateRange({ gte: Number(e.target.value) })
             }
@@ -131,7 +131,7 @@ export default function ValueOrRange({
           />
           <RangeIcon className="shrink-0" />
           <input
-            className="min-w-0 rounded-md border border-primary-6 bg-transparent px-2 py-2 text-center"
+            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center"
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               updateRange({ lte: Number(e.target.value) })
             }

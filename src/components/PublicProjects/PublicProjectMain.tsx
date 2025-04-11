@@ -173,12 +173,12 @@ export default function PublicProjectMain({ slug }: { slug: string }) {
 
   return (
     content !== null && (
-      <div className="relative flex min-h-screen w-full flex-col gap-y-12 bg-primary-9 py-6 pl-28 pr-10">
+      <div className="bg-primary-9 relative flex min-h-screen w-full flex-col gap-y-12 py-6 pr-10 pl-28">
         <HeaderPublicProject title={content.name} headerImage={content?.heroImage} />
 
         <div className="flex flex-col">
           <NavigationSections activeSection={activeSection} setActiveSection={setActiveSection} />
-          <div className="scroll-behavior: smooth; flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8 text-primary-9">
+          <div className="scroll-behavior: smooth; text-primary-9 flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8">
             {activeSectionContent}
           </div>
         </div>

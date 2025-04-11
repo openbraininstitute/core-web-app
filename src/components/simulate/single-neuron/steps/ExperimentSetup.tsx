@@ -65,14 +65,14 @@ const CONDITIONS_FIELDS: Array<Omit<SetupInputProps, 'onChange'>> = [
 function SetupInput({ name, text, unit, min, max, onChange }: SetupInputProps) {
   return (
     <div className="flex flex-col items-start justify-center">
-      <div className="text-base font-light uppercase text-neutral-4">{text}</div>
+      <div className="text-neutral-4 text-base font-light uppercase">{text}</div>
       <div className="flex w-max max-w-[120px] flex-row flex-nowrap items-center justify-center gap-2">
         <Form.Item
           name={['conditions', name]}
           rules={[{ required: true, message: 'Required field' }]}
         >
           <InputNumber
-            className="w-full rounded-xs! border border-neutral-4! font-bold [&_.ant-input-number-input]:text-base! [&_.ant-input-number-input]:text-primary-8!"
+            className="border-neutral-4! [&_.ant-input-number-input]:text-primary-8! w-full rounded-xs! border font-bold [&_.ant-input-number-input]:text-base!"
             min={min}
             max={max}
             onChange={(newValue) =>
@@ -83,7 +83,7 @@ function SetupInput({ name, text, unit, min, max, onChange }: SetupInputProps) {
             }
           />
         </Form.Item>
-        {unit && <span className="mb-[24px] text-base font-light text-neutral-4">{unit}</span>}
+        {unit && <span className="text-neutral-4 mb-[24px] text-base font-light">{unit}</span>}
       </div>
     </div>
   );

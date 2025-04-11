@@ -21,7 +21,7 @@ function ColumnContent(text: string) {
   return isNumeric(text) ? (
     text
   ) : (
-    <span className="rounded-md bg-neutral-1 px-2 py-2 text-center">{JSON.stringify(text)}</span>
+    <span className="bg-neutral-1 rounded-md px-2 py-2 text-center">{JSON.stringify(text)}</span>
   );
 }
 
@@ -102,7 +102,7 @@ function CustomTD({
 function LinkWrapper({ children, href, title }: HTMLProps<HTMLSpanElement>) {
   return (
     <Tooltip overlayInnerStyle={{ background: '#003A8C', color: 'white' }} title={title}>
-      <span className="border border-neutral-4 p-2 text-primary-7 hover:bg-white hover:text-primary-9">
+      <span className="border-neutral-4 text-primary-7 hover:text-primary-9 border p-2 hover:bg-white">
         <Link className="text-primary-7 hover:text-primary-9" href={href ?? ''}>
           {children}
         </Link>
@@ -125,13 +125,13 @@ export function IndexColContent({
   return (
     <div className="flex flex-col gap-5">
       <Link
-        className="whitespace-pre-wrap font-bold"
+        className="font-bold whitespace-pre-wrap"
         href={`${pathname}/${to64(`${project}!/!${id}`)}`}
       >
         {text}
       </Link>
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm uppercase text-neutral-4">Open in</span>
+        <span className="text-neutral-4 text-sm uppercase">Open in</span>
         <div className="flex items-center gap-3">
           {[
             {
@@ -165,7 +165,7 @@ export function IndexColContent({
 
 export function ValueArray({ value }: { value?: string[] }) {
   return value ? (
-    <div className="flex w-fit gap-2 rounded-sm bg-neutral-1 px-2 py-1 font-semibold text-primary-8">
+    <div className="bg-neutral-1 text-primary-8 flex w-fit gap-2 rounded-sm px-2 py-1 font-semibold">
       {value.map((x, i, arr) => (
         <span key={x}>{i < arr.length - 1 ? `${x},` : x}</span>
       ))}

@@ -13,7 +13,7 @@ export function QABrainRegionPerQuestion({ id, title }: SelectedBrainRegionPerQu
   return (
     <div
       id={`brain-region-${id}`}
-      className="inline-flex w-full items-center justify-between gap-2 rounded-3xl bg-primary-0 px-4 py-2 text-primary-8"
+      className="bg-primary-0 text-primary-8 inline-flex w-full items-center justify-between gap-2 rounded-3xl px-4 py-2"
     >
       <BrainIcon />
       <div title={title} className="line-clamp-1 w-full flex-1 text-base font-bold">
@@ -47,13 +47,13 @@ function QAContextBrainRegion() {
         overlayInnerStyle={{ backgroundColor: 'white' }}
         arrow={false}
         overlay={
-          <p className="flex select-none flex-col gap-2 text-primary-8">
+          <p className="text-primary-8 flex flex-col gap-2 select-none">
             In order to modify the context, select another brain region from the side panel.
           </p>
         }
         trigger="hover"
       >
-        <InfoCircleOutlined className="text-lg text-primary-8" />
+        <InfoCircleOutlined className="text-primary-8 text-lg" />
       </Tooltip>
     </div>
   );
@@ -69,12 +69,12 @@ function QABrainRegion() {
       {isBuildSection && (
         <Button
           onClick={() => router.back()}
-          className="mb-6 flex items-center rounded-none py-6 text-primary-8"
+          className="text-primary-8 mb-6 flex items-center rounded-none py-6"
         >
           <ArrowLeftOutlined /> Back to configuration
         </Button>
       )}
-      <div className="mb-2 text-lg font-medium text-primary-8">Current context of search: </div>
+      <div className="text-primary-8 mb-2 text-lg font-medium">Current context of search: </div>
       <QAContextBrainRegion />
     </div>
   );

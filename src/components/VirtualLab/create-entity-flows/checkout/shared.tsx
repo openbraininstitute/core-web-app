@@ -90,10 +90,10 @@ export const Switch = forwardRef<
 >(({ className, thumbCls, ...props }, ref) => (
   <SwitchPrimitives.Root
     className={classNames(
-      'peer inline-flex h-5 w-11 shrink-0 cursor-pointer items-center ',
+      'peer inline-flex h-5 w-11 shrink-0 cursor-pointer items-center',
       'data-[state=unchecked]:bg-input rounded-full border-2 border-transparent transition-colors',
-      'focus-visible:ring-ring focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 ',
-      'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50 ',
+      'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
+      'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
       className
     )}
     // eslint-disable-next-line react/jsx-props-no-spreading

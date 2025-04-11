@@ -23,7 +23,7 @@ import { setCompositionPayloadConfigurationAtom } from '@/state/brain-model-conf
 import { isConfigEditableAtom } from '@/state/brain-model-config';
 import { OriginalCompositionUnit } from '@/types/composition/original';
 import useLiteratureCleanNavigate from '@/components/explore-section/Literature/useLiteratureCleanNavigate';
-import { Btn, FileInputBtn } from '@/components/Btn';
+import { Btn, FileInputBtn } from '@/components/buttons/base/legacy-btn';
 import useNotification from '@/hooks/notifications';
 
 function CellPosition() {

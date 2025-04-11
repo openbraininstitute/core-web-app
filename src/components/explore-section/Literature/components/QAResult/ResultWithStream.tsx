@@ -13,7 +13,7 @@ function ResultOnStreamAnswer() {
   const { answer } = useAtomValue(literatureAtom);
 
   return (
-    <div className="flex w-full items-start text-xl font-normal leading-7 text-blue-900">
+    <div className="flex w-full items-start text-xl leading-7 font-normal text-blue-900">
       {answer}
     </div>
   );
@@ -152,7 +152,7 @@ export default function withStreamResult({
     }
     return (
       <Result key={id} {...{ id, scoped }} result={current}>
-        <div className="w-full text-xl font-normal leading-7 text-blue-900">{finalAnswer}</div>
+        <div className="w-full text-xl leading-7 font-normal text-blue-900">{finalAnswer}</div>
       </Result>
     );
   }

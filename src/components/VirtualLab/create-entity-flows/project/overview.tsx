@@ -35,7 +35,7 @@ export default function Overview() {
     >
       <Form.Item
         validateDebounce={800}
-        label={<span className="font-semibold text-primary-8">Project&#39;s Name</span>}
+        label={<span className="text-primary-8 font-semibold">Project&#39;s Name</span>}
         name="name"
         className="w-full flex-1"
         rules={[
@@ -84,13 +84,13 @@ export default function Overview() {
         />
       </Form.Item>
       <Form.Item
-        label={<span className="font-semibold text-primary-8">Description</span>}
+        label={<span className="text-primary-8 font-semibold">Description</span>}
         name="description"
       >
         <TextArea
           rows={4}
           placeholder="Enter your description here"
-          className="rounded-none border! border-primary-8"
+          className="border-primary-8 rounded-none border!"
         />
       </Form.Item>
     </div>

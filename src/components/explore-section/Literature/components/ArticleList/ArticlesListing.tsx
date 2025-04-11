@@ -183,12 +183,12 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
   }, [loading, loadMoreArticles]);
 
   return (
-    <div className="mx-10 mb-2 mt-12 flex w-full items-start gap-x-4">
+    <div className="mx-10 mt-12 mb-2 flex w-full items-start gap-x-4">
       <div className="flex min-w-[10rem] items-start bg-white px-4">
         <If id="total-count" condition={Boolean(total)}>
-          <div className="text-md mt-4 text-primary-8">
+          <div className="text-md text-primary-8 mt-4">
             Number of articles:{' '}
-            <div className="font-bold text-primary-8" data-testid="total-article-count">
+            <div className="text-primary-8 font-bold" data-testid="total-article-count">
               {total}
             </div>
           </div>
@@ -203,8 +203,8 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
         <If id="error" condition={Boolean(error && experiment && articles.length === 0)}>
           <div
             className={classNames(
-              'mx-auto self-center whitespace-pre-line border border-gray-400 p-7',
-              'mt-10 max-w-max text-center text-lg font-semibold text-warning'
+              'mx-auto self-center border border-gray-400 p-7 whitespace-pre-line',
+              'text-warning mt-10 max-w-max text-center text-lg font-semibold'
             )}
             data-testid="article-listing-error"
           >
@@ -243,7 +243,7 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
               </>
             }
             renderItem={(article, index) => (
-              <List.Item className="border-0! border-transparent! border-b-0! px-4!">
+              <List.Item className="border-0! border-b-0! border-transparent! px-4!">
                 <ArticleListItem article={article} index={index} />
               </List.Item>
             )}

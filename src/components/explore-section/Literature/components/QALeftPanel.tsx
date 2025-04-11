@@ -32,8 +32,8 @@ function IgnoreBrainContext() {
       <Switch.Root
         id="select-all-brains"
         className={classNames(
-          'group relative flex h-[16px] w-8 items-center rounded-full border border-primary-8 bg-white',
-          'data-[state=checked]:border data-[state=checked]:border-primary-8 data-[state=checked]:bg-primary-8',
+          'group border-primary-8 relative flex h-[16px] w-8 items-center rounded-full border bg-white',
+          'data-[state=checked]:border-primary-8 data-[state=checked]:bg-primary-8 data-[state=checked]:border',
           'data-disabled:cursor-not-allowed data-disabled:border data-disabled:border-gray-500 data-disabled:bg-gray-300'
         )}
         title={isNil(brainRegion) ? 'Search in ' : 'Search in all brain regions'}
@@ -48,7 +48,7 @@ function IgnoreBrainContext() {
           )}
         />
       </Switch.Root>
-      <label htmlFor="select-all-brains" className="ml-2 text-primary-8">
+      <label htmlFor="select-all-brains" className="text-primary-8 ml-2">
         Ignore current context
       </label>
     </div>
@@ -77,8 +77,8 @@ function IgnoreContextualLiterature() {
       <Switch.Root
         id="select-all-brains"
         className={classNames(
-          'group relative h-4 w-8 rounded-full border border-primary-8 bg-white',
-          'data-[state=checked]:border data-[state=checked]:border-primary-8 data-[state=checked]:bg-primary-8',
+          'group border-primary-8 relative h-4 w-8 rounded-full border bg-white',
+          'data-[state=checked]:border-primary-8 data-[state=checked]:bg-primary-8 data-[state=checked]:border',
           'data-disabled:cursor-not-allowed data-disabled:border data-disabled:border-gray-500 data-disabled:bg-gray-300'
         )}
         title="show questions relative to the context"
@@ -94,7 +94,7 @@ function IgnoreContextualLiterature() {
           )}
         />
       </Switch.Root>
-      <label htmlFor="select-all-brains" className="ml-2 text-primary-8">
+      <label htmlFor="select-all-brains" className="text-primary-8 ml-2">
         Show all questions
       </label>
     </div>
@@ -119,7 +119,7 @@ function QALeftPanel() {
       {true && (
         <>
           <QABrainRegion />
-          <div className="mb-5 mt-2">
+          <div className="mt-2 mb-5">
             <IgnoreBrainContext />
             <IgnoreContextualLiterature />
           </div>

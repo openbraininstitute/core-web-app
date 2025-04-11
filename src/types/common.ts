@@ -35,11 +35,17 @@ export type SelectOption = {
 
 export type ApplicationSection = 'explore' | 'build' | 'simulate';
 
-export interface ServerSideComponentProp<Params> {
-  params: Params;
+export interface ServerSideComponentProp<Params, SearchParams> {
+  params: Promise<Params>;
+  searchParams: Promise<SearchParams>;
 }
 
 export type Nullish = null | undefined;
 export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
+
+export type WorkspaceContext = {
+  virtualLabId: string;
+  projectId: string;
+};

@@ -38,7 +38,7 @@ export default function ExperimentDesignerPanel() {
 
   return (
     <div
-      className={classNames('h-screen bg-primary-9 text-white', isOpen ? 'w-[300px]' : 'w-[40px]')}
+      className={classNames('bg-primary-9 h-screen text-white', isOpen ? 'w-[300px]' : 'w-[40px]')}
     >
       {!isOpen && (
         <div className="flex flex-col items-center pt-2">
@@ -51,8 +51,7 @@ export default function ExperimentDesignerPanel() {
           />
 
           <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Simulate</div>
-
-          <Link className="mt-4 text-lg text-primary-3" href="/">
+          <Link className="text-primary-3 mt-4 text-lg" href="/">
             <HomeIcon />
           </Link>
         </div>
@@ -61,7 +60,7 @@ export default function ExperimentDesignerPanel() {
       {isOpen && (
         <div className="flex h-full flex-col overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-x-2">
-            <div className="overflow-hidden text-ellipsis text-3xl font-bold">{simCampName}</div>
+            <div className="overflow-hidden text-3xl font-bold text-ellipsis">{simCampName}</div>
             <Button
               type="text"
               size="small"
@@ -70,15 +69,15 @@ export default function ExperimentDesignerPanel() {
             />
           </div>
 
-          <div className="mt-3 text-primary-3">{simCampDescription}</div>
+          <div className="text-primary-3 mt-3">{simCampDescription}</div>
 
-          <div className="mt-3 text-primary-3">
+          <div className="text-primary-3 mt-3">
             <UserOutlined />
             <span className="ml-3">{campaignCreatorUsername || 'Loading...'}</span>
           </div>
 
           <div className="my-6">
-            <div className="h-px bg-primary-5" />
+            <div className="bg-primary-5 h-px" />
           </div>
 
           <div className="text-primary-3">Circuit used</div>
@@ -91,7 +90,7 @@ export default function ExperimentDesignerPanel() {
             </FooterLink>
 
             <div className="my-6">
-              <div className="mb-7 h-px bg-primary-5" />
+              <div className="bg-primary-5 mb-7 h-px" />
             </div>
 
             <FooterLink className="bg-primary-8" href="/build">

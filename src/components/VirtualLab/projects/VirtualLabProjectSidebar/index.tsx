@@ -61,7 +61,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
           <div className="flex justify-between">
             <span>Project Library</span>
             {bookmarksCount ? (
-              <span className="font-normal text-primary-3">{bookmarksCount}</span>
+              <span className="text-primary-3 font-normal">{bookmarksCount}</span>
             ) : null}
           </div>
         ),
@@ -73,7 +73,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
           <div className="flex justify-between">
             <span>Project Team</span>
             {membersCount ? (
-              <span className="font-normal text-primary-3">{membersCount}</span>
+              <span className="text-primary-3 font-normal">{membersCount}</span>
             ) : null}
           </div>
         ),
@@ -90,7 +90,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
           <div className="flex justify-between">
             <span>Notebooks</span>
             {notebookCount > 0 ? (
-              <span className="font-normal text-primary-3">{notebookCount}</span>
+              <span className="text-primary-3 font-normal">{notebookCount}</span>
             ) : null}
           </div>
         ),
@@ -105,7 +105,7 @@ export default function VirtualLabProjectSidebar({ virtualLabId, projectId }: Pr
         content: (
           <div className="flex justify-between">
             <span className="opacity-50">Project papers</span>
-            <span className="font-normal text-primary-3">Coming soon</span>
+            <span className="text-primary-3 font-normal">Coming soon</span>
           </div>
         ),
         href: 'papers',

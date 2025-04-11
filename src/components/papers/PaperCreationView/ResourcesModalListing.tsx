@@ -4,7 +4,7 @@ import { Button, ConfigProvider, Modal } from 'antd';
 import { SourceDataActiveTab, SourceDataCategory } from './data';
 import { DataType } from '@/constants/explore-section/list-views';
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
-import { Btn } from '@/components/Btn';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { ExploreDataScope } from '@/types/explore-section/application';
 
@@ -24,7 +24,7 @@ type ModalProps = {
 function Header({ title, onClose }: HeaderProps) {
   return (
     <div className="sticky top-0 z-10 flex flex-col">
-      <div className="flex w-full items-center justify-between bg-primary-9 p-4 py-4 text-white">
+      <div className="bg-primary-9 flex w-full items-center justify-between p-4 py-4 text-white">
         <h1 className="text-xl font-bold">{title}</h1>
         <Button
           htmlType="button"
@@ -53,7 +53,7 @@ function Body({ type, category, onRowClick }: BodyProps) {
         selectionType="checkbox"
         renderButton={(props) => (
           <Btn
-            className="fit-content fixed bottom-4 right-4 ml-auto w-fit bg-primary-8"
+            className="fit-content bg-primary-8 fixed right-4 bottom-4 ml-auto w-fit"
             onClick={() => onRowClick(props, category)}
           >
             {props.selectedRows.length ? `(${props.selectedRows.length})` : ''} Use in paper

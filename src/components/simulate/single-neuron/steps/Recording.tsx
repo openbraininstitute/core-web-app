@@ -32,7 +32,7 @@ function RecordItem({
   return (
     <div className="w-full [&:last-of-type_div.divider]:hidden">
       <div className="flex w-full flex-col items-start justify-start">
-        <h3 className="mb-1 text-lg uppercase text-neutral-4">Recording {index + 1}</h3>
+        <h3 className="text-neutral-4 mb-1 text-lg uppercase">Recording {index + 1}</h3>
         <div className="grid w-full grid-cols-[auto_1fr_max-content_max-content_.5fr] items-start justify-center gap-2">
           {/**
            * We add 1 to the index because the first color is already used by the current injection.
@@ -44,13 +44,13 @@ function RecordItem({
               placeholder="Section name"
               onChange={(v) => onAddSource(index, { section: v })}
               options={sections.map((sec) => ({ label: sec, value: sec }))}
-              className="w-full [&_.ant-select-selection-item]:text-left! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-item]:text-primary-8!"
+              className="[&_.ant-select-selection-item]:text-primary-8! w-full [&_.ant-select-selection-item]:text-left! [&_.ant-select-selection-item]:font-bold"
               placement="bottomLeft"
               disabled={disable}
               size="large"
             />
           </Form.Item>
-          <div className="flex h-11 items-center justify-center align-middle text-base text-neutral-4">
+          <div className="text-neutral-4 flex h-11 items-center justify-center align-middle text-base">
             <span className="mr-2 uppercase">offset</span>
             <CustomPopover
               message="The recording position relative to the section. 0 being the start of the section and 1 being the end."
@@ -77,7 +77,7 @@ function RecordItem({
               min={0}
               max={1}
               step={0.01}
-              className="w-full [&_.ant-input-number-input]:font-bold [&_.ant-input-number-input]:text-primary-8!"
+              className="[&_.ant-input-number-input]:text-primary-8! w-full [&_.ant-input-number-input]:font-bold"
               onChange={(v) => {
                 if (!isNil(v)) {
                   onAddSource(index, { offset: v });
@@ -87,7 +87,7 @@ function RecordItem({
               disabled={disable}
             />
           </Form.Item>
-          <div className="mb-2 flex h-11  items-center justify-end">
+          <div className="mb-2 flex h-11 items-center justify-end">
             <Button
               type="text"
               icon={<DeleteOutlined />}
@@ -97,7 +97,7 @@ function RecordItem({
           </div>
         </div>
       </div>
-      <div className="divider my-4 h-px w-full bg-neutral-3" />
+      <div className="divider bg-neutral-3 my-4 h-px w-full" />
     </div>
   );
 }
@@ -139,7 +139,7 @@ export default function Recording() {
         disabled={!sectionNames.length}
         type="button"
         className={classNames(
-          'mt-4 border border-primary-8 bg-white px-6 py-3 text-lg font-bold text-primary-8',
+          'border-primary-8 text-primary-8 mt-4 border bg-white px-6 py-3 text-lg font-bold',
           'hover:border-neutral-4 hover:bg-neutral-4 hover:text-white',
           'disabled:pointer-events-none disabled:border-gray-100 disabled:bg-gray-100 disabled:text-gray-400'
         )}

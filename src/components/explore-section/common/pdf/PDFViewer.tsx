@@ -54,7 +54,7 @@ export default function PDFViewer({ distribution }: Props) {
   return (
     <div className="mt-4 flex flex-col items-center">
       {type && (
-        <h2 className="mb-6 w-full bg-neutral-1 p-3 text-center text-2xl font-bold text-primary-8">
+        <h2 className="bg-neutral-1 text-primary-8 mb-6 w-full p-3 text-center text-2xl font-bold">
           {typeLabel(type)}
         </h2>
       )}
@@ -78,7 +78,7 @@ export default function PDFViewer({ distribution }: Props) {
                 pageNumber={index + 1}
                 renderTextLayer={false}
                 renderAnnotationLayer={false}
-                className="border border-primary-8"
+                className="border-primary-8 border"
               />
               <div className="text-center">
                 Page {index + 1} of {totalPages}
@@ -132,7 +132,7 @@ function ImageViewer({
           fill
           objectFit="contains"
           alt="Stimulus plot"
-          className="border border-neutral-2"
+          className="border-neutral-2 border"
           src={thumbnail}
         />
       </div>

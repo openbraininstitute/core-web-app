@@ -47,7 +47,7 @@ export default function AlternateViewSelector({
     return (
       <span
         style={{ color: colorCode }}
-        className="text-left text-[10px] font-thin text-neutral-1 mix-blend-difference"
+        className="text-neutral-1 text-left text-[10px] font-thin mix-blend-difference"
       >
         {defaultViewOption.label}
       </span>

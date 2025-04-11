@@ -27,7 +27,7 @@ export default function Member({
         inviteAccepted={inviteAccepted}
         email={email}
       />
-      <div className="text-nowrap font-bold">{inviteAccepted ? name : email}</div>
+      <div className="font-bold text-nowrap">{inviteAccepted ? name : email}</div>
       {/* Commenting out since feature is not present yet */}
       {/* <div className="text-primary-3">Active {lastActive}</div> */}
     </div>

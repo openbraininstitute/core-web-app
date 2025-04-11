@@ -75,7 +75,7 @@ function BrainModelConfigDetails() {
           </div>
         )}
       </div>
-      <p className="my-2 text-xs text-primary-2">{brainModelConfig?.description}</p>
+      <p className="text-primary-2 my-2 text-xs">{brainModelConfig?.description}</p>
     </div>
   );
 }
@@ -125,7 +125,7 @@ function CuratedModelLinkBtn({
 }) {
   return (
     <Link
-      className="flex h-12 items-center justify-center border border-primary-3 text-primary-3"
+      className="border-primary-3 text-primary-3 flex h-12 items-center justify-center border"
       key={config.id}
       href={`${baseHref}/?brainModelConfigId=${encodeURIComponent(config.id)}`}
     >
@@ -155,8 +155,8 @@ function Collapsible({
     <details className="w-full py-2" open={open}>
       <summary className="group block cursor-pointer">
         <div className="flex items-center justify-between">
-          <span className="text-base font-bold group-hover:text-primary-3">{title}</span>
-          <RightOutlined className="h-[14px] w-[14px] text-sm text-primary-3" />
+          <span className="group-hover:text-primary-3 text-base font-bold">{title}</span>
+          <RightOutlined className="text-primary-3 h-[14px] w-[14px] text-sm" />
         </div>
       </summary>
       <div className="px-2 py-4 transition-all duration-200">{children}</div>
@@ -193,12 +193,12 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
         <BrainModelConfigDetails />
       </Suspense>
 
-      <div className="mb-3 flex w-full flex-col items-start border-y border-primary-7 py-2">
+      <div className="border-primary-7 mb-3 flex w-full flex-col items-start border-y py-2">
         {brainModelConfig && (
           <Button
             type="text"
             icon={<CloneIcon className="text-primary-4" />}
-            className="px-0 text-base font-bold text-white hover:bg-transparent! hover:text-primary-4!"
+            className="hover:text-primary-4! px-0 text-base font-bold text-white hover:bg-transparent!"
             onClick={openCloneModal(brainModelConfig)}
           >
             Duplicate brain model
@@ -207,7 +207,7 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
         <CopyTextBtn
           icon={<LinkOutlined className="text-primary-4" />}
           text={brainModelConfig?.['@id'] ?? ''}
-          className="px-0 text-base font-bold text-white hover:bg-transparent! hover:text-primary-4!"
+          className="hover:text-primary-4! px-0 text-base font-bold text-white hover:bg-transparent!"
         >
           Copy brain model url
         </CopyTextBtn>
@@ -221,7 +221,7 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
         </div>
       </Collapsible>
 
-      <div className="h-px! w-full bg-primary-7" />
+      <div className="bg-primary-7 h-px! w-full" />
 
       <Collapsible title="Recently used configurations">
         <div className="space-y-2">
@@ -231,7 +231,7 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
         </div>
       </Collapsible>
 
-      <div className="h-px w-full bg-primary-7" />
+      <div className="bg-primary-7 h-px w-full" />
 
       <Collapsible title="Public configurations">
         <div className="space-y-2">
@@ -241,7 +241,7 @@ function BuildSideBarControlPanel({ baseHref, expanded }: { baseHref: string; ex
         </div>
       </Collapsible>
 
-      <div className="h-px w-full bg-primary-7" />
+      <div className="bg-primary-7 h-px w-full" />
 
       <Collapsible title="My configurations">
         <div className="space-y-2">

@@ -138,7 +138,7 @@ export default function JobReportList({
     <ConfigProvider theme={tableTheme}>
       <Table<JobReport>
         size="small"
-        className="mb-12 mt-6"
+        className="mt-6 mb-12"
         loading={isLoading}
         dataSource={jobReports}
         pagination={{

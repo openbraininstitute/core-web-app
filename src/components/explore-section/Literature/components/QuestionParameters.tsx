@@ -78,7 +78,7 @@ function QuestionParameters({ areQAParamsVisible, closeQAParams }: Props) {
     >
       <div
         className={classNames(
-          'w-fill relative mb-6 rounded-lg bg-primary-0 px-7',
+          'w-fill bg-primary-0 relative mb-6 rounded-lg px-7',
           areQAParamsVisible ? 'block' : 'hidden'
         )}
       >
@@ -87,7 +87,7 @@ function QuestionParameters({ areQAParamsVisible, closeQAParams }: Props) {
           onClick={closeQAParams}
           shape="circle"
           aria-label="close-parameters"
-          className="absolute right-4 top-2 mr-3 border-none bg-transparent text-primary-8 shadow-none"
+          className="text-primary-8 absolute top-2 right-4 mr-3 border-none bg-transparent shadow-none"
         />
         <div className="mt-8 w-full">
           <DateRange
@@ -101,7 +101,7 @@ function QuestionParameters({ areQAParamsVisible, closeQAParams }: Props) {
                 : { ...initialParameters.selectedDate },
             }}
           />
-          <hr className="my-3 border-primary-2" />
+          <hr className="border-primary-2 my-3" />
         </div>
 
         <div className="w-full">
@@ -115,7 +115,7 @@ function QuestionParameters({ areQAParamsVisible, closeQAParams }: Props) {
               update('selectedJournals', [...selectedValues]);
             }}
           />
-          <hr className="my-3 border-primary-2" />
+          <hr className="border-primary-2 my-3" />
         </div>
 
         <div className="w-full">
@@ -136,7 +136,7 @@ function QuestionParameters({ areQAParamsVisible, closeQAParams }: Props) {
               )
             }
           />
-          <hr className="my-3 border-primary-2" />
+          <hr className="border-primary-2 my-3" />
         </div>
 
         <div className="mb-3 w-full">

@@ -12,18 +12,18 @@ import { ensureArray } from '@/util/nexus';
 
 function DimensionTitle({ title, dismissible, dismissFunc, setStatus }: DimensionTitleProps) {
   return (
-    <div className="text-base text-primary-7">
+    <div className="text-primary-7 text-base">
       <span className="font-bold">{title}</span>
       {dismissible && title && (
         <Button
           type="link"
-          className="text-xs text-primary-7 "
+          className="text-primary-7 text-xs"
           onClick={() => {
             dismissFunc?.();
             setStatus('selection');
           }}
         >
-          <div className="align-center flex flex-row text-primary-6">
+          <div className="align-center text-primary-6 flex flex-row">
             <span>Edit axis</span>
             <EditOutlined className="ml-2" />
           </div>
@@ -63,7 +63,7 @@ export default function DimensionBox({
         setStatus={setStatus}
       />
       <div
-        className={`h-28 gap-1 rounded-sm border border-primary-1 px-3.5 py-2.5 text-primary-7 ${renderMargin()}`}
+        className={`border-primary-1 text-primary-7 h-28 gap-1 rounded-sm border px-3.5 py-2.5 ${renderMargin()}`}
       >
         {dimension ? (
           <AssignedDimensionBox dimension={dimension} isAxis={isAxis} />

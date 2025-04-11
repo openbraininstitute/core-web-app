@@ -21,7 +21,7 @@ export default function DateRange({
         format="DD-MM-YYYY"
         allowEmpty={[true, true]}
         defaultValue={[filter.value.gte as Date, filter.value.lte as Date]}
-        className="font-sm rounded-sm border border-primary-4 bg-transparent p-2 text-primary-4 placeholder-primary-4"
+        className="font-sm border-primary-4 text-primary-4 placeholder-primary-4 rounded-sm border bg-transparent p-2"
         onChange={(newValues: RangeValue<Date>) =>
           onChange({ gte: newValues?.[0] ?? null, lte: newValues?.[1] ?? null })
         }

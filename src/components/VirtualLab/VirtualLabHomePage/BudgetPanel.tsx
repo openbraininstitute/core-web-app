@@ -32,7 +32,7 @@ export default function BudgetPanel({
       children: (
         <div className="flex flex-col gap-3 text-white">
           {/* budget loader */}
-          <div className="h-3 overflow-hidden rounded-full bg-primary-3">
+          <div className="bg-primary-3 h-3 overflow-hidden rounded-full">
             <div className="h-full w-[60%] bg-white" />
           </div>
           {/* Total spent + remaining */}
@@ -52,7 +52,7 @@ export default function BudgetPanel({
 
   return (
     <div
-      className="mt-[3px] flex flex-col gap-5 bg-primary-8 p-3"
+      className="bg-primary-8 mt-[3px] flex flex-col gap-5 p-3"
       style={{ minHeight: suspended ? 119.5 : undefined, boxSizing: 'content-box' }}
     >
       <ConfigProvider

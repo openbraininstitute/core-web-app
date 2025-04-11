@@ -173,7 +173,7 @@ export default function useExploreColumns<T>(
             render: (r) => term?.render?.(r),
             onHeaderCell: () => ({
               handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
-              onClick: () => isSortable && sorterES(key),
+              onClick: () => isSortable && term.order?.value && sorterES(term.order?.value),
               showsortertooltip: {
                 title: term.description ? term.description : term.title,
               },

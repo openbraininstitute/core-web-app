@@ -206,7 +206,7 @@ export function Form({ virtualLabId, toggleOpenStripeForm }: PaymentFormProps) {
           <Button
             size="large"
             htmlType="submit"
-            className="my-4 w-full rounded-none border-primary-8 bg-primary-8 text-center text-xl text-white"
+            className="border-primary-8 bg-primary-8 my-4 w-full rounded-none text-center text-xl text-white"
             disabled={disableForm}
             loading={formLoading}
           >

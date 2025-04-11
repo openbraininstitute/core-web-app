@@ -8,7 +8,7 @@ import ExploreSectionListingView from '@/components/explore-section/ExploreSecti
 import { OnCellClick } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import { DataType } from '@/constants/explore-section/list-views';
 import { selectedEModelIdAtom, meModelSectionAtom } from '@/state/virtual-lab/build/me-model';
-import { Btn } from '@/components/Btn';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 import { ESeModel, ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { detailUrlBuilder } from '@/util/common';
@@ -60,7 +60,7 @@ export default function ElectrophysiologyPage(props: Params) {
           virtualLabInfo={{ virtualLabId: params.virtualLabId, projectId: params.projectId }}
           renderButton={({ selectedRows }) => (
             <Btn
-              className="fit-content sticky bottom-0 ml-auto w-fit bg-primary-8"
+              className="fit-content bg-primary-8 sticky bottom-0 ml-auto w-fit"
               onClick={() => onEModelPicked(selectedRows)}
             >
               Select e-model

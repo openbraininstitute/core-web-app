@@ -26,19 +26,19 @@ export default function ArticleListItem({ article, index }: Props) {
 
   return (
     <article>
-      <h6 className="mb-2 pr-8 pt-2 text-sm uppercase leading-6 text-gray-400">
+      <h6 className="mb-2 pt-2 pr-8 text-sm leading-6 text-gray-400 uppercase">
         Article {index + 1}
       </h6>
       <div className="h-[2px] w-6 bg-gray-300" />
       <div className="flex items-center justify-between">
-        <h4 className="mb-4 mt-3 text-xl font-bold leading-7 text-primary-8">{article.title}</h4>
+        <h4 className="text-primary-8 mt-3 mb-4 text-xl leading-7 font-bold">{article.title}</h4>
         <div className="flex">
           {article.doi && (
             <div className="mx-2 flex">
               <CopyTextBtn
                 text={article.doi}
                 icon={<CopyIcon />}
-                className="flex w-max items-center justify-center gap-2 rounded-md px-2 py-1 text-base font-normal text-primary-8 hover:bg-gray-200"
+                className="text-primary-8 flex w-max items-center justify-center gap-2 rounded-md px-2 py-1 text-base font-normal hover:bg-gray-200"
               >
                 Copy DOI
               </CopyTextBtn>
@@ -106,12 +106,12 @@ export default function ArticleListItem({ article, index }: Props) {
           />
         )}
       </div>
-      <p className="border border-gray-200 px-7 py-3 text-base text-primary-8">
+      <p className="text-primary-8 border border-gray-200 px-7 py-3 text-base">
         {isNil(article.abstract) ? 'No abstract available' : abstract}
         <br />
         {article.abstract && (
           <Button
-            className="mt-3 rounded-md bg-gray-100 px-3 py-2 text-sm leading-5 text-primary-8 shadow-none"
+            className="text-primary-8 mt-3 rounded-md bg-gray-100 px-3 py-2 text-sm leading-5 shadow-none"
             onClick={toggleTrimAbstract}
           >
             {trimAbstract ? 'Read more' : 'Read less'}

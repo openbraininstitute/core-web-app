@@ -10,7 +10,7 @@ export default function Header() {
           className={`${styles.link} max-w-[8em] flex-none font-serif text-[24px] sm:text-[28.5px]`}
           href="/"
         >
-          <h2 className="relative text-balance text-right leading-[0.8]">
+          <h2 className="relative text-right leading-[0.8] text-balance">
             Open Brain <br /> Institute
           </h2>
         </Link>

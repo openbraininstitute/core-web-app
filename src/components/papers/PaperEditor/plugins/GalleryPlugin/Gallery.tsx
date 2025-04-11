@@ -67,7 +67,7 @@ export default function Gallery({
 
   return (
     <div className="group/gallery relative my-4 flex w-full flex-col rounded-lg bg-gray-100 p-4">
-      <div className="flex w-90percent flex-col gap-2">
+      <div className="w-90percent flex flex-col gap-2">
         {editMode ? (
           <input
             name="title"
@@ -114,7 +114,7 @@ export default function Gallery({
                 size="small"
                 icon={<DeleteOutlined />}
                 className={classNames(
-                  'absolute left-2 top-2 border border-gray-200 shadow-md',
+                  'absolute top-2 left-2 border border-gray-200 shadow-md',
                   editMode ? 'hidden bg-white! group-hover:block' : 'hidden'
                 )}
                 onClick={onItemDelete(img)}
@@ -123,7 +123,7 @@ export default function Gallery({
           ))}
         </ul>
       )}
-      <div className="absolute right-2 top-2 hidden items-center justify-between gap-2 group-hover/gallery:flex">
+      <div className="absolute top-2 right-2 hidden items-center justify-between gap-2 group-hover/gallery:flex">
         <button
           aria-label={editMode ? 'Save' : 'Edit'}
           type="button"

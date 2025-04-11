@@ -53,7 +53,7 @@ const LOW_FUNDS_ERROR_MSG =
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
 const label = (text: string) => (
-  <span className="text-base font-semibold text-primary-8">{text}</span>
+  <span className="text-primary-8 text-base font-semibold">{text}</span>
 );
 
 type Props = {
@@ -322,7 +322,7 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
   return (
     <div className="relative mb-20 h-full w-full">
       <div className="sticky top-0 mb-5 flex items-center justify-between gap-2">
-        <h2 className="my-3 text-2xl font-bold text-primary-8">
+        <h2 className="text-primary-8 my-3 text-2xl font-bold">
           <span>
             Synapses sets
             <span className="ml-2 text-base font-light">
@@ -375,12 +375,12 @@ export default function SynaptomeConfigurationForm({ org, project, resource }: P
           Add new synapses set
         </Button>
       </div>
-      <Form.Item className="fixed bottom-4 right-10 my-6">
+      <Form.Item className="fixed right-10 bottom-4 my-6">
         <Space className="w-full justify-end">
           <button
             type="submit"
             className={classNames(
-              'flex items-center justify-between gap-2 bg-primary-8 px-12 py-4 text-white',
+              'bg-primary-8 flex items-center justify-between gap-2 px-12 py-4 text-white',
               'disabled:bg-gray-100 disabled:text-gray-400'
             )}
             disabled={loading || Boolean(synapsesHasErrors.length)}

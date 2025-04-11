@@ -232,7 +232,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
             <div className={step !== 'members' ? 'hidden' : ''}>
               <div className="mx-auto mt-10 w-full max-w-2xl">
                 <div className="mb-4 flex items-center justify-between">
-                  <h1 className="text-xl font-bold text-primary-8">Add new members to project</h1>
+                  <h1 className="text-primary-8 text-xl font-bold">Add new members to project</h1>
                   <div className="flex items-center space-x-2">
                     <Input
                       placeholder="Search members..."
@@ -247,7 +247,7 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
                     />
                     <Button
                       type="text"
-                      icon={<SearchOutlined className="text-xl text-primary-8" />}
+                      icon={<SearchOutlined className="text-primary-8 text-xl" />}
                       onClick={handleSearchClick}
                       className="!p-1"
                       disabled={!users.length || pending}

@@ -47,7 +47,7 @@ export default function BrainConfigSelector({ onSelect }: Props) {
         <span className="grow text-xl font-bold">Assign Circuit</span>
         <input
           type="text"
-          className="block h-7 w-[300px] border-b border-b-primary-1 bg-primary-9 py-5 placeholder-primary-3"
+          className="border-b-primary-1 bg-primary-9 placeholder-primary-3 block h-7 w-[300px] border-b py-5"
           placeholder="Search circuits..."
           value={searchInputValue}
           onChange={(e) => setSearch(e.target.value)}

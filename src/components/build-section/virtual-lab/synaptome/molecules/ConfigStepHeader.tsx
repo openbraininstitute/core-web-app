@@ -18,21 +18,21 @@ export default function ConfigStepHeader({ configStep }: Props) {
   const name = getFieldValue('name');
 
   return (
-    <div className="sticky left-0 top-0 w-full">
+    <div className="sticky top-0 left-0 w-full">
       <div
         className={classNames(
           'flex w-full items-center gap-4 px-10 py-4',
-          !openBasicConfig && 'border-b border-neutral-2 '
+          !openBasicConfig && 'border-neutral-2 border-b'
         )}
       >
-        <div className="flex w-fit items-center gap-2 uppercase tracking-wide text-gray-400">
+        <div className="flex w-fit items-center gap-2 tracking-wide text-gray-400 uppercase">
           <div>{name}</div>
           <CaretRightOutlined />
         </div>
         <div
           className={classNames(
-            'flex w-fit items-center gap-2 uppercase tracking-wide',
-            configStep === 'me-model-config' ? 'flex text-primary-8' : 'text-neutral-4',
+            'flex w-fit items-center gap-2 tracking-wide uppercase',
+            configStep === 'me-model-config' ? 'text-primary-8 flex' : 'text-neutral-4',
             configStep === 'basic-config' && 'hidden'
           )}
         >
@@ -46,8 +46,8 @@ export default function ConfigStepHeader({ configStep }: Props) {
 
         <div
           className={classNames(
-            'flex w-fit items-center gap-2 uppercase tracking-wide',
-            configStep === 'placement-config' ? 'flex text-primary-8' : 'hidden text-neutral-4'
+            'flex w-fit items-center gap-2 tracking-wide uppercase',
+            configStep === 'placement-config' ? 'text-primary-8 flex' : 'text-neutral-4 hidden'
           )}
         >
           <div>configure model</div>

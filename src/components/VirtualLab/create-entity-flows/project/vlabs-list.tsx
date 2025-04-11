@@ -16,8 +16,8 @@ export default function List() {
         <Form.Item
           label={
             <div className="text-left">
-              <span className="font-semibold text-primary-8">Select virtual lab</span>
-              <p className="font-light text-primary-7">
+              <span className="text-primary-8 font-semibold">Select virtual lab</span>
+              <p className="text-primary-7 font-light">
                 Each project must be assigned to a virtual lab. Please select the lab where you want
                 this project to reside.
               </p>

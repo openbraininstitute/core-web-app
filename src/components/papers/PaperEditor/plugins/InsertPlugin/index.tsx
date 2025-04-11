@@ -123,14 +123,14 @@ export default function InsertPlugin({ paper }: Props) {
   useOnClickOutside(ref, toggleShowMenu);
 
   return (
-    <div className="fixed bottom-24 right-16 z-20 flex items-center justify-end">
+    <div className="fixed right-16 bottom-24 z-20 flex items-center justify-end">
       <div className="relative">
         <div ref={onRef} className="relative" />
         {!showMenu && (
           <EditorButton
             title="Insert"
             aria-label="Insert Custom Elements"
-            className="h-10! w-10! border! border-primary-7 bg-white! text-primary-8"
+            className="border-primary-7 text-primary-8 h-10! w-10! border! bg-white!"
             onClick={toggleShowMenu}
             icon={<PlusOutlined />}
           />
@@ -150,7 +150,7 @@ export default function InsertPlugin({ paper }: Props) {
               </button>
               <div className="flex items-start justify-start bg-white">
                 <div className="flex w-1/3 flex-col">
-                  <div className="w-40 min-w-max select-none border border-b-0 border-gray-200 px-3 py-2 text-gray-500">
+                  <div className="w-40 min-w-max border border-b-0 border-gray-200 px-3 py-2 text-gray-500 select-none">
                     Generate
                   </div>
                   <div className="grid w-full grid-rows-4">
@@ -165,7 +165,7 @@ export default function InsertPlugin({ paper }: Props) {
                   </div>
                 </div>
                 <div className="flex w-2/3 flex-col">
-                  <div className="select-none border border-l-0 border-gray-200 px-3 py-2 text-gray-500">
+                  <div className="border border-l-0 border-gray-200 px-3 py-2 text-gray-500 select-none">
                     Blocks
                   </div>
                   <div className="grid w-full grid-flow-col grid-rows-4">
@@ -174,7 +174,7 @@ export default function InsertPlugin({ paper }: Props) {
                         key={key}
                         icon={<PlusOutlined />}
                         label={label}
-                        className="border-l-0 border-t-0"
+                        className="border-t-0 border-l-0"
                         onClick={onClick}
                       />
                     ))}

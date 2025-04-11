@@ -164,7 +164,7 @@ export default function PlotRenderer({
       <div className="relative w-full p-2">
         <div className="flex items-center justify-between gap-4">
           {withTitle && title && (
-            <div className="flex h-10 items-center justify-center bg-primary-8 px-4 py-2 text-base text-white">
+            <div className="bg-primary-8 flex h-10 items-center justify-center px-4 py-2 text-base text-white">
               {title}
             </div>
           )}
@@ -177,7 +177,7 @@ export default function PlotRenderer({
                 icon={<DownloadOutlined />}
                 onClick={onDownloadPlotDataCsv}
                 className={classNames(
-                  'h-10 rounded-none border border-primary-8 bg-white text-primary-8',
+                  'border-primary-8 text-primary-8 h-10 rounded-none border bg-white',
                   bordered && 'border-b-0'
                 )}
               >
@@ -188,8 +188,8 @@ export default function PlotRenderer({
         </div>
         <div
           className={classNames(
-            'relative flex h-full  w-full flex-col items-center justify-center px-2 pt-8',
-            bordered && 'border border-primary-8 '
+            'relative flex h-full w-full flex-col items-center justify-center px-2 pt-8',
+            bordered && 'border-primary-8 border'
           )}
         >
           <div className="h-full w-[calc(100%-2rem)]">
@@ -199,7 +199,7 @@ export default function PlotRenderer({
               style={{ opacity: isLoading ? 0.5 : 1 }}
             />
             {isLoading && (
-              <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center text-sm text-gray-500">
+              <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center text-sm text-gray-500">
                 <Spin size="large" />
               </div>
             )}

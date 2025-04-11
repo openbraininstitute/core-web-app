@@ -11,10 +11,7 @@ export default async function PapersListing(
 ) {
   const params = await props.params;
 
-  const {
-    virtualLabId,
-    projectId
-  } = params;
+  const { virtualLabId, projectId } = params;
 
   const session = await auth();
   if (!session) return;
@@ -32,7 +29,7 @@ export default async function PapersListing(
     >
       <PaperListView {...{ total, papers }} />
       <Link
-        className="mt-auto flex max-w-max items-center justify-center self-end bg-primary-8 px-8 py-4 text-white"
+        className="bg-primary-8 mt-auto flex max-w-max items-center justify-center self-end px-8 py-4 text-white"
         type="primary"
         href={`${generateVlProjectUrl(virtualLabId, projectId)}/papers/create`}
       >

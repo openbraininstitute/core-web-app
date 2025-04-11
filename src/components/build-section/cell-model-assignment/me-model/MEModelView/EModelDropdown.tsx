@@ -43,7 +43,7 @@ export default function EModelDropdown() {
 
   return (
     <div className="flex gap-5">
-      <div className="text-3xl font-bold text-primary-8">Available E-Models</div>
+      <div className="text-primary-8 text-3xl font-bold">Available E-Models</div>
       <Select
         key={`${selectedEModel.id}`}
         defaultValue={selectedEModel.id}

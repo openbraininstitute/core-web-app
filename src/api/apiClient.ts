@@ -406,7 +406,6 @@ class ApiClient {
  * @returns {Promise<ApiClient>} a promise that resolves to an instance of ApiClient
  */
 export default async function authApiClient(rootUri: string, cacheConfig?: CacheConfiguration) {
-  console.info('rootUri:', rootUri);
   const session = await getSession();
 
   return new ApiClient({

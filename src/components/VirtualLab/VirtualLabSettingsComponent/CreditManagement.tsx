@@ -46,7 +46,7 @@ export default function CreditManagement({ virtualLabId }: { virtualLabId: strin
       <>
         <button
           type="button"
-          className="flex h-8 w-8 items-center justify-center border border-primary-5 hover:bg-primary-7"
+          className="border-primary-5 hover:bg-primary-7 flex h-8 w-8 items-center justify-center border"
           onClick={() => openBalanceTransferModal(projectId)}
           aria-label="Transfer credits"
         >
@@ -63,7 +63,7 @@ export default function CreditManagement({ virtualLabId }: { virtualLabId: strin
 
   return (
     <div className="py-10">
-      <div className="flex gap-x-4 px-8 py-4 text-sm text-primary-1">
+      <div className="text-primary-1 flex gap-x-4 px-8 py-4 text-sm">
         <div className="flex-1">Project</div>
         <div className="w-48 flex-none">Current credit balance</div>
         <div className="w-32 flex-none">Actions</div>
@@ -71,9 +71,9 @@ export default function CreditManagement({ virtualLabId }: { virtualLabId: strin
       {projectsObj.data?.results.map((project) => (
         <div
           key={project.id}
-          className="mt-4 flex gap-x-4 border border-primary-7 px-8 py-5 text-xl text-white"
+          className="border-primary-7 mt-4 flex gap-x-4 border px-8 py-5 text-xl text-white"
         >
-          <div className="flex-1 overflow-hidden truncate text-ellipsis font-bold">
+          <div className="flex-1 truncate overflow-hidden font-bold text-ellipsis">
             {project.name}
           </div>
           <div className="w-48 flex-none">{balanceRenderFn(project.id)}</div>

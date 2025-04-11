@@ -98,10 +98,10 @@ export default function InsertGalleryDialog({ onUpload, onClose }: Props) {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold text-primary-9">Insert Gallery</h1>
+      <h1 className="text-primary-9 text-2xl font-bold">Insert Gallery</h1>
       <div className="my-3 flex w-full flex-col gap-2">
         <div className="flex flex-col items-start gap-3">
-          <div className="min-w-max text-base font-bold text-primary-8">Name</div>
+          <div className="text-primary-8 min-w-max text-base font-bold">Name</div>
           <input
             name="name"
             value={title}
@@ -110,7 +110,7 @@ export default function InsertGalleryDialog({ onUpload, onClose }: Props) {
           />
         </div>
         <div className="flex flex-col items-start gap-3">
-          <div className="min-w-max text-base font-bold text-primary-8">Description</div>
+          <div className="text-primary-8 min-w-max text-base font-bold">Description</div>
           <textarea
             name="description"
             value={description}
@@ -120,7 +120,7 @@ export default function InsertGalleryDialog({ onUpload, onClose }: Props) {
           />
         </div>
       </div>
-      <div className="mb-3 min-w-max text-base font-bold text-primary-8">Images</div>
+      <div className="text-primary-8 mb-3 min-w-max text-base font-bold">Images</div>
       <div className="flex w-full flex-wrap gap-3 rounded-md border border-gray-200 p-2">
         {Boolean(images.length) && (
           <div className="flex w-full flex-wrap gap-2">
@@ -145,15 +145,15 @@ export default function InsertGalleryDialog({ onUpload, onClose }: Props) {
                   />
                 )}
                 {uploads.success.includes(image.id) && (
-                  <CheckCircleFilled className="absolute right-2 top-2 text-teal-600" />
+                  <CheckCircleFilled className="absolute top-2 right-2 text-teal-600" />
                 )}
                 {uploads.failed.includes(image.id) && (
-                  <CloseCircleFilled className="absolute right-2 top-2 text-rose-600" />
+                  <CloseCircleFilled className="absolute top-2 right-2 text-rose-600" />
                 )}
                 <button
                   aria-label="Delete"
                   type="button"
-                  className="absolute right-2 top-2 hidden rounded-md border border-gray-200 bg-white p-2 shadow-md hover:bg-gray-200 group-hover:z-10 group-hover:block"
+                  className="absolute top-2 right-2 hidden rounded-md border border-gray-200 bg-white p-2 shadow-md group-hover:z-10 group-hover:block hover:bg-gray-200"
                   onClick={onRemove(image)}
                 >
                   <Delete className="text-lg" />

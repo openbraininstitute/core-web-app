@@ -37,7 +37,7 @@ export default function VerticalLinks({ virtualLabId, projectId, currentPage, li
   const selectedLayout = useSelectedLayoutSegment();
   if (!links || !links.length) return null;
   return (
-    <div className="flex h-fit w-full flex-col border border-primary-7">
+    <div className="border-primary-7 flex h-fit w-full flex-col border">
       {links.map((link, idx) => {
         return virtualLabId && projectId ? (
           <button

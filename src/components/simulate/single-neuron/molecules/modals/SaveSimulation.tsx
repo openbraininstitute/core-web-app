@@ -90,16 +90,16 @@ export default function SaveSimulationModal({
   };
 
   return (
-    <div className="flex flex-col py-5 pl-10 pr-5">
+    <div className="flex flex-col py-5 pr-5 pl-10">
       <div className="mb-10 flex items-start justify-between gap-4">
         <div className="flex w-3/4 flex-col gap-3">
-          <h2 className="text-3xl font-extrabold text-primary-8">Save simulation experiment</h2>
-          <p className="text-base font-light text-primary-8">
+          <h2 className="text-primary-8 text-3xl font-extrabold">Save simulation experiment</h2>
+          <p className="text-primary-8 text-base font-light">
             Please confirm the name and description for your simulation. This will help you organize
             and find your experiments later.
           </p>
         </div>
-        <CloseOutlined className="text-2xl text-primary-8" onClick={onClose} />
+        <CloseOutlined className="text-primary-8 text-2xl" onClick={onClose} />
       </div>
       <div>
         <Form name="simulation" onFinish={saveSimulation}>
@@ -112,7 +112,7 @@ export default function SaveSimulationModal({
             <Input
               placeholder="Simulation name"
               size="large"
-              className="rounded-none border-0 border-b! border-neutral-3 font-bold!  text-primary-8!"
+              className="border-neutral-3 text-primary-8! rounded-none border-0 border-b! font-bold!"
             />
           </Form.Item>
           <div className="mb-2">{label('Description', 'secondary')}</div>
@@ -121,7 +121,7 @@ export default function SaveSimulationModal({
               rows={5}
               placeholder="Your description"
               size="large"
-              className="rounded-none border border-neutral-3 p-2 font-bold! text-primary-8!"
+              className="border-neutral-3 text-primary-8! rounded-none border p-2 font-bold!"
             />
           </Form.Item>
 
@@ -133,7 +133,7 @@ export default function SaveSimulationModal({
               <GenericButton
                 text="Save"
                 htmlType="submit"
-                className="w-max bg-primary-8 text-white"
+                className="bg-primary-8 w-max text-white"
                 disabled={loading}
                 loading={loading}
               />

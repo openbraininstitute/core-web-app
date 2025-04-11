@@ -10,7 +10,7 @@ export default function SaveButton() {
     <>
       <GenericButton
         text="Save ME-Model"
-        className="w-15 absolute bottom-5 right-5 mt-8 bg-secondary-3 text-white"
+        className="bg-secondary-3 absolute right-5 bottom-5 mt-8 w-15 text-white"
         onClick={createModal}
       />
       {contextHolder}

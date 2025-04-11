@@ -63,7 +63,7 @@ export default function MemberAvatar({
           <div className="flex flex-col gap-1">
             <h3
               className={classNames(
-                'text-xl font-bold  text-primary-8',
+                'text-primary-8 text-xl font-bold',
                 status !== 'pending' && 'first-letter:uppercase',
                 cls?.text
               )}
@@ -87,7 +87,7 @@ export default function MemberAvatar({
           </div>
           <p
             className={classNames(
-              'capitalize text-gray-500',
+              'text-gray-500 capitalize',
               layout === 'vertical' && 'hidden',
               cls?.role
             )}
@@ -145,7 +145,7 @@ export function MemberAvatarCasual({
             <PendingInvite width={48} height={48} />
             <div
               className={classNames(
-                'text-xl font-bold  text-primary-8',
+                'text-primary-8 text-xl font-bold',
                 !pending && 'first-letter:uppercase',
                 cls?.text
               )}
@@ -174,7 +174,7 @@ export function MemberAvatarCasual({
               <div className={classNames('flex flex-col')}>
                 <h3
                   className={classNames(
-                    'text-xl font-bold  text-primary-8',
+                    'text-primary-8 text-xl font-bold',
                     status !== 'pending' && 'first-letter:uppercase',
                     cls?.text
                   )}

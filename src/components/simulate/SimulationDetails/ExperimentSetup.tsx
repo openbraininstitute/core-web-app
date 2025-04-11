@@ -37,7 +37,7 @@ export default function ExperimentSetupTab({ experimentSetup, type, meModel }: P
   const [activeTab, setActiveTab] = useState<TabKeys>('simulation-configuration');
   return (
     <div className="flex flex-1 flex-col">
-      <h1 className="mb-3 mt-6 text-3xl font-bold text-primary-8">Experiment Setup</h1>
+      <h1 className="text-primary-8 mt-6 mb-3 text-3xl font-bold">Experiment Setup</h1>
       <ul className="flex w-full items-center justify-center">
         {(type === 'synaptome-simulation' ? TABS.filter((p) => p.key !== 'analysis') : TABS).map(
           ({ key, title }) => (
@@ -46,7 +46,7 @@ export default function ExperimentSetupTab({ experimentSetup, type, meModel }: P
               key={key}
               className={classNames(
                 'w-1/3 flex-[1_1_33%] border py-3 text-center text-xl font-semibold transition-all duration-200 ease-out',
-                activeTab === key ? 'bg-primary-9 text-white' : 'bg-white text-primary-9'
+                activeTab === key ? 'bg-primary-9 text-white' : 'text-primary-9 bg-white'
               )}
             >
               <button

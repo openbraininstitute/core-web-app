@@ -1,13 +1,14 @@
-'use client';;
-import { use } from "react";
+'use client';
+import { use } from 'react';
 
 import VirtualLabTeamTable from '@/components/VirtualLab/VirtualLabTeamTable';
 import withVirtualLabUsers from '@/components/VirtualLab/data/WithVirtualLabUsers';
 import { ServerSideComponentProp } from '@/types/common';
 
-export default function VirtualLabTeamPage(props: ServerSideComponentProp<{ virtualLabId: string }>) {
-  const params = use(props.params);
-  const { virtualLabId } = params;
+export default function VirtualLabTeamPage(
+  props: ServerSideComponentProp<{ virtualLabId: string }, null>
+) {
+  const { virtualLabId } = use(props.params);
   const WithVirtualLabUsers = withVirtualLabUsers(VirtualLabTeamTable, virtualLabId);
   return <WithVirtualLabUsers />;
 }

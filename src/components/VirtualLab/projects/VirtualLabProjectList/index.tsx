@@ -54,7 +54,7 @@ const CreateProjectButton = memo(({ labId }: CreateProjectButtonProps) => {
   };
 
   return (
-    <div className="ml-auto mt-4 flex items-center gap-3 pr-3">
+    <div className="mt-4 ml-auto flex items-center gap-3 pr-3">
       <CustomPopover
         when={['hover']}
         message="You must have Owner/Administrator role to create a project."
@@ -65,7 +65,7 @@ const CreateProjectButton = memo(({ labId }: CreateProjectButtonProps) => {
         <button
           role="link"
           type="button"
-          className="w-max rounded-none border-none font-bold text-primary-9"
+          className="text-primary-9 w-max rounded-none border-none font-bold"
           aria-label="Create project"
           disabled={!allowedOperation}
           onMouseLeave={() => setIsPopoverOpen(false)}
@@ -112,7 +112,7 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
       <div className="h-[calc(100%-80px)] overflow-hidden">
         <ProjectListContent projects={projects} />
       </div>
-      <div className="ml-auto mt-auto">
+      <div className="mt-auto ml-auto">
         <CreateProjectButton labId={id} />
       </div>
     </div>

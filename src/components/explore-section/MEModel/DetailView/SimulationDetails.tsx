@@ -70,7 +70,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="font-light text-primary-9">Loading simulation {index + 1}...</h2>
+        <h2 className="text-primary-9 font-light">Loading simulation {index + 1}...</h2>
       </div>
     );
   }
@@ -79,23 +79,23 @@ export default function SimulationDetail<T extends GenericSimulation>({
 
   return (
     <div className="flex items-start gap-8 border p-8">
-      <div className="flex flex-[0_1_60%] flex-col gap-10 text-primary-8">
+      <div className="text-primary-8 flex flex-[0_1_60%] flex-col gap-10">
         <NameDescription name={simulation.name} description={simulation.description} />
         <Params payload={distributionJson} />
         <div className="flex w-full flex-col gap-2">
-          <div className="text-lg font-bold text-primary-8">Injection location</div>
+          <div className="text-primary-8 text-lg font-bold">Injection location</div>
           <div className="mt-2 flex max-w-max items-center justify-center border border-gray-100 px-5 py-1 font-bold">
             {distributionJson.config.currentInjection.injectTo}
           </div>
         </div>
         <div className="flex w-full flex-col gap-2">
-          <div className="text-lg font-bold text-primary-8">Recording locations</div>
+          <div className="text-primary-8 text-lg font-bold">Recording locations</div>
           <div className="mt-2 flex items-center gap-4">
             {distributionJson.config.recordFrom.map((r, ind) => (
               <div key={`${r.section}_${r.offset}`} className="flex flex-col gap-1">
-                <div className="uppercase text-gray-400">Recording {ind + 1}</div>
+                <div className="text-gray-400 uppercase">Recording {ind + 1}</div>
                 <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100 px-5 py-1">
-                  <span className="text-base font-bold capitalize text-primary-8">{r.section}</span>
+                  <span className="text-primary-8 text-base font-bold capitalize">{r.section}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm uppercase">offset</span>
                     <CustomPopover
@@ -105,7 +105,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
                     >
                       <InfoCircleOutlined className="cursor-pointer" />
                     </CustomPopover>
-                    <span className="py-1 text-base font-bold text-primary-8">{r.offset}</span>
+                    <span className="text-primary-8 py-1 text-base font-bold">{r.offset}</span>
                   </div>
                 </div>
               </div>
@@ -118,14 +118,14 @@ export default function SimulationDetail<T extends GenericSimulation>({
       <div className="flex w-full flex-[1_1_40%] flex-col items-end justify-center gap-5">
         {distributionJson.stimulus && (
           <div className="flex w-full flex-col">
-            <div className="mb-4 text-2xl font-bold text-primary-8">Stimulus</div>
+            <div className="text-primary-8 mb-4 text-2xl font-bold">Stimulus</div>
             <SimulationPlotAsImage yTitle="Current [nA]" plotData={distributionJson.stimulus} />
           </div>
         )}
 
         {distributionJson.simulation && (
           <div className="flex w-full flex-col">
-            <div className="mb-4 text-2xl font-bold text-primary-8">Recording</div>
+            <div className="text-primary-8 mb-4 text-2xl font-bold">Recording</div>
             <ConfigProvider theme={{ hashed: false }}>
               <Segmented
                 defaultValue="center"

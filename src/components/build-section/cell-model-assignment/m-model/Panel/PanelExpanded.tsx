@@ -21,7 +21,7 @@ function PanelTitle({ title, onClick, className }: PanelTitleProps) {
     <div className={classNames(className, 'mb-5 flex items-start justify-between')}>
       <div className="flex items-center justify-start space-x-2 text-2xl font-bold text-white">
         <BrainRegionIcon style={{ height: '1em' }} />
-        <span className="text-[16px] text-secondary-4">{title ?? 'Select a region first'}</span>
+        <span className="text-secondary-4 text-[16px]">{title ?? 'Select a region first'}</span>
       </div>
       <Button
         type="text"

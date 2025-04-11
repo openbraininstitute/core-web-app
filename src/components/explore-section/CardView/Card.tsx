@@ -42,7 +42,7 @@ export default function Card({ resource, dataType, activeKeys, metrics, score }:
 
   return (
     <div ref={ref} className="mr-0 h-fit w-[350px] shrink-0 px-0 py-4">
-      {score && <div className="mb-2 font-bold text-primary-7">{score}</div>}
+      {score && <div className="text-primary-7 mb-2 font-bold">{score}</div>}
       <div className="flex h-full min-h-[350px] min-w-[350px] flex-col border-x border-t">
         {inView && (
           <div className="h-full w-full grow">
@@ -63,7 +63,7 @@ export default function Card({ resource, dataType, activeKeys, metrics, score }:
                       return (
                         <div
                           key={field.field}
-                          className={`mb-2 h-6 truncate pl-4 text-primary-8 ${field.className}`}
+                          className={`text-primary-8 mb-2 h-6 truncate pl-4 ${field.className}`}
                         >
                           {field.field === Field.Name ? (
                             <Link href={resourceUrl} passHref>

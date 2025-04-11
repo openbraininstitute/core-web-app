@@ -46,7 +46,7 @@ function DimensionHeader({ label, value, orientation }: DimensionHeaderProps) {
 
   return (
     <div key={value} className="text-center" style={style}>
-      <div className="text-xs text-neutral-4">{label}</div>
+      <div className="text-neutral-4 text-xs">{label}</div>
       <div>{value}</div>
     </div>
   );

@@ -87,7 +87,7 @@ export default function InsertImageDialog({ onClose, onUpload }: Props) {
 
   return (
     <div className="w-full">
-      <h1 className="mb-4 text-2xl font-bold text-primary-9">Insert Image</h1>
+      <h1 className="text-primary-9 mb-4 text-2xl font-bold">Insert Image</h1>
       <Upload
         withCredentials
         beforeUpload={beforeUpload}
@@ -125,7 +125,7 @@ export default function InsertImageDialog({ onClose, onUpload }: Props) {
       </Upload>
       <div className="my-3 flex w-full flex-col gap-2">
         <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-          <span className="min-w-max font-bold text-primary-8">Name</span>
+          <span className="text-primary-8 min-w-max font-bold">Name</span>
           <input
             name="name"
             value={name}
@@ -134,7 +134,7 @@ export default function InsertImageDialog({ onClose, onUpload }: Props) {
           />
         </div>
         <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-          <span className="min-w-max font-bold text-primary-8">Description</span>
+          <span className="text-primary-8 min-w-max font-bold">Description</span>
           <input
             name="alt"
             value={alt}
@@ -143,7 +143,7 @@ export default function InsertImageDialog({ onClose, onUpload }: Props) {
           />
         </div>
         <div className="grid h-11 grid-cols-[100px_40px_1fr] items-center gap-3">
-          <span className="min-w-max font-bold text-primary-8">Inline Position</span>
+          <span className="text-primary-8 min-w-max font-bold">Inline Position</span>
           <Checkbox onChange={onInlineChange} />
           {inline && (
             <Select

@@ -25,8 +25,8 @@ type Props = {
 
 function Field({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
-    <div className="mb-4 mr-10 text-sm text-primary-7">
-      <div className="uppercase text-neutral-4">{label}</div>
+    <div className="text-primary-7 mr-10 mb-4 text-sm">
+      <div className="text-neutral-4 uppercase">{label}</div>
       <div className={classNames(className)}>{value}</div>
     </div>
   );
@@ -52,21 +52,21 @@ export default function ModelDetails({
 
   return (
     <div>
-      <h1 className="mb-3 text-3xl font-bold text-primary-8">Model</h1>
+      <h1 className="text-primary-8 mb-3 text-3xl font-bold">Model</h1>
       <div className="relative flex max-h-fit items-start gap-4 rounded-sm border border-neutral-200 px-8 py-6">
         <Link
           href={generateMeModelDetailView()}
-          className="absolute right-8 top-6 flex items-center justify-center font-bold text-primary-8 hover:text-primary-7"
+          className="text-primary-8 hover:text-primary-7 absolute top-6 right-8 flex items-center justify-center font-bold"
         >
           View details
         </Link>
         <div className="flex flex-col">
-          <span className="mb-2 text-base uppercase text-neutral-4">
+          <span className="text-neutral-4 mb-2 text-base uppercase">
             {type === 'single-neuron-simulation' ? 'Single neuron model' : 'Synaptome'}
           </span>
           <div className="flex items-start gap-2">
             {mModel ? (
-              <div className="flex h-56 w-56 items-center justify-center border border-neutral-3">
+              <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
                 <CardVisualization
                   dataType={DataType.ExperimentalNeuronMorphology}
                   resource={mModel}
@@ -78,7 +78,7 @@ export default function ModelDetails({
               <Skeleton.Image className="h-full w-full rounded-none" />
             )}
             {eModel ? (
-              <div className="flex h-56 w-56 items-center justify-center border border-neutral-3">
+              <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
                 <EModelThumbnail emodel={eModel} />
               </div>
             ) : (
@@ -88,7 +88,7 @@ export default function ModelDetails({
         </div>
         <div className="mt-6 flex flex-col gap-3">
           <div className="pl-12">
-            <Field label="Name" value={name} className="my-1 text-3xl font-bold text-primary-8" />
+            <Field label="Name" value={name} className="text-primary-8 my-1 text-3xl font-bold" />
           </div>
           <div className="flex items-start gap-4 pl-12">
             <div className="flex flex-col gap-2">

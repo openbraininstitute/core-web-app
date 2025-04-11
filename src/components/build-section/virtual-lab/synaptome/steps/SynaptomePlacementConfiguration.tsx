@@ -36,7 +36,7 @@ function SynaptomeConfiguration({ virtualLabId, projectId }: Props) {
       <div>
         <div className="flex h-[calc(100vh-51px)] w-full flex-col items-center justify-center gap-3">
           <Spin indicator={<LoadingOutlined />} size="large" />
-          <h2 className="font-light text-primary-9">Loading Model ...</h2>
+          <h2 className="text-primary-9 font-light">Loading Model ...</h2>
         </div>
       </div>
     );

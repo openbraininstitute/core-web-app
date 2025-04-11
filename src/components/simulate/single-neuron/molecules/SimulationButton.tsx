@@ -118,7 +118,7 @@ export default function SimulationButton({
     <div className="flex items-center justify-between gap-4">
       {simulationStatus?.status === 'finished' && (
         <button
-          className="w-max bg-primary-8 px-7 py-3 text-white"
+          className="bg-primary-8 w-max px-7 py-3 text-white"
           type="button"
           onClick={onDownloadRecordingDataAsZip}
         >
@@ -136,7 +136,7 @@ export default function SimulationButton({
       </button>
       {simulationStatus?.status === 'finished' && (
         <button
-          className="w-max bg-primary-8 px-7 py-3 text-white"
+          className="bg-primary-8 w-max px-7 py-3 text-white"
           type="button"
           onClick={saveSimulation}
         >

@@ -34,7 +34,7 @@ export default function MEModelLayout({ children }: Props) {
 
     return createPortal(
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="flex h-screen overflow-hidden bg-primary-7">
+        <div className="bg-primary-7 flex h-screen overflow-hidden">
           {!isSidebarExpanded ? (
             <PanelCollapsed setIsSidebarExpanded={setIsSidebarExpanded} />
           ) : (

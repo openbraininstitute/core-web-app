@@ -22,7 +22,7 @@ export default function HelpMenu({ children, cls }: Props) {
       <MenubarMenu>
         <MenubarTrigger
           className={classNames(
-            'group cursor-pointer border-none text-primary-2 outline-0 outline-offset-0',
+            'group text-primary-2 cursor-pointer border-none outline-0 outline-offset-0',
             cls?.trigger
           )}
           style={{ outline: 'none' }}
@@ -32,11 +32,11 @@ export default function HelpMenu({ children, cls }: Props) {
         <MenubarContent
           align="end"
           side="right"
-          className="rounded-none border border-primary-7 bg-primary-9 text-white"
+          className="border-primary-7 bg-primary-9 rounded-none border text-white"
         >
           <MenubarItem
             asChild
-            className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
+            className="hover:text-primary-8 h-[40.5px] cursor-pointer hover:bg-white"
           >
             <Link href="/about" className="text-lg!">
               About OBI
@@ -44,7 +44,7 @@ export default function HelpMenu({ children, cls }: Props) {
           </MenubarItem>
           <MenubarItem
             asChild
-            className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
+            className="hover:text-primary-8 h-[40.5px] cursor-pointer hover:bg-white"
           >
             <a href="mailto:support@openbraininstitute.org" className="text-lg!">
               Contact support
@@ -52,7 +52,7 @@ export default function HelpMenu({ children, cls }: Props) {
           </MenubarItem>
           <MenubarItem
             asChild
-            className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
+            className="hover:text-primary-8 h-[40.5px] cursor-pointer hover:bg-white"
           >
             <Link href="/terms" className="text-lg!">
               Terms and conditions

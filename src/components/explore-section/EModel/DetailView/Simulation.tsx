@@ -98,8 +98,8 @@
 
 export default function Simulation() {
   return (
-    <div className="flex items-center justify-center border border-neutral-2">
-      <div className="my-[20%] text-7xl text-neutral-4">Coming soon</div>
+    <div className="border-neutral-2 flex items-center justify-center border">
+      <div className="text-neutral-4 my-[20%] text-7xl">Coming soon</div>
     </div>
   );
   // HIDDEN FOR SFN

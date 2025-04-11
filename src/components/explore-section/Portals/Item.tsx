@@ -16,7 +16,7 @@ export default function PortalItem({ content }: { content: Portal }) {
     <Link
       href={content.url}
       className={classNames(
-        'relative flex h-48 w-full flex-row items-center justify-between rounded-sm p-3 transition-background duration-300 ease-linear',
+        'transition-background relative flex h-48 w-full flex-row items-center justify-between rounded-sm p-3 duration-300 ease-linear',
         isMouseOver ? 'bg-primary-7' : 'bg-primary-8'
       )}
       onMouseOver={() => setIsMouseOver(true)}
@@ -24,9 +24,9 @@ export default function PortalItem({ content }: { content: Portal }) {
       onMouseOut={() => setIsMouseOver(false)}
       onBlur={() => setIsMouseOver(false)}
     >
-      <div className="flex h-full w-90percent flex-row items-center">
+      <div className="w-90percent flex h-full flex-row items-center">
         {/* Image */}
-        <div className="h-full w-48 overflow-hidden bg-primary-2 shadow-strongImage">
+        <div className="bg-primary-2 shadow-strongImage h-full w-48 overflow-hidden">
           <Image
             src={`${basePath}/${content.image}`}
             alt={content.name}
@@ -39,10 +39,10 @@ export default function PortalItem({ content }: { content: Portal }) {
         <TextContent content={content} />
       </div>
 
-      <div className="relative mr-5 flex h-4 w-10percent items-center justify-center overflow-hidden">
+      <div className="w-10percent relative mr-5 flex h-4 items-center justify-center overflow-hidden">
         <ArrowRightIcon
           className={classNames(
-            'absolute h-3 w-auto text-white transition-right duration-500 ease-in-out',
+            'transition-right absolute h-3 w-auto text-white duration-500 ease-in-out',
             isMouseOver ? 'right-0' : '-right-8'
           )}
         />

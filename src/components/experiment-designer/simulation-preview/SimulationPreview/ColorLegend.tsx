@@ -34,13 +34,13 @@ function LegendItemBox({ label, colorHex, onColorChange }: LegendItemBoxProps) {
     <div key={label} className="flex flex-row items-center gap-2">
       <div className="relative h-[10px] w-[10px]">
         <div
-          className="absolute left-0 top-0 h-[10px] w-[10px] rounded-full border-0 p-0"
+          className="absolute top-0 left-0 h-[10px] w-[10px] rounded-full border-0 p-0"
           style={{ backgroundColor: colorHex }}
         />
         <input
           type="color"
           onChange={handleColorChange}
-          className="absolute left-0 top-0 opacity-0"
+          className="absolute top-0 left-0 opacity-0"
           value={colorHex}
         />
       </div>
