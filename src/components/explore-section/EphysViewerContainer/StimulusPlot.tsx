@@ -16,10 +16,7 @@ const DEFAULT_STIMULUS_UNIT = 'pA';
 function StimulusPlot({
   reset,
   setSelectedSweeps,
-  metadata,
-  sweeps: { selectedSweeps, previewSweep, allSweeps, colorMapper },
-  dataset,
-  options,
+  sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
   const [stimulusUnit, setStimulusUnit] = React.useState<Amperes>(DEFAULT_STIMULUS_UNIT);
 
@@ -29,22 +26,26 @@ function StimulusPlot({
     setZoomRanges(null);
   }, [reset]);
 
-  const isAmperes = metadata && metadata.i_unit === 'amperes';
+  // const isAmperes = metadata && metadata.i_unit === 'amperes';
+  const isAmperes = true;
+
   const { config, layout, font, style, antBreakpoints } = useConfig();
 
   const rawData = React.useMemo(() => {
-    const deltaTime = metadata ? metadata?.dt : 1;
+    // const deltaTime = metadata ? metadata?.dt : 1;
+    const deltaTime = 1;
+
     const zoom = {
       xstart: zoomRanges?.x[0],
       xend: zoomRanges?.x[1],
     };
 
     const allSweepsData = allSweeps.map((sweep) => {
-      const name = options[`${dataset} ${sweep} i`]?.name;
-      const y = options[`${dataset} ${sweep} i`] ? options[`${dataset} ${sweep} i`].y : [];
+      const name = sweep;
+      const y = sweepDataMap.get(sweep)?.stimulus.data as number[]; // TODO Fix typing
 
       const yConverted = isAmperes ? convertAmperes(y, stimulusUnit) : y;
-      const color = colorMapper[sweep];
+      const color = colorMap.get(sweep) as string;
 
       return {
         name,
@@ -57,12 +58,12 @@ function StimulusPlot({
     });
 
     return optimizePlotData(allSweepsData, deltaTime, zoom) || [];
-  }, [options, dataset, metadata, zoomRanges, allSweeps, isAmperes, colorMapper, stimulusUnit]);
+  }, [zoomRanges, allSweeps, isAmperes, colorMap, stimulusUnit]);
 
   const selectedResponse: Partial<PlotData>[] = React.useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [options, dataset, selectedSweeps, metadata, stimulusUnit]
+    [selectedSweeps, stimulusUnit]
   );
 
   const previewDataResponse: Partial<PlotData>[] = React.useMemo(
@@ -94,8 +95,10 @@ function StimulusPlot({
     return false;
   };
 
-  const xTitle = metadata ? metadata.t_unit : '';
-  const yTitle = isAmperes ? stimulusUnit : (metadata && metadata.i_unit) || '';
+  // const xTitle = metadata ? metadata.t_unit : '';
+  const xTitle = 'units';
+  // const yTitle = isAmperes ? stimulusUnit : (metadata && metadata.i_unit) || '';
+  const yTitle = 'units';
 
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;

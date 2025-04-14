@@ -14,12 +14,10 @@ const DEFAULT_RESPONSE_UNIT = 'mV';
 function ResponsePlot({
   reset,
   setSelectedSweeps,
-  metadata,
-  sweeps: { selectedSweeps, previewSweep, allSweeps, colorMapper },
-  dataset,
-  options,
+  sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
-  const isVolts = metadata && metadata.v_unit === 'volts';
+  // const isVolts = metadata && metadata.v_unit === 'volts';
+  const isVolts = 'volts';
 
   const [zoomRanges, setZoomRanges] = React.useState<ZoomRanges | null>(null);
 
@@ -30,16 +28,17 @@ function ResponsePlot({
   const { config, layout, font, style } = useConfig();
 
   const rawData = React.useMemo(() => {
-    const deltaTime = metadata ? metadata?.dt : 1;
+    // const deltaTime = metadata ? metadata?.dt : 1;
+    const deltaTime = 1;
     const zoom = {
       xstart: zoomRanges?.x[0],
       xend: zoomRanges?.x[1],
     };
     const allSweepsData = allSweeps.map((sweep) => {
-      const name = options[`${dataset} ${sweep} v`]?.name;
-      const y = options[`${dataset} ${sweep} v`] ? options[`${dataset} ${sweep} v`].y : [];
+      const name = sweep;
+      const y = sweepDataMap.get(sweep)?.response.data as number[]; // TODO Fix typing
       const yConverted = isVolts ? convertVolts(y, DEFAULT_RESPONSE_UNIT) : y;
-      const color = colorMapper[sweep];
+      const color = colorMap.get(sweep) as string;
       return {
         name,
         y: yConverted,
@@ -51,12 +50,12 @@ function ResponsePlot({
     });
 
     return optimizePlotData(allSweepsData, deltaTime, zoom) || [];
-  }, [options, dataset, metadata, zoomRanges, allSweeps, isVolts, colorMapper]);
+  }, [zoomRanges, allSweeps, isVolts, colorMap]);
 
   const selectedResponse: Partial<PlotData>[] = React.useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [options, dataset, selectedSweeps, metadata]
+    [selectedSweeps]
   );
 
   const previewDataResponse: Partial<PlotData>[] = React.useMemo(
@@ -85,9 +84,11 @@ function ResponsePlot({
     return false;
   };
 
-  const xTitle = metadata ? metadata.t_unit : '';
+  // const xTitle = metadata ? metadata.t_unit : '';
+  const xTitle = 'units';
 
-  const yTitle = isVolts ? DEFAULT_RESPONSE_UNIT : (metadata && metadata.v_unit) || '';
+  // const yTitle = isVolts ? DEFAULT_RESPONSE_UNIT : (metadata && metadata.v_unit) || '';
+  const yTitle = 'units';
 
   const isEmptySelection = !selectedSweeps.length;
   const emptySelectionResponse = isEmptySelection ? rawData : selectedResponse;

@@ -6,7 +6,7 @@ type TraceSelectorGroupProps = {
   sweepsOptions: { label: string; value: string }[];
   handlePreviewSweep: (value?: string) => void;
   setSelectedSweeps: (sweeps: string[]) => void;
-  colorMapper: { [key: string]: string };
+  colorMap: Map<string, string>;
   previewItem?: string;
 };
 
@@ -16,7 +16,7 @@ function TraceSelectorGroup({
   sweepsOptions,
   handlePreviewSweep,
   setSelectedSweeps,
-  colorMapper,
+  colorMap,
 }: TraceSelectorGroupProps) {
   const sweeps = sweepsOptions.map(({ label, value }) => {
     const isSelected = selectedSweeps.includes(value);
@@ -36,28 +36,33 @@ function TraceSelectorGroup({
     };
 
     return (
-      <label // eslint-disable-line jsx-a11y/label-has-associated-control
-        className={classNames(
-          'flex h-[32px] w-[32px] cursor-pointer items-center rounded hover:opacity-75',
-          isSelected ? 'border-[#1890ff]' : 'border-[#1890ff00]'
-        )}
-        style={{
-          background: colorMapper[value] || '#1890ff',
-        }}
+      <div
         key={label}
+        className="px-1 pb-1 last:pr-0"
         onMouseEnter={() => handlePreviewSweep(value)}
         onMouseLeave={() => handlePreviewSweep(undefined)}
       >
-        <input
-          id="sweepInput"
-          className="hidden"
-          checked={isSelected}
-          type="checkbox"
-          value={value}
-          onChange={handleChange}
-        />
-        <span style={{ display: isHighlight ? 'none' : undefined }} />
-      </label>
+        <label // eslint-disable-line jsx-a11y/label-has-associated-control
+          className={classNames(
+            'border-1 flex h-[32px] w-[32px] cursor-pointer items-center rounded hover:opacity-75',
+            isSelected ? 'border-[#1890ff]' : 'border-[#1890ff00]'
+          )}
+          style={{
+            background: colorMap.get(value) ?? '#1890ff',
+          }}
+          key={label}
+        >
+          <input
+            id="sweepInput"
+            className="hidden"
+            checked={isSelected}
+            type="checkbox"
+            value={value}
+            onChange={handleChange}
+          />
+          <span style={{ display: isHighlight ? 'none' : undefined }} />
+        </label>
+      </div>
     );
   });
 
@@ -66,7 +71,7 @@ function TraceSelectorGroup({
       <span className="font-bold text-dark">
         Sweep <small className="text-sm font-light">({sweepsOptions.length} available)</small>
       </span>
-      <div className="flex items-center gap-3">{sweeps}</div>
+      <div className="flex flex-wrap items-center">{sweeps}</div>
     </div>
   );
 }

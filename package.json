@@ -75,6 +75,7 @@
     "file-saver": "^2.0.5",
     "framer-motion": "^12.4.7",
     "github-markdown-css": "^5.8.1",
+    "h5wasm": "^0.7.9",
     "input-otp": "^1.4.2",
     "jotai": "^2.7.2",
     "jotai-devtools": "^0.10.0",

@@ -1,11 +1,11 @@
 import { Dispatch, SetStateAction } from 'react';
 import { Loadable } from 'jotai/vanilla/utils/loadable';
-import { IndexDataValue } from '@/types/explore-section/misc';
 import { FlattenedExploreESResponse, ExploreResource } from '@/types/explore-section/es';
 
 import { Filter, GteLteValue } from '@/components/Filter/types';
 import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DataType } from '@/constants/explore-section/list-views';
+import { SweepData } from '@/components/explore-section/EphysViewerContainer/nwb-trace';
 
 // defines the source from where the explore data will be retrieved
 // SelectedBrainRegion: The data will be filtered based on the selected brain region
@@ -41,15 +41,13 @@ export type ListViewAtoms<T> = {
 export type PlotProps = {
   reset: boolean;
   setSelectedSweeps: (sweeps: string[]) => void;
-  metadata?: IndexDataValue;
   sweeps: {
     selectedSweeps: string[];
     previewSweep?: string;
+    sweepDataMap: Map<string, SweepData>;
     allSweeps: string[];
-    colorMapper: { [key: string]: string };
+    colorMap: Map<string, string>;
   };
-  dataset: string;
-  options: any;
 };
 
 export type FilterValues = {

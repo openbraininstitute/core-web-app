@@ -1,94 +1,76 @@
-import { Radio, RadioChangeEvent } from 'antd';
+import { useState } from 'react';
+import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
-import React, { useMemo } from 'react';
-import { EPhysImageItem } from '@/types/explore-section/resources';
+import { useAtomValue } from 'jotai';
+
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
 import ImageViewContainer from '@/components/explore-section/EphysViewerContainer/ImageViewContainer';
-import GraphViewContainer from '@/components/explore-section/EphysViewerContainer/GraphViewContainer';
+import TraceDetailsView from './TraceDetailsView';
 import './styles/ephys-plugin-styles.scss';
-import { ensureArray } from '@/util/nexus';
+import sessionAtom from '@/state/session';
+import useTrace from './hooks/use-nwb-trace';
 
-enum VIEWS {
-  IMAGE = 'image',
-  CHART = 'graph',
+enum VIEW {
+  OVERVIEW = 'overview',
+  DETAILED = 'detailed',
 }
 
-const getStimulusTypeString = (image: EPhysImageItem) => {
-  const typeString = image.stimulusType['@id'].split('/');
-  return typeString[typeString.length - 1];
-};
-
 function EphysViewerContainer({ resource }: { resource: ExperimentalTrace }) {
-  const [view, setView] = React.useState<VIEWS>(VIEWS.IMAGE);
-  const [selectedRepetition, setSelectedRepetition] = React.useState<string>();
-  const stimulusTypes = useMemo(() => {
-    return resource.image
-      ? ensureArray(resource.image)
-          .filter((image) => image.about.match(/stimulation/i))
-          .map(getStimulusTypeString)
-          .sort()
-      : [];
-  }, [resource]);
+  const session = useAtomValue(sessionAtom);
+  const [trace, error] = useTrace(resource, session);
 
-  const stimulusTypeMap = React.useMemo(() => {
-    const typeToNumbers = new Map<string, number>();
-
-    stimulusTypes.forEach((stimulusTypeName) => {
-      const amount = typeToNumbers.get(stimulusTypeName);
-      if (amount) {
-        typeToNumbers.set(stimulusTypeName, amount + 1);
-      } else {
-        typeToNumbers.set(stimulusTypeName, 1);
-      }
-    });
-
-    return typeToNumbers;
-  }, [stimulusTypes]);
-
-  const [stimulusType, setStimulusType] = React.useState<string>('All');
+  const [view, setView] = useState<VIEW>(VIEW.DETAILED);
+  const [repetition, setRepetition] = useState<string>();
+  const [protocol, setProtocol] = useState<string>('All');
 
   const handleViewChange = (e: RadioChangeEvent) => {
-    setView(e.target.value);
+    setView(e.target.value as VIEW);
   };
 
-  const handleChange = (value: string) => {
-    setStimulusType(value);
+  const showRepetitionDetails = (protocol: string, repetition: string) => () => {
+    setProtocol(protocol);
+    setRepetition(repetition);
+    setView(VIEW.DETAILED);
   };
 
-  const handleRepetitionClicked = (domStimulusType: string, repetition: string) => () => {
-    setStimulusType(domStimulusType);
-    setSelectedRepetition(repetition);
-    setView(VIEWS.CHART);
-  };
+  if (error) {
+    console.error(error);
+
+    return (
+      <Empty className="p-2em" description="There was a problem loading the required resources" />
+    );
+  }
+
+  if (!trace) {
+    return <Spin />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <Radio.Group onChange={handleViewChange} value={view}>
-        <Radio.Button value={VIEWS.IMAGE}>
+        <Radio.Button value={VIEW.OVERVIEW}>
           <FileImageOutlined /> Overview
         </Radio.Button>
-        <Radio.Button value={VIEWS.CHART}>
+
+        <Radio.Button value={VIEW.DETAILED}>
           <LineChartOutlined /> Interactive Details
         </Radio.Button>
       </Radio.Group>
-      {view === VIEWS.IMAGE && (
+
+      {/* {view === VIEW.OVERVIEW && (
         <ImageViewContainer
-          {...{
-            stimulusType,
-            resource,
-            stimulusTypeMap,
-            onRepetitionClicked: handleRepetitionClicked,
-            onStimulusChange: handleChange,
-          }}
+          trace={trace}
+          stimulusType={protocol}
+          onRepetitionClicked={showRepetitionDetails}
+          onStimulusChange={setProtocol}
         />
-      )}
-      {view === VIEWS.CHART && (
-        <GraphViewContainer
-          resource={resource}
-          defaultStimulusType={
-            stimulusType === 'None' || stimulusType === 'All' ? undefined : stimulusType
-          }
-          defaultRepetition={selectedRepetition}
+      )} */}
+
+      {view === VIEW.DETAILED && (
+        <TraceDetailsView
+          trace={trace}
+          defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
+          defaultRepetition={repetition}
         />
       )}
     </div>

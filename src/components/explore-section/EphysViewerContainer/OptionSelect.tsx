@@ -32,7 +32,7 @@ function OptionSelect({
       {numberOfAvailable > 1 ? (
         <Select
           id="optionSelect"
-          className="w-[222px]"
+          className="w-[180px]"
           value={value}
           placeholder="Please select"
           onChange={handleChange}
