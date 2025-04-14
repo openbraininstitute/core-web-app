@@ -128,12 +128,7 @@ export function ScopeSelector({
         <div className="text-4xl text-primary-4">CIRCUIT</div>
         <div className="text-4xl text-primary-4">SYSTEM</div>
         {tileJSX(SimulationType.IonChannel, 'Coming soon.', imageUrl('ionChannel'), true)}
-        {tileJSX(
-          SimulationType.PairedNeuron,
-          'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
-          imageUrl('pairedNeuron'),
-          true
-        )}
+        {tileJSX(SimulationType.PairedNeuron, 'Coming soon.', imageUrl('pairedNeuron'), true)}
         {tileJSX(SimulationType.BrainRegions, 'Coming soon.', imageUrl('brainRegion'), true)}
         {tileJSX(
           SimulationType.SingleNeuron,
