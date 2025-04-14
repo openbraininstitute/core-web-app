@@ -90,7 +90,7 @@ export default class NWBTrace {
       throw new Error('Protocol group not found');
     }
 
-    const protocols = protocolGroup.keys();
+    const protocols = protocolGroup.keys().sort();
     if (protocols.length === 0) {
       throw new Error('No protocols found');
     }
@@ -109,7 +109,7 @@ export default class NWBTrace {
       throw new Error(`Repetition group for protocol ${protocol} not found`);
     }
 
-    const repetitions = repetitionGroup.keys();
+    const repetitions = repetitionGroup.keys().sort();
     if (repetitions.length === 0) {
       throw new Error(`No repetitions for ${protocol} found`);
     }
@@ -128,7 +128,7 @@ export default class NWBTrace {
       throw new Error(`Sweep group for ${repetition} not found`);
     }
 
-    const sweeps = sweepGroup.keys();
+    const sweeps = sweepGroup.keys().sort();
     if (sweeps.length === 0) {
       throw new Error(`No sweeps for ${repetition} found`);
     }
