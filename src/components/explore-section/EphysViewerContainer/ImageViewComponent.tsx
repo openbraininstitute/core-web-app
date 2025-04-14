@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Select } from 'antd';
 import { LineChartOutlined } from '@ant-design/icons';
+import NWBTrace from './nwb-trace';
+import { useMemo } from 'react';
 
 const { Option } = Select;
 
@@ -26,23 +28,21 @@ interface ImageSetComponentProps {
       about?: string | undefined;
     }[];
   };
-  onRepetitionClicked: (stimulusType: string, rep: string) => () => void;
+  onRepetitionClick: (stimulusType: string, rep: string) => () => void;
   imagePreview: React.FC<{ imageUrl: string }>;
 }
 
-interface ImageViewComponentProps {
-  stimulusTypeMap: Map<string, number>;
-  stimulusType: string;
-  imageCollectionData: ImageCollection;
-  imagePreview: React.FC<{ imageUrl: string }>;
+interface TraceOverviewComponentProps {
+  trace: NWBTrace;
+  protocol: string;
   onStimulusChange: (value: string) => void;
-  onRepetitionClicked: (stimulusType: string, rep: string) => () => void;
+  onRepetitionClick: (stimulusType: string, rep: string) => () => void;
 }
 
 function ImageSetComponent({
   stimulusType,
   repetitions,
-  onRepetitionClicked,
+  onRepetitionClick,
   imagePreview,
 }: ImageSetComponentProps) {
   const repCount = Object.keys(repetitions).length;
@@ -79,7 +79,7 @@ function ImageSetComponent({
                 <span className="indent-10 text-lg font-light text-dark">Repetition {repKey}</span>
                 <button
                   className="flex items-center rounded bg-neutral-1 p-3 hover:bg-neutral-2"
-                  onClick={onRepetitionClicked(stimulusType, repKey)}
+                  onClick={onRepetitionClick(stimulusType, repKey)}
                   type="button"
                   aria-label="Toggle selection"
                 >
@@ -106,58 +106,56 @@ function ImageSetComponent({
   );
 }
 
-function ImageViewComponent({
-  stimulusTypeMap,
-  stimulusType,
-  imageCollectionData,
-  imagePreview,
+function TraceOverviewComponent({
+  trace,
+  protocol,
   onStimulusChange,
-  onRepetitionClicked,
-}: ImageViewComponentProps) {
-  const sortedImageCollectionData = React.useMemo(() => {
-    const entries = Array.from(imageCollectionData.entries() || []);
+  onRepetitionClick,
+}: TraceOverviewComponentProps) {
+  const protocols = useMemo(() => trace.getProtocols(), [trace]);
 
-    return entries.sort(([stimulusTypeA], [stimulusTypeB]) => {
-      const textA = stimulusTypeA.toUpperCase();
-      const textB = stimulusTypeB.toUpperCase();
-      const AvB = textA > textB ? 1 : 0;
-      return textA < textB ? -1 : AvB;
-    });
-  }, [imageCollectionData]);
+  const repetitionMap = useMemo(
+    () =>
+      protocols.reduce(
+        (map, protocol) => map.set(protocol, trace.getRepetitions(protocol)),
+        new Map<string, string[]>()
+      ),
+    [trace]
+  );
 
   return (
     <div className="flex flex-col gap-10">
-      {stimulusTypeMap.size > 1 && (
+      {protocols.length > 1 && (
         <div className="flex flex-col gap-2">
-          Select Stimulus ({stimulusTypeMap.size} available)
+          Select Stimulus ({protocols.length} available)
           <Select
             className="stimulus-select"
             placeholder="Select a stimulus"
-            value={stimulusType}
+            value={protocol}
             onChange={onStimulusChange}
           >
             <Option value="All">All</Option>
-            {Array.from(stimulusTypeMap.entries()).map(([key, amount]) => (
-              <Option value={key} key={key}>
-                {key} {amount > 1 && `(${amount})`}
+            {Array.from(repetitionMap.entries()).map(([protocol, repetitions]) => (
+              <Option value={protocol} key={protocol}>
+                {protocol} {repetitions.length > 1 && `(${repetitions.length})`}
               </Option>
             ))}
           </Select>
         </div>
       )}
       <div className="flex flex-col gap-5">
-        {sortedImageCollectionData.map(([itemStimulusType, { repetitions }]) => (
-          <ImageSetComponent
-            key={itemStimulusType}
-            stimulusType={itemStimulusType}
-            repetitions={repetitions}
-            onRepetitionClicked={onRepetitionClicked}
-            imagePreview={imagePreview}
-          />
+        {protocols.map((protocol) => (
+          <h2>{protocol}</h2>
+          // <ImageSetComponent
+          //   key={protocol}
+          //   stimulusType={protocol}
+          //   repetitions={repetitionMap.get(protocol) ?? []}
+          //   onRepetitionClick={onRepetitionClick}
+          // />
         ))}
       </div>
     </div>
   );
 }
 
-export default ImageViewComponent;
+export default TraceOverviewComponent;

@@ -4,11 +4,12 @@ import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
-import ImageViewContainer from '@/components/explore-section/EphysViewerContainer/ImageViewContainer';
+import TraceOverview from '@/components/explore-section/EphysViewerContainer/ImageViewContainer';
 import TraceDetailsView from './TraceDetailsView';
-import './styles/ephys-plugin-styles.scss';
 import sessionAtom from '@/state/session';
 import useTrace from './hooks/use-nwb-trace';
+
+import './styles/ephys-plugin-styles.scss';
 
 enum VIEW {
   OVERVIEW = 'overview',
@@ -57,14 +58,14 @@ function EphysViewerContainer({ resource }: { resource: ExperimentalTrace }) {
         </Radio.Button>
       </Radio.Group>
 
-      {/* {view === VIEW.OVERVIEW && (
-        <ImageViewContainer
+      {view === VIEW.OVERVIEW && (
+        <TraceOverview
           trace={trace}
           stimulusType={protocol}
-          onRepetitionClicked={showRepetitionDetails}
+          onRepetitionClick={showRepetitionDetails}
           onStimulusChange={setProtocol}
         />
-      )} */}
+      )}
 
       {view === VIEW.DETAILED && (
         <TraceDetailsView

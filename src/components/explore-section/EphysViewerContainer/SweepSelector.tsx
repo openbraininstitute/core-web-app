@@ -3,22 +3,22 @@ import { classNames } from '@/util/utils';
 
 type TraceSelectorGroupProps = {
   selectedSweeps: string[];
-  sweepsOptions: { label: string; value: string }[];
+  sweepOptions: { label: string; value: string }[];
   handlePreviewSweep: (value?: string) => void;
   setSelectedSweeps: (sweeps: string[]) => void;
   colorMap: Map<string, string>;
   previewItem?: string;
 };
 
-function TraceSelectorGroup({
+function SweepSelector({
   previewItem,
   selectedSweeps,
-  sweepsOptions,
+  sweepOptions,
   handlePreviewSweep,
   setSelectedSweeps,
   colorMap,
 }: TraceSelectorGroupProps) {
-  const sweeps = sweepsOptions.map(({ label, value }) => {
+  const sweeps = sweepOptions.map(({ label, value }) => {
     const isSelected = selectedSweeps.includes(value);
     const isEmptySelection = !selectedSweeps.length;
     const isHighlight = isSelected || (isEmptySelection && !previewItem);
@@ -69,11 +69,11 @@ function TraceSelectorGroup({
   return (
     <div className="flex flex-col gap-3">
       <span className="font-bold text-dark">
-        Sweep <small className="text-sm font-light">({sweepsOptions.length} available)</small>
+        Sweep <small className="text-sm font-light">({sweepOptions.length} available)</small>
       </span>
       <div className="flex flex-wrap items-center">{sweeps}</div>
     </div>
   );
 }
 
-export default TraceSelectorGroup;
+export default SweepSelector;

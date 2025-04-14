@@ -5,7 +5,7 @@ import DistinctColors from 'distinct-colors';
 import StimulusPlot from './StimulusPlot';
 import ResponsePlot from './ResponsePlot';
 import OptionSelect from '@/components/explore-section/EphysViewerContainer/OptionSelect';
-import TraceSelectorGroup from '@/components/explore-section/EphysViewerContainer/TraceSelectorGroup';
+import SweepSelector from '@/components/explore-section/EphysViewerContainer/SweepSelector';
 import NWBTrace from './nwb-trace';
 
 interface EphysPlotProps {
@@ -68,7 +68,7 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
     </Select.Option>
   ));
 
-  const sweepsOptions = sweeps ? sweeps.map((sweep) => ({ label: sweep, value: sweep })) : [];
+  const sweepOptions = sweeps ? sweeps.map((sweep) => ({ label: sweep, value: sweep })) : [];
 
   const handleProtocolChange = (protocol: string) => {
     setSelectedDataSet(protocol);
@@ -80,7 +80,7 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
   const handlePreviewSweep = (value?: string) => {
     if (!value) {
       setPreviewItem(undefined);
-    } else if (sweepsOptions.length > 1 && !selectedSweeps.includes(value)) {
+    } else if (sweepOptions.length > 1 && !selectedSweeps.includes(value)) {
       setPreviewItem(value);
     }
   };
@@ -115,13 +115,13 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
           handleChange={handleRepetitionChange}
           hideWhenSingle
         />
-        <TraceSelectorGroup
+        <SweepSelector
           handlePreviewSweep={handlePreviewSweep}
           colorMap={colorMap}
           selectedSweeps={selectedSweeps}
           previewItem={previewItem}
           setSelectedSweeps={setSelectedSweeps}
-          sweepsOptions={sweepsOptions}
+          sweepOptions={sweepOptions}
         />
         {sweeps.length > 1 && (
           <button
