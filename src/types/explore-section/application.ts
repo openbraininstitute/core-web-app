@@ -5,7 +5,7 @@ import { FlattenedExploreESResponse, ExploreResource } from '@/types/explore-sec
 import { Filter, GteLteValue } from '@/components/Filter/types';
 import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DataType } from '@/constants/explore-section/list-views';
-import { SweepData } from '@/components/explore-section/EphysViewerContainer/nwb-trace';
+import { SweepData } from '@/components/explore-section/EphysViewer/nwb-trace';
 
 // defines the source from where the explore data will be retrieved
 // SelectedBrainRegion: The data will be filtered based on the selected brain region

@@ -8,7 +8,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import MorphologyDetailView from '@/components/explore-section/MorphologyDetailView';
 import Detail from '@/components/explore-section/Detail';
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
-import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
+import EphysViewerContainer from '@/components/explore-section/EphysViewer';
 import {
   BOUTON_DENSITY_FIELDS,
   ELECTRO_PHYSIOLOGY_FIELDS,

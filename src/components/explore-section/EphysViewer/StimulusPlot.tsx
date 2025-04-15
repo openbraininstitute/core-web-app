@@ -3,9 +3,9 @@ import Plotly, { PlotData } from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import { Radio } from 'antd';
 
-import { convertAmperes, Amperes } from '@/util/explore-section/plotHelpers';
+import { convertCurrentSeries, CurrentUnit } from '@/util/explore-section/plotHelpers';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import useConfig from '@/components/explore-section/EphysViewerContainer/hooks/useConfig';
+import useConfig from '@/components/explore-section/EphysViewer/hooks/useConfig';
 import { PlotProps } from '@/types/explore-section/application';
 import { ZoomRanges } from '@/types/explore-section/misc';
 
@@ -18,7 +18,7 @@ function StimulusPlot({
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
-  const [stimulusUnit, setStimulusUnit] = React.useState<Amperes>(DEFAULT_STIMULUS_UNIT);
+  const [stimulusUnit, setStimulusUnit] = React.useState<CurrentUnit>(DEFAULT_STIMULUS_UNIT);
 
   const [zoomRanges, setZoomRanges] = React.useState<ZoomRanges | null>(null);
 
@@ -44,7 +44,7 @@ function StimulusPlot({
       const name = sweep;
       const y = sweepDataMap.get(sweep)?.stimulus.data as number[]; // TODO Fix typing
 
-      const yConverted = isAmperes ? convertAmperes(y, stimulusUnit) : y;
+      const yConverted = isAmperes ? convertCurrentSeries(y, stimulusUnit) : y;
       const color = colorMap.get(sweep) as string;
 
       return {

@@ -12,6 +12,7 @@ enum NWBKey {
 type RecordingData = {
   data: number[];
   unit: string;
+  conversionFactor: number;
   timeUnit: string;
   timeRate: number;
 };
@@ -178,6 +179,8 @@ export default class NWBTrace {
       throw new Error(`Incompatible stimulus unit: ${stimUnit}, expected string`);
     }
 
+    const stimConversionFactor = stimDataset.get_attribute('conversion', true) ?? 1;
+
     const stimTimeDatasetKey = `${NWBKey.STIMULUS_PRESENTATIONON}/${stimRecId}/${NWBKey.STARTING_TIME}`;
     const stimTimeDataset = this.file.get(stimTimeDatasetKey);
     if (!(stimTimeDataset instanceof Dataset)) {
@@ -208,6 +211,8 @@ export default class NWBTrace {
       throw new Error(`Incompatible response unit: ${resUnit}, expected string`);
     }
 
+    const resConversionFactor = resDataset.get_attribute('conversion', true) ?? 1;
+
     const resTimeDatasetKey = `${NWBKey.ACQUISITION}/${resRecId}/${NWBKey.STARTING_TIME}`;
     const resTimeDataset = this.file.get(resTimeDatasetKey);
     if (!(resTimeDataset instanceof Dataset)) {
@@ -230,12 +235,14 @@ export default class NWBTrace {
       stimulus: {
         data: stimData,
         unit: stimUnit,
+        conversionFactor: stimConversionFactor,
         timeUnit: stimTimeUnit,
         timeRate: stimTimeRate,
       },
       response: {
         data: resData,
         unit: resUnit,
+        conversionFactor: resConversionFactor,
         timeUnit: resTimeUnit,
         timeRate: resTimeRate,
       },

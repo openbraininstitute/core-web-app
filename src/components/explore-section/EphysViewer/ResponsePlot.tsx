@@ -1,8 +1,8 @@
 import React from 'react';
 import Plotly, { PlotData } from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
-import { convertVolts } from '@/util/explore-section/plotHelpers';
-import useConfig from '@/components/explore-section/EphysViewerContainer/hooks/useConfig';
+import { convertVoltageSeries } from '@/util/explore-section/plotHelpers';
+import useConfig from '@/components/explore-section/EphysViewer/hooks/useConfig';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { PlotProps } from '@/types/explore-section/application';
 import { ZoomRanges } from '@/types/explore-section/misc';
@@ -37,7 +37,7 @@ function ResponsePlot({
     const allSweepsData = allSweeps.map((sweep) => {
       const name = sweep;
       const y = sweepDataMap.get(sweep)?.response.data as number[]; // TODO Fix typing
-      const yConverted = isVolts ? convertVolts(y, DEFAULT_RESPONSE_UNIT) : y;
+      const yConverted = isVolts ? convertVoltageSeries(y, DEFAULT_RESPONSE_UNIT) : y;
       const color = colorMap.get(sweep) as string;
       return {
         name,

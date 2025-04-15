@@ -4,7 +4,7 @@ import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
-import TraceOverview from '@/components/explore-section/EphysViewerContainer/ImageViewContainer';
+import TraceOverview from '@/components/explore-section/EphysViewer/TraceOverview';
 import TraceDetailsView from './TraceDetailsView';
 import sessionAtom from '@/state/session';
 import useTrace from './hooks/use-nwb-trace';
@@ -20,7 +20,7 @@ function EphysViewerContainer({ resource }: { resource: ExperimentalTrace }) {
   const session = useAtomValue(sessionAtom);
   const [trace, error] = useTrace(resource, session);
 
-  const [view, setView] = useState<VIEW>(VIEW.DETAILED);
+  const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [repetition, setRepetition] = useState<string>();
   const [protocol, setProtocol] = useState<string>('All');
 

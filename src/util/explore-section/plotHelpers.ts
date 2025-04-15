@@ -1,40 +1,66 @@
-export type Volts = 'mV' | 'V';
+export type VoltageUnit = 'mV' | 'V';
 
-export type Amperes = 'pA' | 'nA' | 'A';
+export type CurrentUnit = 'pA' | 'nA' | 'A';
 
 /**
- * Convert volts to millivolts
- * 1 V = 1 000 mV
- * @param {array<number>} array of values
- * @param {string} desirable units
+ * Convert voltage to a specific unit (mV, V)
+ *
+ * @param {array<number>} Voltage series, in Volts
+ * @param {string} desirable unit
+ * @param {number} baseline conversion factor
  * @return {array<number>} array of converted values
  */
-export const convertVolts = (values: number[], toUnits: Volts) => {
-  switch (toUnits) {
-    case 'mV':
-      return values.map((value: number) => value * 1000);
-    case 'V':
-    default:
-      return values;
+export const convertVoltageSeries = (
+  values: number[],
+  targetUnit: VoltageUnit,
+  baselineConversionFactor: number = 1
+) => {
+  if (targetUnit === 'V') {
+    return values;
   }
+
+  let conversionFactor = 1 * baselineConversionFactor;
+
+  switch (targetUnit) {
+    case 'mV':
+      conversionFactor = 1000 * baselineConversionFactor;
+      break;
+    default:
+      throw new Error(`Invalid voltage conversion unit: ${targetUnit}`);
+  }
+
+  return values.map((value: number) => value * conversionFactor);
 };
 
 /**
- * Convert amperes to picoamperes or nanoamperes
- * 1 A = 1 000 000 000 000 pA
- * 1 A = 1 000 000 000 nA
- * @param {array<number>} array of values
- * @param {string} desirable units
+ * Convert current to a specific int (pA, nA, A)
+ *
+ * @param {array<number>} Current series, in Amperes
+ * @param {string} desirable unit
+ * @param {number} baseline conversion factor
  * @return {array<number>} array of converted values
  */
-export const convertAmperes = (values: number[], toUnits: Amperes) => {
-  switch (toUnits) {
-    case 'pA':
-      return values.map((value: number) => value * 10 ** 12);
-    case 'nA':
-      return values.map((value: number) => value * 10 ** 9);
-    case 'A':
-    default:
-      return values;
+export const convertCurrentSeries = (
+  values: number[],
+  targetUnit: CurrentUnit,
+  baselineConversionFactor: number = 1
+) => {
+  if (targetUnit === 'A') {
+    return values;
   }
+
+  let conversionFactor = 1;
+
+  switch (targetUnit) {
+    case 'pA':
+      conversionFactor = baselineConversionFactor * 10 ** 12;
+      break;
+    case 'nA':
+      conversionFactor = baselineConversionFactor * 10 ** 9;
+      break;
+    default:
+      throw new Error(`Invalid current conversion unit: ${targetUnit}`);
+  }
+
+  return values.map((value: number) => value * conversionFactor);
 };
