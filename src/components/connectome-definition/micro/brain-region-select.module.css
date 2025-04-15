@@ -7,14 +7,12 @@
   }
 }
 
-.outerContainer.extraPadding {
-  & :global .ant-select-selection-overflow {
-    margin-top: 1.8rem;
-  }
+.outerContainer.extraPadding :global(.ant-select-selection-overflow) {
+  margin-top: 1.8rem;
+}
 
-  & :global .ant-select-selection-overflow-item {
-    margin-top: 0.5rem;
-  }
+.outerContainer.extraPadding :global(.ant-select-selection-overflow-item) {
+  margin-top: 0.5rem;
 }
 
 .container {

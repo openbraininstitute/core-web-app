@@ -7,6 +7,8 @@ import pickBy from 'lodash/pickBy';
 import isNil from 'lodash/isNil';
 import get from 'lodash/get';
 
+import useHorizontalScrollInfo from '@/hooks/useHorizontalScrollInfo';
+import { DotsHorizontal } from '@/components/icons/EditorIcons';
 import { toPascalCase } from '@/utils/string';
 import { classNames } from '@/util/utils';
 
@@ -30,15 +32,24 @@ type DataTypeTabsProps = {
 };
 
 export function EntityTypeTabs({ items, activeType, basePath, category }: EntityTypeTabsProps) {
+  const { ref, canScrollLeft, canScrollRight } = useHorizontalScrollInfo();
+
   return (
     <div className="relative">
       <div className={classNames('bg-primary-9 relative flex')}>
         <div
+          ref={ref}
           className={classNames(
-            'w-full overflow-x-hidden scroll-smooth',
-            items.length > 1 ? 'flex' : 'inline-block'
+            'no-scrollbar relative w-full overflow-x-auto scroll-smooth',
+            items.length > 1 ? 'flex' : 'inline-block',
+            'border-primary-6 border-0 border-r border-l'
           )}
         >
+          {canScrollLeft && (
+            <div className="bg-primary-9 border-primary-6 sticky top-0 left-0 flex h-14 items-center justify-center border-t px-4">
+              <DotsHorizontal className="text-xl" />
+            </div>
+          )}
           {items?.map((tab) => (
             <NestedTypeLink
               key={tab.key}
@@ -50,6 +61,11 @@ export function EntityTypeTabs({ items, activeType, basePath, category }: Entity
               type={kebabCase(tab.key)}
             />
           ))}
+          {canScrollRight && (
+            <div className="bg-primary-9 border-primary-6 sticky top-0 right-0 flex h-14 items-center justify-center border-t px-4">
+              <DotsHorizontal className="text-xl" />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -174,7 +190,7 @@ function NestedTypeTitle({ title, active }: { title: string; active: boolean }) 
     <div
       className={classNames(
         'flex h-14 items-center justify-center gap-2 rounded-none px-12 whitespace-nowrap transition-all duration-300',
-        'border-primary-6 border !border-r border-b-0',
+        'border-primary-6 border !border-r border-b-0 first:border-l-0 last:border-r-0',
         active
           ? 'text-primary-8 hover:!text-primary-8 bg-white font-semibold'
           : 'hover:!text-primary-8 text-white hover:!bg-white'

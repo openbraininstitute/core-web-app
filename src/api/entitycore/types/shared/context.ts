@@ -70,7 +70,7 @@ const ENTITY_CORE_EXPERIMENTAL: Record<string, EntityCoreMapper> = {
     queryAll: entitycore.getExperimentalSynapsesPerConnections,
     queryOne: entitycore.getExperimentalSynapsesPerConnection,
   },
-  EXPERIMENTAL_EXPERIMENTAL_TRACE: {
+  EXPERIMENTAL_ELECTROPHYSIOLOGY: {
     group: 'experimental',
     legacyType: DataType.ExperimentalElectroPhysiology,
     type: 'single-cell-experimental-trace',

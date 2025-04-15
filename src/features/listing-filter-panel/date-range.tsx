@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { ConfigProvider, DatePicker } from 'antd';
-import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
 
 import { GteLteValue, DateRangeFilter } from '@/features/listing-filter-panel/types';
@@ -22,7 +21,7 @@ export default function DateRange({
         allowEmpty={[true, true]}
         defaultValue={[filter.value.gte as Date, filter.value.lte as Date]}
         className="font-sm border-primary-4 text-primary-4 placeholder-primary-4 rounded-sm border bg-transparent p-2"
-        onChange={(newValues: RangeValue<Date>) =>
+        onChange={(newValues) =>
           onChange({ gte: newValues?.[0] ?? null, lte: newValues?.[1] ?? null })
         }
       />

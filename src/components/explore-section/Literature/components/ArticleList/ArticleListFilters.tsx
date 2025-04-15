@@ -11,7 +11,6 @@ import {
   initialAuthorSuggestionsAtom,
   initialJournalSuggestionsAtom,
 } from '@/state/explore-section/literature-filters';
-import { DateRange } from '@/features/listing-filter-panel/filter-group';
 import { Suggestion } from '@/types/literature';
 import ReloadIcon from '@/components/icons/Reload';
 import {
@@ -24,6 +23,7 @@ import {
 } from '@/components/explore-section/Literature/api';
 import { normalizeString } from '@/util/utils';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
+import DateRange from '@/features/listing-filter-panel/date-range';
 
 type Props = {
   values: ArticleFilters;
@@ -99,7 +99,6 @@ export default function ArticleListFilters({ values, onSubmit, onClearFilters }:
             filter={{
               field: 'publicationDate',
               type: FilterTypeEnum.DateRange,
-              aggregationType: 'buckets',
               value: {
                 gte: filters.publicationDate?.gte ?? null,
                 lte: filters.publicationDate?.lte ?? null,

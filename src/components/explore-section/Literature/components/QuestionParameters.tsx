@@ -7,7 +7,6 @@ import { memo, useCallback, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import AutoCompleteSearch from './AutoCompleteSearch';
-import { DateRange } from '@/features/listing-filter-panel/filter-group';
 import { classNames, normalizeString } from '@/util/utils';
 import { Suggestion } from '@/types/literature';
 import {
@@ -29,6 +28,7 @@ import {
   initialJournalSuggestionsAtom,
 } from '@/state/explore-section/literature-filters';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
+import DateRange from '@/features/listing-filter-panel/date-range';
 
 type Props = {
   areQAParamsVisible: boolean;
@@ -95,7 +95,6 @@ function QuestionParameters({ areQAParamsVisible, closeQAParams }: Props) {
             filter={{
               field: 'publicationDate',
               type: FilterTypeEnum.DateRange,
-              aggregationType: 'buckets',
               value: currentParameters.selectedDate
                 ? { ...currentParameters.selectedDate }
                 : { ...initialParameters.selectedDate },

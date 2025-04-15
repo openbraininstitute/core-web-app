@@ -8,7 +8,6 @@ import {
 } from '@/state/virtual-lab/build/me-model';
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
 import { detailUrlWithinLab, to64 } from '@/util/common';
-import { BookmarkTabsName } from '@/types/virtual-lab/bookmark';
 import ModelCard from '@/components/build-section/virtual-lab/me-model/ModelCard';
 import { mTypeSelectorFn } from '@/util/explore-section/selector-functions';
 import CardVisualization from '@/components/explore-section/CardView/CardVisualization';
@@ -35,14 +34,16 @@ export default function MorphologyCard({ reselectLink = false }: Props) {
     if (!virtualLabId || !projectId)
       return `/app/explore/interactive/experimental/morphology/${to64(`${orgProj}!/!${selectedMModel['@id']}`)}`;
 
-    return detailUrlWithinLab(
-      virtualLabId,
-      projectId,
-      orgProj,
-      selectedMModel['@id'],
-      BookmarkTabsName.EXPERIMENTS,
-      ExperimentTypeNames.MORPHOLOGY
-    );
+    // TODO: fix when we have me-model data
+    return '';
+    // return detailUrlWithinLab(
+    //   virtualLabId,
+    //   projectId,
+    //   orgProj,
+    //   selectedMModel['@id'],
+    //   BookmarkTabsName.EXPERIMENTS,
+    //   ExperimentTypeNames.MORPHOLOGY
+    // );
   };
 
   const details = [
