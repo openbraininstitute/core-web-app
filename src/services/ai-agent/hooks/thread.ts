@@ -1,12 +1,13 @@
 import { useSession } from 'next-auth/react';
-import React from 'react';
+import React, { useState } from 'react';
 import { serviceAiAgentThreadCreate } from '../api/thread';
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
-export function useServiceAiAgentThread(): [string | undefined, () => void] {
+export function useServiceAiAgentThread(): [string | undefined, () => void, Error | null] {
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
+  const [error, setError] = useState<Error | null>(null);
   const refCurrentThreadId = React.useRef<string | null>(null);
   const [threadId, setThreadId] = React.useState<string | undefined>(undefined);
   const session = useSession();
@@ -25,8 +26,12 @@ export function useServiceAiAgentThread(): [string | undefined, () => void] {
         setThreadId(data.threadId);
         refCurrentThreadId.current = data.threadId;
       })
-      .catch(logError);
+      .catch((err) => {
+        logError(err);
+        setError(err as unknown as Error);
+      });
   }, [accessToken, user, virtualLabId, projectId]);
+
   React.useEffect(() => {
     if (!accessToken) return;
 
@@ -47,5 +52,5 @@ export function useServiceAiAgentThread(): [string | undefined, () => void] {
       // });
     };
   }, [accessToken, createThread]);
-  return [threadId, createThread];
+  return [threadId, createThread, error];
 }

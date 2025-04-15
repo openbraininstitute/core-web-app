@@ -209,8 +209,9 @@ export default function ControlPanel({
   if (!activeColumns) return null;
 
   const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${activeColumnsLength === 1 ? 'column' : 'columns'
-    }`;
+  const activeColumnsText = `${activeColumnsLength} active ${
+    activeColumnsLength === 1 ? 'column' : 'columns'
+  }`;
 
   const filterItems = filters
     ?.map((filter) => {
