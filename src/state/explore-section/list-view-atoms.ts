@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEmpty from 'lodash/isEmpty';
@@ -8,7 +8,6 @@ import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
 import { EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
 
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
 import fetchDataQuery from '@/queries/explore-section/data';
 import {
@@ -18,12 +17,7 @@ import {
   fetchLinkedModel,
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
-import {
-  DataType,
-  EXPERIMENTAL_DATATYPES,
-  PAGE_NUMBER,
-  PAGE_SIZE,
-} from '@/constants/explore-section/list-views';
+import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
 import { Filter } from '@/features/listing-filter-panel/types';
 import {
   selectedBrainRegionAtom,
@@ -39,13 +33,18 @@ import {
 } from '@/api/entitycore/transformers';
 import { EntityCoreLegacyType, getEntityByLegacyType } from '@/api/entitycore/types/shared/context';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { WorkspaceContext } from '@/types/common';
+import { EXPERIMENTAL_DATATYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { useUnwrappedValue } from '@/hooks/hooks';
 
 type DataAtomFamilyScopeType = {
+  key: string;
+  resourceId?: string;
+  shouldUseIds?: boolean;
+  targetIds?: Array<string>;
   dataType: DataType;
   dataScope?: ExploreDataScope;
-  resourceId?: string;
-  virtualLabInfo?: VirtualLabInfo;
-  key: string;
+  virtualLabInfo?: WorkspaceContext;
 };
 
 const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
@@ -60,9 +59,7 @@ export const selectedRowsAtom = atomFamily(
 export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
-  const initialState: SortState = isExperimentalData(scope.dataType)
-    ? { field: EntityCoreFields.CreationDate, order: 'desc' }
-    : { field: EntityCoreFields.CreationDate, order: 'desc' };
+  const initialState: SortState = { field: EntityCoreFields.CreationDate, order: 'desc' };
 
   const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
     set(writableAtom, update); // Correctly updates the state
@@ -199,6 +196,27 @@ export const dataAtom = atomFamily(
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const filters = await get(filtersAtom(scope));
+
+      if (scope.shouldUseIds) {
+        if (scope.targetIds && Boolean(scope.targetIds?.length)) {
+          filters.push({
+            constraint: 'id__in',
+            field: 'id',
+            type: FilterTypeEnum.CheckList,
+            value: scope.targetIds,
+          });
+        } else {
+          return {
+            data: [],
+            pagination: {
+              total_items: 0,
+              page: 1,
+              page_size: PAGE_SIZE,
+            },
+          } as EntityCoreResponse<T | null>;
+        }
+      }
+
       const sortState = get(sortStateAtom(scope));
       const queryParams = transformQueryParamsArrayToString(transformFiltersToQuery(filters));
 
@@ -210,7 +228,7 @@ export const dataAtom = atomFamily(
         ...queryParams,
       };
 
-      const entity = getEntityByLegacyType(scope.dataType as EntityCoreLegacyType);
+      const entity = getEntityByLegacyType({ legacyType: scope.dataType as EntityCoreLegacyType });
       if (entity && entity.queryAll) {
         const response = await entity.queryAll({
           withFacets: entity.allowedFacets,
@@ -224,6 +242,7 @@ export const dataAtom = atomFamily(
             //   : undefined,
           },
         });
+
         return {
           ...response,
           data: response.data.map((o: T) => ({
@@ -245,6 +264,23 @@ export const dataAtom = atomFamily(
   isListAtomEqual
 );
 
-function isExperimentalData(dataType: DataType) {
-  return EXPERIMENTAL_DATATYPES.includes(dataType);
+export function useDataAtom<T>(
+  dataContext: {
+    virtualLabInfo?: WorkspaceContext;
+    dataScope: ExploreDataScope;
+    dataType: DataType;
+    shouldUseIds?: boolean;
+    targetIds?: Array<string>;
+  },
+  key: string
+): Array<T> {
+  const [prevData] = useAtom(previousDataAtom({ ...dataContext, key }));
+  const data = useUnwrappedValue(
+    dataAtom({
+      ...dataContext,
+      key,
+    })
+  );
+
+  return [...prevData, ...(data?.data ?? [])] as Array<T>;
 }

@@ -19,7 +19,7 @@ import If from '@/components/ConditionalRenderer/If';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { brainRegionTitleCaseExceptConjunctions } from '@/util/utils';
 import {
-  EXPERIMENT_DATA_TYPES,
+  EXPERIMENT_DATA_TYPE_CONFIG,
   ExperimentTypeNames,
 } from '@/constants/explore-section/data-types/experiment-data-types';
 
@@ -38,7 +38,7 @@ function ExperimentLiteratureHeader({
   const filters = useAtomValue(articleListFiltersAtom);
   const brainRegionTitle = selectedBrainRegion?.title;
 
-  const menuItems = Object.values(EXPERIMENT_DATA_TYPES).map((config) => ({
+  const menuItems = Object.values(EXPERIMENT_DATA_TYPE_CONFIG).map((config) => ({
     key: config.name,
     title: config.title,
     label: <span className="text-base font-normal">{config.title}</span>,

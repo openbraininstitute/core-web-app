@@ -17,7 +17,7 @@ import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { articleListFiltersAtom } from '@/state/explore-section/literature-filters';
 
 import './styles.css';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 
 type ListingState = {
   loading: boolean;
@@ -43,7 +43,7 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
   const [skeletonItems, setSkeletonItems] = useState(0);
   const filters = useAtomValue(articleListFiltersAtom);
   const brainRegion = useAtomValue(selectedBrainRegionAtom)?.title;
-  const experiment = Object.values(EXPERIMENT_DATA_TYPES).find(
+  const experiment = Object.values(EXPERIMENT_DATA_TYPE_CONFIG).find(
     (exp) => exp.name === params?.['experiment-data-type'] ?? ''
   );
 

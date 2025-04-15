@@ -21,8 +21,8 @@ import WithGeneralization, {
 import { DataType } from '@/constants/explore-section/list-views';
 import { NEURON_MORPHOLOGY_FIELDS } from '@/constants/explore-section/detail-views-fields';
 import { MorphoViewer } from '@/components/MorphoViewer';
+import { ensureArray } from '@/utils/array';
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { ensureArray } from '@/util/nexus';
 
 function GeneralizationContainer({ children }: { children: ReactNode }) {
   if (children !== notFound && children !== generalizationError) {
@@ -39,9 +39,9 @@ export default function MorphologyDetailView() {
     >
       {(detail) => (
         <>
-          {ensureArray(detail.legacy_id).length > 0 && (
+          {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
             <Morphometrics
-              legacyId={ensureArray(detail.legacy_id).at(0)!}
+              legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
               dataType={DataType.ExperimentalNeuronMorphology}
             />
           )}
@@ -63,10 +63,10 @@ export default function MorphologyDetailView() {
           >
             <GeneralizationControls dataType={DataType.ExperimentalNeuronMorphology} />
           </ErrorBoundary>
-          {ensureArray(detail.legacy_id).length > 0 && (
+          {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
             <GeneralizationContainer>
               <WithGeneralization
-                legacyId={ensureArray(detail.legacy_id).at(0)!}
+                legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
                 dataType={DataType.ExperimentalNeuronMorphology}
               />
             </GeneralizationContainer>

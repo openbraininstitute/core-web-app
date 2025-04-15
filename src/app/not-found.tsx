@@ -19,12 +19,12 @@ export default function NotFoundContent() {
 
         <div className="flex w-full gap-2">
           <Link href="/app/virtual-lab/explore/interactive" className="w-1/2">
-            <div className="hover:bg-opacity-10 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
+            <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
               Back to Explore
             </div>
           </Link>
           <Link href="/app/virtual-lab" className="w-1/2">
-            <div className="hover:bg-opacity-10 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
+            <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
               Back to home
             </div>
           </Link>

@@ -14,14 +14,6 @@ export enum DataType {
   SingleNeuronSynaptomeSimulation = 'SynaptomeSimulation',
 }
 
-export const EXPERIMENTAL_DATATYPES = [
-  DataType.ExperimentalBoutonDensity,
-  DataType.ExperimentalNeuronDensity,
-  DataType.ExperimentalElectroPhysiology,
-  DataType.ExperimentalSynapsePerConnection,
-  DataType.ExperimentalNeuronMorphology,
-];
-
 export const DataTypeToNexusType = {
   [DataType.ExperimentalBoutonDensity]: `${ontologyBaseUrl}/ExperimentalBoutonDensity`,
   [DataType.ExperimentalNeuronDensity]: `${ontologyBaseUrl}/ExperimentalNeuronDensity`,

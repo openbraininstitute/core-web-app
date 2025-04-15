@@ -1,111 +1,104 @@
-import { getSession } from '@/authFetch';
-import { virtualLabApi } from '@/config';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+
+import type { DataType } from '@/constants/explore-section/list-views';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   BookmarkRequest,
   AddBookmarkResponse,
   DeleteBookmarksResponse,
-  BookmarksByCategoryResponse,
+  VlmGetProjectBookmarksResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
-const baseUri = `${virtualLabApi.url}/virtual-labs`;
+const baseUri = '/virtual-labs';
 
-export async function addBookmark(
-  lab: string,
-  labProject: string,
+/**
+ * Bookmarks an entity to a specific project library within a virtual lab.
+ *
+ * @param {string} virtualLabId - The identifier of the virtual lab.
+ * @param {string} projectId - The identifier of the project within the lab.
+ * @param {BookmarkRequest} bookmarkDetails - Details of the bookmark to add.
+ * @param {string} bookmarkDetails.entity_id - The ID of the entity being bookmarked.
+ * @param {string} bookmarkDetails.resource_id - The ID of the resource being bookmarked (optional, for legacy data).
+ * @param {string} bookmarkDetails.category - The category to place the bookmark under.
+ * @returns {Promise<AddBookmarkResponse>} A promise that resolves with the response after adding the bookmark.
+ */
+export async function bookmarkToProjectLibrary(
+  { virtualLabId, projectId }: WorkspaceContext,
   { entity_id, resource_id, category }: BookmarkRequest
 ): Promise<AddBookmarkResponse> {
-  const session = await getSession();
-  const url = `${baseUri}/${lab}/projects/${labProject}/bookmarks`;
-  const response = await fetch(url, {
-    method: 'post',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    body: JSON.stringify({
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
+  return await api.post<AddBookmarkResponse>(url, {
+    body: {
       entity_id,
       resource_id,
       category,
-    }),
+    },
   });
-
-  if (!response.ok) {
-    throw new Error('Error add bookmark to project', { cause: await response.json() });
-  }
-
-  const result = await response.json();
-  return result as AddBookmarkResponse;
 }
 
-export async function removeBookmark(
-  lab: string,
-  labProject: string,
+/**
+ * Removes a specific bookmark from a project library within a virtual lab.
+ *
+ * @param {string} lab - The identifier of the virtual lab.
+ * @param {string} labProject - The identifier of the project within the lab.
+ * @param {BookmarkRequest} bookmarkDetails - Details of the bookmark to remove.
+ * @param {string} bookmarkDetails.resource_id - The ID of the resource to un-bookmark.
+ * @param {string} bookmarkDetails.entity_id - The ID of the entity to un-bookmark.
+ * @param {string} bookmarkDetails.category - The category of the bookmark to remove.
+ * @returns {Promise<boolean>} A promise that resolves to true if the bookmark was successfully removed, false otherwise.
+ */
+export async function removeBookmarkFromProjectLibrary(
+  { virtualLabId, projectId }: WorkspaceContext,
   { resource_id, entity_id, category }: BookmarkRequest
 ): Promise<boolean> {
-  const session = await getSession();
-  const params = new URLSearchParams({
-    entity_id,
-    resource_id,
-    category,
-  });
-  const url = `${baseUri}/${lab}/projects/${labProject}/bookmarks?${params.toString()}`;
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
+  return await api.delete<boolean>(url, {
+    queryParams: {
+      entity_id,
+      resource_id,
+      category,
     },
   });
-
-  if (!response.ok) {
-    throw new Error('Error remove bookmark to project', { cause: await response.json() });
-  }
-
-  return true;
 }
 
-export async function getBookmarksByCategory(
-  lab: string,
-  labProject: string,
-  token: string
-): Promise<BookmarksByCategoryResponse> {
-  const session = await getSession();
-  const response = await fetch(`${baseUri}/${lab}/projects/${labProject}/bookmarks`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+/**
+ * Retrieves all bookmarks for a specific project, grouped by category.
+ *
+ * @param {string} lab - The identifier of the virtual lab.
+ * @param {string} labProject - The identifier of the project within the lab.
+ * @returns {Promise<VlmGetProjectBookmarksResponse>} A promise that resolves with all bookmarks categorized.
+ */
+export async function getAllBookmarksByCategory(
+  { virtualLabId, projectId }: WorkspaceContext,
+  { category }: { category?: DataType }
+): Promise<VlmGetProjectBookmarksResponse> {
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks${category ? `?category=${category}` : ''}`;
+  return await api.get<VlmGetProjectBookmarksResponse>(url, {
+    cache: 'no-store',
+    next: {
+      tags: ['list-bookmarks'],
     },
   });
-
-  if (!response.ok) {
-    throw new Error('Error get bookmarks by category', { cause: await response.json() });
-  }
-
-  const result = await response.json();
-  return result as BookmarksByCategoryResponse;
 }
 
-export async function bulkRemoveBookmarks(
-  lab: string,
-  labProject: string,
-  bookmarks: BookmarkRequest[]
+/**
+ * Deletes multiple bookmarks from a project library based on the provided list.
+ *
+ * @param {string} lab - The identifier of the virtual lab.
+ * @param {string} labProject - The identifier of the project within the lab.
+ * @param {BookmarkRequest[]} bookmarks - An array of bookmark details to delete.
+ * @returns {Promise<DeleteBookmarksResponse>} A promise that resolves with the response after attempting to delete the bookmarks.
+ */
+export async function deleteBookmarksFromProjectLibrary(
+  { virtualLabId, projectId }: WorkspaceContext,
+  { bookmarks }: { bookmarks: BookmarkRequest[] }
 ): Promise<DeleteBookmarksResponse> {
-  const session = await getSession();
-  const url = `${baseUri}/${lab}/projects/${labProject}/bookmarks/bulk-delete`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    body: JSON.stringify(bookmarks),
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/delete`;
+  return await api.post<DeleteBookmarksResponse>(url, {
+    body: { bookmarks },
   });
-
-  if (!response.ok) {
-    throw new Error('Error bulk remove bookmarks', { cause: await response.json() });
-  }
-
-  const result = await response.json();
-  return result as DeleteBookmarksResponse;
 }

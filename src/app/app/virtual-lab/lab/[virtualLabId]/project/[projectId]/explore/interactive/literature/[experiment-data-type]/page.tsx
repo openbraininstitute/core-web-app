@@ -8,7 +8,7 @@ import Error from './error';
 import { ArticleListing as Listing } from '@/components/explore-section/Literature/components/ArticleList/ArticlesListing';
 import Filters from '@/components/explore-section/Literature/components/ArticleList/ArticleListFilters';
 import { articleListFiltersAtom, initialFilters } from '@/state/explore-section/literature-filters';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 
 export default function Page() {
@@ -19,7 +19,7 @@ export default function Page() {
   }>();
   const [filters, updateFilters] = useAtom(articleListFiltersAtom);
   const [brainRegion] = useQueryState('brainRegion');
-  const currentExperiment = Object.values(EXPERIMENT_DATA_TYPES).find(
+  const currentExperiment = Object.values(EXPERIMENT_DATA_TYPE_CONFIG).find(
     (experiment) => experiment.name === params?.['experiment-data-type'] ?? ''
   );
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);

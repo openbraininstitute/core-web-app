@@ -6,7 +6,7 @@ import { notFound, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 import { DataType } from '@/constants/explore-section/list-views';
-import { MODEL_DATA_TYPES } from '@/constants/explore-section/data-types/model-data-types';
+import { MODEL_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/model-data-types';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
@@ -25,8 +25,8 @@ const ExploreSynaptomeModelTable = dynamic(
 
 export default function VirtualLabModelListingView() {
   const params = useParams<{ modelType: string; virtualLabId: string; projectId: string }>();
-  const currentModel = Object.keys(MODEL_DATA_TYPES).find(
-    (key) => MODEL_DATA_TYPES[key].name === params?.modelType
+  const currentModel = Object.keys(MODEL_DATA_TYPE_CONFIG).find(
+    (key) => MODEL_DATA_TYPE_CONFIG[key].name === params?.modelType
   );
   const virtualLabInfo: VirtualLabInfo = {
     virtualLabId: params.virtualLabId,

@@ -1,22 +1,29 @@
+import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
+import { RowSelectionType } from 'antd/es/table/interface';
 import { ConfigProvider, Table, TableProps } from 'antd';
 import { TableRef } from 'antd/es/table';
-import { RowSelectionType } from 'antd/es/table/interface';
-import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 
-import LoadMoreButton from './LoadMoreButton';
-import useRowSelection, { RenderButtonProps } from './useRowSelection';
-import { useOnCellRouteHandler, useShowMore } from './hooks';
+import useRowSelection, {
+  RenderButtonProps,
+} from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
+import {
+  useOnCellRouteHandler,
+  useShowMore,
+} from '@/components/explore-section/ExploreSectionListingView/hooks';
+import LoadMoreButton from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { classNames } from '@/util/utils';
 
+import TableControls from '@/components/listing-table/controls';
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { DataType } from '@/constants/explore-section/list-views';
+
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
-import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
-import TableControls from '@/components/listing-table/controls';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
@@ -96,7 +103,7 @@ type AdditionalTableProps<T> = {
   onCellClick?: OnCellClick<T>;
 };
 
-export function BaseTable<T extends EntityCoreBaseId>({
+export function BaseTable<T extends EntityCoreIdentifiable>({
   columns,
   dataContext,
   dataSource,
@@ -194,7 +201,7 @@ export function BaseTable<T extends EntityCoreBaseId>({
   );
 }
 
-export default function ExploreSectionTable<T extends EntityCoreBaseId>({
+export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
   columns,
   dataContext,
   dataSource,
@@ -258,11 +265,7 @@ export default function ExploreSectionTable<T extends EntityCoreBaseId>({
           visible={controlsVisible}
         >
           {displayLoadMoreBtn && (
-            <LoadMoreButton
-              dataContext={{ ...dataContext, dataKey: dataKey }}
-              dataKey={dataKey}
-              hide={toggleDisplayMore}
-            />
+            <LoadMoreButton hide={toggleDisplayMore} dataKey={dataKey} dataContext={dataContext} />
           )}
         </TableControls>
       )}

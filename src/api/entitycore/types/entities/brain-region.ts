@@ -1,4 +1,4 @@
-import { DateMetadata } from '@/api/entitycore/types/shared/global';
+import { Timestamps } from '@/api/entitycore/types/shared/global';
 
 type BrainRegionHierarchy = {
   name: string;
@@ -6,7 +6,7 @@ type BrainRegionHierarchy = {
   children: number[];
 };
 
-export interface IBrainRegionHierarchy extends BrainRegionHierarchy, DateMetadata {}
+export interface IBrainRegionHierarchy extends BrainRegionHierarchy, Timestamps {}
 
 // order of values: id: number, name: string, acronym: string, children: Array, level: number
 export type TemporaryFlatBrainRegionHierarchy = Array<

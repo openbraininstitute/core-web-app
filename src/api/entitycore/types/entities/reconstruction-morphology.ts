@@ -2,7 +2,7 @@ import {
   BrainLocationFilter,
   BrainRegionFilter,
   ContributionFilter,
-  DateFilter,
+  TimestampsFilter,
   PaginationFilter,
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
@@ -12,11 +12,12 @@ import {
   ILicense,
   ISpecies,
   IStrain,
-  DateMetadata,
+  Timestamps,
   Measurement,
   IMType,
   IContributor,
   EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
 } from '@/api/entitycore/types/shared/global';
 
 export type ReconstructionMorphologyExpandFields =
@@ -32,20 +33,28 @@ type MtypeFilter = {
   mtype_pref_label__in: string | null;
   mtype__order_by: string | null;
 };
+
 type SpeciesFilter = {
   species__id: string | null;
   species__name: string | null;
   species__name__in: string | null;
   species__order_by: string | null;
 };
+
 type StainFilter = {
   strain__id: string | null;
   strain__name: string | null;
   strain__name__in: string | null;
   strain__order_by: string | null;
 };
+
+type IDFilter = {
+  id__in: string | null;
+};
+
 export type ReconstructionMorphologyFilter = Partial<
-  DateFilter &
+  IDFilter &
+    TimestampsFilter &
     BrainLocationFilter &
     ContributionFilter &
     BrainRegionFilter &
@@ -61,7 +70,10 @@ export type MorphologyFeatureAnnotation = {
   measurements: Array<Measurement>;
 };
 
-export interface IReconstructionMorphology extends DateMetadata, EntityCoreBaseAsset {
+export interface IReconstructionMorphology
+  extends EntityCoreIdentifiable,
+    Timestamps,
+    EntityCoreBaseAsset {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;

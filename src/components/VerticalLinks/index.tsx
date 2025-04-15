@@ -45,7 +45,7 @@ export default function VerticalLinks({ virtualLabId, projectId, currentPage, li
             disabled={link.disabled}
             onClick={onClick(link.href)}
             type="button"
-            className={`border-primary-7 py-4 text-left font-bold ${(selectedLayout === link.key || currentPage === link.key) && 'bg-neutral-1 text-primary-8'} ${idx !== links.length - 1 && 'border-b'}`}
+            className={`border-primary-7 py-4 text-left font-bold ${selectedLayout === link.key || currentPage === link.key ? 'bg-neutral-1 text-primary-8' : ''} ${idx !== links.length - 1 ? 'border-b' : ''}`}
           >
             <div className="mx-4">{link.content}</div>
           </button>
@@ -54,7 +54,7 @@ export default function VerticalLinks({ virtualLabId, projectId, currentPage, li
             prefetch={link.key !== 'notebooks'}
             key={link.key}
             href={link.href}
-            className={`border-primary-7 py-4 text-left font-bold ${(selectedLayout === link.key || currentPage === link.key) && 'bg-neutral-1 text-primary-8'} ${idx !== links.length - 1 && 'border-b'}`}
+            className={`border-primary-7 py-4 text-left font-bold ${selectedLayout === link.key || currentPage === link.key ? 'bg-neutral-1 text-primary-8' : 'text-white'} ${idx !== links.length - 1 ? 'border-b' : ''}`}
           >
             <div className="mx-4">{link.content}</div>
           </Link>

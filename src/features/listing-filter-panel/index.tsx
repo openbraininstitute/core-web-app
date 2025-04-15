@@ -262,7 +262,7 @@ export default function ListingFilterPanel({
             autoFocus // eslint-disable-line jsx-a11y/no-autofocus
             type="button"
             onClick={toggleDisplay}
-            className="hover:bg-neutral-1 hover:bg-opacity-30 rounded-md px-2 py-1 text-white"
+            className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"
             aria-label="Close"
           >
             <CloseOutlined />

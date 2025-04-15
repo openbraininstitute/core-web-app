@@ -7,6 +7,7 @@ import {
 import { notification as antd_notification } from 'antd';
 import { Key } from 'react';
 import { NotificationType, Placement } from '@/types/notifications';
+import { ReactNode } from 'react';
 
 /**
  * Function used in order to open a notification using the antD notification API
@@ -21,7 +22,7 @@ import { NotificationType, Placement } from '@/types/notifications';
  */
 export default function openNotification(
   type: NotificationType,
-  message: string,
+  message: ReactNode,
   duration: number = 5,
   placement: Placement = 'bottomRight',
   closeIcon: boolean = true,
@@ -102,7 +103,7 @@ const warning = (
  * @param placement
  */
 const success = (
-  message: string,
+  message: ReactNode,
   duration: number = 5,
   placement: Placement = 'bottomRight',
   closeIcon: boolean = true,

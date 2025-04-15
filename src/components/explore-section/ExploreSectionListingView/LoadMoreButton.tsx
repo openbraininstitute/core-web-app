@@ -2,14 +2,17 @@ import { HTMLProps, useCallback } from 'react';
 import { useAtom } from 'jotai';
 import {
   dataAtom,
+  useDataAtom,
   pageNumberAtom,
   previousDataAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { classNames } from '@/util/utils';
+import { PAGE_SIZE } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import { useLoadableValue, useUnwrappedValue } from '@/hooks/hooks';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { useLoadableValue } from '@/hooks/hooks';
+import { classNames } from '@/util/utils';
+
+import type { DataType } from '@/constants/explore-section/list-views';
 
 function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
@@ -25,26 +28,6 @@ function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonEle
   );
 }
 
-export function useData<T>(
-  dataContext: {
-    virtualLabInfo?: VirtualLabInfo;
-    dataScope: ExploreDataScope;
-    dataType: DataType;
-  },
-  key: string
-): Array<T> {
-  const [prevData] = useAtom(previousDataAtom({ ...dataContext, key }));
-
-  const data = useUnwrappedValue(
-    dataAtom({
-      ...dataContext,
-      key,
-    })
-  );
-
-  return [...prevData, ...(data?.data ?? [])] as Array<T>;
-}
-
 export function useLoadMore<T>(
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
@@ -56,7 +39,7 @@ export function useLoadMore<T>(
   const [, setPrevData] = useAtom(previousDataAtom({ ...dataContext, key }));
   const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
 
-  const data = useData<T>(dataContext, key);
+  const data = useDataAtom<T>(dataContext, key);
   const res = useLoadableValue(
     dataAtom({
       ...dataContext,
@@ -64,6 +47,7 @@ export function useLoadMore<T>(
     })
   );
 
+  const loading = res.state === 'loading';
   const showLoadMore =
     res.state === 'hasData' &&
     res.data.data.length + (res.data.pagination.page - 1) * PAGE_SIZE <
@@ -81,7 +65,11 @@ export function useLoadMore<T>(
     [pageNumber, setPageNumber, res, data, setPrevData]
   );
 
-  return { loadMore, showLoadMore, loading: res.state === 'loading' };
+  return {
+    loadMore,
+    loading,
+    showLoadMore,
+  };
 }
 
 export default function LoadMoreButton({
@@ -93,12 +81,12 @@ export default function LoadMoreButton({
     virtualLabInfo?: VirtualLabInfo;
     dataScope: ExploreDataScope;
     dataType: DataType;
-    dataKey: string;
   };
   dataKey: string;
   hide: () => void;
 }) {
   const { loadMore, showLoadMore } = useLoadMore(dataContext, dataKey);
+
   if (!showLoadMore) return null;
   return (
     <Btn

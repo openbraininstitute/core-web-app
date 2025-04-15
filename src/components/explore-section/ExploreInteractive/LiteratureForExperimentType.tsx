@@ -12,7 +12,7 @@ import { usePathname } from 'next/navigation';
 import { ML_MAX_ARTICLES_PER_PAGE } from '../Literature/api';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
 import { getLiteratureCountForBrainRegion } from '@/state/explore-section/interactive';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { brainRegionsAtom, selectedBrainRegionAtom } from '@/state/brain-regions';
 
 export default function LiteratureForExperimentType() {
@@ -50,7 +50,7 @@ export default function LiteratureForExperimentType() {
 
       {totalByExperimentAndBrainRegion.state === 'hasData' && (
         <>
-          {Object.entries(EXPERIMENT_DATA_TYPES).map(([id, config]) => {
+          {Object.entries(EXPERIMENT_DATA_TYPE_CONFIG).map(([id, config]) => {
             const details = totalByExperimentAndBrainRegion.data?.[id];
             const total = details?.total ?? 0;
             const statValue = isNil(details) ? (

@@ -1,13 +1,17 @@
 import {
-  DateMetadata,
+  Timestamps,
   IBrainRegion,
   ILicense,
   ISpecies,
   IStrain,
 } from '@/api/entitycore/types/shared/global';
-import { DateFilter, PaginationFilter, SharedFilter } from '@/api/entitycore/types/shared/request';
+import {
+  TimestampsFilter,
+  PaginationFilter,
+  SharedFilter,
+} from '@/api/entitycore/types/shared/request';
 
-export interface IExperimentalSynapsesPerConnection extends DateMetadata {
+export interface IExperimentalSynapsesPerConnection extends Timestamps {
   name: string;
   description: string;
   license?: ILicense | null;
@@ -18,5 +22,5 @@ export interface IExperimentalSynapsesPerConnection extends DateMetadata {
 }
 
 export type ExperimentalSynapsesPerConnectionFilter = Partial<
-  DateFilter & PaginationFilter & SharedFilter
+  TimestampsFilter & PaginationFilter & SharedFilter
 >;

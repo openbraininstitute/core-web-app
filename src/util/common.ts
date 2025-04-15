@@ -6,8 +6,8 @@ import {
   BASE_MODEL_EXPLORE_PATH,
 } from '@/constants/explore-section/paths';
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
-import { BookmarkTabsName, BookmarksSupportedTypes } from '@/types/virtual-lab/bookmark';
-import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
+import { BookmarksSupportedTypes } from '@/features/bookmark/helpers';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export const switchStateType = {
   COUNT: 'count',
@@ -48,7 +48,7 @@ export const isValidBase64 = (str: string): boolean => {
   }
 };
 
-export const detailUrlBuilder = <T extends EntityCoreBaseId>(basePath: string, resource: T) =>
+export const detailUrlBuilder = <T extends EntityCoreIdentifiable>(basePath: string, resource: T) =>
   `${basePath}/${resource.id}`;
 
 export const detailUrlWithinLab = (

@@ -1,22 +1,24 @@
 import { DownloadOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Spin, Button } from 'antd';
-import { ReactNode, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { ReactNode, useState } from 'react';
+import { Spin, Button } from 'antd';
 import { useAtomValue } from 'jotai';
 
-import BookmarkButton from '@/components/buttons/variants/bookmark';
-import usePathname from '@/hooks/pathname';
-import fetchArchive from '@/api/archive';
-import sessionAtom from '@/state/session';
-import Link from '@/components/Link';
+import BookmarkButton from '@/features/bookmark/control';
 import useNotification from '@/hooks/notifications';
+import usePathname from '@/hooks/pathname';
+import sessionAtom from '@/state/session';
+import fetchArchive from '@/api/archive';
+import Link from '@/components/Link';
 
-import { InteractiveViewIcon } from '@/components/icons';
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
-import { BookmarksSupportedTypes } from '@/types/virtual-lab/bookmark';
 import { SimulationTypeNames } from '@/types/simulation/single-neuron';
-import { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
+import { InteractiveViewIcon } from '@/components/icons';
+import { ensureArray } from '@/utils/array';
+
+import type { BookmarksSupportedTypes } from '@/features/bookmark/helpers';
+import type { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
 
 export default function Header<T extends { name: string }>({
   detail,
@@ -66,9 +68,10 @@ export default function Header<T extends { name: string }>({
             {virtualLabId && projectId && supportedBookmarkType && (
               <BookmarkButton
                 virtualLabId={virtualLabId}
+                entityId={detail.id}
                 projectId={projectId}
-                resourceId={detail.id}
-                type={supportedBookmarkType}
+                resourceId={ensureArray({ input: detail.legacy_id }).at(0)!}
+                typeSlug={supportedBookmarkType}
               />
             )}
             <Button

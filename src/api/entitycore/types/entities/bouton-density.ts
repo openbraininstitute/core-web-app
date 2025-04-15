@@ -1,13 +1,18 @@
 import {
-  DateMetadata,
+  Timestamps,
   IBrainRegion,
   ILicense,
   ISpecies,
   IStrain,
+  EntityCoreIdentifiable,
 } from '@/api/entitycore/types/shared/global';
-import { DateFilter, PaginationFilter, SharedFilter } from '@/api/entitycore/types/shared/request';
+import {
+  TimestampsFilter,
+  PaginationFilter,
+  SharedFilter,
+} from '@/api/entitycore/types/shared/request';
 
-export interface IExperimentalBoutonDensity extends DateMetadata {
+export interface IExperimentalBoutonDensity extends EntityCoreIdentifiable, Timestamps {
   name: string;
   description: string;
   license?: ILicense | null;
@@ -17,4 +22,6 @@ export interface IExperimentalBoutonDensity extends DateMetadata {
   type: 'experimental_bouton_density';
 }
 
-export type ExperimentalBoutonDensityFilter = Partial<DateFilter & PaginationFilter & SharedFilter>;
+export type ExperimentalBoutonDensityFilter = Partial<
+  TimestampsFilter & PaginationFilter & SharedFilter
+>;

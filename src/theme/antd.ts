@@ -1,9 +1,11 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
+import { ThemeConfig } from 'antd';
 
-const commonAntdTheme = {
+const commonAntdTheme: ThemeConfig = {
   token: {
     fontFamily: 'var(--font-titillium-web)',
   },
+  hashed: false,
 };
 
 export default commonAntdTheme;

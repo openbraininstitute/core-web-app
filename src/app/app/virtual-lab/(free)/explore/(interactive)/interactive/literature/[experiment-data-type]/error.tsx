@@ -1,7 +1,7 @@
 'use client';
 
 import ExperimentLiteratureHeader from '@/components/explore-section/Literature/components/ArticleList/ExperimentLiteratureHeader';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 
 type Props = {
   basePath: string;
@@ -31,7 +31,7 @@ export default function LiteratureArticlesError({
   }
 
   if (noExperimentSelected) {
-    const validExperimentTypes = Object.values(EXPERIMENT_DATA_TYPES).map(
+    const validExperimentTypes = Object.values(EXPERIMENT_DATA_TYPE_CONFIG).map(
       (experiment) => experiment.name
     );
 

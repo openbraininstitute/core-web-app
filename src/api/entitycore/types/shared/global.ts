@@ -11,7 +11,7 @@ export type Prettify<T> = {
 export type EntityCoreDataType =
   (typeof ENTITY_CORE_MAPPER)[keyof typeof ENTITY_CORE_MAPPER]['type'];
 
-export type EntityCoreBaseId = {
+export type EntityCoreIdentifiable = {
   id: string;
   legacy_id: Array<string> | null;
 };
@@ -25,11 +25,11 @@ export interface EntityCoreBaseAsset {
 }
 
 export interface EntityCoreResource
-  extends EntityCoreBaseId,
+  extends EntityCoreIdentifiable,
     EntityCoreBaseType,
     EntityCoreBaseAsset {}
 
-export interface DateMetadata extends EntityCoreBaseId {
+export interface Timestamps {
   creation_date: string; // ISO format
   update_date: string; // ISO format
 }
@@ -39,7 +39,7 @@ type BrainRegion = {
   name: string;
 };
 
-export interface IBrainRegion extends BrainRegion, DateMetadata {}
+export interface IBrainRegion extends BrainRegion, Timestamps, EntityCoreIdentifiable {}
 
 type Strain = {
   name: string;
@@ -47,14 +47,14 @@ type Strain = {
   species_id: number;
 };
 
-export interface IStrain extends Strain, DateMetadata {}
+export interface IStrain extends Strain, Timestamps, EntityCoreIdentifiable {}
 
 type Species = {
   name: string;
   taxonomy_id: string;
 };
 
-export interface ISpecies extends Species, DateMetadata {}
+export interface ISpecies extends Species, Timestamps, EntityCoreIdentifiable {}
 
 interface License {
   name: string;
@@ -62,7 +62,7 @@ interface License {
   label: string;
 }
 
-export interface ILicense extends License, DateMetadata {}
+export interface ILicense extends License, Timestamps, EntityCoreIdentifiable {}
 
 export interface IBrainLocation {
   x: number;
@@ -86,7 +86,7 @@ export type MTypeBase = {
   definition: string;
 };
 
-export interface IMType extends MTypeBase, DateMetadata {}
+export interface IMType extends MTypeBase, Timestamps, EntityCoreIdentifiable {}
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
@@ -99,7 +99,7 @@ type RoleBase = {
   role_id: string;
 };
 
-export interface IRole extends RoleBase, DateMetadata {}
+export interface IRole extends RoleBase, Timestamps, EntityCoreIdentifiable {}
 
 type OrganizationBase = {
   type: 'organization';
@@ -107,7 +107,7 @@ type OrganizationBase = {
   alternative_name?: string | null;
 };
 
-export interface IOrganization extends OrganizationBase, DateMetadata {}
+export interface IOrganization extends OrganizationBase, Timestamps, EntityCoreIdentifiable {}
 
 type PersonBase = {
   type: 'person';
@@ -116,10 +116,10 @@ type PersonBase = {
   pref_label: string;
 };
 
-export interface IPerson extends PersonBase, DateMetadata {}
+export interface IPerson extends PersonBase, Timestamps, EntityCoreIdentifiable {}
 export type Agent = IPerson | IOrganization;
 
-export interface IContributor extends DateMetadata {
+export interface IContributor extends Timestamps, EntityCoreIdentifiable {
   agent: Agent;
   role: IRole;
 }

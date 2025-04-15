@@ -1,6 +1,6 @@
 import authApiClient from '@/api/apiClient';
 
-import { EntityCountsResponse } from '@/api/entitycore/types/entities/stats';
+import { EntityCountsResponse } from '@/api/entitycore/types/entities/statistics';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 

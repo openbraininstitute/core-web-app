@@ -1,20 +1,21 @@
 import { ReactNode, useEffect } from 'react';
 import Error from 'next/error';
-
-import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { useSetAtom } from 'jotai';
-import { DetailsPageSideBackLink } from '@/components/explore-section/Sidebar';
-import { detailFamily } from '@/state/explore-section/detail-view-atoms';
-import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
-import { DetailProps } from '@/types/explore-section/application';
-import DetailHeader from '@/components/explore-section/DetailHeader';
+
+import DetailHeader from '@/components/explore-section/details-view/overview';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
+import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import usePathname from '@/hooks/pathname';
+
+import { DetailsPageSideBackLink } from '@/components/explore-section/Sidebar';
+import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
+import { detailFamily } from '@/state/explore-section/detail-view-atoms';
+import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { DeltaResource } from '@/types/explore-section/resources';
 import { useLoadableValue } from '@/hooks/hooks';
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import { COMMON_FIELDS } from '@/constants/explore-section/detail-views-fields';
 import { DataType } from '@/constants/explore-section/list-views';
+import type { DetailProps } from '@/types/explore-section/application';
 
 type ExtendsExperiment<T> = T extends DeltaResource ? T : never;
 

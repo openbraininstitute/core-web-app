@@ -1,13 +1,18 @@
 import {
-  DateMetadata,
+  Timestamps,
   IBrainRegion,
   ILicense,
   ISpecies,
   IStrain,
+  EntityCoreIdentifiable,
 } from '@/api/entitycore/types/shared/global';
-import { DateFilter, PaginationFilter, SharedFilter } from '@/api/entitycore/types/shared/request';
+import {
+  TimestampsFilter,
+  PaginationFilter,
+  SharedFilter,
+} from '@/api/entitycore/types/shared/request';
 
-export interface IExperimentalNeuronDensity extends DateMetadata {
+export interface IExperimentalNeuronDensity extends Timestamps, EntityCoreIdentifiable {
   name: string;
   description: string;
   license?: ILicense | null;
@@ -17,4 +22,6 @@ export interface IExperimentalNeuronDensity extends DateMetadata {
   type: 'experimental_neuron_density';
 }
 
-export type ExperimentalNeuronDensityFilter = Partial<DateFilter & PaginationFilter & SharedFilter>;
+export type ExperimentalNeuronDensityFilter = Partial<
+  TimestampsFilter & PaginationFilter & SharedFilter
+>;

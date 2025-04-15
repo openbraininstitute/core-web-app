@@ -25,6 +25,8 @@ type RequestOptions = {
   >;
   body?: any;
   signal?: AbortSignal;
+  cache?: RequestCache;
+  next?: NextFetchRequestConfig;
 };
 
 // New cache configuration type
@@ -41,6 +43,12 @@ type ApiClientOptions = {
   headers?: Record<string, string>;
   config?: RequestConfiguration;
   cache?: CacheConfiguration; // Add cache configuration to options
+};
+
+export type ErrorCause<T extends Record<string, any>> = {
+  status: number;
+  message: string;
+  data: T;
 };
 
 class ApiClient {
@@ -198,6 +206,7 @@ class ApiClient {
     const maxAttempts = config.attempts ?? this._attempts ?? 1;
 
     const url = new URL(`${this._rootUrl}${endpoint}`);
+
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         value.forEach((v) => url.searchParams.append(`${key}[]`, `${v}`));
@@ -251,6 +260,8 @@ class ApiClient {
         },
         body: options.body ? JSON.stringify(options.body) : undefined,
         signal: options.signal,
+        cache: options.cache,
+        next: options.next,
       });
 
       for (const interceptor of this.requestInterceptors) {

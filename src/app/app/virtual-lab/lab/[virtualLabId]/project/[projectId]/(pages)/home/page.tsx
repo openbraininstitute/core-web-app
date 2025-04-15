@@ -2,7 +2,7 @@ import VirtualLabProjectHomePage from '@/components/VirtualLab/projects/VirtualL
 import { ServerSideComponentProp } from '@/types/common';
 
 export default async function VirtualLabProjectPage(
-  props: ServerSideComponentProp<{ virtualLabId: string; projectId: string }>
+  props: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, null>
 ) {
   const params = await props.params;
   const { virtualLabId, projectId } = params;
