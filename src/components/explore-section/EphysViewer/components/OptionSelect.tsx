@@ -29,6 +29,7 @@ function OptionSelect({
           {numberOfAvailable > 1 && <>&nbsp;({numberOfAvailable} available)</>}
         </small>
       </label>
+
       {numberOfAvailable > 1 ? (
         <Select
           id="optionSelect"

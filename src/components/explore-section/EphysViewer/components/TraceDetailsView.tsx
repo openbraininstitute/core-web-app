@@ -4,9 +4,9 @@ import DistinctColors from 'distinct-colors';
 
 import StimulusPlot from './StimulusPlot';
 import ResponsePlot from './ResponsePlot';
-import OptionSelect from '@/components/explore-section/EphysViewer/OptionSelect';
-import SweepSelector from '@/components/explore-section/EphysViewer/SweepSelector';
-import NWBTrace from './nwb-trace';
+import OptionSelect from '@/components/explore-section/EphysViewer/components/OptionSelect';
+import SweepSelector from '@/components/explore-section/EphysViewer/components/SweepSelector';
+import NWBTrace from '../nwb-trace';
 
 interface EphysPlotProps {
   trace: NWBTrace;

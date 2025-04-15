@@ -1,4 +1,3 @@
-import { timeHours } from 'd3';
 import { File, Group, Dataset, ready } from 'h5wasm';
 
 enum NWBKey {
@@ -179,7 +178,9 @@ export default class NWBTrace {
       throw new Error(`Incompatible stimulus unit: ${stimUnit}, expected string`);
     }
 
-    const stimConversionFactor = stimDataset.get_attribute('conversion', true) ?? 1;
+    const stimConversionFactorRaw = stimDataset.get_attribute('conversion', true);
+    const stimConversionFactor =
+      typeof stimConversionFactorRaw === 'number' ? stimConversionFactorRaw : 1;
 
     const stimTimeDatasetKey = `${NWBKey.STIMULUS_PRESENTATIONON}/${stimRecId}/${NWBKey.STARTING_TIME}`;
     const stimTimeDataset = this.file.get(stimTimeDatasetKey);
@@ -211,7 +212,9 @@ export default class NWBTrace {
       throw new Error(`Incompatible response unit: ${resUnit}, expected string`);
     }
 
-    const resConversionFactor = resDataset.get_attribute('conversion', true) ?? 1;
+    const resConversionFactorRaw = resDataset.get_attribute('conversion', true) ?? 1;
+    const resConversionFactor =
+      typeof resConversionFactorRaw === 'number' ? resConversionFactorRaw : 1;
 
     const resTimeDatasetKey = `${NWBKey.ACQUISITION}/${resRecId}/${NWBKey.STARTING_TIME}`;
     const resTimeDataset = this.file.get(resTimeDatasetKey);

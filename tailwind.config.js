@@ -45,6 +45,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      aspectRatio: {
+        '4/3': '4 / 3',
+      },
       colors: {
         'accent-dark': '#389E0D',
         'accent-light': '#95DE64',
