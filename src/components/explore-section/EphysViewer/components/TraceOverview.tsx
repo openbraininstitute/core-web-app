@@ -4,7 +4,7 @@ import { Select } from 'antd';
 import { LineChartOutlined } from '@ant-design/icons';
 import startCase from 'lodash/startCase';
 
-import NWBTrace from '../nwb-trace';
+import NWBTrace, { RecordingType } from '../nwb-trace';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
@@ -42,7 +42,7 @@ function TraceThumbnail({
   trace: NWBTrace;
   protocol: string;
   repetition: string;
-  recordingType: 'stimulus' | 'response';
+  recordingType: RecordingType;
 }) {
   const [initialized, setInitialized] = useState(false);
 
@@ -54,21 +54,21 @@ function TraceThumbnail({
     let conversionFactor = 1;
 
     const plotData = sweeps.map((sweep, idx) => {
-      const sweepData = trace.getSweepData(protocol, repetition, sweep);
+      const recordingData = trace.getSweepRecordingData(protocol, repetition, sweep, recordingType);
 
       if (idx === 0) {
-        const { timeUnit, timeRate } = sweepData[recordingType];
+        const { timeUnit, timeRate } = recordingData;
 
         if (timeUnit === 'seconds') {
           deltaTime = (1 / timeRate) * 1000;
         }
 
-        dataUnit = sweepData[recordingType].unit;
-        conversionFactor = sweepData[recordingType].conversionFactor;
+        dataUnit = recordingData.unit;
+        conversionFactor = recordingData.conversionFactor;
       }
 
       const name = sweep;
-      const y = sweepData[recordingType].data as number[]; // TODO Fix typing
+      const y = recordingData.data as number[]; // TODO Fix typing
 
       const color = colorMap[recordingType];
 
@@ -175,7 +175,7 @@ function TraceThumbnailContainer({
   trace: NWBTrace;
   protocol: string;
   repetition: string;
-  recordingType: 'stimulus' | 'response';
+  recordingType: RecordingType;
 }) {
   const [ref, inView] = useInView({ threshold: 0, triggerOnce: true, rootMargin: '1200px' });
 
@@ -227,15 +227,17 @@ function ImageSetComponent({
               </button>
             </div>
 
-            {['stimulus', 'response'].map((recordingType: string) => (
-              <TraceThumbnailContainer
-                key={recordingType}
-                trace={trace}
-                protocol={protocol}
-                repetition={repetition}
-                recordingType={recordingType}
-              />
-            ))}
+            {[RecordingType.STIMULUS, RecordingType.RESPONSE].map(
+              (recordingType: RecordingType) => (
+                <TraceThumbnailContainer
+                  key={recordingType}
+                  trace={trace}
+                  protocol={protocol}
+                  repetition={repetition}
+                  recordingType={recordingType}
+                />
+              )
+            )}
           </div>
         ))}
       </div>

@@ -8,6 +8,11 @@ enum NWBKey {
   STARTING_TIME = 'starting_time',
 }
 
+export enum RecordingType {
+  STIMULUS = 'stimulus',
+  RESPONSE = 'response',
+}
+
 type RecordingData = {
   data: number[];
   unit: string;
@@ -136,7 +141,12 @@ export default class NWBTrace {
     return sweeps;
   }
 
-  public getSweepData(protocol: string, repetition: string, sweep: string): SweepData {
+  public getSweepRecordingData(
+    protocol: string,
+    repetition: string,
+    sweep: string,
+    recordingType: RecordingType
+  ): RecordingData {
     if (!this.file || !this.cellId) {
       throw new Error('File or cell ID not initialized');
     }
@@ -149,109 +159,76 @@ export default class NWBTrace {
 
     const recIds = sweepGroup.keys();
 
-    /* Stimulus recording IDs are prefixed with:
-      - 'ics__' for current.
-      - 'vcs__' for voltage.
-     */
-    const stimRecId = recIds.find((id) => id.match(/^\w\ws__/));
+    /* Recording IDs are prefixed with:
+      - For stimuli:
+        - 'ics__' for current.
+        - 'vcs__' for voltage.
+      - For responses:
+        - 'ic__' for current.
+        - 'vc__' for voltage.
+    */
 
-    /* Response recording IDs are prefixed with:
-      - 'ic__' for current.
-      - 'vc__' for voltage.
-     */
-    const resRecId = recIds.find((id) => id.match(/^\w\w__/));
+    const recRegex = recordingType === RecordingType.STIMULUS ? /^\w\ws__/ : /^\w\w__/;
+    const recId = recIds.find((id) => id.match(recRegex));
 
-    if (!stimRecId || !resRecId) {
-      throw new Error(`Stimulus or response recording ID(s) not found among ${recIds.join(', ')}`);
+    const datasetKey =
+      recordingType === RecordingType.STIMULUS
+        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.DATA}`
+        : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.DATA}`;
+
+    const dataset = this.file.get(datasetKey);
+    if (!(dataset instanceof Dataset)) {
+      throw new Error(`${recordingType} dataset for ${recId} not found`);
     }
 
-    // Gathering stimulus data
-    const stimDatasetKey = `${NWBKey.STIMULUS_PRESENTATIONON}/${stimRecId}/${NWBKey.DATA}`;
-    const stimDataset = this.file.get(stimDatasetKey);
-    if (!(stimDataset instanceof Dataset)) {
-      debugger;
-      throw new Error(`Stimulus dataset for ${stimRecId} not found`);
+    const unit = dataset.get_attribute('unit', true);
+    if (typeof unit !== 'string') {
+      throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
     }
 
-    const stimUnit = stimDataset.get_attribute('unit', true);
-    if (typeof stimUnit !== 'string') {
-      throw new Error(`Incompatible stimulus unit: ${stimUnit}, expected string`);
+    const conversionFactorRaw = dataset.get_attribute('conversion', true);
+    const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
+
+    const timeDatasetKey =
+      recordingType === RecordingType.STIMULUS
+        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.STARTING_TIME}`
+        : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.STARTING_TIME}`;
+
+    const timeDataset = this.file.get(timeDatasetKey);
+    if (!(timeDataset instanceof Dataset)) {
+      throw new Error(`${recordingType} starting time dataset for ${recId} not found`);
     }
 
-    const stimConversionFactorRaw = stimDataset.get_attribute('conversion', true);
-    const stimConversionFactor =
-      typeof stimConversionFactorRaw === 'number' ? stimConversionFactorRaw : 1;
-
-    const stimTimeDatasetKey = `${NWBKey.STIMULUS_PRESENTATIONON}/${stimRecId}/${NWBKey.STARTING_TIME}`;
-    const stimTimeDataset = this.file.get(stimTimeDatasetKey);
-    if (!(stimTimeDataset instanceof Dataset)) {
-      throw new Error(`Stimulus starting time dataset for ${stimRecId} not found`);
+    const timeUnit = timeDataset.get_attribute('unit', true);
+    if (typeof timeUnit !== 'string') {
+      throw new Error(`Incompatible ${recordingType} time unit: ${timeUnit}, expected string`);
     }
 
-    const stimTimeUnit = stimTimeDataset.get_attribute('unit', true);
-    if (typeof stimTimeUnit !== 'string') {
-      throw new Error(`Incompatible stimulus time unit: ${stimTimeUnit}, expected string`);
+    const timeRate = timeDataset.get_attribute('rate', true);
+    if (typeof timeRate !== 'number') {
+      throw new Error(`Incompatible ${recordingType} time rate: ${timeRate}, expected number`);
     }
 
-    const stimTimeRate = stimTimeDataset.get_attribute('rate', true);
-    if (typeof stimTimeRate !== 'number') {
-      throw new Error(`Incompatible stimulus time rate: ${stimTimeRate}, expected number`);
-    }
+    const data = dataset.to_array() as number[];
 
-    const stimData = stimDataset.to_array() as number[];
-
-    // Gathering response data
-    const resDatasetKey = `${NWBKey.ACQUISITION}/${resRecId}/${NWBKey.DATA}`;
-    const resDataset = this.file.get(resDatasetKey);
-    if (!(resDataset instanceof Dataset)) {
-      throw new Error(`Response dataset for ${resRecId} not found`);
-    }
-
-    const resUnit = resDataset.get_attribute('unit', true);
-    if (typeof resUnit !== 'string') {
-      throw new Error(`Incompatible response unit: ${resUnit}, expected string`);
-    }
-
-    const resConversionFactorRaw = resDataset.get_attribute('conversion', true) ?? 1;
-    const resConversionFactor =
-      typeof resConversionFactorRaw === 'number' ? resConversionFactorRaw : 1;
-
-    const resTimeDatasetKey = `${NWBKey.ACQUISITION}/${resRecId}/${NWBKey.STARTING_TIME}`;
-    const resTimeDataset = this.file.get(resTimeDatasetKey);
-    if (!(resTimeDataset instanceof Dataset)) {
-      throw new Error(`Response starting time dataset for ${resRecId} not found`);
-    }
-
-    const resTimeUnit = resTimeDataset.get_attribute('unit', true);
-    if (typeof resTimeUnit !== 'string') {
-      throw new Error(`Incompatible response time unit: ${resTimeUnit}, expected string`);
-    }
-
-    const resTimeRate = resTimeDataset.get_attribute('rate', true);
-    if (typeof resTimeRate !== 'number') {
-      throw new Error(`Incompatible response time rate: ${resTimeRate}, expected number`);
-    }
-
-    const resData = resDataset.to_array() as number[];
-
-    const sweepData: SweepData = {
-      stimulus: {
-        data: stimData,
-        unit: stimUnit,
-        conversionFactor: stimConversionFactor,
-        timeUnit: stimTimeUnit,
-        timeRate: stimTimeRate,
-      },
-      response: {
-        data: resData,
-        unit: resUnit,
-        conversionFactor: resConversionFactor,
-        timeUnit: resTimeUnit,
-        timeRate: resTimeRate,
-      },
+    return {
+      data,
+      unit,
+      conversionFactor,
+      timeUnit,
+      timeRate,
     };
+  }
 
-    return sweepData;
+  public getSweepData(protocol: string, repetition: string, sweep: string): SweepData {
+    if (!this.file || !this.cellId) {
+      throw new Error('File or cell ID not initialized');
+    }
+
+    return {
+      stimulus: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.STIMULUS),
+      response: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.RESPONSE),
+    };
   }
 
   public destroy() {
