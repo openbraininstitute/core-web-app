@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build --turbopack",
+    "start": "next start --turbopack",
     "lint": "npx eslint src __tests__ && npx tsc --noEmit",
     "lint:fix": "next lint --fix",
     "prettier:check": "prettier --check . --log-level warn",

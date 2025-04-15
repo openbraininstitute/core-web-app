@@ -11,7 +11,6 @@ import EModelTracePreview from '@/components/explore-section/ExploreSectionListi
 import { EModel } from '@/types/e-model';
 import { detailUrlWithinLab, to64 } from '@/util/common';
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
-import { BookmarkTabsName } from '@/types/virtual-lab/bookmark';
 import ModelCard from '@/components/build-section/virtual-lab/me-model/ModelCard';
 
 type Props = {
@@ -36,14 +35,16 @@ export default function EModelCard({ exemplarMorphology, reselectLink = false }:
     if (!virtualLabId || !projectId)
       return `/app/explore/interactive/model/e-model/${to64(`${orgProj}!/!${selectedEModel['@id']}`)}`;
 
-    return detailUrlWithinLab(
-      virtualLabId,
-      projectId,
-      orgProj,
-      selectedEModel['@id'],
-      BookmarkTabsName.MODELS,
-      ModelTypeNames.E_MODEL
-    );
+    // TODO: fix when we have emodel data
+    return '';
+    // return detailUrlWithinLab(
+    //   virtualLabId,
+    //   projectId,
+    //   orgProj,
+    //   selectedEModel['@id'],
+    //   BookmarkTabsName.MODELS,
+    //   ModelTypeNames.E_MODEL
+    // );
   };
 
   const details = [

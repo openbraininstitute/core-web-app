@@ -17,7 +17,6 @@ import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import BookmarkButton from '@/features/bookmark/control';
 import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
-import { isSimulation } from '@/types/virtual-lab/bookmark';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -36,6 +35,7 @@ import {
 } from '@/components/VirtualLab/ScopeSelector';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import Styles from '@/styles/vlabs.module.css';
+import { isSimulation } from '@/features/bookmark/helpers';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -136,6 +136,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}
+                    entityId="" // TODO: fix it when whe have simulation data
                     // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
                     resourceId={selectedRows[0]?._source['@id']}
                     typeSlug={SIMULATION_DATA_TYPE_CONFIG[dataType].name}

@@ -17,7 +17,6 @@ import {
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { classNames } from '@/util/utils';
 import { detailUrlWithinLab } from '@/util/common';
-import { BookmarkTabsName } from '@/types/virtual-lab/bookmark';
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
 import { DisplayMessages } from '@/constants/display-messages';
 import { ensureArray } from '@/util/nexus';
@@ -161,14 +160,16 @@ export default function NewMEModelPage(props: Params) {
 
     createMEModel({ virtualLabId, projectId })
       .then((meModel) => {
-        const redirectionUrl = detailUrlWithinLab(
-          virtualLabId,
-          projectId,
-          `${virtualLabId}/${projectId}`,
-          meModel['@id'],
-          BookmarkTabsName.MODELS,
-          ModelTypeNames.ME_MODEL
-        );
+        // const redirectionUrl = detailUrlWithinLab(
+        //   virtualLabId,
+        //   projectId,
+        //   `${virtualLabId}/${projectId}`,
+        //   meModel['@id'],
+        //   BookmarkTabsName.MODELS,
+        //   ModelTypeNames.ME_MODEL
+        // );
+        // TODO: fix when we have me-model data
+        const redirectionUrl = '';
         notification.success({
           duration: 7,
           message: 'ME-model created successfully',
