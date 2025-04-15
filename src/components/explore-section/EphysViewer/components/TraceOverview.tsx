@@ -24,7 +24,7 @@ interface ImageSetComponentProps {
 interface TraceOverviewComponentProps {
   trace: NWBTrace;
   protocol: string;
-  onStimulusChange: (value: string) => void;
+  onProtocolChange: (value: string) => void;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
 }
 
@@ -127,7 +127,7 @@ function TraceThumbnail({
           size: 10,
         },
         margin: {
-          l: 48,
+          l: 52,
           r: 0,
           t: 0,
           b: 42,
@@ -248,7 +248,7 @@ function ImageSetComponent({
 export default function TraceOverview({
   trace,
   protocol,
-  onStimulusChange,
+  onProtocolChange,
   onRepetitionClick,
 }: TraceOverviewComponentProps) {
   const protocols = useMemo(() => trace.getProtocols(), [trace]);
@@ -262,6 +262,11 @@ export default function TraceOverview({
     [trace]
   );
 
+  const filteredProtocols = useMemo(
+    () => protocols.filter((p) => p === protocol || protocol === 'All'),
+    [protocols, protocol]
+  );
+
   return (
     <div className="flex flex-col gap-10">
       {protocols.length > 1 && (
@@ -271,7 +276,7 @@ export default function TraceOverview({
             className="stimulus-select"
             placeholder="Select a stimulus"
             value={protocol}
-            onChange={onStimulusChange}
+            onChange={onProtocolChange}
           >
             <Option value="All">All</Option>
             {Array.from(repetitionMap.entries()).map(([protocol, repetitions]) => (
@@ -283,7 +288,7 @@ export default function TraceOverview({
         </div>
       )}
       <div className="flex flex-col gap-5">
-        {protocols.map((protocol) => (
+        {filteredProtocols.map((protocol) => (
           <ImageSetComponent
             key={protocol}
             trace={trace}

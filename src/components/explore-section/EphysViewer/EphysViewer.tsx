@@ -63,7 +63,7 @@ export default function EphysViewer({ resource }: { resource: ExperimentalTrace 
           trace={trace}
           protocol={protocol}
           onRepetitionClick={showRepetitionDetails}
-          onStimulusChange={setProtocol}
+          onProtocolChange={setProtocol}
         />
       )}
 
