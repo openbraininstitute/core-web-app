@@ -209,9 +209,8 @@ export default function ControlPanel({
   if (!activeColumns) return null;
 
   const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${
-    activeColumnsLength === 1 ? 'column' : 'columns'
-  }`;
+  const activeColumnsText = `${activeColumnsLength} active ${activeColumnsLength === 1 ? 'column' : 'columns'
+    }`;
 
   const filterItems = filters
     ?.map((filter) => {
@@ -239,7 +238,7 @@ export default function ControlPanel({
   return (
     <div
       data-testid="listing-view-filter-panel"
-      className="absolute right-0 top-0 z-10 flex h-full w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 pl-8 pr-16 pt-6"
+      className="fixed right-0 top-0 z-10 flex h-full w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 pl-8 pr-16 pt-6"
     >
       <div>
         <button
