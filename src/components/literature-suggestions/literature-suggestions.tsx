@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import React from 'react';
 
 import SuggestedQuestions from './suggested-questions';
 import MessageItem from './message-item';
@@ -20,9 +20,14 @@ export interface LiteratureSuggestionsProps {
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
   const [collapsedPanel, setCollapsedPanel] = React.useState(false);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
-  const [threadId, recreateThreadId] = useServiceAiAgentThread();
+  const [threadId, recreateThreadId, threadError] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
   const { messages, clear, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
+
+  // TODO: for future improvement, to disable the spinner for user has not virtual lab
+  // const userStats = useAtomValue(userStatsAtom);
+  // const userHasVirtualLab = Boolean(userStats?.data?.owned_labs_count);
+
   const handleQuery = React.useCallback(
     (content: string) => {
       append({
@@ -117,7 +122,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               </footer>
             </>
           ) : (
-            status !== 'error' && <Spinner />
+            status !== 'error' && !threadError && <Spinner />
           )}
         </>
       )}
