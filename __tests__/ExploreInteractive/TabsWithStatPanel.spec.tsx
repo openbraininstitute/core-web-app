@@ -8,7 +8,7 @@ import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { SelectedBrainRegion } from '@/state/brain-regions/types';
 import { mockBrainRegions } from '__tests__/__utils__/SelectedBrainRegions';
 import { DataType } from '@/constants/explore-section/list-views';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import DataTypeTabs, {
   dataTabAtom,
@@ -54,7 +54,8 @@ jest.mock('src/components/explore-section/Literature/api.ts', () => {
               experimentUrl: experimentType.id,
             });
           } else if (
-            experimentType.name === EXPERIMENT_DATA_TYPES[experimentWithMoreThan100Articles].mlTopic
+            experimentType.name ===
+            EXPERIMENT_DATA_TYPE_CONFIG[experimentWithMoreThan100Articles].mlTopic
           ) {
             resolve({
               total: 110,
@@ -92,7 +93,7 @@ describe('SelectedBrainRegionPanel', () => {
   test('shows count of dataset for all experiment types', async () => {
     await screen.findByRole('tab', { name: /Experimental data/i });
 
-    for await (const [id, config] of Object.entries(EXPERIMENT_DATA_TYPES)) {
+    for await (const [id, config] of Object.entries(EXPERIMENT_DATA_TYPE_CONFIG)) {
       const experimentEle = await screen.findByTestId(`experiment-dataset-${id}`);
       expect(experimentEle.textContent).toContain(config.title);
       expect(experimentEle.textContent).toContain(`${mockCountForExperiment}`);
@@ -102,7 +103,7 @@ describe('SelectedBrainRegionPanel', () => {
   test('shows literature articles count for all experiment types', async () => {
     await switchToLiteratureTab();
 
-    for await (const [id, config] of Object.entries(EXPERIMENT_DATA_TYPES)) {
+    for await (const [id, config] of Object.entries(EXPERIMENT_DATA_TYPE_CONFIG)) {
       const experimentEle = await screen.findByTestId(`literature-articles-${id}`);
       expect(experimentEle.textContent).toContain(config.title);
     }
@@ -115,7 +116,7 @@ describe('SelectedBrainRegionPanel', () => {
     );
 
     expect(experimentElement.textContent).toMatch(
-      EXPERIMENT_DATA_TYPES[experimentWithMoreThan100Articles].title
+      EXPERIMENT_DATA_TYPE_CONFIG[experimentWithMoreThan100Articles].title
     );
     expect(experimentElement.textContent).toMatch('100+ articles');
   });
@@ -127,7 +128,7 @@ describe('SelectedBrainRegionPanel', () => {
     );
 
     expect(experimentElement.textContent).toMatch(
-      EXPERIMENT_DATA_TYPES[experimentWith100Articles].title
+      EXPERIMENT_DATA_TYPE_CONFIG[experimentWith100Articles].title
     );
     expect(experimentElement.textContent).toMatch('100 articles');
   });
@@ -139,7 +140,7 @@ describe('SelectedBrainRegionPanel', () => {
     );
 
     expect(experimentElement.textContent).toMatch(
-      EXPERIMENT_DATA_TYPES[experimentWithFewArticles].title
+      EXPERIMENT_DATA_TYPE_CONFIG[experimentWithFewArticles].title
     );
     expect(experimentElement.textContent).toMatch(`${mockCountForExperiment} articles`);
   });

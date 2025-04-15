@@ -2,6 +2,14 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import { DataTypeConfig, DataTypeGroup } from '@/types/explore-section/data-types';
 
+export const EXPERIMENTAL_DATATYPES = [
+  DataType.ExperimentalBoutonDensity,
+  DataType.ExperimentalNeuronDensity,
+  DataType.ExperimentalElectroPhysiology,
+  DataType.ExperimentalSynapsePerConnection,
+  DataType.ExperimentalNeuronMorphology,
+];
+
 export enum ExperimentTypeNames {
   MORPHOLOGY = 'morphology',
   ELECTROPHYSIOLOGY = 'electrophysiology',
@@ -10,7 +18,7 @@ export enum ExperimentTypeNames {
   SYNAPSE_PER_CONNECTION = 'synapse-per-connection',
 }
 
-export const EXPERIMENT_DATA_TYPES: { [key: string]: DataTypeConfig } = {
+export const EXPERIMENT_DATA_TYPE_CONFIG: { [key: string]: DataTypeConfig } = {
   [DataType.ExperimentalNeuronMorphology]: {
     title: 'Morphology',
     group: DataTypeGroup.ExperimentalData,
@@ -91,7 +99,7 @@ export const EXPERIMENT_DATA_TYPES: { [key: string]: DataTypeConfig } = {
         className: 'col-span-2',
       },
       {
-        field: EntityCoreFields.SubjectSpecies,
+        field: EntityCoreFields.Species,
         className: 'col-span-2',
       },
       {

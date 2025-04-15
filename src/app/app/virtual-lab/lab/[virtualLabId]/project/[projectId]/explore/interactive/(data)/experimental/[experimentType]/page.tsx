@@ -4,7 +4,7 @@ import { notFound, useParams } from 'next/navigation';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -13,8 +13,8 @@ import { useExploreTableOnClickHandler } from '@/hooks/virtual-labs';
 export default function VirtualLabExperimentListingView() {
   const params = useParams<{ experimentType: string; virtualLabId: string; projectId: string }>();
 
-  const currentExperiment = Object.keys(EXPERIMENT_DATA_TYPES).find(
-    (key) => EXPERIMENT_DATA_TYPES[key].name === params?.experimentType
+  const currentExperiment = Object.keys(EXPERIMENT_DATA_TYPE_CONFIG).find(
+    (key) => EXPERIMENT_DATA_TYPE_CONFIG[key].name === params?.experimentType
   );
 
   const virtualLabInfo: VirtualLabInfo = {

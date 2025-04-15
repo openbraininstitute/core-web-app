@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 import sessionAtom from '@/state/session';
 import { ExperimentDatasetCountPerBrainRegion } from '@/api/explore-section/resources';
 import { fetchParagraphCountForBrainRegionAndExperiment } from '@/components/explore-section/Literature/api';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 
 export const getLiteratureCountForBrainRegion = (brainRegion: string, signal: AbortSignal) =>
   atom<Promise<Record<string, ExperimentDatasetCountPerBrainRegion> | null>>(async (get) => {
@@ -10,7 +10,7 @@ export const getLiteratureCountForBrainRegion = (brainRegion: string, signal: Ab
     if (!session) return null;
 
     return await Promise.allSettled(
-      Object.entries(EXPERIMENT_DATA_TYPES).map(([id, config]) =>
+      Object.entries(EXPERIMENT_DATA_TYPE_CONFIG).map(([id, config]) =>
         fetchParagraphCountForBrainRegionAndExperiment(
           { name: config.mlTopic || 'morphology', id },
           brainRegion,

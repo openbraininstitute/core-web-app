@@ -29,10 +29,10 @@ export const useMorphometrics = (
     );
 
     return (
-      <div className="text-primary-8 mr-10">
+      <div className="text-primary-8 mr-10" key={field.field}>
         {showLabel && <div className="text-neutral-4 uppercase">{fieldObj.title}</div>}
         <div className={`${showLabel ? 'mt-2' : 'mt-0 ml-6'}`}>
-          <div key={field.field} className={`mb-2 h-6 truncate ${field.className}`}>
+          <div className={`mb-2 h-6 truncate ${field.className}`}>
             {metricSource
               ? fieldObj?.render?.esResourceViewFn?.('text', metricSource)
               : DisplayMessages.NO_DATA_STRING}

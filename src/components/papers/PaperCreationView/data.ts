@@ -1,4 +1,4 @@
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DataType } from '@/constants/explore-section/list-views';
 
 export const SourceDataGroupTabsEnum = {
@@ -45,9 +45,9 @@ export const SOURCE_DATA_GROUP_LIST: Array<{
 }> = [
   {
     id: 'experimental-data',
-    list: Object.keys(EXPERIMENT_DATA_TYPES).map((key) => ({
+    list: Object.keys(EXPERIMENT_DATA_TYPE_CONFIG).map((key) => ({
       id: key,
-      name: EXPERIMENT_DATA_TYPES[key].title,
+      name: EXPERIMENT_DATA_TYPE_CONFIG[key].title,
       active: true,
     })),
   },

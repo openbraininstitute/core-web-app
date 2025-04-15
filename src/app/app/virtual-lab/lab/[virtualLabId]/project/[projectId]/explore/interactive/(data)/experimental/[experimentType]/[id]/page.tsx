@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { notFound, useParams } from 'next/navigation';
 
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DataType } from '@/constants/explore-section/list-views';
 import MorphologyDetailView from '@/components/explore-section/reconstruction-morphology/detail-view';
 import Detail from '@/components/explore-section/Detail';
@@ -20,8 +20,8 @@ import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 export default function ExperimentDetailViewPage() {
   const params = useParams<{ experimentType: string }>();
 
-  const currentExperiment = Object.keys(EXPERIMENT_DATA_TYPES).find(
-    (key) => EXPERIMENT_DATA_TYPES[key].name === params?.experimentType
+  const currentExperiment = Object.keys(EXPERIMENT_DATA_TYPE_CONFIG).find(
+    (key) => EXPERIMENT_DATA_TYPE_CONFIG[key].name === params?.experimentType
   );
 
   if (!currentExperiment) notFound();

@@ -1,6 +1,6 @@
+import { RowSelectionType } from 'antd/es/table/interface';
 import { ReactNode } from 'react';
 import { useAtom } from 'jotai';
-import { RowSelectionType } from 'antd/es/table/interface';
 
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import ExploreSectionTable, {
@@ -11,16 +11,15 @@ import NumericResultsInfo from '@/components/explore-section/ExploreSectionListi
 import useExploreColumns from '@/hooks/useExploreColumns';
 
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
-import { sortStateAtom, dataAtom } from '@/state/explore-section/list-view-atoms';
-import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
+import { sortStateAtom, dataAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
-import { useData } from './LoadMoreButton';
 
-export default function ExploreSectionListingView<T extends EntityCoreBaseId>({
+export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
   dataType,
   dataScope,
   renderButton,
@@ -63,7 +62,7 @@ export default function ExploreSectionListingView<T extends EntityCoreBaseId>({
     })
   );
 
-  const dataSource = useData<T>(
+  const dataSource = useDataAtom<T>(
     {
       dataType,
       dataScope,

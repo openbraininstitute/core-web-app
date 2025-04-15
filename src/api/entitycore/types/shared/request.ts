@@ -1,4 +1,4 @@
-export type DateFilter = {
+export type TimestampsFilter = {
   creation_date__lte: Date | null;
   creation_date__gte: Date | null;
   update_date__lte: Date | null;

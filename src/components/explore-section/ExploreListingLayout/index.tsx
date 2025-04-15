@@ -14,8 +14,8 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
-import { MODEL_DATA_TYPES } from '@/constants/explore-section/data-types/model-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
+import { MODEL_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/model-data-types';
 import { DataType } from '@/constants/explore-section/list-views';
 import { useLoadableValue } from '@/hooks/hooks';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
@@ -73,7 +73,9 @@ export default function ExploreListingLayout({
     : DataTypeGroup.ModelData;
 
   const config =
-    dataTypeGroup === DataTypeGroup.ExperimentalData ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
+    dataTypeGroup === DataTypeGroup.ExperimentalData
+      ? EXPERIMENT_DATA_TYPE_CONFIG
+      : MODEL_DATA_TYPE_CONFIG;
 
   const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';

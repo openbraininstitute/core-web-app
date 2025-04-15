@@ -2,7 +2,12 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DataTypeConfig, DataTypeGroup } from '@/types/explore-section/data-types';
 
-export const SIMULATION_DATA_TYPES: { [key: string]: DataTypeConfig } = {
+export const SIMULATION_DATATYPES = [
+  DataType.SingleNeuronSimulation,
+  DataType.SingleNeuronSynaptomeSimulation,
+];
+
+export const SIMULATION_DATA_TYPE_CONFIG: { [key: string]: DataTypeConfig } = {
   [DataType.SimulationCampaigns]: {
     title: 'Simulation campaigns',
     group: DataTypeGroup.SimulationData,

@@ -15,8 +15,8 @@ import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64, detailUrlBuilder } from '@/util/common';
 import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
-import BookmarkButton from '@/components/buttons/variants/bookmark';
-import { SIMULATION_DATA_TYPES } from '@/constants/explore-section/data-types/simulation-data-types';
+import BookmarkButton from '@/features/bookmark/control';
+import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
 import { isSimulation } from '@/types/virtual-lab/bookmark';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -132,13 +132,13 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 >
                   View
                 </Btn>
-                {isSimulation(SIMULATION_DATA_TYPES[dataType].name) && (
+                {isSimulation(SIMULATION_DATA_TYPE_CONFIG[dataType].name) && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}
                     // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
                     resourceId={selectedRows[0]?._source['@id']}
-                    type={SIMULATION_DATA_TYPES[dataType].name}
+                    typeSlug={SIMULATION_DATA_TYPE_CONFIG[dataType].name}
                     customButton={customBookmarkButton}
                   />
                 )}

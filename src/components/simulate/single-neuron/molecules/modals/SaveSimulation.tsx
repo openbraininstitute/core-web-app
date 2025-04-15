@@ -17,7 +17,7 @@ import { CREATE_SYNAPTOME_SIMULATION_SUCCESS } from '@/components/build-section/
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { SIMULATION_DATA_TYPES } from '@/constants/explore-section/data-types/simulation-data-types';
+import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
 
 export type Props = {
   modelSelfUrl: string;
@@ -41,8 +41,8 @@ export default function SaveSimulationModal({
 }: Props) {
   const { push: navigate } = useRouter();
   const dataType = useMemo(() => {
-    const dataTypeFromSimulationType = Object.keys(SIMULATION_DATA_TYPES).find(
-      (type) => SIMULATION_DATA_TYPES[type].name === simulationType
+    const dataTypeFromSimulationType = Object.keys(SIMULATION_DATA_TYPE_CONFIG).find(
+      (type) => SIMULATION_DATA_TYPE_CONFIG[type].name === simulationType
     );
     return (dataTypeFromSimulationType ?? DataType.SingleNeuronSynaptomeSimulation) as DataType;
   }, [simulationType]);

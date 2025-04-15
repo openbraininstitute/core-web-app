@@ -1,3 +1,4 @@
+import '@ant-design/v5-patch-for-react-19';
 import { ReactNode, Suspense } from 'react';
 import { Gabarito, Titillium_Web, DM_Serif_Text } from 'next/font/google';
 

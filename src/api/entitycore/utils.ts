@@ -16,7 +16,7 @@ export const getEntityCoreContext = (virtualLabId?: string, projectId?: string) 
   },
 });
 
-export async function entityCoreApi() {
-  const api = await authApiClient(entityCoreUrl);
+export async function entityCoreApi(url?: string) {
+  const api = await authApiClient(url ?? entityCoreUrl);
   return api;
 }

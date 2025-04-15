@@ -18,7 +18,7 @@ import { normalizeString } from '@/util/utils';
 import { ArticleListFilters } from '@/components/explore-section/Literature/api';
 import sessionAtom from '@/state/session';
 import { articleListingFilterPanelOpenAtom } from '@/state/explore-section/literature-filters';
-import { EXPERIMENT_DATA_TYPES } from '@/constants/explore-section/data-types/experiment-data-types';
+import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 
 const ML_DATE_FORMAT = 'yyyy-MM-dd';
@@ -161,7 +161,7 @@ describe('LiteratureArticleListingPage', () => {
     await user.click(expTypesMenuButton);
 
     const options = screen.getAllByRole('menuitem');
-    expect(options.length).toEqual(Object.keys(EXPERIMENT_DATA_TYPES).length);
+    expect(options.length).toEqual(Object.keys(EXPERIMENT_DATA_TYPE_CONFIG).length);
   });
 
   test('navigates to route selected by user', async () => {

@@ -1,21 +1,21 @@
 import { MouseEvent, ReactNode, useEffect, useState } from 'react';
-import { useSetAtom } from 'jotai';
-import { ConfigProvider, Button } from 'antd';
 import { ColumnGroupType, ColumnType } from 'antd/es/table';
+import { ConfigProvider, Button } from 'antd';
+import { useSetAtom } from 'jotai';
 
 import ChevronLast from '@/components/icons/ChevronLast';
-import { Field } from '@/constants/explore-section/fields-config/enums';
-import { DataType } from '@/constants/explore-section/list-views';
 import usePathname from '@/hooks/pathname';
+
+import { Field } from '@/constants/explore-section/fields-config/enums';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
-import type { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { classNames } from '@/util/utils';
-import { EntityCoreBaseId } from '@/api/entitycore/types/shared/global';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { DataType } from '@/constants/explore-section/list-views';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
-export function useOnCellRouteHandler<T extends EntityCoreBaseId>({
+export function useOnCellRouteHandler<T extends EntityCoreIdentifiable>({
   dataType,
   onCellClick,
 }: {

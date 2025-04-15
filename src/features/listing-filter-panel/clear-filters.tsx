@@ -4,7 +4,7 @@ export default function ClearFilters({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
-      className="flex min-w-fit items-center justify-center gap-2 border-none py-3 pr-8 text-white hover:bg-[#ffffff33]"
+      className="flex min-w-fit items-center justify-center gap-2 border-none px-4 py-3 text-white hover:bg-[#ffffff33]"
       onClick={onClick}
     >
       <div>Clear filters</div>

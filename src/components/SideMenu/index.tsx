@@ -106,7 +106,7 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
           <UserMenu>
             <UserOutlined className="group-hover:text-white" />
           </UserMenu>
-          <Link href="/app/virtual-lab" className="group cursor-pointer">
+          <Link href="/app/virtual-lab" className="group text-primary-2 cursor-pointer">
             <HomeOutlined className="group-hover:text-white" />
           </Link>
         </div>

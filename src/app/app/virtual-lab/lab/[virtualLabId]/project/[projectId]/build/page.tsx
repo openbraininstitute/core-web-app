@@ -9,18 +9,17 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
-import { MODEL_DATA_TYPES } from '@/constants/explore-section/data-types/model-data-types';
+import { MODEL_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/model-data-types';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { SimulationScopeToModelType, SimulationType } from '@/types/virtual-lab/lab';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
-import BookmarkButton from '@/components/buttons/variants/bookmark';
+import BookmarkButton from '@/features/bookmark/control';
 
 import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { ExploreESHit } from '@/types/explore-section/es';
-import { isModel } from '@/types/virtual-lab/bookmark';
 import { classNames } from '@/util/utils';
 import {
   ScopeSelector,
@@ -34,6 +33,7 @@ import {
 } from '@/components/VirtualLab/ScopeSelector/state';
 import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
 import Styles from '@/styles/vlabs.module.css';
+import { isModel } from '@/features/bookmark/helpers';
 
 type Params = {
   params: Promise<{
@@ -155,13 +155,13 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
                 >
                   View
                 </Btn>
-                {isModel(MODEL_DATA_TYPES[selectedModelType].name) && (
+                {isModel(MODEL_DATA_TYPE_CONFIG[selectedModelType].name) && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}
                     // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
                     resourceId={selectedRows[0]?._source['@id']}
-                    type={MODEL_DATA_TYPES[selectedModelType].name}
+                    typeSlug={MODEL_DATA_TYPE_CONFIG[selectedModelType].name}
                     customButton={customBookmarkButton}
                   />
                 )}
