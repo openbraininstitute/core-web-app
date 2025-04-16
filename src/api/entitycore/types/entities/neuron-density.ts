@@ -12,7 +12,7 @@ import {
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export interface IExperimentalNeuronDensity extends Timestamps, EntityCoreIdentifiable {
+export interface IExperimentalNeuronDensity extends EntityCoreIdentifiable, Timestamps {
   name: string;
   description: string;
   license?: ILicense | null;

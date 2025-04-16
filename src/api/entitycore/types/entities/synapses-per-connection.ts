@@ -4,6 +4,7 @@ import {
   ILicense,
   ISpecies,
   IStrain,
+  EntityCoreIdentifiable,
 } from '@/api/entitycore/types/shared/global';
 import {
   TimestampsFilter,
@@ -11,7 +12,7 @@ import {
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export interface IExperimentalSynapsesPerConnection extends Timestamps {
+export interface IExperimentalSynapsesPerConnection extends EntityCoreIdentifiable, Timestamps {
   name: string;
   description: string;
   license?: ILicense | null;

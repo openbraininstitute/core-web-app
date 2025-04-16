@@ -2,11 +2,11 @@ import { ReactNode } from 'react';
 
 import Header from '@/components/explore-section/details-view/header';
 
-import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 import { COMMON_FIELDS } from '@/constants/explore-section/detail-views-fields';
 import { DetailProps } from '@/types/explore-section/application';
 import { classNames } from '@/util/utils';
 import { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
+import { getCoreFieldDefinition } from '@/entity-configuration/definitions';
 
 type FieldProps = {
   field: string;
@@ -15,7 +15,7 @@ type FieldProps = {
 };
 
 export function Field({ field, className, data }: FieldProps) {
-  const fieldObj = ENTITY_CORE_FIELDS_CONFIG[field];
+  const fieldObj = getCoreFieldDefinition(field);
   return (
     <div className={classNames('text-primary-7 mr-10', className)}>
       <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>

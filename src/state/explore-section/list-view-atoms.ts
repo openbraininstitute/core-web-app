@@ -31,10 +31,10 @@ import {
   transformFiltersToQuery,
   transformQueryParamsArrayToString,
 } from '@/api/entitycore/transformers';
-import { EntityCoreLegacyType, getEntityByLegacyType } from '@/api/entitycore/types/shared/context';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { WorkspaceContext } from '@/types/common';
-import { EXPERIMENTAL_DATATYPES } from '@/constants/explore-section/data-types/experiment-data-types';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
 type DataAtomFamilyScopeType = {
@@ -229,13 +229,13 @@ export const dataAtom = atomFamily(
       };
 
       const entity = getEntityByLegacyType({ legacyType: scope.dataType as EntityCoreLegacyType });
-      if (entity && entity.queryAll) {
-        const response = await entity.queryAll({
-          withFacets: entity.allowedFacets,
+      if (entity && entity.api.query.list) {
+        const response = await entity.api.query.list({
+          withFacets: entity.api.config.allowedFacets,
           filters: {
-            ...(entity.allowedParams === 'all'
+            ...(entity.api.config.allowedParams === 'all'
               ? queryParameters
-              : pick(queryParameters, entity.allowedParams ?? [])),
+              : pick(queryParameters, entity.api.config.allowedParams ?? [])),
             // TODO: extend the brain region (in EntityCore) filter to support the children of the selected one
             // brain_region_id: selectedBrainRegion?.id
             //   ? Number(selectedBrainRegion?.id.split('/').pop())

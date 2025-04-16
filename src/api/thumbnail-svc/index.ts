@@ -1,16 +1,15 @@
 import find from 'lodash/find';
 
-import { getSession } from '@/authFetch';
-import { thumbnailGenerationBaseUrl } from '@/config';
-import { ENTITY_CORE_MAPPER } from '@/api/entitycore/types/shared/context';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import buildQueryString from '@/util/query-params-builder';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { thumbnailGenerationBaseUrl } from '@/config';
+import { getSession } from '@/authFetch';
+
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 function buildAssetUrl(resource: EntityCoreResource, options?: { dpi?: number }) {
   let queryParams = '';
-  const extension = find(Object.values(ENTITY_CORE_MAPPER), {
-    type: resource.type,
-  })?.assetExtension;
+  const extension = getEntityByCoreType({ type: resource.type })?.asset.extension;
   const asset = find(resource.assets, { content_type: extension });
   queryParams = buildQueryString({
     dpi: options?.dpi,
