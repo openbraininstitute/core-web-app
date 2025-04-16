@@ -18,13 +18,13 @@ function NumericResultsInfo({
   dataKey: string;
 }) {
   const res = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
+  let current = res ? (res.pagination.page - 1) * res.pagination.page_size + res.data.length : 0;
 
-  const current = res
-    ? ((res.pagination.page - 1) * res.pagination.page_size + res.data.length).toLocaleString(
-        'en-US'
-      )
-    : '';
-  const total = res ? res.pagination.total_items.toLocaleString('en-US') : '';
+  const total = res ? res.pagination.total_items : 0;
+  current = total > 0 ? current : 0;
+  const currentFormatted = current.toLocaleString('en-US');
+  const totalFormatted = total.toLocaleString('en-US');
+  const showFormattedResults = Boolean(current) && Boolean(total);
 
   return (
     <div className="flex w-full justify-start">
@@ -34,11 +34,13 @@ function NumericResultsInfo({
         aria-label="listing-view-title"
       >
         <span>Results </span>
-        {res ? (
+        {res && showFormattedResults ? (
           <strong>
-            {current}/{total}
+            {currentFormatted}/{totalFormatted}
           </strong>
-        ) : null}
+        ) : (
+          <strong>0</strong>
+        )}
       </div>
     </div>
   );

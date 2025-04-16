@@ -76,9 +76,9 @@ export type ReconstructedNeuronMorphology = ExperimentProps & {
 
 export enum MorphoMetricCompartment {
   Axon = 'Axon',
+  Soma = 'Soma',
   ApicalDendrite = 'ApicalDendrite',
   BasalDendrite = 'BasalDendrite',
-  Soma = 'Soma',
   NeuronMorphology = 'NeuronMorphology',
 }
 

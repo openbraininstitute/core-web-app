@@ -23,7 +23,9 @@ export async function getReconstructionMorphologies({
   filters?: ReconstructionMorphologyFilter;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IReconstructionMorphology>>(baseUri, {
+  return await api.get<
+    EntityCoreResponse<IReconstructionMorphology | IReconstructionMorphologyExpanded>
+  >(baseUri, {
     queryParams: {
       ...filters,
       with_facets: withFacets,

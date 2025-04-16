@@ -3,12 +3,15 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
 import throttle from 'lodash/throttle';
+
 import { SortState } from '@/types/explore-section/application';
 import { ValueArray } from '@/components/ListTable';
-import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
+import { getCoreFieldDefinition } from 'src/entity-configuration/definitions';
+import CoreFieldsDefinitionRegistry from 'src/entity-configuration/definitions';
+
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
-import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields/enums';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
@@ -49,7 +52,7 @@ export default function useExploreColumns<T>(
   dimensionColumns?: string[] | null,
   dataType?: DataType
 ): ColumnProps<T>[] {
-  const keys = useMemo(() => Object.keys(ENTITY_CORE_FIELDS_CONFIG), []);
+  const keys = useMemo(() => Object.keys(CoreFieldsDefinitionRegistry), []);
   const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
     [...keys, ...(dimensionColumns || [])].map((key) => ({
       key,
@@ -59,17 +62,14 @@ export default function useExploreColumns<T>(
 
   useEffect(() => {
     const totalKeys = dimensionColumns ? [...keys, ...dimensionColumns] : [...keys];
-
     setColumnWidths(
-      totalKeys.map((key) => ({
-        key,
-        width:
-          ENTITY_CORE_FIELDS_CONFIG[key]?.style?.width ??
-          getProvisionedWidth(
-            ENTITY_CORE_FIELDS_CONFIG[key]?.title,
-            ENTITY_CORE_FIELDS_CONFIG[key]?.unit
-          ),
-      }))
+      totalKeys.map((key) => {
+        const field = getCoreFieldDefinition(key);
+        return {
+          key,
+          width: field?.style?.width ?? getProvisionedWidth(field!.title, field?.unit),
+        };
+      })
     );
   }, [dimensionColumns, keys]);
 
@@ -151,16 +151,16 @@ export default function useExploreColumns<T>(
   const main: ColumnProps<T>[] = useMemo(
     () =>
       keys.reduce((acc, key) => {
-        const term = ENTITY_CORE_FIELDS_CONFIG[key];
-        const isSortable = term.isSortable;
+        const term = getCoreFieldDefinition(key);
+        const isSortable = term?.isSortable;
         return [
           ...acc,
           {
             key,
             title: (
               <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-                <div className={styles.columnTitle}>{fieldTitleSentenceCase(term.title)}</div>
-                {term.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
+                <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title!)}</div>
+                {term?.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
               </div>
             ),
             className: classNames(
@@ -175,11 +175,11 @@ export default function useExploreColumns<T>(
               handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
               onClick: () => isSortable && term.order?.value && sorterES(term.order?.value),
               showsortertooltip: {
-                title: term.description ? term.description : term.title,
+                title: term?.description ? term.description : term?.title,
               },
             }),
             sortOrder: getSortOrder(key),
-            align: term.style?.align,
+            align: term?.style?.align,
           },
         ];
       }, initialColumns),

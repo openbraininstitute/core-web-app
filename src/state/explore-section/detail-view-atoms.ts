@@ -23,7 +23,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { MEModelResource } from '@/types/me-model';
 import { fetchLinkedMandEModels } from '@/api/explore-section/resources';
 import { SynaptomeModelResource } from '@/types/explore-section/delta-model';
-import { getReconstructionMorphology } from '@/api/entitycore/queries';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 
 export const backToListPathAtom = atom<string | null | undefined>(null);
 
@@ -174,8 +174,9 @@ export const detailFamily = atomFamily<
 >(
   (viewParams) =>
     atom(async () => {
-      if (viewParams.dataType === DataType.ExperimentalNeuronMorphology) {
-        return await getReconstructionMorphology({ id: viewParams.id });
+      const entity = getEntityByLegacyType({ legacyType: viewParams.dataType });
+      if (entity && entity.api.query.one) {
+        return await entity.api.query.one({ id: viewParams.id });
       }
       // TODO: add other experiment types, modal types, and simulation types
       // TODO: after adding other types, refactor the get functions to be more generic

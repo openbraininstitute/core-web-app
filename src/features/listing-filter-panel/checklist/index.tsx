@@ -7,8 +7,8 @@ import {
 } from '@/features/listing-filter-panel/checklist/use-options';
 import { CheckListProps } from '@/features/listing-filter-panel/checklist/default-checklist';
 import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants/explore-section/list-views';
-import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
 import { Filter } from '@/features/listing-filter-panel/types';
+import { getCoreFieldDefinition } from '@/entity-configuration/definitions';
 
 import SearchFilter from '@/features/listing-filter-panel/search-filter';
 import CenteredMessage from '@/components/CenteredMessage';
@@ -40,11 +40,8 @@ export default function CheckList({ children, data, filter, values, onChange }: 
   const remainingLength = (data?.length || 0) - filtersRenderLength;
   const adjustedLoadMoreLength =
     remainingLength >= loadMoreLength ? loadMoreLength : remainingLength;
-
-  const fieldLabel =
-    remainingLength === 1
-      ? ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.singular
-      : ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.plural;
+  const field = getCoreFieldDefinition(filter.field);
+  const fieldLabel = remainingLength === 1 ? field?.vocabulary.singular : field?.vocabulary.plural;
 
   const updateRenderLength = () => setFiltersRenderLength((prev) => prev + adjustedLoadMoreLength);
   const loadMoreBtn = () =>

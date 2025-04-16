@@ -1,16 +1,15 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { ConfigProvider, Tag } from 'antd';
 import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
+import type { DefaultOptionType } from 'antd/es/select';
 
 import { Filter } from '@/features/listing-filter-panel/types';
 import {
   FacetLabelValuePair,
   useOptions,
 } from '@/features/listing-filter-panel/checklist/use-options';
-import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
-
+import { getCoreFieldDefinition } from 'src/entity-configuration/definitions';
 import Search from '@/components/Search';
-import { DefaultOptionType } from 'antd/es/select';
 
 export default function SearchFilter({
   data,
@@ -73,7 +72,7 @@ export default function SearchFilter({
           value: id,
         }))}
         mode="multiple"
-        placeholder={`Search for ${ENTITY_CORE_FIELDS_CONFIG[filter.field].vocabulary.plural}`}
+        placeholder={`Search for ${getCoreFieldDefinition(filter.field)?.vocabulary.plural}`}
         tagRender={(props) => {
           return tagRender(props);
         }}

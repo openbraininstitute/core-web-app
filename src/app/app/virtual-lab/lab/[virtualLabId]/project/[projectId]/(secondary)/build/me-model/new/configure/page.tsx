@@ -23,6 +23,7 @@ import { ensureArray } from '@/util/nexus';
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 const DEFAULT_ERROR_MSG =
   'Something went wrong while creating the ME-model, please try again later';
@@ -37,7 +38,7 @@ type Params = {
   }>;
 };
 
-function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
+function NewMEModelHeader({ virtualLabId, projectId }: WorkspaceContext) {
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
   const selectedMModel = useAtomValue(selectedMModelAtom);
@@ -104,10 +105,8 @@ function NewMEModelHeader({ projectId, virtualLabId }: Params['params']) {
   );
 }
 
-export default function NewMEModelPage(props: Params) {
-  const params = use(props.params);
-
-  const { projectId, virtualLabId } = params;
+export default function NewMEModelPage(props: ServerSideComponentProp<WorkspaceContext, null>) {
+  const { projectId, virtualLabId } = use(props.params);
 
   const router = useRouter();
   const selectedMModel = useAtomValue(selectedMModelAtom);

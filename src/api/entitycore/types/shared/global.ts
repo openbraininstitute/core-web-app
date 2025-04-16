@@ -1,4 +1,4 @@
-import { ENTITY_CORE_MAPPER } from '@/api/entitycore/types/shared/context';
+import { EntityCoreConfiguration } from '@/entity-configuration/domain/index';
 import { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 
@@ -9,7 +9,7 @@ export type Prettify<T> = {
 } & {};
 
 export type EntityCoreDataType =
-  (typeof ENTITY_CORE_MAPPER)[keyof typeof ENTITY_CORE_MAPPER]['type'];
+  (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['type'];
 
 export type EntityCoreIdentifiable = {
   id: string;

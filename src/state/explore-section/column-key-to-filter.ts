@@ -1,42 +1,50 @@
-import { Filter } from '@/features/listing-filter-panel/types';
-import { ENTITY_CORE_FIELDS_CONFIG } from '@/constants/explore-section/fields-config';
-import { FilterTypeEnum } from '@/types/explore-section/filters';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields/enums';
+import { getCoreFieldDefinition } from '@/entity-configuration/definitions';
 
-export default function columnKeyToFilter(key: string): Filter {
-  const fieldConfig = ENTITY_CORE_FIELDS_CONFIG[key];
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
+
+export default function columnKeyToFilter(key: string): CoreFilter {
+  const fieldConfig = getCoreFieldDefinition(key);
+  if (!fieldConfig) {
+    return {
+      field: key,
+      type: CoreFieldFilterTypeEnum.Text,
+      value: '',
+    };
+  }
   switch (fieldConfig.filter) {
-    case FilterTypeEnum.CheckList:
+    case CoreFieldFilterTypeEnum.CheckList:
       return {
         field: key,
-        type: FilterTypeEnum.CheckList,
+        type: CoreFieldFilterTypeEnum.CheckList,
         value: [],
         constraint: fieldConfig.constraint,
       };
-    case FilterTypeEnum.DateRange:
+    case CoreFieldFilterTypeEnum.DateRange:
       return {
         field: key,
-        type: FilterTypeEnum.DateRange,
+        type: CoreFieldFilterTypeEnum.DateRange,
         value: { gte: null, lte: null },
         constraint: fieldConfig.constraint,
       };
-    case FilterTypeEnum.ValueRange:
+    case CoreFieldFilterTypeEnum.ValueRange:
       return {
         field: key,
-        type: FilterTypeEnum.ValueRange,
+        type: CoreFieldFilterTypeEnum.ValueRange,
         value: { gte: null, lte: null },
         constraint: fieldConfig.constraint,
       };
-    case FilterTypeEnum.ValueOrRange:
+    case CoreFieldFilterTypeEnum.ValueOrRange:
       return {
         field: key,
-        type: FilterTypeEnum.ValueOrRange,
+        type: CoreFieldFilterTypeEnum.ValueOrRange,
         value: null,
         constraint: fieldConfig.constraint,
       };
-    case FilterTypeEnum.Text:
+    case CoreFieldFilterTypeEnum.Text:
       return {
         field: key,
-        type: FilterTypeEnum.Text,
+        type: CoreFieldFilterTypeEnum.Text,
         value: '',
         constraint: fieldConfig.constraint,
       };

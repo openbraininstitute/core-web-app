@@ -1,6 +1,6 @@
 import kebabCase from 'lodash/kebabCase';
 
-import { getEntityByLegacyType } from '@/api/entitycore/types/shared/context';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { toPascalCase } from '@/utils/string';
 
 import type { DataType } from '@/constants/explore-section/list-views';
@@ -19,7 +19,7 @@ export function resolveExploreDetailsPageUrl({
 }) {
   const entityConfig = getEntityByLegacyType({ legacyType: dataType });
   let slug = entityConfig?.slug; // morphology, e-model, ...
-  const routePrefix = entityConfig?.exploreRoutePrefix; // interactive/experimental, model, simulate
+  const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
   if (routePrefix === 'simulate') slug = `${slug}/view`;
   let baseUrl = `${baseUri}/explore/${routePrefix}/${slug}/${entityId}`;
   if (ctx) {
