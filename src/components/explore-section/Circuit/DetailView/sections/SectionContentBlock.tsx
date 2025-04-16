@@ -30,5 +30,5 @@ export default function SectionContentBlock({
       currentSection = null;
   }
 
-  return <div className="relative flex w-full flex-col bg-white p-12">{currentSection}</div>;
+  return <div className="relative z-10 flex w-full flex-col bg-white p-12">{currentSection}</div>;
 }

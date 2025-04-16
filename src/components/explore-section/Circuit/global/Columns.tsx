@@ -25,7 +25,10 @@ const columns = (
     key: 'name',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link href={`./circuit/${record.key}`} className="whitespace-nowrap">
+      <Link
+        href={`/app/virtual-lab/explore/interactive/model/circuit/${record.key}`}
+        className="whitespace-nowrap"
+      >
         {record.name}
       </Link>
     ),
@@ -37,10 +40,10 @@ const columns = (
   {
     title: 'Description',
     key: 'description',
-    width: 300,
+    width: 200,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <Link
-        href={`./circuit/${record.key}`}
+        href={`/app/virtual-lab/explore/interactive/model/circuit/${record.key}`}
         className="text-ellipsis whitespace-nowrap font-normal"
       >
         {record.description}
@@ -56,7 +59,10 @@ const columns = (
     key: 'brainRegion',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link href={`./circuit/${record.key}`} className="whitespace-nowrap font-normal">
+      <Link
+        href={`/app/virtual-lab/explore/interactive/model/circuit/${record.key}`}
+        className="whitespace-nowrap font-normal"
+      >
         {record.brainRegion}
       </Link>
     ),

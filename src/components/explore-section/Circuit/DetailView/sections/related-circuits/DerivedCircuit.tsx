@@ -1,46 +1,80 @@
-import { Table } from 'antd';
-import { TableRowSelection } from 'antd/es/table/interface';
-import { Key, useState } from 'react';
+'use client';
 
+import { useEffect, useState } from 'react';
+import CircuitTable from '../../../global/CircuitTable';
 import { CircuitSchemaProps } from '../../../type';
-import columns from './columns';
-
-import { classNames } from '@/util/utils';
-import styles from './ExploreCircuitTable.module.scss';
+import { buildCircuitMap } from '../../../utils/circuits-map';
 
 export default function DerivedCircuits({ content }: { content: CircuitSchemaProps }) {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [derivedCircuits, setDerivedCircuits] = useState<CircuitSchemaProps[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const rowSelection: TableRowSelection<CircuitSchemaProps> = {
-    type: 'radio',
-    selectedRowKeys,
-    onChange: (newSelectedRows: Key[]) => {
-      setSelectedRowKeys(newSelectedRows);
-    },
-  };
+  useEffect(() => {
+    const fetchDerivedCircuits = async () => {
+      try {
+        setLoading(true);
+
+        if (!content.derivedFrom || content.derivedFrom.length === 0) {
+          setDerivedCircuits([]);
+          return;
+        }
+
+        const response = await fetch('/circuits/ALL_CIRCUITS.json');
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const circuits: CircuitSchemaProps[] = await response.json();
+        const circuitMap = buildCircuitMap(circuits);
+
+        const derived = content.derivedFrom
+          .map((key) => circuitMap.get(key))
+          .filter((circuit): circuit is CircuitSchemaProps => !!circuit);
+
+        if (derived.length === 0) {
+          throw new Error(`No derived circuits found for keys: ${content.derivedFrom.join(', ')}`);
+        }
+
+        setDerivedCircuits(derived);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDerivedCircuits();
+  }, [content.derivedFrom]);
+
+  if (loading) {
+    return (
+      <div className="relative flex h-[50vh] w-full items-center justify-center text-lg font-normal text-primary-9">
+        Loading subcircuits...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="relative flex h-[50vh] w-full items-center justify-center text-lg font-normal text-red-600">
+        {error}
+      </div>
+    );
+  }
+
+  if (derivedCircuits.length === 0) {
+    return (
+      <div className="relative flex h-[50vh] w-full items-center justify-center text-lg font-normal text-primary-9">
+        No subcircuits available for this circuit
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex w-full flex-col">
-      <Table<CircuitSchemaProps>
-        className={classNames(
-          '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-          '[&_.ant-table-row]:bg-[#FAFAFA]',
-          '[&_.ant-table-thead_th]:!text-sm',
-          '[&_.ant-table-thead_th]:!font-normal',
-          '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
-          '[&_.ant-table-thead_th]:uppercase',
-          '[&_.ant-table-thead_th]:tracking-[0.05em]',
-          '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-          '[&_.ant-table-thead > tr > th]:border-b-0',
-          '[&_.ant-table-expand-icon-col]:w-0',
-          '[&_.ant-table-expand-icon-col]:hidden',
-          styles.circuitTable
-        )}
-        columns={columns}
-        dataSource={content.subcircuit || []}
-        pagination={false}
-        rowSelection={rowSelection}
-      />
+      <CircuitTable data={derivedCircuits} downloadable={false} hasSearch={false} />
     </div>
   );
 }

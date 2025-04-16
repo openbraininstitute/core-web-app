@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { CircuitColumn, CircuitSchemaProps } from '../../../type';
 
-import truncate from '@/util/truncate';
-
 const columns: CircuitColumn[] = [
   {
     title: 'Name',
@@ -17,8 +15,8 @@ const columns: CircuitColumn[] = [
     title: 'Description',
     key: 'description',
     render: (value: CircuitSchemaProps) => (
-      <Link href={`./circuit/${value.key}`} className="whitespace-nowrap font-normal">
-        {truncate(value.description, 40)}
+      <Link href={`./circuit/${value.key}`} className="truncate font-normal">
+        {value.description}
       </Link>
     ),
     width: 300,

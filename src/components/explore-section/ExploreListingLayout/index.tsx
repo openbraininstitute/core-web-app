@@ -5,10 +5,11 @@ import { Menu } from 'antd';
 import { useAtomValue } from 'jotai';
 import find from 'lodash/find';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { CSSProperties, ReactNode } from 'react';
+import { CSSProperties, ReactNode, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import circuitsFlat from '../Circuit/content/circuits_flat';
+import { flattenRows } from '../Circuit/content/circuits_flat';
+import { CircuitSchemaProps } from '../Circuit/type';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
@@ -29,6 +30,11 @@ import { classNames } from '@/util/utils';
 const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
 
 const dataScope = ExploreDataScope.SelectedBrainRegion;
+
+export type ExploreListingLayoutProps = {
+  children?: ReactNode;
+  virtualLabInfo?: VirtualLabInfo;
+};
 
 function MenuItemLabel({
   label,
@@ -56,10 +62,7 @@ function MenuItemLabel({
 export default function ExploreListingLayout({
   children,
   virtualLabInfo,
-}: {
-  children: ReactNode;
-  virtualLabInfo?: VirtualLabInfo;
-}) {
+}: ExploreListingLayoutProps) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const pathname = usePathname();
   const splittedPathname = pathname.split('/');
@@ -69,6 +72,33 @@ export default function ExploreListingLayout({
   const config = pathname.includes('experimental') ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const activePath = pathname?.split('/').pop() || 'morphology';
+
+  // State for circuit count
+  const [circuitCount, setCircuitCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // FETCH CIRCUITS IN /PUBLIC
+  useEffect(() => {
+    const fetchCircuits = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/circuits/ALL_CIRCUITS.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const circuits: CircuitSchemaProps[] = await response.json();
+        const circuitsFlat = flattenRows(circuits);
+        setCircuitCount(circuitsFlat.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch circuits');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCircuits();
+  }, []);
 
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
@@ -119,10 +149,16 @@ export default function ExploreListingLayout({
 
   const circuitActive = activePath === 'circuit';
 
+  const label = () => {
+    if (loading) return 'Circuit (Loading...)';
+    if (error) return 'Circuit (Error)';
+    return `Circuits (${circuitCount})`;
+  };
+
   items.push({
     key: 'circuit',
     title: 'Circuit',
-    label: `Circuit (${circuitsFlat.length})`,
+    label: label(),
     className: 'text-center font-semibold',
     style: {
       backgroundColor: circuitActive ? 'white' : '#002766',

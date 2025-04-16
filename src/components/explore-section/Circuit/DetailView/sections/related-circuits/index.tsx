@@ -21,12 +21,13 @@ export default function RelatedCircuitsSection({ content }: { content: CircuitSc
           <Subcircuits content={content} />
         </>
       )}
-      {content.derivedFrom.length > 0 && (
-        <>
-          <SubtitleBar title="Derived from" />
-          <DerivedCircuits content={content} />
-        </>
-      )}
+      {content.derivedFrom.length > 0 ||
+        (content.derivedFrom === null && (
+          <>
+            <SubtitleBar title="Derived from" />
+            <DerivedCircuits content={content} />
+          </>
+        ))}
     </div>
   );
 }

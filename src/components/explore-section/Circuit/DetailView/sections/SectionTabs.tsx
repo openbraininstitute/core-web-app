@@ -32,7 +32,7 @@ export default function SectionTabs({
   ];
 
   return (
-    <div className="relative grid w-full grid-cols-4">
+    <div className="sticky top-0 z-50 grid h-16 w-full grid-cols-4 bg-[#F3F3F3]">
       {sections.map((section: SectionProps) => {
         return (
           <button

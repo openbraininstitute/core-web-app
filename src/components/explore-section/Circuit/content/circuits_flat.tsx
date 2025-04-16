@@ -1,5 +1,4 @@
 import { CircuitSchemaProps } from '../type';
-import CIRCUITS_FULL from './circuits_tree_formatted';
 
 export type CircuitWithCount = {
   circuit: CircuitSchemaProps;
@@ -39,5 +38,3 @@ export const flattenRows = (data: CircuitSchemaProps[]): CircuitSchemaProps[] =>
     return [...acc, row, ...subcircuits];
   }, [] as CircuitSchemaProps[]);
 };
-
-export default flattenRows(CIRCUITS_FULL);

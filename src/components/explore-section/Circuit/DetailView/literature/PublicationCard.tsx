@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { CopyIcon, LinkIcon } from '../../icon/ArticlesIcons';
-import { PaperLitteratureProps } from '../../type';
+import { PaperLiteratureProps } from '../../type';
 
 import { CheckIcon, UserIcon } from '@/components/icons';
 import CalendarIcon from '@/components/icons/Calendar';
@@ -13,7 +13,7 @@ export default function PublicationCard({
   content,
   index,
 }: {
-  content: PaperLitteratureProps;
+  content: PaperLiteratureProps;
   index: number;
 }) {
   const { abstract } = content;

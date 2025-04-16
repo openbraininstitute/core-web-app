@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CircuitSchemaProps, PaperLitteratureProps } from '../../../type';
+import { CircuitSchemaProps, PaperLiteratureProps } from '../../../type';
 import PublicationCard from '../../literature/PublicationCard';
 import SubtitleBar from '../SubtitleBar';
 
@@ -80,7 +80,7 @@ export default function RelatedPublicationssSection({ content }: { content: Circ
   const CIRCUIT_PROVENANCE_LITERATURE = useMemo(
     () =>
       content.literature.filter(
-        (publication: PaperLitteratureProps) => publication.category === 'circuit_source'
+        (publication: PaperLiteratureProps) => publication.category === 'circuit_source'
       ),
     [content.literature]
   );
@@ -88,7 +88,7 @@ export default function RelatedPublicationssSection({ content }: { content: Circ
   const CIRCUIT_APPLICATION_LITERATURE = useMemo(
     () =>
       content.literature.filter(
-        (publication: PaperLitteratureProps) => publication.category === 'application'
+        (publication: PaperLiteratureProps) => publication.category === 'application'
       ),
     [content.literature]
   );
@@ -97,7 +97,7 @@ export default function RelatedPublicationssSection({ content }: { content: Circ
     <div className="relative flex w-full flex-col">
       <SubtitleBar title="Source" />
       <div className="relative flex w-full flex-col gap-y-12">
-        {CIRCUIT_PROVENANCE_LITERATURE.map((publication: PaperLitteratureProps, index: number) => (
+        {CIRCUIT_PROVENANCE_LITERATURE.map((publication: PaperLiteratureProps, index: number) => (
           <PublicationCard
             key={`Publication_${publication.doi}`}
             content={publication}
@@ -107,7 +107,7 @@ export default function RelatedPublicationssSection({ content }: { content: Circ
       </div>
       <SubtitleBar title="Applications" />
       <div className="relative flex w-full flex-col gap-y-12">
-        {CIRCUIT_APPLICATION_LITERATURE.map((publication: PaperLitteratureProps, index: number) => (
+        {CIRCUIT_APPLICATION_LITERATURE.map((publication: PaperLiteratureProps, index: number) => (
           <PublicationCard
             key={`Publication_${publication.doi}`}
             content={publication}

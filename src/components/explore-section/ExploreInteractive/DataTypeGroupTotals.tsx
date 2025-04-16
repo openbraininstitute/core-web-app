@@ -1,11 +1,18 @@
 'use client';
 
+import fs from 'fs/promises';
+import path from 'path';
+
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 
-import circuitsFlat from '../Circuit/content/circuits_flat';
+import { GetStaticProps } from 'next';
+import { CircuitSchemaProps } from '../Circuit/type';
+
+import { useFlatCircuitMap } from '../Circuit/utils/use-flat-circuit-map';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
+
 import { DATA_TYPE_GROUPS_CONFIG } from '@/constants/explore-section/data-type-groups';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -13,6 +20,12 @@ import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-vi
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
+
+export type DataTypeGroupTotalsProps = {
+  dataTypeGroup: DataTypeGroup;
+  virtualLabInfo?: VirtualLabInfo;
+  circuits: CircuitSchemaProps[];
+};
 
 function DataTypeGroupTotal({
   dataType,
@@ -62,12 +75,12 @@ function DataTypeGroupTotal({
 export default function DataTypeGroupTotals({
   dataTypeGroup,
   virtualLabInfo,
-}: {
-  dataTypeGroup: DataTypeGroup;
-  virtualLabInfo?: VirtualLabInfo;
-}) {
+  circuits,
+}: DataTypeGroupTotalsProps) {
   const { config, extensionPath } = DATA_TYPE_GROUPS_CONFIG[dataTypeGroup];
   const pathName = usePathname();
+
+  const circuitMap = useFlatCircuitMap(circuits, {});
 
   return (
     <>
@@ -87,10 +100,36 @@ export default function DataTypeGroupTotals({
           href={`${pathName}/model/circuit`}
           key="Circuit"
           title="Circuit"
-          subtitle={`${circuitsFlat.length} records`}
+          subtitle={`${circuitMap.size} record${circuitMap.size !== 1 ? 's' : ''}`}
           testId="experiment-dataset-Circuit"
         />
       )}
     </>
   );
 }
+
+export const getStaticProps: GetStaticProps<DataTypeGroupTotalsProps> = async () => {
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'circuits', 'circuits.json');
+
+    const fileContents = await fs.readFile(filePath, 'utf8');
+
+    const circuits: CircuitSchemaProps[] = JSON.parse(fileContents);
+
+    return {
+      props: {
+        dataTypeGroup: DataTypeGroup.ModelData, // Adjust based on your context
+        circuits,
+      },
+    };
+  } catch (error) {
+    console.error('Failed to fetch circuits:', error);
+
+    return {
+      props: {
+        dataTypeGroup: DataTypeGroup.ModelData,
+        circuits: [],
+      },
+    };
+  }
+};

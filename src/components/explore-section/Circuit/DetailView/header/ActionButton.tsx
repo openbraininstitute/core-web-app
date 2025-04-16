@@ -64,10 +64,6 @@ export default function ActionButton({
   }
 
   if (type === 'download' && link) {
-    if (link === 'undefined') {
-      throw new Error("The 'link' property is undefined. Please provide a valid link.");
-    }
-
     return (
       <a
         href={link}

@@ -1,6 +1,6 @@
 import { Button, Input, Select } from 'antd';
 import { useState } from 'react';
-import { NumericFilterOptions } from '../utils/filterCircuitsByNumeric';
+import { NumericFilterOptions } from '../utils/filter-circuits-by-numeric';
 
 const { Option } = Select;
 

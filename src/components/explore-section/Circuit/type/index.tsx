@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type PaperLitteratureProps = {
+export type PaperLiteratureProps = {
   category: string;
   title: string;
   authors: string;

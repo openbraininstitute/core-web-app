@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CircuitSchemaProps, PaperLitteratureProps } from '../../../type';
+import { CircuitSchemaProps, PaperLiteratureProps } from '../../../type';
 import PublicationCard from '../../literature/PublicationCard';
 import SubtitleBar from '../SubtitleBar';
 
@@ -7,7 +7,7 @@ export default function Literature({ content }: { content: CircuitSchemaProps })
   const CIRCUIT_PROVENANCE_LITERATURE = useMemo(
     () =>
       content.literature.filter(
-        (publication: PaperLitteratureProps) => publication.category === 'circuit_source'
+        (publication: PaperLiteratureProps) => publication.category === 'circuit_source'
       ),
     [content.literature]
   );
@@ -15,7 +15,7 @@ export default function Literature({ content }: { content: CircuitSchemaProps })
   const CIRCUIT_PROVENANCE_RELATED_ARTIFACTS = useMemo(
     () =>
       content.literature.filter(
-        (publication: PaperLitteratureProps) => publication.category === 'component_source'
+        (publication: PaperLiteratureProps) => publication.category === 'component_source'
       ),
     [content.literature]
   );
@@ -24,9 +24,9 @@ export default function Literature({ content }: { content: CircuitSchemaProps })
     <div className="relative flex w-full flex-col">
       <SubtitleBar title="Circuit Provenance" />
       <div className="relative flex w-full flex-col gap-y-12">
-        {CIRCUIT_PROVENANCE_LITERATURE.map((publication: PaperLitteratureProps, index: number) => (
+        {CIRCUIT_PROVENANCE_LITERATURE.map((publication: PaperLiteratureProps, index: number) => (
           <PublicationCard
-            key={`Publication_${publication.doi}-${index + 1}`}
+            key={`Publication_${publication.doi}`}
             content={publication}
             index={index}
           />
@@ -35,9 +35,9 @@ export default function Literature({ content }: { content: CircuitSchemaProps })
       <SubtitleBar title="Related artifacts provenance" />
       <div className="relative flex w-full flex-col gap-y-12">
         {CIRCUIT_PROVENANCE_RELATED_ARTIFACTS.map(
-          (publication: PaperLitteratureProps, index: number) => (
+          (publication: PaperLiteratureProps, index: number) => (
             <PublicationCard
-              key={`Publication_${publication.doi}-${index + 1}`}
+              key={`Publication_${publication.doi}`}
               content={publication}
               index={index}
             />
