@@ -54,6 +54,7 @@ export default function Tabs({ items, activeTabId, basePath }: TabsProps) {
       <div className="sticky top-0 right-0 left-0 z-10 flex">
         {items.map((tab) => (
           <Link
+            role="tab"
             key={tab.key}
             href={`${basePath}?t=${tab.key}`}
             className={`px-4 py-2 transition-colors duration-150 ease-in-out focus:outline-none ${
