@@ -16,7 +16,10 @@ export function LinkAndDownloadArtifactList({
   return (
     <div className="flex w-full flex-col gap-12">
       {content.map((singleArtifact: LinkAndDownloadArtifactProps, index: number) => (
-        <SingleArtifact key={`Artifact_${singleArtifact.title}_${index + 1}`} content={singleArtifact} />
+        <SingleArtifact
+          key={`Artifact_${singleArtifact.title}_${index + 1}`}
+          content={singleArtifact}
+        />
       ))}
     </div>
   );
@@ -30,7 +33,6 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
   const [showDownloadAndLinks, setShowDownloadAndLinks] = useState<boolean>(true);
 
   useEffect(() => {
-
     if (content?.artifact !== null) {
       setTotalArtifacts((prev) => prev + (content?.artifact?.length ?? 0));
     }
@@ -43,63 +45,56 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
     if (content?.eModelsList !== null) {
       setTotalArtifacts((prev) => prev + (content?.eModelsList?.length ?? 0));
     }
-
-  }, [
-    content?.artifact,
-    content?.meModelsList,
-    content?.minimalMeModel,
-    content?.eModelsList,
-  ]);
-
+  }, [content?.artifact, content?.meModelsList, content?.minimalMeModel, content?.eModelsList]);
 
   return (
     <div className="relative flex w-full flex-col gap-y-12 scroll-smooth" id="artifacts">
       <header className="sticky top-0 z-50 mb-12 flex h-16 w-full flex-row items-center justify-between bg-white">
         <div className="relative flex flex-row text-base">
-          Total artifacts: <span className="block ml-2 font-bold">{totalArtifacts}</span>
+          Total artifacts: <span className="ml-2 block font-bold">{totalArtifacts}</span>
         </div>
 
         <div className="relative flex items-center gap-x-4">
           <div className="mr-3 text-base font-normal text-primary-9">Show Tables</div>
-            {content?.artifact && (
-              <CheckboxFilter
-                value={showDownloadAndLinks}
-                setValue={setShowDownloadAndLinks}
-                name="Artifacts"
-                dataNumber={content?.artifact.length}
-                link="#artifacts"
-              />
-            )}
+          {content?.artifact && (
+            <CheckboxFilter
+              value={showDownloadAndLinks}
+              setValue={setShowDownloadAndLinks}
+              name="Artifacts"
+              dataNumber={content?.artifact.length}
+              link="#artifacts"
+            />
+          )}
 
-            {content?.meModelsList && (
-              <CheckboxFilter
-                value={showMeModels}
-                setValue={setShowMeModels}
-                name="ME Models"
-                dataNumber={content.meModelsList.length}
-                link="#meModelsFull"
-              />
-            )}
+          {content?.meModelsList && (
+            <CheckboxFilter
+              value={showMeModels}
+              setValue={setShowMeModels}
+              name="ME Models"
+              dataNumber={content.meModelsList.length}
+              link="#meModelsFull"
+            />
+          )}
 
-            {content?.minimalMeModel && (
-              <CheckboxFilter
-                value={showMinimalMeModels}
-                setValue={setShowMinimalMeModels}
-                name="Other ME Models"
-                dataNumber={content?.minimalMeModel.length}
-                link="#meModelsLight"
-              />
-            )}
+          {content?.minimalMeModel && (
+            <CheckboxFilter
+              value={showMinimalMeModels}
+              setValue={setShowMinimalMeModels}
+              name="Other ME Models"
+              dataNumber={content?.minimalMeModel.length}
+              link="#meModelsLight"
+            />
+          )}
 
-            {content?.eModelsList && (
-              <CheckboxFilter
-                value={showEModels}
-                setValue={setShowEModels}
-                name="E Models"
-                dataNumber={content.eModelsList.length}
-                link="#eModels"
-              />
-            )}
+          {content?.eModelsList && (
+            <CheckboxFilter
+              value={showEModels}
+              setValue={setShowEModels}
+              name="E Models"
+              dataNumber={content.eModelsList.length}
+              link="#eModels"
+            />
+          )}
         </div>
       </header>
 
