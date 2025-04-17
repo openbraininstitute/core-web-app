@@ -1,5 +1,4 @@
 import { useMemo, useRef, useEffect } from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
 import { useLoadMore } from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import { ExploreDataScope } from '@/types/explore-section/application';
 
@@ -33,11 +32,10 @@ export default function useInfiniteScroll(
     rootMargin: '0px',
   });
 
-  return (
-    <div ref={loadMoreDivRef} className="flex justify-center pt-5">
-      {loading && <LoadingOutlined className="text-4xl" />}
-    </div>
-  );
+  return [
+    loading,
+    <div key="load-more-trigger" ref={loadMoreDivRef} className="flex justify-center pt-5" />,
+  ];
 }
 
 export function useIntersectionObserver({
