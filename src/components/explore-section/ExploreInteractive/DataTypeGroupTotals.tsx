@@ -123,7 +123,7 @@ export const getStaticProps: GetStaticProps<DataTypeGroupTotalsProps> = async ()
       },
     };
   } catch (error) {
-    console.error('Failed to fetch circuits:', error);
+    throw new Error(`Failed to load circuits: ${error}`);
 
     return {
       props: {
