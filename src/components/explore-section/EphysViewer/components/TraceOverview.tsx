@@ -180,7 +180,7 @@ function TraceThumbnailContainer({
   const [ref, inView] = useInView({ threshold: 0, triggerOnce: true, rootMargin: '1200px' });
 
   return (
-    <div ref={ref} className="aspect-4/3 relative w-full overflow-hidden last:mt-7">
+    <div ref={ref} className="aspect-4/3 relative overflow-hidden last:mt-7">
       {inView ? (
         <TraceThumbnail
           trace={trace}
