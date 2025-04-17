@@ -1,7 +1,8 @@
 import React from 'react';
 import Plotly, { PlotData } from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
-import { convertVoltageSeries } from '@/util/explore-section/plotHelpers';
+
+import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
 import useConfig from '@/components/explore-section/EphysViewer/hooks/useConfig';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { PlotProps } from '@/types/explore-section/application';
@@ -9,16 +10,11 @@ import { ZoomRanges } from '@/types/explore-section/misc';
 
 const Plot = createPlotlyComponent(Plotly);
 
-const DEFAULT_RESPONSE_UNIT = 'mV';
-
 function ResponsePlot({
   reset,
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
-  // const isVolts = metadata && metadata.v_unit === 'volts';
-  const isVolts = 'volts';
-
   const [zoomRanges, setZoomRanges] = React.useState<ZoomRanges | null>(null);
 
   React.useEffect(() => {
@@ -27,21 +23,40 @@ function ResponsePlot({
 
   const { config, layout, font, style } = useConfig();
 
-  const rawData = React.useMemo(() => {
-    // const deltaTime = metadata ? metadata?.dt : 1;
-    const deltaTime = 1;
+  const [rawData, dataUnit] = React.useMemo(() => {
+    let deltaTime = 1;
+    let dataUnit: string | null = null;
+    let conversionFactor = 1;
+
     const zoom = {
       xstart: zoomRanges?.x[0],
       xend: zoomRanges?.x[1],
     };
-    const allSweepsData = allSweeps.map((sweep) => {
+
+    const allSweepsData = allSweeps.map((sweep, idx) => {
+      const recordingData = sweepDataMap.get(sweep)?.response;
+      if (!recordingData) {
+        throw new Error(`No recording data found for sweep ${sweep}`);
+      }
+
+      if (idx === 0) {
+        const { timeUnit, timeRate } = recordingData;
+
+        if (timeUnit === 'seconds') {
+          deltaTime = (1 / timeRate) * 1000;
+        }
+
+        dataUnit = recordingData.unit;
+        conversionFactor = recordingData.conversionFactor;
+      }
+
       const name = sweep;
-      const y = sweepDataMap.get(sweep)?.response.data as number[]; // TODO Fix typing
-      const yConverted = isVolts ? convertVoltageSeries(y, DEFAULT_RESPONSE_UNIT) : y;
+      const y = recordingData.data as number[]; // TODO Fix typing
       const color = colorMap.get(sweep) as string;
+
       return {
         name,
-        y: yConverted,
+        y,
         line: {
           color,
         },
@@ -49,8 +64,21 @@ function ResponsePlot({
       };
     });
 
-    return optimizePlotData(allSweepsData, deltaTime, zoom) || [];
-  }, [zoomRanges, allSweeps, isVolts, colorMap]);
+    // Downsample the data.
+    const optimizedPlotData = optimizePlotData(allSweepsData, deltaTime, zoom) || [];
+
+    // Convert the data to meet the desired units.
+    optimizedPlotData.forEach((d) => {
+      d.y =
+        dataUnit === 'amperes'
+          ? convertCurrentSeries(d.y, 'pA', conversionFactor)
+          : convertVoltageSeries(d.y, 'mV', conversionFactor);
+    });
+
+    return [optimizedPlotData, dataUnit];
+  }, [zoomRanges, allSweeps, colorMap]);
+
+  const yTitle = dataUnit === 'amperes' ? 'Current (pA)' : 'Membrane potential (mV)';
 
   const selectedResponse: Partial<PlotData>[] = React.useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
@@ -84,12 +112,6 @@ function ResponsePlot({
     return false;
   };
 
-  // const xTitle = metadata ? metadata.t_unit : '';
-  const xTitle = 'units';
-
-  // const yTitle = isVolts ? DEFAULT_RESPONSE_UNIT : (metadata && metadata.v_unit) || '';
-  const yTitle = 'units';
-
   const isEmptySelection = !selectedSweeps.length;
   const emptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
   return (
@@ -107,18 +129,18 @@ function ResponsePlot({
         setZoomRanges({ x: [x1, x2], y: [y1, y2] });
       }}
       layout={{
-        title: 'Recording',
+        title: 'Response',
         xaxis: {
           title: {
             font,
-            text: `Time (${xTitle})`,
+            text: `Time (ms)`,
           },
           range: zoomRanges?.x,
         },
         yaxis: {
           title: {
             font,
-            text: `Membrane Potential (${yTitle})`,
+            text: yTitle,
           },
           range: zoomRanges?.y,
           zeroline: false,

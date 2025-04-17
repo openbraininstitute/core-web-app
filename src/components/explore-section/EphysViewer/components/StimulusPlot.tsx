@@ -1,55 +1,76 @@
-import * as React from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Plotly, { PlotData } from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import { Radio } from 'antd';
+import { atomWithStorage } from 'jotai/utils';
 
-import { convertCurrentSeries, CurrentUnit } from '@/util/explore-section/plotHelpers';
+import {
+  convertCurrentSeries,
+  convertVoltageSeries,
+  CurrentUnit,
+} from '@/util/explore-section/plotHelpers';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import useConfig from '@/components/explore-section/EphysViewer/hooks/useConfig';
 import { PlotProps } from '@/types/explore-section/application';
 import { ZoomRanges } from '@/types/explore-section/misc';
+import { useAtom } from 'jotai';
 
 const Plot = createPlotlyComponent(Plotly);
 
-const DEFAULT_STIMULUS_UNIT = 'pA';
+const DEFAULT_CURRENT_UNIT: CurrentUnit = 'pA';
+const currentUnitAtom = atomWithStorage<CurrentUnit>(
+  'ephysViewer.currentUnit',
+  DEFAULT_CURRENT_UNIT
+);
 
 function StimulusPlot({
   reset,
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
-  const [stimulusUnit, setStimulusUnit] = React.useState<CurrentUnit>(DEFAULT_STIMULUS_UNIT);
+  const [stimulusUnit, setStimulusUnit] = useAtom(currentUnitAtom);
+  const [zoomRanges, setZoomRanges] = useState<ZoomRanges | null>(null);
 
-  const [zoomRanges, setZoomRanges] = React.useState<ZoomRanges | null>(null);
-
-  React.useEffect(() => {
+  useEffect(() => {
     setZoomRanges(null);
   }, [reset]);
 
-  // const isAmperes = metadata && metadata.i_unit === 'amperes';
-  const isAmperes = true;
-
   const { config, layout, font, style, antBreakpoints } = useConfig();
 
-  const rawData = React.useMemo(() => {
-    // const deltaTime = metadata ? metadata?.dt : 1;
-    const deltaTime = 1;
+  const [rawData, dataUnit] = useMemo(() => {
+    let deltaTime = 1;
+    let dataUnit: string | null = null;
+    let conversionFactor = 1;
 
     const zoom = {
       xstart: zoomRanges?.x[0],
       xend: zoomRanges?.x[1],
     };
 
-    const allSweepsData = allSweeps.map((sweep) => {
-      const name = sweep;
-      const y = sweepDataMap.get(sweep)?.stimulus.data as number[]; // TODO Fix typing
+    const allSweepsData = allSweeps.map((sweep, idx) => {
+      const recordingData = sweepDataMap.get(sweep)?.stimulus;
+      if (!recordingData) {
+        throw new Error(`No recording data found for sweep ${sweep}`);
+      }
 
-      const yConverted = isAmperes ? convertCurrentSeries(y, stimulusUnit) : y;
+      if (idx === 0) {
+        const { timeUnit, timeRate } = recordingData;
+
+        if (timeUnit === 'seconds') {
+          deltaTime = (1 / timeRate) * 1000;
+        }
+
+        dataUnit = recordingData.unit;
+        conversionFactor = recordingData.conversionFactor;
+      }
+
+      const name = sweep;
+      const y = recordingData.data as number[]; // TODO Fix typing
       const color = colorMap.get(sweep) as string;
 
       return {
         name,
-        y: yConverted,
+        y,
         line: {
           color,
         },
@@ -57,16 +78,27 @@ function StimulusPlot({
       };
     });
 
-    return optimizePlotData(allSweepsData, deltaTime, zoom) || [];
-  }, [zoomRanges, allSweeps, isAmperes, colorMap, stimulusUnit]);
+    // Downsample the data.
+    const optimizedPlotData = optimizePlotData(allSweepsData, deltaTime, zoom) || [];
 
-  const selectedResponse: Partial<PlotData>[] = React.useMemo(
+    // Convert the data to meet the desired units.
+    optimizedPlotData.forEach((d) => {
+      d.y =
+        dataUnit === 'amperes'
+          ? convertCurrentSeries(d.y, stimulusUnit, conversionFactor)
+          : convertVoltageSeries(d.y, 'mV', conversionFactor);
+    });
+
+    return [optimizedPlotData, dataUnit];
+  }, [zoomRanges, allSweeps, colorMap, stimulusUnit]);
+
+  const selectedResponse: Partial<PlotData>[] = useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedSweeps, stimulusUnit]
   );
 
-  const previewDataResponse: Partial<PlotData>[] = React.useMemo(
+  const previewDataResponse: Partial<PlotData>[] = useMemo(
     () =>
       rawData?.map((data: { sweepName: string }) => {
         const isSelected = selectedSweeps.includes(data.sweepName);
@@ -95,10 +127,7 @@ function StimulusPlot({
     return false;
   };
 
-  // const xTitle = metadata ? metadata.t_unit : '';
-  const xTitle = 'units';
-  // const yTitle = isAmperes ? stimulusUnit : (metadata && metadata.i_unit) || '';
-  const yTitle = 'units';
+  const yTitle = dataUnit === 'amperes' ? `Current (${stimulusUnit})` : 'Membrane potential (mV)';
 
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
@@ -122,14 +151,14 @@ function StimulusPlot({
           xaxis: {
             title: {
               font,
-              text: `Time (${xTitle})`,
+              text: `Time (ms)`,
             },
             range: zoomRanges?.x,
           },
           yaxis: {
             title: {
               font,
-              text: `Current (${yTitle})`,
+              text: yTitle,
             },
             range: zoomRanges?.y,
             zeroline: false,
@@ -140,14 +169,14 @@ function StimulusPlot({
         style={style}
         config={{ displaylogo: false, ...config }}
       />
-      {isAmperes && antBreakpoints.md && (
+      {antBreakpoints.md && (
         <Radio.Group
           onChange={onChangeStimulusUnits}
           value={stimulusUnit}
           size="small"
           className="units"
         >
-          <Radio.Button value={DEFAULT_STIMULUS_UNIT}>{DEFAULT_STIMULUS_UNIT}</Radio.Button>
+          <Radio.Button value={DEFAULT_CURRENT_UNIT}>{DEFAULT_CURRENT_UNIT}</Radio.Button>
           <Radio.Button value="nA">nA</Radio.Button>
         </Radio.Group>
       )}
