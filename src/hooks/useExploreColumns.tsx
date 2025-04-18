@@ -12,7 +12,7 @@ import CoreFieldsDefinitionRegistry from 'src/entity-configuration/definitions';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields/enums';
-import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
 type ResizeInit = {
@@ -217,11 +217,13 @@ export default function useExploreColumns<T>(
   if (dataType) {
     return columns.sort((a, b) =>
       a.key && b.key
-        ? DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(a.key as EntityCoreFields) -
-          DATA_TYPES_TO_CONFIGS[dataType].columns.indexOf(b.key as EntityCoreFields)
+        ? ViewsDefinitionRegistry[dataType].columns.indexOf(a.key as EntityCoreFields) -
+          ViewsDefinitionRegistry[dataType].columns.indexOf(b.key as EntityCoreFields)
         : -1
     );
   }
+
+  console.log('ᦨ #  useExploreColumns.tsx:228 #  columns:', columns);
 
   return columns;
 }

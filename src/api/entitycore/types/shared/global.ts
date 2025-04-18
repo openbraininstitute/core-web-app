@@ -21,7 +21,7 @@ export type EntityCoreBaseType = {
 };
 
 export interface EntityCoreBaseAsset {
-  assets: Array<IAsset>;
+  assets: Array<IAsset> | null;
 }
 
 export interface EntityCoreResource
@@ -35,11 +35,13 @@ export interface Timestamps {
 }
 
 type BrainRegion = {
-  ontology_id: string;
+  id: number;
   name: string;
+  acronym: string;
+  children: Array<number>;
 };
 
-export interface IBrainRegion extends BrainRegion, Timestamps, EntityCoreIdentifiable {}
+export interface IBrainRegion extends BrainRegion, Timestamps {}
 
 type Strain = {
   name: string;
@@ -70,6 +72,13 @@ export interface IBrainLocation {
   z: number;
 }
 
+export type MeasurementBase = {
+  id: number;
+  name: string;
+  unit: string;
+  value: number;
+};
+
 export type MorphologyMeasurementSerie = {
   name: string;
   value: number;
@@ -80,13 +89,6 @@ export type Measurement = {
   measurement_serie: MorphologyMeasurementSerie[];
 };
 
-export type MTypeBase = {
-  pref_label: string;
-  alt_label: string;
-  definition: string;
-};
-
-export interface IMType extends MTypeBase, Timestamps, EntityCoreIdentifiable {}
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
@@ -143,3 +145,43 @@ export interface IAsset extends AssetBase, AssetLegacyMeta {
   id: string;
   status: AssetStatus;
 }
+
+export type Sex = 'male' | 'female' | 'unknown';
+export type AgePeriod = 'days' | 'weeks' | 'months' | 'years';
+
+export type SubjectBase = {
+  name: string;
+  description: string;
+  sex: Sex;
+  weight?: number | null;
+  age_value?: number | null;
+  age_min?: number | null;
+  age_max?: number | null;
+  age_period?: AgePeriod | null;
+};
+
+export interface ISubject extends SubjectBase {
+  species: ISpecies;
+}
+
+export type EntityAuthorization = {
+  authorized_project_id: string;
+  authorized_public: boolean;
+};
+
+type Annotation = {
+  pref_label: string;
+  alt_label: string;
+  definition: string;
+};
+
+export interface IAnnotation extends EntityCoreIdentifiable, Annotation {}
+export interface IMType extends IAnnotation {}
+export interface IEType extends IAnnotation {}
+
+// check this one
+const Dimension = {
+  dimensionless: 'dimensionless',
+  linear_density: '1/μm',
+  volume_density: '1/mm³',
+} as const;

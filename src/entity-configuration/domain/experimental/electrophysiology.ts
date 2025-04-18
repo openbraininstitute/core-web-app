@@ -1,12 +1,11 @@
 import { DataType } from '@/constants/explore-section/list-views';
-import * as entitycore from '@/api/entitycore/queries';
-
+import { EntityType } from '@/entity-configuration/domain/types';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const Electrophysiology: EntityCoreTypeConfig<any> = {
   group: 'experimental',
   legacyType: DataType.ExperimentalElectroPhysiology,
-  type: 'single-cell-experimental-trace',
+  type: EntityType.SingleCellExperimentalTrace,
   slug: 'electrophysiology',
   api: {
     config: {

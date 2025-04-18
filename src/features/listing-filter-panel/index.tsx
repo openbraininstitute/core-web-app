@@ -34,6 +34,7 @@ import { Facets } from '@/api/entitycore/types/shared/response';
 import { getFieldLabel } from '@/api/explore-section/fields';
 import { defaultList } from './checklist/default-checklist';
 import { fieldTitleSentenceCase } from '@/util/utils';
+import { getCoreFieldDefinition } from '@/entity-configuration/definitions';
 
 export type ListingFilterPanelProps = {
   children?: ReactNode;
@@ -221,7 +222,7 @@ export default function ListingFilterPanel({
               ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
               : undefined,
             display: activeColumns?.includes(filter.field),
-            label: fieldTitleSentenceCase(getFieldLabel(filter.field)),
+            label: fieldTitleSentenceCase(getCoreFieldDefinition(filter.field)?.title ?? ''),
             type: filter.type,
             toggleFunc: showDisplayTrigger
               ? () => onToggleActive && onToggleActive(filter.field)

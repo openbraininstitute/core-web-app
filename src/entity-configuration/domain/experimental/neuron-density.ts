@@ -1,4 +1,5 @@
 import { DataType } from '@/constants/explore-section/list-views';
+import { EntityType } from '@/entity-configuration/domain/types';
 import * as entitycore from '@/api/entitycore/queries';
 
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
@@ -7,12 +8,12 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
   group: 'experimental',
   legacyType: DataType.ExperimentalNeuronDensity,
-  type: 'experimental-neuron-density',
+  type: EntityType.ExperimentalNeuronDensity,
   slug: 'neuron-density',
   api: {
     config: {
-      allowedFacets: undefined,
-      allowedParams: ['page_size', 'page'],
+      allowedFacets: true,
+      allowedParams: 'all',
     },
     query: {
       list: entitycore.getExperimentalNeuronDensities,

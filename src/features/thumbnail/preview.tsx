@@ -7,7 +7,13 @@ import Image from 'next/image';
 
 import { tryCatch } from '@/api/utils';
 import { getPreviewBlob } from '@/api/thumbnail-svc';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+
+import type {
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+} from '@/api/entitycore/types/shared/global';
+
+interface T extends EntityCoreBaseAsset, EntityCoreIdentifiable {}
 
 export default function PreviewThumbnail({
   resource,
@@ -17,7 +23,7 @@ export default function PreviewThumbnail({
   target,
   alt = 'img preview',
 }: {
-  resource: EntityCoreResource;
+  resource: T;
   className?: string;
   dpi?: number;
   size?: { height: number; width: number } | string;

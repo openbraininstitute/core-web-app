@@ -36,6 +36,7 @@ import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { WorkspaceContext } from '@/types/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 
 type DataAtomFamilyScopeType = {
   key: string;
@@ -72,7 +73,7 @@ export const activeColumnsAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<string[]> | string[]>(async (get) => {
       const dimensionColumns = await get(dimensionColumnsAtom(scope));
-      const { columns } = { ...DATA_TYPES_TO_CONFIGS[scope.dataType] };
+      const { columns } = { ...ViewsDefinitionRegistry[scope.dataType] };
 
       return [
         'index',
@@ -105,7 +106,7 @@ export const dimensionColumnsAtom = atomFamily((scope: DataAtomFamilyScopeType) 
 export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Filter[]>>(async (get) => {
-      const { columns } = DATA_TYPES_TO_CONFIGS[scope.dataType];
+      const { columns } = ViewsDefinitionRegistry[scope.dataType];
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
         ...columns.map((colKey) => {

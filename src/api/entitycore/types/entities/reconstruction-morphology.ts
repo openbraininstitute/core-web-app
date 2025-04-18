@@ -5,6 +5,8 @@ import {
   TimestampsFilter,
   PaginationFilter,
   SharedFilter,
+  SpeciesFilter,
+  StainFilter,
 } from '@/api/entitycore/types/shared/request';
 import {
   IBrainLocation,
@@ -18,6 +20,7 @@ import {
   IContributor,
   EntityCoreBaseAsset,
   EntityCoreIdentifiable,
+  EntityAuthorization,
 } from '@/api/entitycore/types/shared/global';
 
 export type ReconstructionMorphologyExpandFields =
@@ -32,20 +35,6 @@ type MtypeFilter = {
   mtype_pref_label: string | null;
   mtype_pref_label__in: string | null;
   mtype__order_by: string | null;
-};
-
-type SpeciesFilter = {
-  species__id: string | null;
-  species__name: string | null;
-  species__name__in: string | null;
-  species__order_by: string | null;
-};
-
-type StainFilter = {
-  strain__id: string | null;
-  strain__name: string | null;
-  strain__name__in: string | null;
-  strain__order_by: string | null;
 };
 
 type IDFilter = {
@@ -73,7 +62,8 @@ export type MorphologyFeatureAnnotation = {
 export interface IReconstructionMorphology
   extends EntityCoreIdentifiable,
     Timestamps,
-    EntityCoreBaseAsset {
+    EntityCoreBaseAsset,
+    EntityAuthorization {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
