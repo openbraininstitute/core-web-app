@@ -15,8 +15,7 @@
     "test:ci": "jest",
     "analyze": "ANALYZE=true npm run build",
     "typecheck": "npx tsc --noEmit",
-    "typecheck:watch": "npx tsc --noEmit --watch",
-    "knip": "knip"
+    "typecheck:watch": "npx tsc --noEmit --watch"
   },
   "dependencies": {
     "@ai-sdk/react": "^1.1.21",
