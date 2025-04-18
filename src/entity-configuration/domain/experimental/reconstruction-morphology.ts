@@ -1,4 +1,6 @@
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { DataType } from '@/constants/explore-section/list-views';
+import { EntityType } from '@/entity-configuration/domain/types';
 import * as entitycore from '@/api/entitycore/queries';
 
 import type {
@@ -6,14 +8,13 @@ import type {
   IReconstructionMorphology,
 } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 
 export const ReconstructionMorphology: EntityCoreTypeConfig<
   IReconstructionMorphology | IReconstructionMorphologyExpanded
 > = {
   group: 'experimental',
   legacyType: DataType.ExperimentalNeuronMorphology,
-  type: 'reconstruction-morphology',
+  type: EntityType.ReconstructionMorphology,
   slug: 'morphology',
   api: {
     config: {

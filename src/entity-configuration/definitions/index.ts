@@ -5,16 +5,16 @@ import { FieldConfiguration as CommonFieldsDefinition } from '@/entity-configura
 import type { CoreFieldDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { CoreFieldDefinition } from '@/entity-configuration/definitions/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreTypes } from '@/api/entitycore/types';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-const CoreFieldsDefinitionRegistry: CoreFieldDefinitionRegistry<EntityCoreTypes> = {
+const CoreFieldsDefinitionRegistry: CoreFieldDefinitionRegistry<EntityCoreObjectTypes> = {
   ...CommonFieldsDefinition,
   ...ExperimentalFieldsDefinition,
 };
 
 export default CoreFieldsDefinitionRegistry;
 
-export function getCoreFieldDefinition<T extends EntityCoreIdentifiable = EntityCoreIdentifiable>(
+export function getCoreFieldDefinition<T extends EntityCoreIdentifiable>(
   field: string
 ): CoreFieldDefinition<T> | null {
   return get(CoreFieldsDefinitionRegistry, field, null);

@@ -1,4 +1,5 @@
 import {
+  renderArray,
   renderDate,
   renderEmptyOrValue,
   renderPreview,
@@ -10,15 +11,14 @@ import { transformAgentToNames } from '@/api/entitycore/transformers';
 
 import type { CoreFieldDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IAsset, IContributor } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreTypes } from '@/api/entitycore/types';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-export const FieldConfiguration: CoreFieldDefinitionRegistry<EntityCoreTypes> = {
+export const FieldConfiguration: CoreFieldDefinitionRegistry<EntityCoreObjectTypes> = {
   [EntityCoreFields.Preview]: {
     className: 'text-center',
     title: 'Preview',
     filter: null,
-    render: (r) =>
-      renderPreview(r as EntityCoreTypes & { assets: Array<IAsset> }, { width: 184, height: 116 }),
+    render: (r) => renderPreview(r, { width: 184, height: 116 }),
     vocabulary: {
       plural: 'previews',
       singular: 'preview',
@@ -109,7 +109,8 @@ export const FieldConfiguration: CoreFieldDefinitionRegistry<EntityCoreTypes> = 
     render: (r) =>
       renderEmptyOrValue(
         transformAgentToNames(
-          (r as EntityCoreTypes & { contributions?: Array<IContributor> | null }).contributions
+          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
+            .contributions
         )
       ),
     vocabulary: {
@@ -129,7 +130,8 @@ export const FieldConfiguration: CoreFieldDefinitionRegistry<EntityCoreTypes> = 
     render: (r) =>
       renderEmptyOrValue(
         transformAgentToNames(
-          (r as EntityCoreTypes & { contributions?: Array<IContributor> | null }).contributions
+          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
+            .contributions
         )
       ),
     vocabulary: {

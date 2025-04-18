@@ -1,27 +1,31 @@
-import {
-  Timestamps,
-  IBrainRegion,
-  ILicense,
-  ISpecies,
-  IStrain,
-  EntityCoreIdentifiable,
-} from '@/api/entitycore/types/shared/global';
-import {
+import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import type {
   TimestampsFilter,
   PaginationFilter,
   SharedFilter,
+  ContributionFilter,
+  BrainRegionFilter,
+  SpeciesFilter,
+  StainFilter,
+  EtypeFilter,
+  MtypeFilter,
 } from '@/api/entitycore/types/shared/request';
+import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 
-export interface IExperimentalNeuronDensity extends EntityCoreIdentifiable, Timestamps {
-  name: string;
-  description: string;
-  license?: ILicense | null;
-  species: ISpecies;
-  strain?: IStrain | null;
-  brain_region: IBrainRegion;
+export interface IExperimentalNeuronDensity extends IExperimentalDensity {
+  mtypes: Array<IMType> | null;
+  etypes: Array<IEType> | null;
   type: 'experimental_neuron_density';
 }
 
 export type ExperimentalNeuronDensityFilter = Partial<
-  TimestampsFilter & PaginationFilter & SharedFilter
+  SharedFilter &
+    TimestampsFilter &
+    PaginationFilter &
+    ContributionFilter &
+    BrainRegionFilter &
+    SpeciesFilter &
+    StainFilter &
+    EtypeFilter &
+    MtypeFilter
 >;
