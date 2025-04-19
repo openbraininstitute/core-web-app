@@ -2,7 +2,6 @@
 
 import { ErrorBoundary } from 'react-error-boundary';
 import { useAtom } from 'jotai';
-
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { campaignNameAtom, campaignDescriptionAtom } from '@/state/simulate';
 import { BrainConfigSelector, ConfirmBtn } from '@/components/simulate';
