@@ -147,7 +147,7 @@ export interface IAsset extends AssetBase, AssetLegacyMeta {
 }
 
 export type Sex = 'male' | 'female' | 'unknown';
-export type AgePeriod = 'days' | 'weeks' | 'months' | 'years';
+export type AgePeriod = 'prenatal' | 'postnatal' | 'unknown';
 
 export type SubjectBase = {
   name: string;
