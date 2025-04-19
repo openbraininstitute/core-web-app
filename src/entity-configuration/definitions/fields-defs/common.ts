@@ -5,15 +5,15 @@ import {
   renderPreview,
   renderTimestamp,
 } from '@/entity-configuration/definitions/renderer';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields/enums';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 
-import type { CoreFieldDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { IAsset, IContributor } from '@/api/entitycore/types/shared/global';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-export const FieldConfiguration: CoreFieldDefinitionRegistry<EntityCoreObjectTypes> = {
+export const FieldConfiguration: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   [EntityCoreFields.Preview]: {
     className: 'text-center',
     title: 'Preview',

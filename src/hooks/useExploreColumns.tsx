@@ -6,12 +6,12 @@ import throttle from 'lodash/throttle';
 
 import { SortState } from '@/types/explore-section/application';
 import { ValueArray } from '@/components/ListTable';
-import { getCoreFieldDefinition } from 'src/entity-configuration/definitions';
-import CoreFieldsDefinitionRegistry from 'src/entity-configuration/definitions';
+import { getFieldDefinition } from 'src/entity-configuration/definitions';
+import FieldsDefinitionRegistry from 'src/entity-configuration/definitions';
 
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
@@ -52,7 +52,7 @@ export default function useExploreColumns<T>(
   dimensionColumns?: string[] | null,
   dataType?: DataType
 ): ColumnProps<T>[] {
-  const keys = useMemo(() => Object.keys(CoreFieldsDefinitionRegistry), []);
+  const keys = useMemo(() => Object.keys(FieldsDefinitionRegistry), []);
   const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
     [...keys, ...(dimensionColumns || [])].map((key) => ({
       key,
@@ -64,7 +64,7 @@ export default function useExploreColumns<T>(
     const totalKeys = dimensionColumns ? [...keys, ...dimensionColumns] : [...keys];
     setColumnWidths(
       totalKeys.map((key) => {
-        const field = getCoreFieldDefinition(key);
+        const field = getFieldDefinition(key);
         return {
           key,
           width: field?.style?.width ?? getProvisionedWidth(field!.title, field?.unit),
@@ -151,7 +151,7 @@ export default function useExploreColumns<T>(
   const main: ColumnProps<T>[] = useMemo(
     () =>
       keys.reduce((acc, key) => {
-        const term = getCoreFieldDefinition(key);
+        const term = getFieldDefinition(key);
         const isSortable = term?.isSortable;
         return [
           ...acc,

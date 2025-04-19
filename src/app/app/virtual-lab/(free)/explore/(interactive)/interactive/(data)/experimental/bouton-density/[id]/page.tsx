@@ -1,14 +1,18 @@
 'use client';
 
 import { Suspense } from 'react';
+
+import Summary from '@/components/explore-section/details-view/summary';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Detail from '@/components/explore-section/Detail';
-import { BOUTON_DENSITY_FIELDS } from '@/constants/explore-section/detail-views-fields';
+
+import { DataType } from '@/constants/explore-section/list-views';
+
+import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
 
 export default function BoutonDensityDetails() {
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Detail fields={BOUTON_DENSITY_FIELDS} />
+      <Summary<IExperimentalBoutonDensity> dataType={DataType.ExperimentalBoutonDensity} />
     </Suspense>
   );
 }

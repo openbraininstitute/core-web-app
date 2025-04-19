@@ -178,8 +178,6 @@ export const detailFamily = atomFamily<
       if (entity && entity.api.query.one) {
         return await entity.api.query.one({ id: viewParams.id });
       }
-      // TODO: add other experiment types, modal types, and simulation types
-      // TODO: after adding other types, refactor the get functions to be more generic
     }),
   isEqual
 );

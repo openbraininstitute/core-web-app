@@ -1,16 +1,17 @@
 'use client';
 
 import { Suspense } from 'react';
-import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Summary from '@/components/explore-section/details-view/summary';
-import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
+
+import { DataType } from '@/constants/explore-section/list-views';
+
 import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
-import { ELECTRO_PHYSIOLOGY_FIELDS } from '@/constants/explore-section/detail-views-fields';
+import Summary from '@/components/explore-section/details-view/summary';
+import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 
 export default function EphysDetailPage() {
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Summary<ExperimentalTrace> fields={ELECTRO_PHYSIOLOGY_FIELDS}>
+      <Summary dataType={DataType.ExperimentalElectroPhysiology}>
         {(detail) => <EphysViewerContainer resource={detail} />}
       </Summary>
     </Suspense>

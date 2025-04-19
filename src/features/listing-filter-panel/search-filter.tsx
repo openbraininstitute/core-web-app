@@ -8,7 +8,7 @@ import {
   FacetLabelValuePair,
   useOptions,
 } from '@/features/listing-filter-panel/checklist/use-options';
-import { getCoreFieldDefinition } from 'src/entity-configuration/definitions';
+import { getFieldDefinition } from 'src/entity-configuration/definitions';
 import Search from '@/components/Search';
 
 export default function SearchFilter({
@@ -72,7 +72,7 @@ export default function SearchFilter({
           value: id,
         }))}
         mode="multiple"
-        placeholder={`Search for ${getCoreFieldDefinition(filter.field)?.vocabulary.plural}`}
+        placeholder={`Search for ${getFieldDefinition(filter.field)?.vocabulary.plural}`}
         tagRender={(props) => {
           return tagRender(props);
         }}

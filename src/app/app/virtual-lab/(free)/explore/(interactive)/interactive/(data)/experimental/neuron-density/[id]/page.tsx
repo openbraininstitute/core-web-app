@@ -1,14 +1,17 @@
 'use client';
 
 import { Suspense } from 'react';
+
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Detail from '@/components/explore-section/Detail';
-import { NEURON_DENSITY_FIELDS } from '@/constants/explore-section/detail-views-fields';
+import Summary from '@/components/explore-section/details-view/summary';
+
+import { DataType } from '@/constants/explore-section/list-views';
+import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
 
 export default function NeuronDensityDetailPage() {
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Detail fields={NEURON_DENSITY_FIELDS} />
+      <Summary<IExperimentalNeuronDensity> dataType={DataType.ExperimentalNeuronDensity} />
     </Suspense>
   );
 }

@@ -37,6 +37,8 @@ import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { WorkspaceContext } from '@/types/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import { CoreFilter } from '@/entity-configuration/definitions/types';
 
 type DataAtomFamilyScopeType = {
   key: string;
@@ -105,7 +107,7 @@ export const dimensionColumnsAtom = atomFamily((scope: DataAtomFamilyScopeType) 
 
 export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
-    atomWithDefault<Promise<Filter[]>>(async (get) => {
+    atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
       const { columns } = ViewsDefinitionRegistry[scope.dataType];
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
@@ -116,9 +118,9 @@ export const filtersAtom = atomFamily(
           (dimension) =>
             ({
               field: dimension,
-              type: FilterTypeEnum.ValueOrRange,
+              type: CoreFieldFilterTypeEnum.ValueOrRange,
               value: { gte: null, lte: null },
-            }) as Filter
+            }) as CoreFilter
         ),
       ];
     }),
@@ -152,9 +154,14 @@ export const queryAtom = atomFamily(
       const sortState = get(sortStateAtom(scope));
       const bookmarkResourceIds = (
         scope.dataScope === ExploreDataScope.BookmarkedResources && scope.virtualLabInfo
-          ? (await get(bookmarksForProjectAtomFamily(scope.virtualLabInfo)))[scope.dataType]
+          ? (
+              (await get(bookmarksForProjectAtomFamily(scope.virtualLabInfo))) as Record<
+                string,
+                any
+              >
+            )[scope.dataType] || []
           : []
-      ).map((b) => b.resourceId);
+      ).map((b: { resourceId: string }) => b.resourceId);
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
@@ -203,7 +210,7 @@ export const dataAtom = atomFamily(
           filters.push({
             constraint: 'id__in',
             field: 'id',
-            type: FilterTypeEnum.CheckList,
+            type: CoreFieldFilterTypeEnum.CheckList,
             value: scope.targetIds,
           });
         } else {
@@ -219,7 +226,9 @@ export const dataAtom = atomFamily(
       }
 
       const sortState = get(sortStateAtom(scope));
-      const queryParams = transformQueryParamsArrayToString(transformFiltersToQuery(filters));
+      const queryParams = transformQueryParamsArrayToString(
+        transformFiltersToQuery(filters as any)
+      );
 
       const queryParameters = {
         page_size: PAGE_SIZE,

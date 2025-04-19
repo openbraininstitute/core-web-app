@@ -19,9 +19,10 @@ import WithGeneralization, {
   generalizationError,
 } from '@/components/explore-section/reconstruction-morphology/with-generalization-hoc';
 import { DataType } from '@/constants/explore-section/list-views';
-import { NEURON_MORPHOLOGY_FIELDS } from '@/constants/explore-section/detail-views-fields';
 import { MorphoViewer } from '@/components/MorphoViewer';
 import { ensureArray } from '@/utils/array';
+import { getViewDefinition } from '@/entity-configuration/definitions/view-defs';
+
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 
 function GeneralizationContainer({ children }: { children: ReactNode }) {
@@ -31,49 +32,44 @@ function GeneralizationContainer({ children }: { children: ReactNode }) {
   return <div className="min-h-auto">{children}</div>;
 }
 
-export default function MorphologyDetailView() {
+export default function MorphologyDetailView({ detail }: { detail: IReconstructionMorphology }) {
+  console.log('ᦨ #  detail-view.tsx:37 #  MorphologyDetailView #  detail:', detail);
+  if (!detail) return null;
   return (
-    <Summary<IReconstructionMorphology>
-      fields={NEURON_MORPHOLOGY_FIELDS}
-      dataType={DataType.ExperimentalNeuronMorphology}
-    >
-      {(detail) => (
-        <>
-          {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
-            <Morphometrics
-              legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
-              dataType={DataType.ExperimentalNeuronMorphology}
-            />
-          )}
-          <ErrorBoundary
-            FallbackComponent={withErrorConfig({
-              cls: { container: 'bg-white' },
-              showButtons: false,
-              customError: 'Error while loading morphology viewer',
-            })}
-          >
-            <MorphoViewerLoaderMemo resource={detail} />
-          </ErrorBoundary>
-          <ErrorBoundary
-            FallbackComponent={withErrorConfig({
-              cls: { container: 'bg-white' },
-              showButtons: false,
-              customError: 'Error while loading similarity filter controls',
-            })}
-          >
-            <GeneralizationControls dataType={DataType.ExperimentalNeuronMorphology} />
-          </ErrorBoundary>
-          {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
-            <GeneralizationContainer>
-              <WithGeneralization
-                legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
-                dataType={DataType.ExperimentalNeuronMorphology}
-              />
-            </GeneralizationContainer>
-          )}
-        </>
+    <>
+      {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
+        <Morphometrics
+          legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
+          dataType={DataType.ExperimentalNeuronMorphology}
+        />
       )}
-    </Summary>
+      <ErrorBoundary
+        FallbackComponent={withErrorConfig({
+          cls: { container: 'bg-white' },
+          showButtons: false,
+          customError: 'Error while loading morphology viewer',
+        })}
+      >
+        <MorphoViewerLoaderMemo resource={detail} />
+      </ErrorBoundary>
+      <ErrorBoundary
+        FallbackComponent={withErrorConfig({
+          cls: { container: 'bg-white' },
+          showButtons: false,
+          customError: 'Error while loading similarity filter controls',
+        })}
+      >
+        <GeneralizationControls dataType={DataType.ExperimentalNeuronMorphology} />
+      </ErrorBoundary>
+      {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
+        <GeneralizationContainer>
+          <WithGeneralization
+            legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
+            dataType={DataType.ExperimentalNeuronMorphology}
+          />
+        </GeneralizationContainer>
+      )}
+    </>
   );
 }
 

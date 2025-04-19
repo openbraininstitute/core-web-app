@@ -1,6 +1,6 @@
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ReactNode } from 'react';
-import { CoreFieldFilterTypeEnum } from './fields/enums';
+import { CoreFieldFilterTypeEnum } from './fields-defs/enums';
 
 export interface GteLteValue {
   gte: Date | number | null;
@@ -73,7 +73,7 @@ type Style = {
   width?: number;
 };
 
-export type CoreFieldDefinition<T extends EntityCoreIdentifiable> = {
+export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   fieldType?: CoreFieldType;
   className?: string;
   title: string;
@@ -95,6 +95,6 @@ export type CoreFieldDefinition<T extends EntityCoreIdentifiable> = {
   style?: Partial<Style>;
 };
 
-export type CoreFieldDefinitionRegistry<T extends EntityCoreIdentifiable> = {
-  [key: string]: CoreFieldDefinition<T>;
+export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = {
+  [key: string]: FieldDefinition<T>;
 };
