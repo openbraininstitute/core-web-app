@@ -1,10 +1,10 @@
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields/enums';
-import { getCoreFieldDefinition } from '@/entity-configuration/definitions';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 export default function columnKeyToFilter(key: string): CoreFilter {
-  const fieldConfig = getCoreFieldDefinition(key);
+  const fieldConfig = getFieldDefinition(key);
   if (!fieldConfig) {
     return {
       field: key,

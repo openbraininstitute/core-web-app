@@ -1,21 +1,22 @@
 import get from 'lodash/get';
-import { FieldConfiguration as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields/experimental';
-import { FieldConfiguration as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields/common';
 
-import type { CoreFieldDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { CoreFieldDefinition } from '@/entity-configuration/definitions/types';
+import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
+import { FieldConfiguration as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/common';
+
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { FieldDefinition } from '@/entity-configuration/definitions/types';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-const CoreFieldsDefinitionRegistry: CoreFieldDefinitionRegistry<EntityCoreObjectTypes> = {
+const FieldsDefinitionRegistry: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   ...CommonFieldsDefinition,
   ...ExperimentalFieldsDefinition,
 };
 
-export default CoreFieldsDefinitionRegistry;
+export default FieldsDefinitionRegistry;
 
-export function getCoreFieldDefinition<T extends EntityCoreIdentifiable>(
+export function getFieldDefinition<T extends EntityCoreIdentifiable>(
   field: string
-): CoreFieldDefinition<T> | null {
-  return get(CoreFieldsDefinitionRegistry, field, null);
+): FieldDefinition<T> | null {
+  return get(FieldsDefinitionRegistry, field, null) as FieldDefinition<T> | null;
 }

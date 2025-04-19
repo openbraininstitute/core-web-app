@@ -3,25 +3,27 @@
 import { Suspense } from 'react';
 import { notFound, useParams } from 'next/navigation';
 
-import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
-import { DataType } from '@/constants/explore-section/list-views';
 import MorphologyDetailView from '@/components/explore-section/reconstruction-morphology/detail-view';
-import Detail from '@/components/explore-section/Detail';
-import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
 import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
-import {
-  BOUTON_DENSITY_FIELDS,
-  ELECTRO_PHYSIOLOGY_FIELDS,
-  NEURON_DENSITY_FIELDS,
-  SYNAPSE_PER_CONNECTION_FIELDS,
-} from '@/constants/explore-section/detail-views-fields';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
+import Summary from '@/components/explore-section/details-view/summary';
+
+import { getViewDefinitionDataTypeByName } from '@/entity-configuration/definitions/view-defs';
+import { DataType } from '@/constants/explore-section/list-views';
+
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { TExperimentTypeNames } from '@/entity-configuration/domain/experimental';
 
 export default function ExperimentDetailViewPage() {
   const params = useParams<{ experimentType: string }>();
 
-  const currentExperiment = Object.keys(EXPERIMENT_DATA_TYPE_CONFIG).find(
-    (key) => EXPERIMENT_DATA_TYPE_CONFIG[key].name === params?.experimentType
+  const currentExperiment = getViewDefinitionDataTypeByName(
+    params?.experimentType as TExperimentTypeNames
+  );
+
+  console.log(
+    'ᦨ #  page.tsx:24 #  ExperimentDetailViewPage #  currentExperiment:',
+    currentExperiment
   );
 
   if (!currentExperiment) notFound();
@@ -29,35 +31,23 @@ export default function ExperimentDetailViewPage() {
   // based on the experiment type, decide what kind of content will be rendered
   switch (currentExperiment) {
     case DataType.ExperimentalNeuronMorphology:
-      content = <MorphologyDetailView />;
+      content = (
+        <Summary dataType={DataType.ExperimentalNeuronMorphology}>
+          {(detail) => <MorphologyDetailView detail={detail as IReconstructionMorphology} />}
+        </Summary>
+      );
       break;
     case DataType.ExperimentalElectroPhysiology:
       content = (
-        <Detail<ExperimentalTrace>
-          dataType={DataType.ExperimentalElectroPhysiology}
-          fields={ELECTRO_PHYSIOLOGY_FIELDS}
-        >
+        <Summary dataType={DataType.ExperimentalElectroPhysiology}>
           {(detail) => <EphysViewerContainer resource={detail} />}
-        </Detail>
-      );
-      break;
-    case DataType.ExperimentalBoutonDensity:
-      content = (
-        <Detail dataType={DataType.ExperimentalBoutonDensity} fields={BOUTON_DENSITY_FIELDS} />
-      );
-      break;
-    case DataType.ExperimentalNeuronDensity:
-      content = (
-        <Detail dataType={DataType.ExperimentalNeuronDensity} fields={NEURON_DENSITY_FIELDS} />
+        </Summary>
       );
       break;
     case DataType.ExperimentalSynapsePerConnection:
-      content = (
-        <Detail
-          dataType={DataType.ExperimentalNeuronDensity}
-          fields={SYNAPSE_PER_CONNECTION_FIELDS}
-        />
-      );
+    case DataType.ExperimentalBoutonDensity:
+    case DataType.ExperimentalNeuronDensity:
+      content = <Summary dataType={currentExperiment} />;
       break;
     default:
       content = null;

@@ -1,6 +1,6 @@
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-export type DetailProps = { field: EntityCoreFields; className?: string };
+export type TypeSummaryProps = { field: EntityCoreFields; className?: string };
 
 export enum DataTypeGroup {
   ExperimentalData = 'experimental',
@@ -14,6 +14,7 @@ export type ViewDefinitionConfig = {
   columns: Array<EntityCoreFields>;
   curated: boolean;
   group: DataTypeGroup;
-  cardViewFields?: DetailProps[];
+  cardViewFields?: Array<TypeSummaryProps>;
+  summaryViewFields?: Array<TypeSummaryProps>;
   mlTopic?: string;
 };

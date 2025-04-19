@@ -1,4 +1,5 @@
 import find from 'lodash/find';
+import get from 'lodash/get';
 
 import getMeasurements, {
   EmptyValue,
@@ -6,17 +7,19 @@ import getMeasurements, {
   renderEmptyOrValue,
   renderMeanStd,
 } from '@/entity-configuration/definitions/renderer';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields/enums';
-import { EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
 import { ensureArray } from '@/utils/array';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { CoreFieldDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 
-export const FieldConfiguration: CoreFieldDefinitionRegistry<EntityCoreObjectTypes> = {
+export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   [EntityCoreFields.License]: {
     title: 'License',
     filter: CoreFieldFilterTypeEnum.CheckList,
@@ -200,15 +203,40 @@ export const FieldConfiguration: CoreFieldDefinitionRegistry<EntityCoreObjectTyp
   },
   [EntityCoreFields.PostSynapticCellType]: {
     title: 'Cell Type [To]',
+    filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
       return renderEmptyOrValue(
         (r as IExperimentalSynapsesPerConnection).synaptic_pathway.post_mtype.pref_label
       );
     },
-    filter: CoreFieldFilterTypeEnum.CheckList,
     vocabulary: {
       plural: 'Cell Type [To]',
       singular: 'Cell Type [To]',
+    },
+  },
+  [EntityCoreFields.Weight]: {
+    title: 'Weight',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    unit: 'gramms',
+    render: (r) => {
+      return renderEmptyOrValue(get(r, 'subject.weight', null));
+    },
+    vocabulary: {
+      plural: 'Values',
+      singular: 'Value',
+    },
+  },
+  [EntityCoreFields.NeuronDensity]: {
+    title: 'Density',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    unit: '1/mm³',
+    render: (r) => {
+      const { mean } = getMeasurements(r as EntityCoreDensityObjectTypes);
+      return renderEmptyOrValue(Number(mean?.value));
+    },
+    vocabulary: {
+      plural: 'Densities',
+      singular: 'Density',
     },
   },
 };

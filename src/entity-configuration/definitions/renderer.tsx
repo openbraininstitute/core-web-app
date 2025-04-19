@@ -1,16 +1,15 @@
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
-import isNil from 'lodash/isNil';
 import isEmpty from 'lodash/isEmpty';
+import isNil from 'lodash/isNil';
+import find from 'lodash/find';
 
 import PreviewThumbnail from '@/features/thumbnail/preview';
 import type {
-  EntityCoreBaseAsset,
   EntityCoreIdentifiable,
-  EntityCoreResource,
+  EntityCoreBaseAsset,
   MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
-import { EntityCoreDensityObjectTypes } from '@/api/entitycore/types';
-import find from 'lodash/find';
+import type { EntityCoreDensityObjectTypes } from '@/api/entitycore/types';
 
 export const EmptyValue = '—';
 

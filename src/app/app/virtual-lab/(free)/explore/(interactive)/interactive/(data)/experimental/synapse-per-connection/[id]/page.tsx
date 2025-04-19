@@ -1,14 +1,20 @@
 'use client';
 
 import { Suspense } from 'react';
+
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Detail from '@/components/explore-section/Detail';
-import { SYNAPSE_PER_CONNECTION_FIELDS } from '@/constants/explore-section/detail-views-fields';
+import Summary from '@/components/explore-section/details-view/summary';
+
+import { DataType } from '@/constants/explore-section/list-views';
+
+import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 
 export default function SynapsePerConnectionDetailPage() {
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Detail fields={SYNAPSE_PER_CONNECTION_FIELDS} />
+      <Summary<IExperimentalSynapsesPerConnection>
+        dataType={DataType.ExperimentalSynapsePerConnection}
+      />
     </Suspense>
   );
 }

@@ -1,5 +1,5 @@
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields/enums';
 import { ExperimentTypeNames } from '@/entity-configuration/domain/experimental';
 import { DataType } from '@/constants/explore-section/list-views';
 
@@ -94,6 +94,20 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
         className: 'col-span-2',
       },
     ],
+    summaryViewFields: [
+      {
+        field: EntityCoreFields.BrainRegion,
+      },
+      {
+        field: EntityCoreFields.Species,
+      },
+      {
+        field: EntityCoreFields.License,
+      },
+      {
+        field: EntityCoreFields.MType,
+      },
+    ],
     mlTopic: 'Neuron morphology',
   },
   // TODO: fix the columns when electrophysiology server from the BE
@@ -108,6 +122,23 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Species,
       EntityCoreFields.Contribution,
+    ],
+    summaryViewFields: [
+      {
+        field: EntityCoreFields.BrainRegion,
+      },
+      {
+        field: EntityCoreFields.Species,
+      },
+      {
+        field: EntityCoreFields.License,
+      },
+      {
+        field: EntityCoreFields.EType,
+      },
+      {
+        field: EntityCoreFields.SubjectAge,
+      },
     ],
     curated: true,
     mlTopic: 'Neuron spike',
@@ -127,6 +158,110 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Contribution,
       EntityCoreFields.RegistrationDate,
     ],
+    cardViewFields: [
+      {
+        field: EntityCoreFields.Name,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.NeuronMorphologyWidth,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.NeuronMorphologyHeight,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.NeuronMorphologyDepth,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.AxonTotalLength,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.AxonStrahlerNumber,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.AxonArborAsymmetryIndex,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.BasalDendriticTotalLength,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.BasalDendriteStrahlerNumber,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.BasalArborAsymmetryIndex,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.ApicalDendriticTotalLength,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.ApicalDendtriteStrahlerNumber,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.SomaDiameter,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.ApicalArborAsymmetryIndex,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.BrainRegion,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.MType,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.Species,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.Contributions,
+        className: 'col-span-2',
+      },
+    ],
+    summaryViewFields: [
+      {
+        field: EntityCoreFields.BrainRegion,
+      },
+      {
+        field: EntityCoreFields.Species,
+      },
+      {
+        field: EntityCoreFields.License,
+      },
+      {
+        field: EntityCoreFields.MType,
+      },
+      {
+        field: EntityCoreFields.SubjectAge,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.EType,
+        className: 'col-span-3',
+      },
+      {
+        field: EntityCoreFields.NeuronDensity,
+        className: 'col-span-3',
+      },
+      {
+        field: EntityCoreFields.NumberOfMeasurements,
+        className: 'col-span-3',
+      },
+    ],
     curated: false,
     mlTopic: 'cell composition',
   },
@@ -142,6 +277,39 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.NumberOfMeasurements,
       EntityCoreFields.Species,
       EntityCoreFields.Contribution,
+    ],
+    summaryViewFields: [
+      {
+        field: EntityCoreFields.BrainRegion,
+      },
+      {
+        field: EntityCoreFields.Species,
+      },
+      {
+        field: EntityCoreFields.License,
+      },
+      {
+        field: EntityCoreFields.MType,
+      },
+      {
+        field: EntityCoreFields.SubjectAge,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.MeanSTD,
+      },
+      {
+        field: EntityCoreFields.Weight,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.Sem,
+        className: 'col-span-3',
+      },
+      {
+        field: EntityCoreFields.NumberOfMeasurements,
+        className: 'col-span-3',
+      },
     ],
     curated: false,
     mlTopic: 'Bouton density',
@@ -159,6 +327,46 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Species,
       EntityCoreFields.SubjectAge,
       EntityCoreFields.Contribution,
+    ],
+    summaryViewFields: [
+      {
+        field: EntityCoreFields.PreSynapticBrainRegion,
+      },
+      {
+        field: EntityCoreFields.Species,
+      },
+      {
+        field: EntityCoreFields.License,
+      },
+      {
+        field: EntityCoreFields.PostSynapticBrainRegion,
+      },
+      {
+        field: EntityCoreFields.SubjectAge,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.PreSynapticCellType,
+      },
+      {
+        field: EntityCoreFields.Weight,
+        className: 'col-span-2',
+      },
+      {
+        field: EntityCoreFields.PostSynapticCellType,
+        className: 'col-span-3',
+      },
+      {
+        field: EntityCoreFields.MeanSTD,
+        className: 'col-span-3',
+      },
+      {
+        field: EntityCoreFields.Sem,
+        className: 'col-span-3',
+      },
+      // {
+      //   field: EntityCoreFields.NumberOfConnections,
+      // },
     ],
     curated: false,
     mlTopic: 'Synapse per connection',

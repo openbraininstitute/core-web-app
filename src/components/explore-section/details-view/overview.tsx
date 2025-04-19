@@ -2,11 +2,12 @@ import { ReactNode } from 'react';
 
 import Header from '@/components/explore-section/details-view/header';
 
-import { COMMON_FIELDS } from '@/constants/explore-section/detail-views-fields';
-import { DetailProps } from '@/types/explore-section/application';
+import { CommonSummaryViewFields } from '@/entity-configuration/definitions/view-defs';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { classNames } from '@/util/utils';
-import { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
-import { getCoreFieldDefinition } from '@/entity-configuration/definitions';
+
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 type FieldProps = {
   field: string;
@@ -15,7 +16,7 @@ type FieldProps = {
 };
 
 export function Field({ field, className, data }: FieldProps) {
-  const fieldObj = getCoreFieldDefinition(field);
+  const fieldObj = getFieldDefinition(field);
   return (
     <div className={classNames('text-primary-7 mr-10', className)}>
       <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>
@@ -26,16 +27,16 @@ export function Field({ field, className, data }: FieldProps) {
   );
 }
 
-export default function DetailHeader<T extends { name: string }>({
+export default function DetailHeader({
+  url,
   fields,
   detail,
-  commonFields = COMMON_FIELDS,
-  url,
   extraHeaderAction,
+  commonFields = CommonSummaryViewFields,
 }: {
-  fields: DetailProps[];
-  detail?: EntityCoreElement<T>;
-  commonFields: DetailProps[];
+  fields: Array<TypeSummaryProps>;
+  detail?: EntityCoreObjectTypes;
+  commonFields: Array<TypeSummaryProps>;
   url?: string | null;
   extraHeaderAction?: ReactNode;
 }) {
