@@ -27,6 +27,7 @@ export default function SubcircuitTable({
   onExpand,
   downloadable = true,
 }: SubcircuitsTableProps) {
+  
   const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
     <SubcircuitTable
       circuit={subCircuit}
@@ -62,6 +63,11 @@ export default function SubcircuitTable({
             '[&_.ant-table-expand-icon-col]:hidden',
             styles.circuitTable
           )}
+          style={
+            {
+              '--ant-table-expand-icon-col-width': '0px',
+            } as React.CSSProperties
+          }
           components={{
             header: {
               cell: ResizableTitle,

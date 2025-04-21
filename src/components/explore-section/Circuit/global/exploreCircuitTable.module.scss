@@ -1,8 +1,10 @@
 .circuitTable {
-  table-layout: fixed;
-
-  &:global(.ant-table-cell) {
-    padding-left: 10px !important;
+  & .ant-table-row {
+    display: table-row !important;
+    min-height: 40px !important;
+  }
+  & .ant-table-cell {
+    padding: 8px !important; /* Ensure padding doesn’t collapse */
   }
 }
 
@@ -46,4 +48,25 @@
 
 .react-resizable-handle:hover {
   background-color: rgba(0, 0, 0, 0.4);
+}
+
+.subcircuitButtonRow {
+  display: table-row !important;
+  min-height: 40px !important;
+  background-color: yellow !important; 
+}
+
+.expandButton {
+  display: block !important;
+  min-height: 32px !important;
+  width: 100%;
+  text-align: left;
+  color: #1890ff !important; /* Ant Design link color */
+  text-decoration: none !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+
+  &:hover {
+    color: #40a9ff !important;
+  }
 }

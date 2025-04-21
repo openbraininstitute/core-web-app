@@ -2,14 +2,15 @@ import { ColumnsType } from 'antd/es/table';
 import Link from 'next/link';
 import { Key, SyntheticEvent } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
-
 import { CircuitSchemaProps } from '../type';
 
 import { ChevronRight } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
+
 export type ResizableColumnType = ColumnsType<CircuitSchemaProps>[number] & {
   onHeaderCell?: (column: ResizableColumnType) => React.HTMLAttributes<HTMLElement> & {
+    width: number;
     onResize: (e: SyntheticEvent, data: ResizeCallbackData) => void;
   };
 };
@@ -32,6 +33,42 @@ const columns = (
         {record.name}
       </Link>
     ),
+    onHeaderCell: (column) => ({
+      width: column.width ?? 150,
+      onResize: handleResize(column.key as string),
+    }),
+  },
+  {
+    title: 'Subcircuits',
+    key: 'hasSubcircuits',
+    width: 120,
+    render: (_value: any, record: CircuitSchemaProps, index: number) => {
+      const isExpanded = Array.isArray(expandedRowKeys) && expandedRowKeys.includes(record.key);
+      const totalSubcircuitsForParent = calculateSubcircuitsForParent(record);
+      const subcircuitCount = record.subcircuit?.length > 0 ? totalSubcircuitsForParent : "–";
+
+      return (
+        <button
+            type="button"
+            className="relative flex h-6 items-center justify-center text-base font-normal focus:outline-none border-none border-gray-100 rounded-full"
+            aria-label="Open subcircuit"
+            onClick={() => handleExpandRow(record, index)}
+            disabled={!record.hasSubcircuits}
+          >
+            <div className="relative mr-6 block whitespace-nowrap">{subcircuitCount}</div>
+            {
+              record.subcircuit?.length !== 0 &&
+              <ChevronRight
+                fill="#003A8C"
+                className={classNames(
+                  'relative top-px h-4 w-auto transition-transform duration-300 ease-in-out',
+                  isExpanded ? 'rotate-90' : 'rotate-0'
+                )}
+              />
+            }
+          </button>
+      );
+    },
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
       onResize: handleResize(column.key as string),
@@ -122,40 +159,6 @@ const columns = (
         {record.metadata.registrationDate}
       </Link>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
-    }),
-  },
-  {
-    title: 'Subcircuits',
-    key: 'hasSubcircuits',
-    width: 120,
-    render: (_value: any, record: CircuitSchemaProps, index: number) => {
-      const isExpanded = Array.isArray(expandedRowKeys) && expandedRowKeys.includes(record.key);
-      const totalSubcircuitsForParent = calculateSubcircuitsForParent(record);
-
-      return (
-        record.hasSubcircuits && (
-          <button
-            type="button"
-            className="relative flex h-6 items-center justify-center text-base font-normal focus:outline-none"
-            aria-label="Open subcircuit"
-            onClick={() => handleExpandRow(record, index)}
-            disabled={!record.hasSubcircuits}
-          >
-            <div className="relative mr-6 block">{totalSubcircuitsForParent}</div>
-            <ChevronRight
-              fill="#003A8C"
-              className={classNames(
-                'relative top-px h-4 w-auto transition-transform duration-300 ease-in-out',
-                isExpanded ? 'rotate-90' : 'rotate-0'
-              )}
-            />
-          </button>
-        )
-      );
-    },
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
       onResize: handleResize(column.key as string),

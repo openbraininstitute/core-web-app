@@ -46,7 +46,7 @@ export default function SearchBar({ searchQuery, onSearchChange }: SearchBarProp
               onChange={handleChange}
               id="search-input"
               aria-label="Search circuits"
-              className="w-full rounded-none border-none bg-transparent py-2 text-base font-normal text-primary-9 placeholder:font-semibold placeholder:text-gray-400 focus:border-none focus:bg-transparent focus:outline-none active:border-none active:bg-transparent active:outline-none"
+              className="w-full rounded-none border border-solid border-gray-200 bg-gray-200 py-2 text-base font-normal text-primary-9 placeholder:font-semibold placeholder:text-gray-400 focus:border-none focus:outline-none active:border-none active:outline-none"
             />
 
             <CloseOutlined

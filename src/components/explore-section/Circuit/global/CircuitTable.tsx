@@ -1,25 +1,52 @@
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
-import { Key, useCallback, useMemo, useState } from 'react';
-
 import { TableRowSelection } from 'antd/es/table/interface';
+import { Key, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
-import SubcircuitTable from '../ListView/SubcircuitsTable';
-import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
-
+import DownloadCircuitButton from '../ListView/DownloadCircuitButton';
 import NumericFilters from '../ListView/NumericFilters';
 import SearchBar from '../ListView/SearchBar';
+import SubcircuitTable from '../ListView/SubcircuitsTable';
 import { CircuitSchemaProps } from '../type';
+import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
 import { NumericFilterOptions } from '../utils/filter-circuits-by-numeric';
-import getExpandableRowKeys from '../utils/get-expandable-row-key';
 import { useFilteredData } from '../utils/use-filtered-data';
-
-import DownloadCircuitButton from '../ListView/DownloadCircuitButton';
 import columns from './Columns';
+import CustomRow from './CustomRow';
 import ResizableTitle from './ResizableTitle';
 
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
+
+export type CustomRowProps = {
+  children: ReactNode;
+  record?: CircuitSchemaProps;
+  handleExpandRow: (expanded: boolean, record: CircuitSchemaProps) => void;
+  expandedRowKeys: Key[];
+  className?: string;
+  style?: React.CSSProperties;
+  'data-row-key'?: string;
+};
+
+function RowWrapper({
+  handleExpandRow,
+  expandedRowKeys,
+  mergedColumns,
+  ...props
+  }: CustomRowProps & {
+    handleExpandRow: (expanded: boolean, record: CircuitSchemaProps) => void;
+    expandedRowKeys: Key[];
+    mergedColumns: ColumnsType<CircuitSchemaProps>;
+  }) {
+  return (
+    <CustomRow
+      {...props}
+      handleExpandRow={handleExpandRow}
+      expandedRowKeys={expandedRowKeys}
+      columnCount={mergedColumns.length}
+    />
+  );
+}
 
 export default function CircuitTable({
   data,
@@ -31,7 +58,7 @@ export default function CircuitTable({
   hasSearch?: boolean;
 }) {
   // ROWS
-  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>(getExpandableRowKeys(data));
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]); 
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
     name: 150,
@@ -70,25 +97,23 @@ export default function CircuitTable({
     []
   );
 
-  const mergedColumns: ColumnsType<CircuitSchemaProps> = useMemo(
-    () =>
-      columns(
-        expandedRowKeys,
-        calculateSubcircuitsForParent,
-        handleRowExpandClick,
-        handleResize
-      ).map((col) => ({
-        ...col,
-        width: columnWidths[col.key as string] || col.width,
-      })),
-    [expandedRowKeys, handleRowExpandClick, handleResize, columnWidths]
-  );
+  const mergedColumns: ColumnsType<CircuitSchemaProps> = useMemo(() => {
+    return columns(
+      expandedRowKeys,
+      calculateSubcircuitsForParent,
+      handleRowExpandClick,
+      handleResize
+    ).map((col) => ({
+      ...col,
+      width: columnWidths[col.key as string] || col.width,
+    }));
+  }, [expandedRowKeys, handleRowExpandClick, handleResize, columnWidths]);
 
   const rowSelection = useMemo(
     (): TableRowSelection<CircuitSchemaProps> | undefined =>
       downloadable
         ? {
-            type: 'radio',
+            type: 'checkbox',
             selectedRowKeys,
             onChange: (newSelectedRowKeys: Key[], _selectedRows: CircuitSchemaProps[]) => {
               const key = newSelectedRowKeys[0] as string;
@@ -108,16 +133,17 @@ export default function CircuitTable({
   }, []);
 
   const renderSubcircuits = useCallback(
-    (circuit: CircuitSchemaProps) => (
-      <SubcircuitTable
-        circuit={circuit}
-        mergedColumns={mergedColumns}
-        rowSelection={rowSelection || ({} as TableRowSelection<CircuitSchemaProps>)}
-        expandedRowKeys={expandedRowKeys}
-        onExpand={handleExpandRow}
-        downloadable={downloadable}
-      />
-    ),
+    (circuit: CircuitSchemaProps) =>
+      circuit.subcircuit && circuit.subcircuit.length > 0 ? (
+        <SubcircuitTable
+          circuit={circuit}
+          mergedColumns={mergedColumns}
+          rowSelection={rowSelection || ({} as TableRowSelection<CircuitSchemaProps>)}
+          expandedRowKeys={expandedRowKeys}
+          onExpand={handleExpandRow}
+          downloadable={downloadable}
+        />
+      ) : null,
     [mergedColumns, rowSelection, expandedRowKeys, handleExpandRow, downloadable]
   );
 
@@ -125,6 +151,11 @@ export default function CircuitTable({
     circuit.key === selectedRowKeys[0]
       ? [circuit]
       : (circuit.subcircuit || []).filter((sub) => sub.key === selectedRowKeys[0])
+  );
+
+  const rowWrapperWithColumns = (props: CustomRowProps) => (
+    // eslint-disable-next-line react/jsx-props-no-spreading
+    <RowWrapper {...props} handleExpandRow={handleExpandRow} expandedRowKeys={expandedRowKeys} mergedColumns={mergedColumns} />
   );
 
   const lastRow = selectedRows.at(-1);
@@ -173,6 +204,9 @@ export default function CircuitTable({
                 header: {
                   cell: ResizableTitle,
                 },
+                body: {
+                  row: rowWrapperWithColumns
+                },
               }}
               dataSource={filteredData}
               columns={mergedColumns}
@@ -181,17 +215,12 @@ export default function CircuitTable({
               expandable={{
                 expandedRowRender: renderSubcircuits,
                 expandedRowKeys,
-                onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
-                  const rowKey = row.key;
-                  setExpandedRowKeys((prev) =>
-                    expanded ? [...prev, rowKey] : prev.filter((key) => key !== rowKey)
-                  );
-                },
+                onExpand: handleExpandRow,
                 expandIcon: () => null,
+                rowExpandable: (record) => !!record.subcircuit && record.subcircuit.length > 0,
               }}
             />
             {fileUrl && (
-              // {fileUrl && searchQuery !== '' && (
               <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />
             )}
           </div>
@@ -220,6 +249,9 @@ export default function CircuitTable({
               header: {
                 cell: ResizableTitle,
               },
+              body: {
+                row: rowWrapperWithColumns
+              },
             }}
             dataSource={filteredData}
             columns={mergedColumns}
@@ -227,13 +259,9 @@ export default function CircuitTable({
             expandable={{
               expandedRowRender: renderSubcircuits,
               expandedRowKeys,
-              onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
-                const rowKey = row.key;
-                setExpandedRowKeys((prev) =>
-                  expanded ? [...prev, rowKey] : prev.filter((key) => key !== rowKey)
-                );
-              },
+              onExpand: handleExpandRow,
               expandIcon: () => null,
+              rowExpandable: (record) => !!record.subcircuit && record.subcircuit.length > 0,
             }}
           />
         )}
