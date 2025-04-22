@@ -188,7 +188,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   useIntersectionObserver({
     observedRef: tableRef,
     onIntersect: setButtonsVisible,
-    rootMargin: '-180px',
+    rootMargin: '0px',
   });
 
   return (
