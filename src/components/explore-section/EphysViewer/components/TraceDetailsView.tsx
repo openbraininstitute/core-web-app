@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { Select } from 'antd';
 import DistinctColors from 'distinct-colors';
 
@@ -6,6 +6,7 @@ import NWBTrace, { RecordingType } from '../nwb-trace';
 import InteractivePlot from './InteractivePlot';
 import OptionSelect from '@/components/explore-section/EphysViewer/components/OptionSelect';
 import SweepSelector from '@/components/explore-section/EphysViewer/components/SweepSelector';
+import useResizeObserver from '../hooks/use-resize-observer';
 
 interface EphysPlotProps {
   trace: NWBTrace;
@@ -15,6 +16,11 @@ interface EphysPlotProps {
 
 function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPlotProps) {
   const [reset, setReset] = useState<boolean>(false);
+
+  const plotContainerRef = useRef<HTMLDivElement>(null);
+  const [plotRevision, setPlotRevision] = useState<number>(0);
+  const onResize = useCallback(() => setPlotRevision((prev) => prev + 1), []);
+  useResizeObserver(plotContainerRef, onResize);
 
   const [selectedProtocol, setSelectedDataSet] = useState<string>(
     defaultProtocol || trace.getProtocols()[0]
@@ -135,18 +141,20 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
           </button>
         )}
       </div>
-      <div className="flex flex-col gap-10 2xl:flex-row">
+      <div ref={plotContainerRef} className="flex flex-col gap-10 2xl:flex-row">
         <InteractivePlot
           recordingType={RecordingType.STIMULUS}
           reset={reset}
           setSelectedSweeps={setSelectedSweeps}
           sweeps={sweepObject}
+          plotRevision={plotRevision}
         />
         <InteractivePlot
           recordingType={RecordingType.RESPONSE}
           reset={reset}
           setSelectedSweeps={setSelectedSweeps}
           sweeps={sweepObject}
+          plotRevision={plotRevision}
         />
       </div>
     </div>

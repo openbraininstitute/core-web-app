@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Plotly from 'plotly.js-dist-min';
 import { Select } from 'antd';
+import { useInView } from 'react-intersection-observer';
 import { LineChartOutlined } from '@ant-design/icons';
 import startCase from 'lodash/startCase';
-
-import NWBTrace, { RecordingType } from '../nwb-trace';
-import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
+
+import useResizeObserver from '../hooks/use-resize-observer';
+import NWBTrace, { RecordingType } from '../nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
 
@@ -38,14 +39,14 @@ function TraceThumbnail({
   protocol,
   repetition,
   recordingType,
+  plotRevision,
 }: {
   trace: NWBTrace;
   protocol: string;
   repetition: string;
   recordingType: RecordingType;
+  plotRevision: number;
 }) {
-  const [initialized, setInitialized] = useState(false);
-
   const sweeps = trace.getSweeps(protocol, repetition);
 
   const [rawData, dataUnit] = useMemo(() => {
@@ -85,7 +86,7 @@ function TraceThumbnail({
     });
 
     // Downsample the data.
-    const optimizedPlotData = optimizePlotData(plotData, deltaTime, {}, 80) || [];
+    const optimizedPlotData = optimizePlotData(plotData, deltaTime, {}, 100) || [];
 
     // Convert the data to meet the desired units.
     optimizedPlotData.forEach((d) => {
@@ -96,17 +97,17 @@ function TraceThumbnail({
     });
 
     return [optimizedPlotData, dataUnit];
-  }, [sweeps]);
+  }, [protocol, recordingType, repetition, sweeps, trace]);
 
   const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
 
   return (
     <Plot
-      onInitialized={() => setInitialized(true)}
       data={rawData}
-      onDoubleClick={() => false}
-      style={{ width: '100%', height: '100%' }}
+      className="h-full w-full"
       layout={{
+        datarevision: plotRevision,
+        autosize: true,
         shapes: [
           {
             type: 'rect',
@@ -161,7 +162,7 @@ function TraceThumbnail({
           },
         },
       }}
-      config={{ displaylogo: false, responsive: true, staticPlot: true }}
+      config={{ displaylogo: false, staticPlot: true, responsive: true }}
     />
   );
 }
@@ -177,12 +178,28 @@ function TraceThumbnailContainer({
   repetition: string;
   recordingType: RecordingType;
 }) {
-  const [ref, inView] = useInView({ threshold: 0, triggerOnce: true, rootMargin: '1200px' });
+  const [plotRevision, setPlotRevision] = useState<number>(0);
+
+  const { ref: setInViewRef, inView } = useInView({
+    threshold: 0,
+    triggerOnce: true,
+    rootMargin: '1200px',
+  });
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  const onResize = useCallback(() => setPlotRevision((prev) => prev + 1), []);
+  useResizeObserver(ref, onResize);
+
+  useEffect(() => {
+    if (ref.current) setInViewRef(ref.current);
+  }, [ref, setInViewRef]);
 
   return (
-    <div ref={ref} className="aspect-4/3 relative overflow-hidden last:mt-7">
+    <div ref={ref} className="relative aspect-4/3 overflow-hidden bg-gray-100 last:mt-7">
       {inView ? (
         <TraceThumbnail
+          plotRevision={plotRevision}
           trace={trace}
           protocol={protocol}
           repetition={repetition}
