@@ -13,7 +13,7 @@ import {
   VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import useConfig from '@/components/explore-section/EphysViewer/hooks/useConfig';
+import { useInteractivePlotConfig } from '@/components/explore-section/EphysViewer/hooks/config-hooks';
 import { PlotProps } from '@/types/explore-section/application';
 import { ZoomRanges } from '@/types/explore-section/misc';
 
@@ -41,7 +41,7 @@ export default function InteractivePlot({
     setZoomRanges(null);
   }, [reset]);
 
-  const { config, layout, font, style, antBreakpoints } = useConfig();
+  const { config, layout, font, style, antBreakpoints } = useInteractivePlotConfig();
 
   const [rawData, dataUnit] = useMemo(() => {
     let deltaTime = 1;
@@ -170,11 +170,10 @@ export default function InteractivePlot({
             range: zoomRanges?.y,
             zeroline: false,
           },
-          autosize: true,
           ...layout,
         }}
         style={style}
-        config={{ displaylogo: false, ...config }}
+        config={config}
       />
       {dataUnit === 'amperes' && antBreakpoints.md && (
         <Radio.Group

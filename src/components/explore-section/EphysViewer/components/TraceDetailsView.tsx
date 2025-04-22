@@ -3,10 +3,10 @@ import { Select } from 'antd';
 import DistinctColors from 'distinct-colors';
 
 import NWBTrace, { RecordingType } from '../nwb-trace';
+import useResizeObserver from '../hooks/use-resize-observer';
 import InteractivePlot from './InteractivePlot';
 import OptionSelect from '@/components/explore-section/EphysViewer/components/OptionSelect';
 import SweepSelector from '@/components/explore-section/EphysViewer/components/SweepSelector';
-import useResizeObserver from '../hooks/use-resize-observer';
 
 interface EphysPlotProps {
   trace: NWBTrace;
@@ -55,7 +55,7 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
     );
 
     return { sweeps, sweepDataMap, colorMap };
-  }, [repetitions, selectedProtocol, selectedRepetition]);
+  }, [selectedProtocol, selectedRepetition, trace]);
 
   const dataSetOptions = trace.getProtocols().map((protocol) => {
     const repetitionNum = trace.getRepetitions(protocol).length;

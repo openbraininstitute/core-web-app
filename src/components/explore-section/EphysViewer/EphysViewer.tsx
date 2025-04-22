@@ -3,11 +3,11 @@ import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 
+import useTrace from './hooks/use-nwb-trace';
+import TraceDetailsView from './components/TraceDetailsView';
 import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
 import TraceOverview from '@/components/explore-section/EphysViewer/components/TraceOverview';
-import TraceDetailsView from './components/TraceDetailsView';
 import sessionAtom from '@/state/session';
-import useTrace from './hooks/use-nwb-trace';
 
 import './styles/ephys-plugin-styles.scss';
 
@@ -35,8 +35,6 @@ export default function EphysViewer({ resource }: { resource: ExperimentalTrace 
   };
 
   if (error) {
-    console.error(error);
-
     return (
       <Empty className="p-2em" description="There was a problem loading the required resources" />
     );

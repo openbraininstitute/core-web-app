@@ -7,6 +7,7 @@ import startCase from 'lodash/startCase';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import useResizeObserver from '../hooks/use-resize-observer';
+import { useOverviewPlotConfig } from '../hooks/config-hooks';
 import NWBTrace, { RecordingType } from '../nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
@@ -101,70 +102,13 @@ function TraceThumbnail({
 
   const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
 
-  return (
-    <Plot
-      data={rawData}
-      className="h-full w-full"
-      layout={{
-        datarevision: plotRevision,
-        autosize: true,
-        shapes: [
-          {
-            type: 'rect',
-            xref: 'paper',
-            yref: 'paper',
-            x0: 0,
-            y0: 0,
-            x1: 1,
-            y1: 1,
-            line: {
-              color: '#808080',
-              width: 1,
-            },
-          },
-        ],
-        showlegend: false,
-        font: {
-          size: 10,
-        },
-        margin: {
-          l: 52,
-          r: 0,
-          t: 0,
-          b: 42,
-        },
-        xaxis: {
-          ticks: 'outside',
-          ticklen: 6,
-          tickwidth: 1,
-          tickcolor: 'black',
-          automargin: true,
-          zeroline: false,
-          title: {
-            font: {
-              size: 12,
-            },
-            text: 'Time (ms)',
-          },
-        },
-        yaxis: {
-          ticks: 'outside',
-          ticklen: 4,
-          tickwidth: 1,
-          tickcolor: 'black',
-          automargin: true,
-          zeroline: false,
-          title: {
-            font: {
-              size: 12,
-            },
-            text: yTitle,
-          },
-        },
-      }}
-      config={{ displaylogo: false, staticPlot: true, responsive: true }}
-    />
-  );
+  const { layout, config } = useOverviewPlotConfig({
+    datarevision: plotRevision,
+    yTitle,
+    xTitle: 'Time (ms)',
+  });
+
+  return <Plot data={rawData} className="h-full w-full" layout={layout} config={config} />;
 }
 
 function TraceThumbnailContainer({
@@ -276,7 +220,7 @@ export default function TraceOverview({
         (map, protocol) => map.set(protocol, trace.getRepetitions(protocol)),
         new Map<string, string[]>()
       ),
-    [trace]
+    [protocols, trace]
   );
 
   const filteredProtocols = useMemo(
