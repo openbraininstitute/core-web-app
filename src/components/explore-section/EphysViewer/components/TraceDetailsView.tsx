@@ -2,11 +2,10 @@ import { useState, useMemo } from 'react';
 import { Select } from 'antd';
 import DistinctColors from 'distinct-colors';
 
-import StimulusPlot from './StimulusPlot';
-import ResponsePlot from './ResponsePlot';
+import NWBTrace, { RecordingType } from '../nwb-trace';
+import InteractivePlot from './InteractivePlot';
 import OptionSelect from '@/components/explore-section/EphysViewer/components/OptionSelect';
 import SweepSelector from '@/components/explore-section/EphysViewer/components/SweepSelector';
-import NWBTrace from '../nwb-trace';
 
 interface EphysPlotProps {
   trace: NWBTrace;
@@ -31,7 +30,7 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
 
   const repetitions: string[] = useMemo(
     () => trace.getRepetitions(selectedProtocol),
-    [selectedProtocol]
+    [selectedProtocol, trace]
   );
 
   const { sweeps, sweepDataMap, colorMap } = useMemo(() => {
@@ -137,8 +136,18 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
         )}
       </div>
       <div className="flex flex-col gap-10 2xl:flex-row">
-        <StimulusPlot reset={reset} setSelectedSweeps={setSelectedSweeps} sweeps={sweepObject} />
-        <ResponsePlot reset={reset} setSelectedSweeps={setSelectedSweeps} sweeps={sweepObject} />
+        <InteractivePlot
+          recordingType={RecordingType.STIMULUS}
+          reset={reset}
+          setSelectedSweeps={setSelectedSweeps}
+          sweeps={sweepObject}
+        />
+        <InteractivePlot
+          recordingType={RecordingType.RESPONSE}
+          reset={reset}
+          setSelectedSweeps={setSelectedSweeps}
+          sweeps={sweepObject}
+        />
       </div>
     </div>
   );

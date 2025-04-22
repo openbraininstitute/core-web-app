@@ -2,33 +2,38 @@ import { useState, useMemo, useEffect } from 'react';
 import Plotly, { PlotData } from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import { Radio } from 'antd';
+import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
+import { RecordingType } from '../nwb-trace';
 import {
   convertCurrentSeries,
   convertVoltageSeries,
   CurrentUnit,
+  VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import useConfig from '@/components/explore-section/EphysViewer/hooks/useConfig';
 import { PlotProps } from '@/types/explore-section/application';
 import { ZoomRanges } from '@/types/explore-section/misc';
-import { useAtom } from 'jotai';
 
 const Plot = createPlotlyComponent(Plotly);
 
 const DEFAULT_CURRENT_UNIT: CurrentUnit = 'pA';
+const DEFAULT_VOLTAGE_UNIT: VoltageUnit = 'mV';
+
 const currentUnitAtom = atomWithStorage<CurrentUnit>(
   'ephysViewer.currentUnit',
   DEFAULT_CURRENT_UNIT
 );
 
-function StimulusPlot({
+export default function InteractivePlot({
+  recordingType,
   reset,
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
-  const [stimulusUnit, setStimulusUnit] = useAtom(currentUnitAtom);
+  const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
   const [zoomRanges, setZoomRanges] = useState<ZoomRanges | null>(null);
 
   useEffect(() => {
@@ -48,7 +53,7 @@ function StimulusPlot({
     };
 
     const allSweepsData = allSweeps.map((sweep, idx) => {
-      const recordingData = sweepDataMap.get(sweep)?.stimulus;
+      const recordingData = sweepDataMap.get(sweep)?.[recordingType];
       if (!recordingData) {
         throw new Error(`No recording data found for sweep ${sweep}`);
       }
@@ -85,17 +90,17 @@ function StimulusPlot({
     optimizedPlotData.forEach((d) => {
       d.y =
         dataUnit === 'amperes'
-          ? convertCurrentSeries(d.y, stimulusUnit, conversionFactor)
-          : convertVoltageSeries(d.y, 'mV', conversionFactor);
+          ? convertCurrentSeries(d.y, currentUnit, conversionFactor)
+          : convertVoltageSeries(d.y, DEFAULT_VOLTAGE_UNIT, conversionFactor);
     });
 
     return [optimizedPlotData, dataUnit];
-  }, [zoomRanges, allSweeps, colorMap, stimulusUnit]);
+  }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, colorMap, currentUnit]);
 
   const selectedResponse: Partial<PlotData>[] = useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedSweeps, stimulusUnit]
+    [selectedSweeps, currentUnit]
   );
 
   const previewDataResponse: Partial<PlotData>[] = useMemo(
@@ -112,7 +117,7 @@ function StimulusPlot({
   );
 
   const onChangeStimulusUnits = (event: any) => {
-    setStimulusUnit(event.target.value);
+    setCurrentUnit(event.target.value);
   };
 
   const handleClick = ({ data, curveNumber }: Readonly<Plotly.LegendClickEvent>): boolean => {
@@ -127,7 +132,7 @@ function StimulusPlot({
     return false;
   };
 
-  const yTitle = dataUnit === 'amperes' ? `Current (${stimulusUnit})` : 'Membrane potential (mV)';
+  const yTitle = dataUnit === 'amperes' ? `Current (${currentUnit})` : 'Membrane potential (mV)';
 
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
@@ -147,7 +152,7 @@ function StimulusPlot({
           setZoomRanges({ x: [x1, x2], y: [y1, y2] });
         }}
         layout={{
-          title: 'Stimulus',
+          title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
           xaxis: {
             title: {
               font,
@@ -169,10 +174,10 @@ function StimulusPlot({
         style={style}
         config={{ displaylogo: false, ...config }}
       />
-      {antBreakpoints.md && (
+      {dataUnit === 'amperes' && antBreakpoints.md && (
         <Radio.Group
           onChange={onChangeStimulusUnits}
-          value={stimulusUnit}
+          value={currentUnit}
           size="small"
           className="units"
         >
@@ -183,5 +188,3 @@ function StimulusPlot({
     </>
   );
 }
-
-export default StimulusPlot;
