@@ -9,7 +9,6 @@ export enum DataType {
   SimulationCampaigns = `SimulationCampaign`,
   CircuitEModel = 'CircuitEModel',
   CircuitMEModel = 'CircuitMEModel',
-  Circuit = 'Circuit',
   SingleNeuronSimulation = 'SingleNeuronSimulation',
   SingleNeuronSynaptome = 'SingleNeuronSynaptome',
   SingleNeuronSynaptomeSimulation = 'SynaptomeSimulation',
@@ -46,7 +45,6 @@ export const DataTypeToNewSimulationPage: Record<string, string> = {
 export const DataTypeToViewModelPage: Record<string, string> = {
   [DataType.SingleNeuronSynaptome]: 'explore/interactive/model/synaptome',
   [DataType.CircuitMEModel]: 'explore/interactive/model/me-model',
-  [DataType.Circuit]: 'explore/interactive/circuit',
 };
 
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;

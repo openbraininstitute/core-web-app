@@ -145,28 +145,3 @@ export async function getVirtualLab(id: string): Promise<VirtualLabResponse> {
   const result: VirtualLabResponse = await response.json();
   return result;
 }
-
-/**
- * Get details for a single virtual lab.
- *
- * @param {string} id - The ID of the virtual lab to retrieve
- * @returns {Promise<VirtualLabResponse>} - API response with the virtual lab details
- * @throws {Error} - Throws an error if the request fails or the response is invalid
- */
-export async function getVirtualLab(id: string): Promise<VirtualLabResponse> {
-  const session = await getSession();
-  const response = await fetch(`${BASE_URL}/${id}`, {
-    method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`getting virtual lab failed`, { cause: await response.json() });
-  }
-
-  const result: VirtualLabResponse = await response.json();
-  return result;
-}
