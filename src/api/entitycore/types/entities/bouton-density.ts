@@ -1,4 +1,6 @@
-import { IMType } from '@/api/entitycore/types/shared/global';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+
+import type { IMType } from '@/api/entitycore/types/shared/global';
 import type {
   TimestampsFilter,
   PaginationFilter,
@@ -8,13 +10,12 @@ import type {
   SpeciesFilter,
   StainFilter,
   EtypeFilter,
-  MtypeFilter,
 } from '@/api/entitycore/types/shared/request';
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 
 export interface IExperimentalBoutonDensity extends IExperimentalDensity {
   mtypes: Array<IMType>;
-  type: 'experimental_bouton_density';
+  type: EntityTypeEnum.ExperimentalBoutonDensity;
 }
 
 export type ExperimentalBoutonDensityFilter = Partial<

@@ -1,5 +1,5 @@
 import { DataType } from '@/constants/explore-section/list-views';
-import { EntityType } from '@/entity-configuration/domain/types';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import * as entitycore from '@/api/entitycore/queries';
 
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
@@ -8,7 +8,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
   group: 'experimental',
   legacyType: DataType.ExperimentalNeuronDensity,
-  type: EntityType.ExperimentalNeuronDensity,
+  type: EntityTypeEnum.ExperimentalNeuronDensity,
   slug: 'neuron-density',
   api: {
     config: {

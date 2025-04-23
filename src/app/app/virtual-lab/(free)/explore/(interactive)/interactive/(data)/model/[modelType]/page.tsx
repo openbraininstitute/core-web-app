@@ -12,12 +12,8 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 
-const ExploreEModelTable = dynamic(
-  () => import('@/components/explore-section/EModel/ExploreEModelTable')
-);
-const ExploreMEModelTable = dynamic(
-  () => import('@/components/explore-section/MEModel/ExploreMEModelTable')
-);
+const ExploreEModelTable = dynamic(() => import('@/features/entities/e-model/listing-view'));
+const ExploreMEModelTable = dynamic(() => import('@/features/entities/me-model/listing-view'));
 
 const ExploreSynaptomeModelTable = dynamic(
   () => import('@/components/explore-section/Synaptome/ExploreSynaptomeModelTable')

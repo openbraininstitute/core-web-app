@@ -2,7 +2,10 @@ import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
-import { Prettify } from '@/types/common';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+
+export type * from '@/api/entitycore/types/entity-type';
 
 export type EntityCoreDensityObjectTypes =
   | IExperimentalNeuronDensity
@@ -13,4 +16,6 @@ export type EntityCoreObjectTypes =
   | IReconstructionMorphology
   | IExperimentalNeuronDensity
   | IExperimentalBoutonDensity
-  | IExperimentalSynapsesPerConnection;
+  | IExperimentalSynapsesPerConnection
+  | IMEModel
+  | IEModel;

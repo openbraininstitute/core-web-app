@@ -5,6 +5,7 @@ import getMeasurements, {
   EmptyValue,
   renderArray,
   renderEmptyOrValue,
+  renderLicense,
   renderMeanStd,
 } from '@/entity-configuration/definitions/renderer';
 import {
@@ -23,21 +24,14 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
   [EntityCoreFields.License]: {
     title: 'License',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => renderEmptyOrValue(r.license?.name),
+    render: (r) => {
+      if ('license' in r) return renderEmptyOrValue(renderLicense({ license: r.license }));
+      return EmptyValue;
+    },
     vocabulary: {
       plural: 'Licenses',
       singular: 'License',
     },
-  },
-  [EntityCoreFields.BrainRegion]: {
-    title: 'Brain Region',
-    filter: null,
-    render: (r) => renderEmptyOrValue(r.brain_region.name),
-    vocabulary: {
-      plural: 'Brain Regions',
-      singular: 'Brain Region',
-    },
-    constraint: 'brain_region_id',
   },
   [EntityCoreFields.Species]: {
     title: 'Species',
@@ -91,7 +85,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     render: (r) =>
       renderEmptyOrValue(
         renderArray(
-          (r as EntityCoreObjectTypes & { etype: Array<IEType> | null }).mtypes?.map(
+          (r as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
             (m) => m.pref_label
           ) || []
         )

@@ -1,0 +1,19 @@
+export enum EntityTypeEnum {
+  AnalysisSoftwareSourceCode = 'analysis_software_source_code',
+  Emodel = 'emodel',
+  ExperimentalBoutonDensity = 'experimental_bouton_density',
+  ExperimentalNeuronDensity = 'experimental_neuron_density',
+  ExperimentalSynapsesPerConnection = 'experimental_synapses_per_connection',
+  Memodel = 'memodel',
+  Mesh = 'mesh',
+  ReconstructionMorphology = 'reconstruction_morphology',
+  SingleCellExperimentalTrace = 'single_cell_experimental_trace',
+  SingleNeuronSimulation = 'single_neuron_simulation',
+  SingleNeuronSynaptome = 'single_neuron_synaptome',
+  SingleNeuronSynaptomeSimulation = 'single_neuron_synaptome_simulation',
+  Subject = 'subject',
+  SynapticPathway = 'synaptic_pathway',
+}
+
+export type EntityTypeUnion = keyof typeof EntityTypeEnum;
+export type EntityTypeValue = `${EntityTypeEnum}`;
