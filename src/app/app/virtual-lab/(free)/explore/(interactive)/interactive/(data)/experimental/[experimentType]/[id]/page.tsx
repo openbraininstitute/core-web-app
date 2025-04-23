@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { notFound, useParams } from 'next/navigation';
 
-import MorphologyDetailView from '@/components/explore-section/reconstruction-morphology/detail-view';
+import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
 import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Summary from '@/components/explore-section/details-view/summary';
@@ -19,11 +19,6 @@ export default function ExperimentDetailViewPage() {
 
   const currentExperiment = getViewDefinitionDataTypeByName(
     params?.experimentType as TExperimentTypeNames
-  );
-
-  console.log(
-    'ᦨ #  page.tsx:24 #  ExperimentDetailViewPage #  currentExperiment:',
-    currentExperiment
   );
 
   if (!currentExperiment) notFound();

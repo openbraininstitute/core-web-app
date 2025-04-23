@@ -1,7 +1,8 @@
 import get from 'lodash/get';
 
 import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
-import { FieldConfiguration as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/common';
+import { FieldsDefinition as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/common';
+import { FieldsDefinition as ModelFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/model';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
@@ -11,6 +12,7 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 const FieldsDefinitionRegistry: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   ...CommonFieldsDefinition,
   ...ExperimentalFieldsDefinition,
+  ...ModelFieldsDefinition,
 };
 
 export default FieldsDefinitionRegistry;

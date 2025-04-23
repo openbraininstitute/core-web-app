@@ -1,6 +1,6 @@
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { DataType } from '@/constants/explore-section/list-views';
-import { EntityType } from '@/entity-configuration/domain/types';
 import * as entitycore from '@/api/entitycore/queries';
 
 import type {
@@ -14,7 +14,7 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
 > = {
   group: 'experimental',
   legacyType: DataType.ExperimentalNeuronMorphology,
-  type: EntityType.ReconstructionMorphology,
+  type: EntityTypeEnum.ReconstructionMorphology,
   slug: 'morphology',
   api: {
     config: {

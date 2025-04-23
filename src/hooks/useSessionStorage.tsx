@@ -101,7 +101,6 @@ export function useSessionStorage<T>(
 
         // Save to session storage
         window.sessionStorage.setItem(key, serializer(newValue));
-
         // Save state
         setStoredValue(newValue);
 

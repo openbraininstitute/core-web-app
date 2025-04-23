@@ -1,96 +1,11 @@
-'use client';
-
-import { useAtom, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useId, use } from 'react';
-import { useRouter } from 'next/navigation';
-
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
-import { OnCellClick } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import { DataType } from '@/constants/explore-section/list-views';
-import { selectedMModelIdAtom, morphologyTypeAtom } from '@/state/virtual-lab/build/me-model';
-import { Btn } from '@/components/buttons/base/legacy-btn';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
-import { ExploreESHit } from '@/types/explore-section/es';
-import { ReconstructedNeuronMorphology } from '@/types/explore-section/es-experiment';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import { meModelDetailsAtom } from '@/state/virtual-lab/build/me-model-setter';
-import { detailUrlBuilder } from '@/util/common';
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
+import MorphologySelectionPage from '@/pages/build/me-model/morphology.selection';
+import type { WorkspaceContext } from '@/types/common';
 
 type Params = {
-  params: Promise<{
-    projectId: string;
-    virtualLabId: string;
-  }>;
+  params: Promise<WorkspaceContext>;
 };
 
-export default function ReconstrucedMorphologyPage(props: Params) {
-  const params = use(props.params);
-  const setMorphologyType = useSetAtom(morphologyTypeAtom);
-  const [meModelDetails, setMEModelDetails] = useAtom(meModelDetailsAtom);
-
-  const setSelectedMModelId = useSetAtom(selectedMModelIdAtom);
-  const router = useRouter();
-
-  useEffect(() => setMorphologyType('reconstructed'), [setMorphologyType]);
-
-  const onMorphPicked = useCallback(
-    (selectedRows: ExploreESHit<ExploreSectionResource>[]) => {
-      if (selectedRows.length > 1) {
-        throw new Error(
-          'Multiple morphologies selected for ME-Model building. Only one is allowed'
-        );
-      }
-
-      const morph = selectedRows[0]._source as ReconstructedNeuronMorphology;
-
-      if (meModelDetails === null) {
-        router.push('./'); // Redirects to (...)/build/me-model/new
-
-        return undefined;
-      }
-
-      // if a brain region is not already set for the me-model, setting the brain region of the morphology selected
-      if (!meModelDetails.brainRegion) {
-        setMEModelDetails({
-          ...meModelDetails,
-          brainRegion: {
-            id: morph.brainRegion['@id'],
-            title: morph.brainRegion.label,
-          },
-        });
-      }
-
-      setSelectedMModelId(morph['@id']);
-      router.push('../configure');
-    },
-    [setSelectedMModelId, router, meModelDetails, setMEModelDetails]
-  );
-
-  const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
-  const baseExploreUrl = `${vlProjectUrl}/explore/interactive/experimental/morphology`;
-
-  const onCellClick: OnCellClick = (_basePath, record) => {
-    router.push(detailUrlBuilder(baseExploreUrl, record));
-  };
-
-  return (
-    <div className="h-full" id="explore-table-container-for-observable">
-      <ExploreSectionListingView
-        dataKey={useId()}
-        dataType={DataType.ExperimentalNeuronMorphology}
-        dataScope={ExploreDataScope.BuildSelectedBrainRegion}
-        onCellClick={onCellClick}
-        selectionType="radio"
-        renderButton={({ selectedRows }) => (
-          <Btn
-            className="fit-content bg-primary-8 sticky bottom-0 ml-auto w-fit"
-            onClick={() => onMorphPicked(selectedRows)}
-          >
-            Select m-model
-          </Btn>
-        )}
-      />
-    </div>
-  );
+export default async function Page({ params: urlParams }: Params) {
+  const params = await urlParams;
+  return <MorphologySelectionPage params={params} />;
 }

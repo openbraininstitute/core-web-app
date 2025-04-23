@@ -1,13 +1,8 @@
-import type { IOrganization, IPerson } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-export function isOrganization(agent: unknown): agent is IOrganization {
-  return (
-    typeof agent === 'object' && agent !== null && 'pref_label' in agent && !('givenName' in agent)
-  );
-}
-
-export function isPerson(agent: unknown): agent is IPerson {
-  return (
-    typeof agent === 'object' && agent !== null && 'givenName' in agent && 'familyName' in agent
-  );
+export function hasAssets(
+  obj: EntityCoreObjectTypes
+): obj is EntityCoreObjectTypes & EntityCoreBaseAsset {
+  return 'assets' in obj && (obj.assets === null || Array.isArray(obj.assets));
 }

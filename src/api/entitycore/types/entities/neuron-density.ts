@@ -1,3 +1,5 @@
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 import type {
   TimestampsFilter,
@@ -15,7 +17,7 @@ import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density
 export interface IExperimentalNeuronDensity extends IExperimentalDensity {
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
-  type: 'experimental_neuron_density';
+  type: EntityTypeEnum.ExperimentalNeuronDensity;
 }
 
 export type ExperimentalNeuronDensityFilter = Partial<

@@ -12,7 +12,7 @@ import usePathname from '@/hooks/pathname';
 import { DetailViewUrlParams } from '@/types/explore-section/application';
 import {
   CommonSummaryViewFields,
-  getViewDefinition,
+  getViewDefinitionByLegacyType,
 } from '@/entity-configuration/definitions/view-defs';
 import { DetailsPageSideBackLink } from '@/components/explore-section/Sidebar';
 import { detailFamily } from '@/state/explore-section/detail-view-atoms';
@@ -21,7 +21,6 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { useLoadableValue } from '@/hooks/hooks';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
@@ -39,7 +38,7 @@ export default function Summary<T extends EntityCoreIdentifiable & { name: strin
   children?: (detail: EntityCoreObjectTypes) => ReactNode;
 }) {
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
-  const fields = getViewDefinition(dataType)?.summaryViewFields;
+  const fields = getViewDefinitionByLegacyType(dataType)?.summaryViewFields;
 
   const path = usePathname();
   const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
@@ -47,8 +46,6 @@ export default function Summary<T extends EntityCoreIdentifiable & { name: strin
   const detail = useLoadableValue(
     detailFamily({ id, virtualLabId, projectId, dataType, ...params })
   ) as Loadable<EntityCoreObjectTypes>;
-
-  console.log('ᦨ #  summary.tsx:51 #  detail:', detail);
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);
@@ -63,8 +60,6 @@ export default function Summary<T extends EntityCoreIdentifiable & { name: strin
       return <Error statusCode={400} title="Something went wrong while fetching the data" />;
     })
     .with({ state: 'hasData' }, ({ data }) => {
-      console.log('ᦨ #  summary.tsx:68 #  .with #  data:', data);
-
       return (
         <div className="flex h-screen grow overflow-x-auto">
           <DetailsPageSideBackLink />

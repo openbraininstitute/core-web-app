@@ -1,42 +1,42 @@
 'use client';
 
-import { useEffect } from 'react';
+import { notFound } from 'next/navigation';
+import { use, useEffect } from 'react';
 import { useSetAtom } from 'jotai';
-import { notFound, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 import { DataType } from '@/constants/explore-section/list-views';
 import { MODEL_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/model-data-types';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-const ExploreEModelTable = dynamic(
-  () => import('@/components/explore-section/EModel/ExploreEModelTable')
-);
-const ExploreMEModelTable = dynamic(
-  () => import('@/components/explore-section/MEModel/ExploreMEModelTable')
-);
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
+const ExploreEModelTable = dynamic(() => import('@/features/entities/e-model/listing-view'));
+const ExploreMEModelTable = dynamic(() => import('@/features/entities/me-model/listing-view'));
 
 const ExploreSynaptomeModelTable = dynamic(
   () => import('@/components/explore-section/Synaptome/ExploreSynaptomeModelTable')
 );
 
-export default function VirtualLabModelListingView() {
-  const params = useParams<{ modelType: string; virtualLabId: string; projectId: string }>();
+export default function VirtualLabModelListingView({
+  params: urlParams,
+}: ServerSideComponentProp<WorkspaceContext & { modelType: string }, null>) {
+  const { virtualLabId, projectId, modelType } = use(urlParams);
+
   const currentModel = Object.keys(MODEL_DATA_TYPE_CONFIG).find(
-    (key) => MODEL_DATA_TYPE_CONFIG[key].name === params?.modelType
+    (key) => MODEL_DATA_TYPE_CONFIG[key].name === modelType
   );
-  const virtualLabInfo: VirtualLabInfo = {
-    virtualLabId: params.virtualLabId,
-    projectId: params.projectId,
-  };
 
   const setBackToListPath = useSetAtom(backToListPathAtom);
-  const vlProjectUrl = generateVlProjectUrl(virtualLabInfo.virtualLabId, virtualLabInfo.projectId);
+  const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
 
   useEffect(() => {
+    resolveExploreDetailsPageUrl({
+      ctx: { virtualLabId, projectId },
+    });
     setBackToListPath(`${vlProjectUrl}/explore/interactive`);
   }, [setBackToListPath, vlProjectUrl]);
 
@@ -46,7 +46,7 @@ export default function VirtualLabModelListingView() {
     case DataType.CircuitEModel:
       return (
         <ExploreEModelTable
-          virtualLabInfo={virtualLabInfo}
+          virtualLabInfo={{ virtualLabId, projectId }}
           dataType={currentModel as DataType}
           dataScope={ExploreDataScope.SelectedBrainRegion}
         />
@@ -54,7 +54,7 @@ export default function VirtualLabModelListingView() {
     case DataType.CircuitMEModel:
       return (
         <ExploreMEModelTable
-          virtualLabInfo={virtualLabInfo}
+          virtualLabInfo={{ virtualLabId, projectId }}
           dataType={currentModel as DataType}
           dataScope={ExploreDataScope.SelectedBrainRegion}
         />
@@ -62,7 +62,7 @@ export default function VirtualLabModelListingView() {
     case DataType.SingleNeuronSynaptome:
       return (
         <ExploreSynaptomeModelTable
-          virtualLabInfo={virtualLabInfo}
+          virtualLabInfo={{ virtualLabId, projectId }}
           dataType={currentModel as DataType}
           dataScope={ExploreDataScope.SelectedBrainRegion}
         />

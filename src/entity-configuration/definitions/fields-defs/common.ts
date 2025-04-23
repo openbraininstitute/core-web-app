@@ -1,5 +1,5 @@
 import {
-  renderArray,
+  EmptyPreview,
   renderDate,
   renderEmptyOrValue,
   renderPreview,
@@ -8,17 +8,21 @@ import {
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
+import { hasAssets } from '@/api/entitycore/guards';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-export const FieldConfiguration: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
+export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   [EntityCoreFields.Preview]: {
     className: 'text-center',
     title: 'Preview',
     filter: null,
-    render: (r) => renderPreview(r, { width: 184, height: 116 }),
+    render: (r) => {
+      if (hasAssets(r)) return renderPreview(r, { width: 184, height: 116 });
+      return EmptyPreview;
+    },
     vocabulary: {
       plural: 'previews',
       singular: 'preview',
@@ -144,5 +148,19 @@ export const FieldConfiguration: FieldsDefinitionRegistry<EntityCoreObjectTypes>
       property: 'contribution__order_by',
       value: 'pref_label',
     },
+  },
+  [EntityCoreFields.BrainRegion]: {
+    title: 'Brain Region',
+    filter: null,
+    render: (r) => {
+      console.log('-->, r', r.brain_region.name);
+      return r.brain_region.name;
+      return renderEmptyOrValue(r.brain_region.name);
+    },
+    vocabulary: {
+      plural: 'Brain Regions',
+      singular: 'Brain Region',
+    },
+    constraint: 'brain_region_id',
   },
 };

@@ -223,7 +223,5 @@ export default function useExploreColumns<T>(
     );
   }
 
-  console.log('ᦨ #  useExploreColumns.tsx:228 #  columns:', columns);
-
   return columns;
 }

@@ -1,39 +1,40 @@
 'use client';
 
-import { useMemo, useState, use } from 'react';
 import { Button, Form, Input, Select } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { useMemo, useState, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state.session';
 import {
   brainRegionsWithRepresentationAtom,
   setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
-import { meModelDetailsAtom } from '@/state/virtual-lab/build/me-model-setter';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
-import { selectedEModelIdAtom, selectedMModelIdAtom } from '@/state/virtual-lab/build/me-model';
+
+import type { WorkspaceContext } from '@/types/common';
 
 type Params = {
-  params: Promise<{
-    virtualLabId: string;
-    projectId: string;
-  }>;
+  params: Promise<WorkspaceContext>;
 };
 
 export default function NewMEModelPage(props: Params) {
-  const params = use(props.params);
+  const { projectId, virtualLabId } = use(props.params);
+  const { push: navigate } = useRouter();
+  const [form] = Form.useForm();
 
-  const { projectId, virtualLabId } = params;
+  const stateId = useMemo(() => `bme-${crypto.randomUUID()}`, []);
+  const { setSessionValue, sessionValue, removeSessionValue } = useBuildMeModelSessionState({
+    stateId,
+    virtualLabId,
+    projectId,
+  });
 
-  const setMEModelDetails = useSetAtom(meModelDetailsAtom);
-  const setSelectedMModel = useSetAtom(selectedMModelIdAtom);
-  const setSelectedEModel = useSetAtom(selectedEModelIdAtom);
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
   const [isFormValid, setIsFormValid] = useState(false);
   const brainRegions = useAtomValue(brainRegionsWithRepresentationAtom);
   const setBrainRegion = useSetAtom(setSelectedBrainRegionAtomGetter('build'));
-  const [form] = Form.useForm();
-  const router = useRouter();
 
   const onValuesChange = () => {
     form
@@ -61,14 +62,18 @@ export default function NewMEModelPage(props: Params) {
       setBrainRegion(brainRegion.id, brainRegion.title, brainRegion.leaves || []);
     }
 
-    setMEModelDetails({
+    setSessionValue({
+      virtualLabId,
+      projectId,
       name: values.name,
       description: values.description,
       brainRegion: brainRegion && { id: brainRegion.id, title: brainRegion.title },
     });
-    setSelectedMModel(null);
-    setSelectedEModel(null);
-    router.push('new/configure');
+
+    const params = new URLSearchParams();
+    params.set('s', stateId);
+
+    navigate(`new/configure?${params.toString()}`);
   };
 
   const brainRegionOptions = useMemo(
@@ -88,6 +93,11 @@ export default function NewMEModelPage(props: Params) {
             autoComplete="off"
             preserve={false}
             onValuesChange={onValuesChange}
+            initialValues={{
+              name: sessionValue.name,
+              description: sessionValue.description,
+              brainRegion: sessionValue.brainRegion?.id,
+            }}
           >
             <Form.Item
               hasFeedback

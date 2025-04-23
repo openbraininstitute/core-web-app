@@ -8,10 +8,30 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreBaseAsset,
   MeasurementBase,
+  EntityCoreResource,
+  ILicense,
 } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreDensityObjectTypes } from '@/api/entitycore/types';
+import { Empty } from 'antd';
 
 export const EmptyValue = '—';
+export const EmptyPreview = (
+  <Empty
+    key={`no-asset-empty-thumbnail`}
+    description="Error loading thumbnail"
+    image={Empty.PRESENTED_IMAGE_SIMPLE}
+    className="h-full! w-full!"
+  />
+);
+
+export const renderLicense = ({ license }: { license?: ILicense | null }) => {
+  if (!license) return null;
+  return (
+    <a id={license.id} href={license.name} target="_blank" rel="noopener noreferrer">
+      Open 🔗
+    </a>
+  );
+};
 
 export const renderEmptyOrValue = (value: any) => {
   return isNil(value) || isEmpty(value) ? EmptyValue : value;
@@ -30,7 +50,7 @@ export const renderTimestamp = (timestamp: string) => {
   if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
 };
 
-export function renderPreview<T extends EntityCoreBaseAsset & EntityCoreIdentifiable>(
+export function renderPreview<T extends EntityCoreResource>(
   resource: T,
   size?: { height: number; width: number } | string
 ) {
@@ -45,7 +65,7 @@ export default function getMeasurements(r: EntityCoreDensityObjectTypes) {
   return { mean, std, ss, se };
 }
 
-function renderFloatNumber(num?: number, fixed: number = 4) {
+export function renderFloatNumber(num?: number, fixed: number = 4) {
   if (!num) return '';
   return Number(num.toPrecision(fixed)).toLocaleString('en-US');
 }

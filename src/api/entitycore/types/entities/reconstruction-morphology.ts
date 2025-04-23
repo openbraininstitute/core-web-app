@@ -1,4 +1,6 @@
-import {
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+
+import type {
   BrainLocationFilter,
   BrainRegionFilter,
   ContributionFilter,
@@ -7,20 +9,22 @@ import {
   SharedFilter,
   SpeciesFilter,
   StainFilter,
+  IDFilter,
+  MtypeFilter,
 } from '@/api/entitycore/types/shared/request';
-import {
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreBaseAsset,
+  EntityAuthorization,
   IBrainLocation,
   IBrainRegion,
+  IContributor,
+  Measurement,
+  Timestamps,
   ILicense,
   ISpecies,
   IStrain,
-  Timestamps,
-  Measurement,
   IMType,
-  IContributor,
-  EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
-  EntityAuthorization,
 } from '@/api/entitycore/types/shared/global';
 
 export type ReconstructionMorphologyExpandFields =
@@ -29,17 +33,6 @@ export type ReconstructionMorphologyExpandFields =
   | 'strain'
   | 'brain_region';
 export type ReconstructionMorphologyExpand = ReconstructionMorphologyExpandFields[];
-
-type MtypeFilter = {
-  mtype__id: string | null;
-  mtype_pref_label: string | null;
-  mtype_pref_label__in: string | null;
-  mtype__order_by: string | null;
-};
-
-type IDFilter = {
-  id__in: string | null;
-};
 
 export type ReconstructionMorphologyFilter = Partial<
   IDFilter &
@@ -59,21 +52,24 @@ export type MorphologyFeatureAnnotation = {
   measurements: Array<Measurement>;
 };
 
-export interface IReconstructionMorphology
-  extends EntityCoreIdentifiable,
-    Timestamps,
-    EntityCoreBaseAsset,
-    EntityAuthorization {
+export interface IReconstructionMorphologyBase extends EntityCoreIdentifiable {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
+}
+
+export interface IReconstructionMorphology
+  extends IReconstructionMorphologyBase,
+    Timestamps,
+    EntityCoreBaseAsset,
+    EntityAuthorization {
   license?: ILicense | null;
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: IBrainRegion;
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
-  type: 'reconstruction-morphology';
+  type: EntityTypeEnum.ReconstructionMorphology;
 }
 
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {

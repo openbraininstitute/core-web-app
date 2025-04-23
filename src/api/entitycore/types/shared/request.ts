@@ -26,6 +26,7 @@ export type PaginationFilter = {
 
 export type SpeciesFilter = {
   species__id: string | null;
+  species_id__in: number | null;
   species__name: string | null;
   species__name__in: string | null;
   species__order_by: string | null;
@@ -46,14 +47,42 @@ export type SharedFilter = {
 
 export type EtypeFilter = {
   etype__id: string | null;
-  pref_label: string | null;
-  pref_label__in: Array<string> | null;
-  order_by: Array<string> | null; //  ["pref_label"]
+  etype__pref_label: string | null;
+  etype__pref_label__in: Array<string> | null;
+  etype__order_by: Array<string> | null; //  ["pref_label"]
 };
 
 export type MtypeFilter = {
   mtype__id: string | null;
-  pref_label: string | null;
-  pref_label__in: Array<string> | null;
-  order_by: Array<string> | null; //  ["pref_label"]
+  mtype_pref_label: string | null;
+  mtype_pref_label__in: Array<string> | null;
+  mtype_order_by: Array<string> | null; //  ["pref_label"]
 };
+
+export type IDFilter = {
+  id__in: string | null;
+};
+
+export interface IEModelFilter {
+  emodel_creation_date_lte?: string | null;
+  emodel_creation_date_gte?: string | null;
+  emodel_update_date_lte?: string | null;
+  emodel_update_date_gte?: string | null;
+  emodel_name__ilike?: string | null;
+  emodel_brain_region_id?: number | null;
+  emodel_species_id__in?: string | null;
+  emodel_score__lte?: number | null;
+  emodel_score_gte?: number | null;
+  emodel_order_by?: string | null;
+}
+
+export interface IMorphologyFilter {
+  exemplar_morphology__creation_date_lte?: string | null;
+  exemplar_morphology__creation_date_gte?: string | null;
+  exemplar_morphology__update_date_lte?: string | null;
+  exemplar_morphology__update_date_gte?: string | null;
+  exemplar_morphology__name_ilike?: string | null;
+  exemplar_morphology__brain_region_id?: number | null;
+  exemplar_morphology__species_id__in?: string | null;
+  exemplar_morphology__order_by?: string | null;
+}

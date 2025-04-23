@@ -8,7 +8,7 @@ import { SynaptomeSimulation } from '@/types/nexus';
 import { getSession } from '@/authFetch';
 import { queryES } from '@/api/nexus';
 
-import SimulationDetail from '@/components/explore-section/MEModel/DetailView/SimulationDetails';
+import SimulationDetail from '@/features/entities/me-model/detail-view/simulation-details';
 import ConfigItem from '@/components/build-section/virtual-lab/synaptome/molecules/ConfigItem';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
