@@ -25,7 +25,7 @@ export default function Item({
     <div
       id={id}
       className={classNames(
-        'animate-scale-in group relative overflow-hidden rounded-md shadow-sm',
+        'animate-scale-in group relative mb-2 overflow-hidden rounded-md shadow-sm',
         'bg-primary-8'
       )}
     >

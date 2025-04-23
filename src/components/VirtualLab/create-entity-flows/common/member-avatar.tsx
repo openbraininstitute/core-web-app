@@ -112,16 +112,19 @@ export function MemberAvatarCasual({
   status,
   shape,
   cls,
+  withEmail = false,
 }: TMember & {
   pending: boolean;
   shape?: 'circle' | 'square';
   size?: 'small' | 'medium' | 'large';
   layout?: 'vertical' | 'horizontal';
+  withEmail?: boolean;
   cls?: {
     container?: string;
     text?: string;
     role?: string;
     avatar?: string;
+    email?: string;
   };
 }) {
   const color = nth(COLOR_DICTIONARY, index)?.color ?? '#fff';
@@ -168,7 +171,7 @@ export function MemberAvatarCasual({
               {initials}
             </Avatar>
             <div className="flex flex-1 items-center justify-between gap-4">
-              <div className="flex flex-col gap-1">
+              <div className={classNames('flex flex-col')}>
                 <h3
                   className={classNames(
                     'text-xl font-bold  text-primary-8',
@@ -178,6 +181,9 @@ export function MemberAvatarCasual({
                 >
                   {name}
                 </h3>
+                {withEmail && (
+                  <p className={classNames('text-sm font-light', cls?.email)}> {email}</p>
+                )}
               </div>
             </div>
           </>

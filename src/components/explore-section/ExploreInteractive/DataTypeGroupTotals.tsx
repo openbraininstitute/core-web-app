@@ -4,10 +4,8 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 
-import HARD_CODED_CONTENT from '../Circuit/content/circuits_tree';
-import { CircuitSchemaProps } from '../Circuit/type';
+import circuitsFlat from '../Circuit/content/circuits_flat';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
-
 import { DATA_TYPE_GROUPS_CONFIG } from '@/constants/explore-section/data-type-groups';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -72,20 +70,9 @@ export default function DataTypeGroupTotals({
   const { config, extensionPath } = DATA_TYPE_GROUPS_CONFIG[dataTypeGroup];
   const pathName = usePathname();
 
-  const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
-    const directSubcircuits = row.subcircuits?.length || 0;
-    const nestedSubcircuits = row.subcircuits
-      ? row.subcircuits.reduce((sum, sub) => sum + calculateSubcircuitsForParent(sub), 0)
-      : 0;
-    return directSubcircuits + nestedSubcircuits;
-  };
-
   return (
     <>
       {Object.keys(config).map((dataType) => {
-        // TODO: find a better way
-        if (dataType === 'Circuit') return null;
-
         return (
           <DataTypeGroupTotal
             key={dataType}
@@ -98,10 +85,10 @@ export default function DataTypeGroupTotals({
 
       {dataTypeGroup === DataTypeGroup.ModelData && (
         <StatItem
-          href={`${rootbasePath}/app/virtual-lab/explore/interactive/model/circuit`}
+          href={`${pathName}/model/circuit`}
           key="Circuit"
           title="Circuit"
-          subtitle={`${HARD_CODED_CONTENT.reduce((sum, row) => sum + calculateSubcircuitsForParent(row), 0)} records`}
+          subtitle={`${circuitsFlat.length} records`}
           testId="experiment-dataset-Circuit"
         />
       )}

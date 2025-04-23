@@ -44,21 +44,21 @@ jobs:
         run: |
           docker push ${{ vars.PUBLICECR_URI }}:staging
 
-      - name: Authenticate with AWS ECS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_STAGING_ECS_REDEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_STAGING_REGION }}
+      # - name: Authenticate with AWS ECS
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ vars.AWS_STAGING_ECS_REDEPLOY_ROLE_ARN }}
+      #     aws-region: ${{ vars.AWS_STAGING_REGION }}
 
-      - name: Trigger new deployment
-        run: |
-          aws ecs update-service \
-            --cluster ${{ vars.AWS_STAGING_ECS_CLUSTER }} \
-            --service ${{ vars.AWS_STAGING_ECS_SERVICE }} \
-            --force-new-deployment
+      # - name: Trigger new deployment
+      #   run: |
+      #     aws ecs update-service \
+      #       --cluster ${{ vars.AWS_STAGING_ECS_CLUSTER }} \
+      #       --service ${{ vars.AWS_STAGING_ECS_SERVICE }} \
+      #       --force-new-deployment
 
-      - name: Wait until the service is stable
-        run: |
-          aws ecs wait services-stable \
-            --cluster ${{ vars.AWS_STAGING_ECS_CLUSTER }} \
-            --service ${{ vars.AWS_STAGING_ECS_SERVICE }}
+      # - name: Wait until the service is stable
+      #   run: |
+      #     aws ecs wait services-stable \
+      #       --cluster ${{ vars.AWS_STAGING_ECS_CLUSTER }} \
+      #       --service ${{ vars.AWS_STAGING_ECS_SERVICE }}

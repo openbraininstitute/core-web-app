@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, ConfigProvider, Popconfirm, Select, Table } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useSetAtom } from 'jotai';
 import get from 'lodash/get';
 import find from 'lodash/find';
-import orderBy from 'lodash/orderBy';
+import sortBy from 'lodash/sortBy';
+import compact from 'lodash/compact';
 
+import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
+import AddMembersModal from '@/components/VirtualLab/create-entity-flows/project/add-members';
+import useUserPermissions from '@/hooks/useUserPermission';
 import useNotification from '@/hooks/notifications';
-import useActiveSubscription from '@/hooks/useActiveSubscription';
-import InviteModal from '@/components/VirtualLab/create-entity-flows/invite';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import {
   cancelProjectInvite,
@@ -44,6 +47,7 @@ type RoleModifierProps = {
 };
 
 function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: RoleModifierProps) {
+  const { data } = useSession();
   const [role, updateRole] = useState(user.role);
   const [loading, setLoading] = useState(false);
   const [removeLoading, seRemoveLoading] = useState(false);
@@ -165,7 +169,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
       onRemove(user.id);
     }
   };
-  if (user.id === ownerId) {
+  if (user.id === ownerId || user.id === data?.user.id) {
     return (
       <div className="flex w-full flex-col items-center justify-end pr-3 text-right">
         <div className="!w-max self-end font-bold text-white hover:!text-primary-2">
@@ -177,7 +181,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
   return user.invite_accepted ? (
     <div className="ml-auto text-right text-base text-white">
       <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
-        <div className="flex w-max flex-col items-center justify-center">
+        <div className="flex w-max flex-row items-center justify-center gap-2">
           <Select
             data-testid="role-select"
             className={classNames(
@@ -185,7 +189,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
               '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
               '[&_.ant-select-selector]:!border [&_.ant-select-selector]:!border-primary-7',
               '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
-              '[&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
+              'min-w-[140px] [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
             )}
             onChange={onChange}
             value={role}
@@ -214,7 +218,7 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
             <Button
               type="default"
               size="large"
-              className="w-full self-end rounded-none border border-t-0 border-primary-7 bg-transparent px-[11px] text-white hover:!border-t"
+              className="w-full self-end rounded-none border border-primary-7 bg-transparent px-[11px] text-white hover:!border-t"
               disabled={removeLoading}
               loading={removeLoading}
             >
@@ -243,10 +247,19 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
   );
 }
 
-export default function VirtualLabTeamTable({ users: initialUsers, ownerId, total }: Props) {
+export default function TeamTable({ users: initialUsers, ownerId, total }: Props) {
+  const { data } = useSession();
   const { virtualLabId, projectId } = useParams<{ virtualLabId: string; projectId: string }>();
   const [isOpen, setOpen] = useState(false);
   const [users, setUsers] = useState(initialUsers);
+  const [popoverOpen, setIsPopoverOpen] = useState(false);
+
+  const { isAllowedBySubscription, isAdmin, isProjectAdmin, loading } = useUserPermissions({
+    virtualLabId,
+    projectId,
+  });
+  const allowedOperation = isAllowedBySubscription && (isAdmin || isProjectAdmin) && !loading;
+
   const onClose = () => setOpen(false);
   const onOpen = () => setOpen(true);
 
@@ -283,9 +296,19 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
             email={record.email}
             role={record.role}
             pending={!record.invite_accepted}
-            name={record.id ? `${record.first_name} ${record.last_name}` : record.email}
+            name={
+              record.id
+                ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+                  get(record, 'username') ||
+                  record.email
+                : record.email
+            }
             initials={extractInitials(
-              record.id ? `${record.first_name} ${record.last_name}` : record.email
+              record.id
+                ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+                    get(record, 'username') ||
+                    record.email
+                : record.email
             )}
             cls={{
               text: classNames(
@@ -308,7 +331,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
       key: 'role',
       dataIndex: 'role',
       align: 'right',
-      width: '200px',
+      width: '450px',
       render: (_: Role, record) => (
         <RoleModifier
           virtualLabId={virtualLabId}
@@ -320,7 +343,26 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
       ),
     },
   ];
-  const { forbiddenOperation } = useActiveSubscription();
+
+  const onOpenChange = (visible: boolean) => {
+    if (loading) return;
+    if (!allowedOperation || !visible) setIsPopoverOpen(true);
+    else setIsPopoverOpen(false);
+  };
+
+  const orderedUsers = useMemo(
+    () =>
+      sortBy(users, [
+        (member) => (member.id === ownerId ? 0 : 1),
+        (member) => (member.id === data?.user.id ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'admin' ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'member' ? 0 : 1),
+        (member) => (member.invite_accepted ? 0 : 1),
+        'created_at',
+      ]),
+    [users, ownerId, data?.user.id]
+  );
+
   return (
     <div className="flex h-full flex-col pb-8">
       <div className="flex h-8 flex-shrink-0 items-center px-3">
@@ -345,7 +387,7 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
         >
           <Table
             bordered={false}
-            dataSource={orderBy(users, ['invite_accepted', 'role'], ['desc', 'asc'])}
+            dataSource={orderedUsers}
             pagination={false}
             columns={columns}
             showHeader={false}
@@ -363,28 +405,35 @@ export default function VirtualLabTeamTable({ users: initialUsers, ownerId, tota
         </ConfigProvider>
       </div>
       <div className="mt-auto flex flex-shrink-0 items-center justify-end">
-        <Button
-          key="add-member"
-          data-testid="add-member-btn"
-          className={classNames(
-            'h-14 rounded-none border border-white bg-white px-14 text-primary-9',
-            'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
-            'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-            'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
-          )}
-          type="default"
-          size="large"
-          htmlType="button"
-          disabled={forbiddenOperation}
-          onClick={onOpen}
+        <CustomPopover
+          when={['hover']}
+          message="Only on Pro and Premium plans the Owner/Administrator can add members."
+          placement="topLeft"
+          visible={popoverOpen}
+          onOpenChange={onOpenChange}
         >
-          Add member
-        </Button>
+          <Button
+            key="add-member"
+            data-testid="add-member-btn"
+            className={classNames(
+              'h-14 rounded-none border border-white bg-white px-14 text-primary-9',
+              'hover:!border hover:!border-primary-8 hover:bg-primary-8 hover:font-bold hover:!text-white hover:shadow-sm',
+              'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
+              'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
+            )}
+            type="default"
+            size="large"
+            htmlType="button"
+            disabled={!allowedOperation}
+            onMouseLeave={() => setIsPopoverOpen(false)}
+            onClick={onOpen}
+          >
+            Add member
+          </Button>
+        </CustomPopover>
       </div>
-      <InviteModal
-        type="project"
+      <AddMembersModal
         key="invite-member-to-project"
-        title="Invite new members to project"
         isOpen={isOpen}
         onClose={onClose}
         context={{ virtualLabId, projectId }}

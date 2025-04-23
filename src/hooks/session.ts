@@ -9,7 +9,7 @@ import sessionAtom from '@/state/session';
 
 export type SessionOrNull = Session | null;
 
-/* 
+/*
    Waits for useSessionState to set the session.
    useSessionState updates it to always have the latest token available.
 */
@@ -73,9 +73,9 @@ export default function useSessionState() {
   }, [session?.accessToken, currentSession, session, setSessionState]);
 
   useEffect(() => {
-    if (session?.error !== 'RefreshAccessTokenError') return;
+    if (currentSession?.data?.error !== 'RefreshAccessTokenError') return;
 
     // automatically signIn when a refresh token expires
     signIn('keycloak');
-  }, [session]);
+  }, [currentSession]);
 }

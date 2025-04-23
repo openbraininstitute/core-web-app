@@ -26,7 +26,6 @@ import {
 } from '@/api/virtual-lab-svc/queries/types';
 
 const BASE_URL = `${virtualLabApi.url}/subscriptions`;
-// const BASE_URL = `http://localhost:8000/subscriptions`;
 
 /**
  * creates a new subscription for a virtual lab.
@@ -273,6 +272,9 @@ export async function listUserSubscriptionsHistory(): Promise<UserSubscriptionsR
       Authorization: `Bearer ${session?.accessToken}`,
     },
     cache: 'no-store',
+    next: {
+      tags: ['list-subscriptions'],
+    },
   });
 
   if (!response.ok) {

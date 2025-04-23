@@ -89,7 +89,7 @@ export interface MEModel extends Entity {
   contribution: MEModelContribution[];
   image?: ESeModel['image'];
   validated: boolean;
-  status: 'initialized' | 'processing' | 'done' | 'running' | 'error';
+  status: 'initialized' | 'running' | 'done' | 'failed';
   brainLocation?: BrainLocation; // it will be added later when the me-model analysis is run
   annotation?: Annotation[];
   eModel?: string;

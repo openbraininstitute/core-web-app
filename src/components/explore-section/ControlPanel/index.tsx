@@ -138,7 +138,7 @@ function createFilterItemComponent(
                 updateFilterValues(filter.field, event.target.value)
               }
             />
-            <span>
+            <span className="text-white">
               Use the asterix character (<code className="text-semibold font-mono">*</code>) to
               specify a &quot;wildcard&quot; for your search. For example; to search for names{' '}
               <i>beginning with</i> &quot;AA11&quot;, specify{' '}
@@ -239,7 +239,7 @@ export default function ControlPanel({
   return (
     <div
       data-testid="listing-view-filter-panel"
-      className="fixed right-0 top-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 pl-8 pr-16 pt-6"
+      className="fixed right-0 top-0 z-10 flex h-full w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 pl-8 pr-16 pt-6"
     >
       <div>
         <button

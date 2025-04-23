@@ -32,6 +32,7 @@ import {
   selectedSimTypeFamily,
   selectedTabFamily,
 } from '@/components/VirtualLab/ScopeSelector/state';
+import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
 import Styles from '@/styles/vlabs.module.scss';
 
 type Params = {
@@ -96,33 +97,11 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const atomKey = 'build' + selectedTab + projectId;
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
 
-  const selectedModelType = SimulationScopeToModelType[selectedSimType];
+  const selectedModelType = SimulationScopeToModelType[selectedSimType] ?? DataType.CircuitMEModel;
 
-  const selectedRows = useAtomValue(
-    selectedRowsAtom(projectId + 'build' + selectedModelType || DataType.CircuitMEModel)
-  );
+  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'build' + selectedModelType));
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
-
-  // Note: Disabled temporarily until SFN
-  // const generateCloneUrl = () => {
-  //   const model = selectedRows[0];
-  //   if (model && selectedModelType) {
-  //     const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
-  //     const baseBuildUrl = `${vlProjectUrl}/${SupportedTypeToTabDetails[selectedModelType].newUrl}`;
-  //     return `${baseBuildUrl}?mode=clone&model=${to64(model._source['@id'])}`;
-  //   }
-  // };
-
-  // const onCloneModel = () => {
-  //   switch (selectedSimulationScope) {
-  //     case SimulationType.Synaptome: {
-  //       return generateCloneUrl();
-  //     }
-  //     default:
-  //       return undefined;
-  //   }
-  // };
 
   const navigateToDetailPage = (record: ExploreESHit<ExploreSectionResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
@@ -130,6 +109,13 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
     const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLs[selectedSimType].viewUrl}`;
     router.push(`${baseExploreUrl}/${pathId}`);
   };
+
+  const [loading, loadMoreDiv] = useInfiniteScroll(
+    virtualLabId,
+    projectId,
+    selectedModelType ?? DataType.CircuitMEModel,
+    projectId + 'build' + selectedModelType
+  );
 
   return (
     <>
@@ -154,7 +140,10 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
               dataKey={projectId + 'build' + selectedModelType || DataType.CircuitMEModel}
+              showLoadingState={loading as boolean}
             />
+
+            {loadMoreDiv}
 
             {selectedRows.length > 0 && (
               <div className="fixed bottom-12 right-[45px] flex items-center justify-end gap-2">
