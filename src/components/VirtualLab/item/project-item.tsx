@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import { ArrowRightOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 
-import { classNames } from '@/util/utils';
-import { dateColumnInfoToRender } from '@/util/date';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { projectBalanceAtomFamily } from '@/state/virtual-lab/projects';
+import { dateColumnInfoToRender } from '@/util/date';
+import { classNames } from '@/util/utils';
 
 type Props = {
   id: string;
@@ -33,7 +33,7 @@ export default function Item({ id, description, vlabId, name, creationDate, memb
           <div>
             <h3 className="mb-1 text-3xl font-bold">{name}</h3>
             <p className="text-base text-primary-2">
-              Project&#39;s creation date:{' '}
+              Project creation date:{' '}
               <span className="text-white">{dateColumnInfoToRender(creationDate).text}</span>
             </p>
           </div>
