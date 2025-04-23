@@ -25,13 +25,16 @@ import { ExploreDataScope, FilterValues } from '@/types/explore-section/applicat
 import {
   activeColumnsAtom,
   filtersAtom,
+  pageNumberAtom,
+  previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
 import { getFieldEsConfig, getFieldLabel } from '@/api/explore-section/fields';
 import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { DataType } from '@/constants/explore-section/list-views';
+import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import ClearFilters from '@/components/explore-section/ExploreSectionListingView/ClearFilters';
 import { fieldTitleSentenceCase } from '@/util/utils';
+import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 export type ControlPanelProps = {
   children?: ReactNode;
@@ -44,6 +47,7 @@ export type ControlPanelProps = {
   setFilters: any;
   showDisplayTrigger?: boolean;
   resourceId?: string;
+  virtualLabInfo?: VirtualLabInfo;
 };
 
 function createFilterItemComponent(
@@ -166,6 +170,7 @@ export default function ControlPanel({
   setFilters,
   showDisplayTrigger = true,
   resourceId,
+  virtualLabInfo,
 }: ControlPanelProps) {
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
@@ -176,6 +181,11 @@ export default function ControlPanel({
 
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId, key: dataKey }));
+  const setPrevData = useSetAtom(
+    previousDataAtom({ virtualLabInfo, dataType, dataScope, key: dataKey })
+  );
+  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
+
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
 
   const onToggleActive = (key: string) => {
@@ -203,6 +213,8 @@ export default function ControlPanel({
   }, [filters]);
 
   const submitValues = () => {
+    setPageNumber(PAGE_NUMBER);
+    setPrevData([]);
     setFilters(filters?.map((fil: Filter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 

@@ -1,5 +1,5 @@
 import { HTMLProps, useCallback } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import {
   dataAtom,
   pageNumberAtom,
@@ -33,7 +33,7 @@ export function useData(
   },
   key: string
 ) {
-  const [prevData] = useAtom(previousDataAtom({ ...dataContext, key }));
+  const prevData = useAtomValue(previousDataAtom({ ...dataContext, key }));
 
   const data = useUnwrappedValue(
     dataAtom({

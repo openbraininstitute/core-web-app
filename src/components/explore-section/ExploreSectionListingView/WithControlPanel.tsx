@@ -70,6 +70,7 @@ export default function WithControlPanel({
           dataType={dataType}
           dataScope={dataScope}
           dataKey={dataKey}
+          virtualLabInfo={virtualLabInfo}
         />
       )}
     </>
