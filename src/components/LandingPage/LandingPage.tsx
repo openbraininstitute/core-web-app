@@ -37,8 +37,6 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
     });
   }, [section]);
 
-  console.log('LandingPage', { section, errorCode });
-
   return (
     <>
       <div className={classNames(className, styles.landingPage)}>
