@@ -5,10 +5,9 @@ import { Filter } from '@/components/Filter/types';
 import { SortState } from '@/types/explore-section/application';
 import buildFilters from '@/queries/explore-section/filters';
 import buildAggs from '@/queries/explore-section/aggs';
-import { DataType } from '@/constants/explore-section/list-views';
+import { DataType, PAGE_SIZE } from '@/constants/explore-section/list-views';
 
 export default function fetchDataQuery(
-  size: number,
   currentPage: number,
   filters: Filter[],
   dataType: DataType,
@@ -20,9 +19,9 @@ export default function fetchDataQuery(
   const sortQuery = sortState && buildESSort(sortState);
 
   return {
-    size,
+    size: PAGE_SIZE,
     sort: sortQuery,
-    from: (currentPage - 1) * size,
+    from: (currentPage - 1) * PAGE_SIZE,
     track_total_hits: true,
     query: buildFilters(
       filters,

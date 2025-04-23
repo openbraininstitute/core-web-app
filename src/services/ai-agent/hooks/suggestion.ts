@@ -6,10 +6,9 @@ import { userJourneyTracker } from '@/components/explore-section/Literature/user
 import { useGenericEventListener } from '@/util/generic-event';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
-export function useServiceAiAgentSuggestionFromUserJourney(): [
-  suggestions: string[],
-  clearSuggestions: () => void,
-] {
+export function useServiceAiAgentSuggestionFromUserJourney(
+  count: number
+): [suggestions: string[], clearSuggestions: () => void] {
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const accessToken = useAccessToken();
@@ -24,13 +23,13 @@ export function useServiceAiAgentSuggestionFromUserJourney(): [
             projectId,
           }
         );
-        setSuggestions(data);
+        setSuggestions(data.slice(0, count));
       } catch {
         setSuggestions([]);
       }
     };
     action();
-  }, [accessToken, projectId, virtualLabId]);
+  }, [count, accessToken, projectId, virtualLabId]);
   React.useEffect(fetchSuggestions, [fetchSuggestions]);
   useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
   return [suggestions, () => setSuggestions([])];

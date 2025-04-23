@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { format } from 'date-fns';
 
 import BluePyEModelCls from '@/services/virtual-lab/build/me-model/bluepy-emodel';
 import { meModelSelfUrlAtom, selectedMEModelIdAtom } from '@/state/virtual-lab/build/me-model';
@@ -10,15 +9,34 @@ import CentralLoadingWheel from '@/components/CentralLoadingWheel';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
+import { EmodelTabKeys } from '@/components/explore-section/EModel/DetailView/SectionTabs';
 
-function getMEModelPageUrl(meModelId: string, virtualLabInfo: VirtualLabInfo) {
+function getMEModelPageUrl(meModelId: string, virtualLabInfo: VirtualLabInfo, tab?: EmodelTabKeys) {
   const { virtualLabId, projectId } = virtualLabInfo;
 
   const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
   const idSegment = to64(`${virtualLabId}/${projectId}!/!${meModelId}`);
 
-  return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}`;
+  const searchParams = new URLSearchParams();
+  if (tab) searchParams.set('tab', tab);
+  const searchStr = searchParams.toString();
+
+  return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}?${searchStr}`;
 }
+
+// Format elapsed time as HH:mm:ss
+const formatElapsedTime = (ms: number) => {
+  const seconds = Math.floor(ms / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  return [
+    hours.toString().padStart(2, '0'),
+    minutes.toString().padStart(2, '0'),
+    remainingSeconds.toString().padStart(2, '0'),
+  ].join(':');
+};
 
 function ElapsedTime() {
   const [startTime] = useState(Date.now());
@@ -31,7 +49,7 @@ function ElapsedTime() {
   }, []);
 
   const elapsed = currentTime - startTime;
-  const elapsedStr = format(elapsed, 'HH:mm:ss');
+  const elapsedStr = formatElapsedTime(elapsed);
 
   return (
     <>
@@ -67,7 +85,7 @@ function ValidationInit({
       <CentralLoadingWheel
         text={
           <>
-            <div>Please don’t close the window</div>
+            <div>Please don&apos;t close the window</div>
             <span className="text-sm font-light">Validation is launching</span>
           </>
         }
@@ -83,12 +101,14 @@ function ValidationInit({
 }
 
 function ValidationRunning({
-  onCancel,
+  meModelId,
   virtualLabInfo,
 }: {
-  onCancel?: () => void;
+  meModelId: string;
   virtualLabInfo: VirtualLabInfo;
 }) {
+  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
       <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">Running validation</h2>
@@ -97,15 +117,20 @@ function ValidationRunning({
         Activity section.
       </p>
 
+      <p className="text-primary-8">
+        You can close the window at any time now. Analysis results will appear under the
+        <Link className="ml-2 text-nowrap font-bold underline" href={meModelPageUrl}>
+          ME-model details page
+        </Link>
+        .
+      </p>
+
       <CentralLoadingWheel
         text={<ElapsedTime />}
         style={{ display: 'table', width: '100%', height: '200px' }}
       />
 
       <div className="mt-10 flex flex-row gap-3">
-        <button type="button" className="text-neutral-7" onClick={onCancel}>
-          Cancel validation
-        </button>
         <a
           className="border border-primary-8 px-4 py-2 text-primary-8"
           href={`${generateVlProjectUrl(virtualLabInfo.virtualLabId, virtualLabInfo.projectId)}/activity`}
@@ -126,7 +151,7 @@ function ValidationSuccess({
 }) {
   const router = useRouter();
 
-  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo, 'analysis');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -141,10 +166,10 @@ function ValidationSuccess({
       <h2 className="items-start gap-x-2 text-4xl font-bold text-primary-8">
         Validation finished successfully
       </h2>
-      <p className="text-primary-8">You will be redirected to ME-Model page shortly</p>
+      <p className="text-primary-8">You will be redirected to ME-model page shortly</p>
 
       <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
-        View EModel details
+        View ME-model details
       </Link>
     </div>
   );
@@ -165,7 +190,7 @@ function ValidationError({
       <p className="text-primary-8">An unexpected error occurred during the validation process.</p>
 
       <Link className="border border-primary-8 px-4 py-2 text-primary-8" href={meModelPageUrl}>
-        EModel details
+        ME-model details
       </Link>
     </div>
   );
@@ -174,11 +199,9 @@ function ValidationError({
 export default function BluePyEModelContainer({
   virtualLabInfo,
   accessToken,
-  onClose,
 }: {
   virtualLabInfo: VirtualLabInfo;
   accessToken: string;
-  onClose: () => void;
 }) {
   const router = useRouter();
 
@@ -223,7 +246,7 @@ export default function BluePyEModelContainer({
   }
 
   if (analysisState === 'running') {
-    return <ValidationRunning onCancel={onClose} virtualLabInfo={virtualLabInfo} />;
+    return <ValidationRunning virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
   }
 
   if (analysisState === 'done') {

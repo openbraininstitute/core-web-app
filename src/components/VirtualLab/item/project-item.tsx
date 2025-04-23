@@ -1,18 +1,25 @@
-import Link from 'next/link';
 import { ArrowRightOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 
-import { classNames } from '@/util/utils';
+import { useLastTruthyValue } from '@/hooks/hooks';
+import { projectBalanceAtomFamily } from '@/state/virtual-lab/projects';
 import { dateColumnInfoToRender } from '@/util/date';
+import { classNames } from '@/util/utils';
 
 type Props = {
   id: string;
   vlabId: string;
   name: string;
-  lastUpdate: string;
+  description: string;
+  creationDate: string;
   memberCount?: number;
 };
 
-export default async function Item({ id, vlabId, name, lastUpdate, memberCount }: Props) {
+export default function Item({ id, description, vlabId, name, creationDate, memberCount }: Props) {
+  const virtualLabBalance = useLastTruthyValue(
+    projectBalanceAtomFamily({ virtualLabId: vlabId, projectId: id })
+  );
+  const balance = virtualLabBalance?.balance ?? 0;
   return (
     <div
       id={id}
@@ -26,8 +33,8 @@ export default async function Item({ id, vlabId, name, lastUpdate, memberCount }
           <div>
             <h3 className="mb-1 text-3xl font-bold">{name}</h3>
             <p className="text-base text-primary-2">
-              Project&#39;s latest update:{' '}
-              <span className="text-white">{dateColumnInfoToRender(lastUpdate).text}</span>
+              Project creation date:{' '}
+              <span className="text-white">{dateColumnInfoToRender(creationDate).text}</span>
             </p>
           </div>
 
@@ -46,12 +53,23 @@ export default async function Item({ id, vlabId, name, lastUpdate, memberCount }
             />
           </Link>
         </div>
-        <div className="my-4 h-[.5px] w-1/2 bg-primary-2" />
-        <div className="mt-4 flex gap-6">
+
+        {description ? (
+          <p className="mb-4 mt-4 flex max-w-2xl gap-6 text-balance text-justify">{description}</p>
+        ) : (
+          <div className="my-4 h-[.5px] w-1/2 bg-primary-2" />
+        )}
+        <div className="flex gap-5">
           <div className="flex items-center gap-2">
             <span className="text-base text-primary-2">
               Members:
               <span className="ml-2 font-bold text-white">{memberCount}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-base text-primary-2">
+              Credit balance:
+              <span className="ml-2 font-bold text-white">{balance}</span>
             </span>
           </div>
         </div>

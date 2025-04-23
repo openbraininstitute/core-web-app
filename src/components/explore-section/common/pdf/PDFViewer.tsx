@@ -9,7 +9,6 @@ import { getSession } from '@/authFetch';
 import { classNames } from '@/util/utils';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { fetchResourceByIdRaw } from '@/api/nexus';
-import { nexus } from '@/config';
 import { composeUrl } from '@/util/nexus';
 import styles from './styles.module.css';
 
@@ -26,7 +25,7 @@ const options = {
   standardFontDataUrl: '/standard_fonts/',
 };
 
-type Distribution = { '@id': string; about: string };
+type Distribution = { '@id': string; about: string; org?: string; project?: string };
 
 export default function PDFViewer({ distribution }: Props) {
   const [totalPages, setNumPages] = useState<number>();
@@ -44,15 +43,15 @@ export default function PDFViewer({ distribution }: Props) {
   const pdfFile = useMemo(
     () => ({
       url: composeUrl('resource', id, {
-        org: nexus.org,
-        project: nexus.project,
+        org: distribution.org,
+        project: distribution.project,
       }),
       httpHeaders: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     }),
-    [token, id]
+    [token, id, distribution.org, distribution.project]
   );
 
   return (
@@ -63,13 +62,17 @@ export default function PDFViewer({ distribution }: Props) {
         </h2>
       )}
       {type === 'thumbnail' ? (
-        <ImageViewer contentUrl={distribution['@id']} />
+        <ImageViewer
+          contentUrl={distribution['@id']}
+          org={distribution.org}
+          project={distribution.project}
+        />
       ) : (
         <Document
           options={options}
           file={pdfFile}
           onLoadSuccess={onDocumentLoadSuccess}
-          className={classNames('w-full', styles.pdf)}
+          className={classNames('w-full lg:w-2/3 xl:w-1/2', styles.pdf)}
         >
           {Array.from(new Array(totalPages), (el, index) => (
             <Fragment key={distribution['@id']}>
@@ -92,7 +95,15 @@ export default function PDFViewer({ distribution }: Props) {
   );
 }
 
-function ImageViewer({ contentUrl }: { contentUrl: string }) {
+function ImageViewer({
+  contentUrl,
+  org,
+  project,
+}: {
+  contentUrl: string;
+  org?: string;
+  project?: string;
+}) {
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -104,10 +115,7 @@ function ImageViewer({ contentUrl }: { contentUrl: string }) {
       }
       setLoading(true);
 
-      const res = await fetchResourceByIdRaw(contentUrl, session, {
-        org: nexus.org,
-        project: nexus.project,
-      });
+      const res = await fetchResourceByIdRaw(contentUrl, session, { org, project });
 
       const blob = await res.blob();
       setThumbnail(URL.createObjectURL(blob));
@@ -118,7 +126,7 @@ function ImageViewer({ contentUrl }: { contentUrl: string }) {
     } finally {
       setLoading(false);
     }
-  }, [contentUrl]);
+  }, [contentUrl, org, project]);
 
   if (thumbnail) {
     return (

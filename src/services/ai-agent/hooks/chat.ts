@@ -1,8 +1,17 @@
+import React from 'react';
 import { useSession } from 'next-auth/react';
 import { useChat } from '@ai-sdk/react';
+
 import { serviceAiAgentUrl } from '../api';
 
+interface RateLimit {
+  limit: string;
+  remaining: string;
+  reset: string;
+}
+
 export function useServiceAiAgentChat(threadId: string) {
+  const [rateLimit, setRateLimit] = React.useState<RateLimit | null>(null);
   const session = useSession();
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -17,13 +26,22 @@ export function useServiceAiAgentChat(threadId: string) {
         tool_selection: ['literature-search-tool', 'web-search-tool', 'now-tool'],
       };
     },
+    onResponse(resp: Response) {
+      setRateLimit({
+        limit: resp.headers.get('x-ratelimit-limit') ?? '',
+        remaining: resp.headers.get('x-ratelimit-remaining') ?? '',
+        reset: resp.headers.get('x-ratelimit-reset') ?? '',
+      });
+    },
   });
 
   return {
+    rateLimit,
     messages: chat.messages,
     append: chat.append,
     status: chat.status,
     error: chat.error,
+    stop: chat.stop,
     clear: () => chat.setMessages([]),
   };
 }

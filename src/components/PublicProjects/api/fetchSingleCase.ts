@@ -43,14 +43,25 @@ const singleCaseQuery = (slug: string) =>
             url,
             _type,
         },
-        eModelsList[] {
+        minimalMeModel[] {
             name,
-            "response": response.asset->url,
             brainRegion,
             mType,
             eType,
+            species,
+        },
+        eModelsList[] {
+            name,
+            hasResponseThumbnail,
+            'response': response.asset->url,
+            brainRegion,
+            mType,
+            eType,
+            hasMorphologyThumbnail,
             modelCumulatedScore,
-            _type,
+            species,
+            contributor,
+            creationDate,
         },
         notebook[] {
             name,

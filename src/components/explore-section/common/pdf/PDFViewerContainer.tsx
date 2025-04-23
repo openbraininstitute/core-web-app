@@ -8,7 +8,7 @@ const DynamicPDFViewer = dynamic(() => import('./PDFViewer'), {
   ssr: false,
 });
 
-type Distribution = { '@id': string; about: string };
+type Distribution = { '@id': string; about: string; org?: string; project?: string };
 
 interface Props {
   distributions: Distribution[];

@@ -176,7 +176,16 @@ export type SubscriptionTiersResponse = {
 export type VirtualLabListResponse = VlmResponse<{
   pending_labs: Array<VirtualLab & { invite_id: string }>;
   virtual_lab: VirtualLab;
-  membership_labs: Array<VirtualLab>;
+  membership_labs: {
+    total: number;
+    filtered_total: number;
+    page: number;
+    size: number;
+    page_size: number;
+    results: Array<VirtualLab>;
+    has_next: boolean;
+    has_previous: boolean;
+  };
 }>;
 
 type SetupIntent = {
@@ -358,6 +367,30 @@ type UserStats = {
   total_projects: number;
 };
 
+export type AttachUsersToProject = {
+  project_id: string;
+  added_users: Array<{
+    id: string;
+    email: string;
+    role: Role;
+  }>;
+  updated_users: Array<{
+    id: string;
+    email: string;
+    role: Role;
+  }>;
+  failed_operations: Array<{
+    user_id: string;
+    requested_role: Role;
+    error: string;
+  }>;
+  email_sending_failures: Array<{
+    email: string;
+    error: string;
+  }>;
+  processed_at: Date;
+};
+
 export interface UserGroupsResponse {
   groups: Array<UserGroup>;
 }
@@ -381,3 +414,4 @@ export type VlmVirtualLabStatsResponse = VlmResponse<VirtualLabStats>;
 export type VlmDeleteProjectMemberResponse = VlmResponse<DeleteProjectMember>;
 export type VlmUserGroupsResponse = VlmResponse<UserGroupsResponse>;
 export type VlmUserStatsResponse = VlmResponse<UserStats>;
+export type VlmAttachUsersToProjectResponse = VlmResponse<AttachUsersToProject>;
