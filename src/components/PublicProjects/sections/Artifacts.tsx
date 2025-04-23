@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import CheckboxFilter from '../CheckboxFilter';
 import EModelTable from '../MEModels/EModelTable';
 import MEModelTable from '../MEModels/MEModelTable';
@@ -26,32 +26,22 @@ export function LinkAndDownloadArtifactList({
 }
 
 export default function ArtifactsSection({ content }: { content: ShowCaseProjectQueryType }) {
-  const [totalArtifacts, setTotalArtifacts] = useState<number>(0);
   const [showMeModels, setShowMeModels] = useState<boolean>(true);
   const [showMinimalMeModels, setShowMinimalMeModels] = useState<boolean>(true);
   const [showEModels, setShowEModels] = useState<boolean>(true);
   const [showDownloadAndLinks, setShowDownloadAndLinks] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (content?.artifact !== null) {
-      setTotalArtifacts((prev) => prev + (content?.artifact?.length ?? 0));
-    }
-    if (content?.meModelsList !== null) {
-      setTotalArtifacts((prev) => prev + (content?.meModelsList?.length ?? 0));
-    }
-    if (content?.minimalMeModel !== null) {
-      setTotalArtifacts((prev) => prev + (content?.minimalMeModel?.length ?? 0));
-    }
-    if (content?.eModelsList !== null) {
-      setTotalArtifacts((prev) => prev + (content?.eModelsList?.length ?? 0));
-    }
-  }, [content?.artifact, content?.meModelsList, content?.minimalMeModel, content?.eModelsList]);
+  const totalDataCount =
+    (content?.artifact?.length ?? 0) +
+    (content?.meModelsList?.length ?? 0) +
+    (content?.minimalMeModel?.length ?? 0) +
+    (content?.eModelsList?.length ?? 0);
 
   return (
     <div className="relative flex w-full flex-col gap-y-12 scroll-smooth" id="artifacts">
       <header className="sticky top-0 z-50 mb-12 flex h-16 w-full flex-row items-center justify-between bg-white">
         <div className="relative flex flex-row text-base">
-          Total artifacts: <span className="ml-2 block font-bold">{totalArtifacts}</span>
+          Total artifacts: <span className="ml-2 block font-bold">{totalDataCount}</span>
         </div>
 
         <div className="relative flex items-center gap-x-4">
