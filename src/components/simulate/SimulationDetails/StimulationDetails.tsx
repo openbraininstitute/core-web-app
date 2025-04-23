@@ -1,4 +1,4 @@
-import SimulationPlotAsImage from '@/components/explore-section/MEModel/DetailView/SimulationPlotAsImage';
+import SimulationPlotAsImage from '@/features/entities/me-model/detail-view/simulation-plot-as-image';
 import {
   DEFAULT_PROTOCOL,
   PROTOCOL_DETAILS,

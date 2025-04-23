@@ -5,8 +5,8 @@ import { useQueryState } from 'nuqs';
 import { useEffect, use } from 'react';
 
 import { selectedEModelAtom, selectedMModelAtom } from '@/state/virtual-lab/build/me-model';
-import MorphologyCard from '@/components/build-section/virtual-lab/me-model/MorphologyCard';
-import EModelCard from '@/components/build-section/virtual-lab/me-model/EModelCard';
+import MorphologyOverviewCard from '@/features/entities/me-model/card-viewers/morphology-overview-card';
+import EModelOverviewCard from '@/features/entities/me-model/card-viewers/emodel-overview-card';
 import SaveButton from '@/components/build-section/virtual-lab/me-model/SaveButton';
 import { initializeSummaryAtom } from '@/state/virtual-lab/build/me-model-setter';
 import { useSessionAtomValue } from '@/hooks/hooks';
@@ -51,8 +51,8 @@ export default function MEModelSummaryPage(props: {
   return (
     <div className="flex h-full flex-col gap-10 p-10">
       <div className="text-primary-8 text-2xl font-bold">Single Neuron</div>
-      <MorphologyCard />
-      <EModelCard />
+      <MorphologyOverviewCard />
+      <EModelOverviewCard />
 
       <AnalysisPreview />
 

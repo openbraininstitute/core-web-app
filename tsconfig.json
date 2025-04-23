@@ -32,7 +32,8 @@
     "**/*.spec.tsx",
     "src/**/*.mjs",
     ".next/types/**/*.ts",
-    "src/util/intersection-observer.jsx"
+    "src/util/intersection-observer.jsx",
+    "src/entity-configuration/definitions/fields-defs/model.tsxx"
   ],
   "exclude": ["node_modules"]
 }

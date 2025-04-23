@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Skeleton } from 'antd';
 
-import { EModelThumbnail } from '@/components/build-section/virtual-lab/me-model/EModelCard';
+import { EModelThumbnail } from '@/features/entities/me-model/card-viewers/emodel-overview-card';
 import { DisplayMessages } from '@/constants/display-messages';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EModel, NeuronMorphology } from '@/types/e-model';

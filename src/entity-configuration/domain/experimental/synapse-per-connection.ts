@@ -1,5 +1,5 @@
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { DataType } from '@/constants/explore-section/list-views';
-import { EntityType } from '@/entity-configuration/domain/types';
 import * as entitycore from '@/api/entitycore/queries';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
@@ -8,7 +8,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
   group: 'experimental',
   legacyType: DataType.ExperimentalSynapsePerConnection,
-  type: EntityType.ExperimentalSynapsesPerConnection,
+  type: EntityTypeEnum.ExperimentalSynapsesPerConnection,
   slug: 'synapse-per-connection',
   api: {
     config: {

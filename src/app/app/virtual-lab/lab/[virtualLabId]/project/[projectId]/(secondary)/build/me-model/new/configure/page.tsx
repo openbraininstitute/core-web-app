@@ -1,29 +1,25 @@
 'use client';
 
-import { useId, useState, use } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSetAtom, useAtomValue } from 'jotai';
+import { useId, useState, use } from 'react';
 import { notification, Spin } from 'antd';
-import { useRouter } from 'next/navigation';
 
-import MorphologyCard from '@/components/build-section/virtual-lab/me-model/MorphologyCard';
-import EModelCard from '@/components/build-section/virtual-lab/me-model/EModelCard';
+import MorphologyOverviewCard from '@/features/entities/me-model/card-viewers/morphology-overview-card';
+import EModelOverviewCard from '@/features/entities/me-model/card-viewers/emodel-overview-card';
+
 import { usePendingValidationModal } from '@/components/build-section/virtual-lab/me-model/pending-validation-modal-hook';
-import { createMEModelAtom, meModelDetailsAtom } from '@/state/virtual-lab/build/me-model-setter';
-import {
-  selectedEModelAtom,
-  selectedEModelConfigurationAtom,
-  selectedMModelAtom,
-} from '@/state/virtual-lab/build/me-model';
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state.session';
+import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
-import { classNames } from '@/util/utils';
-import { detailUrlWithinLab } from '@/util/common';
-import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
-import { DisplayMessages } from '@/constants/display-messages';
-import { ensureArray } from '@/util/nexus';
-import { queryAtom } from '@/state/explore-section/list-view-atoms';
+import { createMEModelAtom } from '@/state/virtual-lab/build/me-model-setter';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { queryAtom } from '@/state/explore-section/list-view-atoms';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
-import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { classNames } from '@/util/utils';
+
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 const DEFAULT_ERROR_MSG =
   'Something went wrong while creating the ME-model, please try again later';
@@ -31,43 +27,32 @@ const LOW_FUNDS_ERROR_MSG =
   'The project does not have enough credits to create a model, please add credits and try again';
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
-type Params = {
-  params: Promise<{
-    virtualLabId: string;
-    projectId: string;
-  }>;
-};
+function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { stateId: string }) {
+  stateId;
+  const { sessionValue } = useBuildMeModelSessionState({
+    stateId,
+    virtualLabId,
+    projectId,
+  });
 
-function NewMEModelHeader({ virtualLabId, projectId }: WorkspaceContext) {
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
-  const selectedMModel = useAtomValue(selectedMModelAtom);
-  const selectedEModel = useAtomValue(selectedEModelAtom);
-
-  const meModelDetails = useAtomValue(meModelDetailsAtom);
-
-  const router = useRouter();
-
-  if (meModelDetails === null) {
-    router.push('./'); // Redirects to (...)/build/me-model/new
-
-    return undefined;
-  }
-
+  const mmodel = sessionValue.mmodel;
+  const emodel = sessionValue.emodel;
   const fields = [
     {
       className: 'col-span-6',
       title: 'name',
-      value: <span className="text-2xl font-bold">{meModelDetails.name}</span>,
+      value: <span className="text-2xl font-bold">{sessionValue.name}</span>,
     },
     {
       className: 'col-span-3 row-span-3',
       title: 'description',
-      value: meModelDetails.description,
+      value: sessionValue.description,
     },
     {
       title: 'brain region',
-      value: meModelDetails.brainRegion?.title,
+      value: sessionValue.brainRegion?.title,
     },
     {
       title: 'created by',
@@ -79,17 +64,11 @@ function NewMEModelHeader({ virtualLabId, projectId }: WorkspaceContext) {
     },
     {
       title: 'm-type',
-      value:
-        ensureArray(selectedMModel?.annotation)?.find(({ '@type': type }) =>
-          type.includes('MTypeAnnotation')
-        )?.hasBody.label || DisplayMessages.NO_DATA_STRING,
+      value: renderEmptyOrValue(renderArray(mmodel?.mtypes?.map((m) => m.pref_label) || [])),
     },
     {
       title: 'e-type',
-      value:
-        ensureArray(selectedEModel?.annotation)?.find(({ '@type': type }) =>
-          type.includes('ETypeAnnotation')
-        )?.hasBody.label || DisplayMessages.NO_DATA_STRING,
+      value: renderEmptyOrValue(renderArray(emodel?.etypes?.map((m) => m.pref_label) || [])),
     },
   ];
 
@@ -105,13 +84,25 @@ function NewMEModelHeader({ virtualLabId, projectId }: WorkspaceContext) {
   );
 }
 
-export default function NewMEModelPage(props: ServerSideComponentProp<WorkspaceContext, null>) {
-  const { projectId, virtualLabId } = use(props.params);
+export default function NewMEModelPage({
+  params: urlParams,
+}: ServerSideComponentProp<WorkspaceContext, null>) {
+  const { projectId, virtualLabId } = use(urlParams);
+  const { push: navigate } = useRouter();
+  const params = useSearchParams();
 
-  const router = useRouter();
-  const selectedMModel = useAtomValue(selectedMModelAtom);
-  const selectedEModel = useAtomValue(selectedEModelAtom);
-  const selectedEModelConfiguration = useAtomValue(selectedEModelConfigurationAtom);
+  const emodelId = params?.get('e');
+  const morphologyId = params?.get('m');
+  const stateId = params?.get('s');
+
+  const { sessionValue, removeSessionValue } = useBuildMeModelSessionState({
+    stateId: stateId || '',
+    virtualLabId,
+    projectId,
+  });
+
+  if (!stateId) return navigate('./');
+
   const refreshMeModels = useSetAtom(
     queryAtom({
       dataType: DataType.CircuitMEModel,
@@ -127,8 +118,6 @@ export default function NewMEModelPage(props: ServerSideComponentProp<WorkspaceC
   >(null);
 
   const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
-
-  const modelsAreSelected = selectedEModel && selectedMModel;
 
   const showErrorNotification = (error: any) => {
     notification.error({
@@ -149,7 +138,10 @@ export default function NewMEModelPage(props: ServerSideComponentProp<WorkspaceC
 
     createMEModel({ virtualLabId, projectId })
       .then(fetchFreshAccessToken)
-      .then((accessToken) => createValidationModal({ virtualLabId, projectId }, accessToken))
+      .then((accessToken) => {
+        createValidationModal({ virtualLabId, projectId }, accessToken);
+        removeSessionValue();
+      })
       .catch((err) => showErrorNotification(err))
       .finally(() => setActiveProcess(null));
   };
@@ -158,23 +150,21 @@ export default function NewMEModelPage(props: ServerSideComponentProp<WorkspaceC
     setActiveProcess('modelCreation');
 
     createMEModel({ virtualLabId, projectId })
-      .then((meModel) => {
-        // const redirectionUrl = detailUrlWithinLab(
-        //   virtualLabId,
-        //   projectId,
-        //   `${virtualLabId}/${projectId}`,
-        //   meModel['@id'],
-        //   BookmarkTabsName.MODELS,
-        //   ModelTypeNames.ME_MODEL
-        // );
-        // TODO: fix when we have me-model data
-        const redirectionUrl = '';
+      .then((record) => {
         notification.success({
           duration: 7,
           message: 'ME-model created successfully',
         });
         refreshMeModels();
-        router.push(redirectionUrl);
+        removeSessionValue();
+        navigate(
+          resolveExploreDetailsPageUrl({
+            ctx: { virtualLabId, projectId },
+            dataType: DataType.CircuitMEModel,
+            // @ts-expect-error
+            entityId: record.id, // TODO: fix it after add create me model endpoint
+          })
+        );
       })
       .catch((err) => {
         showErrorNotification(err);
@@ -184,7 +174,7 @@ export default function NewMEModelPage(props: ServerSideComponentProp<WorkspaceC
       });
   };
 
-  const validateTrigger = modelsAreSelected && (
+  const validateTrigger = sessionValue.emodel && sessionValue.mmodel && (
     <div className="fixed right-10 bottom-10 flex flex-row gap-4 text-white">
       <button
         className={classNames(
@@ -226,16 +216,23 @@ export default function NewMEModelPage(props: ServerSideComponentProp<WorkspaceC
   return (
     <>
       <div className="m-10 flex flex-col gap-8">
-        <NewMEModelHeader projectId={projectId} virtualLabId={virtualLabId} />
+        <Header
+          {...{
+            stateId,
+            virtualLabId,
+            projectId,
+          }}
+        />
         <div className="flex flex-col gap-4">
-          <MorphologyCard reselectLink />
-          <EModelCard
-            exemplarMorphology={
-              selectedEModelConfiguration?.uses.find(
-                ({ '@type': type }) => type === 'NeuronMorphology'
-              )?.name
-            }
+          <MorphologyOverviewCard
             reselectLink
+            mode={!!morphologyId ? 'select' : 'summary'}
+            promise={sessionValue.mmodel}
+          />
+          <EModelOverviewCard
+            reselectLink
+            mode={!!emodelId ? 'select' : 'summary'}
+            promise={sessionValue.emodel}
           />
         </div>
       </div>

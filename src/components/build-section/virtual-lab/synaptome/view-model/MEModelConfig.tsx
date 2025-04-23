@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import CardVisualization from '@/components/explore-section/CardView/CardVisualization';
 
-import { EModelThumbnail } from '@/components/build-section/virtual-lab/me-model/EModelCard';
+import { EModelThumbnail } from '@/features/entities/me-model/card-viewers/emodel-overview-card';
 import { DataType } from '@/constants/explore-section/list-views';
 import { MEModel, MEModelResource } from '@/types/me-model';
 import { EModel, NeuronMorphology } from '@/types/e-model';

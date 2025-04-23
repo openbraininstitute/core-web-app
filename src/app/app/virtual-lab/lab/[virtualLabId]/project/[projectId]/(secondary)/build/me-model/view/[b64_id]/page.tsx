@@ -4,7 +4,7 @@ import { useEffect, use } from 'react';
 import { useSetAtom } from 'jotai';
 
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
-import MEModelDetailView from '@/components/explore-section/MEModel/DetailView/View';
+import SummaryView from '@/features/entities/me-model/detail-view/view';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
@@ -31,7 +31,7 @@ export default function MEModelViewPage(props: Params) {
     <div className="grid grid-cols-[min-content_auto] overflow-hidden bg-white">
       <Nav params={params} />
       <div className="secondary-scrollbar h-screen w-full overflow-y-auto">
-        <MEModelDetailView showViewMode params={params} />
+        <SummaryView showViewMode params={params} />
       </div>
     </div>
   );

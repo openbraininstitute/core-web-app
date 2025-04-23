@@ -1,6 +1,8 @@
 import find from 'lodash/find';
 import { EntityCoreConfiguration } from '.';
 
+import type { EntityTypeValue } from '@/api/entitycore/types';
+
 export type EntityCoreLegacyType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['legacyType'];
 
@@ -8,7 +10,7 @@ export const getEntityByLegacyType = ({ legacyType }: { legacyType: EntityCoreLe
   find(EntityCoreConfiguration, { legacyType });
 
 // TODO: fix type to be a list of available types in entitycore
-export const getEntityByCoreType = ({ type }: { type: string }) =>
+export const getEntityByCoreType = ({ type }: { type: EntityTypeValue }) =>
   find(EntityCoreConfiguration, { type });
 
 export const getEntityBySlug = ({ slug }: { slug: string }) =>

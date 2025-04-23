@@ -6,7 +6,7 @@ import {
   NeuronDensity,
 } from './experimental';
 
-import { Mesh, Emodel } from './model';
+import { Mesh, Emodel, MEmodel } from './model';
 
 export const EntityCoreConfiguration = {
   ReconstructionMorphology,
@@ -14,6 +14,7 @@ export const EntityCoreConfiguration = {
   Electrophysiology,
   BoutonDensity,
   NeuronDensity,
+  MEmodel,
   Emodel,
   Mesh,
 } as const;

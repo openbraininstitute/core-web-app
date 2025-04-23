@@ -10,7 +10,7 @@ type Props = {
  * A conditional rendering component that only renders its children if the condition is true.
  * @component
  * @param {Object} props The props object
- * @param {string} props.id A unique identifier for the component use for seperation/debuging
+ * @param {string} props.id A unique identifier for the component use for separation/debugging
  * @param {boolean} props.condition The condition to evaluate
  * @param {React.ReactNode} props.children The children to render if the condition is true
  * @returns {React.ReactNode|null} The rendered children or null

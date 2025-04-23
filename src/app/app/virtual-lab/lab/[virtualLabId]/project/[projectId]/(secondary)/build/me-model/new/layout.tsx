@@ -4,22 +4,21 @@ import { ReactNode, Suspense, useEffect, use } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { sectionAtom } from '@/state/application';
+
+import type { WorkspaceContext } from '@/types/common';
 
 type GenericLayoutProps = {
   children: ReactNode;
-  params: Promise<{ virtualLabId: string; projectId: string }>;
+  params: Promise<WorkspaceContext>;
 };
 
-export default function BuildMEModelLayout(props: GenericLayoutProps) {
-  const params = use(props.params);
-
-  const { children } = props;
+export default function Layout({ params: urlParams, children }: GenericLayoutProps) {
+  const params = use(urlParams);
 
   const setSection = useSetAtom(sectionAtom);
-
   useEffect(() => setSection('build'), [setSection]);
 
   return (

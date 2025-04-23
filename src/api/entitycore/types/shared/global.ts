@@ -66,11 +66,13 @@ interface License {
 
 export interface ILicense extends License, Timestamps, EntityCoreIdentifiable {}
 
-export interface IBrainLocation {
+export interface PointLocationBase {
   x: number;
   y: number;
   z: number;
 }
+
+export interface IBrainLocation extends PointLocationBase {}
 
 export type MeasurementBase = {
   id: number;

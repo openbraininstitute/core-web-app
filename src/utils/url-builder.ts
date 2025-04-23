@@ -13,16 +13,20 @@ export function resolveExploreDetailsPageUrl({
   entityId,
   dataType,
 }: {
-  ctx?: WorkspaceContext;
-  entityId: string;
-  dataType: DataType;
+  ctx?: Partial<WorkspaceContext>;
+  entityId?: string;
+  dataType?: DataType;
 }) {
+  if (ctx && ctx.virtualLabId && ctx.projectId && (!dataType || !entityId)) {
+    return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`;
+  }
+
   const entityConfig = getEntityByLegacyType({ legacyType: dataType });
   let slug = entityConfig?.slug; // morphology, e-model, ...
   const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
   if (routePrefix === 'simulate') slug = `${slug}/view`;
   let baseUrl = `${baseUri}/explore/${routePrefix}/${slug}/${entityId}`;
-  if (ctx) {
+  if (ctx && ctx.virtualLabId && ctx.projectId) {
     baseUrl = `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${slug}/${entityId}`;
   }
   return baseUrl;

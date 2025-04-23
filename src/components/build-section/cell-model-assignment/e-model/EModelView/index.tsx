@@ -8,7 +8,7 @@ import EModelTitle from './EModelTitle';
 import WorkflowAttributes from './WorkflowAttributes';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import ExemplarTraces from '@/components/explore-section/EModel/DetailView/ExemplarTraces';
+import ExemplarTraces from '@/features/entities/e-model/detail-view/exemplar-traces';
 
 type Params = {
   id: string;
