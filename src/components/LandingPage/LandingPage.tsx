@@ -2,19 +2,21 @@
 
 import { useEffect, useState } from 'react';
 
+import { getSection } from './utils';
+
+import PaddedBlock from './components/PaddedBlock';
+import VerticalSpace from './components/VerticalSpace';
 import FooterPanel from './layout/FooterPanel';
+import Hero from './layout/Hero';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
-import { EnumSection } from './sections/sections';
-import { getSection } from './utils';
-import Hero from './layout/Hero';
 import SectionGeneric from './sections/SectionGeneric';
-import PaddedBlock from './components/PaddedBlock';
 import SectionNews from './sections/SectionNews';
-import VerticalSpace from './components/VerticalSpace';
-import { classNames } from '@/util/utils';
+import { EnumSection } from './sections/sections';
+
 import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
 import { logError } from '@/util/logger';
+import { classNames } from '@/util/utils';
 
 import styles from './LandingPage.module.css';
 import './global.css';
@@ -34,6 +36,8 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       behavior: 'instant',
     });
   }, [section]);
+
+  console.log('LandingPage', { section, errorCode });
 
   return (
     <>
@@ -58,6 +62,7 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.Team:
     case EnumSection.Resources:
     case EnumSection.TermsAndConditions:
+    case EnumSection.Financing:
     case EnumSection.PrivacyPolicy:
     case EnumSection.ComingSoon:
     case EnumSection.Story:

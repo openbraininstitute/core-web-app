@@ -15,6 +15,7 @@ const FREE_ACCESS_PAGES = [
   '/contact',
   '/terms',
   '/privacy',
+  '/financing',
   '/coming-soon',
   '/the-real-digital-brain-story',
 
