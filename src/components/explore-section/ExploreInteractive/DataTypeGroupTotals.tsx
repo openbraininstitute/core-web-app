@@ -13,7 +13,6 @@ import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-vi
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { basePath as rootbasePath } from '@/config';
 
 function DataTypeGroupTotal({
   dataType,

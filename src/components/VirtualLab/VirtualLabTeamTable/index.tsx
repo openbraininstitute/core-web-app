@@ -360,7 +360,6 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
     [users, ownerId, data?.user.id]
   );
 
-  const { forbiddenOperation } = useActiveSubscription();
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-8 flex-shrink-0 items-center px-3">
