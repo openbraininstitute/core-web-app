@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Select } from 'antd';
 import DistinctColors from 'distinct-colors';
 
@@ -19,8 +19,8 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
 
   const plotContainerRef = useRef<HTMLDivElement>(null);
   const [plotRevision, setPlotRevision] = useState<number>(0);
-  const onResize = useCallback(() => setPlotRevision((prev) => prev + 1), []);
-  useResizeObserver(plotContainerRef, onResize);
+  const updatePlots = useCallback(() => setPlotRevision((prev) => prev + 1), []);
+  useResizeObserver(plotContainerRef, updatePlots);
 
   const [selectedProtocol, setSelectedDataSet] = useState<string>(
     defaultProtocol || trace.getProtocols()[0]
@@ -96,13 +96,22 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
     setReset(!reset);
   };
 
-  const sweepObject = {
-    selectedSweeps,
-    colorMap,
-    sweepDataMap,
-    allSweeps: sweeps,
-    previewSweep: previewItem,
-  };
+  const sweepObject = useMemo(
+    () => ({
+      selectedSweeps,
+      colorMap,
+      sweepDataMap,
+      allSweeps: sweeps,
+      previewSweep: previewItem,
+      plotRevision, // This is used to force a re-render of the plot
+    }),
+    [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision]
+  );
+
+  useEffect(
+    () => updatePlots(),
+    [selectedProtocol, selectedRepetition, selectedSweeps, updatePlots]
+  );
 
   return (
     <div className="flex flex-col gap-10">
@@ -147,14 +156,12 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
           reset={reset}
           setSelectedSweeps={setSelectedSweeps}
           sweeps={sweepObject}
-          plotRevision={plotRevision}
         />
         <InteractivePlot
           recordingType={RecordingType.RESPONSE}
           reset={reset}
           setSelectedSweeps={setSelectedSweeps}
           sweeps={sweepObject}
-          plotRevision={plotRevision}
         />
       </div>
     </div>

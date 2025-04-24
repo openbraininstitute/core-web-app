@@ -49,7 +49,6 @@ export type PlotProps = {
     allSweeps: string[];
     colorMap: Map<string, string>;
   };
-  plotRevision: number;
 };
 
 export type FilterValues = {

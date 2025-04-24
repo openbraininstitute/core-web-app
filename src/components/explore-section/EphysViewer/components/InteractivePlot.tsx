@@ -32,7 +32,6 @@ export default function InteractivePlot({
   reset,
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
-  plotRevision,
 }: PlotProps) {
   const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
   const [zoomRanges, setZoomRanges] = useState<ZoomRanges | null>(null);
@@ -154,7 +153,6 @@ export default function InteractivePlot({
         }}
         layout={{
           title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
-          datarevision: plotRevision,
           xaxis: {
             title: {
               font,
