@@ -1,12 +1,12 @@
 'use client';
 
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
-import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import Base from '@/components/VirtualLab/side-bar/base';
+import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import { userStatsAtom } from '@/state/virtual-lab/lab';
 
 export default function SideBar() {
@@ -23,7 +23,7 @@ export default function SideBar() {
       },
       {
         url: '/app/virtual-lab/public-projects',
-        title: 'Public project',
+        title: 'Public projects',
         count: 3,
       },
     ],
