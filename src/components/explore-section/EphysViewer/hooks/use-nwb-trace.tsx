@@ -38,12 +38,13 @@ export default function useTrace(
     initialized.current = true;
 
     const id = resource['@id'].split('/').at(-1);
-    const trace = new NWBTrace(id, nwbArrayBuffer);
 
-    trace.ready.then(() => setTrace(trace)).catch((e) => setError(e));
+    NWBTrace.create(id, nwbArrayBuffer)
+      .then((t) => setTrace(t))
+      .catch((e) => setError(e));
 
     return () => {
-      trace.destroy();
+      trace?.destroy();
       initialized.current = false;
     };
   }, [nwbArrayBuffer]);
