@@ -2,23 +2,23 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useMemo } from 'react';
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
+import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { CollapseProps } from 'antd/lib/collapse/Collapse';
-import { LoadingOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
+import { loadable } from 'jotai/utils';
 import { useQueryState } from 'nuqs';
+import { useMemo } from 'react';
 
 import CreditManagement from './CreditManagement';
 import SpendingsPanel from './Spendings';
 
+import Collapse from '@/components/Collapse';
 import BuyCredits from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/buy-credits';
 import PurchasesHistory from '@/components/VirtualLab/VirtualLabSettingsComponent/purchases-history';
-import Collapse from '@/components/Collapse';
+import { useLastTruthyValue } from '@/hooks/hooks';
 import { virtualLabBalanceAtomFamily, virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 import { classNames } from '@/util/utils';
-import { useLastTruthyValue } from '@/hooks/hooks';
 
 function VirtualLabBlock({
   virtualLabId,
@@ -83,7 +83,12 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
   const purchases = useMemo(
     () => ({
       key: 'purchases',
-      label: <CollapsibleLabel text="Purchases" description="View details about your purchases" />,
+      label: (
+        <CollapsibleLabel
+          text="Compute purchases"
+          description="View details about your purchases"
+        />
+      ),
       children: <PurchasesHistory />,
     }),
     []
@@ -94,7 +99,7 @@ export default function VirtualLabSettingsComponent({ id }: { id: string }) {
       key: 'spendings',
       label: (
         <CollapsibleLabel
-          text="Spendings"
+          text="Compute history"
           description="View all the activities that used credits"
         />
       ),
