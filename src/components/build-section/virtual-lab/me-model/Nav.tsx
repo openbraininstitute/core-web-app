@@ -27,7 +27,8 @@ export default function Nav({ params, extraLinks }: Props) {
       key: LinkItemKey.Build,
       href: `${labProjectUrl}/build`,
       content: 'Build',
-      styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
+      styles:
+        'rounded-full bg-primary-5 py-1 px-2 text-primary-9 w-[21px] font-semibold capitalize',
     },
   ];
 

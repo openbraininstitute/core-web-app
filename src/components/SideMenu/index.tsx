@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 
-import HelpMenu from '../HelpMenu';
+import HelpMenu from '@/components/HelpMenu';
 import UserMenu from '@/components/user-menu';
 import { LabItem, LinkItem, ProjectItem } from '@/components/VerticalLinks';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
@@ -57,9 +57,14 @@ function ProjectLink({ project, lab }: { project: ProjectItem; lab: LabItem }) {
 export default function SideMenu({ lab, project, links }: SideMenuProps) {
   const result = useAtomValue(unwrap(virtualLabDetailAtomFamily(lab.id)));
   return (
-    <div className="border-primary-7 bg-primary-9 text-light sticky top-0 flex h-screen w-[45px] flex-col items-center justify-center gap-2 border-r-[1px] transition-transform ease-in-out will-change-auto">
+    <div
+      className={classNames(
+        'border-primary-7 bg-primary-9 text-light sticky top-0 flex h-screen w-[45px]',
+        'flex-col items-center justify-center gap-2 border-r-[1px] transition-transform ease-in-out will-change-auto'
+      )}
+    >
       <div className="flex w-[45px] grow flex-col items-center justify-between overflow-hidden">
-        <div className="mt-2 flex w-full flex-col items-center overflow-hidden">
+        <div className="mt-4 flex w-full flex-col items-center gap-2 overflow-hidden">
           {links
             .slice()
             .reverse()
@@ -68,11 +73,14 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
                 key={link.key}
                 href={link.href}
                 className={classNames(
-                  'flex h-[90px] w-[45px] items-center justify-center'
-                  // link.styles
+                  'text-primary-5 flex items-center justify-center hover:text-white',
+                  link.styles
                 )}
+                style={{
+                  writingMode: 'sideways-lr',
+                }}
               >
-                <div className="bg-primary-5 origin-center -rotate-90 transform rounded-3xl px-4 py-1 whitespace-nowrap">
+                <div className="origin-center rounded-3xl px-2 py-1 font-semibold whitespace-nowrap capitalize">
                   <span className="text-base">{link.content}</span>
                 </div>
               </Link>
