@@ -1,22 +1,24 @@
 'use client';
-import { use } from 'react';
+import { ReactNode, use } from 'react';
 
 import { ErrorBoundary } from 'react-error-boundary';
 import { useAtomValue } from 'jotai';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import VirtualLabProjectSidebar from '@/components/VirtualLab/projects/VirtualLabProjectSidebar';
-import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import SideMenu from '@/components/SideMenu';
 import { LinkItemKey, Label } from '@/constants/virtual-labs/sidemenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { LinkItem } from '@/components/VerticalLinks';
 
-export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
-  const params = use(props.params);
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-  const { children } = props;
+export default function VirtualLabProjectLayout({
+  params: urlParams,
+  children,
+}: ServerSideComponentProp<WorkspaceContext, null> & { children: ReactNode }) {
+  const params = use(urlParams);
 
   const labUrl = generateLabUrl(params.virtualLabId);
 

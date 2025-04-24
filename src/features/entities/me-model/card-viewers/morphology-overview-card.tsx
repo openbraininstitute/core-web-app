@@ -51,8 +51,8 @@ function MorphologyOverviewCard({ mode = 'summary', promise, reselectLink = fals
     }
 
     const details = [
-      { label: 'Brain Region', value: mmodel.brain_region.name },
-      { label: 'Species', value: mmodel.species.name },
+      { label: 'Brain Region', value: renderEmptyOrValue(mmodel.brain_region.name) },
+      { label: 'Species', value: renderEmptyOrValue(mmodel.species.name) },
       {
         label: 'License',
         value: renderEmptyOrValue(renderLicense({ license: mmodel.license })),

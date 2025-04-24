@@ -26,6 +26,7 @@ import { useSessionStorage } from '@/hooks/useSessionStorage';
 import useSynaptomeModel from '@/components/simulate/single-neuron/hooks/useSynaptomeModel';
 import SideMenu from '@/components/SideMenu';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 type Props = {
   params: Promise<{
@@ -34,10 +35,12 @@ type Props = {
   }>;
 };
 
-function Synaptome(props: Props) {
-  const params = use(props.params);
-
-  const { virtualLabId, projectId } = params;
+function Synaptome({
+  params: urlParams,
+  searchParams,
+}: ServerSideComponentProp<WorkspaceContext, { mode: 'clone' | ''; model: string }>) {
+  const { virtualLabId, projectId } = use(urlParams);
+  const queryParams = use(searchParams);
 
   const [form] = Form.useForm();
   const { sessionValue } = useSessionStorage<{
@@ -50,7 +53,6 @@ function Synaptome(props: Props) {
   const scope = useAtomValue(selectedSimulationScopeAtom);
   const [configStep, setConfigStep] = useState<SynaptomeModelConfigSteps>('basic-config');
   const setSelectedRows = useSetAtom(selectedRowsAtom(DataType.CircuitMEModel));
-  const queryParams = useSearchParams();
   const onConfigStep = (value: SynaptomeModelConfigSteps) => setConfigStep(value);
 
   const labUrl = generateLabUrl(virtualLabId);
@@ -59,10 +61,7 @@ function Synaptome(props: Props) {
   const { model, configuration } = useSynaptomeModel({
     virtualLabId,
     projectId,
-    modelId:
-      queryParams.get('mode') === 'clone' && queryParams.get('model')
-        ? from64(queryParams.get('model')!)
-        : null,
+    modelId: queryParams.mode === 'clone' && queryParams.model ? from64(queryParams.model) : null,
     callback: (m, c) => {
       // FIXME: add model row to the table selected row state to show it as selected in the second step
       form.setFieldsValue({
@@ -87,7 +86,7 @@ function Synaptome(props: Props) {
     }
   }, [sessionValue, form, setSelectedRows]);
 
-  if (queryParams.get('mode') === 'clone' && (!model || !configuration)) {
+  if (queryParams.mode === 'clone' && (!model || !configuration)) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
