@@ -86,13 +86,11 @@ export default function DataTypeGroupTotals({
       try {
         const response = await fetch('/api/circuits/count');
         if (!response.ok) {
-          console.error('Fetch failed with status:', response.status);
           throw new Error('Failed to fetch circuit count');
         }
 
         const data = await response.json();
         if (data.error) {
-          console.error('API error:', data.error);
           throw new Error(data.error);
         }
 

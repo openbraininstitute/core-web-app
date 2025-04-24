@@ -33,11 +33,11 @@ function RowWrapper({
   expandedRowKeys,
   mergedColumns,
   ...props
-  }: CustomRowProps & {
-    handleExpandRow: (expanded: boolean, record: CircuitSchemaProps) => void;
-    expandedRowKeys: Key[];
-    mergedColumns: ColumnsType<CircuitSchemaProps>;
-  }) {
+}: CustomRowProps & {
+  handleExpandRow: (expanded: boolean, record: CircuitSchemaProps) => void;
+  expandedRowKeys: Key[];
+  mergedColumns: ColumnsType<CircuitSchemaProps>;
+}) {
   return (
     <CustomRow
       {...props}
@@ -58,7 +58,7 @@ export default function CircuitTable({
   hasSearch?: boolean;
 }) {
   // ROWS
-  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]); 
+  const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
     name: 150,
@@ -155,7 +155,12 @@ export default function CircuitTable({
 
   const rowWrapperWithColumns = (props: CustomRowProps) => (
     // eslint-disable-next-line react/jsx-props-no-spreading
-    <RowWrapper {...props} handleExpandRow={handleExpandRow} expandedRowKeys={expandedRowKeys} mergedColumns={mergedColumns} />
+    <RowWrapper
+      {...props}
+      handleExpandRow={handleExpandRow}
+      expandedRowKeys={expandedRowKeys}
+      mergedColumns={mergedColumns}
+    />
   );
 
   const lastRow = selectedRows.at(-1);
@@ -205,7 +210,7 @@ export default function CircuitTable({
                   cell: ResizableTitle,
                 },
                 body: {
-                  row: rowWrapperWithColumns
+                  row: rowWrapperWithColumns,
                 },
               }}
               dataSource={filteredData}
@@ -250,7 +255,7 @@ export default function CircuitTable({
                 cell: ResizableTitle,
               },
               body: {
-                row: rowWrapperWithColumns
+                row: rowWrapperWithColumns,
               },
             }}
             dataSource={filteredData}

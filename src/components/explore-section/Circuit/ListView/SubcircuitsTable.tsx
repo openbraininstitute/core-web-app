@@ -27,7 +27,6 @@ export default function SubcircuitTable({
   onExpand,
   downloadable = true,
 }: SubcircuitsTableProps) {
-  
   const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
     <SubcircuitTable
       circuit={subCircuit}

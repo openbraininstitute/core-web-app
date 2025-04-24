@@ -23,28 +23,24 @@ function CustomRow({
   ...restProps
 }: CustomRowProps) {
   if (!record || !record.key || !record.subcircuit || record.subcircuit.length === 0) {
-    // eslint-disable-next-line react/jsx-props-no-spreading  
+    // eslint-disable-next-line react/jsx-props-no-spreading
     return <tr {...restProps}>{children}</tr>;
   }
 
   const isExpanded = expandedRowKeys.includes(record.key);
 
-  console.log('CustomRow: Expandable row', {
-    record,
-    subcircuitLength: record.subcircuit.length,
-    columnCount,
-    childrenCount: Children.toArray(children).length,
-  });
-
   return (
     <>
-     {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+      {/* eslint-disable-next-line react/jsx-props-no-spreading */}
       <tr {...restProps}>{children}</tr>
-      <tr className={styles.subcircuitButtonRow} style={{ display: 'table-row', minHeight: '40px' }}>
+      <tr
+        className={styles.subcircuitButtonRow}
+        style={{ display: 'table-row', minHeight: '40px' }}
+      >
         <td
           colSpan={columnCount ?? Children.toArray(children).length}
           style={{ padding: 0, backgroundColor: '#fafafa', minHeight: '40px' }}
-          >
+        >
           <Button
             type="link"
             onClick={() => handleExpandRow(!isExpanded, record)}
@@ -60,7 +56,8 @@ function CustomRow({
             aria-expanded={isExpanded}
             aria-controls={`subcircuit-table-${record.key}`}
           >
-            Subcircuits ({record.subcircuit.length}) {isExpanded ? <UpOutlined /> : <DownOutlined />}
+            Subcircuits ({record.subcircuit.length}){' '}
+            {isExpanded ? <UpOutlined /> : <DownOutlined />}
           </Button>
         </td>
       </tr>
@@ -68,4 +65,4 @@ function CustomRow({
   );
 }
 
-export default memo(CustomRow)
+export default memo(CustomRow);
