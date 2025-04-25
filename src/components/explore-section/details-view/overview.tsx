@@ -8,6 +8,7 @@ import { classNames } from '@/util/utils';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 type FieldProps = {
   field: string;
@@ -27,7 +28,7 @@ export function Field({ field, className, data }: FieldProps) {
   );
 }
 
-export default function DetailHeader({
+export default function DetailHeader<T extends EntityCoreIdentifiable>({
   url,
   fields,
   detail,
@@ -35,7 +36,7 @@ export default function DetailHeader({
   commonFields = CommonSummaryViewFields,
 }: {
   fields: Array<TypeSummaryProps>;
-  detail?: EntityCoreObjectTypes;
+  detail?: T;
   commonFields: Array<TypeSummaryProps>;
   url?: string | null;
   extraHeaderAction?: ReactNode;
@@ -44,7 +45,7 @@ export default function DetailHeader({
 
   return (
     <div className="flex w-full flex-col gap-10">
-      <Header detail={detail} url={url} extraHeaderAction={extraHeaderAction} />
+      <Header<T> detail={detail} url={url} extraHeaderAction={extraHeaderAction} />
       <div className="flex w-full flex-row gap-x-8">
         <div className="grid w-1/2 auto-rows-max grid-cols-3 gap-x-8 gap-y-6">
           {commonFields.map(({ className, field }) => (

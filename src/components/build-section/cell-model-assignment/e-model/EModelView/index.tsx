@@ -7,7 +7,7 @@ import SimulationParameters from './SimulationParameters';
 import EModelTitle from './EModelTitle';
 import WorkflowAttributes from './WorkflowAttributes';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import SimpleErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
 import ExemplarTraces from '@/features/entities/e-model/detail-view/exemplar-traces';
 
 type Params = {
@@ -55,13 +55,25 @@ export default function EModelView({
         </ErrorBoundary>
       </DefaultLoadingSuspense>
 
-      <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
+      <ErrorBoundary
+        FallbackComponent={withErrorConfig({
+          cls: { container: 'bg-white' },
+          showButtons: false,
+          customError: 'Error while loading mechanisms',
+        })}
+      >
         <DefaultLoadingSuspense>
           <Mechanism params={params} />
         </DefaultLoadingSuspense>
       </ErrorBoundary>
 
-      <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
+      <ErrorBoundary
+        FallbackComponent={withErrorConfig({
+          cls: { container: 'bg-white' },
+          showButtons: false,
+          customError: 'Error while loading workflow attributes',
+        })}
+      >
         <WorkflowAttributes />
       </ErrorBoundary>
     </div>

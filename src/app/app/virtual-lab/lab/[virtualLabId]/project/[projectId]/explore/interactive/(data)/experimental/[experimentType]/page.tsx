@@ -22,6 +22,11 @@ export default function VirtualLabExperimentListingView() {
     projectId: params.projectId,
   };
 
+  console.log(
+    'ᦨ #  page.tsx:25 #  VirtualLabExperimentListingView #  virtualLabInfo:',
+    virtualLabInfo
+  );
+
   const onCellClick = useExploreTableOnClickHandler();
 
   if (!currentExperiment) notFound();

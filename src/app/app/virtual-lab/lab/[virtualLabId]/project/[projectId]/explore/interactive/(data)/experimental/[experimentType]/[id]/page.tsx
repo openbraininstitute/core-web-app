@@ -21,11 +21,6 @@ export default function ExperimentDetailViewPage() {
     params?.experimentType as TExperimentTypeNames
   );
 
-  console.log(
-    'ᦨ #  page.tsx:24 #  ExperimentDetailViewPage #  currentExperiment:',
-    currentExperiment
-  );
-
   if (!currentExperiment) notFound();
   let content;
   // based on the experiment type, decide what kind of content will be rendered

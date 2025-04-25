@@ -2,19 +2,20 @@
 
 import { ReactNode, use } from 'react';
 import ExploreListingLayout from '@/components/explore-section/ExploreListingLayout';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { WorkspaceContext } from '@/types/common';
 
 export default function VirtualLabExperimentLayout(props: {
   children: ReactNode;
-  params: Promise<{ virtualLabId: string; projectId: string }>;
+  params: Promise<WorkspaceContext>;
 }) {
   const params = use(props.params);
 
   const { children } = props;
 
-  const virtualLabInfo: VirtualLabInfo = {
+  const virtualLabInfo: WorkspaceContext = {
     virtualLabId: params.virtualLabId,
     projectId: params.projectId,
   };
+
   return <ExploreListingLayout virtualLabInfo={virtualLabInfo}>{children}</ExploreListingLayout>;
 }

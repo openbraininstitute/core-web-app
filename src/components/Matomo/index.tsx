@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 import { init, push } from '@/util/matomo';
-import { env } from '@/env.mjs';
+import { env } from '@/env';
 
 const MATOMO_URL = env.NEXT_PUBLIC_MATOMO_URL;
 const MATOMO_CDN_URL = env.NEXT_PUBLIC_MATOMO_CDN_URL;
@@ -15,7 +15,7 @@ function Matomo() {
   const pathname = usePathname();
   const [initialized, setInitialized] = useState(false);
 
-  const searchParamsString = searchParams.toString();
+  const searchParamsString = searchParams?.toString();
 
   useEffect(() => {
     if (MATOMO_URL && MATOMO_SITE_ID && MATOMO_CDN_URL && !initialized) {

@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { captureException } from '@sentry/nextjs';
 import { z } from 'zod';
 
-import { env } from '@/env.mjs';
+import { env } from '@/env';
 
 const API_KEY = env.MAILCHIMP_API_KEY;
 const API_SERVER = env.MAILCHIMP_API_SERVER;

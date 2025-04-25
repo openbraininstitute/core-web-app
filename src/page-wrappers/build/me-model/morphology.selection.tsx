@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useId, use } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useId } from 'react';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
@@ -14,17 +14,17 @@ import { Btn } from '@/components/buttons/base/legacy-btn';
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
-type Params = {
+type Props = {
   params: WorkspaceContext;
+  searchParams: { s: string };
 };
 
-export default function Page({ params }: Params) {
-  const searchParams = useSearchParams();
+export default function MorphologySelection({ params, searchParams }: Props) {
   const pathname = usePathname();
   const { push: navigate } = useRouter();
 
   const { virtualLabId, projectId } = params;
-  const stateId = searchParams?.get('s');
+  const stateId = searchParams.s;
 
   if (!stateId) {
     navigate('../');
@@ -43,16 +43,11 @@ export default function Page({ params }: Params) {
     }
 
     const morphology = selectedRows.at(0);
-    setSessionValue({
-      ...sessionValue,
-      mmodel: morphology,
-    });
+    setSessionValue({ ...sessionValue, mmodel: morphology });
 
     const upOneLevel = pathname?.split('/').slice(0, -1).join('/');
-
-    const _params = new URLSearchParams(searchParams?.toString());
+    const _params = new URLSearchParams(searchParams);
     _params.set('m', morphology!.id);
-
     const newHref = _params ? `${upOneLevel}?${_params.toString()}` : (upOneLevel ?? '');
 
     navigate(newHref);
@@ -61,7 +56,7 @@ export default function Page({ params }: Params) {
   const onCellClick = (_basePath: string, record: IReconstructionMorphology) => {
     navigate(
       resolveExploreDetailsPageUrl({
-        ctx: { virtualLabId, projectId },
+        ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
         dataType: DataType.ExperimentalNeuronMorphology,
         entityId: record.id,
       })
@@ -75,6 +70,7 @@ export default function Page({ params }: Params) {
         dataType={DataType.ExperimentalNeuronMorphology}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}
+        virtualLabInfo={{ virtualLabId: params.virtualLabId, projectId: params.projectId }}
         selectionType="radio"
         renderButton={({ selectedRows }) => (
           <Btn

@@ -6,7 +6,10 @@ export const env = createEnv({
   // Validating environment variables only in runtime.
   // TODO Add validation of client env vars during the build,
   // requires: https://github.com/t3-oss/t3-env/issues/85.
-  skipValidation: ['lint', 'test', 'test:ci', 'build', 'lint:fix'].includes(process.env.npm_lifecycle_event),
+  skipValidation: ['lint', 'test', 'test:ci', 'build', 'lint:fix'].includes(
+    String(process.env.npm_lifecycle_event)
+  ),
+  emptyStringAsUndefined: true,
 
   server: {
     KEYCLOAK_ISSUER: z.string().url(),
@@ -24,7 +27,6 @@ export const env = createEnv({
   },
 
   client: {
-
     NEXT_PUBLIC_BASE_PATH: z.preprocess((basePath) => basePath ?? '', z.string()),
 
     // When run on non-protected branch in Gitlab CI the value of env var will be an empty string.
@@ -89,14 +91,14 @@ export const env = createEnv({
     NEXT_PUBLIC_CONN_INITIAL_PARAMS_FILE_ID: z.string().url(),
 
     NEXT_PUBLIC_VIRTUAL_LAB_API_URL: z.string().url(),
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith("pk_"),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_'),
     NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL: z.string().url().optional(),
-    NEXT_PUBLIC_DEPLOYMENT_ENV: z.enum(["staging", "production"]).optional(),
+    NEXT_PUBLIC_DEPLOYMENT_ENV: z.enum(['staging', 'production']).optional(),
     NEXT_PUBLIC_MATOMO_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_CDN_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_SITE_ID: z.string().optional(),
     // There is only one Sanity server, but with two datasets.
-    NEXT_PUBLIC_SANITY_DATASET: z.enum(["staging", "production"]).optional(),
+    NEXT_PUBLIC_SANITY_DATASET: z.enum(['staging', 'production']).optional(),
     NEXT_PUBLIC_ENTITY_CORE_URL: z.string().url(),
     NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: z.string().nonempty(),
     NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID: z.string().nonempty(),
@@ -119,7 +121,8 @@ export const env = createEnv({
     NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL: process.env.NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL,
     NEXT_PUBLIC_CELL_SVC_BASE_URL: process.env.NEXT_PUBLIC_CELL_SVC_BASE_URL,
     NEXT_PUBLIC_KG_INFERENCE_BASE_URL: process.env.NEXT_PUBLIC_KG_INFERENCE_BASE_URL,
-    NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: process.env.NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL,
+    NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL:
+      process.env.NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL,
     NEXT_PUBLIC_SYNTHESIS_URL: process.env.NEXT_PUBLIC_SYNTHESIS_URL,
 
     NEXT_PUBLIC_DEFAULT_MODEL_RELEASE_NAME: process.env.NEXT_PUBLIC_DEFAULT_MODEL_RELEASE_NAME,
@@ -137,7 +140,8 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_PROJECT,
     NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_ID:
       process.env.NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_ID,
-    NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_TAG: process.env.NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_TAG,
+    NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_TAG:
+      process.env.NEXT_PUBLIC_BRAIN_REGION_ONTOLOGY_RESOURCE_TAG,
 
     NEXT_PUBLIC_ATLAS_RELEASE_RESOURCE_ID: process.env.NEXT_PUBLIC_ATLAS_RELEASE_RESOURCE_ID,
 
@@ -154,8 +158,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_INFERENCE_MORPH_RELEVANT_RULE_ID,
 
     NEXT_PUBLIC_CELL_COMPOSITION_ORG: process.env.NEXT_PUBLIC_CELL_COMPOSITION_ORG,
-    NEXT_PUBLIC_CELL_COMPOSITION_PROJECT:
-      process.env.NEXT_PUBLIC_CELL_COMPOSITION_PROJECT,
+    NEXT_PUBLIC_CELL_COMPOSITION_PROJECT: process.env.NEXT_PUBLIC_CELL_COMPOSITION_PROJECT,
     NEXT_PUBLIC_CELL_COMPOSITION_ID: process.env.NEXT_PUBLIC_CELL_COMPOSITION_ID,
     NEXT_PUBLIC_CELL_COMPOSITION_TAG: process.env.NEXT_PUBLIC_CELL_COMPOSITION_TAG,
 
@@ -179,7 +182,10 @@ export const env = createEnv({
     NEXT_PUBLIC_MATOMO_CDN_URL: process.env.NEXT_PUBLIC_MATOMO_CDN_URL,
     NEXT_PUBLIC_MATOMO_SITE_ID: process.env.NEXT_PUBLIC_MATOMO_SITE_ID,
     NEXT_PUBLIC_ENTITY_CORE_URL: process.env.NEXT_PUBLIC_ENTITY_CORE_URL,
-    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: process.env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID,
-    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID,
+    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID:
+      process.env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID,
+    NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID:
+      process.env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID,
+    NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET,
   },
 });

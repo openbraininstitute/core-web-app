@@ -23,8 +23,6 @@ type Params = {
 export default function DetailPage(props: Params) {
   const params = use(props.params);
 
-  console.log('ᦨ #  page.tsx:26 #  DetailPage #  params:', params);
-
   switch (params.modelType) {
     case 'e-model':
       return <EModelDetailView params={params} />;

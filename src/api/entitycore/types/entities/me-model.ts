@@ -1,3 +1,4 @@
+import z from 'zod';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
 import type {
@@ -68,3 +69,16 @@ export interface IMEModelFilter
   type: EntityTypeEnum.Emodel;
   validation_status: ValidationStatus;
 }
+
+export const CreateMEModelSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  validation_status: z.nativeEnum(ValidationStatus),
+  brain_region_id: z.number(),
+  morphology_id: z.string().uuid(),
+  emodel_id: z.string().uuid(),
+  species_id: z.string().uuid(),
+  strain_id: z.string().uuid().nullable(),
+});
+
+export type TCreateMEModel = z.infer<typeof CreateMEModelSchema>;

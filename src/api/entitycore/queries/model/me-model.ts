@@ -1,6 +1,12 @@
-import { entityCoreApi } from '@/api/entitycore/utils';
-import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
+import type {
+  IMEModel,
+  IMEModelFilter,
+  TCreateMEModel,
+} from '@/api/entitycore/types/entities/me-model';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/memodel';
 /**
@@ -13,15 +19,22 @@ const baseUri = '/memodel';
 export async function getMEModels({
   withFacets,
   filters,
+  context,
 }: {
   withFacets?: boolean;
   filters?: IMEModelFilter;
+  context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IMEModel>>(baseUri, {
     queryParams: {
       ...filters,
       with_facets: withFacets,
+    },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
     },
   });
 }
@@ -33,7 +46,47 @@ export async function getMEModels({
  * @param {string} params.id - The unique identifier of the me-model to retrieve
  * @returns {Promise<IEModel>} A promise that resolves to the requested me-model
  */
-export async function getMEModel({ id }: { id: string }) {
+export async function getMEModel({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
   const api = await entityCoreApi();
-  return await api.get<IMEModel>(`${baseUri}/${id}`);
+  return await api.get<IMEModel>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
+/**
+ * Creates a new ME model in entity core API.
+ *
+ * @param params - The parameters for creating the ME model.
+ * @param params.body - The payload containing the data for the new ME model.
+ * @param params.context - The workspace context containing necessary headers and configurations.
+ * @returns {Promise<IEModel>} A promise that resolves to the created ME model.
+ *
+ * @throws Will throw an error if the API request fails.
+ */
+export async function createMEModel({
+  body,
+  context,
+}: {
+  body: TCreateMEModel;
+  context: Required<WorkspaceContext>;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IMEModel>(`${baseUri}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body,
+  });
 }

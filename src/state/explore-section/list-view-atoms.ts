@@ -201,6 +201,7 @@ export const previousDataAtom = atomFamily(
 export const dataAtom = atomFamily(
   <T>(scope: DataAtomFamilyScopeType) =>
     atom<Promise<EntityCoreResponse<T | null>>>(async (get) => {
+      console.log('ᦨ #  list-view-atoms.ts:204 #  scope:', scope);
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const filters = await get(filtersAtom(scope));
@@ -251,6 +252,7 @@ export const dataAtom = atomFamily(
             //   ? Number(selectedBrainRegion?.id.split('/').pop())
             //   : undefined,
           },
+          context: scope.virtualLabInfo,
         });
 
         return {
