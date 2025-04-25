@@ -3,13 +3,12 @@ import { ConfigProvider, Tag } from 'antd';
 import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
 import type { DefaultOptionType } from 'antd/es/select';
 
-import { Filter } from '@/features/listing-filter-panel/types';
-import {
-  FacetLabelValuePair,
-  useOptions,
-} from '@/features/listing-filter-panel/checklist/use-options';
+import { useOptions } from '@/features/listing-filter-panel/checklist/use-options';
 import { getFieldDefinition } from 'src/entity-configuration/definitions';
 import Search from '@/components/Search';
+
+import type { FacetLabelValuePair } from '@/features/listing-filter-panel/checklist/use-options';
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 export default function SearchFilter({
   data,
@@ -18,7 +17,7 @@ export default function SearchFilter({
   onChange,
 }: {
   data: Array<FacetLabelValuePair>;
-  filter: Filter;
+  filter: CoreFilter;
   values: string[];
   onChange: (newValues: string[]) => void;
 }) {

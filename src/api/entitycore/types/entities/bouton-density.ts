@@ -9,7 +9,7 @@ import type {
   BrainRegionFilter,
   SpeciesFilter,
   StainFilter,
-  EtypeFilter,
+  MtypeFilter,
 } from '@/api/entitycore/types/shared/request';
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 
@@ -26,5 +26,5 @@ export type ExperimentalBoutonDensityFilter = Partial<
     BrainRegionFilter &
     SpeciesFilter &
     StainFilter &
-    EtypeFilter
+    MtypeFilter
 >;

@@ -1,22 +1,21 @@
 import { ReactNode, useState } from 'react';
 import { InfoCircleFilled } from '@ant-design/icons';
 
-import {
-  FacetLabelValuePair,
-  useOptions,
-} from '@/features/listing-filter-panel/checklist/use-options';
-import { CheckListProps } from '@/features/listing-filter-panel/checklist/default-checklist';
+import { useOptions } from '@/features/listing-filter-panel/checklist/use-options';
 import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants/explore-section/list-views';
-import { Filter } from '@/features/listing-filter-panel/types';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 
 import SearchFilter from '@/features/listing-filter-panel/search-filter';
 import CenteredMessage from '@/components/CenteredMessage';
 
+import type { FacetLabelValuePair } from '@/features/listing-filter-panel/checklist/use-options';
+import type { CheckListProps } from '@/features/listing-filter-panel/checklist/default-checklist';
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
+
 type Props = {
   children: (props: CheckListProps) => ReactNode;
   data: Array<FacetLabelValuePair>;
-  filter: Filter;
+  filter: CoreFilter;
   values: string[];
   onChange: (value: string[]) => void;
 };
