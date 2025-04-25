@@ -1,16 +1,17 @@
-import { ReactElement } from 'react';
-import * as Accordion from '@radix-ui/react-accordion';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import * as Accordion from '@radix-ui/react-accordion';
+import { ReactElement } from 'react';
 
 import { ChevronIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
-import { Filter } from '@/features/listing-filter-panel/types';
 
 import styles from '@/features/listing-filter-panel/filters.module.css';
 
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
+
 type ContentProps = {
-  filters: Filter[];
-  setFilters: (filters: Filter[]) => void;
+  filters: Array<CoreFilter>;
+  setFilters: (filters: Array<CoreFilter>) => void;
 };
 
 export type FilterGroupProps = {
@@ -20,8 +21,8 @@ export type FilterGroupProps = {
     label: string;
     toggleFunc?: () => void;
   }[];
-  filters: Filter[];
-  setFilters: (filters: Filter[]) => void;
+  filters: Array<CoreFilter>;
+  setFilters: (filters: Array<CoreFilter>) => void;
 };
 
 export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {

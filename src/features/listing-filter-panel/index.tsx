@@ -35,6 +35,8 @@ import { getFieldLabel } from '@/api/explore-section/fields';
 import { defaultList } from './checklist/default-checklist';
 import { fieldTitleSentenceCase } from '@/util/utils';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export type ListingFilterPanelProps = {
   children?: ReactNode;
@@ -42,7 +44,7 @@ export type ListingFilterPanelProps = {
   dataType: DataType;
   dataScope?: ExploreDataScope;
   dataKey: string;
-  filters: Filter[];
+  filters: CoreFilter[];
   facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
@@ -50,7 +52,7 @@ export type ListingFilterPanelProps = {
 };
 
 function createFilterItemComponent(
-  filter: Filter,
+  filter: CoreFilter,
   facets: Facets | undefined,
   filterValues: FilterValues,
   setFilterValues: Dispatch<SetStateAction<FilterValues>>
@@ -72,7 +74,7 @@ function createFilterItemComponent(
     );
 
     switch (type) {
-      case FilterTypeEnum.DateRange:
+      case CoreFieldFilterTypeEnum.DateRange:
         return (
           <DateRange
             filter={filter}
@@ -80,7 +82,7 @@ function createFilterItemComponent(
           />
         );
 
-      case FilterTypeEnum.ValueRange:
+      case CoreFieldFilterTypeEnum.ValueRange:
         if (!facets) return emptyFilter;
 
         // if (esConfig?.nested) {
@@ -99,7 +101,7 @@ function createFilterItemComponent(
         // );
         return null;
 
-      case FilterTypeEnum.CheckList:
+      case CoreFieldFilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
         const facetItems = map(facets[filter.field], ({ id, label, count, type }) => ({
           id,
@@ -119,7 +121,7 @@ function createFilterItemComponent(
           </CheckList>
         );
 
-      case FilterTypeEnum.ValueOrRange:
+      case CoreFieldFilterTypeEnum.ValueOrRange:
         return (
           <ValueOrRange
             filter={filter}
@@ -129,7 +131,7 @@ function createFilterItemComponent(
           />
         );
 
-      case FilterTypeEnum.Text:
+      case CoreFieldFilterTypeEnum.Text:
         return (
           <div className="flex flex-col gap-2">
             <Input
@@ -195,7 +197,7 @@ export default function ListingFilterPanel({
   useEffect(() => {
     const values: FilterValues = {};
 
-    filters?.forEach((filter: Filter) => {
+    filters?.forEach((filter: CoreFilter) => {
       values[filter.field] = filter.value;
     });
 
@@ -203,7 +205,7 @@ export default function ListingFilterPanel({
   }, [filters]);
 
   const submitValues = () => {
-    setFilters(filters?.map((fil: Filter) => ({ ...fil, value: filterValues[fil.field] })));
+    setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 
   if (!activeColumns) return null;

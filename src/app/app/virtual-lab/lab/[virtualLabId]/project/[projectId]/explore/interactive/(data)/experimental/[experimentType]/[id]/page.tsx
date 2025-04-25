@@ -5,8 +5,8 @@ import { notFound, useParams } from 'next/navigation';
 
 import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
 import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
-import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Summary from '@/components/explore-section/details-view/summary';
+import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 
 import { getViewDefinitionDataTypeByName } from '@/entity-configuration/definitions/view-defs';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -23,7 +23,6 @@ export default function ExperimentDetailViewPage() {
 
   if (!currentExperiment) notFound();
   let content;
-  // based on the experiment type, decide what kind of content will be rendered
   switch (currentExperiment) {
     case DataType.ExperimentalNeuronMorphology:
       content = (
