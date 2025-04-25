@@ -16,7 +16,8 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T>>;
-      one?: (query: any) => Promise<any>;
+      one?: (query: any) => Promise<T>;
+      create?: (query: any) => Promise<T>;
     };
   };
   explore: {

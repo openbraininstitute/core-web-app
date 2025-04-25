@@ -44,7 +44,7 @@ export enum EntityCoreFields {
   PreSynapticCellType = 'pre_mtype',
   PostSynapticCellType = 'post_mtype',
   Weight = 'weight',
-  EModelMorphology = 'eModelMorphology',
+  EModelExemplarMorphology = 'exemplar_morphology',
   EModelScore = 'eModelScore',
   EModelResponse = 'eModelResponse',
   MEModelMorphologyPreview = 'meModelMorphologyPreview',

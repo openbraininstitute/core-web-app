@@ -3,6 +3,7 @@ import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEmpty from 'lodash/isEmpty';
 import pick from 'lodash/pick';
+import _get from 'lodash/get';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
@@ -42,6 +43,7 @@ import {
 } from '@/entity-configuration/definitions/view-defs';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
+import { getFieldsDefinition } from '@/entity-configuration/definitions';
 
 type DataAtomFamilyScopeType = {
   key: string;
@@ -112,9 +114,17 @@ export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
       const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
+      const fields = columns ? getFieldsDefinition(columns) : [];
+
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
-        ...(columns?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
+        ...(columns
+          ?.filter(
+            (o) =>
+              _get(fields, o)?.isFilterable === true ||
+              typeof _get(fields, o)?.isFilterable === 'undefined' // TODO: should be changed in the next commit
+          )
+          ?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
         ...(dimensionsColumns || []).map(
           (dimension) =>
             ({
