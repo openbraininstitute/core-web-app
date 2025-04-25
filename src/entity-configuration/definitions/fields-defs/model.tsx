@@ -9,14 +9,16 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
-  [EntityCoreFields.EModelMorphology]: {
+  [EntityCoreFields.EModelExemplarMorphology]: {
     title: 'Morphology',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => <span className="text-red-500">Entitycore Needed</span>,
+    render: (r) => renderEmptyOrValue((r as IEModel).exemplar_morphology.name),
     vocabulary: {
       plural: 'Morphologies',
       singular: 'Morphology',
     },
+    constraint: 'exemplar_morphology__label__in',
+    isFilterable: true,
   },
   [EntityCoreFields.EModelScore]: {
     title: 'Model cumulated score',
@@ -26,6 +28,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       plural: 'Model cumulated score',
       singular: 'Model cumulated scores',
     },
+    isFilterable: false,
     // constraint: 'brain_region_id',
   },
   [EntityCoreFields.EModelResponse]: {
@@ -43,6 +46,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     //   value: 'name',
     // },
     isSortable: false,
+    isFilterable: false,
   },
   [EntityCoreFields.MEModelMorphologyPreview]: {
     className: 'text-center',
@@ -60,6 +64,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Morphology',
     },
     style: { width: 184 },
+    isFilterable: false,
   },
   [EntityCoreFields.MEModelTracePreview]: {
     className: 'text-center',
@@ -75,5 +80,6 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Trace',
     },
     style: { width: 184 },
+    isFilterable: false,
   },
 };
