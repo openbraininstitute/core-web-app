@@ -1,46 +1,5 @@
 export type ZoomRanges = Record<'x' | 'y', Array<number | undefined>>;
 
-export type Sweep = {
-  [key: string]: {
-    i: string;
-    v: string;
-  };
-};
-
-export type Repetition = {
-  [key: string]: {
-    sweeps: string[];
-  };
-};
-
-export type IndexDataValue = {
-  dt: number;
-  dur: number;
-  i_unit: string;
-  name: string;
-  repetitions: Repetition;
-  sweeps: Sweep;
-  t_unit: string;
-  v_unit: string;
-};
-
-export type RABIndexData = {
-  [key: string]: IndexDataValue;
-};
-
-export type RABIndex = {
-  data: RABIndexData;
-  metadata: {
-    [key: string]: string;
-  };
-};
-
-export type TraceData = {
-  y: any;
-  name: string;
-  x?: any;
-};
-
 export type AxesState = {
   xAxis?: string;
   yAxis?: string;

@@ -18,7 +18,8 @@ const optimizePlotData = (
   }: {
     xstart?: number;
     xend?: number;
-  }
+  },
+  desiredLength = 1000
 ) => {
   if (!rawData) return [];
 
@@ -29,7 +30,7 @@ const optimizePlotData = (
     const ySelected = Array.from(sweep.y.slice(start, end));
 
     const points = ySelected.map((y, index): DataPoint => [(index + start) * deltaTime, y]);
-    const downsampledPoints = LTTB(points, 1000) as DataPoint[];
+    const downsampledPoints = LTTB(points, desiredLength) as DataPoint[];
 
     return {
       ...sweep,

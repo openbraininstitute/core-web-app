@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction, type JSX } from 'react';
 import { Loadable } from 'jotai/vanilla/utils/loadable';
-import { IndexDataValue } from '@/types/explore-section/misc';
 import { FlattenedExploreESResponse, ExploreResource } from '@/types/explore-section/es';
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
@@ -43,20 +42,6 @@ export type ListViewAtomValues = {
 
 export type ListViewAtoms<T> = {
   [P in keyof T]: [T[P], Dispatch<SetStateAction<T[P]>>];
-};
-
-export type PlotProps = {
-  reset: boolean;
-  setSelectedSweeps: (sweeps: string[]) => void;
-  metadata?: IndexDataValue;
-  sweeps: {
-    selectedSweeps: string[];
-    previewSweep?: string;
-    allSweeps: string[];
-    colorMapper: { [key: string]: string };
-  };
-  dataset: string;
-  options: any;
 };
 
 export type FilterValues = {
