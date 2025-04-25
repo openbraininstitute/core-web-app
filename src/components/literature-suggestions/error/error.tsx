@@ -72,15 +72,23 @@ function isRateLimitError(data: unknown): data is RateLimitError {
 }
 
 function renderRateLimitError(value: RateLimitError): React.ReactNode {
-  const t = Math.floor(value.detail.retry_after / 60);
+  const t = Math.ceil(value.detail.retry_after / 60);
   const minutes = t % 60;
   const hours = Math.floor((t - minutes) / 60);
+  const when = figureWhen(hours, minutes);
   return (
     <>
-      <div>Rate limit exceeded!</div>
-      {hours === 0 && <div>Please try again in {minutes} minutes.</div>}
-      {hours === 1 && <div>Please try again in one hour and {minutes} minutes.</div>}
-      {hours > 1 && <div>Please try again in approximately {hours + 1} hours.</div>}
+      <div>You have reached the limit of questions you can ask for free.</div>
+      <div>Please use a virtual lab, or try agin in {when}.</div>
     </>
   );
+}
+
+/**
+ * Create a user friendly text of the remaining time.
+ */
+function figureWhen(hours: number, minutes: number) {
+  if (hours === 0) return `${minutes} minutes`;
+  if (hours === 1) return `one hour and ${minutes} minutes`;
+  return `approximately ${hours + 1} hours`;
 }

@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 
 export default function User() {
   const { data } = useSession();
+  const userName = data?.user.name ?? data?.user.username;
   return (
     <div className="sticky top-0 z-30 mb-6 flex w-full flex-grow items-center justify-between gap-3 bg-primary-9 py-2 pr-4">
       <div className="flex max-w-max items-center justify-center gap-2">
@@ -22,7 +23,7 @@ export default function User() {
             <circle cx="12" cy="7" r="4" />
           </svg>
         </div>
-        <h1 className="select-none text-2xl font-bold tracking-tight">{data?.user.name}</h1>
+        <h1 className="select-none text-2xl font-bold tracking-tight">{userName}</h1>
       </div>
     </div>
   );

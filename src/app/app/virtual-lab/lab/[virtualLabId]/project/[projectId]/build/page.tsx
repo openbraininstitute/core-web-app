@@ -110,7 +110,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
     router.push(`${baseExploreUrl}/${pathId}`);
   };
 
-  const loadMoreDiv = useInfiniteScroll(
+  const [loading, loadMoreDiv] = useInfiniteScroll(
     virtualLabId,
     projectId,
     selectedModelType ?? DataType.CircuitMEModel,
@@ -140,7 +140,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
               dataKey={projectId + 'build' + selectedModelType || DataType.CircuitMEModel}
-              showLoadingState={false}
+              showLoadingState={loading as boolean}
             />
 
             {loadMoreDiv}

@@ -15,8 +15,11 @@ export function LinkAndDownloadArtifactList({
 }) {
   return (
     <div className="flex w-full flex-col gap-12">
-      {content.map((singleArtifact: LinkAndDownloadArtifactProps) => (
-        <SingleArtifact key={`Artifact_${singleArtifact.title}`} content={singleArtifact} />
+      {content.map((singleArtifact: LinkAndDownloadArtifactProps, index: number) => (
+        <SingleArtifact
+          key={`Artifact_${singleArtifact.title}_${index + 1}`}
+          content={singleArtifact}
+        />
       ))}
     </div>
   );
@@ -28,30 +31,17 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
   const [showEModels, setShowEModels] = useState<boolean>(true);
   const [showDownloadAndLinks, setShowDownloadAndLinks] = useState<boolean>(true);
 
-  const allData = () => {
-    let totalData = 0;
-
-    if (content?.artifact && showDownloadAndLinks) {
-      totalData += content?.artifact.length ?? 0;
-    }
-    if (showMeModels && content?.meModelsList.length > 0) {
-      totalData += content?.meModelsList?.length ?? 0;
-    }
-    if (showMinimalMeModels && content?.minimalMeModel.length > 0) {
-      totalData += content?.minimalMeModel?.length ?? 0;
-    }
-    if (showEModels && content?.eModelsList.length > 0) {
-      totalData += content?.eModelsList?.length ?? 0;
-    }
-
-    return totalData;
-  };
+  const totalDataCount =
+    (content?.artifact?.length ?? 0) +
+    (content?.meModelsList?.length ?? 0) +
+    (content?.minimalMeModel?.length ?? 0) +
+    (content?.eModelsList?.length ?? 0);
 
   return (
     <div className="relative flex w-full flex-col gap-y-12 scroll-smooth" id="artifacts">
       <header className="sticky top-0 z-50 mb-12 flex h-16 w-full flex-row items-center justify-between bg-white">
         <div className="relative flex flex-row text-base">
-          Total artifacts: <span className="font-bold">{allData()}</span>
+          Total artifacts: <span className="ml-2 block font-bold">{totalDataCount}</span>
         </div>
 
         <div className="relative flex items-center gap-x-4">
@@ -99,6 +89,7 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
       </header>
 
       {content?.artifact && <LinkAndDownloadArtifactList content={content.artifact} />}
+
       {content?.meModelsList && showMeModels && (
         <div className="relative z-0 flex w-full flex-col">
           <div

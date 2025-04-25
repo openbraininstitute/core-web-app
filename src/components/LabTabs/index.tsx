@@ -14,7 +14,7 @@ export default function BrainFactoryTabs({ children }: BrainFactoryTabsProps) {
         <div className="flex">
           <Popover.Root>
             <Popover.Trigger className="flex-auto bg-secondary-2 px-8 text-white">
-              Build & Simulate
+              Build & Experiment
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content className="z-[100] flex flex-col text-white">

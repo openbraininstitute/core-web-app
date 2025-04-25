@@ -88,7 +88,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
-  const loadMoreDiv = useInfiniteScroll(
+  const [loading, loadMoreDiv] = useInfiniteScroll(
     virtualLabId,
     projectId,
     dataType ?? DataType.SingleNeuronSimulation,
@@ -120,7 +120,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
                 dataKey={projectId + 'simulate' + dataType}
-                showLoadingState={false}
+                showLoadingState={loading as boolean}
               />
               {loadMoreDiv}
             </div>
@@ -154,11 +154,12 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 }
 
 function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
+  const router = useRouter();
   const [selectedTab] = useAtom(selectedTabFamily('simulate' + projectId));
   const atomKey = 'simulate' + selectedTab + projectId;
-  const router = useRouter();
   const selectedSimulationScope = useAtomValue(selectedSimTypeFamily(atomKey));
   const modelType = SimulationScopeToModelType[selectedSimulationScope] ?? DataType.CircuitMEModel;
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const onModelSelected = (model: ExploreESHit<ExploreSectionResource>) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
@@ -175,11 +176,9 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
 
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
 
-  const tableRef = useRef<HTMLDivElement>(null);
-
   const [buttonsVisible, setButtonsVisible] = useState(false);
 
-  const loadMoreDiv = useInfiniteScroll(
+  const [loading, loadMoreDiv] = useInfiniteScroll(
     virtualLabId,
     projectId,
     modelType,
@@ -189,7 +188,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   useIntersectionObserver({
     observedRef: tableRef,
     onIntersect: setButtonsVisible,
-    rootMargin: '-300px',
+    rootMargin: '0px',
   });
 
   return (
@@ -198,7 +197,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
 
       {/* TODO: replace this list with items saved in Model Library */}
       <div
-        className="relative mb-5 flex w-full grow flex-col"
+        className="mb-5 flex w-full grow flex-col"
         id="explore-table-container-for-observable"
         ref={tableRef}
       >
@@ -213,9 +212,9 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
           selectionType="radio"
           renderButton={() => null}
           dataKey={projectId + 'simulate' + modelType}
-          showLoadingState={false}
+          showLoadingState={loading as boolean}
         />
-        {buttonsVisible && selectedRows.length > 0 && (
+        {buttonsVisible && !!selectedRows.length && (
           <div className="fixed bottom-8 right-[50px] flex items-center justify-end gap-2">
             <Btn
               type="button"

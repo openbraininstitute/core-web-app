@@ -20,6 +20,7 @@ type Props = {
 };
 export default function UserMenu({ children, cls }: Props) {
   const { data } = useSession();
+  const userName = data?.user.name ?? data?.user.username;
   return (
     <Menubar className="border-none !p-0">
       <MenubarMenu>
@@ -38,7 +39,7 @@ export default function UserMenu({ children, cls }: Props) {
           className="rounded-none border border-primary-7 bg-primary-9 text-white"
         >
           <MenubarItem asChild className="-m-[3.5px] h-14 select-none bg-primary-8 text-white">
-            <div className="!text-lg font-bold">{data?.user.name}</div>
+            <div className="!text-lg font-bold">{userName}</div>
           </MenubarItem>
 
           <MenubarItem

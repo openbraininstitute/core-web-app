@@ -8,8 +8,12 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import { CSSProperties, ReactNode, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
+<<<<<<< HEAD
 import { flattenRows } from '../Circuit/content/circuits_flat';
 import { CircuitSchemaProps } from '../Circuit/type';
+=======
+import { circuitCountAtom } from '../Circuit/content/circuits_flat';
+>>>>>>> develop
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
@@ -25,9 +29,7 @@ import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-vi
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ensureString } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
-
-const menuItemWidth = `${Math.floor(100 / Object.keys(EXPERIMENT_DATA_TYPES).length) - 0.01}%`;
+import { DataTypeGroup } from '@/types/explore-section/data-types';
 
 const dataScope = ExploreDataScope.SelectedBrainRegion;
 
@@ -62,16 +64,38 @@ function MenuItemLabel({
 export default function ExploreListingLayout({
   children,
   virtualLabInfo,
+<<<<<<< HEAD
 }: ExploreListingLayoutProps) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const pathname = usePathname();
   const splittedPathname = pathname.split('/');
   const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
+=======
+}: {
+  children: ReactNode;
+  virtualLabInfo?: VirtualLabInfo;
+}) {
+>>>>>>> develop
   const router = useRouter();
   const params = useParams();
-  const config = pathname.includes('experimental') ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
+  const pathname = usePathname();
+
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
+
+  const splittedPathname = pathname.split('/');
+  const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
+
+  const dataTypeGroup = pathname.includes('experimental')
+    ? DataTypeGroup.ExperimentalData
+    : DataTypeGroup.ModelData;
+
+  const config =
+    dataTypeGroup === DataTypeGroup.ExperimentalData ? EXPERIMENT_DATA_TYPES : MODEL_DATA_TYPES;
+
+  const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
+  const circuitCount = useAtomValue(circuitCountAtom);
 
   // State for circuit count
   const [circuitCount, setCircuitCount] = useState<number>(0);
@@ -114,8 +138,13 @@ export default function ExploreListingLayout({
     router.push(key);
   };
 
+<<<<<<< HEAD
   // eslint-disable-next-line
   const isCircuitPage = /\/model\/circuit\/[^\/]+$/.test(pathname);
+=======
+  const nMenuItems = Object.keys(config).length + (showCircuitMenu ? 1 : 0);
+  const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
+>>>>>>> develop
 
   const items: {
     key: string;
@@ -147,8 +176,10 @@ export default function ExploreListingLayout({
     };
   });
 
-  const circuitActive = activePath === 'circuit';
+  if (showCircuitMenu) {
+    const circuitActive = activePath === 'circuit';
 
+<<<<<<< HEAD
   const label = () => {
     if (loading) return 'Circuit (Loading...)';
     if (error) return 'Circuit (Error)';
@@ -166,6 +197,20 @@ export default function ExploreListingLayout({
       flexBasis: menuItemWidth,
     },
   });
+=======
+    items.push({
+      key: 'circuit',
+      title: 'Circuit',
+      label: `Circuit (${circuitCount})`,
+      className: 'text-center font-semibold',
+      style: {
+        backgroundColor: circuitActive ? 'white' : '#002766',
+        color: circuitActive ? '#002766' : 'white',
+        flexBasis: menuItemWidth,
+      },
+    });
+  }
+>>>>>>> develop
 
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
@@ -175,6 +220,7 @@ export default function ExploreListingLayout({
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         {!isCircuitPage && <BackToInteractiveExplorationBtn href={interactivePageHref} />}
 
+<<<<<<< HEAD
         <div className={classNames('flex-1 overflow-hidden')}>
           {!isCircuitPage && (
             <Menu
@@ -187,8 +233,20 @@ export default function ExploreListingLayout({
               items={items}
             />
           )}
+=======
+        <div className="flex grow flex-col overflow-x-hidden">
+          <Menu
+            onClick={onClick}
+            selectedKeys={[activePath]}
+            mode="horizontal"
+            theme="dark"
+            style={{ backgroundColor: '#002766' }}
+            className="flex w-[calc(100%+6px)] justify-start"
+            items={items}
+          />
+>>>>>>> develop
 
-          <div className="h-full w-full bg-primary-9 text-white">{children}</div>
+          <div className="grow bg-primary-9 text-white">{children}</div>
         </div>
       </ErrorBoundary>
     </div>

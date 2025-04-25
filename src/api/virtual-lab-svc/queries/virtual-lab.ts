@@ -1,6 +1,7 @@
-import { getSession } from '@/authFetch';
+import isEmpty from 'lodash/isEmpty';
 
-import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
+import { getSession } from '@/authFetch';
+import { LabTypeEnum, VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import {
   VirtualLabExistsVerificationResponse,
   VirtualLabListResponse,
@@ -9,7 +10,6 @@ import {
 import { virtualLabApi } from '@/config';
 
 const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
-// const BASE_URL = 'http://localhost:8000/virtual-labs';
 
 /**
  * Checks if a virtual lab with the given name already exists.
@@ -81,9 +81,27 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
  * @returns {Promise<VirtualLabResponse[]>} - api response with the list of virtual labs.
  * @throws {Error} - Throws an error if the request fails or the response is invalid.
  */
-export async function listVirtualLabs(): Promise<VirtualLabListResponse> {
+
+export async function listVirtualLabs({
+  include = [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS, LabTypeEnum.PENDING_LABS],
+  page = 1,
+  size = 10,
+  query = '',
+}: {
+  include: Array<LabTypeEnum>;
+  page?: number;
+  size?: number;
+  query?: string;
+}): Promise<VirtualLabListResponse> {
   const session = await getSession();
-  const response = await fetch(BASE_URL, {
+  const params = new URLSearchParams({
+    include: include.join(','),
+    page: page.toString(),
+    size: size.toString(),
+    ...(!isEmpty(query) ? { query } : {}),
+  });
+  const url = `${BASE_URL}?${params.toString()}`;
+  const response = await fetch(url, {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',

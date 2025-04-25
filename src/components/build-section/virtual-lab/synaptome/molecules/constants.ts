@@ -29,7 +29,7 @@ export const DEFAULT_SYNAPSE_VALUE: SingleSynaptomeConfig = {
 };
 
 export const sectionTargetMapping = {
-  dend: 'Basal Dendrites',
+  dend: 'Basal dendrites',
   soma: 'Soma',
   apic: 'Apical dendrites',
   basal: 'Basal dendrites',
@@ -39,8 +39,8 @@ export const sectionTargetMapping = {
 export type SectionTargetMappingKeys = keyof typeof sectionTargetMapping;
 
 export const synapseTypeMapping = {
-  110: 'Excitatory Synapses',
-  10: 'Inhibitory Synapses',
+  110: 'Excitatory synapses',
+  10: 'Inhibitory synapses',
 };
 
 export type SynapseTypeMappingKeys = keyof typeof synapseTypeMapping;

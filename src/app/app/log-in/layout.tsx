@@ -1,12 +1,18 @@
 import { Suspense, ReactNode } from 'react';
-
 import WrapperBanner from '@/components/WrapperBanner';
-import Logo from '@/components/logo/as-svg';
+import { basePath } from '@/config';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <WrapperBanner>
-      <Logo className="absolute left-10 top-10 text-white" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        width={176}
+        height={56}
+        className="absolute left-[35px] top-[35px] h-[56px] w-[176x] text-white"
+        alt="OBP"
+        src={`${basePath}/images/obi_logo.svg`}
+      />
       <div className="text-2xl font-bold text-white">
         <Suspense fallback="Logging in...">{children}</Suspense>
       </div>

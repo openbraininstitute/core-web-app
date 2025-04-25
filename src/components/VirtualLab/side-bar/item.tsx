@@ -30,7 +30,7 @@ export default function Item({ title, url, icon, disabled, count, active = false
     >
       {icon}
       {title}
-      {count && (
+      {Boolean(count) && (
         <span className="ml-auto font-bold text-primary-3 group-hover:text-gray-400">{count}</span>
       )}
     </Link>

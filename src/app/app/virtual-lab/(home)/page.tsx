@@ -1,90 +1,103 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
+import { Spin } from 'antd';
 import { ErrorBoundary } from 'react-error-boundary';
-import { ExclamationCircleFilled } from '@ant-design/icons';
-import Link from 'next/link';
+import { LoadingOutlined } from '@ant-design/icons';
 
-import LabsListing from '@/components/VirtualLab/labs-listing/listing';
-import CreateFirstLab from '@/components/VirtualLab/labs-listing/no-vlabs';
+import MembershipsVirtualLabsList from '@/components/VirtualLab/labs-listing/membership-list';
+import MyVirtualLabCard from '@/components/VirtualLab/labs-listing/my-virtual-lab';
+import VirtualSplashScreen from '@/components/VirtualLab/labs-listing/no-vlabs';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { tryCatch } from '@/api/utils';
-import { classNames } from '@/util/utils';
+import Tabs from '@/components/VirtualLab/labs-listing/menu-tabs';
 
-export const metadata: Metadata = {
-  title: 'Virtual labs',
-  description: 'View and manage your virtual labs, create new projects.',
+import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { ErrorListing } from '@/components/VirtualLab/labs-listing/elements';
+import { getUserStats } from '@/api/virtual-lab-svc/queries/stats';
+import { tryCatch } from '@/api/utils';
+
+const tabs = [
+  {
+    key: 'my-virtual-lab',
+    label: 'My virtual lab',
+  },
+  {
+    key: 'membership-labs',
+    label: 'Virtual lab memberships',
+  },
+];
+
+type Props = {
+  searchParams: { [key: string]: string | string[] | undefined };
 };
+
+export async function generateMetadata({ searchParams: { t } }: Props): Promise<Metadata> {
+  const activeTabId = t as string;
+
+  let title = 'Virtual labs';
+  let description = 'View and manage your virtual labs, create new projects.';
+
+  if (activeTabId === 'my-virtual-lab' || !activeTabId) {
+    title = 'My virtual lab';
+    description = 'View and manage your virtual lab, create new projects.';
+  }
+  if (activeTabId === 'membership-labs') {
+    title = 'Membership labs';
+    description = 'Explore and join virtual labs created by other users.';
+  }
+
+  return {
+    title,
+    description,
+  };
+}
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page() {
-  const { data: result, error } = await tryCatch(
-    Promise.all([listVirtualLabs(), getUserActiveSubscription()]),
+export default async function Home({ searchParams }: Props) {
+  const activeTabId = (searchParams?.t as string) || tabs[0].key;
+  const { data, error } = await tryCatch(
+    Promise.allSettled([getUserStats(), getUserActiveSubscription()]),
     undefined,
     {
       section: 'virtual-lab-home-page',
-      feature: 'list-virtual-labs',
+      feature: 'get-user-stats',
+      extra: { 'get-user-stats': true, 'get-user-active-subscription': true },
     }
   );
+  const stats = data?.[0].status === 'fulfilled' ? data[0].value.data : null;
+  const subscription = data?.[1].status === 'fulfilled' ? data[1].value?.subscription : null;
+  const hasProSubscription = Boolean(subscription && subscription?.type !== 'free');
+  const hasVirtualLabs = Boolean(stats && stats.total_labs > 0);
 
-  if (error) {
-    return (
-      <div
-        data-testid="virtual-labs-error"
-        className="mb-6 transform rounded-sm bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl"
-      >
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h2 className="mb-2 text-2xl font-bold text-red-200">Unable to load virtual labs</h2>
-            <p className="max-w-xl text-red-200/80">
-              Please try refreshing the page or return later. If the issue persists, please contact
-              support at{' '}
-              <a href="mailto:support@openbraininstitute.org">support@openbraininstitute.org</a>.
-            </p>
-          </div>
-          <div className="mb-2 flex items-center gap-2 self-baseline">
-            <ExclamationCircleFilled className="text-2xl text-yellow-400" />
-            <span className="text-xl font-bold text-yellow-400">Error</span>
-          </div>
-        </div>
-      </div>
-    );
+  const statsError = data?.[0].status === 'rejected' ? data[0].reason : null;
+  const subscriptionError = data?.[1].status === 'rejected' ? data[1].reason : null;
+
+  if (error || statsError || subscriptionError) {
+    return <ErrorListing />;
   }
+
+  if (!hasVirtualLabs) {
+    return <VirtualSplashScreen showCreateSubscription={!hasProSubscription} />;
+  }
+  const Loading = (
+    <div className="flex h-screen items-center justify-center">
+      <Spin indicator={<LoadingOutlined />} size="large" />
+    </div>
+  );
+
   return (
-    <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-      {result?.[1]?.subscription.type === 'free' && (
-        <Link
-          href="/app/virtual-lab/account/subscription"
-          className={classNames(
-            'relative',
-            'mx-auto mb-6 h-32 w-full max-w-7xl rounded-lg p-6',
-            'z-0 bg-[rgb(39,111,201)]',
-            'bg-gradient-to-r from-[rgba(39,111,201,1)] to-[rgba(0,34,77,1)]'
+    <div className="container mx-auto p-4">
+      <Tabs items={tabs} activeTabId={activeTabId} basePath="/app/virtual-lab" />
+      <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
+        <Suspense fallback={Loading}>
+          {activeTabId === 'my-virtual-lab' && (
+            <MyVirtualLabCard hasProSubscription={hasProSubscription} />
           )}
-        >
-          <div
-            style={{
-              background: "url('/images/get-pro-bg.webp') no-repeat center right",
-              backgroundSize: '50%',
-              backgroundPosition: 'right',
-            }}
-          />
-          <h2 className="z-10 text-2xl font-semibold">Get your Pro plan</h2>
-          <p className="z-10 text-gray-200">
-            In order to join other labs or invite teammates in your lab...
-          </p>
-        </Link>
-      )}
-      {!result?.[0]?.data?.virtual_lab ? (
-        <CreateFirstLab />
-      ) : (
-        <LabsListing
-          virtualLab={result?.[0]?.data.virtual_lab}
-          membership_labs={result?.[0]?.data.membership_labs}
-          pendingLabs={result?.[0]?.data.pending_labs}
-        />
-      )}
-    </ErrorBoundary>
+          {activeTabId === 'membership-labs' && (
+            <MembershipsVirtualLabsList searchParams={searchParams} />
+          )}
+        </Suspense>
+      </ErrorBoundary>
+    </div>
   );
 }

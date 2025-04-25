@@ -1,63 +1,49 @@
 'use client';
 
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAtomValue } from 'jotai';
-import { Fragment } from 'react';
+import { useMemo } from 'react';
 
-import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import Base from '@/components/VirtualLab/side-bar/base';
+import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import { userStatsAtom } from '@/state/virtual-lab/lab';
-
-const noLabsMenuItems: Array<ItemProps> = [
-  {
-    url: '/app/virtual-lab/public-projects',
-    title: 'Public projects',
-    disabled: false,
-  },
-];
-
-const withLabsMenuItems: Array<ItemProps> = [
-  {
-    url: '/app/virtual-lab',
-    title: 'Virtual labs',
-  },
-  {
-    url: '/app/virtual-lab/public-projects',
-    title: 'Public project',
-    disabled: false,
-  },
-];
 
 export default function SideBar() {
   const path = usePathname();
   const userStats = useAtomValue(userStatsAtom);
   const labsCount = userStats?.data?.total_labs;
 
+  const menu: Array<ItemProps> = useMemo(
+    () => [
+      {
+        url: '/app/virtual-lab',
+        title: 'Virtual labs',
+        count: labsCount,
+      },
+      {
+        url: '/app/virtual-lab/public-projects',
+        title: 'Public projects',
+        count: 3,
+      },
+    ],
+    [labsCount]
+  );
+
   return (
     <Base>
       <nav className="flex max-h-max flex-1 flex-col py-4">
         <div className="mt-20 border border-primary-5">
-          {labsCount && labsCount >= 1 ? (
-            <Fragment key="labs">
-              {withLabsMenuItems.map(({ url, title, disabled }) => (
-                <Item
-                  key={url}
-                  url={url}
-                  title={title}
-                  active={path === url}
-                  disabled={disabled}
-                  count={url === '/app/virtual-lab' ? labsCount : undefined}
-                />
-              ))}
-            </Fragment>
-          ) : (
-            <Fragment key="no-labs">
-              {noLabsMenuItems.map(({ url, title, disabled }) => (
-                <Item key={url} url={url} title={title} active={path === url} disabled={disabled} />
-              ))}
-            </Fragment>
-          )}
+          {menu.map(({ url, title, count }) => (
+            <Item
+              key={url}
+              url={url}
+              title={title}
+              active={path === url}
+              disabled={false}
+              count={count}
+            />
+          ))}
         </div>
         <Link
           href="/app/virtual-lab/explore/interactive"

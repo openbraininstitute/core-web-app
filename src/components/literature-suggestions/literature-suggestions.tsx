@@ -21,9 +21,14 @@ export interface LiteratureSuggestionsProps {
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
   const [collapsedPanel, setCollapsedPanel] = React.useState(false);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
-  const [threadId, recreateThreadId] = useServiceAiAgentThread();
+  const [threadId, recreateThreadId, threadError] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
-  const { messages, clear, status, append, error } = useServiceAiAgentChat(threadId ?? '');
+  const { messages, clear, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
+
+  // TODO: for future improvement, to disable the spinner for user has not virtual lab
+  // const userStats = useAtomValue(userStatsAtom);
+  // const userHasVirtualLab = Boolean(userStats?.data?.owned_labs_count);
+
   const handleQuery = React.useCallback(
     (content: string) => {
       append({
@@ -55,11 +60,27 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
         type="button"
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
+<<<<<<< HEAD
         <h1 title={status}>AI Assistant</h1>
         {collapsedPanel ? <PlusOutlined className="h-5 w-5" /> : <MinusOutlined />}
+=======
+        <h1 title={status}>AI literature search</h1>
+        {collapsedPanel ? <PlusOutlined /> : <MinusOutlined />}
+>>>>>>> develop
       </button>
       {!collapsedPanel && (
         <>
+          {messages.length === 0 && (
+            <div className={styles.welcome}>
+              <div>
+                <p>Welcome to the OBI platform! </p>
+                <p>
+                  I&apos;m here to help with your literature searches, and soon, I&apos;ll assist
+                  you in exploring our database and setting up your own simulations.
+                </p>
+              </div>
+            </div>
+          )}
           {threadId ? (
             <>
               <div className={styles.articles}>
@@ -82,8 +103,9 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               </div>
 
               <footer>
-                {messages.length === 0 && (
+                {status === 'ready' && (
                   <SuggestedQuestions
+                    messagesLength={messages.length}
                     onClick={(selectedPrompt) => {
                       setPrompt(selectedPrompt);
                       handleQuery(selectedPrompt);
@@ -93,11 +115,20 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
                 {(status === 'ready' || status === 'error') && (
                   <Prompt value={prompt} onChange={setPrompt} onClick={handleQuery} />
                 )}
-                {status !== 'ready' && status !== 'error' && <Spinner />}
+                {status !== 'ready' && status !== 'error' && (
+                  <div className={styles.spinnerContainer}>
+                    <Spinner />
+                    {status === 'streaming' && (
+                      <button className={styles.cancelButton} type="button" onClick={stop}>
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
               </footer>
             </>
           ) : (
-            status !== 'error' && <Spinner />
+            status !== 'error' && !threadError && <Spinner />
           )}
         </>
       )}

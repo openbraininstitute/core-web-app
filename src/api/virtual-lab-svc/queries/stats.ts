@@ -7,7 +7,6 @@ import { getSession } from '@/authFetch';
 import { virtualLabApi } from '@/config';
 
 const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
-// const BASE_URL = `http://localhost:8000/virtual-labs`;
 
 /**
  * Get statistics for the current user.
@@ -21,6 +20,10 @@ export async function getUserStats(): Promise<VlmUserStatsResponse> {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
+    },
+    cache: 'no-store',
+    next: {
+      tags: ['user-stats'],
     },
   });
 

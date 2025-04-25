@@ -26,6 +26,7 @@ export const ProjectPayloadSchema = z.object({
   include_members: z
     .array(
       z.object({
+        id: z.string().uuid().optional().describe('ID of the member to be included'),
         email: z.string().email().describe('Email of the member to be included'),
         role: RoleSchema.describe('Role assigned to the member'),
       })
