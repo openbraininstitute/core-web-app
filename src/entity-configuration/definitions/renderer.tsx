@@ -27,7 +27,13 @@ export const EmptyPreview = (
 export const renderLicense = ({ license }: { license?: ILicense | null }) => {
   if (!license) return null;
   return (
-    <a id={license.id} href={license.name} target="_blank" rel="noopener noreferrer">
+    <a
+      title={license.label ?? license.description ?? ''}
+      id={license.id}
+      href={license.name}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       Open 🔗
     </a>
   );
