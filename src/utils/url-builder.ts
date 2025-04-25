@@ -17,17 +17,16 @@ export function resolveExploreDetailsPageUrl({
   entityId?: string;
   dataType?: DataType;
 }) {
-  if (ctx && ctx.virtualLabId && ctx.projectId && (!dataType || !entityId)) {
-    return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`;
-  }
-
   const entityConfig = getEntityByLegacyType({ legacyType: dataType });
   let slug = entityConfig?.slug; // morphology, e-model, ...
   const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
   if (routePrefix === 'simulate') slug = `${slug}/view`;
   let baseUrl = `${baseUri}/explore/${routePrefix}/${slug}/${entityId}`;
   if (ctx && ctx.virtualLabId && ctx.projectId) {
-    baseUrl = `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${slug}/${entityId}`;
+    if (entityId)
+      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${slug}/${entityId}`;
+    else
+      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${slug}`;
   }
   return baseUrl;
 }

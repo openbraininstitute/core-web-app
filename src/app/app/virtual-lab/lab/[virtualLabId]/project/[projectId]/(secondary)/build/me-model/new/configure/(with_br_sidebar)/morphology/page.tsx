@@ -1,11 +1,18 @@
-import MorphologySelectionPage from '@/pages/build/me-model/morphology.selection';
-import type { WorkspaceContext } from '@/types/common';
+import MorphologySelectionPage from '@/page-wrappers/build/me-model/morphology.selection';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-type Params = {
-  params: Promise<WorkspaceContext>;
-};
+export default async function Page(
+  props: ServerSideComponentProp<WorkspaceContext, { s: string }>
+) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
 
-export default async function Page({ params: urlParams }: Params) {
-  const params = await urlParams;
-  return <MorphologySelectionPage params={params} />;
+  return (
+    <MorphologySelectionPage
+      {...{
+        params,
+        searchParams,
+      }}
+    />
+  );
 }

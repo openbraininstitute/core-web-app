@@ -1,7 +1,7 @@
 import { getServerSession, type NextAuthOptions, type TokenSet, type Session } from 'next-auth';
 import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
-import { env } from '@/env.mjs';
+import { env } from '@/env';
 
 const issuer = env.KEYCLOAK_ISSUER;
 const clientId = env.KEYCLOAK_CLIENT_ID;

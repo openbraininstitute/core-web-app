@@ -1,6 +1,8 @@
-import { entityCoreApi } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
 import type { IEModelFilter, IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/emodel';
 /**
@@ -13,15 +15,22 @@ const baseUri = '/emodel';
 export async function getEModels({
   withFacets,
   filters,
+  context,
 }: {
   withFacets?: boolean;
   filters?: IEModelFilter;
+  context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IEModel>>(baseUri, {
     queryParams: {
       ...filters,
       with_facets: withFacets,
+    },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
     },
   });
 }
@@ -33,7 +42,19 @@ export async function getEModels({
  * @param {string} params.id - The unique identifier of the emodel to retrieve
  * @returns {Promise<IEModel>} A promise that resolves to the requested emodel
  */
-export async function getEModel({ id }: { id: string }) {
+export async function getEModel({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
   const api = await entityCoreApi();
-  return await api.get<IEModel>(`${baseUri}/${id}`);
+  return await api.get<IEModel>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
 }

@@ -1,4 +1,4 @@
-import { entityCoreApi } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type {
   ExpandReconstructionMorphologyParm,
   ReconstructionMorphologyFilter,
@@ -6,6 +6,7 @@ import type {
   IReconstructionMorphologyExpanded,
 } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/reconstruction-morphology';
 /**
@@ -18,9 +19,11 @@ const baseUri = '/reconstruction-morphology';
 export async function getReconstructionMorphologies({
   withFacets,
   filters,
+  context,
 }: {
   withFacets?: boolean;
   filters?: ReconstructionMorphologyFilter;
+  context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<
@@ -29,6 +32,11 @@ export async function getReconstructionMorphologies({
     queryParams: {
       ...filters,
       with_facets: withFacets,
+    },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
     },
   });
 }
@@ -44,9 +52,11 @@ export async function getReconstructionMorphologies({
 export async function getReconstructionMorphology({
   id,
   expand,
+  context,
 }: {
   id: string;
   expand?: ExpandReconstructionMorphologyParm;
+  context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<IReconstructionMorphology | IReconstructionMorphologyExpanded>(
@@ -54,6 +64,11 @@ export async function getReconstructionMorphology({
     {
       queryParams: {
         expand,
+      },
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        ...getEntityCoreContext(context).headers,
       },
     }
   );

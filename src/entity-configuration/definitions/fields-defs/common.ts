@@ -152,11 +152,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
   [EntityCoreFields.BrainRegion]: {
     title: 'Brain Region',
     filter: null,
-    render: (r) => {
-      console.log('-->, r', r.brain_region.name);
-      return r.brain_region.name;
-      return renderEmptyOrValue(r.brain_region.name);
-    },
+    render: (r) => renderEmptyOrValue(r.brain_region.name),
     vocabulary: {
       plural: 'Brain Regions',
       singular: 'Brain Region',

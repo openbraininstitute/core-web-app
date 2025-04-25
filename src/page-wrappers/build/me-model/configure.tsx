@@ -1,0 +1,334 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useSetAtom, useAtomValue } from 'jotai';
+import { useId, useState } from 'react';
+import { App, Spin } from 'antd';
+import get from 'lodash/get';
+import z from 'zod';
+
+import MorphologyOverviewCard from '@/features/entities/me-model/card-viewers/morphology-overview-card';
+import EModelOverviewCard from '@/features/entities/me-model/card-viewers/emodel-overview-card';
+
+import { usePendingValidationModal } from '@/components/build-section/virtual-lab/me-model/pending-validation-modal-hook';
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state.session';
+import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { ExploreDataScope } from '@/types/explore-section/application';
+import { queryAtom } from '@/state/explore-section/list-view-atoms';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { DataType } from '@/constants/explore-section/list-views';
+import { classNames } from '@/util/utils';
+
+import { WorkspaceContextSchema, type WorkspaceContext } from '@/types/common';
+import {
+  CreateMEModelSchema,
+  IMEModel,
+  ValidationStatus,
+} from '@/api/entitycore/types/entities/me-model';
+import { createMEModel } from '@/api/entitycore/queries';
+import { tryCatch } from '@/api/utils';
+import { OneshotSession } from '@/services/accounting';
+import { ServiceSubtype } from '@/types/accounting';
+
+const DEFAULT_ERROR_MSG =
+  'Something went wrong while creating the ME-model, please try again later';
+const LOW_FUNDS_ERROR_MSG =
+  'The project does not have enough credits to create a model, please add credits and try again';
+const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
+const VALIDATION_ERROR_MSG = 'Validation failed. Please check the data and try again.';
+
+const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema);
+type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
+
+function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { stateId: string }) {
+  stateId;
+  const { sessionValue } = useBuildMeModelSessionState({
+    stateId,
+    virtualLabId,
+    projectId,
+  });
+
+  const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
+    ?.data?.users;
+  const mmodel = sessionValue.mmodel;
+  const emodel = sessionValue.emodel;
+  const fields = [
+    {
+      className: 'col-span-6',
+      title: 'name',
+      value: <span className="text-2xl font-bold">{sessionValue.name}</span>,
+    },
+    {
+      className: 'col-span-3 row-span-3',
+      title: 'description',
+      value: sessionValue.description,
+    },
+    {
+      title: 'brain region',
+      value: sessionValue.brainRegion?.title,
+    },
+    {
+      title: 'created by',
+      value: <ul>{contributors?.map(({ id, name }) => <li key={id}>{name}</li>)}</ul>,
+    },
+    {
+      title: 'created date',
+      value: new Intl.DateTimeFormat('fr-CH').format(new Date()),
+    },
+    {
+      title: 'm-type',
+      value: renderEmptyOrValue(renderArray(mmodel?.mtypes?.map((m) => m.pref_label) || [])),
+    },
+    {
+      title: 'e-type',
+      value: renderEmptyOrValue(renderArray(emodel?.etypes?.map((m) => m.pref_label) || [])),
+    },
+  ];
+
+  return (
+    <div className="grid max-w-(--breakpoint-2xl) grow grid-cols-6 gap-x-10 gap-y-4 break-words">
+      {fields.map(({ className, title, value }) => (
+        <div key={title} className={classNames('text-primary-7', className)}>
+          <div className="text-neutral-4 uppercase">{title}</div>
+          <div className="mt-2">{value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type Props = {
+  params: WorkspaceContext;
+  searchParams: {
+    s: string;
+    m: string;
+    e: string;
+  };
+};
+
+export default function Configure({ params, searchParams }: Props) {
+  const { push: navigate } = useRouter();
+  const { notification } = App.useApp();
+
+  const emodelId = get(searchParams, 'e', undefined);
+  const morphologyId = get(searchParams, 'm', undefined);
+  const stateId = get(searchParams, 's', undefined);
+
+  const { sessionValue, removeSessionValue } = useBuildMeModelSessionState({
+    stateId: stateId || '',
+    virtualLabId: params.virtualLabId,
+    projectId: params.projectId,
+  });
+
+  if (!stateId) {
+    navigate('./');
+    return;
+  }
+
+  const refreshMeModels = useSetAtom(
+    queryAtom({
+      dataType: DataType.CircuitMEModel,
+      dataScope: ExploreDataScope.NoScope,
+      virtualLabInfo: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+      key: useId(),
+    })
+  );
+
+  const [activeProcess, setActiveProcess] = useState<
+    null | 'modelCreation' | 'modelCreationWithValidation'
+  >(null);
+
+  const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
+
+  const showErrorNotification = (error: any, type: 'validation' | 'http') => {
+    let message = DEFAULT_ERROR_MSG;
+    if (type === 'http')
+      message =
+        error?.cause?.error_code === LOW_FUNDS_ERROR_CODE ? LOW_FUNDS_ERROR_MSG : DEFAULT_ERROR_MSG;
+    else message = VALIDATION_ERROR_MSG;
+
+    notification.error({
+      duration: 10,
+      message,
+    });
+  };
+
+  const fetchFreshAccessToken = async () => {
+    const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
+    const token = await res.json();
+    return token.accessToken;
+  };
+
+  // const onClickWithValidation = () => {
+  //   setActiveProcess('modelCreationWithValidation');
+
+  //   createMEModel({ virtualLabId, projectId })
+  //     .then(fetchFreshAccessToken)
+  //     .then((accessToken) => {
+  //       createValidationModal({ virtualLabId, projectId }, accessToken);
+  //       removeSessionValue();
+  //     })
+  //     .catch((err) => showErrorNotification(err))
+  //     .finally(() => setActiveProcess(null));
+  // };
+
+  const onClickWithoutValidation = async () => {
+    setActiveProcess('modelCreation');
+    const body: Partial<TCreateMeModelContext> = {
+      virtualLabId: params.virtualLabId,
+      projectId: params.projectId,
+      name: sessionValue.name,
+      description: sessionValue.description,
+      emodel_id: sessionValue.emodel?.id,
+      morphology_id: sessionValue.mmodel?.id,
+      species_id: sessionValue.mmodel?.species.id,
+      brain_region_id:
+        Number(sessionValue.brainRegion?.id.split('/').pop()) ??
+        sessionValue.mmodel?.brain_region.id,
+      strain_id: sessionValue.mmodel?.strain?.id ?? null,
+      validation_status: ValidationStatus.Initialized,
+    };
+
+    const { error: validationError, data: validationData } =
+      await CreateMeModelContextSchema.safeParseAsync(body);
+    if (validationError) {
+      showErrorNotification(validationError, 'validation');
+      return;
+    }
+    const accountingSession = new OneshotSession({
+      subtype: ServiceSubtype.SingleCellBuild,
+      virtualLabId: params.virtualLabId,
+      projectId: params.projectId,
+      count: 1,
+    });
+
+    const { data, error } = await tryCatch(
+      accountingSession.useWith<IMEModel>(() =>
+        createMEModel({
+          body: validationData,
+          context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+        })
+      ),
+      () => {
+        setActiveProcess(null);
+      },
+      {
+        feature: 'create-me-model',
+        section: 'build/create-me-model',
+        extra: {
+          ...validationData,
+          virtualLabId: params.virtualLabId,
+          projectId: params.projectId,
+        },
+      }
+    );
+    if (data) {
+      refreshMeModels();
+      // TODO: fix this, should i reset session storage ?
+      // removeSessionValue();
+      navigate(
+        resolveExploreDetailsPageUrl({
+          ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+          dataType: DataType.CircuitMEModel,
+          entityId: data.id,
+        })
+      );
+    }
+    if (error) {
+      showErrorNotification(error, 'http');
+      return;
+    }
+    // createMEModel({ virtualLabId, projectId })
+    //   .then((record) => {
+    //     notification.success({
+    //       duration: 7,
+    //       message: 'ME-model created successfully',
+    //     });
+    //     refreshMeModels();
+    //     removeSessionValue();
+    //     navigate(
+    //       resolveExploreDetailsPageUrl({
+    //         ctx: { virtualLabId, projectId },
+    //         dataType: DataType.CircuitMEModel,
+    //         // @ts-expect-error
+    //         entityId: record.id, // TODO: fix it after add create me model endpoint
+    //       })
+    //     );
+    //   })
+    //   .catch((err) => {
+    //     showErrorNotification(err);
+    //   })
+    //   .finally(() => {
+    //     setActiveProcess(null);
+    //   });
+  };
+
+  const validateTrigger = sessionValue.emodel && sessionValue.mmodel && (
+    <div className="fixed right-10 bottom-10 flex flex-row gap-4 text-white">
+      <button
+        className={classNames(
+          'fit-content ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',
+          activeProcess ? 'bg-neutral-4' : 'bg-primary-8'
+        )}
+        onClick={onClickWithoutValidation}
+        type="button"
+        disabled={!!activeProcess}
+      >
+        {activeProcess === 'modelCreation' ? (
+          <span className="flex flex-row gap-4">
+            Creating ME-model <Spin />
+          </span>
+        ) : (
+          'Save'
+        )}
+      </button>
+      <button
+        className={classNames(
+          'fit-content ml-auto flex w-fit items-center p-4 font-bold hover:brightness-110',
+          activeProcess ? 'bg-neutral-4' : 'bg-primary-8'
+        )}
+        // onClick={onClickWithValidation}
+        onClick={() => {}}
+        type="button"
+        disabled={!!activeProcess}
+      >
+        {activeProcess === 'modelCreationWithValidation' ? (
+          <span className="flex flex-row gap-4">
+            Launch validation <Spin />
+          </span>
+        ) : (
+          'Launch validation'
+        )}
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="m-10 flex flex-col gap-8">
+        <Header
+          {...{
+            stateId,
+            virtualLabId: params.virtualLabId,
+            projectId: params.projectId,
+          }}
+        />
+        <div className="flex flex-col gap-4">
+          <MorphologyOverviewCard
+            reselectLink
+            mode={!!morphologyId ? 'select' : 'summary'}
+            promise={sessionValue.mmodel}
+          />
+          <EModelOverviewCard
+            reselectLink
+            mode={!!emodelId ? 'select' : 'summary'}
+            promise={sessionValue.emodel}
+          />
+        </div>
+      </div>
+      {validateTrigger}
+      {contextHolder}
+    </>
+  );
+}

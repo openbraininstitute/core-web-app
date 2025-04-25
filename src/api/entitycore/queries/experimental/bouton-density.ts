@@ -1,9 +1,10 @@
-import { entityCoreApi } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   ExperimentalBoutonDensityFilter,
   IExperimentalBoutonDensity,
 } from '@/api/entitycore/types/entities/bouton-density';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/experimental-bouton-density';
 /**
@@ -16,15 +17,22 @@ const baseUri = '/experimental-bouton-density';
 export async function getExperimentalBoutonDensities({
   withFacets,
   filters,
+  context,
 }: {
   withFacets?: boolean;
   filters?: ExperimentalBoutonDensityFilter;
+  context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IExperimentalBoutonDensity>>(baseUri, {
     queryParams: {
       ...filters,
       with_facets: withFacets,
+    },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
     },
   });
 }
@@ -36,7 +44,19 @@ export async function getExperimentalBoutonDensities({
  * @param {string} params.id - The unique identifier of the bouton density to retrieve
  * @returns {Promise<IExperimentalBoutonDensity>} A promise that resolves to the requested bouton density
  */
-export async function getExperimentalBoutonDensity({ id }: { id: string }) {
+export async function getExperimentalBoutonDensity({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
   const api = await entityCoreApi();
-  return await api.get<IExperimentalBoutonDensity>(`${baseUri}/${id}`);
+  return await api.get<IExperimentalBoutonDensity>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
 }

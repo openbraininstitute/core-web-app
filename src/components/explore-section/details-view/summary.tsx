@@ -22,7 +22,9 @@ import { useLoadableValue } from '@/hooks/hooks';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import ErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
+import Link from 'next/link';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export default function Summary<T extends EntityCoreIdentifiable & { name: string }>({
   showViewMode,
@@ -35,7 +37,7 @@ export default function Summary<T extends EntityCoreIdentifiable & { name: strin
   commonFields?: Array<TypeSummaryProps>;
   extraHeaderAction?: ReactNode;
   dataType: DataType;
-  children?: (detail: EntityCoreObjectTypes) => ReactNode;
+  children?: (detail: T) => ReactNode;
 }) {
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
   const fields = getViewDefinitionByLegacyType(dataType)?.summaryViewFields;
@@ -43,9 +45,11 @@ export default function Summary<T extends EntityCoreIdentifiable & { name: strin
   const path = usePathname();
   const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
 
+  console.log('ᦨ #  summary.tsx:48 #  virtualLabId, projectId:', virtualLabId, projectId);
+
   const detail = useLoadableValue(
     detailFamily({ id, virtualLabId, projectId, dataType, ...params })
-  ) as Loadable<EntityCoreObjectTypes>;
+  ) as Loadable<T>;
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);
@@ -57,7 +61,31 @@ export default function Summary<T extends EntityCoreIdentifiable & { name: strin
   const component = match(detail)
     .with({ state: 'loading' }, () => <CentralLoadingSpinner />)
     .with({ state: 'hasError', error: P.any.select() }, () => {
-      return <Error statusCode={400} title="Something went wrong while fetching the data" />;
+      const Component = withErrorConfig({
+        showButtons: false,
+        customError: 'Something went wrong while fetching the data',
+        children: (
+          <div className="flex w-full gap-2">
+            <Link
+              href={resolveExploreDetailsPageUrl({
+                ctx: { virtualLabId, projectId },
+                dataType: DataType.CircuitMEModel,
+              })}
+              className="w-1/2"
+            >
+              <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
+                Back to ME-Models
+              </div>
+            </Link>
+            <Link href="/app/virtual-lab" className="w-1/2">
+              <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
+                Back to home
+              </div>
+            </Link>
+          </div>
+        ),
+      });
+      return <Component />;
     })
     .with({ state: 'hasData' }, ({ data }) => {
       return (

@@ -1,4 +1,4 @@
-import { env } from '@/env.mjs';
+import { env } from '@/env';
 
 export const basePath = env.NEXT_PUBLIC_BASE_PATH;
 

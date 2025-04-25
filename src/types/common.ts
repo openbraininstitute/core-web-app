@@ -1,3 +1,4 @@
+import { z } from 'zod';
 /**
  * Constructs a type based on T and makes properties K optional.
  *
@@ -45,7 +46,9 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type WorkspaceContext = {
-  virtualLabId: string;
-  projectId: string;
-};
+export const WorkspaceContextSchema = z.object({
+  virtualLabId: z.string(),
+  projectId: z.string(),
+});
+
+export type WorkspaceContext = z.infer<typeof WorkspaceContextSchema>;
