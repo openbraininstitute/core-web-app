@@ -36,7 +36,10 @@ import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { WorkspaceContext } from '@/types/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import {
+  getViewDefinitionByLegacyType,
+  ViewsDefinitionRegistry,
+} from '@/entity-configuration/definitions/view-defs';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
 
@@ -108,12 +111,10 @@ export const dimensionColumnsAtom = atomFamily((scope: DataAtomFamilyScopeType) 
 export const filtersAtom = atomFamily(
   (scope: DataAtomFamilyScopeType) =>
     atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
-      const { columns } = ViewsDefinitionRegistry[scope.dataType];
+      const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
       return [
-        ...columns.map((colKey) => {
-          return columnKeyToFilter(colKey);
-        }),
+        ...(columns?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
         ...(dimensionsColumns || []).map(
           (dimension) =>
             ({
@@ -201,11 +202,11 @@ export const previousDataAtom = atomFamily(
 export const dataAtom = atomFamily(
   <T>(scope: DataAtomFamilyScopeType) =>
     atom<Promise<EntityCoreResponse<T | null>>>(async (get) => {
-      console.log('ᦨ #  list-view-atoms.ts:204 #  scope:', scope);
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const filters = await get(filtersAtom(scope));
 
+      // TODO: better handling when we have IDs filter
       if (scope.shouldUseIds) {
         if (scope.targetIds && Boolean(scope.targetIds?.length)) {
           filters.push({
@@ -222,7 +223,7 @@ export const dataAtom = atomFamily(
               page: 1,
               page_size: PAGE_SIZE,
             },
-          } as EntityCoreResponse<T | null>;
+          } as EntityCoreResponse<T>;
         }
       }
 
@@ -271,7 +272,7 @@ export const dataAtom = atomFamily(
           page: 1,
           page_size: PAGE_SIZE,
         },
-      } as EntityCoreResponse<T | null>;
+      } as EntityCoreResponse<T>;
     }),
   isListAtomEqual
 );

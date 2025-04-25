@@ -163,11 +163,12 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
         (r as IExperimentalSynapsesPerConnection).synaptic_pathway.pre_region.name
       );
     },
-    filter: CoreFieldFilterTypeEnum.CheckList,
     vocabulary: {
       plural: 'Brain Region [From]',
       singular: 'Brain Region [From]',
     },
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    constraint: 'synaptic_pathway__pre_region',
   },
   [EntityCoreFields.PostSynapticBrainRegion]: {
     title: 'Brain Region [To]',
@@ -176,11 +177,12 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
         (r as IExperimentalSynapsesPerConnection).synaptic_pathway.post_region.name
       );
     },
-    filter: CoreFieldFilterTypeEnum.CheckList,
     vocabulary: {
       plural: 'Brain Region [To]',
       singular: 'Brain Region [To]',
     },
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    constraint: 'synaptic_pathway__post_region',
   },
   [EntityCoreFields.PreSynapticCellType]: {
     title: 'Cell Type [From]',
