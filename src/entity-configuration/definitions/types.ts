@@ -81,6 +81,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   filter: CoreFilterType;
   constraint?: string | Record<string, string>;
   isSortable?: boolean;
+  isFilterable?: boolean;
   order?: {
     property: string;
     value: string;
