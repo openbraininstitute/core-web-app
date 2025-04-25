@@ -10,6 +10,7 @@ import { classNames } from '@/util/utils';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import ListingFilterPanel from '@/features/listing-filter-panel';
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 export default function WithListingFilterPanel({
   children,
@@ -23,7 +24,7 @@ export default function WithListingFilterPanel({
     activeColumns?: string[];
     displayControlPanel: boolean;
     setDisplayControlPanel: Dispatch<SetStateAction<boolean>>;
-    filters?: Filter[];
+    filters?: CoreFilter[];
   }) => ReactNode;
   dataType: DataType;
   dataScope: ExploreDataScope;

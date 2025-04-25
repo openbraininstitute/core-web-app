@@ -88,6 +88,8 @@ export function transformFiltersToQuery(
               // Apply transformToIlikePattern for ilike constraints
               if (typeof val === 'string' && constraintKey.endsWith('__ilike')) {
                 acc[constraintKey] = transformToIlikePattern(val);
+              } else if (val instanceof Date) {
+                acc[constraintKey] = val.toISOString();
               } else {
                 acc[constraintKey] = val;
               }
@@ -99,6 +101,8 @@ export function transformFiltersToQuery(
             // Apply transformToIlikePattern for ilike constraints
             if (typeof val === 'string' && constraintKey.endsWith('__ilike')) {
               acc[constraintKey] = transformToIlikePattern(val);
+            } else if (val instanceof Date) {
+              acc[constraintKey] = val.toISOString();
             } else {
               acc[constraintKey] = val;
             }
