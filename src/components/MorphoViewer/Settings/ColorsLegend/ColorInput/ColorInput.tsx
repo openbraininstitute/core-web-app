@@ -70,11 +70,11 @@ function toggleOpacity(color: string): string {
 
 function isOpaque(color: string) {
   COLOR.parse(color);
-  return COLOR.A >= 1;
+  return COLOR.A < 1;
 }
 
 function setOpacity(color: string, opaque: boolean): string {
   COLOR.parse(color);
-  COLOR.A = opaque ? 1 : 0.99;
+  COLOR.A = opaque ? 0.99 : 1;
   return COLOR.toString();
 }
