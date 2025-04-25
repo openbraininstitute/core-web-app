@@ -77,12 +77,11 @@ const columns = (
     key: 'description',
     width: 200,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link
-        href={`/app/virtual-lab/explore/interactive/model/circuit/${record.key}`}
+      <div
         className="text-ellipsis whitespace-nowrap font-normal"
       >
         {record.description}
-      </Link>
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -94,12 +93,11 @@ const columns = (
     key: 'brainRegion',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link
-        href={`/app/virtual-lab/explore/interactive/model/circuit/${record.key}`}
+      <div
         className="whitespace-nowrap font-normal"
       >
         {record.brainRegion}
-      </Link>
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -111,9 +109,9 @@ const columns = (
     key: 'numberOfNeurons',
     width: 130,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link href={`./circuit/${record.key}`} className="whitespace-nowrap font-normal">
+      <div className="whitespace-nowrap font-normal">
         {record.numberOfNeurons}
-      </Link>
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -125,9 +123,9 @@ const columns = (
     key: 'specie',
     width: 120,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link href={`./circuit/${record.key}`} className="whitespace-nowrap font-normal">
+      <div className="whitespace-nowrap font-normal">
         {record.species}
-      </Link>
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -139,9 +137,9 @@ const columns = (
     key: 'contributorSimple',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link href={`./circuit/${record.key}`} className="whitespace-nowrap font-normal">
+      <div className="whitespace-nowrap font-normal">
         {record.metadata.contributorSimple}
-      </Link>
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -153,9 +151,9 @@ const columns = (
     key: 'registrationDate',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link href={`./circuit/${record.key}`} className="whitespace-nowrap font-normal">
+      <div className="whitespace-nowrap font-normal">
         {record.metadata.registrationDate}
-      </Link>
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
