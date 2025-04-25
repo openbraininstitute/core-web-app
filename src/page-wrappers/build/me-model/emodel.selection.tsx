@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useId, use } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useId } from 'react';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
@@ -9,28 +9,28 @@ import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { WorkspaceContext } from '@/types/common';
 
-type Params = {
+type Props = {
   params: WorkspaceContext;
+  searchParams: {
+    s: string;
+  };
 };
 
-export default function Page({ params }: Params) {
-  const searchParams = useSearchParams();
+export default function EmodelSelection({ params, searchParams }: Props) {
   const { push: navigate } = useRouter();
   const pathname = usePathname();
 
-  const { virtualLabId, projectId } = params;
-  const stateId = searchParams?.get('s');
+  const stateId = searchParams.s;
 
   const { setSessionValue, sessionValue } = useBuildMeModelSessionState({
     stateId: stateId || '',
-    virtualLabId,
-    projectId,
+    virtualLabId: params.virtualLabId,
+    projectId: params.projectId,
   });
 
   if (!stateId) {
@@ -43,14 +43,10 @@ export default function Page({ params }: Params) {
       throw new Error('Multiple e-models selected for ME-Model building. Only one is allowed');
     }
     const emodel = selectedRows.at(0);
-    setSessionValue({
-      ...sessionValue,
-      emodel,
-    });
+    setSessionValue({ ...sessionValue, emodel });
 
     const upOneLevel = pathname?.split('/').slice(0, -1).join('/');
-
-    const _params = new URLSearchParams(searchParams?.toString());
+    const _params = new URLSearchParams(searchParams);
     _params.set('e', emodel!.id);
     const newHref = _params ? `${upOneLevel}?${_params.toString()}` : (upOneLevel ?? '');
 
@@ -59,7 +55,7 @@ export default function Page({ params }: Params) {
 
   const onCellClick = (_basePath: string, record: IEModel) => {
     resolveExploreDetailsPageUrl({
-      ctx: { virtualLabId, projectId },
+      ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
       dataType: DataType.CircuitEModel,
       entityId: record.id,
     });
@@ -73,7 +69,7 @@ export default function Page({ params }: Params) {
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}
         selectionType="radio"
-        virtualLabInfo={{ virtualLabId, projectId }}
+        virtualLabInfo={{ virtualLabId: params.virtualLabId, projectId: params.projectId }}
         renderButton={({ selectedRows }) => (
           <Btn
             className="fit-content bg-primary-8 sticky bottom-0 ml-auto w-fit"

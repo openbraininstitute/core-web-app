@@ -1,11 +1,17 @@
-import EmodelSelectionPage from '@/pages/build/me-model/emodel.selection';
-import type { WorkspaceContext } from '@/types/common';
+import EmodelSelectionPage from '@/page-wrappers/build/me-model/emodel.selection';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-type Params = {
-  params: Promise<WorkspaceContext>;
-};
-
-export default async function Page({ params: urlParams }: Params) {
-  const params = await urlParams;
-  return <EmodelSelectionPage params={params} />;
+export default async function Page(
+  props: ServerSideComponentProp<WorkspaceContext, { s: string }>
+) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+  return (
+    <EmodelSelectionPage
+      {...{
+        params,
+        searchParams,
+      }}
+    />
+  );
 }

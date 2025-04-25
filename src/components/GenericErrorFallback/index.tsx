@@ -4,11 +4,13 @@ import { WarningOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 import { classNames } from '@/util/utils';
-interface ErrorComponentProps {
-  error: Error & { cause?: unknown };
+import { JSX, ReactNode } from 'react';
+interface Props {
+  error?: Error & { cause?: unknown };
   cls?: { container: string };
   showButtons?: boolean;
   customError?: string;
+  children?: ReactNode;
 }
 
 export function ErrorComponent({
@@ -16,7 +18,8 @@ export function ErrorComponent({
   cls = { container: '' },
   customError = '',
   showButtons = true,
-}: ErrorComponentProps) {
+  children,
+}: Props) {
   return (
     <div
       className={classNames(
@@ -37,7 +40,7 @@ export function ErrorComponent({
               'We apologize, but something unexpected went wrong. Please try again later.'}
           </p>
         </div>
-
+        {children}
         {showButtons && (
           <div className="flex w-full gap-2">
             <Link href="/app/virtual-lab/explore/interactive" className="w-1/2">
@@ -57,22 +60,24 @@ export function ErrorComponent({
   );
 }
 
-// Higher Order Component
 export function withErrorConfig({
   cls,
   showButtons,
   customError,
+  children,
 }: {
   cls?: { container: string };
   showButtons?: boolean;
   customError?: string;
+  children?: ReactNode;
 }) {
-  return function ({ error }: { error: Error & { cause?: unknown } }) {
+  return function ({ error }: { error?: Error & { cause?: unknown } }) {
     return (
-      <ErrorComponent error={error} customError={customError} cls={cls} showButtons={showButtons} />
+      <ErrorComponent error={error} customError={customError} cls={cls} showButtons={showButtons}>
+        {children}
+      </ErrorComponent>
     );
   };
 }
 
-// Default export with original behavior
 export default ErrorComponent;

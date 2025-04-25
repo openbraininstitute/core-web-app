@@ -1,5 +1,5 @@
 import { getSession } from '@/authFetch';
-import { env } from '@/env.mjs';
+import { env } from '@/env';
 
 export async function keycloakLogout() {
   const session = await getSession();

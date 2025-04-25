@@ -65,10 +65,10 @@ export default function ExploreListingLayout({
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
 
-  const splittedPathname = pathname.split('/');
-  const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
+  const splittedPathname = pathname?.split('/');
+  const interactivePageHref = splittedPathname?.slice(0, splittedPathname.length - 2).join('/');
 
-  const dataTypeGroup = pathname.includes('experimental')
+  const dataTypeGroup = pathname?.includes('experimental')
     ? DataTypeGroup.ExperimentalData
     : DataTypeGroup.ModelData;
 
@@ -143,9 +143,9 @@ export default function ExploreListingLayout({
       },
     });
   }
-
-  if (params?.id)
+  if (params?.id) {
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
+  }
 
   return (
     <div className="bg-primary-9 flex h-screen w-full overflow-x-auto" id="interactive-data-layout">

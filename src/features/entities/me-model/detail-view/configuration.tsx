@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { Suspense } from 'react';
 
@@ -13,13 +13,18 @@ import { getReconstructionMorphology, getEModel } from '@/api/entitycore/queries
 import { tryCatch } from '@/api/utils';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import { WorkspaceContext } from '@/types/common';
 
 export default function Configuration({ model }: { model: IMEModel }) {
-  const morphologyPromise = tryCatch(getReconstructionMorphology({ id: model.morphology.id }));
-  const emodelPromise = tryCatch(getEModel({ id: model.emodel.id }));
+  const workspaceContext = useParams<WorkspaceContext>();
+
+  const morphologyPromise = tryCatch(
+    getReconstructionMorphology({ id: model.morphology.id, context: workspaceContext })
+  );
+  const emodelPromise = tryCatch(getEModel({ id: model.emodel.id, context: workspaceContext }));
   const params = useSearchParams();
-  const emodelId = params.get('e');
-  const morphologyId = params.get('m');
+  const emodelId = params?.get('e');
+  const morphologyId = params?.get('m');
 
   return (
     <div className="flex w-full flex-col gap-4">

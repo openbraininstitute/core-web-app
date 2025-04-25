@@ -23,7 +23,7 @@ type Props = {
 
 const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
 
-export default function VirtualLabProjectInteractiveExploreLayout(props: Props) {
+export default function Layout(props: Props) {
   const { virtualLabId, projectId } = useParams<{
     virtualLabId: string;
     projectId: string;
@@ -50,7 +50,7 @@ export default function VirtualLabProjectInteractiveExploreLayout(props: Props) 
                 key: LinkItemKey.Explore,
                 href: `${labProjectUrl}/explore/interactive`,
                 content: Content.Explore,
-                styles: 'rounded-full bg-primary-5 py-3 text-primary-9',
+                styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-[21px]',
               },
             ]}
             lab={{

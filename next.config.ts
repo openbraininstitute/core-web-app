@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 import NextBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 
-import { env } from './src/env.mjs';
+import { env } from './src/env';
 
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -109,7 +109,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  transpilePackages: ['jotai-devtools'],
+  transpilePackages: ['jotai-devtools', '@t3-oss/env-nextjs', '@t3-oss/env-core'],
   logging: {
     fetches: {
       fullUrl: true,

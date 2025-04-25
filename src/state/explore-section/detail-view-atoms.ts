@@ -176,7 +176,10 @@ export const detailFamily = atomFamily<
     atom(async () => {
       const entity = getEntityByLegacyType({ legacyType: viewParams.dataType });
       if (entity && entity.api.query.one) {
-        return await entity.api.query.one({ id: viewParams.id });
+        return await entity.api.query.one({
+          id: viewParams.id,
+          context: { virtualLabId: viewParams.virtualLabId, projectId: viewParams.projectId },
+        });
       }
     }),
   isEqual

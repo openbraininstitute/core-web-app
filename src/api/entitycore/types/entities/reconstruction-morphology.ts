@@ -26,6 +26,7 @@ import type {
   IStrain,
   IMType,
 } from '@/api/entitycore/types/shared/global';
+import { ValidationStatus } from './me-model';
 
 export type ReconstructionMorphologyExpandFields =
   | 'brain_location'
