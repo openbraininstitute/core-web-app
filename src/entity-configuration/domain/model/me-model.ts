@@ -1,4 +1,4 @@
-import { getMEModel, getMEModels } from '@/api/entitycore/queries/model/me-model';
+import { getMEModel, getMEModels, createMEModel } from '@/api/entitycore/queries/model/me-model';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
@@ -17,6 +17,7 @@ export const MEmodel: EntityCoreTypeConfig<any> = {
     query: {
       list: getMEModels,
       one: getMEModel,
+      create: createMEModel,
     },
   },
   explore: {
