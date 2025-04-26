@@ -44,6 +44,7 @@ import {
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import filter from 'lodash/filter';
 
 type DataAtomFamilyScopeType = {
   key: string;
@@ -82,12 +83,7 @@ export const activeColumnsAtom = atomFamily(
       const dimensionColumns = await get(dimensionColumnsAtom(scope));
       const { columns } = { ...ViewsDefinitionRegistry[scope.dataType] };
 
-      return [
-        'index',
-        ...(dimensionColumns || []),
-        ...columns,
-        // isExperimentalData(scope.dataType) ? Field.RegistrationDate : Field.CreationDate,
-      ];
+      return ['index', ...(dimensionColumns || []), ...columns];
     }),
   isListAtomEqual
 );
@@ -115,14 +111,14 @@ export const filtersAtom = atomFamily(
     atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
       const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
       const fields = columns ? getFieldsDefinition(columns) : [];
-
       const dimensionsColumns = await get(dimensionColumnsAtom(scope));
+
       return [
         ...(columns
           ?.filter(
             (o) =>
-              _get(fields, o)?.isFilterable === true ||
-              typeof _get(fields, o)?.isFilterable === 'undefined' // TODO: should be changed in the next commit
+              _get(fields, o, { isFilterable: false })?.isFilterable === true ||
+              _get(fields, o, { isDisplayable: false })?.isDisplayable === true
           )
           ?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
         ...(dimensionsColumns || []).map(

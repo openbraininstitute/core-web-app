@@ -33,6 +33,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'License',
     },
     isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.Species]: {
     title: 'Species',
@@ -56,6 +57,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     isSortable: false,
     isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.MType]: {
     fieldType: CoreFieldType.CellType,
@@ -80,6 +82,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     isSortable: false,
     isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.EType]: {
     fieldType: CoreFieldType.CellType,
@@ -104,6 +107,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     isSortable: false,
     isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.NumberOfMeasurements]: {
     title: 'N° of Measurements',
@@ -121,6 +125,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     isSortable: false,
     isFilterable: false,
+    isDisplayable: false,
   },
   [EntityCoreFields.SubjectAge]: {
     title: 'Age',
@@ -131,6 +136,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Age',
     },
     isFilterable: false,
+    isDisplayable: false,
   },
   [EntityCoreFields.MeanSTD]: {
     title: 'Mean ± STD',
@@ -150,6 +156,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     isFilterable: false,
     isSortable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.Sem]: {
     title: 'SEM',
@@ -163,8 +170,9 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       plural: 'Values',
       singular: 'Value',
     },
-    isFilterable: false,
     isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
   },
   [EntityCoreFields.PreSynapticBrainRegion]: {
     title: 'Brain Region [From]',
@@ -179,6 +187,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     filter: CoreFieldFilterTypeEnum.CheckList,
     constraint: 'synaptic_pathway__pre_region',
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.PostSynapticBrainRegion]: {
     title: 'Brain Region [To]',
@@ -193,6 +203,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     filter: CoreFieldFilterTypeEnum.CheckList,
     constraint: 'synaptic_pathway__post_region',
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.PreSynapticCellType]: {
     title: 'Cell Type [From]',
@@ -206,6 +218,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       plural: 'Cell Type [From]',
       singular: 'Cell Type [From]',
     },
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.PostSynapticCellType]: {
     title: 'Cell Type [To]',
@@ -219,6 +233,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       plural: 'Cell Type [To]',
       singular: 'Cell Type [To]',
     },
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.Weight]: {
     title: 'Weight',
@@ -231,8 +247,9 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       plural: 'Values',
       singular: 'Value',
     },
-    isFilterable: false,
     isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
   },
   [EntityCoreFields.NeuronDensity]: {
     title: 'Density',
@@ -246,7 +263,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       plural: 'Densities',
       singular: 'Density',
     },
-    isFilterable: false,
     isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
   },
 };

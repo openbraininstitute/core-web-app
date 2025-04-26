@@ -10,15 +10,18 @@ import {
   useState,
 } from 'react';
 import { CloseOutlined } from '@ant-design/icons';
-import { Input } from 'antd';
-import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
-import map from 'lodash/map';
+import { useAtom, useSetAtom } from 'jotai';
+import { Input } from 'antd';
 
+import orderBy from 'lodash/orderBy';
+import map from 'lodash/map';
+import get from 'lodash/get';
+
+import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 import ClearFilters from '@/features/listing-filter-panel/clear-filters';
 import DateRange from '@/features/listing-filter-panel/date-range';
 import CheckList from '@/features/listing-filter-panel/checklist';
-import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 
 import {
   activeColumnsAtom,
@@ -26,17 +29,19 @@ import {
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
+import { getFieldDefinition, getFieldsDefinition } from '@/entity-configuration/definitions';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { DataType } from '@/constants/explore-section/list-views';
-import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { Facets } from '@/api/entitycore/types/shared/response';
-import { getFieldLabel } from '@/api/explore-section/fields';
 import { defaultList } from './checklist/default-checklist';
 import { fieldTitleSentenceCase } from '@/util/utils';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
+
+import type { CoreFilter, FieldsDefinitionItem } from '@/entity-configuration/definitions/types';
 
 export type ListingFilterPanelProps = {
   children?: ReactNode;
@@ -179,6 +184,7 @@ export default function ListingFilterPanel({
       [dataType, dataScope, dataKey]
     )
   );
+  const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;
@@ -217,21 +223,26 @@ export default function ListingFilterPanel({
 
   const filterItems = useMemo(
     () =>
-      filters
-        ?.map((filter) => {
-          return {
-            content: filter.type
-              ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
-              : undefined,
-            display: activeColumns?.includes(filter.field),
-            label: fieldTitleSentenceCase(getFieldDefinition(filter.field)?.title ?? ''),
-            type: filter.type,
-            toggleFunc: showDisplayTrigger
-              ? () => onToggleActive && onToggleActive(filter.field)
-              : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
-          };
-        })
-        .filter((item) => showDisplayTrigger || item.content !== undefined), // If showDisplayTrigger is false and content is undefined that filter is not needed.
+      orderBy(
+        filters
+          ?.map((filter) => {
+            const item = get(fields, filter.field, {}) as FieldsDefinitionItem<any>;
+            return {
+              content:
+                filter.type && item.isFilterable
+                  ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
+                  : undefined,
+              display: item.isDisplayable,
+              label: fieldTitleSentenceCase(getFieldDefinition(filter.field)?.title ?? ''),
+              type: filter.type,
+              toggleFunc: showDisplayTrigger
+                ? () => onToggleActive && onToggleActive(filter.field)
+                : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
+            };
+          })
+          .filter((item) => showDisplayTrigger || item.content !== undefined), // If showDisplayTrigger is false and content is undefined that filter is not needed.
+        ['display', 'desc']
+      ),
     [
       filters,
       facets,
