@@ -36,8 +36,6 @@ export default async function Page(props: Props) {
   );
   const { list } = groupBookmarksByCategory(result?.data);
 
-  console.log('ᦨ #  page.tsx:41 #  Page #  list:', list);
-
   const { activeCategory, tabs, availableTypeKeysPerCategory } = getAvailableTabs(category, list);
   const activeType = tabs.at(0)?.key!;
 

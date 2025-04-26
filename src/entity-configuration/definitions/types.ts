@@ -82,6 +82,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   constraint?: string | Record<string, string>;
   isSortable?: boolean;
   isFilterable?: boolean;
+  isDisplayable?: boolean;
   order?: {
     property: string;
     value: string;
@@ -99,3 +100,6 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
 export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = {
   [key: string]: FieldDefinition<T>;
 };
+
+export type FieldsDefinitionItem<T extends EntityCoreIdentifiable> =
+  FieldsDefinitionRegistry<T>[keyof FieldsDefinitionRegistry<T>];

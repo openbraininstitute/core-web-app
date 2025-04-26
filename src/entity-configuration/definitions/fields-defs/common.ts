@@ -28,6 +28,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'preview',
     },
     style: { width: 184 },
+    isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.Name]: {
     title: 'Name',
@@ -43,6 +45,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       property: 'order_by',
       value: 'name',
     },
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.CreationDate]: {
     title: 'Creation date',
@@ -61,6 +65,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       property: 'order_by',
       value: 'creation_date',
     },
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.RegistrationDate]: {
     title: 'Registration date',
@@ -79,6 +85,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       property: 'order_by',
       value: 'creation_date',
     },
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.UpdateDate]: {
     title: 'Update date',
@@ -97,6 +105,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       property: 'order_by',
       value: 'updated_at',
     },
+    isFilterable: false,
+    isDisplayable: false,
   },
   [EntityCoreFields.Description]: {
     title: 'Description',
@@ -106,27 +116,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       plural: 'Descriptions',
       singular: 'Description',
     },
-  },
-  [EntityCoreFields.Contributions]: {
-    title: 'Contributors',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) =>
-      renderEmptyOrValue(
-        transformAgentToNames(
-          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
-            .contributions
-        )
-      ),
-    vocabulary: {
-      plural: 'Contributors',
-      singular: 'Contributor',
-    },
-    constraint: 'contribution__pref_label__in',
-    isSortable: false,
-    order: {
-      property: 'contribution__order_by',
-      value: 'pref_label',
-    },
+    isFilterable: false,
+    isDisplayable: false,
   },
   [EntityCoreFields.Contribution]: {
     title: 'Contributors',
@@ -143,11 +134,13 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Contributor',
     },
     constraint: 'contribution__pref_label__in',
-    isSortable: false,
     order: {
       property: 'contribution__order_by',
       value: 'pref_label',
     },
+    isSortable: false,
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.BrainRegion]: {
     title: 'Brain Region',
@@ -158,5 +151,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Brain Region',
     },
     constraint: 'brain_region_id',
+    isFilterable: false,
+    isDisplayable: true,
   },
 };

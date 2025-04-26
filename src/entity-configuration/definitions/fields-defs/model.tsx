@@ -18,7 +18,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Morphology',
     },
     constraint: 'exemplar_morphology__label__in',
-    isFilterable: true,
+    isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.EModelScore]: {
     title: 'Model cumulated score',
@@ -29,6 +30,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Model cumulated scores',
     },
     isFilterable: false,
+    isDisplayable: true,
     // constraint: 'brain_region_id',
   },
   [EntityCoreFields.EModelResponse]: {
@@ -47,6 +49,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     // },
     isSortable: false,
     isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.MEModelMorphologyPreview]: {
     className: 'text-center',
@@ -65,6 +68,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     style: { width: 184 },
     isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.MEModelTracePreview]: {
     className: 'text-center',
@@ -81,5 +85,6 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     },
     style: { width: 184 },
     isFilterable: false,
+    isDisplayable: true,
   },
 };
