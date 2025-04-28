@@ -2,7 +2,7 @@ import { ReactNode, useEffect } from 'react';
 import Error from 'next/error';
 import { useSetAtom } from 'jotai';
 
-import DetailHeader from '@/components/explore-section/details-view/overview';
+import DetailHeader from '@/features/details-view/overview';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import usePathname from '@/hooks/pathname';

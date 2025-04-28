@@ -17,11 +17,10 @@ import { SimulationTypeNames } from '@/types/simulation/single-neuron';
 import { InteractiveViewIcon } from '@/components/icons';
 import { ensureArray } from '@/utils/array';
 
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { BookmarksSupportedTypes } from '@/features/bookmark/helpers';
-import type { EntityCoreElement } from '@/constants/explore-section/fields-config/types';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
-export default function Header<T extends EntityCoreIdentifiable>({
+export default function Header<T extends EntityCoreIdentifiableNamed>({
   detail,
   url,
   extraHeaderAction,

@@ -5,8 +5,8 @@ import { match, P } from 'ts-pattern';
 import { useSetAtom } from 'jotai';
 import Link from 'next/link';
 
-import Overview from '@/components/explore-section/details-view/overview';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
+import Overview from '@/features/details-view/overview';
 import usePathname from '@/hooks/pathname';
 
 import {
@@ -22,10 +22,10 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { useLoadableValue } from '@/hooks/hooks';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { DetailViewUrlParams } from '@/types/explore-section/application';
 
-export default function Summary<T extends EntityCoreIdentifiable & { name: string }>({
+export default function Summary<T extends EntityCoreIdentifiableNamed>({
   showViewMode,
   extraHeaderAction,
   dataType,

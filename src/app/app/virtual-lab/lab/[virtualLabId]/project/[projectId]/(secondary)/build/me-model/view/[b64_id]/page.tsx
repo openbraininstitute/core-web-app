@@ -3,11 +3,12 @@
 import { useEffect, use } from 'react';
 import { useSetAtom } from 'jotai';
 
+import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
+import SummaryView from '@/page-wrappers/explore/me-model';
+
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
-import SummaryView from '@/features/entities/me-model/detail-view/view';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 
 type Params = {
   params: Promise<{

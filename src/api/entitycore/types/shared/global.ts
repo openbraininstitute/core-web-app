@@ -16,6 +16,10 @@ export type EntityCoreIdentifiable = {
   legacy_id: Array<string> | null;
 };
 
+export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
+  name: string;
+}
+
 export type EntityCoreBaseType = {
   type: EntityCoreDataType;
 };

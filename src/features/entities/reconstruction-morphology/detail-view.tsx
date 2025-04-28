@@ -12,7 +12,7 @@ import createMorphologyDataAtom from '@/state/morpho-viewer';
 import GeneralizationControls from '@/components/explore-section/WithGeneralization/GeneralizationControls';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import Morphometrics from '@/components/explore-section/Morphometrics';
-import Summary from '@/components/explore-section/details-view/summary';
+import Summary from '@/features/details-view/summary';
 
 import WithGeneralization, {
   notFound,

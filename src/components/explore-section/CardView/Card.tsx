@@ -36,8 +36,6 @@ export default function Card({ resource, dataType, activeKeys, metrics, score }:
   const basePath = path.split('/').slice(0, -1).join('/');
   const resourceUrl = detailUrlBuilder(basePath, resource);
 
-  console.log('ᦨ #  Card.tsx:39 #  Card #  resource:', resource);
-
   const { groupedCardFields, renderMetric } = useMorphometrics(dataType, metrics);
 
   return (
