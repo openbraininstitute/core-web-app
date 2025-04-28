@@ -51,4 +51,5 @@ export enum EntityCoreFields {
   MEModelTracePreview = 'meModelTracePreview',
   MEModelValidated = 'meModelValidated',
   CreatedBy = 'createdBy',
+  SynaptomeUsedMEModelName = 'me_model',
 }

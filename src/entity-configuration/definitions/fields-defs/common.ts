@@ -1,5 +1,6 @@
 import {
   EmptyPreview,
+  EmptyValue,
   renderDate,
   renderEmptyOrValue,
   renderPreview,
@@ -153,5 +154,29 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     constraint: 'brain_region_id',
     isFilterable: false,
     isDisplayable: true,
+  },
+  [EntityCoreFields.CreatedBy]: {
+    title: 'Created by',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => {
+      if ('createdBy' in r) renderEmptyOrValue(r.createdBy);
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Users',
+      singular: 'User',
+    },
+  },
+  [EntityCoreFields.UpdatedBy]: {
+    title: 'Updated by',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => {
+      if ('updatedBy' in r) renderEmptyOrValue(r.updatedBy);
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Users',
+      singular: 'User',
+    },
   },
 };

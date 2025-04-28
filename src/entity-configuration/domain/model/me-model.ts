@@ -3,8 +3,9 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
-export const MEmodel: EntityCoreTypeConfig<any> = {
+export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
   group: 'models',
   legacyType: DataType.CircuitMEModel,
   type: EntityTypeEnum.Memodel,

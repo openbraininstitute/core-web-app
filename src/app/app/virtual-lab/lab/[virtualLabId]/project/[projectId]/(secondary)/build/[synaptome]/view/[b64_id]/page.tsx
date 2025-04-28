@@ -19,7 +19,7 @@ type Props = {
 };
 
 const SynaptomeDetailView = dynamic(
-  () => import('@/components/explore-section/Synaptome/DetailView')
+  () => import('@/features/entities/single-neuron-synaptome/detail-view')
 );
 
 export default function Synaptome(props: Props) {
