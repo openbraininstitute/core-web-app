@@ -1,17 +1,17 @@
 import { ReactNode } from 'react';
 
-import Header from '@/components/explore-section/details-view/header';
+import Header from '@/features/details-view/header';
 
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CommonSummaryViewFields } from '@/entity-configuration/definitions/view-defs';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { classNames } from '@/util/utils';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 
 type FieldProps = {
-  field: string;
+  field: EntityCoreFields;
   className?: string;
   data: any;
 };
@@ -28,7 +28,7 @@ export function Field({ field, className, data }: FieldProps) {
   );
 }
 
-export default function DetailHeader<T extends EntityCoreIdentifiable>({
+export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   url,
   fields,
   detail,

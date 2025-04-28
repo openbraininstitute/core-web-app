@@ -13,6 +13,8 @@ import {
   voltageFeatures,
 } from '@/constants/cell-model-assignment/e-model';
 
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+
 export interface EModelMenuItem {
   name: string;
   id: string;
@@ -444,7 +446,7 @@ export interface EModelScriptResource extends ResourceMetadata, EModelScript {}
 
 export interface EModelUIConfig {
   name: string;
-  morphologies: ExemplarMorphologyDataType[];
+  morphologies: Array<IReconstructionMorphology>;
   traces: ExperimentalTracesDataType[];
   mechanism: MechanismForUI[];
   parameters: SimulationParameter;

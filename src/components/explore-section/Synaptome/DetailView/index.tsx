@@ -8,7 +8,7 @@ import Link from 'next/link';
 import SynapseGroupList from '@/components/build-section/virtual-lab/synaptome/view-model/ListSynapses';
 import useSynaptomeModel from '@/components/simulate/single-neuron/hooks/useSynaptomeModel';
 import Results from '@/components/build-section/virtual-lab/synaptome/view-model/Results';
-import Summary from '@/components/explore-section/details-view/summary';
+import Summary from '@/features/details-view/summary';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import {

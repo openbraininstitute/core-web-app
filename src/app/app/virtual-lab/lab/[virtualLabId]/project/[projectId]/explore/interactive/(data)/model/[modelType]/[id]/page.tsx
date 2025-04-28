@@ -5,8 +5,8 @@ import dynamic from 'next/dynamic';
 
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
 
-const EModelDetailView = dynamic(() => import('@/features/entities/e-model/detail-view/view'));
-const MEModelDetailView = dynamic(() => import('@/features/entities/me-model/detail-view/view'));
+const EModelDetailView = dynamic(() => import('@/page-wrappers/explore/e-model'));
+const MEModelDetailView = dynamic(() => import('@/page-wrappers/explore/me-model'));
 const SynaptomeDetailView = dynamic(
   () => import('@/components/explore-section/Synaptome/DetailView')
 );

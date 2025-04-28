@@ -6,15 +6,15 @@ import { ErrorBoundary } from 'react-error-boundary';
 import FeatureSelectionContainer from '@/components/build-section/cell-model-assignment/e-model/EModelView/FeatureSelectionContainer';
 import DefaultEModelTable from '@/components/build-section/cell-model-assignment/e-model/EModelView/DefaultEModelTable';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
+import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
-import { previewRender } from '@/constants/explore-section/fields-config/common';
 import { eCodesDocumentationUrl } from '@/constants/cell-model-assignment/e-model';
-import { useUnwrappedValue } from '@/hooks/hooks';
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
+import { previewRender } from '@/constants/explore-section/fields-config/common';
 import { detailFamily } from '@/state/explore-section/detail-view-atoms';
 import { experimentalTracesAtomFamily } from '@/state/e-model';
 import { ExperimentalTracesDataType } from '@/types/e-model';
+import { useUnwrappedValue } from '@/hooks/hooks';
 
 type Params = {
   id: string;

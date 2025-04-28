@@ -6,7 +6,7 @@ import { notFound, useParams } from 'next/navigation';
 import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
 import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Summary from '@/components/explore-section/details-view/summary';
+import Summary from '@/features/details-view/summary';
 
 import { getViewDefinitionDataTypeByName } from '@/entity-configuration/definitions/view-defs';
 import { DataType } from '@/constants/explore-section/list-views';

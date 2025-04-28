@@ -1,7 +1,7 @@
 import { ConfigProvider, Table, ThemeConfig } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 
-import { ExemplarMorphologyDataType, ExperimentalTracesDataType } from '@/types/e-model';
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 
 const theme: ThemeConfig = {
   components: {
@@ -14,7 +14,7 @@ const theme: ThemeConfig = {
   },
 };
 
-type SupportedDataTypes = ExemplarMorphologyDataType | ExperimentalTracesDataType;
+type SupportedDataTypes = IReconstructionMorphology; // TODO: add ephys
 
 type Props<T> = {
   dataSource: T[];
@@ -31,7 +31,7 @@ export default function DefaultEModelTable<T extends SupportedDataTypes>({
         size="small"
         dataSource={dataSource}
         pagination={{ hideOnSinglePage: true }}
-        rowKey="@id"
+        rowKey="id"
         columns={columns}
         rowClassName="[&:last-child>td]:border-b-0!"
         scroll={{

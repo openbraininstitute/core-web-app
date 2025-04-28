@@ -1,6 +1,11 @@
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ReactNode } from 'react';
-import { CoreFieldFilterTypeEnum } from './fields-defs/enums';
+
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export interface GteLteValue {
   gte: Date | number | null;
@@ -8,7 +13,7 @@ export interface GteLteValue {
 }
 
 interface BaseFilter {
-  field: string;
+  field: EntityCoreFields;
   type: null;
   value: null;
   constraint?: string | Record<string, string>;
