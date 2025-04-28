@@ -7,6 +7,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   group: 'experimental',
+  title: 'Bouton density',
   legacyType: DataType.ExperimentalBoutonDensity,
   type: EntityTypeEnum.ExperimentalBoutonDensity,
   slug: 'bouton-density',
@@ -21,6 +22,7 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
     },
   },
   explore: {
+    basePrefix: 'experimental',
     routePrefix: 'interactive/experimental',
   },
   asset: {

@@ -10,7 +10,7 @@ import isNil from 'lodash/isNil';
 import { usePathname } from 'next/navigation';
 
 import { ML_MAX_ARTICLES_PER_PAGE } from '../Literature/api';
-import StatItem, { StatError, StatItemSkeleton } from './StatItem';
+import StatItem, { StatError, EntityTypeCountSkeleton } from '../../entities-type-stats/stat-item';
 import { getLiteratureCountForBrainRegion } from '@/state/explore-section/interactive';
 import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { brainRegionsAtom, selectedBrainRegionAtom } from '@/state/brain-regions';
@@ -39,7 +39,7 @@ export default function LiteratureForExperimentType() {
       {totalByExperimentAndBrainRegion.state === 'loading' && (
         <>
           {[...Array.from({ length: 6 }, (_, index) => index)].map((s) => (
-            <StatItemSkeleton key={`literature-skeleton${s}`} />
+            <EntityTypeCountSkeleton key={`literature-skeleton${s}`} />
           ))}
         </>
       )}

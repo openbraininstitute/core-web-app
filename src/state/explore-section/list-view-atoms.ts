@@ -7,7 +7,7 @@ import _get from 'lodash/get';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
-import { EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
 import fetchDataQuery from '@/queries/explore-section/data';
@@ -217,7 +217,7 @@ export const dataAtom = atomFamily(
         if (scope.targetIds && Boolean(scope.targetIds?.length)) {
           filters.push({
             constraint: 'id__in',
-            field: 'id',
+            field: EntityCoreFields.ID,
             type: CoreFieldFilterTypeEnum.CheckList,
             value: scope.targetIds,
           });

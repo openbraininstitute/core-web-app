@@ -10,6 +10,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome> = {
   group: 'models',
+  title: 'Synaptome',
   legacyType: DataType.SingleNeuronSynaptome,
   type: EntityTypeEnum.SingleNeuronSynaptome,
   slug: 'synaptome',
@@ -24,6 +25,7 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
     },
   },
   explore: {
+    basePrefix: 'model',
     routePrefix: 'interactive/model',
   },
   asset: {

@@ -1,16 +1,25 @@
 'use client';
 
+import { ErrorBoundary } from 'react-error-boundary';
+import { Suspense } from 'react';
+
 import DataTypeTabs from './DataTypeTabs';
 import SelectedBrainRegionMETypes from './SelectedBrainRegionMETypes';
-import DataTypeStatPanel from './DataTypeStatPanel';
+import EntityTypeStatsPanelContainer, {
+  EntityTypeStatsPanel,
+} from '@/components/entities-type-stats/panel';
 import ThreeDeeBrain from '@/components/ThreeDeeBrain';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { EntityTypeCountSkeleton } from '@/components/entities-type-stats/stat-item';
 
-type ExploreInteractivePanelProps = {
-  virtualLabInfo?: VirtualLabInfo;
+import type { BulkEntityCoreCountResult } from '@/services/entitycore/entities-types-count';
+import type { Result } from '@/api/utils';
+
+type Props = {
+  entityCounterPromise: Promise<Result<BulkEntityCoreCountResult, Error>>;
 };
 
-export default function ExploreInteractivePanel({ virtualLabInfo }: ExploreInteractivePanelProps) {
+export default function ExploreInteractivePanel({ entityCounterPromise }: Props) {
   return (
     <div className="relative flex h-full min-w-0 flex-1 overflow-hidden">
       <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-[#012766]">
@@ -36,7 +45,30 @@ export default function ExploreInteractivePanel({ virtualLabInfo }: ExploreInter
             <ThreeDeeBrain />
           </div>
           <div id="statistic-panel" style={{ gridArea: '6 / 1 / 7 / 5' }}>
-            <DataTypeStatPanel virtualLabInfo={virtualLabInfo} />
+            <ErrorBoundary
+              FallbackComponent={withErrorConfig({
+                customError: 'failed to load statistics for different entities',
+                showButtons: false,
+              })}
+            >
+              <Suspense
+                fallback={
+                  <div className="relative grid h-full grid-flow-row grid-cols-2 gap-x-3 gap-y-1 p-4 pt-0">
+                    {Array.from({ length: 6 })
+                      .fill(0)
+                      .map(() => (
+                        <EntityTypeCountSkeleton />
+                      ))}
+                  </div>
+                }
+              >
+                <EntityTypeStatsPanelContainer entityCounterPromise={entityCounterPromise}>
+                  {({ data, error, pathName, selectedTab }) => (
+                    <EntityTypeStatsPanel {...{ data, error, pathName, selectedTab }} />
+                  )}
+                </EntityTypeStatsPanelContainer>
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </div>
       </div>

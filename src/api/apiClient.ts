@@ -68,8 +68,8 @@ class ApiClient {
   constructor({ rootUri: rootUrl, token, headers = {}, config = {}, cache }: ApiClientOptions) {
     this._rootUrl = rootUrl;
     this._headers = headers ?? {
+      Accept: 'application/json',
       'Content-Type': 'application/json',
-      'Accept-Type': 'application/json',
     };
     this._token = token;
     this._timeout = config.timeout;

@@ -1,62 +1,40 @@
 'use client';
 
-import type { MenuProps } from 'antd';
-import { Menu } from 'antd';
-import { useAtomValue } from 'jotai';
-import find from 'lodash/find';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { CSSProperties, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { ReactNode, Suspense, useMemo } from 'react';
+import { Menu, type MenuProps } from 'antd';
+import { useAtomValue } from 'jotai';
+import get from 'lodash/get';
 
-import { circuitCountAtom } from '../Circuit/content/circuits_flat';
-
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
+import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
+
+import { circuitCountAtom } from '@/components/explore-section/Circuit/content/circuits_flat';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
-import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
-import { MODEL_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/model-data-types';
-import { DataType } from '@/constants/explore-section/list-views';
-import { useLoadableValue } from '@/hooks/hooks';
-import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
-import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { ensureString } from '@/util/type-guards';
+import { getBulkEntityCoreCount } from '@/services/entitycore/entities-types-count';
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
+import { selectedBrainRegionAtom } from '@/state/brain-regions';
+import { ensureString } from '@/util/type-guards';
+import { tryCatch } from '@/api/utils';
+import {
+  EntityCoreExperimentalConfiguration,
+  EntityCoreModelConfiguration,
+} from '@/entity-configuration/domain';
 
-const dataScope = ExploreDataScope.SelectedBrainRegion;
-
-function MenuItemLabel({
-  label,
-  dataType,
-  virtualLabInfo,
-}: {
-  label: string;
-  dataType: DataType;
-  virtualLabInfo?: VirtualLabInfo;
-}) {
-  const totalByExperimentAndRegions = useLoadableValue(
-    totalByExperimentAndRegionsAtom({
-      dataType,
-      dataScope,
-      virtualLabInfo,
-      key: (virtualLabInfo?.projectId ?? '') + dataType,
-    })
-  );
-
-  return `${label} ${
-    totalByExperimentAndRegions.state === 'hasData' ? `(${totalByExperimentAndRegions.data})` : ''
-  }`;
-}
+import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export default function ExploreListingLayout({
   children,
   virtualLabInfo,
 }: {
   children: ReactNode;
-  virtualLabInfo?: VirtualLabInfo;
+  virtualLabInfo?: WorkspaceContext;
 }) {
   const router = useRouter();
   const params = useParams();
@@ -74,12 +52,26 @@ export default function ExploreListingLayout({
 
   const config =
     dataTypeGroup === DataTypeGroup.ExperimentalData
-      ? EXPERIMENT_DATA_TYPE_CONFIG
-      : MODEL_DATA_TYPE_CONFIG;
+      ? EntityCoreExperimentalConfiguration
+      : EntityCoreModelConfiguration;
 
   const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
   const circuitCount = useAtomValue(circuitCountAtom);
+
+  const entityCounterPromise = useMemo(
+    () =>
+      tryCatch(
+        getBulkEntityCoreCount({
+          context:
+            virtualLabInfo?.virtualLabId && virtualLabInfo?.projectId
+              ? { virtualLabId: virtualLabInfo.virtualLabId, projectId: virtualLabInfo.projectId }
+              : undefined,
+          brainRegion: selectedBrainRegion?.id,
+        })
+      ),
+    [selectedBrainRegion]
+  );
 
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
@@ -89,7 +81,7 @@ export default function ExploreListingLayout({
     if (!(await userJourneyTracker.getCurrentTuple())) {
       await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
     }
-    const artifact = ensureString(find(DATA_TYPES_TO_CONFIGS, { name: key })?.title, 'Morphology');
+    const artifact = ensureString(getEntityBySlug({ slug: key })?.title, 'Morphology');
     setCurrentExplorerArtifact(artifact);
     await userJourneyTracker.handleClick('artifact', artifact);
     router.push(key);
@@ -98,27 +90,18 @@ export default function ExploreListingLayout({
   const nMenuItems = Object.keys(config).length + (showCircuitMenu ? 1 : 0);
   const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
-  const items: {
-    key: string;
-    title: string;
-    label: ReactNode;
-    className: string;
-    style: CSSProperties;
-  }[] = Object.keys(config).map((dataType) => {
-    const key = DATA_TYPES_TO_CONFIGS[dataType as DataType].name;
-    const active = DATA_TYPES_TO_CONFIGS[dataType as DataType].name === activePath;
-    const label = DATA_TYPES_TO_CONFIGS[dataType as DataType].title;
+  const items: Array<NavigationMenuItem> = Object.keys(config).map((dataType) => {
+    const entity = get(config, `${dataType}`) as EntityCoreTypeConfig<any>;
+    const key = entity?.slug!;
+    const active = entity?.slug === activePath;
+    const label = entity?.title!;
+    const entitytype = entity.legacyType;
 
     return {
       key,
+      entitytype,
       title: label,
-      label: (
-        <MenuItemLabel
-          dataType={dataType as DataType}
-          label={label}
-          virtualLabInfo={virtualLabInfo}
-        />
-      ),
+      label: label,
       className: 'text-center font-semibold',
       style: {
         backgroundColor: active ? 'white' : '#002766',
@@ -134,6 +117,9 @@ export default function ExploreListingLayout({
     items.push({
       key: 'circuit',
       title: 'Circuit',
+      // TODO: circuit should be included to the supported types when ready in entitycore
+      // @ts-expect-error
+      entityType: 'Circuit',
       label: `Circuit (${circuitCount})`,
       className: 'text-center font-semibold',
       style: {
@@ -152,17 +138,26 @@ export default function ExploreListingLayout({
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
-        <div className="flex grow flex-col overflow-x-hidden">
-          <Menu
-            onClick={onClick}
-            selectedKeys={[activePath]}
-            mode="horizontal"
-            theme="dark"
-            style={{ backgroundColor: '#002766' }}
-            className="flex w-[calc(100%+6px)] justify-start"
-            items={items}
-          />
-
+        <div className="flex w-full grow flex-col overflow-x-hidden">
+          <Suspense
+            fallback={
+              <Menu
+                selectedKeys={[activePath]}
+                mode="horizontal"
+                theme="dark"
+                style={{ backgroundColor: '#002766', opacity: 70 }}
+                className="flex w-[calc(100%+6px)] justify-start"
+                items={items}
+              />
+            }
+          >
+            <NavigationMenu
+              activePath={activePath}
+              items={items}
+              onClick={onClick}
+              entityCounterPromise={entityCounterPromise}
+            />
+          </Suspense>
           <div className="bg-primary-9 grow text-white">{children}</div>
         </div>
       </ErrorBoundary>

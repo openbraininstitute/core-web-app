@@ -1,16 +1,16 @@
 // TODO: this data type should be moved from this file
 import { DataType } from '@/constants/explore-section/list-views';
 
-export * from './single-neuron-synaptome';
-export * from './me-model';
-export * from './e-model';
-export * from './mesh';
+export * from '@/entity-configuration/domain/model/single-neuron-synaptome';
+export * from '@/entity-configuration/domain/model/me-model';
+export * from '@/entity-configuration/domain/model/e-model';
+export * from '@/entity-configuration/domain/model/mesh';
 
 export const MODEL_DATATYPES = [
   DataType.CircuitEModel,
   DataType.CircuitMEModel,
   DataType.SingleNeuronSynaptome,
-];
+] as const;
 
 export enum ModelTypeNames {
   E_MODEL = 'e-model',
@@ -18,3 +18,7 @@ export enum ModelTypeNames {
   SINGLE_NEURON_SYNAPTOME = 'synaptome',
   CIRCUIT = 'circuit',
 }
+
+export type TModelTypeNames = `${ModelTypeNames}`;
+
+export type ModelDataType = (typeof MODEL_DATATYPES)[number];

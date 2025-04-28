@@ -9,6 +9,7 @@ import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
+// TODO: to delete when confirm the LiteratureForExperimentType is not needed
 export default function StatItem({
   href,
   title,
@@ -22,6 +23,7 @@ export default function StatItem({
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+
   const onClick = async () => {
     if (!(await userJourneyTracker.getCurrentTuple())) {
       await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
@@ -44,12 +46,13 @@ export default function StatItem({
   );
 }
 
-export function StatItemSkeleton() {
+export function EntityTypeCountSkeleton() {
   return (
     <div className="bg-neutral-7 flex h-[50px] w-full animate-pulse justify-between rounded-xs px-3 py-4 opacity-85" />
   );
 }
 
+// TODO: to delete
 export function StatError({ text }: { text: string }) {
   return (
     <div
@@ -61,5 +64,47 @@ export function StatError({ text }: { text: string }) {
       <WarningOutlined className="text-xl" />
       {text}
     </div>
+  );
+}
+
+export function EntityTypeCount({
+  href,
+  title,
+  records,
+  type,
+  isError,
+}: {
+  href: string;
+  title: string;
+  records: string;
+  type: string;
+  isError: boolean;
+}) {
+  const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
+  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+
+  const onClick = async () => {
+    if (!(await userJourneyTracker.getCurrentTuple())) {
+      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+    }
+    const artifact = ensureString(title, 'Morphology');
+    setCurrentExplorerArtifact(artifact);
+    await userJourneyTracker.handleClick('artifact', artifact);
+  };
+
+  return (
+    <Link
+      href={href}
+      className="hover:text-primary-4 flex h-[50px] w-full justify-between rounded-xs bg-[#013a8c] px-3 py-4 text-white"
+      onClick={onClick}
+      data-testid={`dataset-${type}`}
+    >
+      <span className="text-base font-bold">{title}</span>
+      {isError ? (
+        <WarningOutlined className="text-xl" />
+      ) : (
+        <span className="mr-2 font-light">{records}</span>
+      )}
+    </Link>
   );
 }

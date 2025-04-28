@@ -7,6 +7,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
   group: 'experimental',
+  title: 'Synapse per connection',
   legacyType: DataType.ExperimentalSynapsePerConnection,
   type: EntityTypeEnum.ExperimentalSynapsesPerConnection,
   slug: 'synapse-per-connection',
@@ -21,6 +22,7 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
     },
   },
   explore: {
+    basePrefix: 'experimental',
     routePrefix: 'interactive/experimental',
   },
   asset: {

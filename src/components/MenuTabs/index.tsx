@@ -31,13 +31,13 @@ function Tab({ id, label, active, className, activeClassName, onClick }: TabProp
         role="tab"
       >
         {label}
-        <span
+        {/* <span
           className={clsx(
             'absolute bottom-0 left-1/2 h-[2px] w-1/3 -translate-x-1/2 rounded-full bg-white',
             'transition-opacity duration-200 ease-linear',
             active ? 'opacity-100' : 'opacity-0'
           )}
-        />
+        /> */}
       </button>
     </li>
   );
