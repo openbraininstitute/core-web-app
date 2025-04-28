@@ -1,14 +1,13 @@
-'use client';
 import { use } from 'react';
-
+import { match } from 'ts-pattern';
 import dynamic from 'next/dynamic';
 
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
 
-const EModelDetailView = dynamic(() => import('@/page-wrappers/explore/e-model'));
-const MEModelDetailView = dynamic(() => import('@/page-wrappers/explore/me-model'));
-const SynaptomeDetailView = dynamic(
-  () => import('@/components/explore-section/Synaptome/DetailView')
+const EModelView = dynamic(() => import('@/page-wrappers/explore/e-model'));
+const MEModelView = dynamic(() => import('@/page-wrappers/explore/me-model'));
+const SingleNeuronSynaptomeView = dynamic(
+  () => import('@/page-wrappers/explore/single-neuron-synaptome')
 );
 // const CircuitDetailView = dynamic(() => import('@/components/explore-section/Circuit/DetailView'));
 
@@ -22,18 +21,21 @@ type Params = {
 };
 
 export default function DetailPage(props: Params) {
-  const params = use(props.params);
-  switch (params.modelType) {
-    case 'e-model':
-      return <EModelDetailView params={params} />;
-    case 'me-model':
-      return <MEModelDetailView params={params} showViewMode />;
-    case 'synaptome':
-      return <SynaptomeDetailView params={params} showViewMode />;
-    case 'circuit':
-      return null;
-    // return <CircuitDetailView params={params} />;
-    default:
-      break;
-  }
+  const { id, projectId, virtualLabId, modelType } = use(props.params);
+
+  return match(modelType)
+    .with(ModelTypeNames.E_MODEL, () => <EModelView params={{ id, projectId, virtualLabId }} />)
+    .with(ModelTypeNames.ME_MODEL, () => (
+      <MEModelView params={{ id, projectId, virtualLabId, modelType }} showViewMode />
+    ))
+    .with(ModelTypeNames.SINGLE_NEURON_SYNAPTOME, () => (
+      <SingleNeuronSynaptomeView {...{ id, projectId, virtualLabId, modelType }} />
+    ))
+    .with(ModelTypeNames.CIRCUIT, () => (
+      <div className="text-red-500">
+        TODO: Will come after
+        {/* <CircuitDetailView params={params} /> */}
+      </div>
+    ))
+    .otherwise(() => null);
 }

@@ -14,9 +14,8 @@ import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 
 const ExploreEModelTable = dynamic(() => import('@/features/entities/e-model/listing-view'));
 const ExploreMEModelTable = dynamic(() => import('@/features/entities/me-model/listing-view'));
-
 const ExploreSynaptomeModelTable = dynamic(
-  () => import('@/components/explore-section/Synaptome/ExploreSynaptomeModelTable')
+  () => import('@/features/entities/single-neuron-synaptome/listing-view')
 );
 
 export default function VirtualLabModelListingView() {

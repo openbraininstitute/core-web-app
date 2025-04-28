@@ -16,6 +16,11 @@ export type EntityCoreIdentifiable = {
   legacy_id: Array<string> | null;
 };
 
+export type EntityCoreOwnership = {
+  createdBy: Agent;
+  updatedBy: Array<Agent> | null;
+};
+
 export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
   name: string;
 }

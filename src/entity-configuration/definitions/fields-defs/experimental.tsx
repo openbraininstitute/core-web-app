@@ -13,6 +13,7 @@ import {
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { ensureArray } from '@/utils/array';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
@@ -43,7 +44,8 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
         return renderEmptyOrValue(
           renderArray(ensureArray({ input: r.species }).map((s) => s.name))
         );
-      else if ('species' in r.subject) return renderEmptyOrValue(r.subject.species.name);
+      else if ('subject' in r && 'species' in r.subject)
+        return renderEmptyOrValue(r.subject.species.name);
       return EmptyValue;
     },
     vocabulary: {
@@ -63,14 +65,18 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     fieldType: CoreFieldType.CellType,
     title: 'M-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) =>
-      renderEmptyOrValue(
+    render: (r) => {
+      if (r.type === EntityTypeEnum.SingleNeuronSynaptome) {
+        return renderEmptyOrValue(renderArray(r.me_model.mtypes?.map((m) => m.pref_label) || []));
+      }
+      return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
             (m) => m.pref_label
           ) || []
         )
-      ),
+      );
+    },
     vocabulary: {
       plural: 'M-Types',
       singular: 'M-Type',
@@ -88,14 +94,18 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     fieldType: CoreFieldType.CellType,
     title: 'E-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) =>
-      renderEmptyOrValue(
+    render: (r) => {
+      if (r.type === EntityTypeEnum.SingleNeuronSynaptome) {
+        return renderEmptyOrValue(renderArray(r.me_model.etypes?.map((m) => m.pref_label) || []));
+      }
+      return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
             (m) => m.pref_label
           ) || []
         )
-      ),
+      );
+    },
     vocabulary: {
       plural: 'E-Types',
       singular: 'E-Type',

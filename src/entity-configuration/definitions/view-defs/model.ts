@@ -62,4 +62,24 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.EType, className: 'col-span-4' },
     ],
   },
+  [DataType.SingleNeuronSynaptome]: {
+    title: 'Synaptome',
+    group: DataTypeGroup.ModelData,
+    name: ModelTypeNames.SINGLE_NEURON_SYNAPTOME,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.SynaptomeUsedMEModelName,
+      EntityCoreFields.MType,
+      EntityCoreFields.EType,
+      EntityCoreFields.BrainRegion,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    curated: false,
+    summaryViewFields: [
+      { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
+      { field: EntityCoreFields.License, className: 'col-span-1' },
+    ],
+  },
 };

@@ -1,36 +1,32 @@
-'use client';
-import { use } from 'react';
-
 import dynamic from 'next/dynamic';
+import { match } from 'ts-pattern';
 
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
+
+import type { ServerSideComponentProp } from '@/types/common';
 
 const EModelDetailView = dynamic(() => import('@/page-wrappers/explore/e-model'));
 const MEModelDetailView = dynamic(() => import('@/page-wrappers/explore/me-model'));
 const SynaptomeDetailView = dynamic(
-  () => import('@/components/explore-section/Synaptome/DetailView')
+  () => import('@/page-wrappers/explore/single-neuron-synaptome')
 );
 
-type Params = {
-  params: Promise<{
-    id: string;
-    modelType: ModelTypeNames;
-    projectId: string;
-    virtualLabId: string;
-  }>;
-};
+export default async function DetailPage(
+  props: ServerSideComponentProp<
+    {
+      id: string;
+      modelType: ModelTypeNames;
+      projectId: string;
+      virtualLabId: string;
+    },
+    null
+  >
+) {
+  const params = await props.params;
 
-export default function DetailPage(props: Params) {
-  const params = use(props.params);
-
-  switch (params.modelType) {
-    case 'e-model':
-      return <EModelDetailView params={params} />;
-    case 'me-model':
-      return <MEModelDetailView params={params} />;
-    case 'synaptome':
-      return <SynaptomeDetailView params={params} />;
-    default:
-      break;
-  }
+  return match(params.modelType)
+    .with(ModelTypeNames.E_MODEL, () => <EModelDetailView params={params} />)
+    .with(ModelTypeNames.ME_MODEL, () => <MEModelDetailView params={params} />)
+    .with(ModelTypeNames.SINGLE_NEURON_SYNAPTOME, () => <SynaptomeDetailView {...params} />)
+    .otherwise(() => null);
 }

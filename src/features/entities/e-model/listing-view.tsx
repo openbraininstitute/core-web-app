@@ -8,9 +8,9 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { setInitializationValue } from '@/util/utils';
+import { detailUrlBuilder } from '@/util/common';
 import { EModelMenuItem } from '@/types/e-model';
 import { ensureArray } from '@/utils/array';
-import { detailUrlBuilder } from '@/util/common';
 import {
   eModelEditModeAtom,
   eModelUIConfigAtom,

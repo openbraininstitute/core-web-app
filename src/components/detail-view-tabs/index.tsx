@@ -1,18 +1,15 @@
-import { Options, parseAsString, useQueryState, UseQueryStateReturn } from 'nuqs';
+import { parseAsString, useQueryState } from 'nuqs';
 import { classNames } from '@/util/utils';
 
-export type TabsKeys = 'configuration' | 'analysis' | 'simulation';
-export const TabsConfig: Array<{ key: TabsKeys; title: string }> = [
-  { key: 'configuration', title: 'Configuration' },
-  { key: 'analysis', title: 'Analysis' },
-  { key: 'simulation', title: 'Simulation' },
-];
+type Props<T> = {
+  tabsConfig?: Array<{ key: T; title: string }>;
+};
 
-export default function Tabs() {
-  const { activeTab, onChangeTab } = useTabs();
+export default function Tabs<T extends string>({ tabsConfig }: Props<T>) {
+  const { activeTab, onChangeTab } = useTabs({ tabsConfig });
   return (
     <ul className="!border-neutral-3 flex w-full items-center justify-center border">
-      {TabsConfig.map(({ key, title }) => (
+      {tabsConfig?.map(({ key, title }) => (
         <li
           key={key}
           title={title}
@@ -36,10 +33,10 @@ export default function Tabs() {
   );
 }
 
-export function useTabs() {
+export function useTabs<T extends string>({ tabsConfig }: Props<T>) {
   const [activeTab, setActiveTab] = useQueryState(
     'tab',
-    parseAsString.withDefault(TabsConfig.at(0)!.key)
+    parseAsString.withDefault(tabsConfig?.at(0)!.key!)
   );
 
   const onChangeTab = (key: string) => () => setActiveTab(key);

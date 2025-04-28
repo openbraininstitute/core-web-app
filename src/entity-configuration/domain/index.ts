@@ -6,7 +6,7 @@ import {
   NeuronDensity,
 } from './experimental';
 
-import { Mesh, Emodel, MEmodel } from './model';
+import { Mesh, Emodel, MEmodel, SingleNeuronSynaptome } from './model';
 
 export const EntityCoreConfiguration = {
   ReconstructionMorphology,
@@ -14,6 +14,7 @@ export const EntityCoreConfiguration = {
   ElectricalCellRecording,
   BoutonDensity,
   NeuronDensity,
+  SingleNeuronSynaptome,
   MEmodel,
   Emodel,
   Mesh,

@@ -13,16 +13,16 @@ import { getReconstructionMorphology, getEModel } from '@/api/entitycore/queries
 import { tryCatch } from '@/api/utils';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export default function Configuration({ model }: { model: IMEModel }) {
   const workspaceContext = useParams<WorkspaceContext>();
+  const params = useSearchParams();
 
   const morphologyPromise = tryCatch(
     getReconstructionMorphology({ id: model.morphology.id, context: workspaceContext })
   );
   const emodelPromise = tryCatch(getEModel({ id: model.emodel.id, context: workspaceContext }));
-  const params = useSearchParams();
   const emodelId = params?.get('e');
   const morphologyId = params?.get('m');
 

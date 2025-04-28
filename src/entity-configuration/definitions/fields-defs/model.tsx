@@ -4,9 +4,10 @@ import {
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
+import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -86,5 +87,16 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     style: { width: 184 },
     isFilterable: false,
     isDisplayable: true,
+  },
+  [EntityCoreFields.SynaptomeUsedMEModelName]: {
+    className: 'text-center',
+    title: 'ME-model',
+    filter: null,
+    render: (r) => renderEmptyOrValue((r as ISingleNeuronSynaptome).me_model.name),
+    vocabulary: {
+      plural: 'ME-models',
+      singular: 'ME-model',
+    },
+    style: { width: 184, align: 'left' },
   },
 };

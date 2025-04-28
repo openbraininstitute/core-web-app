@@ -30,8 +30,15 @@ type Props = {
   showViewMode?: boolean;
 };
 
+type TabsKeys = 'configuration' | 'analysis' | 'simulation';
+const TabsConfig: Array<{ key: TabsKeys; title: string }> = [
+  { key: 'configuration', title: 'Configuration' },
+  { key: 'analysis', title: 'Analysis' },
+  { key: 'simulation', title: 'Simulation' },
+];
+
 export default function SummaryView({ params, showViewMode = false }: Props) {
-  const { activeTab } = useTabs();
+  const { activeTab } = useTabs({ tabsConfig: TabsConfig });
 
   const setInitializeSummary = useSetAtom(initializeSummaryAtom);
   // const { id, org, project } = useResourceInfoFromPath();
@@ -67,7 +74,7 @@ export default function SummaryView({ params, showViewMode = false }: Props) {
       >
         {(data) => (
           <>
-            <Tabs />
+            <Tabs tabsConfig={TabsConfig} />
             <div className="w-full flex-1">
               <Suspense fallback={<CentralLoadingSpinner />}>
                 <If id="configuration" condition={activeTab === 'configuration'}>

@@ -11,7 +11,8 @@ import Analysis from '@/features/entities/e-model/detail-view/analysis';
 import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 import { DataType } from '@/constants/explore-section/list-views';
-import { IEModel } from '@/api/entitycore/types/entities/e-model';
+
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 type Props = {
   params: {
@@ -20,16 +21,22 @@ type Props = {
     virtualLabId: string;
   };
 };
+type TabsKeys = 'configuration' | 'analysis' | 'simulation';
+const TabsConfig: Array<{ key: TabsKeys; title: string }> = [
+  { key: 'configuration', title: 'Configuration' },
+  { key: 'analysis', title: 'Analysis' },
+  { key: 'simulation', title: 'Simulation' },
+];
 
 export default function EModelDetailView({ params }: Props) {
-  const { activeTab } = useTabs();
+  const { activeTab } = useTabs({ tabsConfig: TabsConfig });
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
       <Summary dataType={DataType.CircuitEModel}>
         {(data) => (
           <>
-            <Tabs />
+            <Tabs tabsConfig={TabsConfig} />
             <div className="w-full flex-1">
               <Suspense fallback={<CentralLoadingSpinner />}>
                 <If id="configuration" condition={activeTab === 'configuration'}>

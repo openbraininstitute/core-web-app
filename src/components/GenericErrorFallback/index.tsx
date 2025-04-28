@@ -1,16 +1,26 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { classNames } from '@/util/utils';
-import { JSX, ReactNode } from 'react';
 interface Props {
   error?: Error & { cause?: unknown };
   cls?: { container: string };
   showButtons?: boolean;
   customError?: string;
   children?: ReactNode;
+}
+
+export function ErrorLink({ href, title }: { href: string; title: string }) {
+  return (
+    <Link href={href} className="w-1/2">
+      <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
+        {title}
+      </div>
+    </Link>
+  );
 }
 
 export function ErrorComponent({
@@ -43,16 +53,8 @@ export function ErrorComponent({
         {children}
         {showButtons && (
           <div className="flex w-full gap-2">
-            <Link href="/app/virtual-lab/explore/interactive" className="w-1/2">
-              <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
-                Back to Explore
-              </div>
-            </Link>
-            <Link href="/app/virtual-lab" className="w-1/2">
-              <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
-                Back to home
-              </div>
-            </Link>
+            <ErrorLink href="/app/virtual-lab/explore/interactive" title="Back to Explore" />
+            <ErrorLink href="/app/virtual-lab" title="Back to Home" />
           </div>
         )}
       </div>

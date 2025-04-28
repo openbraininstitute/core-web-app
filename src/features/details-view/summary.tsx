@@ -3,7 +3,6 @@ import { ReactNode, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { useSetAtom } from 'jotai';
-import Link from 'next/link';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Overview from '@/features/details-view/overview';
@@ -16,7 +15,7 @@ import {
 import { DetailsPageSideBackLink } from '@/components/explore-section/Sidebar';
 import { detailFamily } from '@/state/explore-section/detail-view-atoms';
 import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { ErrorLink, withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { useLoadableValue } from '@/hooks/hooks';
@@ -63,22 +62,14 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
         customError: 'Something went wrong while fetching the data',
         children: (
           <div className="flex w-full gap-2">
-            <Link
+            <ErrorLink
+              title="Back to entities list"
               href={resolveExploreDetailsPageUrl({
                 ctx: { virtualLabId, projectId },
                 dataType: DataType.CircuitMEModel,
               })}
-              className="w-1/2"
-            >
-              <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
-                Back to ME-Models
-              </div>
-            </Link>
-            <Link href="/app/virtual-lab" className="w-1/2">
-              <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
-                Back to home
-              </div>
-            </Link>
+            />
+            <ErrorLink title="Back to home" href="/app/virtual-lab" />
           </div>
         ),
       });

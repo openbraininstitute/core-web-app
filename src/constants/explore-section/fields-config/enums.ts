@@ -124,4 +124,6 @@ export enum EntityCoreFields {
   PostSynapticBrainRegion = 'postSynapticBrainRegion',
   PreSynapticCellType = 'preSynapticCellType',
   PostSynapticCellType = 'postSynapticCellType',
+  CreatedBy = 'createdBy',
+  UpdatedBy = 'updatedBy',
 }

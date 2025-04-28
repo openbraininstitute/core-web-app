@@ -66,7 +66,6 @@ export interface IMEModelFilter
     SharedFilter {
   score__lte: number | null;
   score__gte: number | null;
-  type: EntityTypeEnum.Emodel;
   validation_status: ValidationStatus;
 }
 
