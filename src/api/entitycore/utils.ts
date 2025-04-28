@@ -1,6 +1,7 @@
+import authApiClient from '@/api/apiClient';
+
 import { entityCorePublicProjectId, entityCorePublicVirtualLabId } from '@/config';
 import { entityCoreUrl } from '@/config';
-import authApiClient from '@/api/apiClient';
 
 export const getEntityCorePublicContext = () => ({
   headers: {
@@ -18,12 +19,15 @@ export const getEntityCoreContext = (
     | undefined
     | null
 ) => {
-  return {
-    headers: {
-      'virtual-lab-id': ctx?.virtualLabId ?? entityCorePublicVirtualLabId,
-      'project-id': ctx?.projectId ?? entityCorePublicProjectId,
-    },
-  };
+  if (ctx?.virtualLabId && ctx?.projectId) {
+    return {
+      headers: {
+        'virtual-lab-id': ctx?.virtualLabId,
+        'project-id': ctx?.projectId,
+      },
+    };
+  }
+  return {};
 };
 
 export async function entityCoreApi(url?: string) {
