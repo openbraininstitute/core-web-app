@@ -8,6 +8,7 @@ export enum CoreFieldFilterTypeEnum {
 }
 
 export enum EntityCoreFields {
+  ID = 'id',
   Preview = 'preview',
   Name = 'name',
   Description = 'description',
@@ -50,6 +51,7 @@ export enum EntityCoreFields {
   MEModelMorphologyPreview = 'meModelMorphologyPreview',
   MEModelTracePreview = 'meModelTracePreview',
   MEModelValidated = 'meModelValidated',
-  CreatedBy = 'createdBy',
   SynaptomeUsedMEModelName = 'me_model',
+  CreatedBy = 'createdBy',
+  UpdatedBy = 'updatedBy',
 }

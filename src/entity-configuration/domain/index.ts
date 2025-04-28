@@ -4,18 +4,27 @@ import {
   SynapsePerConnection,
   BoutonDensity,
   NeuronDensity,
-} from './experimental';
+} from '@/entity-configuration/domain/experimental';
 
-import { Mesh, Emodel, MEmodel, SingleNeuronSynaptome } from './model';
+import { Emodel, MEmodel, SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+
+// NOTE: order is important (it's used in stats panel in explore)
+export const EntityCoreExperimentalConfiguration = {
+  ReconstructionMorphology,
+  ElectricalCellRecording,
+  NeuronDensity,
+  BoutonDensity,
+  SynapsePerConnection,
+};
+
+// NOTE: order is important (it's used in stats panel in explore)
+export const EntityCoreModelConfiguration = {
+  Emodel,
+  MEmodel,
+  SingleNeuronSynaptome,
+};
 
 export const EntityCoreConfiguration = {
-  ReconstructionMorphology,
-  SynapsePerConnection,
-  ElectricalCellRecording,
-  BoutonDensity,
-  NeuronDensity,
-  SingleNeuronSynaptome,
-  MEmodel,
-  Emodel,
-  Mesh,
+  ...EntityCoreExperimentalConfiguration,
+  ...EntityCoreModelConfiguration,
 } as const;

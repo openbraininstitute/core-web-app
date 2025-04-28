@@ -7,6 +7,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
   group: 'experimental',
+  title: 'Neuron density',
   legacyType: DataType.ExperimentalNeuronDensity,
   type: EntityTypeEnum.ExperimentalNeuronDensity,
   slug: 'neuron-density',
@@ -21,6 +22,7 @@ export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
     },
   },
   explore: {
+    basePrefix: 'experimental',
     routePrefix: 'interactive/experimental',
   },
   asset: {

@@ -7,6 +7,7 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
 export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
   group: 'models',
+  title: 'ME-model',
   legacyType: DataType.CircuitMEModel,
   type: EntityTypeEnum.Memodel,
   slug: 'me-model',
@@ -22,6 +23,7 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
     },
   },
   explore: {
+    basePrefix: 'model',
     routePrefix: 'interactive/model',
   },
   asset: {

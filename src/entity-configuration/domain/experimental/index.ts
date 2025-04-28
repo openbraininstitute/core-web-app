@@ -13,7 +13,7 @@ export const EXPERIMENTAL_DATATYPES = [
   DataType.ExperimentalElectroPhysiology,
   DataType.ExperimentalSynapsePerConnection,
   DataType.ExperimentalNeuronMorphology,
-];
+] as const;
 
 export enum ExperimentTypeNames {
   MORPHOLOGY = 'morphology',
@@ -24,3 +24,4 @@ export enum ExperimentTypeNames {
 }
 
 export type TExperimentTypeNames = `${ExperimentTypeNames}`;
+export type ExperimentalDataType = (typeof EXPERIMENTAL_DATATYPES)[number];

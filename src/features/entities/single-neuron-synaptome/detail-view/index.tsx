@@ -93,7 +93,6 @@ export default function Page({
           //   }
         >
           {(data) => {
-            console.log('ᦨ #  single-neuron-synaptome.tsx:68 #  Page #  data:', data);
             return (
               <div>
                 <Tabs tabsConfig={TabsConfig} />

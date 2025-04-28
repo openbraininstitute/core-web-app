@@ -7,6 +7,7 @@ import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 export const Emodel: EntityCoreTypeConfig<IEModel> = {
   group: 'models',
+  title: 'E-model',
   legacyType: DataType.CircuitEModel,
   type: EntityTypeEnum.Emodel,
   slug: 'e-model',
@@ -21,6 +22,7 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
     },
   },
   explore: {
+    basePrefix: 'model',
     routePrefix: 'interactive/model',
   },
   asset: {

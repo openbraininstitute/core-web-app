@@ -57,7 +57,10 @@ export function useSetBrainRegionFromQuery() {
 export function useSetBrainRegionToQuery() {
   const sectionName = useAtomValue(sectionAtom);
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
-  const [brainRegionIdInQuery, setBrainRegionIdInQuery] = useQueryState(brainRegionIdQueryParamKey);
+  const [brainRegionIdInQuery, setBrainRegionIdInQuery] = useQueryState(
+    brainRegionIdQueryParamKey,
+    { history: 'push' }
+  );
 
   useEffect(() => {
     // set new brain region in query param and save in storage

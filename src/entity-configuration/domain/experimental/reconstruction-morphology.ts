@@ -13,6 +13,7 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   IReconstructionMorphology | IReconstructionMorphologyExpanded
 > = {
   group: 'experimental',
+  title: 'Morphology',
   legacyType: DataType.ExperimentalNeuronMorphology,
   type: EntityTypeEnum.ReconstructionMorphology,
   slug: 'morphology',
@@ -27,6 +28,7 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
     },
   },
   explore: {
+    basePrefix: 'experimental',
     routePrefix: 'interactive/experimental',
   },
   asset: {

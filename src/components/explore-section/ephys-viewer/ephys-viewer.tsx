@@ -8,8 +8,8 @@ import useTrace from '@/components/explore-section/ephys-viewer/hooks/use-nwb-tr
 import TraceDetailsView from '@/components/explore-section/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/components/explore-section/ephys-viewer/components/trace-overview';
 
+import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import './styles/ephys-plugin-styles.css';
-import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 
 enum VIEW {
   OVERVIEW = 'overview',

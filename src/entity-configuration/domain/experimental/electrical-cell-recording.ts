@@ -6,6 +6,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const ElectricalCellRecording: EntityCoreTypeConfig<any> = {
   group: 'experimental',
+  title: 'Electrophysiology',
   legacyType: DataType.ExperimentalElectroPhysiology,
   type: EntityTypeEnum.ElectricalCellRecording,
   slug: 'electrophysiology',
@@ -20,6 +21,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<any> = {
     },
   },
   explore: {
+    basePrefix: 'experimental',
     routePrefix: 'interactive/experimental',
   },
   asset: {

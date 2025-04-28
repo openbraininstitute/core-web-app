@@ -9,6 +9,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   legacyType?: DataType;
   type: EntityTypeValue;
   slug: string;
+  title: string;
   api: {
     config: {
       allowedFacets?: boolean;
@@ -21,6 +22,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
   };
   explore: {
+    basePrefix?: string;
     routePrefix?: string;
   };
   asset: {
