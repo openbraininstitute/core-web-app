@@ -1,6 +1,6 @@
 import { Select } from 'antd';
-
 import type { JSX } from 'react';
+
 
 interface OptionSelectProps {
   label: {
@@ -31,10 +31,11 @@ function OptionSelect({
           {numberOfAvailable > 1 && <>&nbsp;({numberOfAvailable} available)</>}
         </small>
       </label>
+
       {numberOfAvailable > 1 ? (
         <Select
           id="optionSelect"
-          className="w-[222px]"
+          className="w-[180px]"
           value={value}
           placeholder="Please select"
           onChange={handleChange}
