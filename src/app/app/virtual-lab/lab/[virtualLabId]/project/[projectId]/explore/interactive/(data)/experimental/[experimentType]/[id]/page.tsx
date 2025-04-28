@@ -4,16 +4,16 @@ import { Suspense } from 'react';
 import { notFound, useParams } from 'next/navigation';
 
 import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
+import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import EphysViewer from '@/components/explore-section/ephys-viewer';
 import Summary from '@/features/details-view/summary';
-import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 
 import { getViewDefinitionDataTypeByName } from '@/entity-configuration/definitions/view-defs';
 import { DataType } from '@/constants/explore-section/list-views';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { TExperimentTypeNames } from '@/entity-configuration/domain/experimental';
-import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 
 export default function ExperimentDetailViewPage() {
   const params = useParams<{ experimentType: string }>();
