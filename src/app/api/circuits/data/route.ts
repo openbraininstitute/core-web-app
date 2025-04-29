@@ -21,6 +21,9 @@ export async function GET() {
     return NextResponse.json({ circuits });
   } catch (error) {
     throw new Error(`Failed to load ALL_CIRCUITS.json: ${error}`);
-    return NextResponse.json({ error: 'Failed to load circuits data', circuits: [] }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to load circuits data', circuits: [] },
+      { status: 500 }
+    );
   }
 }
