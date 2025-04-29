@@ -26,7 +26,7 @@ export default function FooterPanel({ className }: FooterPanelProps) {
           </Section>
         ))}
         <Section section={EnumSection.TermsAndConditions}>Terms and conditions</Section>
-        <Section section={EnumSection.Financing}>Financing</Section>
+        <Section section={EnumSection.Financing}>Financing policy</Section>
         <Section section={EnumSection.PrivacyPolicy}>Privacy policy</Section>
         <div className={styles.socialmedia}>
           <SocialMediaLinks />
