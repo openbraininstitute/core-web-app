@@ -27,7 +27,7 @@ export async function getAssets({
 }
 
 /**
- * Retrieves a specific asset by its id from the EntityCoreAPI.
+ * Retrieves a specific asset (metadata) by its id from the EntityCoreAPI.
  *
  * @param {Object} params - The parameters object
  * @param {string} params.entityType - The type of the entity to retrieve
@@ -51,16 +51,15 @@ export async function getAsset({
 }
 
 /**
- * Retrieves a pre-signed URL, a specific asset by its id
- * can be downloaded with from the EntityCoreAPI.
+ * Downloads a specific asset by its id from the EntityCoreAPI.
  *
  * @param {Object} params - The parameters object
  * @param {string} params.entityType - The type of the entity to retrieve
  * @param {string} params.entityId - The id of the entity to retrieve
  * @param {string} params.id - The id of the asset to retrieve
- * @returns {Promise<IAsset>} A promise that resolves to the requested asset
+ * @returns {Promise<Response>} A promise that resolves to the response from the API
  */
-export async function getAssetDownloadURL({
+export async function downloadAsset({
   entityType,
   entityId,
   id,
@@ -70,7 +69,7 @@ export async function getAssetDownloadURL({
   id: string;
 }) {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<string>(`/${entityType}/${entityId}/assets/${id}/download`, {
+  return await api.get<ArrayBuffer>(`/${entityType}/${entityId}/assets/${id}/download`, {
     ...getEntityCoreContext(),
   });
 }

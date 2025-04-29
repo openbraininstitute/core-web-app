@@ -3,7 +3,7 @@ import { Session } from 'next-auth';
 
 import NWBTrace from '@/components/explore-section/ephys-viewer/nwb-trace';
 import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { getAssetDownloadURL } from '@/api/entitycore/queries/assets';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 
 export default function useTrace(
   resource: IElectricalCellRecording,
@@ -26,14 +26,12 @@ export default function useTrace(
       return;
     }
 
-    getAssetDownloadURL({
-      entityType: 'electrical_cell_recording',
+    downloadAsset({
+      entityType: 'electrical-cell-recording',
       entityId: resource.id,
       id: asset.id,
     })
-      .then(fetch)
-      .then((res) => res.arrayBuffer())
-      .then((arrayBuffer) => setNwbArrayBuffer(arrayBuffer))
+      .then(setNwbArrayBuffer)
       .catch((e) => setError(e));
   }, [resource.assets, resource.id, session]);
 

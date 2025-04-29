@@ -16,7 +16,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<any> = {
     },
     query: {
       list: entitycore.getElectricalCellRecordings,
-      one: entitycore.getElectricalCellRecordings,
+      one: entitycore.getElectricalCellRecording,
     },
   },
   explore: {
