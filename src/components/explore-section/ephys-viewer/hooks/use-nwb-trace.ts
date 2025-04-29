@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Session } from 'next-auth';
 
-import { ensureArray } from '@/util/nexus';
-import { Distribution } from '@/types/nexus';
-import { fetchFileByUrl } from '@/api/nexus';
 import NWBTrace from '@/components/explore-section/ephys-viewer/nwb-trace';
-
+import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import { getAssetDownloadURL } from '@/api/entitycore/queries/assets';
 
 export default function useTrace(
-  resource: any,
+  resource: IElectricalCellRecording,
   session: Session | null
 ): [NWBTrace | null, Error | null] {
   const [nwbArrayBuffer, setNwbArrayBuffer] = useState<ArrayBuffer | null>(null);
@@ -21,15 +19,23 @@ export default function useTrace(
       return;
     }
 
-    const distr = ensureArray(resource.distribution).find(
-      (distribution: Distribution) => distribution.encodingFormat === 'application/nwb'
-    );
+    const asset = resource.assets?.find((a) => a.content_type === 'application/nwb');
 
-    fetchFileByUrl(distr.contentUrl, session)
+    if (!asset) {
+      setError(new Error('No NWB file found'));
+      return;
+    }
+
+    getAssetDownloadURL({
+      entityType: 'electrical_cell_recording',
+      entityId: resource.id,
+      id: asset.id,
+    })
+      .then(fetch)
       .then((res) => res.arrayBuffer())
       .then((arrayBuffer) => setNwbArrayBuffer(arrayBuffer))
       .catch((e) => setError(e));
-  }, [session]);
+  }, [resource.assets, resource.id, session]);
 
   useEffect(() => {
     if (initialized.current || !nwbArrayBuffer) {
@@ -38,9 +44,7 @@ export default function useTrace(
 
     initialized.current = true;
 
-    const id = resource['@id'].split('/').at(-1);
-
-    NWBTrace.create(id, nwbArrayBuffer)
+    NWBTrace.create(resource.id, nwbArrayBuffer)
       .then((t) => setTrace(t))
       .catch((e) => setError(e));
 
@@ -48,7 +52,7 @@ export default function useTrace(
       trace?.destroy();
       initialized.current = false;
     };
-  }, [nwbArrayBuffer]);
+  }, [nwbArrayBuffer, resource.id, trace]);
 
   return [trace, error];
 }

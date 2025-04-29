@@ -49,3 +49,28 @@ export async function getAsset({
     ...getEntityCoreContext(),
   });
 }
+
+/**
+ * Retrieves a pre-signed URL, a specific asset by its id
+ * can be downloaded with from the EntityCoreAPI.
+ *
+ * @param {Object} params - The parameters object
+ * @param {string} params.entityType - The type of the entity to retrieve
+ * @param {string} params.entityId - The id of the entity to retrieve
+ * @param {string} params.id - The id of the asset to retrieve
+ * @returns {Promise<IAsset>} A promise that resolves to the requested asset
+ */
+export async function getAssetDownloadURL({
+  entityType,
+  entityId,
+  id,
+}: {
+  entityType: EntityCoreDataType;
+  entityId: string;
+  id: string;
+}) {
+  const api = await authApiClient(entityCoreUrl);
+  return await api.get<string>(`/${entityType}/${entityId}/assets/${id}/download`, {
+    ...getEntityCoreContext(),
+  });
+}

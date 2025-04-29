@@ -163,8 +163,8 @@ function ImageSetComponent({
   const repetitions = repetitionMap.get(protocol) ?? [];
 
   return (
-    <div className="flex flex-col gap-3 divide-y divide-neutral-2">
-      <div className="flex items-baseline gap-2 text-lg font-bold text-primary-9">
+    <div className="divide-neutral-2 flex flex-col gap-3 divide-y">
+      <div className="text-primary-9 flex items-baseline gap-2 text-lg font-bold">
         {protocol}
         <small className="font-light">{`${repetitions.length} ${
           repetitions.length === 1 ? 'repetition' : 'repetitions'
@@ -175,11 +175,11 @@ function ImageSetComponent({
         {repetitions.map((repetition) => (
           <div className="flex flex-col gap-2" key={repetition}>
             <div className="flex items-center justify-between">
-              <span className="indent-10 text-lg font-light capitalize text-dark">
+              <span className="text-dark indent-10 text-lg font-light capitalize">
                 {repetition}
               </span>
               <button
-                className="flex items-center rounded bg-neutral-1 p-3 hover:bg-neutral-2"
+                className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
                 onClick={onRepetitionClick(protocol, repetition)}
                 type="button"
                 aria-label="Toggle selection"

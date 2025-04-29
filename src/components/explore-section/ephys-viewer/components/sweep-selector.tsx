@@ -1,7 +1,6 @@
 import { ChangeEvent } from 'react';
 import { classNames } from '@/util/utils';
 
-
 type TraceSelectorGroupProps = {
   selectedSweeps: string[];
   sweepOptions: { label: string; value: string }[];
@@ -45,7 +44,7 @@ function SweepSelector({
       >
         <label // eslint-disable-line jsx-a11y/label-has-associated-control
           className={classNames(
-            'border-1 flex h-[32px] w-[32px] cursor-pointer items-center rounded hover:opacity-75',
+            'flex h-[32px] w-[32px] cursor-pointer items-center rounded border-1 hover:opacity-75',
             isSelected ? 'border-[#1890ff]' : 'border-[#1890ff00]'
           )}
           style={{
@@ -69,7 +68,7 @@ function SweepSelector({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="font-bold text-dark">
+      <span className="text-dark font-bold">
         Sweep <small className="text-sm font-light">({sweepOptions.length} available)</small>
       </span>
       <div className="flex flex-wrap items-center">{sweeps}</div>
