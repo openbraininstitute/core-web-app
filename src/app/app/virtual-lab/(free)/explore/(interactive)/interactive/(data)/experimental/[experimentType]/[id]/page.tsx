@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { notFound, useParams } from 'next/navigation';
 
 import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
-import EphysViewerContainer from '@/components/explore-section/EphysViewerContainer';
+import EphysViewer from '@/components/explore-section/ephys-viewer';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Summary from '@/features/details-view/summary';
 
@@ -35,7 +35,7 @@ export default function ExperimentDetailViewPage() {
     case DataType.ExperimentalElectroPhysiology:
       content = (
         <Summary dataType={DataType.ExperimentalElectroPhysiology}>
-          {(detail) => <EphysViewerContainer resource={detail} />}
+          {(detail) => <EphysViewer resource={detail} />}
         </Summary>
       );
       break;

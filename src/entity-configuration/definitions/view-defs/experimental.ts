@@ -1,6 +1,6 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { ExperimentTypeNames } from '@/entity-configuration/domain/experimental';
+import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DataType } from '@/constants/explore-section/list-views';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';

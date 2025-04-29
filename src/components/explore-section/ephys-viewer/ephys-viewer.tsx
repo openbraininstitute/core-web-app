@@ -6,17 +6,17 @@ import { useAtomValue } from 'jotai';
 import sessionAtom from '@/state/session';
 import useTrace from '@/components/explore-section/ephys-viewer/hooks/use-nwb-trace';
 import TraceDetailsView from '@/components/explore-section/ephys-viewer/components/trace-details-view';
-import { ExperimentalTrace } from '@/types/explore-section/delta-experiment';
 import TraceOverview from '@/components/explore-section/ephys-viewer/components/trace-overview';
 
 import './styles/ephys-plugin-styles.css';
+import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 
 enum VIEW {
   OVERVIEW = 'overview',
   DETAILED = 'detailed',
 }
 
-export default function EphysViewer({ resource }: { resource: ExperimentalTrace }) {
+export default function EphysViewer({ resource }: { resource: IElectricalCellRecording }) {
   const session = useAtomValue(sessionAtom);
   const [trace, error] = useTrace(resource, session);
 

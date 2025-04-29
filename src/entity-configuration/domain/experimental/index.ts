@@ -3,7 +3,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 
 export * from '@/entity-configuration/domain/experimental/reconstruction-morphology';
 export * from '@/entity-configuration/domain/experimental/synapse-per-connection';
-export * from '@/entity-configuration/domain/experimental/electrophysiology';
+export * from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 export * from '@/entity-configuration/domain/experimental/bouton-density';
 export * from '@/entity-configuration/domain/experimental/neuron-density';
 

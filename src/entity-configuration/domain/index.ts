@@ -1,6 +1,6 @@
 import {
   ReconstructionMorphology,
-  Electrophysiology,
+  ElectricalCellRecording,
   SynapsePerConnection,
   BoutonDensity,
   NeuronDensity,
@@ -11,7 +11,7 @@ import { Mesh, Emodel, MEmodel } from './model';
 export const EntityCoreConfiguration = {
   ReconstructionMorphology,
   SynapsePerConnection,
-  Electrophysiology,
+  ElectricalCellRecording,
   BoutonDensity,
   NeuronDensity,
   MEmodel,

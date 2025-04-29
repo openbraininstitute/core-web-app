@@ -267,7 +267,6 @@ class NWBLNMCTrace extends NWBTrace {
   }
 }
 
-
 /**
  * NWBGenericTrace represents a generic trace from a Neurodata Without Borders (NWB) file
  * with an unknown organizational structure.

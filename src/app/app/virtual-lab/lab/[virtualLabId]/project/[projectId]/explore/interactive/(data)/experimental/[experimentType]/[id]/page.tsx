@@ -13,6 +13,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { TExperimentTypeNames } from '@/entity-configuration/domain/experimental';
+import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 
 export default function ExperimentDetailViewPage() {
   const params = useParams<{ experimentType: string }>();
@@ -34,7 +35,7 @@ export default function ExperimentDetailViewPage() {
     case DataType.ExperimentalElectroPhysiology:
       content = (
         <Summary dataType={DataType.ExperimentalElectroPhysiology}>
-          {(detail) => <EphysViewer resource={detail} />}
+          {(detail) => <EphysViewer resource={detail as IElectricalCellRecording} />}
         </Summary>
       );
       break;

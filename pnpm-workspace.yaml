@@ -1,0 +1,8 @@
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@sentry/cli'
+  - canvas
+  - es5-ext
+  - esbuild
+  - msw
+  - sharp
