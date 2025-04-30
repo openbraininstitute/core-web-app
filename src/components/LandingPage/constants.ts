@@ -29,7 +29,7 @@ export const SECTIONS: Readonly<Section[]> = [
   },
   {
     index: EnumSection.Financing,
-    caption: 'Financing',
+    caption: 'Financing policy',
     slug: '/financing',
   },
   { index: EnumSection.ComingSoon, caption: 'Coming Soon', slug: '/releasing-soon' },
