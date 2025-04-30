@@ -5,7 +5,7 @@ import { Radio } from 'antd';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
-import { RecordingType } from '@/components/explore-section/ephys-viewer/nwb-trace';
+import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import {
   convertCurrentSeries,
   convertVoltageSeries,
@@ -13,8 +13,8 @@ import {
   VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import { useInteractivePlotConfig } from '@/components/explore-section/ephys-viewer/hooks/config-hooks';
-import { PlotProps } from '@/components/explore-section/ephys-viewer/types';
+import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { PlotProps } from '@/features/ephys-viewer/types';
 import { ZoomRanges } from '@/types/explore-section/misc';
 
 const Plot = createPlotlyComponent(Plotly);

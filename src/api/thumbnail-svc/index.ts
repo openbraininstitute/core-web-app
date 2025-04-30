@@ -1,4 +1,5 @@
 import find from 'lodash/find';
+import kebabCase from 'lodash/kebabCase';
 
 import buildQueryString from '@/util/query-params-builder';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
@@ -17,7 +18,8 @@ function buildAssetUrl(resource: EntityCoreResource, options?: { dpi?: number })
     asset_id: asset?.id,
   });
   queryParams = queryParams ? `?${queryParams}` : '';
-  return `${thumbnailGenerationBaseUrl}/core/${resource.type}/preview${queryParams}`;
+  const type = kebabCase(resource.type);
+  return `${thumbnailGenerationBaseUrl}/core/${type}/preview${queryParams}`;
 }
 
 export async function getPreviewBlob(resource: EntityCoreResource, accept: string = 'image/png') {
@@ -28,7 +30,7 @@ export async function getPreviewBlob(resource: EntityCoreResource, accept: strin
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
-      Accept: accept ?? 'image/png',
+      Accept: accept,
     },
   });
   if (!response.ok) {

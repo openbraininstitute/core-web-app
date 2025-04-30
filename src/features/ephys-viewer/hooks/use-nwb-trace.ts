@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Session } from 'next-auth';
 
-import NWBTrace from '@/components/explore-section/ephys-viewer/nwb-trace';
+import NWBTrace from '@/features/ephys-viewer/nwb-trace';
 import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 

@@ -6,9 +6,9 @@ import { LineChartOutlined } from '@ant-design/icons';
 import startCase from 'lodash/startCase';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
-import useResizeObserver from '@/components/explore-section/ephys-viewer/hooks/use-resize-observer';
-import { useOverviewPlotConfig } from '@/components/explore-section/ephys-viewer/hooks/config-hooks';
-import NWBTrace, { RecordingType } from '@/components/explore-section/ephys-viewer/nwb-trace';
+import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
+import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
 

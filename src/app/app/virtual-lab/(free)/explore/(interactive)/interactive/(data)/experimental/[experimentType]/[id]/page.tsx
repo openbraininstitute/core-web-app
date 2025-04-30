@@ -4,8 +4,8 @@ import { Suspense } from 'react';
 import { notFound, useParams } from 'next/navigation';
 
 import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
+import EphysViewer from '@/features/ephys-viewer';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import EphysViewer from '@/components/explore-section/ephys-viewer';
 import Summary from '@/features/details-view/summary';
 
 import { getViewDefinitionDataTypeByName } from '@/entity-configuration/definitions/view-defs';

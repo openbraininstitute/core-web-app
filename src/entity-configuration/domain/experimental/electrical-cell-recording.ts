@@ -3,8 +3,9 @@ import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import * as entitycore from '@/api/entitycore/queries';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 
-export const ElectricalCellRecording: EntityCoreTypeConfig<any> = {
+export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: 'experimental',
   title: 'Electrophysiology',
   legacyType: DataType.ExperimentalElectroPhysiology,
@@ -12,8 +13,8 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<any> = {
   slug: 'electrophysiology',
   api: {
     config: {
-      allowedFacets: undefined,
-      allowedParams: ['page_size', 'page'],
+      allowedFacets: true,
+      allowedParams: 'all',
     },
     query: {
       list: entitycore.getElectricalCellRecordings,

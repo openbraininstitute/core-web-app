@@ -4,9 +4,9 @@ import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 
 import sessionAtom from '@/state/session';
-import useTrace from '@/components/explore-section/ephys-viewer/hooks/use-nwb-trace';
-import TraceDetailsView from '@/components/explore-section/ephys-viewer/components/trace-details-view';
-import TraceOverview from '@/components/explore-section/ephys-viewer/components/trace-overview';
+import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
+import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
+import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import './styles/ephys-plugin-styles.css';
