@@ -47,5 +47,5 @@ export interface IElectricalCellRecording
     EntityAuthorization {
   license?: ILicense | null;
   brain_region: IBrainRegion;
-  type: EntityTypeEnum.ReconstructionMorphology;
+  type: EntityTypeEnum.ElectricalCellRecording;
 }

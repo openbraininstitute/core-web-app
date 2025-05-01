@@ -2,11 +2,11 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Select } from 'antd';
 import DistinctColors from 'distinct-colors';
 
-import NWBTrace, { RecordingType } from '@/components/explore-section/ephys-viewer/nwb-trace';
-import useResizeObserver from '@/components/explore-section/ephys-viewer/hooks/use-resize-observer';
-import InteractivePlot from '@/components/explore-section/ephys-viewer/components/interactive-plot';
-import OptionSelect from '@/components/explore-section/ephys-viewer/components/option-select';
-import SweepSelector from '@/components/explore-section/ephys-viewer/components/sweep-selector';
+import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
+import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
+import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
+import OptionSelect from '@/features/ephys-viewer/components/option-select';
+import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
 
 interface EphysPlotProps {
   trace: NWBTrace;

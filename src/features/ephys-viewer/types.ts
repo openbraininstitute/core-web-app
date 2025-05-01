@@ -1,4 +1,4 @@
-import { RecordingType, SweepData } from '@/components/explore-section/ephys-viewer/nwb-trace';
+import { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
 
 export type PlotProps = {
   recordingType: RecordingType;
