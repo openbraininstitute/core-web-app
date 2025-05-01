@@ -1,5 +1,6 @@
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import * as entitycore from '@/api/entitycore/queries';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -10,7 +11,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   title: 'Electrophysiology',
   legacyType: DataType.ExperimentalElectroPhysiology,
   type: EntityTypeEnum.ElectricalCellRecording,
-  slug: 'electrophysiology',
+  slug: EntitySlug.ElectricalCellRecording,
   api: {
     config: {
       allowedFacets: true,

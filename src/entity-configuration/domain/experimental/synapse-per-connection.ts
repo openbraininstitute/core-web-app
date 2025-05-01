@@ -1,4 +1,5 @@
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
 import * as entitycore from '@/api/entitycore/queries';
 
@@ -10,7 +11,7 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   title: 'Synapse per connection',
   legacyType: DataType.ExperimentalSynapsePerConnection,
   type: EntityTypeEnum.ExperimentalSynapsesPerConnection,
-  slug: 'synapse-per-connection',
+  slug: EntitySlug.ExperimentalSynapsesPerConnection,
   api: {
     config: {
       allowedFacets: true,

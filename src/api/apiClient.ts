@@ -53,16 +53,25 @@ export type ErrorCause<T extends Record<string, any>> = {
 
 class ApiClient {
   private _rootUrl: string;
+
   private _headers: Record<string, string>;
+
   private _token?: string;
+
   private _timeout?: number;
+
   private _attempts?: number;
+
   private _backoff?: BackoffStrategy;
+
   private _retryOnError?: boolean;
+
   private _retryOnException?: boolean;
+
   private _cacheConfig?: CacheConfiguration; // Cache configuration
 
   private requestInterceptors: ((request: Request) => Promise<Request>)[] = [];
+
   private responseInterceptors: ((response: Response) => Promise<Response>)[] = [];
 
   constructor({ rootUri: rootUrl, token, headers = {}, config = {}, cache }: ApiClientOptions) {

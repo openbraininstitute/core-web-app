@@ -27,6 +27,7 @@ import {
 
 import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
 
 export default function ExploreListingLayout({
@@ -81,7 +82,10 @@ export default function ExploreListingLayout({
     if (!(await userJourneyTracker.getCurrentTuple())) {
       await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
     }
-    const artifact = ensureString(getEntityBySlug({ slug: key })?.title, 'Morphology');
+    const artifact = ensureString(
+      getEntityBySlug({ slug: key as EntitySlugValue })?.title,
+      'Morphology'
+    );
     setCurrentExplorerArtifact(artifact);
     await userJourneyTracker.handleClick('artifact', artifact);
     router.push(key);
@@ -119,7 +123,7 @@ export default function ExploreListingLayout({
       title: 'Circuit',
       // TODO: circuit should be included to the supported types when ready in entitycore
       // @ts-expect-error
-      entityType: 'Circuit',
+      entitytype: 'Circuit',
       label: `Circuit (${circuitCount})`,
       className: 'text-center font-semibold',
       style: {

@@ -1,6 +1,7 @@
 import find from 'lodash/find';
 import { EntityCoreConfiguration } from '.';
 
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityTypeValue } from '@/api/entitycore/types';
 
 export type EntityCoreLegacyType =
@@ -13,5 +14,5 @@ export const getEntityByLegacyType = ({ legacyType }: { legacyType: EntityCoreLe
 export const getEntityByCoreType = ({ type }: { type: EntityTypeValue }) =>
   find(EntityCoreConfiguration, { type });
 
-export const getEntityBySlug = ({ slug }: { slug: string }) =>
+export const getEntityBySlug = ({ slug }: { slug: EntitySlugValue }) =>
   find(EntityCoreConfiguration, { slug });

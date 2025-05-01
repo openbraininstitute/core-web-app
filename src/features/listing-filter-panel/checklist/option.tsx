@@ -1,10 +1,12 @@
+'use client';
+
+import { memo, ReactNode, useEffect, useState } from 'react';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { format } from 'date-fns';
+
+import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
 import { CheckIcon } from '@/components/icons';
 import { tryCatch } from '@/api/utils';
-import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
-import { memo, ReactNode, Suspense, useEffect, useState } from 'react';
-import { Spin } from 'antd';
 
 const DisplayLabel = (filterField: string, key: string): string | null => {
   switch (filterField) {

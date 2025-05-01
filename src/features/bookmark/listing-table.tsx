@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 
 import ExploreSectionTable from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import WithControlPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
+import WithControlPanel from '@/features/listing-filter-panel';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import Footer from '@/features/bookmark/footer';

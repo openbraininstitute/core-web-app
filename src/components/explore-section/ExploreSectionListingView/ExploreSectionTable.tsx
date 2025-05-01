@@ -1,3 +1,5 @@
+'use client';
+
 import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { RowSelectionType } from 'antd/es/table/interface';
@@ -13,7 +15,6 @@ import {
 } from '@/components/explore-section/ExploreSectionListingView/hooks';
 import LoadMoreButton from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { classNames } from '@/util/utils';
 
 import TableControls from '@/components/listing-table/controls';
@@ -22,6 +23,7 @@ import useScrollComplete from '@/hooks/useScrollComplete';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { DataType } from '@/constants/explore-section/list-views';
+import type { WorkspaceContext } from '@/types/common';
 
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
@@ -95,7 +97,7 @@ function CustomCell({ children, style, ...props }: { children: ReactNode; style:
 
 type AdditionalTableProps<T> = {
   dataContext: {
-    virtualLabInfo?: VirtualLabInfo;
+    virtualLabInfo?: WorkspaceContext;
     dataScope: ExploreDataScope;
     dataType: DataType;
   };

@@ -2,10 +2,10 @@ import { useEffect, useMemo } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { axesAtom } from '../Simulations/state';
-import NumericResultsInfo from './NumericResultsInfo';
+import NumericResultsInfo from '../../../features/listing-filter-panel/numeric-results-info';
 import FilterControls from './FilterControls';
 import ListTable from '@/components/ListTable';
-import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
+import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import {
   activeColumnsAtom,

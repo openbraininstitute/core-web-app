@@ -1,9 +1,10 @@
 import omit from 'lodash/omit';
 import isNumber from 'lodash/isNumber';
 
-import { Filter } from '@/features/listing-filter-panel/types';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { BrainRegion } from '@/types/ontologies';
-import { FilterTypeEnum } from '@/types/explore-section/filters';
+
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 /**
  * Takes array of brainRegions and searches for targetTitle against BrainRegion.title
@@ -54,15 +55,15 @@ export function findTitleAndCollectParentBrainRegions(
  *
  * @param filter the filter to check
  */
-export function filterHasValue(filter: Filter) {
+export function filterHasValue(filter: CoreFilter) {
   switch (filter.type) {
-    case FilterTypeEnum.CheckList:
+    case CoreFieldFilterTypeEnum.CheckList:
       return filter.value.length !== 0;
-    case FilterTypeEnum.DateRange:
+    case CoreFieldFilterTypeEnum.DateRange:
       return filter.value.gte || filter.value.lte;
-    case FilterTypeEnum.ValueRange:
+    case CoreFieldFilterTypeEnum.ValueRange:
       return filter.value.gte || filter.value.lte;
-    case FilterTypeEnum.ValueOrRange:
+    case CoreFieldFilterTypeEnum.ValueOrRange:
       if (!filter.value) {
         return false;
       }

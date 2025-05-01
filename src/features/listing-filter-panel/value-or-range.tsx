@@ -1,3 +1,5 @@
+'use client';
+
 import { ChangeEvent, HTMLProps, useState } from 'react';
 
 import { getFieldUnit } from '@/api/explore-section/fields';

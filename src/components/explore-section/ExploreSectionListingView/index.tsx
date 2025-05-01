@@ -1,3 +1,5 @@
+'use client';
+
 import { RowSelectionType } from 'antd/es/table/interface';
 import { ReactNode } from 'react';
 import { useAtom } from 'jotai';
@@ -6,18 +8,19 @@ import FilterControls from '@/components/explore-section/ExploreSectionListingVi
 import ExploreSectionTable, {
   OnCellClick,
 } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import WithListingFilterPanel from '@/components/explore-section/ExploreSectionListingView/WithControlPanel';
-import NumericResultsInfo from '@/components/explore-section/ExploreSectionListingView/NumericResultsInfo';
+import NumericResultsInfo from '@/features/listing-filter-panel/numeric-results-info';
+import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
-import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { sortStateAtom, dataAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
+
+import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
+import type { WorkspaceContext } from '@/types/common';
 
 export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
   dataType,
@@ -43,7 +46,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   onRowsSelected?: (rows: Array<T>) => void;
   onCellClick?: OnCellClick<T>;
   selectionType?: RowSelectionType;
-  virtualLabInfo?: VirtualLabInfo;
+  virtualLabInfo?: WorkspaceContext;
   tableScrollable?: boolean;
   controlsVisible?: boolean;
   style?: Record<'background', string>;

@@ -3,12 +3,13 @@ import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/globa
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: 'experimental' | 'models' | 'simulations';
   legacyType?: DataType;
   type: EntityTypeValue;
-  slug: string;
+  slug: EntitySlugValue;
   title: string;
   api: {
     config: {
@@ -30,3 +31,8 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   };
   viewDefinition?: ViewDefinitionConfig;
 };
+
+export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<
+  EntityCoreTypeConfig<T>,
+  'api' | 'viewDefinition'
+>;

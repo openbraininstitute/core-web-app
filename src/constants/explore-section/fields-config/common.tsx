@@ -337,7 +337,7 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       value: 'pref_label',
     },
   },
-  [EntityCoreFields.Contribution]: {
+  [EntityCoreFields.Contributions]: {
     title: 'Contributors',
     filter: FilterTypeEnum.CheckList,
     render: (r) => renderEmptyOrValue(transformAgentToNames(r.contributions)),

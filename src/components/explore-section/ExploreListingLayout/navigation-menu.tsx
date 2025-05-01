@@ -36,14 +36,14 @@ export default function NavigationMenu({
   const updatedItems = items.map(({ entitytype, label, ...rest }) => {
     let value: ReactNode;
     if (error) value = <WarningOutlined className="text-xl" />;
-    if (data) {
+    if (allData) {
       const v = get(allData, `${entitytype}`, null);
-      if (typeof v === 'number') value = get(allData, `${entitytype}`);
-      else value = 'error';
+      if (typeof v === 'number') value = get(allData, `${entitytype}`, null);
+      else value = null;
     }
     return {
       ...rest,
-      label: `${label} (${value})`,
+      label: `${label} ${value !== null ? `(${value})` : ''}`,
     };
   });
 

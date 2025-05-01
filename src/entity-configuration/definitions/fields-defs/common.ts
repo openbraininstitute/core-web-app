@@ -120,7 +120,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     isFilterable: false,
     isDisplayable: false,
   },
-  [EntityCoreFields.Contribution]: {
+  [EntityCoreFields.Contributions]: {
     title: 'Contributors',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>

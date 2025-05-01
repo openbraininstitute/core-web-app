@@ -1,4 +1,5 @@
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
 import * as entitycore from '@/api/entitycore/queries';
 
@@ -10,7 +11,7 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   title: 'Bouton density',
   legacyType: DataType.ExperimentalBoutonDensity,
   type: EntityTypeEnum.ExperimentalBoutonDensity,
-  slug: 'bouton-density',
+  slug: EntitySlug.ExperimentalBoutonDensity,
   api: {
     config: {
       allowedFacets: true,

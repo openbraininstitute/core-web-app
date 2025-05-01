@@ -1,3 +1,5 @@
+'use client';
+
 import { MouseEvent, ReactNode, useEffect, useState } from 'react';
 import { ColumnGroupType, ColumnType } from 'antd/es/table';
 import { ConfigProvider, Button } from 'antd';
