@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import MainDetailViewCore from '@/components/explore-section/Circuit/DetailView/MainDetailViewCore';
 import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
 
@@ -77,7 +78,7 @@ export default function CircuitDetailPage() {
 
   return (
     <div className="relative flex w-full flex-col">
-      {circuitData && <div>Future detail view private name</div>}
+      {circuitData && <MainDetailViewCore content={circuitData} />}
     </div>
   );
 }
