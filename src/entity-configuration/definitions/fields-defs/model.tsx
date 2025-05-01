@@ -8,6 +8,7 @@ import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/sin
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { IMEModel, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 
 export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -85,6 +86,23 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
       singular: 'Trace',
     },
     style: { width: 184 },
+    isFilterable: false,
+    isDisplayable: true,
+  },
+  [EntityCoreFields.MEModelValidationStatus]: {
+    className: 'text-center',
+    title: 'Validated',
+    filter: null,
+    render: (r) => {
+      return renderEmptyOrValue(
+        (r as IMEModel).validation_status === ValidationStatus.Done ? 'True' : 'False'
+      );
+    },
+    vocabulary: {
+      plural: 'Validated',
+      singular: 'Validated',
+    },
+    style: { width: 90, align: 'left' },
     isFilterable: false,
     isDisplayable: true,
   },

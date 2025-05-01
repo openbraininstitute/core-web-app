@@ -3,14 +3,15 @@
 import { ErrorBoundary } from 'react-error-boundary';
 import { Suspense } from 'react';
 
-import DataTypeTabs from './DataTypeTabs';
-import SelectedBrainRegionMETypes from './SelectedBrainRegionMETypes';
+import SelectedBrainRegionMETypes from '@/components/explore-section/ExploreInteractive/SelectedBrainRegionMETypes';
+import DataTypeTabs from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
+import ThreeDeeBrain from '@/components/ThreeDeeBrain';
+
 import EntityTypeStatsPanelContainer, {
   EntityTypeStatsPanel,
 } from '@/components/entities-type-stats/panel';
-import ThreeDeeBrain from '@/components/ThreeDeeBrain';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { EntityTypeCountSkeleton } from '@/components/entities-type-stats/stat-item';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
 
 import type { BulkEntityCoreCountResult } from '@/services/entitycore/entities-types-count';
 import type { Result } from '@/api/utils';
@@ -56,8 +57,8 @@ export default function ExploreInteractivePanel({ entityCounterPromise }: Props)
                   <div className="relative grid h-full grid-flow-row grid-cols-2 gap-x-3 gap-y-1 p-4 pt-0">
                     {Array.from({ length: 6 })
                       .fill(0)
-                      .map(() => (
-                        <EntityTypeCountSkeleton />
+                      .map((v, i) => (
+                        <EntityTypeCountSkeleton key={`skeleton-${i}`} />
                       ))}
                   </div>
                 }

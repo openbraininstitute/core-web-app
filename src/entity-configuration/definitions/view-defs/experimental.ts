@@ -16,7 +16,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.MType,
       EntityCoreFields.Name,
       EntityCoreFields.Species,
-      EntityCoreFields.Contribution,
+      EntityCoreFields.Contributions,
       EntityCoreFields.RegistrationDate,
     ],
     curated: true,
@@ -113,7 +113,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.EType,
       EntityCoreFields.Name,
       EntityCoreFields.Species,
-      EntityCoreFields.Contribution,
+      EntityCoreFields.Contributions,
     ],
     summaryViewFields: [
       { field: EntityCoreFields.BrainRegion },
@@ -137,7 +137,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Species,
       EntityCoreFields.SubjectAge,
       EntityCoreFields.NumberOfMeasurements,
-      EntityCoreFields.Contribution,
+      EntityCoreFields.Contributions,
       EntityCoreFields.RegistrationDate,
     ],
     cardViewFields: [
@@ -184,7 +184,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Sem,
       EntityCoreFields.NumberOfMeasurements,
       EntityCoreFields.Species,
-      EntityCoreFields.Contribution,
+      EntityCoreFields.Contributions,
     ],
     summaryViewFields: [
       { field: EntityCoreFields.BrainRegion },
@@ -212,7 +212,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.MeanSTD,
       EntityCoreFields.Species,
       EntityCoreFields.SubjectAge,
-      EntityCoreFields.Contribution,
+      EntityCoreFields.Contributions,
     ],
     summaryViewFields: [
       { field: EntityCoreFields.PreSynapticBrainRegion },

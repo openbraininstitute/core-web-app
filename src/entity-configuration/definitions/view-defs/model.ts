@@ -30,6 +30,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.EModelScore,
       EntityCoreFields.BrainRegion,
       EntityCoreFields.Contributions,
+      EntityCoreFields.CreationDate,
     ],
     curated: true,
     summaryViewFields: [
@@ -47,7 +48,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.MEModelMorphologyPreview,
       EntityCoreFields.MEModelTracePreview,
-      EntityCoreFields.MEModelValidated,
+      EntityCoreFields.MEModelValidationStatus,
       EntityCoreFields.BrainRegion,
       EntityCoreFields.MType,
       EntityCoreFields.EType,
@@ -57,7 +58,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     curated: false,
     summaryViewFields: [
       { field: EntityCoreFields.BrainRegion, className: 'col-span-2' },
-      { field: EntityCoreFields.MEModelValidated, className: 'col-span-2' },
+      { field: EntityCoreFields.MEModelValidationStatus, className: 'col-span-2' },
       { field: EntityCoreFields.MType, className: 'col-span-4' },
       { field: EntityCoreFields.EType, className: 'col-span-4' },
     ],

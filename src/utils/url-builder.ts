@@ -18,15 +18,26 @@ export function resolveExploreDetailsPageUrl({
   dataType?: DataType;
 }) {
   const entityConfig = getEntityByLegacyType({ legacyType: dataType });
-  let slug = entityConfig?.slug; // morphology, e-model, ...
-  const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
-  if (routePrefix === 'simulate') slug = `${slug}/view`;
-  let baseUrl = `${baseUri}/explore/${routePrefix}/${slug}/${entityId}`;
+  const slug = entityConfig?.slug; // morphology, e-model, ...
+  let usedSlug: string | undefined = slug;
+  const routePrefix = entityConfig?.explore.basePrefix; // interactive/experimental, model, simulate
+  const basePrefix = entityConfig?.explore.basePrefix; // experimental, model, simulate
+
+  if (basePrefix === 'simulate' && slug) usedSlug = `${slug}/view`;
+  let baseUrl = `${baseUri}/explore/${routePrefix}/${usedSlug}`;
+  if (entityId) {
+    baseUrl = `${baseUrl}/${entityId}`;
+  }
   if (ctx && ctx.virtualLabId && ctx.projectId) {
-    if (entityId)
-      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${slug}/${entityId}`;
-    else
-      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${slug}`;
+    if (entityId && usedSlug) {
+      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}/${entityId}`;
+    } else if (usedSlug) {
+      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}`;
+    } else {
+      return (baseUrl = `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`);
+    }
+  } else if (!dataType && !entityId) {
+    baseUrl = `${baseUri}/explore/interactive`;
   }
   return baseUrl;
 }

@@ -1,5 +1,6 @@
 import { getEModel, getEModels } from '@/api/entitycore/queries/model/e-model';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -10,7 +11,7 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
   title: 'E-model',
   legacyType: DataType.CircuitEModel,
   type: EntityTypeEnum.Emodel,
-  slug: 'e-model',
+  slug: EntitySlug.EModel,
   api: {
     config: {
       allowedFacets: true,

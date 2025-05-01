@@ -1,3 +1,5 @@
+'use client';
+
 import { CSSProperties, HTMLProps, ReactNode, useState } from 'react';
 import { ConfigProvider, Table, TableProps, Tooltip } from 'antd';
 

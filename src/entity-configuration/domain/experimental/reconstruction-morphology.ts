@@ -1,5 +1,6 @@
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
 import * as entitycore from '@/api/entitycore/queries';
 
@@ -16,7 +17,7 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   title: 'Morphology',
   legacyType: DataType.ExperimentalNeuronMorphology,
   type: EntityTypeEnum.ReconstructionMorphology,
-  slug: 'morphology',
+  slug: EntitySlug.ReconstructionMorphology,
   api: {
     config: {
       allowedFacets: true,

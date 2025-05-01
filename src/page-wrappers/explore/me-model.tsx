@@ -20,7 +20,6 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
 type Params = {
   id: string;
-  modelType: ModelTypeNames;
   projectId: string;
   virtualLabId: string;
 };

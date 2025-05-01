@@ -26,6 +26,7 @@ export function BrainRegionMesh({
   const brainRegionMesh = useAtomValue(
     useMemo(() => loadable(getMeshAtom(brainRegionId)), [brainRegionId])
   );
+
   const addMeshVisibility = useSetAtom(addMeshVisibilityAtom);
   const { scene } = useThree();
 

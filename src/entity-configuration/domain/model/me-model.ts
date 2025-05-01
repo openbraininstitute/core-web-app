@@ -1,6 +1,7 @@
 import { getMEModel, getMEModels, createMEModel } from '@/api/entitycore/queries/model/me-model';
-import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { DataType } from '@/constants/explore-section/list-views';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
@@ -10,7 +11,7 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
   title: 'ME-model',
   legacyType: DataType.CircuitMEModel,
   type: EntityTypeEnum.Memodel,
-  slug: 'me-model',
+  slug: EntitySlug.MeModel,
   api: {
     config: {
       allowedFacets: true,

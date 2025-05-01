@@ -1,3 +1,5 @@
+'use client';
+
 import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { Loadable } from 'jotai/vanilla/utils/loadable';

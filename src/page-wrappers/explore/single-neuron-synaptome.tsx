@@ -9,7 +9,6 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Props = WorkspaceContext & {
   id: string;
-  modelType: ModelTypeNames;
 };
 
 // TODO: this is preparation for entitycore to add "expand" for memodel, synaptome

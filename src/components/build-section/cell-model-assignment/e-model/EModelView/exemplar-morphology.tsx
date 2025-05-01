@@ -29,7 +29,7 @@ const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Description,
   EntityCoreFields.BrainRegion,
   EntityCoreFields.MType,
-  EntityCoreFields.Contribution,
+  EntityCoreFields.Contributions,
 ]);
 
 const defaultColumns: ColumnsType<IReconstructionMorphology> = Object.entries(

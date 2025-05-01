@@ -1,3 +1,5 @@
+'use client';
+
 import { useInView } from 'react-intersection-observer';
 import { useEffect, useState } from 'react';
 import { Empty, Skeleton } from 'antd';
@@ -5,8 +7,8 @@ import { match, P } from 'ts-pattern';
 import isEmpty from 'lodash/isEmpty';
 import Image from 'next/image';
 
-import { tryCatch } from '@/api/utils';
 import { getPreviewBlob } from '@/api/thumbnail-svc';
+import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 

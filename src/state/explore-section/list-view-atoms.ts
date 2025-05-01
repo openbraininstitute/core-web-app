@@ -245,7 +245,7 @@ export const dataAtom = atomFamily(
         order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
         ...queryParams,
       };
-
+      // TODO: migrate from legacy type to entitycore type when everything is migrated
       const entity = getEntityByLegacyType({ legacyType: scope.dataType as EntityCoreLegacyType });
       if (entity && entity.api.query.list) {
         const response = await entity.api.query.list({

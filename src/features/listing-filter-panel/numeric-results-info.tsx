@@ -4,7 +4,8 @@ import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { DataType } from '@/constants/explore-section/list-views';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
+
+import type { WorkspaceContext } from '@/types/common';
 
 function NumericResultsInfo({
   dataType,
@@ -14,7 +15,7 @@ function NumericResultsInfo({
 }: {
   dataType: DataType;
   dataScope: ExploreDataScope;
-  virtualLabInfo?: VirtualLabInfo;
+  virtualLabInfo?: WorkspaceContext;
   dataKey: string;
 }) {
   const res = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));

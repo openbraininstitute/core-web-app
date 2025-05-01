@@ -43,8 +43,8 @@ export default function DataTypeTabs() {
   };
 
   return (
-    selected && (
-      <div className="z-10 flex max-h-[80px] w-full items-center justify-between px-4 pt-8">
+    <div className="z-10 flex max-h-[80px] w-full items-center justify-between px-4 pt-8">
+      {selected && (
         <h1
           className="flex w-1/2 items-center justify-start self-start pl-4 text-[1.6rem] font-bold"
           style={{ color: selected?.colorCode }}
@@ -56,10 +56,10 @@ export default function DataTypeTabs() {
           />
           <span className="line-clamp-2">{selectedBrainRegion?.title}</span>
         </h1>
-        <div className="flex w-fit flex-nowrap">
-          <MenuTabs items={DATA_TYPE_TABS} onTabClick={onTabClick} activeKey={dataTypeActiveTab} />
-        </div>
+      )}
+      <div className="ml-auto flex w-fit flex-nowrap">
+        <MenuTabs items={DATA_TYPE_TABS} onTabClick={onTabClick} activeKey={dataTypeActiveTab} />
       </div>
-    )
+    </div>
   );
 }

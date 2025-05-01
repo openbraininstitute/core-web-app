@@ -4,6 +4,7 @@ import {
 } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -13,7 +14,7 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
   title: 'Synaptome',
   legacyType: DataType.SingleNeuronSynaptome,
   type: EntityTypeEnum.SingleNeuronSynaptome,
-  slug: 'synaptome',
+  slug: EntitySlug.SingleNeuronSynaptome,
   api: {
     config: {
       allowedFacets: true,

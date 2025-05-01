@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Dispatch,
   HTMLProps,
@@ -10,14 +12,17 @@ import {
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { Spin } from 'antd';
+
 import ExploreSectionNameSearch from '@/components/explore-section/ExploreSectionListingView/ExploreSectionNameSearch';
 import SettingsIcon from '@/components/icons/Settings';
-import { filterHasValue } from '@/features/listing-filter-panel/util';
+
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
-import { Filter } from '@/features/listing-filter-panel/types';
+import { ExploreDataScope } from '@/types/explore-section/application';
+import { filterHasValue } from '@/features/listing-filter-panel/util';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
-import { ExploreDataScope } from '@/types/explore-section/application';
+
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 export function FilterBtn({ disabled, children, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
@@ -55,7 +60,7 @@ export default function FilterControls({
   dataType: DataType;
   dataScope?: ExploreDataScope;
   dataKey: string;
-  filters?: Filter[];
+  filters?: CoreFilter[];
   resourceId?: string;
   disabled?: boolean;
   className?: HTMLProps<HTMLElement>['className'];
