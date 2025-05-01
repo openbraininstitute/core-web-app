@@ -1,10 +1,9 @@
-import React from 'react';
-
-import { EnumSection } from '../../sections/sections';
-import { MENU_ITEMS } from '../../constants';
-import { gotoSection } from '../../utils';
 import SocialMediaLinks from '../../components/social-media-links';
+import { MENU_ITEMS } from '../../constants';
+import { EnumSection } from '../../sections/sections';
+import { gotoSection } from '../../utils';
 import NewsLetterSubscription from './NewsLetterSubscription';
+
 import { classNames } from '@/util/utils';
 
 import styles from './FooterPanel.module.css';
@@ -27,6 +26,7 @@ export default function FooterPanel({ className }: FooterPanelProps) {
           </Section>
         ))}
         <Section section={EnumSection.TermsAndConditions}>Terms and conditions</Section>
+        <Section section={EnumSection.Financing}>Financing policy</Section>
         <Section section={EnumSection.PrivacyPolicy}>Privacy policy</Section>
         <div className={styles.socialmedia}>
           <SocialMediaLinks />

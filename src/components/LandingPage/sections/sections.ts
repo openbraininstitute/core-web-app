@@ -1,5 +1,6 @@
 export enum EnumSection {
   ComingSoon = -9,
+  Financing = -8,
   PrivacyPolicy = -3,
   TermsAndConditions = -2,
   Home = -1,

@@ -1,7 +1,7 @@
 import { ReactNode, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
-import Providers from './providers';
+import Providers from '@/app/app/providers';
 import { auth } from '@/auth';
 
 const TermsOfUseAcceptance = dynamic(
