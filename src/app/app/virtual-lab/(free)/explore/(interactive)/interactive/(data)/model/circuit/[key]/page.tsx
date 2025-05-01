@@ -13,51 +13,51 @@ export default function CircuitDetailPage() {
 
   const params = useParams();
   const circuitKey = params?.key as string | undefined;
-  
+
   useEffect(() => {
-	  const fetchCircuit = async () => {
-		  if (!circuitKey) {
-			  setError('No existing circuit')
-			  setLoading(false)
-			  return;
-		  }
-		  
-		  try {
-			  setLoading(true);
-			  const response = await fetch('/api/circuit/data', {
-                cache: 'no-store'
-              })
-			  
-			  if (!response.ok) {
+    const fetchCircuit = async () => {
+      if (!circuitKey) {
+        setError('No existing circuit');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await fetch('/api/circuit/data', {
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);
         }
-			  
-			  const data = await response.json();
-			  
-				 if (data.error || !Array.isArray(data.circuits)) {
-					 throw new Error(data.error || 'Invalid response from API')
-				 }
-				 
-				 const {circuits} = data
-				 const circuitMap = buildCircuitMap(circuits)
-				 const matchingCircuit = circuitMap.get(circuitKey)
-				 
-				 if (!matchingCircuit) {
-					 throw new Error(`Circuit with key ${circuitKey} not found!`)
-				 }
-				 
-				 setCircuitData(matchingCircuit)
-				 
-		  } catch(er) {
-            setError((er instanceof Error ? er.message : 'An error occurred while fetching the circuit data'));
-		  } finally {
-			  setLoading(false)
-		  }
-	  }
 
-      fetchCircuit()
-  }, [circuitKey])
+        const data = await response.json();
 
+        if (data.error || !Array.isArray(data.circuits)) {
+          throw new Error(data.error || 'Invalid response from API');
+        }
+
+        const { circuits } = data;
+        const circuitMap = buildCircuitMap(circuits);
+        const matchingCircuit = circuitMap.get(circuitKey);
+
+        if (!matchingCircuit) {
+          throw new Error(`Circuit with key ${circuitKey} not found!`);
+        }
+
+        setCircuitData(matchingCircuit);
+      } catch (er) {
+        setError(
+          er instanceof Error ? er.message : 'An error occurred while fetching the circuit data'
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCircuit();
+  }, [circuitKey]);
 
   if (loading) {
     return (
@@ -77,11 +77,7 @@ export default function CircuitDetailPage() {
 
   return (
     <div className="relative flex w-full flex-col">
-      {circuitData && (
-        <div>
-            Future detail view private name
-        </div>
-      )}
+      {circuitData && <div>Future detail view private name</div>}
     </div>
   );
 }
