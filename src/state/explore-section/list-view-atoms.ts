@@ -1,4 +1,4 @@
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEmpty from 'lodash/isEmpty';
@@ -45,6 +45,7 @@ import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fiel
 import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import filter from 'lodash/filter';
+import { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 type DataAtomFamilyScopeType = {
   key: string;
@@ -206,8 +207,8 @@ export const previousDataAtom = atomFamily(
 );
 
 export const dataAtom = atomFamily(
-  <T>(scope: DataAtomFamilyScopeType) =>
-    atom<Promise<EntityCoreResponse<T | null>>>(async (get) => {
+  <T extends EntityCoreObjectTypes>(scope: DataAtomFamilyScopeType) =>
+    atom<Promise<EntityCoreResponse<T>>>(async (get): Promise<EntityCoreResponse<T>> => {
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const filters = await get(filtersAtom(scope));
@@ -262,13 +263,7 @@ export const dataAtom = atomFamily(
           context: scope.virtualLabInfo,
         });
 
-        return {
-          ...response,
-          data: response.data.map((o: T) => ({
-            ...o,
-            type: entity.type,
-          })) as Array<T>,
-        };
+        return response as EntityCoreResponse<T>;
       }
 
       return {
@@ -293,7 +288,7 @@ export function useDataAtom<T>(
   },
   key: string
 ): Array<T> {
-  const [prevData] = useAtom(previousDataAtom({ ...dataContext, key }));
+  const prevData = useAtomValue(previousDataAtom({ ...dataContext, key }));
   const data = useUnwrappedValue(
     dataAtom({
       ...dataContext,

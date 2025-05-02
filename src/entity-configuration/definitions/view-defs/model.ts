@@ -28,7 +28,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.EType,
       EntityCoreFields.EModelExemplarMorphology,
       EntityCoreFields.EModelScore,
-      EntityCoreFields.BrainRegion,
       EntityCoreFields.Contributions,
       EntityCoreFields.CreationDate,
     ],

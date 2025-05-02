@@ -74,6 +74,7 @@ export default function WithListingFilterPanel({
           dataScope={dataScope}
           dataKey={dataKey}
           facets={facets}
+          virtualLabInfo={virtualLabInfo}
         />
       )}
     </>

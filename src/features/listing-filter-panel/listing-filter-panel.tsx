@@ -26,13 +26,15 @@ import CheckList from '@/features/listing-filter-panel/checklist';
 import {
   activeColumnsAtom,
   filtersAtom,
+  pageNumberAtom,
+  previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
 import { getFieldDefinition, getFieldsDefinition } from '@/entity-configuration/definitions';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
-import { DataType } from '@/constants/explore-section/list-views';
+import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { Facets } from '@/api/entitycore/types/shared/response';
 import { defaultList } from './checklist/default-checklist';
 import { fieldTitleSentenceCase } from '@/util/utils';
@@ -41,9 +43,10 @@ import {
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import type { CoreFilter, FieldsDefinitionItem } from '@/entity-configuration/definitions/types';
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { WorkspaceContext } from '@/types/common';
 
-export type ListingFilterPanelProps = {
+export type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: DataType;
@@ -54,6 +57,7 @@ export type ListingFilterPanelProps = {
   setFilters: any;
   showDisplayTrigger?: boolean;
   resourceId?: string;
+  virtualLabInfo?: WorkspaceContext;
 };
 
 function createFilterItemComponent(
@@ -173,11 +177,15 @@ export default function ListingFilterPanel({
   facets,
   showDisplayTrigger = true,
   resourceId,
-}: ListingFilterPanelProps) {
+  virtualLabInfo,
+}: Props) {
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId, key: dataKey }));
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
-
+  const setPrevData = useSetAtom(
+    previousDataAtom({ virtualLabInfo, dataType, dataScope, key: dataKey })
+  );
+  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
       () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey })),
@@ -211,6 +219,8 @@ export default function ListingFilterPanel({
   }, [filters]);
 
   const submitValues = () => {
+    setPageNumber(PAGE_NUMBER);
+    setPrevData([]);
     setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 
@@ -223,26 +233,23 @@ export default function ListingFilterPanel({
 
   const filterItems = useMemo(
     () =>
-      orderBy(
-        filters
-          ?.map((filter) => {
-            const item = get(fields, filter.field, {}) as FieldsDefinitionItem<any>;
-            return {
-              content:
-                filter.type && item.isFilterable
-                  ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
-                  : undefined,
-              display: item.isDisplayable,
-              label: fieldTitleSentenceCase(getFieldDefinition(filter.field)?.title ?? ''),
-              type: filter.type,
-              toggleFunc: showDisplayTrigger
-                ? () => onToggleActive && onToggleActive(filter.field)
-                : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
-            };
-          })
-          .filter((item) => showDisplayTrigger || item.content !== undefined), // If showDisplayTrigger is false and content is undefined that filter is not needed.
-        ['display', 'desc']
-      ),
+      filters
+        ?.map((filter) => {
+          const item = getFieldDefinition(filter.field);
+          return {
+            content:
+              filter.type && item?.isFilterable
+                ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
+                : undefined,
+            display: item?.isDisplayable && activeColumns.includes(filter.field),
+            label: fieldTitleSentenceCase(item?.title ?? ''),
+            type: filter.type,
+            toggleFunc: showDisplayTrigger
+              ? () => onToggleActive && onToggleActive(filter.field)
+              : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
+          };
+        })
+        .filter((item) => showDisplayTrigger || item.content !== undefined), // If showDisplayTrigger is false and content is undefined that filter is not needed.
     [
       filters,
       facets,

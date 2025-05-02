@@ -15,7 +15,7 @@ import type { FieldsDefinitionRegistry } from '@/entity-configuration/definition
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
+export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.Preview]: {
     className: 'text-center',
     title: 'Preview',

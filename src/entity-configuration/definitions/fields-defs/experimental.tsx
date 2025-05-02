@@ -21,7 +21,7 @@ import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 
-export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
+export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.License]: {
     title: 'License',
     filter: CoreFieldFilterTypeEnum.CheckList,

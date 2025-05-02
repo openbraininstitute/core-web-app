@@ -16,6 +16,7 @@ export enum EntityCoreFields {
   CreationDate = 'creation_date',
   RegistrationDate = 'registration_date',
   UpdateDate = 'update_date',
+  Contribution = 'contribution',
   Contributions = 'contributions',
   License = 'license',
   BrainRegion = 'brain_region',
@@ -54,3 +55,6 @@ export enum EntityCoreFields {
   CreatedBy = 'createdBy',
   UpdatedBy = 'updatedBy',
 }
+
+export type EntityCoreFieldsUnion = keyof typeof EntityCoreFields;
+export type EntityCoreFieldsValue = `${EntityCoreFields}`;
