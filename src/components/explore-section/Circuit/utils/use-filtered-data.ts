@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { CircuitSchemaProps } from '../type';
 import { filterCircuits } from './filter-circuits';
 import filterCircuitsByNumeric, {
-    NumericFilterProperty,
-    NumericFilterType,
+  NumericFilterProperty,
+  NumericFilterType,
 } from './filter-circuits-by-numeric';
 
 type NumericFilterOptions = {

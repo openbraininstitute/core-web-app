@@ -63,7 +63,10 @@ const filterCircuitsByNumeric = (
 
       return null;
     })
-    .filter((circuit): circuit is CircuitSchemaProps => circuit !== null && circuit.subcircuit !== undefined);
+    .filter(
+      (circuit): circuit is CircuitSchemaProps =>
+        circuit !== null && circuit.subcircuit !== undefined
+    );
 };
 
 export default filterCircuitsByNumeric;
