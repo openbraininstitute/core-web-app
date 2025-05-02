@@ -1,6 +1,8 @@
 import z from 'zod';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
@@ -22,8 +24,6 @@ import type {
   MtypeFilter,
   EtypeFilter,
 } from '@/api/entitycore/types/shared/request';
-import type { IEModelBase } from '@/api/entitycore/types/entities/e-model';
-import type { IReconstructionMorphologyBase } from '@/api/entitycore/types/entities/reconstruction-morphology';
 
 export enum ValidationStatus {
   Created = 'created',
@@ -50,8 +50,8 @@ export interface IMEModel
   contributions?: Array<IContributor> | null;
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
-  morphology: IReconstructionMorphologyBase;
-  emodel: IEModelBase;
+  morphology: IReconstructionMorphology;
+  emodel: IEModel;
   type: EntityTypeEnum.Memodel;
 }
 

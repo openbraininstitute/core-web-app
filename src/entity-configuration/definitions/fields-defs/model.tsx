@@ -1,4 +1,10 @@
-import { renderEmptyOrValue, renderFloatNumber } from '@/entity-configuration/definitions/renderer';
+import {
+  EmptyPreview,
+  renderEmptyOrValue,
+  renderFloatNumber,
+  renderImage,
+  renderPreview,
+} from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -9,6 +15,7 @@ import type { FieldsDefinitionRegistry } from '@/entity-configuration/definition
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import { IMEModel, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { hasAssets } from '@/api/entitycore/guards';
 
 export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -58,11 +65,9 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     title: 'Morphology',
     filter: null,
     render: (r) => {
-      // TODO: use id to renderer the preview
-      // return (
-      //   <MorphPreviewFromId id={morphId} org={org} project={project} height={116} width={184} />
-      // );
-      return <span className="text-red-500">Entitycore Needed</span>;
+      const morphology = (r as IMEModel).morphology;
+      if (hasAssets(morphology)) return renderPreview(morphology, { width: 184, height: 116 });
+      return EmptyPreview;
     },
     vocabulary: {
       plural: 'Morphology',
@@ -77,9 +82,9 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     title: 'Trace',
     filter: null,
     render: (r) => {
-      // TODO: use id to renderer the preview
-      // return <EModelTracePreview images={images} height={116} width={184} />;
-      return <span className="text-red-500">Entitycore Needed</span>;
+      const emodel = (r as IMEModel).emodel;
+      if (hasAssets(emodel)) return renderImage(emodel, { width: 184, height: 116 });
+      return EmptyPreview;
     },
     vocabulary: {
       plural: 'Trace',

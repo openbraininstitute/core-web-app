@@ -31,8 +31,6 @@ import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 type Props = {
   params: WorkspaceContext;
-  mmodel: IReconstructionMorphology;
-  emodel: IEModel;
   memodel: IMEModel;
   showViewMode?: boolean;
 };
@@ -43,12 +41,7 @@ const TabsConfig: Array<{ key: TabKeys; title: string }> = [
   { key: 'simulation', title: 'Simulation' },
 ];
 
-export default function Page({
-  params: { virtualLabId, projectId },
-  emodel,
-  memodel,
-  mmodel,
-}: Props) {
+export default function Page({ params: { virtualLabId, projectId }, memodel }: Props) {
   //   const info = useResourceInfoFromPath();
   const { activeTab } = useTabs({ tabsConfig: TabsConfig });
 
@@ -104,8 +97,6 @@ export default function Page({
                           virtualLabId,
                           projectId,
                           memodel,
-                          emodel,
-                          mmodel,
                         }}
                       />
                       {/* <div className="mt-10">

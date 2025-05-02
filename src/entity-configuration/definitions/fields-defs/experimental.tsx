@@ -12,8 +12,8 @@ import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { ensureArray } from '@/utils/array';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
@@ -66,7 +66,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     title: 'M-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
-      if (r.type === EntityTypeEnum.SingleNeuronSynaptome) {
+      if (isSingleNeuronSynaptome(r)) {
         return renderEmptyOrValue(renderArray(r.me_model.mtypes?.map((m) => m.pref_label) || []));
       }
       return renderEmptyOrValue(
@@ -95,7 +95,7 @@ export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> =
     title: 'E-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
-      if (r.type === EntityTypeEnum.SingleNeuronSynaptome) {
+      if (isSingleNeuronSynaptome(r)) {
         return renderEmptyOrValue(renderArray(r.me_model.etypes?.map((m) => m.pref_label) || []));
       }
       return renderEmptyOrValue(

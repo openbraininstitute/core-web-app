@@ -1,6 +1,4 @@
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-
-import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreType, IEType, IMType } from '@/api/entitycore/types/shared/global';
 import type {
   TimestampsFilter,
   PaginationFilter,
@@ -14,10 +12,9 @@ import type {
 } from '@/api/entitycore/types/shared/request';
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 
-export interface IExperimentalNeuronDensity extends IExperimentalDensity {
+export interface IExperimentalNeuronDensity extends IExperimentalDensity, EntityCoreType {
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
-  type: EntityTypeEnum.ExperimentalNeuronDensity;
 }
 
 export type ExperimentalNeuronDensityFilter = Partial<

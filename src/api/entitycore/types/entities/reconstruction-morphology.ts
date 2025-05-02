@@ -1,5 +1,3 @@
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-
 import type {
   BrainLocationFilter,
   BrainRegionFilter,
@@ -25,8 +23,8 @@ import type {
   ISpecies,
   IStrain,
   IMType,
+  EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
-import { ValidationStatus } from './me-model';
 
 export type ReconstructionMorphologyExpandFields =
   | 'brain_location'
@@ -63,14 +61,14 @@ export interface IReconstructionMorphology
   extends IReconstructionMorphologyBase,
     Timestamps,
     EntityCoreBaseAsset,
-    EntityAuthorization {
+    EntityAuthorization,
+    EntityCoreType {
   license?: ILicense | null;
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: IBrainRegion;
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
-  type: EntityTypeEnum.ReconstructionMorphology;
 }
 
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {

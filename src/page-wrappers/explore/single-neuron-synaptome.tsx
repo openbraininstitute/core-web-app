@@ -22,19 +22,8 @@ async function fetchSingleNeuronSynaptome({
     id: synaptome.me_model.id,
     context: { virtualLabId, projectId },
   });
-  const [emodel, morphology] = await Promise.all([
-    getEModel({ id: memodel.emodel.id, context: { virtualLabId, projectId } }),
-    getReconstructionMorphology({
-      id: memodel.morphology.id,
-      context: { virtualLabId, projectId },
-    }),
-  ]);
 
-  return {
-    memodel,
-    emodel,
-    morphology,
-  };
+  return memodel;
 }
 
 export default async function Page(props: Props) {
@@ -47,7 +36,5 @@ export default async function Page(props: Props) {
     return <div>error </div>;
   }
 
-  return (
-    <Detail params={props} emodel={data.emodel} memodel={data.memodel} mmodel={data.morphology} />
-  );
+  return <Detail params={props} memodel={data} />;
 }

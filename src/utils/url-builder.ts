@@ -20,7 +20,7 @@ export function resolveExploreDetailsPageUrl({
   const entityConfig = getEntityByLegacyType({ legacyType: dataType });
   const slug = entityConfig?.slug; // morphology, e-model, ...
   let usedSlug: string | undefined = slug;
-  const routePrefix = entityConfig?.explore.basePrefix; // interactive/experimental, model, simulate
+  const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
   const basePrefix = entityConfig?.explore.basePrefix; // experimental, model, simulate
 
   if (basePrefix === 'simulate' && slug) usedSlug = `${slug}/view`;

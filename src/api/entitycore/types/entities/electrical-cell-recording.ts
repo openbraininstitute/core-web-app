@@ -1,4 +1,3 @@
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import type {
   BrainRegionFilter,
   ContributionFilter,
@@ -15,6 +14,7 @@ import type {
   IBrainRegion,
   Timestamps,
   ILicense,
+  EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
 
 export type ElectricalCellRecordingExpandFields =
@@ -44,8 +44,8 @@ export interface IElectricalCellRecording
   extends IElectricalCellRecordingBase,
     Timestamps,
     EntityCoreBaseAsset,
-    EntityAuthorization {
+    EntityAuthorization,
+    EntityCoreType {
   license?: ILicense | null;
   brain_region: IBrainRegion;
-  type: EntityTypeEnum.ElectricalCellRecording;
 }

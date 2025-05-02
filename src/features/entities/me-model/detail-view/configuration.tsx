@@ -16,15 +16,19 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
 
 export default function Configuration({ model }: { model: IMEModel }) {
-  const workspaceContext = useParams<WorkspaceContext>();
+  const workspace = useParams<WorkspaceContext>();
   const params = useSearchParams();
-
-  const morphologyPromise = tryCatch(
-    getReconstructionMorphology({ id: model.morphology.id, context: workspaceContext })
-  );
-  const emodelPromise = tryCatch(getEModel({ id: model.emodel.id, context: workspaceContext }));
   const emodelId = params?.get('e');
   const morphologyId = params?.get('m');
+
+  // TODO: probably the promise here not needed, should be removed ?
+  const morphologyPromise = !!morphologyId
+    ? tryCatch(getReconstructionMorphology({ id: model.morphology.id, context: workspace }))
+    : model.morphology;
+
+  const emodelPromise = !!emodelId
+    ? tryCatch(getEModel({ id: model.emodel.id, context: workspace }))
+    : model.emodel;
 
   return (
     <div className="flex w-full flex-col gap-4">
