@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
+  EntityCoreFieldsValue,
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
@@ -102,9 +103,10 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   style?: Partial<Style>;
 };
 
-export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = {
-  [key: string]: FieldDefinition<T>;
-};
+export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
+  Partial<EntityCoreFieldsValue>,
+  FieldDefinition<T>
+>;
 
 export type FieldsDefinitionItem<T extends EntityCoreIdentifiable> =
   FieldsDefinitionRegistry<T>[keyof FieldsDefinitionRegistry<T>];

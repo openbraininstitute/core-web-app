@@ -1,3 +1,4 @@
+import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import {
   EmptyPreview,
   renderEmptyOrValue,
@@ -9,15 +10,15 @@ import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { hasAssets } from '@/api/entitycore/guards';
 
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import { IMEModel, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
-import { hasAssets } from '@/api/entitycore/guards';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
-export const FieldsDefinition: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
+export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
     title: 'Morphology',
     filter: CoreFieldFilterTypeEnum.CheckList,
