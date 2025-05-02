@@ -15,9 +15,6 @@ export default function CircuitDetailPage() {
   const params = useParams();
   const circuitKey = params.key as string | undefined;
 
-  console.log('What is my params? ', params)
-
-
   useEffect(() => {
     const fetchCircuit = async () => {
       if (!circuitKey) {
@@ -78,7 +75,6 @@ export default function CircuitDetailPage() {
       </div>
     );
   }
-
 
   return (
     <div className="relative flex w-full flex-col">
