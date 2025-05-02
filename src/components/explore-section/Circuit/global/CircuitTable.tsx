@@ -3,7 +3,6 @@ import { ColumnsType } from 'antd/es/table';
 import { TableRowSelection } from 'antd/es/table/interface';
 import { Key, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
-import SubcircuitTable from '../ListView/SubcircuitsTable';
 import { CircuitSchemaProps } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
 import { NumericFilterOptions } from '../utils/filter-circuits-by-numeric';
@@ -14,6 +13,7 @@ import DownloadCircuitButton from './DownloadCircuitButton';
 import NumericFilters from './NumericFilters';
 import ResizableTitle from './ResizableTitle';
 import SearchBar from './SearchBar';
+import SubcircuitTable from './SubcircuitsTable';
 
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
