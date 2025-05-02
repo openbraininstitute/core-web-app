@@ -13,7 +13,10 @@ export default function CircuitDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const params = useParams();
-  const circuitKey = params?.key as string | undefined;
+  const circuitKey = params.key as string | undefined;
+
+  console.log('What is my params? ', params)
+
 
   useEffect(() => {
     const fetchCircuit = async () => {
@@ -25,7 +28,7 @@ export default function CircuitDetailPage() {
 
       try {
         setLoading(true);
-        const response = await fetch('/api/circuit/data', {
+        const response = await fetch('/api/circuits/data', {
           cache: 'no-store',
         });
 
@@ -75,6 +78,7 @@ export default function CircuitDetailPage() {
       </div>
     );
   }
+
 
   return (
     <div className="relative flex w-full flex-col">
