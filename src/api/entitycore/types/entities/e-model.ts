@@ -1,5 +1,3 @@
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
@@ -11,6 +9,8 @@ import type {
   IStrain,
   IEType,
   IMType,
+  EntityCoreType,
+  EntityCoreBaseAsset,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -37,7 +37,12 @@ export interface IEModelBase extends EntityCoreIdentifiable {
   seed: number;
 }
 
-export interface IEModel extends IEModelBase, Timestamps, EntityAuthorization {
+export interface IEModel
+  extends IEModelBase,
+    Timestamps,
+    EntityAuthorization,
+    EntityCoreType,
+    EntityCoreBaseAsset {
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: IBrainRegion;
@@ -45,7 +50,6 @@ export interface IEModel extends IEModelBase, Timestamps, EntityAuthorization {
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
   exemplar_morphology: ExemplarMorphology;
-  type: EntityTypeEnum.Emodel;
 }
 
 export interface IEModelFilter

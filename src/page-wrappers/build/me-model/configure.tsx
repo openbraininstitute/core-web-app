@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { useId, useState } from 'react';
 import { App, Spin } from 'antd';
+import omit from 'lodash/omit';
 import get from 'lodash/get';
 import z from 'zod';
 
@@ -206,7 +207,7 @@ export default function Configure({ params, searchParams }: Props) {
     const { data, error } = await tryCatch(
       accountingSession.useWith<IMEModel>(() =>
         createMEModel({
-          body: validationData,
+          body: omit(validationData, ['virtualLabId', 'projectId']),
           context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
         })
       ),
@@ -225,8 +226,6 @@ export default function Configure({ params, searchParams }: Props) {
     );
     if (data) {
       refreshMeModels();
-      // TODO: fix this, should i reset session storage ?
-      // removeSessionValue();
       navigate(
         resolveExploreDetailsPageUrl({
           ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },

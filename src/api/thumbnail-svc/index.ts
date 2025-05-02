@@ -19,6 +19,7 @@ function buildAssetUrl(resource: EntityCoreResource, options?: { dpi?: number })
   });
   queryParams = queryParams ? `?${queryParams}` : '';
   const type = kebabCase(resource.type);
+
   return `${thumbnailGenerationBaseUrl}/core/${type}/preview${queryParams}`;
 }
 

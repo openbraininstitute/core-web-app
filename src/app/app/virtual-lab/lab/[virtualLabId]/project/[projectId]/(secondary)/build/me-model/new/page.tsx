@@ -54,7 +54,14 @@ export default function NewMEModelPage(props: Params) {
   const onSubmit = () => {
     const values = form.getFieldsValue();
     const brainRegion = brainRegions?.find((br) => br.id === values.brainRegion);
-
+    // delete all building memodels session
+    if (typeof window !== 'undefined') {
+      for (const key of Object.keys(window.sessionStorage)) {
+        if (key.startsWith('bme')) {
+          window.sessionStorage.removeItem(key);
+        }
+      }
+    }
     if (values.brainRegion && !brainRegion) return;
 
     // if a brain region is selected and found, set it as selected brain region on sidebar

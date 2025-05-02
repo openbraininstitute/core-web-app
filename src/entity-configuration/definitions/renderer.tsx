@@ -7,6 +7,7 @@ import find from 'lodash/find';
 import { Empty } from 'antd';
 
 import PreviewThumbnail from '@/features/thumbnail/preview';
+import PreviewImage from '@/features/thumbnail/image';
 
 import type {
   EntityCoreResource,
@@ -41,6 +42,8 @@ export const renderLicense = ({ license }: { license?: ILicense | null }) => {
 };
 
 export const renderEmptyOrValue = (value: any) => {
+  console.log('ᦨ #  renderer.tsx:46 #  renderEmptyOrValue #  value:', value);
+
   return isNil(value) || isEmpty(value) ? EmptyValue : value;
 };
 
@@ -62,6 +65,13 @@ export function renderPreview<T extends EntityCoreResource>(
   size?: { height: number; width: number } | string
 ) {
   return <PreviewThumbnail resource={resource} size={size} />;
+}
+
+export function renderImage<T extends EntityCoreResource>(
+  resource: T,
+  size?: { height: number; width: number } | string
+) {
+  return <PreviewImage resource={resource} size={size} />;
 }
 
 export default function getMeasurements(r: EntityCoreDensityObjectTypes) {

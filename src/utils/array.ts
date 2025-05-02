@@ -44,3 +44,7 @@ export function ensureArray<TElement>({
     return resultArray;
   }
 }
+
+export const isArrayEmpty = (array: Array<any> | null | undefined) => {
+  return isEmpty(array);
+};

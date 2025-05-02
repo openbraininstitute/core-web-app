@@ -1,6 +1,8 @@
-import { EntityCoreConfiguration } from '@/entity-configuration/domain/index';
-import { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
+import { EntityCoreConfiguration } from '@/entity-configuration/domain';
+
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
+import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 
 // TODO: should be in global shared type file
 export type Nullish = null | undefined;
@@ -14,6 +16,10 @@ export type EntityCoreDataType =
 export type EntityCoreIdentifiable = {
   id: string;
   legacy_id: Array<string> | null;
+};
+
+export type EntityCoreType = {
+  type: EntityTypeValue;
 };
 
 export type EntityCoreOwnership = {

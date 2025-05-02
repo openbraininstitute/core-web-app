@@ -1,10 +1,9 @@
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-
 import {
   Timestamps,
   IBrainRegion,
   EntityCoreIdentifiable,
   IMType,
+  EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
 import {
   TimestampsFilter,
@@ -25,10 +24,9 @@ interface SynapticPathway extends EntityCoreIdentifiable, Timestamps {
   post_region: IBrainRegion;
 }
 
-export interface IExperimentalSynapsesPerConnection extends IExperimentalDensity {
+export interface IExperimentalSynapsesPerConnection extends IExperimentalDensity, EntityCoreType {
   mtypes: Array<IMType> | null;
   synaptic_pathway: SynapticPathway;
-  type: EntityTypeEnum.ExperimentalSynapsesPerConnection;
 }
 
 export type ExperimentalSynapsesPerConnectionFilter = Partial<

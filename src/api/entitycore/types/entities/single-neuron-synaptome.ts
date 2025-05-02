@@ -1,5 +1,3 @@
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
@@ -7,6 +5,7 @@ import type {
   IContributor,
   Timestamps,
   EntityCoreOwnership,
+  EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -29,11 +28,11 @@ export interface ISingleNeuronSynaptome
     EntityAuthorization,
     SingleNeuronSynaptomeBase,
     Timestamps,
-    EntityCoreOwnership {
+    EntityCoreOwnership,
+    EntityCoreType {
   contributions?: Array<IContributor> | null;
   brain_region: IBrainRegion;
   me_model: IMEModel;
-  type: EntityTypeEnum.SingleNeuronSynaptome;
 }
 
 export interface ISingleNeuronSynaptomeFilter

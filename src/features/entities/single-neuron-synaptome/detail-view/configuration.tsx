@@ -7,25 +7,19 @@ import {
   renderPreview,
   renderArray,
 } from '@/entity-configuration/definitions/renderer';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export default function Configuration({
   memodel,
-  mmodel,
-  emodel,
   virtualLabId,
   projectId,
 }: {
-  mmodel: IReconstructionMorphology;
   memodel: IMEModel;
-  emodel: IEModel;
   virtualLabId: string;
   projectId: string;
 }) {
@@ -45,27 +39,20 @@ export default function Configuration({
         <div className="mb-2 text-xl font-light text-gray-400 uppercase">single neuron model</div>
         <div className="flex items-start gap-2">
           <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-            {renderPreview<IReconstructionMorphology>(
-              {
-                ...mmodel,
-                type: EntityTypeEnum.ReconstructionMorphology,
-              },
-              { height: 200, width: 200 }
-            )}
+            {renderPreview<IReconstructionMorphology>(memodel.morphology, {
+              height: 200,
+              width: 200,
+            })}
           </div>
           <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-            {renderPreview(
-              // @ts-expect-error
-              { ...emodel, type: EntityTypeEnum.Emodel },
-              { height: 200, width: 200 }
-            )}
+            {renderPreview(memodel.emodel, { height: 200, width: 200 })}
           </div>
         </div>
       </div>
       <div className="mt-12 min-w-0 flex-1">
         <div className="text-neutral-4 font-thin uppercase">NAME</div>
         <div className="text-primary-8 my-1 text-3xl font-bold break-words">{memodel.name}</div>
-        <MeModelDetails memodel={memodel} emodel={emodel} mmodel={mmodel} />
+        <MeModelDetails memodel={memodel} />
       </div>
     </div>
   );
@@ -73,11 +60,12 @@ export default function Configuration({
 
 type ModelDetails = {
   memodel: IMEModel;
-  emodel: IEModel;
-  mmodel: IReconstructionMorphology;
 };
 
-function MeModelDetails({ emodel, memodel, mmodel }: ModelDetails) {
+function MeModelDetails({ memodel }: ModelDetails) {
+  const mmodel = memodel.morphology;
+  const emodel = memodel.emodel;
+
   return (
     <div className="text-primary-8 mt-4 grid grid-cols-2 gap-4 gap-x-12">
       <div className="col-span-1">
