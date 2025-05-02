@@ -40,6 +40,7 @@ function RowWrapper({
 }) {
   return (
     <CustomRow
+      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
       handleExpandRow={handleExpandRow}
       expandedRowKeys={expandedRowKeys}
@@ -134,7 +135,7 @@ export default function CircuitTable({
 
   const renderSubcircuits = useCallback(
     (circuit: CircuitSchemaProps) =>
-      circuit.subcircuit && circuit.subcircuit.length > 0 ? (
+      circuit.subcircuits && circuit.subcircuits.length > 0 ? (
         <SubcircuitTable
           circuit={circuit}
           mergedColumns={mergedColumns}
@@ -150,12 +151,13 @@ export default function CircuitTable({
   const selectedRows = data.flatMap((circuit) =>
     circuit.key === selectedRowKeys[0]
       ? [circuit]
-      : (circuit.subcircuit || []).filter((sub) => sub.key === selectedRowKeys[0])
+      : (circuit.subcircuits || []).filter((sub) => sub.key === selectedRowKeys[0])
   );
 
   const rowWrapperWithColumns = (props: CustomRowProps) => (
     // eslint-disable-next-line react/jsx-props-no-spreading
     <RowWrapper
+      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
       handleExpandRow={handleExpandRow}
       expandedRowKeys={expandedRowKeys}
@@ -222,7 +224,7 @@ export default function CircuitTable({
                 expandedRowKeys,
                 onExpand: handleExpandRow,
                 expandIcon: () => null,
-                rowExpandable: (record) => !!record.subcircuit && record.subcircuit.length > 0,
+                rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
               }}
             />
             {fileUrl && (
@@ -266,7 +268,7 @@ export default function CircuitTable({
               expandedRowKeys,
               onExpand: handleExpandRow,
               expandIcon: () => null,
-              rowExpandable: (record) => !!record.subcircuit && record.subcircuit.length > 0,
+              rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
             }}
           />
         )}
