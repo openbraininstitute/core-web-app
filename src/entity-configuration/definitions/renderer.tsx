@@ -42,8 +42,6 @@ export const renderLicense = ({ license }: { license?: ILicense | null }) => {
 };
 
 export const renderEmptyOrValue = (value: any) => {
-  console.log('ᦨ #  renderer.tsx:46 #  renderEmptyOrValue #  value:', value);
-
   return isNil(value) || isEmpty(value) ? EmptyValue : value;
 };
 

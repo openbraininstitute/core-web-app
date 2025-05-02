@@ -29,6 +29,7 @@ import type { NavigationMenuItem } from '@/components/explore-section/ExploreLis
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
+import { useQueryState } from 'nuqs';
 
 export default function ExploreListingLayout({
   children,
@@ -40,6 +41,7 @@ export default function ExploreListingLayout({
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
+  const [brainRegionId] = useQueryState('brainRegion');
 
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
@@ -64,14 +66,12 @@ export default function ExploreListingLayout({
     () =>
       tryCatch(
         getBulkEntityCoreCount({
-          context:
-            virtualLabInfo?.virtualLabId && virtualLabInfo?.projectId
-              ? { virtualLabId: virtualLabInfo.virtualLabId, projectId: virtualLabInfo.projectId }
-              : undefined,
-          brainRegion: selectedBrainRegion?.id,
+          virtualLabId: virtualLabInfo?.virtualLabId,
+          projectId: virtualLabInfo?.projectId,
+          brainRegion: brainRegionId,
         })
       ),
-    [selectedBrainRegion]
+    [brainRegionId]
   );
 
   const onClick: MenuProps['onClick'] = async (info) => {

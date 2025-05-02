@@ -1,7 +1,7 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -18,7 +18,7 @@ import { defaultModelRelease } from '@/config';
 
 type Props = {
   children: React.ReactNode;
-  params: ServerSideComponentProp<WorkspaceContext, null>;
+  params: ServerSideComponentProp<WorkspaceContext, { brainRegion: string }>;
 };
 
 const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
