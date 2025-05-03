@@ -16,6 +16,37 @@
   display: hidden;
 }
 
+.circuitTable ant-table-tbody {
+  background: #FAFAFA;
+
+  & > tr:last-child > td {
+    border-bottom: 0;
+  }
+}
+
+.circuitTable ant-table-row {
+  background: #FAFAFA;
+}
+
+.circuitTable ant-table-thead_th{
+  font-size: 14px;
+  font-weight: normal;
+  color: #8C8C8C;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ant-table-thead > tr > th {
+  border-bottom: 0;
+}
+
+.ant-table-expand-icon-col {
+  width: 0 !important;
+  display: hidden !important;
+}
+
+// RESIZING 
+
 .resize-handle {
   position: absolute;
   right: -5px;

@@ -8,7 +8,7 @@ import ResizableTitle from './ResizableTitle';
 
 import { classNames } from '@/util/utils';
 
-import styles from './ExploreCircuiteTable.module.scss';
+import styles from './exploreCircuitTable.module.scss';
 
 export type SubcircuitsTableProps = {
   circuit: CircuitSchemaProps;

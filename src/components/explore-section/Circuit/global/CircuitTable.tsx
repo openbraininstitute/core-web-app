@@ -15,10 +15,10 @@ import ResizableTitle from './ResizableTitle';
 import SearchBar from './SearchBar';
 import SubcircuitTable from './SubcircuitsTable';
 
-import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
 
 export type CustomRowProps = {
+  circuit?: CircuitSchemaProps;
   children: ReactNode;
   record?: CircuitSchemaProps;
   handleExpandRow: (expanded: boolean, record: CircuitSchemaProps) => void;
@@ -58,6 +58,7 @@ export default function CircuitTable({
   downloadable?: boolean;
   hasSearch?: boolean;
 }) {
+
   // ROWS
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -184,29 +185,15 @@ export default function CircuitTable({
         </div>
       )}
       <div className="relative w-full overflow-x-scroll">
-        {downloadable ? (
           <div className="tableAndButton">
             <Table
-              className={classNames(
-                '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-                '[&_.ant-table-row]:bg-[#FAFAFA]',
-                '[&_.ant-table-thead_th]:!text-sm',
-                '[&_.ant-table-thead_th]:!font-normal',
-                '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
-                '[&_.ant-table-thead_th]:uppercase',
-                '[&_.ant-table-thead_th]:tracking-[0.05em]',
-                '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-                '[&_.ant-table-thead > tr > th]:border-b-0',
-                '[&_.ant-table-expand-icon-col]:w-0',
-                '[&_.ant-table-expand-icon-col]:hidden',
-                styles.circuitTable
-              )}
+              className={styles.circuitTable}
               style={
                 {
                   '--ant-table-expand-icon-col-width': '0px',
                 } as React.CSSProperties
               }
-              data-row-selection={downloadable.toString()}
+              data-row-selection={downloadable && downloadable.toString()}
               components={{
                 header: {
                   cell: ResizableTitle,
@@ -218,7 +205,7 @@ export default function CircuitTable({
               dataSource={filteredData}
               columns={mergedColumns}
               pagination={false}
-              rowSelection={rowSelection}
+              rowSelection={downloadable ? rowSelection : undefined}
               expandable={{
                 expandedRowRender: renderSubcircuits,
                 expandedRowKeys,
@@ -231,47 +218,7 @@ export default function CircuitTable({
               <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />
             )}
           </div>
-        ) : (
-          <Table
-            className={classNames(
-              '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-              '[&_.ant-table-row]:bg-[#FAFAFA]',
-              '[&_.ant-table-thead_th]:!text-sm',
-              '[&_.ant-table-thead_th]:!font-normal',
-              '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
-              '[&_.ant-table-thead_th]:uppercase',
-              '[&_.ant-table-thead_th]:tracking-[0.05em]',
-              '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-              '[&_.ant-table-thead > tr > th]:border-b-0',
-              '[&_.ant-table-expand-icon-col]:w-0',
-              '[&_.ant-table-expand-icon-col]:hidden',
-              styles.circuitTable
-            )}
-            style={
-              {
-                '--ant-table-expand-icon-col-width': '0px',
-              } as React.CSSProperties
-            }
-            components={{
-              header: {
-                cell: ResizableTitle,
-              },
-              body: {
-                row: rowWrapperWithColumns,
-              },
-            }}
-            dataSource={filteredData}
-            columns={mergedColumns}
-            pagination={false}
-            expandable={{
-              expandedRowRender: renderSubcircuits,
-              expandedRowKeys,
-              onExpand: handleExpandRow,
-              expandIcon: () => null,
-              rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
-            }}
-          />
-        )}
+        
       </div>
     </div>
   );

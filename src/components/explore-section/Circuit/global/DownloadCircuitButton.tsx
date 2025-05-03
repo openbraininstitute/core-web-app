@@ -11,7 +11,7 @@ export default function DownloadCircuitButton({
   return (
     <a
       href={fileUrl}
-      type="button"
+      download
       className="fixed bottom-6 right-10 flex h-[60px] w-[180px] items-center justify-center bg-primary-8 text-xl transition-bottom duration-300 ease-in-out"
       style={{
         visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',

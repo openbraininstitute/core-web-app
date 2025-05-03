@@ -44,7 +44,7 @@ const columns = (
     render: (_value: any, record: CircuitSchemaProps, index: number) => {
       const isExpanded = Array.isArray(expandedRowKeys) && expandedRowKeys.includes(record.key);
       const totalSubcircuitsForParent = calculateSubcircuitsForParent(record);
-      const subcircuitCount = record.subcircuit?.length > 0 ? totalSubcircuitsForParent : '–';
+      const subcircuitCount = (record.subcircuits?.length ?? 0) > 0 ? totalSubcircuitsForParent : '–';
 
       return (
         <button
@@ -55,7 +55,7 @@ const columns = (
           disabled={!record.hasSubcircuits}
         >
           <div className="relative mr-6 block whitespace-nowrap">{subcircuitCount}</div>
-          {record.subcircuit?.length !== 0 && (
+          {record.subcircuits?.length !== 0 && (
             <ChevronRight
               fill="#003A8C"
               className={classNames(
@@ -77,7 +77,11 @@ const columns = (
     key: 'description',
     width: 200,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <div className="text-ellipsis whitespace-nowrap font-normal">{record.description}</div>
+      <div
+        className="text-ellipsis whitespace-nowrap font-normal"
+      >
+        {record.description}
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -89,7 +93,11 @@ const columns = (
     key: 'brainRegion',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <div className="whitespace-nowrap font-normal">{record.brainRegion}</div>
+      <div
+        className="whitespace-nowrap font-normal"
+      >
+        {record.brainRegion}
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -101,7 +109,9 @@ const columns = (
     key: 'numberOfNeurons',
     width: 130,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <div className="whitespace-nowrap font-normal">{record.numberOfNeurons}</div>
+      <div className="whitespace-nowrap font-normal">
+        {record.numberOfNeurons}
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -113,7 +123,9 @@ const columns = (
     key: 'specie',
     width: 120,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <div className="whitespace-nowrap font-normal">{record.species}</div>
+      <div className="whitespace-nowrap font-normal">
+        {record.species}
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -125,7 +137,9 @@ const columns = (
     key: 'contributorSimple',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <div className="whitespace-nowrap font-normal">{record.metadata.contributorSimple}</div>
+      <div className="whitespace-nowrap font-normal">
+        {record.metadata.contributorSimple}
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
@@ -137,7 +151,9 @@ const columns = (
     key: 'registrationDate',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <div className="whitespace-nowrap font-normal">{record.metadata.registrationDate}</div>
+      <div className="whitespace-nowrap font-normal">
+        {record.metadata.registrationDate}
+      </div>
     ),
     onHeaderCell: (column) => ({
       width: column.width ?? 150,
