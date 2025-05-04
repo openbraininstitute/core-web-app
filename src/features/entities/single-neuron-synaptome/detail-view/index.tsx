@@ -1,37 +1,31 @@
 'use client';
 
-import { Spin } from 'antd';
 import { Suspense } from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
-import SynapseGroupList from '@/components/build-section/virtual-lab/synaptome/view-model/ListSynapses';
-import useSynaptomeModel from '@/components/simulate/single-neuron/hooks/useSynaptomeModel';
-import Results from '@/components/build-section/virtual-lab/synaptome/view-model/Results';
+import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
+import Results from '@/features/entities/single-neuron-synaptome/detail-view/elements/simulation-results';
 import Summary from '@/features/details-view/summary';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 
 import Configuration from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import {
-  DataType,
-  DataTypeToNewSimulationPage,
-  DataTypeToNexusType,
-} from '@/constants/explore-section/list-views';
-import { to64 } from '@/util/common';
+import { DataType } from '@/constants/explore-section/list-views';
 import { CommonSummaryViewFields } from '@/entity-configuration/definitions/view-defs';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import Tabs, { useTabs } from '@/components/detail-view-tabs';
+import { resolveExperimentUrl } from '@/utils/url-builder';
 import If from '@/components/ConditionalRenderer/If';
 
-import type { WorkspaceContext } from '@/types/common';
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
-  params: WorkspaceContext;
+  params: WorkspaceContext & { id: string };
   memodel: IMEModel;
+  config: {
+    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+  } | null;
   showViewMode?: boolean;
 };
 
@@ -41,31 +35,8 @@ const TabsConfig: Array<{ key: TabKeys; title: string }> = [
   { key: 'simulation', title: 'Simulation' },
 ];
 
-export default function Page({ params: { virtualLabId, projectId }, memodel }: Props) {
-  //   const info = useResourceInfoFromPath();
+export default function Page({ params: { virtualLabId, projectId, id }, memodel, config }: Props) {
   const { activeTab } = useTabs({ tabsConfig: TabsConfig });
-
-  //   const { model, configuration, loading } = useSynaptomeModel({
-  //     modelId: info.id,
-  //     virtualLabId,
-  //     projectId,
-  //   });
-
-  //   if (loading || !model || !configuration) {
-  //     return (
-  //       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
-  //         <Spin indicator={<LoadingOutlined />} size="large" />
-  //         <h2 className="text-primary-9 font-light">Loading synaptome model...</h2>
-  //       </div>
-  //     );
-  //   }
-
-  const getSimulationId = (synaptomeModelId: string) => {
-    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const basePath = `${vlProjectUrl}/simulate/${DataTypeToNewSimulationPage[DataTypeToNexusType.SingleNeuronSynaptome]}/new`;
-    return `${basePath}/${to64(`${projectId}!/!${synaptomeModelId}`)}`;
-  };
-
   return (
     <div className="secondary-scrollbar h-screen w-full overflow-y-auto">
       <Suspense fallback={<CentralLoadingSpinner />}>
@@ -73,17 +44,21 @@ export default function Page({ params: { virtualLabId, projectId }, memodel }: P
           showViewMode
           dataType={DataType.SingleNeuronSynaptome}
           commonFields={CommonSummaryViewFields}
-          //   extraHeaderAction={
-          //     model &&
-          //     !showViewMode && (
-          //       <Link
-          //         className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
-          //         href={getSimulationId(model['@id'])}
-          //       >
-          //         Simulate
-          //       </Link>
-          //     )
-          //   }
+          extraHeaderAction={
+            virtualLabId &&
+            projectId && (
+              <Link
+                className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
+                href={resolveExperimentUrl({
+                  ctx: { virtualLabId, projectId },
+                  dataType: EntityTypeEnum.SingleNeuronSynaptome,
+                  entityId: id,
+                })}
+              >
+                Simulate
+              </Link>
+            )
+          }
         >
           {(data) => {
             return (
@@ -99,9 +74,9 @@ export default function Page({ params: { virtualLabId, projectId }, memodel }: P
                           memodel,
                         }}
                       />
-                      {/* <div className="mt-10">
-                        <SynapseGroupList modelUrl={data.distribution.contentUrl} />
-                      </div> */}
+                      <div className="mt-10">
+                        <SynapseGroupList config={config} />
+                      </div>
                     </div>
                   </If>
                   {/* <If id="simulation" condition={activeTab === 'simulation'}>

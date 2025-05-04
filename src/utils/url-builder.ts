@@ -1,10 +1,11 @@
 import kebabCase from 'lodash/kebabCase';
 
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getEntityByCoreType, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { toPascalCase } from '@/utils/string';
 
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
 const baseUri = '/app/virtual-lab';
 
@@ -42,8 +43,25 @@ export function resolveExploreDetailsPageUrl({
   return baseUrl;
 }
 
+export function resolveVirtualLabUrl({ virtualLabId }: { virtualLabId: string }) {
+  return `${baseUri}/lab/${virtualLabId}`;
+}
+
 export function resolveProjectUrl({ virtualLabId, projectId }: WorkspaceContext) {
   return `${baseUri}/lab/${virtualLabId}/project/${projectId}`;
+}
+
+export function resolveExperimentUrl({
+  ctx,
+  entityId,
+  dataType,
+}: {
+  ctx: Required<WorkspaceContext>;
+  dataType: EntityTypeEnum;
+  entityId: string;
+}) {
+  const entityConfig = getEntityByCoreType({ type: dataType });
+  return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/simulate/${entityConfig?.slug}/${entityId}`;
 }
 
 export function resolveLibraryUrl({

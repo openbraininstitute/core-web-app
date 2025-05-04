@@ -1,6 +1,7 @@
-import { blueNaasUrl } from '@/config';
-import { SingleSynaptomeConfig } from '@/types/synaptome';
 import { createHeaders } from '@/util/utils';
+import { blueNaasUrl } from '@/config';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 export default async function getSynapsesPlacement({
   modelId,
@@ -12,7 +13,7 @@ export default async function getSynapsesPlacement({
   token: string;
   modelId: string;
   seed: number;
-  config: SingleSynaptomeConfig;
+  config: TSingleNeuronSynaptomeConfiguration;
   signal?: AbortSignal;
 }) {
   const response = await fetch(
@@ -22,7 +23,7 @@ export default async function getSynapsesPlacement({
       headers: createHeaders(token),
       body: JSON.stringify({
         seed,
-        config,
+        config: { ...config, distribution: 'formula' },
       }),
       signal,
     }

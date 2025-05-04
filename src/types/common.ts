@@ -41,11 +41,6 @@ export interface ServerSideComponentProp<Params, SearchParams> {
   searchParams: Promise<SearchParams>;
 }
 
-export type Nullish = null | undefined;
-export type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
 export const WorkspaceContextSchema = z.object({
   virtualLabId: z.string(),
   projectId: z.string(),

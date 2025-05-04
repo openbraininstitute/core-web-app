@@ -13,7 +13,7 @@ import useNotification from '@/hooks/notifications';
 
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
-import { CREATE_SYNAPTOME_SIMULATION_SUCCESS } from '@/components/build-section/virtual-lab/synaptome/molecules/constants';
+import { CREATE_SYNAPTOME_SIMULATION_SUCCESS } from '@/features/entities/synaptome/elements/constants';
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';

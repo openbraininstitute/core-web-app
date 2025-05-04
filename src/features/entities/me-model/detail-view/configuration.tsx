@@ -4,10 +4,10 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { Suspense } from 'react';
 
-import MorphologyOverviewCard from '@/features/entities/me-model/card-viewers/morphology-overview-card';
-import EModelOverviewCard from '@/features/entities/me-model/card-viewers/emodel-overview-card';
-import CardContainerSkeleton from '@/features/entities/me-model/card-viewers/card-skeleton';
-import CardError from '@/features/entities/me-model/card-viewers/card-error';
+import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
+import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
+import CardContainerSkeleton from '@/features/entities/me-model/detail-view/card-viewers/card-skeleton';
+import CardError from '@/features/entities/me-model/detail-view/card-viewers/card-error';
 
 import { getReconstructionMorphology, getEModel } from '@/api/entitycore/queries';
 import { tryCatch } from '@/api/utils';

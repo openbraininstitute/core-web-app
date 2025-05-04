@@ -1,40 +1,90 @@
 import Detail from '@/features/entities/single-neuron-synaptome/detail-view';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { getEModel, getMEModel, getReconstructionMorphology } from '@/api/entitycore/queries';
-import { ModelTypeNames } from '@/entity-configuration/domain/model';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { ErrorComponent } from '@/components/GenericErrorFallback';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { getMEModel } from '@/api/entitycore/queries';
+import { arrayBufferToJson } from '@/utils/buffer';
 import { tryCatch } from '@/api/utils';
 
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
 
-type Props = WorkspaceContext & {
-  id: string;
+type Props = {
+  params: WorkspaceContext & {
+    id: string;
+  };
 };
 
-// TODO: this is preparation for entitycore to add "expand" for memodel, synaptome
-async function fetchSingleNeuronSynaptome({
-  id,
-  virtualLabId,
-  projectId,
-}: WorkspaceContext & { id: string }) {
-  const synaptome = await getSingleNeuronSynaptome({ id, context: { virtualLabId, projectId } });
-  const memodel = await getMEModel({
-    id: synaptome.me_model.id,
-    context: { virtualLabId, projectId },
-  });
-
-  return memodel;
-}
-
-export default async function Page(props: Props) {
-  const { id, virtualLabId, projectId } = props;
+// TODO: this is preparation for entitycore to expand memodel within synaptome
+async function fetchSingleNeuronSynaptome({ id, virtualLabId, projectId }: Props['params']) {
+  let config: {
+    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+  } | null = null;
   const { data, error } = await tryCatch(
-    fetchSingleNeuronSynaptome({ id, virtualLabId, projectId })
+    getSingleNeuronSynaptome({ id, context: { virtualLabId, projectId } })
   );
+
   if (error) {
-    // TODO: fix the error page
-    return <div>error </div>;
+    throw new Error('Single neuron synaptome could not be found');
   }
 
-  return <Detail params={props} memodel={data} />;
+  const { data: memodel, error: err1 } = await tryCatch(
+    getMEModel({
+      id: data.me_model.id,
+      context: { virtualLabId, projectId },
+    })
+  );
+
+  if (err1) {
+    throw new Error('Single neuron model could not be found');
+  }
+
+  const configAsset = getAssetElement({
+    assets: data.assets,
+    path: `${SingleNeuronSynaptome.asset.configfile}_${data.id}.json`,
+    type: SingleNeuronSynaptome.asset.extension!,
+  });
+
+  if (!configAsset) {
+    throw new Error('No Single Neuron Synaptome configuration found');
+  }
+
+  const { data: asset, error: err2 } = await tryCatch(
+    downloadAsset({
+      ctx: { virtualLabId, projectId },
+      entityId: data.id,
+      entityType: EntityTypeEnum.SingleNeuronSynaptome,
+      id: configAsset.id,
+    })
+  );
+
+  if (err2) {
+    throw new Error('Could not read the single neuron configuration file');
+  }
+  config = arrayBufferToJson(asset);
+
+  return {
+    entity: data,
+    memodel,
+    config: config,
+  };
+}
+
+export default async function Page({ params }: Props) {
+  const { id, virtualLabId, projectId } = params;
+  const { data, error } = await tryCatch(
+    fetchSingleNeuronSynaptome({ virtualLabId, projectId, id })
+  );
+
+  if (error) {
+    return <ErrorComponent error={error} />;
+  }
+
+  return (
+    <Detail params={{ virtualLabId, projectId, id }} memodel={data.memodel} config={data.config} />
+  );
 }

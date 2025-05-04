@@ -2,6 +2,7 @@ import omitBy from 'lodash/omitBy';
 import isNil from 'lodash/isNil';
 
 import { getSession } from '@/authFetch';
+import { compactRecord } from '@/utils/dictionary';
 
 type BackoffStrategy = {
   type: 'exponential' | 'custom';
@@ -18,7 +19,7 @@ type RequestConfiguration = {
 };
 
 type RequestOptions = {
-  headers?: Record<string, string>;
+  headers?: Record<string, string | undefined>;
   queryParams?: Record<
     string,
     string | number | string[] | number[] | null | undefined | boolean | Date
@@ -262,12 +263,17 @@ class ApiClient {
       attempt++;
       let request = new Request(urlString, {
         method,
-        headers: {
+        headers: compactRecord({
           ...this._headers,
           ...(this._token ? { Authorization: `Bearer ${this._token}` } : {}),
           ...options.headers,
-        },
-        body: options.body ? JSON.stringify(options.body) : undefined,
+        }),
+        body:
+          options.body && !(options.body instanceof FormData)
+            ? JSON.stringify(options.body)
+            : options.body
+              ? options.body
+              : undefined,
         signal: options.signal,
         cache: options.cache,
         next: options.next,

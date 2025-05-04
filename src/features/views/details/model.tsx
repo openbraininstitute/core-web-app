@@ -27,6 +27,8 @@ export default function DetailView(props: Props) {
   return match<EntityCoreTypeConfig<any>>(entity)
     .with({ legacyType: DataType.CircuitEModel }, () => <EModelDetailView params={props} />)
     .with({ legacyType: DataType.CircuitMEModel }, () => <MEModelDetailView params={props} />)
-    .with({ legacyType: DataType.SingleNeuronSynaptome }, () => <SynaptomeDetailView {...props} />)
+    .with({ legacyType: DataType.SingleNeuronSynaptome }, () => (
+      <SynaptomeDetailView params={props} />
+    ))
     .otherwise(() => null);
 }

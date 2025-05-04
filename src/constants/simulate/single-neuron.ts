@@ -159,7 +159,7 @@ export const DEFAULT_SIM_CONFIG: SimulationConfiguration = {
   synapses: undefined,
 };
 
-export const SYNPASE_CODE_TO_TYPE: Record<number, SynapseType> = {
+export const SYNAPSE_CODE_TO_TYPE: Record<number, SynapseType> = {
   110: 'excitatory',
   10: 'inhibitory',
 };

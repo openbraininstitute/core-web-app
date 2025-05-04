@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useReducer, useRef, useState } from 'react';
 import { Form, Input, Select, Button, FormListFieldData, InputNumber } from 'antd';
+import { useMemo, useReducer, useRef, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
+import { Color } from 'three';
 import {
   CloseOutlined,
   DeleteOutlined,
@@ -10,28 +11,28 @@ import {
   InfoCircleFilled,
   PlusCircleOutlined,
 } from '@ant-design/icons';
-import { Color } from 'three';
 
+import findIndex from 'lodash/findIndex';
 import isEqual from 'lodash/isEqual';
 import groupBy from 'lodash/groupBy';
-import findIndex from 'lodash/findIndex';
 
-import { GENERATE_SYNAPSES_FAIL, sectionTargetMapping } from './constants';
-import { classNames } from '@/util/utils';
-import { SingleSynaptomeConfig } from '@/types/synaptome';
+import useNotification from '@/hooks/notifications';
+import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { SectionSynapses, synapsesPlacementAtom } from '@/state/synaptome';
+import { validateFormula } from '@/api/bluenaas/validate-synapse-formula';
+import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
+import { secNamesAtom } from '@/state/simulate/single-neuron';
+import { getSynaptomePlacement } from '@/api/bluenaas';
+import { messages } from '@/i18n/en/synaptome';
 import {
   sendDisplaySynapses3DEvent,
   sendRemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
-import { validateFormula } from '@/api/bluenaas/validateSynapseGenerationFormula';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
-import { getSynaptomePlacement } from '@/api/bluenaas';
+import { classNames } from '@/util/utils';
 import { getSession } from '@/authFetch';
 
-import useNotification from '@/hooks/notifications';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 type Props = {
   modelId: string;
@@ -62,7 +63,7 @@ export default function SynapseSet({
   const [displayExclusionRules, toggleDisplayExclusionRules] = useReducer((val) => !val, false);
   const [displayFormulaHelp, toggleFormulaHelp] = useReducer((val) => !val, false);
 
-  const synapses = Form.useWatch<Array<SingleSynaptomeConfig>>('synapses', form);
+  const synapses = Form.useWatch<Array<TSingleNeuronSynaptomeConfiguration>>('synapses', form);
   const seed = Form.useWatch<number>('seed', form);
 
   const config = synapses?.[index];
@@ -82,7 +83,7 @@ export default function SynapseSet({
     label:
       value === 'dend' && !hasApic
         ? 'Dendrites'
-        : sectionTargetMapping[value as keyof typeof sectionTargetMapping],
+        : SECTION_TARGET_MAPPING[value as keyof typeof SECTION_TARGET_MAPPING],
   }));
 
   const isAlreadyVisualized = useMemo(
@@ -134,7 +135,7 @@ export default function SynapseSet({
     }
   };
 
-  const onTargetChange = (newTarget?: keyof typeof sectionTargetMapping) => {
+  const onTargetChange = (newTarget?: keyof typeof SECTION_TARGET_MAPPING) => {
     if (newTarget === 'soma') {
       form.setFieldValue(['synapses', index], {
         ...config,
@@ -166,7 +167,7 @@ export default function SynapseSet({
   const onVisualizationError = async (response?: Response) => {
     if (!response) {
       notifyError(
-        GENERATE_SYNAPSES_FAIL.replace('$$', (index + 1).toString()),
+        messages.GenerationSynapsesFailed.replace('$$', (index + 1).toString()),
         undefined,
         'topRight'
       );
@@ -178,14 +179,14 @@ export default function SynapseSet({
       notifyError(errorDetails.details, undefined, 'topRight');
     } catch {
       notifyError(
-        GENERATE_SYNAPSES_FAIL.replace('$$', (index + 1).toString()),
+        messages.GenerationSynapsesFailed.replace('$$', (index + 1).toString()),
         undefined,
         'topRight'
       );
     }
   };
 
-  const onVisualizeSynapome = async () => {
+  const onVisualizeSynaptome = async () => {
     if (isAlreadyVisualized) {
       return;
     }
@@ -201,7 +202,7 @@ export default function SynapseSet({
       const response = await getSynaptomePlacement({
         modelId,
         seed,
-        config,
+        config: { ...config },
         token: session?.accessToken,
       });
       if (!response.ok) {
@@ -408,9 +409,6 @@ export default function SynapseSet({
                     required: true,
                     message: 'Please provide a valid distribution formula!',
                     async validator(_, value) {
-                      if (synapses?.[index].distribution !== 'formula') {
-                        return Promise.resolve();
-                      }
                       if (synapses?.[index].target === 'soma') {
                         return Promise.resolve();
                       }
@@ -424,10 +422,7 @@ export default function SynapseSet({
                   },
                 ]}
                 validateTrigger="onBlur"
-                className={classNames(
-                  '[&_.ant-form-item-required]:w-full',
-                  synapses?.[index].distribution !== 'formula' ? 'hidden' : ''
-                )}
+                className="[&_.ant-form-item-required]:w-full"
               >
                 <Input
                   placeholder="0.03*x*x + 0.004"
@@ -511,7 +506,7 @@ export default function SynapseSet({
                         </div>
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-start justify-center gap-2">
-                            <div className="font-lightw-full text-primary-8 flex h-[40px] max-w-max min-w-max items-center justify-center">
+                            <div className="text-primary-8 flex h-[40px] w-full max-w-max min-w-max items-center justify-center font-light">
                               greater or equal to
                             </div>
                             <Form.Item className="mb-2" name={[f.name, 'distance_soma_gte']}>
@@ -524,7 +519,7 @@ export default function SynapseSet({
                             </Form.Item>
                           </div>
                           <div className="flex items-start justify-center gap-2">
-                            <div className="font-lightw-full text-primary-8 flex h-[40px] max-w-max min-w-max items-center justify-center">
+                            <div className="text-primary-8 flex h-[40px] w-full max-w-max min-w-max items-center justify-center font-light">
                               less or equal to
                             </div>
                             <Form.Item className="mb-2" name={[f.name, 'distance_soma_lte']}>
@@ -557,7 +552,7 @@ export default function SynapseSet({
         <div className="mt-4 flex items-center justify-end">
           <Button
             htmlType="button"
-            onClick={onVisualizeSynapome}
+            onClick={onVisualizeSynaptome}
             disabled={disableApplyChanges}
             loading={visualizeLoading}
             size="large"

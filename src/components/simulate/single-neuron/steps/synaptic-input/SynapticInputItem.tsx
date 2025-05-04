@@ -16,9 +16,9 @@ import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover
 
 import { SingleSynaptomeConfig, SynaptomeConfigDistribution } from '@/types/synaptome';
 import {
-  sectionTargetMapping,
+  SECTION_TARGET_MAPPING,
   synapseTypeMapping,
-} from '@/components/build-section/virtual-lab/synaptome/molecules/constants';
+} from '@/features/entities/single-neuron-synaptome/build/elements/constants';
 import { SectionSynapses, synapsesPlacementAtom } from '@/state/synaptome';
 import {
   sendDisplaySynapses3DEvent,
@@ -32,6 +32,7 @@ import { calculateRangeOutput } from '@/constants/simulate/single-neuron';
 import { Switch } from '@/components/common/Switch';
 import { UpdateSynapseSimulationProperty } from '@/types/simulation/single-neuron';
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 type Props = {
   index: number;
@@ -39,7 +40,7 @@ type Props = {
   onChange: (change: UpdateSynapseSimulationProperty) => void;
   removeForm: () => void;
   synaptomeModelConfig: SynaptomeConfigDistribution;
-  selectedSynapticInputPlacementConfig: SingleSynaptomeConfig;
+  selectedSynapticInputPlacementConfig: TSingleNeuronSynaptomeConfiguration;
 };
 
 export default function SynapticInputItem({
@@ -74,7 +75,7 @@ export default function SynapticInputItem({
   const options = synaptomeModelConfig.synapses.map((op) => ({
     label: op.name,
     value: op.id,
-    target: sectionTargetMapping[op.target as keyof typeof sectionTargetMapping],
+    target: SECTION_TARGET_MAPPING[op.target as keyof typeof SECTION_TARGET_MAPPING],
     type: synapseTypeMapping[op.type as keyof typeof synapseTypeMapping],
     distribution: op.distribution !== 'formula' ? op.distribution : op.formula,
     isFormula: op.distribution === 'formula',

@@ -8,11 +8,11 @@ import omit from 'lodash/omit';
 import get from 'lodash/get';
 import z from 'zod';
 
-import MorphologyOverviewCard from '@/features/entities/me-model/card-viewers/morphology-overview-card';
-import EModelOverviewCard from '@/features/entities/me-model/card-viewers/emodel-overview-card';
+import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
+import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
 
 import { usePendingValidationModal } from '@/components/build-section/virtual-lab/me-model/pending-validation-modal-hook';
-import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state.session';
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -31,13 +31,9 @@ import { createMEModel } from '@/api/entitycore/queries';
 import { tryCatch } from '@/api/utils';
 import { OneshotSession } from '@/services/accounting';
 import { ServiceSubtype } from '@/types/accounting';
+import { messages } from '@/i18n/en/me-model';
 
-const DEFAULT_ERROR_MSG =
-  'Something went wrong while creating the ME-model, please try again later';
-const LOW_FUNDS_ERROR_MSG =
-  'The project does not have enough credits to create a model, please add credits and try again';
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
-const VALIDATION_ERROR_MSG = 'Validation failed. Please check the data and try again.';
 
 const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema);
 type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
@@ -116,7 +112,7 @@ export default function Configure({ params, searchParams }: Props) {
   const morphologyId = get(searchParams, 'm', undefined);
   const stateId = get(searchParams, 's', undefined);
 
-  const { sessionValue, removeSessionValue } = useBuildMeModelSessionState({
+  const { sessionValue } = useBuildMeModelSessionState({
     stateId: stateId || '',
     virtualLabId: params.virtualLabId,
     projectId: params.projectId,
@@ -143,11 +139,13 @@ export default function Configure({ params, searchParams }: Props) {
   const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
 
   const showErrorNotification = (error: any, type: 'validation' | 'http') => {
-    let message = DEFAULT_ERROR_MSG;
+    let message = messages.DefaultErrorMsg;
     if (type === 'http')
       message =
-        error?.cause?.error_code === LOW_FUNDS_ERROR_CODE ? LOW_FUNDS_ERROR_MSG : DEFAULT_ERROR_MSG;
-    else message = VALIDATION_ERROR_MSG;
+        error?.cause?.error_code === LOW_FUNDS_ERROR_CODE
+          ? messages.LowFundsError
+          : messages.DefaultErrorMsg;
+    else message = messages.ValidationError;
 
     notification.error({
       duration: 10,

@@ -2,7 +2,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { use, memo } from 'react';
 import Link from 'next/link';
 
-import CardContainer from '@/features/entities/me-model/card-viewers/card-container';
+import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
 import {
   EmptyValue,
   renderArray,

@@ -1,16 +1,22 @@
 'use client';
 
-import { Button, Form, Input, Select } from 'antd';
+import { ConfigProvider, Form, Input, Select } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useMemo, useState, use, useEffect } from 'react';
+import { UserOutlined } from '@ant-design/icons';
+import { useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state.session';
 import {
   brainRegionsWithRepresentationAtom,
   setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
+
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { renderDate } from '@/entity-configuration/definitions/renderer';
+import { label } from '@/components/form-label';
+import { ensureArray } from '@/utils/array';
+import { classNames } from '@/util/utils';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -91,74 +97,89 @@ export default function NewMEModelPage(props: Params) {
   return (
     <div className="m-10 flex h-full flex-col gap-5">
       <div className="text-primary-8 text-3xl font-bold">Build a new single neuron model</div>
-      <div className="flex flex-row gap-4">
-        <div className="flex-1 grow flex-col gap-4">
-          <Form
-            className="flex flex-col gap-4"
-            form={form}
-            layout="vertical"
-            autoComplete="off"
-            preserve={false}
-            onValuesChange={onValuesChange}
-            initialValues={{
-              name: sessionValue.name,
-              description: sessionValue.description,
-              brainRegion: sessionValue.brainRegion?.id,
-            }}
-          >
-            <Form.Item
-              hasFeedback
-              label={<span className="text-primary-8">NAME</span>}
-              name="name"
-              validateTrigger="onBlur"
-              rules={[{ required: true, message: 'Please fill the name' }]}
+      <div className="grid w-full grid-rows-[max-content_1fr] gap-x-20 gap-y-10 md:grid-cols-2 md:gap-y-0">
+        <div className="order-2 flex w-full flex-col gap-y-5 md:order-1">
+          <ConfigProvider theme={{ token: { borderRadius: 0 } }}>
+            <Form
+              name="single-model-configuration-form"
+              className="flex flex-col gap-4"
+              form={form}
+              layout="vertical"
+              autoComplete="off"
+              preserve={false}
+              requiredMark="optional"
+              onValuesChange={onValuesChange}
+              initialValues={{
+                name: sessionValue.name,
+                description: sessionValue.description,
+                brainRegion: sessionValue.brainRegion?.id,
+              }}
             >
-              <Input placeholder="Your model name..." />
-            </Form.Item>
-            <Form.Item
-              hasFeedback
-              label={<span className="text-primary-8">DESCRIPTION</span>}
-              name="description"
-            >
-              <Input.TextArea placeholder="Your description..." showCount />
-            </Form.Item>
-            <Form.Item
-              hasFeedback
-              label={<span className="text-primary-8">BRAIN REGION</span>}
-              name="brainRegion"
-            >
-              <Select
-                placeholder="Select brain region"
-                optionFilterProp="label"
-                allowClear
-                showSearch
-                options={brainRegionOptions}
-              />
-            </Form.Item>
-          </Form>
+              <Form.Item
+                hasFeedback
+                label={label('name', 'main', <sup className="text-base text-red-500">*</sup>)}
+                name="name"
+                validateTrigger="onBlur"
+                rules={[{ required: true, message: 'Please provide a name!' }]}
+              >
+                <Input
+                  placeholder="your model name"
+                  size="large"
+                  className="border-neutral-2! text-primary-8! rounded-sm! font-bold! [&_input]:placeholder:!font-light"
+                />
+              </Form.Item>
+              <Form.Item hasFeedback label={label('Description', 'main')} name="description">
+                <Input.TextArea
+                  rows={5}
+                  placeholder="your description"
+                  size="large"
+                  className="border-neutral-2! text-primary-8! rounded-sm! p-2 [&_textarea]:placeholder:!font-light"
+                />
+              </Form.Item>
+              <Form.Item hasFeedback label={label('brain region', 'main')} name="brainRegion">
+                <Select
+                  placeholder="Select brain region"
+                  optionFilterProp="label"
+                  allowClear
+                  showSearch
+                  size="large"
+                  options={brainRegionOptions}
+                  className="border-neutral-2! text-primary-8! rounded-sm! [&_.ant-select-selector]:!rounded-sm"
+                />
+              </Form.Item>
+            </Form>
+          </ConfigProvider>
         </div>
-        <div className="text-primary-7 mr-10 flex-1">
-          <div className="text-neutral-4 uppercase">Created by</div>
-          <div className="mt-2">
-            <ul>{contributors?.map(({ id, name }) => <li key={id}>{name}</li>)}</ul>
+        <div className="order-1 grid grid-cols-2 items-start justify-between gap-2 md:order-2">
+          <div className="flex flex-col items-start gap-1">
+            {label('created by', 'secondary')}
+            <div className="text-primary-8 flex flex-col items-start justify-center gap-2">
+              {ensureArray({ input: contributors }).map((user) => (
+                <div className="font-bold" key={`contributor-${user.id}`}>
+                  <UserOutlined className="mr-1 h-3 w-3" />
+                  {user.name ?? user.username}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="text-primary-7 mr-10 flex-1">
-          <div className="text-neutral-4 uppercase">Creation Date</div>
-          <div className="mt-2">{new Intl.DateTimeFormat('fr-CH').format(new Date())}</div>
+          <div className="flex flex-col gap-1">
+            {label('creation date', 'secondary')}
+            <div className="text-primary-8 font-bold">{renderDate(new Date().toISOString())}</div>
+          </div>
         </div>
       </div>
       <div>
-        <Button
-          type="primary"
-          htmlType="submit"
-          disabled={!isFormValid}
-          size="large"
+        <button
+          type="button"
+          className={classNames(
+            'bg-primary-8 fixed right-10 bottom-10 rounded-none px-7 py-4 text-white',
+            'disabled:text-primary-7 disabled:border-primary-7 disabled:cursor-not-allowed disabled:border disabled:bg-white'
+          )}
           onClick={onSubmit}
-          className="bg-primary-8 absolute right-0 bottom-0 m-10 rounded-none"
+          disabled={!isFormValid}
         >
           Start building
-        </Button>
+        </button>
       </div>
     </div>
   );
