@@ -1,15 +1,11 @@
 import { ModelResource } from './explore-section/delta-model';
 
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+
 export const NEXUS_SYNAPTOME_TYPE = 'SingleNeuronSynaptome';
-export const SYNAPTOME_OBJECT_OF_STUDY = {
-  '@id': 'http://bbp.epfl.ch/neurosciencegraph/taxonomies/objectsofstudy/singlecells',
-  '@type': 'nsg:ObjectOfStudy',
-  label: 'Single Cell',
-} as const;
-type SynaptomeObjectOfStudy = typeof SYNAPTOME_OBJECT_OF_STUDY;
 
 export type SynaptomeConfigDistribution = {
-  synapses: SingleSynaptomeConfig[];
+  synapses: Array<TSingleNeuronSynaptomeConfiguration>;
   meModelSelf: string;
 };
 
@@ -37,7 +33,7 @@ export type SynaptomeModelConfiguration = {
   description: string;
   seed: number;
   modelUrl: string;
-  synapses: Array<SingleSynaptomeConfig>;
+  synapses: Array<TSingleNeuronSynaptomeConfiguration>;
 };
 
 export type SingleNeuronSynaptomeResource = ModelResource & {
@@ -45,6 +41,6 @@ export type SingleNeuronSynaptomeResource = ModelResource & {
     '@id': string;
     '@type': ['Entity', 'MEModel'];
   };
-  objectOfStudy: SynaptomeObjectOfStudy;
+  // objectOfStudy: SynaptomeObjectOfStudy;
   '@type': 'SingleNeuronSynaptome';
 };

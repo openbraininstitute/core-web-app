@@ -1,6 +1,7 @@
 import {
   getSingleNeuronSynaptome,
   getSingleNeuronSynaptomes,
+  createSingleNeuronSynaptome,
 } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
@@ -23,6 +24,7 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
     query: {
       list: getSingleNeuronSynaptomes,
       one: getSingleNeuronSynaptome,
+      create: createSingleNeuronSynaptome,
     },
   },
   explore: {
@@ -30,6 +32,7 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
     routePrefix: 'interactive/model',
   },
   asset: {
-    extension: undefined,
+    extension: 'application/json',
+    configfile: 'single_neuron_synaptome_config',
   },
 } as const;

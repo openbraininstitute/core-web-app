@@ -2,6 +2,8 @@ import authApiClient from '@/api/apiClient';
 
 import { entityCorePublicProjectId, entityCorePublicVirtualLabId } from '@/config';
 import { entityCoreUrl } from '@/config';
+import { EntityCoreBaseAsset, IAsset } from './types/shared/global';
+import find from 'lodash/find';
 
 export const getEntityCorePublicContext = () => ({
   headers: {
@@ -33,4 +35,15 @@ export const getEntityCoreContext = (
 export async function entityCoreApi(url?: string) {
   const api = await authApiClient(url ?? entityCoreUrl);
   return api;
+}
+
+export function getAssetElement(
+  config:
+    | (Partial<EntityCoreBaseAsset> & { filter: (i: IAsset) => boolean })
+    | (Partial<EntityCoreBaseAsset> & { type: string; path: string })
+) {
+  if ('filter' in config) {
+    return find(config.assets, config.filter);
+  }
+  return find(config.assets, (v) => v.path === config.path && v.content_type === config.type);
 }

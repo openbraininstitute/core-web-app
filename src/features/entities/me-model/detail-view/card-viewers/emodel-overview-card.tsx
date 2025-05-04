@@ -2,7 +2,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { use, memo } from 'react';
 import Link from 'next/link';
 
-import CardContainer from '@/features/entities/me-model/card-viewers/card-container';
+import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
 import {
   EmptyValue,
   renderArray,
@@ -77,10 +77,8 @@ function EModelOverviewCard({ mode = 'summary', promise, reselectLink = false }:
         modelDetails={details}
         thumbnail={
           renderPreview(
-            // @ts-expect-error
-            // TODO: need to the type form entitycore api
-            // TODO: use the ephys here instead of the emodel
-            { ...emodel, type: EntityTypeEnum.Emodel },
+            // TODO: use renderImage (emodel has a thumbnail image in `image`)
+            emodel,
             { height: 200, width: 200 }
           )
           // selectedEModel && <EModelThumbnail emodel={selectedEModel} />

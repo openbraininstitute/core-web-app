@@ -194,6 +194,8 @@ export default function ListingFilterPanel({
   );
   const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
 
+  console.log('ᦨ #  listing-filter-panel.tsx:197 #  activeColumns:', activeColumns);
+
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;
     const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);

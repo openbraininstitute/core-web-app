@@ -3,6 +3,7 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type {
   ISingleNeuronSynaptome,
   ISingleNeuronSynaptomeFilter,
+  TCreateSingleNeuronSynaptome,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
@@ -69,5 +70,23 @@ export async function getSingleNeuronSynaptome({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+  });
+}
+
+export async function createSingleNeuronSynaptome({
+  body,
+  context,
+}: {
+  body: TCreateSingleNeuronSynaptome;
+  context: Required<WorkspaceContext>;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<ISingleNeuronSynaptome>(`${baseUri}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body,
   });
 }

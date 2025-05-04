@@ -45,10 +45,7 @@ export function ErrorComponent({
 
         <div className="mb-2 w-full bg-white p-6">
           <h2 className="text-primary-8 mb-2 text-sm font-medium select-none">DESCRIPTION</h2>
-          <p className="text-primary-8 text-xl font-bold">
-            {(customError ?? error?.message) ||
-              'We apologize, but something unexpected went wrong. Please try again later.'}
-          </p>
+          <p className="text-primary-8 text-xl font-bold">{error?.message || customError}</p>
         </div>
         {children}
         {showButtons && (

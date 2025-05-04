@@ -28,6 +28,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   };
   asset: {
     extension?: string;
+    configfile?: string;
   };
   viewDefinition?: ViewDefinitionConfig;
 };

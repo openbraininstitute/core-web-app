@@ -20,7 +20,6 @@ export default function ExploreLayout({ children }: GenericLayoutProps) {
   const setSection = useSetAtom(sectionAtom);
 
   useEffect(() => {
-    console.log('ExploreLayout mounted');
     setSection('explore');
   }, [setSection]);
 

@@ -102,7 +102,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     mlTopic: 'Neuron morphology',
   },
-  // TODO: fix the columns when electrophysiology server from the BE
   [DataType.ExperimentalElectroPhysiology]: {
     title: 'Electrophysiology',
     group: DataTypeGroup.ExperimentalData,

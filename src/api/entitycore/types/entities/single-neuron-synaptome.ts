@@ -1,3 +1,9 @@
+import isNil from 'lodash/isNil';
+import { z } from 'zod';
+
+import { validateFormula } from '@/api/bluenaas/validate-synapse-formula';
+
+import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
@@ -6,6 +12,7 @@ import type {
   Timestamps,
   EntityCoreOwnership,
   EntityCoreType,
+  EntityCoreBaseAsset,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -14,8 +21,6 @@ import type {
   MtypeFilter,
   EtypeFilter,
 } from '@/api/entitycore/types/shared/request';
-
-import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 
 export interface SingleNeuronSynaptomeBase {
   name: string;
@@ -29,7 +34,8 @@ export interface ISingleNeuronSynaptome
     SingleNeuronSynaptomeBase,
     Timestamps,
     EntityCoreOwnership,
-    EntityCoreType {
+    EntityCoreType,
+    EntityCoreBaseAsset {
   contributions?: Array<IContributor> | null;
   brain_region: IBrainRegion;
   me_model: IMEModel;
@@ -42,3 +48,78 @@ export interface ISingleNeuronSynaptomeFilter
     BrainRegionFilter,
     SharedFilter,
     IMEModelFilter {}
+
+export const CreateSingleNeuronSynaptomeSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  brain_region_id: z.number(),
+  me_model_id: z.string().uuid(),
+  seed: z.number(),
+});
+
+export type TCreateSingleNeuronSynaptome = z.infer<typeof CreateSingleNeuronSynaptomeSchema>;
+
+export const SingleNeuronSynaptomeExclusionRuleSchema = z
+  .object({
+    id: z.string().uuid(),
+    distance_soma_gte: z.number().nullish(),
+    distance_soma_lte: z.number().nullish(),
+  })
+  .refine(
+    (data) => {
+      if (!isNil(data.distance_soma_gte) || !isNil(data.distance_soma_lte)) return true;
+      return false;
+    },
+    {
+      message: 'At least one of distance_soma_gte or distance_soma_lte must be provided',
+      path: ['distance_soma_gte', 'distance_soma_lte'],
+    }
+  );
+
+export type TSingleNeuronSynaptomeExclusionRule = z.infer<
+  typeof SingleNeuronSynaptomeExclusionRuleSchema
+>;
+
+export const SingleNeuronSynaptomeConfigurationSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    target: z.string().optional(),
+    seed: z.number(),
+    color: z.string(),
+    formula: z.string(),
+    soma_synapse_count: z.number().optional(),
+    type: z.union([z.literal(110), z.literal(10)]).optional(),
+    exclusion_rules: z.array(SingleNeuronSynaptomeExclusionRuleSchema).nullable(),
+  })
+  .superRefine((synapse, ctx) => {
+    if (synapse.target !== 'soma' && isNil(synapse.formula)) {
+      return ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'formula should be provided when target is different then "soma"',
+        path: ['formula'],
+      });
+    }
+    if (synapse.target === 'soma' && isNil(synapse.soma_synapse_count)) {
+      return ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'soma_synapse_count must be a valid number when target is "soma"',
+        path: ['soma_synapse_count'],
+      });
+    }
+  })
+  .superRefine(async (synapse, ctx) => {
+    return validateFormula(synapse.formula).then((v) => {
+      if (!v) {
+        return ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'formula is not valid',
+          path: ['formula'],
+        });
+      }
+    });
+  });
+
+export type TSingleNeuronSynaptomeConfiguration = z.infer<
+  typeof SingleNeuronSynaptomeConfigurationSchema
+>;

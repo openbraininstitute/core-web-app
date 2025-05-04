@@ -1,38 +1,32 @@
 'use client';
 
-import { Empty, Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { Empty } from 'antd';
 
 import {
-  sectionTargetMapping,
+  SECTION_TARGET_MAPPING,
   SectionTargetMappingKeys,
-} from '@/components/build-section/virtual-lab/synaptome/molecules/constants';
-import { getSimulationColor, SYNPASE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
-import { useModelConfiguration } from '@/hooks/useModelConfiguration';
-import { SynaptomeConfigDistribution } from '@/types/synaptome';
+} from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
+import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
 
-import ConfigItem from '@/components/build-section/virtual-lab/synaptome/molecules/ConfigItem';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
-export default function SynapseGroupList({ modelUrl }: { modelUrl: string }) {
-  const { configuration, loading } = useModelConfiguration<SynaptomeConfigDistribution>({
-    contentUrl: modelUrl,
-  });
+type Props = {
+  config: {
+    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+  } | null;
+};
 
-  if (loading)
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-        <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading Synaptome Model configuration ...</h2>
-      </div>
-    );
-
-  if (!loading && !configuration) return <Empty description="No synapses found" />;
+export default function SynapseGroupList({ config }: Props) {
+  if (config && !config.synapses.length) {
+    return <Empty description="No synapses found" />;
+  }
 
   return (
     <div className="w-full">
       <h2 className="text-primary-8 mb-8 text-2xl font-bold">Synapse groups</h2>
       <div className="flex flex-row flex-wrap gap-4">
-        {configuration?.synapses?.map(
+        {config?.synapses?.map(
           ({ id, name, formula, target, type, color, soma_synapse_count }, indx) => (
             <div
               key={id}
@@ -52,11 +46,11 @@ export default function SynapseGroupList({ modelUrl }: { modelUrl: string }) {
                   <ConfigItem
                     {...{
                       label: 'target',
-                      value: sectionTargetMapping[target as SectionTargetMappingKeys],
+                      value: SECTION_TARGET_MAPPING[target as SectionTargetMappingKeys],
                     }}
                   />
                   <ConfigItem
-                    {...{ label: 'type', value: type ? SYNPASE_CODE_TO_TYPE[type] : undefined }}
+                    {...{ label: 'type', value: type ? SYNAPSE_CODE_TO_TYPE[type] : undefined }}
                   />
                 </div>
                 {target === 'soma' ? (

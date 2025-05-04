@@ -1,18 +1,20 @@
+import { CaretRightOutlined, DownOutlined } from '@ant-design/icons';
 import { useReducer } from 'react';
 import { Form } from 'antd';
-import { CaretRightOutlined, DownOutlined } from '@ant-design/icons';
 
-import BasicConfigurationHeader from './BasicConfigurationHeader';
-
-import { SynaptomeModelConfigSteps } from './types';
-import { SynaptomeModelConfiguration } from '@/types/synaptome';
+import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/single-neuron-synaptome/build/create.state-session';
+import Header from '@/features/entities/single-neuron-synaptome/build/elements/basic-header';
 import { classNames } from '@/util/utils';
 
-type Props = {
-  configStep: SynaptomeModelConfigSteps;
+import type { SynaptomeModelConfiguration } from '@/types/synaptome';
+import type { WorkspaceContext } from '@/types/common';
+
+type Props = WorkspaceContext & {
+  stateId: string;
 };
 
-export default function ConfigStepHeader({ configStep }: Props) {
+export default function ConfigStepHeader(props: Props) {
+  const { phase } = useBuildSingleNeuronSynaptomeSessionState(props);
   const { getFieldValue } = Form.useFormInstance<SynaptomeModelConfiguration>();
   const [openBasicConfig, onToggleBasicConfig] = useReducer((val) => !val, false);
   const name = getFieldValue('name');
@@ -32,12 +34,12 @@ export default function ConfigStepHeader({ configStep }: Props) {
         <div
           className={classNames(
             'flex w-fit items-center gap-2 tracking-wide uppercase',
-            configStep === 'me-model-config' ? 'text-primary-8 flex' : 'text-neutral-4',
-            configStep === 'basic-config' && 'hidden'
+            phase === 'me-model' ? 'text-primary-8 flex' : 'text-neutral-4',
+            phase === 'basic' && 'hidden'
           )}
         >
           <div>select single neuron</div>
-          {configStep === 'me-model-config' ? (
+          {phase === 'me-model' ? (
             <DownOutlined onClick={onToggleBasicConfig} />
           ) : (
             <CaretRightOutlined />
@@ -47,18 +49,22 @@ export default function ConfigStepHeader({ configStep }: Props) {
         <div
           className={classNames(
             'flex w-fit items-center gap-2 tracking-wide uppercase',
-            configStep === 'placement-config' ? 'text-primary-8 flex' : 'text-neutral-4 hidden'
+            phase === 'placement' ? 'text-primary-8 flex' : 'text-neutral-4 hidden'
           )}
         >
           <div>configure model</div>
-          {configStep === 'placement-config' ? (
+          {phase === 'placement' ? (
             <DownOutlined onClick={onToggleBasicConfig} />
           ) : (
             <CaretRightOutlined />
           )}
         </div>
       </div>
-      <BasicConfigurationHeader show={openBasicConfig} />
+      <Header
+        show={openBasicConfig}
+        virtualLabId={props.virtualLabId}
+        projectId={props.projectId}
+      />
     </div>
   );
 }
