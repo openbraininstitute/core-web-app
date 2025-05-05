@@ -60,8 +60,6 @@ export default function CircuitDetailPage() {
     fetchCircuit();
   }, [circuitKey]);
 
-  console.log('Circuit data:', circuitData);
-
   if (loading) {
     return (
       <div className="relative flex h-[50vh] w-full items-center justify-center text-lg font-normal text-primary-9">
