@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { CircuitSchemaProps } from '../../type';
-import placeholderImage from './circuit-preview-image_01.jpg';
+import placeholderImage from './circuit_placeholder.jpg';
 
 export default function Visualiser({ content }: { content: CircuitSchemaProps }) {
   const imageUrl = content.overview.mainDisplay[0].url;
