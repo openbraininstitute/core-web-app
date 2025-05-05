@@ -77,7 +77,7 @@ export default function CircuitDetailPage() {
   }
 
   return (
-    <div className="relative flex w-full flex-col">
+    <div className="relative flex w-full flex-col p-10 bg-white">
       {circuitData && <MainDetailViewCore content={circuitData} />}
     </div>
   );
