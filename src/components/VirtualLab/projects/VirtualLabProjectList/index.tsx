@@ -1,16 +1,16 @@
 'use client';
 
-import { memo, useMemo, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import Link from 'next/link';
+import { memo, useMemo, useState } from 'react';
 
-import Item from '@/components/VirtualLab/item/project-item';
-import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { Project } from '@/api/virtual-lab-svc/queries/types';
-import useUserPermissions from '@/hooks/useUserPermission';
 import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
+import Item from '@/components/VirtualLab/item/project-item';
+import useUserPermissions from '@/hooks/useUserPermission';
+import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 
 interface ProjectListContentProps {
   projects: Array<Project>;
@@ -107,10 +107,24 @@ export default function VirtualLabProjectList({ id }: { id: string }) {
     [currentProjects?.data?.results]
   );
 
+  console.log('Number of projects:', projects.length);
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="h-[calc(100%-80px)] overflow-hidden">
-        <ProjectListContent projects={projects} />
+        {projects.length > 0 ? (
+          <ProjectListContent projects={projects} />
+        ) : (
+          <div className="w-full rounded-xl border border-solid border-primary-6 bg-transparent p-10">
+            <h1 className="text-2xl font-bold text-white">
+              You do not have access to any projects yet. Create a new project to get started!
+            </h1>
+            <p className="text-lg text-primary-3">
+              In order to start exploring brain regions, building models and simulate neurons,
+              create a project
+            </p>
+          </div>
+        )}
       </div>
       <div className="ml-auto mt-auto">
         <CreateProjectButton labId={id} />
