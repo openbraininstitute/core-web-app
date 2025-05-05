@@ -25,7 +25,7 @@ export default function CircuitDetailPage() {
 
       try {
         setLoading(true);
-        const response = await fetch('/api/circuit/data', {
+        const response = await fetch('/api/circuits/data', {
           cache: 'no-store',
         });
 
@@ -59,6 +59,8 @@ export default function CircuitDetailPage() {
 
     fetchCircuit();
   }, [circuitKey]);
+
+  console.log('Circuit data:', circuitData);
 
   if (loading) {
     return (
