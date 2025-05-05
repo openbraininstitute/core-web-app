@@ -130,7 +130,7 @@ export default function ExploreListingLayout({
   useEffect(() => {
     async function fetchCircuitCount() {
       try {
-        const response = await fetch('/api/circuits/count');
+        const response = await fetch('/api/explore-circuits/count');
         if (!response.ok) {
           throw new Error('Failed to fetch circuit count');
         }
