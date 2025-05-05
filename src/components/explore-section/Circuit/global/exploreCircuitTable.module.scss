@@ -17,7 +17,7 @@
 }
 
 .circuitTable ant-table-tbody {
-  background: #FAFAFA;
+  background: #fafafa;
 
   & > tr:last-child > td {
     border-bottom: 0;
@@ -25,13 +25,13 @@
 }
 
 .circuitTable ant-table-row {
-  background: #FAFAFA;
+  background: #fafafa;
 }
 
-.circuitTable ant-table-thead_th{
+.circuitTable ant-table-thead_th {
   font-size: 14px;
   font-weight: normal;
-  color: #8C8C8C;
+  color: #8c8c8c;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -45,7 +45,7 @@
   display: hidden !important;
 }
 
-// RESIZING 
+// RESIZING
 
 .resize-handle {
   position: absolute;

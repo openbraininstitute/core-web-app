@@ -58,7 +58,6 @@ export default function CircuitTable({
   downloadable?: boolean;
   hasSearch?: boolean;
 }) {
-
   // ROWS
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -185,40 +184,37 @@ export default function CircuitTable({
         </div>
       )}
       <div className="relative w-full overflow-x-scroll">
-          <div className="tableAndButton">
-            <Table
-              className={styles.circuitTable}
-              style={
-                {
-                  '--ant-table-expand-icon-col-width': '0px',
-                } as React.CSSProperties
-              }
-              data-row-selection={downloadable && downloadable.toString()}
-              components={{
-                header: {
-                  cell: ResizableTitle,
-                },
-                body: {
-                  row: rowWrapperWithColumns,
-                },
-              }}
-              dataSource={filteredData}
-              columns={mergedColumns}
-              pagination={false}
-              rowSelection={downloadable ? rowSelection : undefined}
-              expandable={{
-                expandedRowRender: renderSubcircuits,
-                expandedRowKeys,
-                onExpand: handleExpandRow,
-                expandIcon: () => null,
-                rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
-              }}
-            />
-            {fileUrl && (
-              <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />
-            )}
-          </div>
-        
+        <div className="tableAndButton">
+          <Table
+            className={styles.circuitTable}
+            style={
+              {
+                '--ant-table-expand-icon-col-width': '0px',
+              } as React.CSSProperties
+            }
+            data-row-selection={downloadable && downloadable.toString()}
+            components={{
+              header: {
+                cell: ResizableTitle,
+              },
+              body: {
+                row: rowWrapperWithColumns,
+              },
+            }}
+            dataSource={filteredData}
+            columns={mergedColumns}
+            pagination={false}
+            rowSelection={downloadable ? rowSelection : undefined}
+            expandable={{
+              expandedRowRender: renderSubcircuits,
+              expandedRowKeys,
+              onExpand: handleExpandRow,
+              expandIcon: () => null,
+              rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
+            }}
+          />
+          {fileUrl && <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />}
+        </div>
       </div>
     </div>
   );

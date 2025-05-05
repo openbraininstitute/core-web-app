@@ -50,23 +50,20 @@ const filterCircuitsByNumeric = (
           matches = false;
       }
 
-      const filteredSubcircuits = circuit.subcircuits
+      const filteredsubcircuits = circuit.subcircuits
         ? filterCircuitsByNumeric(circuit.subcircuits, options)
         : [];
 
-      if (matches || filteredSubcircuits.length > 0) {
+      if (matches || filteredsubcircuits.length > 0) {
         return {
           ...circuit,
-          subcircuit: filteredSubcircuits ?? [],
+          subcircuits: filteredsubcircuits ?? [],
         };
       }
 
       return null;
     })
-    .filter(
-      (circuit): circuit is CircuitSchemaProps =>
-        circuit !== null && circuit.subcircuit !== undefined
-    );
+    .filter((circuit): circuit is CircuitSchemaProps => circuit !== null);
 };
 
 export default filterCircuitsByNumeric;
