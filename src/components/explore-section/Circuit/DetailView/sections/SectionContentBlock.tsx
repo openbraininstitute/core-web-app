@@ -1,8 +1,8 @@
 import { CircuitSchemaProps } from '../../type';
-import OverviewSection from './OverviewSection';
-import ProvenanceSection from './ProvenanceSection';
-import RelatedCircuitsSection from './RelatedCircuitsSection';
-import RelatedPublicationssSection from './RelatedPublicationssSection';
+import OverviewSection from './Overview';
+import ProvenanceSection from './Provenance';
+import RelatedCircuitsSection from './RelatedCircuits';
+import RelatedPublicationssSection from './RelatedPublications';
 
 
 export default function SectionContentBlock({

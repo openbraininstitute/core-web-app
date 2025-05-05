@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react';
-import { CircuitSchemaProps } from '../../type';
-import Literature from './Provenance/Literature';
-import RelatedArtifacts from './Provenance/RelatedArtifacts';
+import { CircuitSchemaProps } from '../../../type';
+import Literature from './Literature';
+import RelatedArtifacts from './RelatedArtifacts';
 
 export type ProvenanceSubsectionProps = {
   name: string;

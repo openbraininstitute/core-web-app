@@ -1,5 +1,6 @@
 import { CircuitSchemaProps } from '../type';
 import HeaderDetailView from './HeaderDetailView';
+import SectionMainContainer from './sections/SectionMainContainer';
 import Visualiser from './visualisation/Visualiser';
 
 export default function MainDetailViewCore({ content }: { content: CircuitSchemaProps }) {
@@ -7,6 +8,7 @@ export default function MainDetailViewCore({ content }: { content: CircuitSchema
     <div className="relative flex w-full flex-col text-primary-9">
       <HeaderDetailView content={content} />
       <Visualiser content={content} />
+      <SectionMainContainer content={content} />
     </div>
   );
 }

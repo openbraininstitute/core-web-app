@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { CircuitSchemaProps, PaperLiteratureProps } from '../../../type';
-import PublicationCard from '../PublicationCard';
-import SubtitleBar from '../SubtitleBar';
+import PublicationCard from '../global/PublicationCard';
+import SubtitleBar from '../global/SubtitleBar';
 
 export default function Literature({ content }: { content: CircuitSchemaProps }) {
   const CIRCUIT_PROVENANCE_LITERATURE = useMemo(

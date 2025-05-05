@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { CopyIcon, LinkIcon } from '../../icon/ArticlesIcons';
-import { PaperLiteratureProps } from '../../type';
 
-import { CheckIcon, UserIcon } from '@/components/icons';
+import { PaperLiteratureProps } from '../../../type';
+
+import { CheckIcon, LinkIcon, UserIcon } from '@/components/icons';
 import CalendarIcon from '@/components/icons/Calendar';
+import CopyIcon from '@/components/icons/CopyIcon';
 import { classNames } from '@/util/utils';
 
 export default function PublicationCard({
@@ -47,20 +48,24 @@ export default function PublicationCard({
           </h3>
         </div>
         <div className="flex flex-row gap-x-3">
-          <Link
-            href={content.link}
-            target="_blank"
-            className="flex flex-row items-center text-base font-normal text-[#003A8C]"
-          >
-            <LinkIcon iconColor="#003A8C" className="mr-2 h-4 w-4" />
-            <span>Link</span>
-          </Link>
+          {
+            content.link !== undefined && (
+              <Link
+                href={content.link}
+                target="_blank"
+                className="flex flex-row items-center text-base font-normal text-[#003A8C]"
+              >
+                <LinkIcon className="mr-2 h-4 w-4" />
+                <span>Link</span>
+              </Link>
+            )
+          }
           <button
             type="button"
             onClick={copyDOI}
             className="flex flex-row items-center text-base font-normal text-[#003A8C]"
           >
-            <CopyIcon iconColor="#003A8C" className="mr-2 h-4 w-4" />
+            <CopyIcon className="mr-2 h-4 w-4" />
             <span className="whitespace-nowrap">Copy DOI</span>
           </button>
         </div>

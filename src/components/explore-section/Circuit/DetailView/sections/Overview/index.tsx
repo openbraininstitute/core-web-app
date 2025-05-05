@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { CircuitSchemaProps } from '../../type';
-import SubtitleBar from './SubtitleBar';
+import { CircuitSchemaProps } from '../../../type';
+import SubtitleBar from '../global/SubtitleBar';
 
 export type ImageProps = {
   name: string;
