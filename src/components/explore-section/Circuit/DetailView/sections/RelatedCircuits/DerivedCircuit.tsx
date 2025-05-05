@@ -59,7 +59,8 @@ export default function DerivedCircuits({ content }: { content: CircuitSchemaPro
   if (error) {
     return (
       <div className="relative flex h-[50vh] w-full items-center justify-center text-lg font-normal text-red-600">
-        {error}
+       An error occured while fetching derived circuits. 
+       <a href="mailto:support@openbraininstitute.org">Let us know how we can help</a>
       </div>
     );
   }
