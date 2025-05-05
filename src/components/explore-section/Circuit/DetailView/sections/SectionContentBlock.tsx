@@ -4,7 +4,6 @@ import ProvenanceSection from './Provenance';
 import RelatedCircuitsSection from './RelatedCircuits';
 import RelatedPublicationssSection from './RelatedPublications';
 
-
 export default function SectionContentBlock({
   content,
   activeSection,

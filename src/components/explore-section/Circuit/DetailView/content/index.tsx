@@ -1,4 +1,4 @@
-import { CircuitSchemaProps } from "../../type";
+import { CircuitSchemaProps } from '../../type';
 
 export type CircuitWithCount = {
   circuit: CircuitSchemaProps;

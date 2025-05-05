@@ -48,18 +48,16 @@ export default function PublicationCard({
           </h3>
         </div>
         <div className="flex flex-row gap-x-3">
-          {
-            content.link !== undefined && (
-              <Link
-                href={content.link}
-                target="_blank"
-                className="flex flex-row items-center text-base font-normal text-[#003A8C]"
-              >
-                <LinkIcon className="mr-2 h-4 w-4" />
-                <span>Link</span>
-              </Link>
-            )
-          }
+          {content.link !== undefined && (
+            <Link
+              href={content.link}
+              target="_blank"
+              className="flex flex-row items-center text-base font-normal text-[#003A8C]"
+            >
+              <LinkIcon className="mr-2 h-4 w-4" />
+              <span>Link</span>
+            </Link>
+          )}
           <button
             type="button"
             onClick={copyDOI}

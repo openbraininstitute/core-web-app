@@ -1,11 +1,10 @@
 'use client';
 
-import { CircuitSchemaProps } from "../../../type";
-import SubtitleBar from "../global/SubtitleBar";
-import DerivedCircuits from "./DerivedCircuit";
-import ParentCircuit from "./Parentcircuit";
-import Subcircuits from "./Subcircuit";
-
+import { CircuitSchemaProps } from '../../../type';
+import SubtitleBar from '../global/SubtitleBar';
+import DerivedCircuits from './DerivedCircuit';
+import ParentCircuit from './Parentcircuit';
+import Subcircuits from './Subcircuit';
 
 export default function RelatedCircuitsSection({ content }: { content: CircuitSchemaProps }) {
   return (
