@@ -13,7 +13,7 @@ export default function CircuitDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const params = useParams();
-  const circuitKey = params?.key as string | undefined;
+  const circuitKey = params.key as string | undefined;
 
   useEffect(() => {
     const fetchCircuit = async () => {
@@ -25,7 +25,7 @@ export default function CircuitDetailPage() {
 
       try {
         setLoading(true);
-        const response = await fetch('/api/circuit/data', {
+        const response = await fetch('/api/circuits/data', {
           cache: 'no-store',
         });
 
