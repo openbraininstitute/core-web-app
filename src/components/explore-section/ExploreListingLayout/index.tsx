@@ -5,10 +5,9 @@ import { Menu } from 'antd';
 import { useAtomValue } from 'jotai';
 import find from 'lodash/find';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { CSSProperties, ReactNode } from 'react';
+import { CSSProperties, ReactNode, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-
-import { circuitCountAtom } from '../Circuit/content/circuits_flat';
+import { StatError } from '../ExploreInteractive/StatItem';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
@@ -22,9 +21,9 @@ import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { totalByExperimentAndRegionsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { DataTypeGroup } from '@/types/explore-section/data-types';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { ensureString } from '@/util/type-guards';
-import { DataTypeGroup } from '@/types/explore-section/data-types';
 
 const dataScope = ExploreDataScope.SelectedBrainRegion;
 
@@ -65,6 +64,9 @@ export default function ExploreListingLayout({
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
 
+  const [circuitCount, setCircuitCount] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const splittedPathname = pathname.split('/');
   const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
 
@@ -77,7 +79,6 @@ export default function ExploreListingLayout({
 
   const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
-  const circuitCount = useAtomValue(circuitCountAtom);
 
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
@@ -125,6 +126,32 @@ export default function ExploreListingLayout({
       },
     };
   });
+
+  useEffect(() => {
+    async function fetchCircuitCount() {
+      try {
+        const response = await fetch('/api/circuits/count');
+        if (!response.ok) {
+          throw new Error('Failed to fetch circuit count');
+        }
+
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setCircuitCount(data.count);
+      } catch (err) {
+        setError('Failed to load circuit count');
+        setCircuitCount(0);
+      }
+    }
+    fetchCircuitCount();
+  }, []);
+
+  if (error) {
+    return <StatError text={error} />;
+  }
 
   if (showCircuitMenu) {
     const circuitActive = activePath === 'circuit';
