@@ -181,15 +181,15 @@ export default function ExploreListingLayout({
         {!isCircuitPage && <BackToInteractiveExplorationBtn href={interactivePageHref} />}
 
         <div className="flex grow flex-col overflow-x-hidden">
-            <Menu
-              onClick={onClick}
-              selectedKeys={[activePath]}
-              mode="horizontal"
-              theme="dark"
-              style={{ backgroundColor: '#002766' }}
-              className="flex w-[calc(100%+6px)] justify-start"
-              items={items}
-            />
+          <Menu
+            onClick={onClick}
+            selectedKeys={[activePath]}
+            mode="horizontal"
+            theme="dark"
+            style={{ backgroundColor: '#002766' }}
+            className="flex w-[calc(100%+6px)] justify-start"
+            items={items}
+          />
 
           <div className="grow bg-primary-9 text-white">{children}</div>
         </div>

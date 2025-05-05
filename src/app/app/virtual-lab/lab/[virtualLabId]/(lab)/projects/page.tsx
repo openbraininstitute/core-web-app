@@ -16,5 +16,5 @@ export default function VirtualLabProjectsPage({
 }: ServerSideComponentProp<{ virtualLabId: string }>) {
   const { virtualLabId } = params;
 
-  return <VirtualLabProjectList id={virtualLabId} />
+  return <VirtualLabProjectList id={virtualLabId} />;
 }

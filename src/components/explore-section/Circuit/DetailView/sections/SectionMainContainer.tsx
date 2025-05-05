@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { CircuitSchemaProps } from '../../type';
+
 import SectionContentBlock from './SectionContentBlock';
 import SectionTabs from './SectionTabs';
 
-export default function SectionMainContainer({ content }: { content: CircuitSchemaProps }) {
+export default function SectionMainContainer({
+  content,
+  parentCircuit,
+  derivedCircuits,
+}: {
+  content: CircuitSchemaProps;
+  parentCircuit: CircuitSchemaProps | null;
+  derivedCircuits: CircuitSchemaProps[] | null;
+}) {
   const [activeSection, setActiveSection] = useState<
     'overview' | 'provenance' | 'related-publications' | 'related-circuits'
   >('overview');
@@ -11,7 +20,12 @@ export default function SectionMainContainer({ content }: { content: CircuitSche
   return (
     <div className="relative flex w-full flex-col">
       <SectionTabs activeSection={activeSection} setActiveSection={setActiveSection} />
-      <SectionContentBlock content={content} activeSection={activeSection} />
+      <SectionContentBlock
+        content={content}
+        parentCircuit={parentCircuit}
+        derivedCircuits={derivedCircuits}
+        activeSection={activeSection}
+      />
     </div>
   );
 }

@@ -76,6 +76,12 @@ export type CircuitSchemaProps = {
   literature: PaperLiteratureProps[];
 };
 
+export type FullCircuitData = {
+  content: CircuitSchemaProps;
+  parent: CircuitSchemaProps | null;
+  derivedFrom: CircuitSchemaProps[] | null;
+};
+
 export type CircuitCellValue = {
   name: string;
   description: 'string';

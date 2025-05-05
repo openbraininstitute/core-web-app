@@ -1,33 +1,39 @@
+import {
+  ActiveSection,
+  SECTION_OVERVIEW,
+  SECTION_PROVENANCE,
+  SECTION_RELATED_CIRCUITS,
+  SECTION_RELATED_PUBLICATIONS,
+} from '../../type/sectionTypes';
+
 type SectionProps = {
   name: string;
-  id: 'overview' | 'provenance' | 'related-publications' | 'related-circuits';
+  id: ActiveSection;
 };
 
 export default function SectionTabs({
   activeSection,
   setActiveSection,
 }: {
-  activeSection: 'overview' | 'provenance' | 'related-publications' | 'related-circuits';
-  setActiveSection: (
-    section: 'overview' | 'provenance' | 'related-publications' | 'related-circuits'
-  ) => void;
+  activeSection: ActiveSection;
+  setActiveSection: (section: ActiveSection) => void;
 }) {
   const sections: SectionProps[] = [
     {
       name: 'Overview',
-      id: 'overview',
+      id: SECTION_OVERVIEW,
     },
     {
       name: 'Provenance',
-      id: 'provenance',
+      id: SECTION_PROVENANCE,
     },
     {
       name: 'Related Publications',
-      id: 'related-publications',
+      id: SECTION_RELATED_PUBLICATIONS,
     },
     {
       name: 'Related Circuits',
-      id: 'related-circuits',
+      id: SECTION_RELATED_CIRCUITS,
     },
   ];
 

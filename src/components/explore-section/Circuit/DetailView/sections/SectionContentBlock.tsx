@@ -6,9 +6,13 @@ import RelatedPublicationssSection from './RelatedPublications';
 
 export default function SectionContentBlock({
   content,
+  parentCircuit,
+  derivedCircuits,
   activeSection,
 }: {
   content: CircuitSchemaProps;
+  parentCircuit: CircuitSchemaProps | null;
+  derivedCircuits: CircuitSchemaProps[] | null;
   activeSection: 'overview' | 'provenance' | 'related-publications' | 'related-circuits';
 }) {
   let currentSection;
@@ -24,7 +28,13 @@ export default function SectionContentBlock({
       currentSection = <RelatedPublicationssSection content={content} />;
       break;
     case 'related-circuits':
-      currentSection = <RelatedCircuitsSection content={content} />;
+      currentSection = (
+        <RelatedCircuitsSection
+          content={content}
+          parentCircuit={parentCircuit}
+          derivedCircuits={derivedCircuits}
+        />
+      );
       break;
     default:
       currentSection = null;

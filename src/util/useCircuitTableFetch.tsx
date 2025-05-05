@@ -10,19 +10,22 @@ export type CircuitDataResponse = {
   derivedFrom?: CircuitSchemaProps[];
   loading: boolean;
   error: string | null;
-}
+};
 
 const buildCircuitMap = (circuits: CircuitSchemaProps[]): Map<string, CircuitSchemaProps> => {
   const circuitMap = new Map<string, CircuitSchemaProps>();
-  
+
   circuits.forEach((circuit) => {
     circuitMap.set(circuit.key, circuit);
   });
-  
+
   return circuitMap;
 };
 
-const useCircuitData = (content: CircuitSchemaProps, dataType: CircuitDataType): CircuitDataResponse => {
+const useCircuitData = (
+  content: CircuitSchemaProps,
+  dataType: CircuitDataType
+): CircuitDataResponse => {
   const [data, setData] = useState<{
     parent: CircuitSchemaProps | null;
     subcircuits: CircuitSchemaProps[];
@@ -42,7 +45,6 @@ const useCircuitData = (content: CircuitSchemaProps, dataType: CircuitDataType):
 
       try {
         if (dataType === 'subcircuits') {
-          
           setData((prev) => ({
             ...prev,
             subcircuits: content.subcircuits || [],
@@ -55,7 +57,10 @@ const useCircuitData = (content: CircuitSchemaProps, dataType: CircuitDataType):
           return;
         }
 
-        if (dataType === 'derivedFrom' && (!content.derivedFrom || content.derivedFrom.length === 0)) {
+        if (
+          dataType === 'derivedFrom' &&
+          (!content.derivedFrom || content.derivedFrom.length === 0)
+        ) {
           setError(`Circuit with key "${content.key}" has no derived circuits`);
           return;
         }
@@ -83,7 +88,9 @@ const useCircuitData = (content: CircuitSchemaProps, dataType: CircuitDataType):
             .map((key) => circuitMap.get(key))
             .filter((circuit): circuit is CircuitSchemaProps => !!circuit);
           if (derivedCircuits.length === 0) {
-            throw new Error(`No derived circuits found for keys "${content.derivedFrom.join(', ')}"`);
+            throw new Error(
+              `No derived circuits found for keys "${content.derivedFrom.join(', ')}"`
+            );
           }
           setData((prev) => ({
             ...prev,
