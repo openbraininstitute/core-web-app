@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:next": "npx dotenv -e .deployment-envs/.env.staging-next -- next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start --turbopack",
     "lint": "npx eslint src __tests__ && npx tsc --noEmit",
@@ -145,6 +146,7 @@
     "@vitejs/plugin-react": "^4.4.0",
     "autoprefixer": "^10.4.14",
     "dotenv": "^16.5.0",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^8.40.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
