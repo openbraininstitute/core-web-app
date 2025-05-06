@@ -6,6 +6,7 @@ import type { ExperimentalDataType } from '@/entity-configuration/domain/experim
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { ModelDataType } from '@/entity-configuration/domain/model';
 import type { WorkspaceContext } from '@/types/common';
+import { buildBrainRegionFilterQuery } from '@/api/entitycore/transformers';
 
 export type BulkEntityCoreCountResult = {
   experimental: Record<ExperimentalDataType, number | string>;
@@ -23,11 +24,13 @@ async function getBulkEntityCoreResult({
   context?: WorkspaceContext;
 }) {
   const api = await entityCoreApi();
-  const brainRegionId = brainRegion
-    ? Number(decodeURIComponent(brainRegion).split('/').pop())
-    : undefined;
-
-  const queryParams = { brain_region_id: brainRegionId, page: 1, page_size: 1 };
+  const queryParams = {
+    within_brain_region: buildBrainRegionFilterQuery(
+      brainRegion ? decodeURIComponent(brainRegion) : null
+    ),
+    page: 1,
+    page_size: 1,
+  };
   const headers = {
     accept: 'application/json',
     'content-type': 'application/json',

@@ -29,6 +29,7 @@ import {
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import {
+  buildBrainRegionFilterQuery,
   transformFiltersToQuery,
   transformQueryParamsArrayToString,
 } from '@/api/entitycore/transformers';
@@ -46,13 +47,14 @@ import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import filter from 'lodash/filter';
 import { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { compactRecord } from '@/utils/dictionary';
 
 type DataAtomFamilyScopeType = {
   key: string;
   resourceId?: string;
   shouldUseIds?: boolean;
   targetIds?: Array<string>;
-  dataType: DataType;
+  dataType: EntityCoreLegacyType;
   dataScope?: ExploreDataScope;
   virtualLabInfo?: WorkspaceContext;
 };
@@ -212,7 +214,7 @@ export const dataAtom = atomFamily(
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const filters = await get(filtersAtom(scope));
-
+      const brainRegion = await get(selectedBrainRegionAtom);
       // TODO: better handling when we have IDs filter
       if (scope.shouldUseIds) {
         if (scope.targetIds && Boolean(scope.targetIds?.length)) {
@@ -235,18 +237,16 @@ export const dataAtom = atomFamily(
       }
 
       const sortState = get(sortStateAtom(scope));
-      const queryParams = transformQueryParamsArrayToString(
-        transformFiltersToQuery(filters as any)
-      );
 
-      const queryParameters = {
+      const queryParameters = compactRecord({
         page_size: PAGE_SIZE,
         page: pageNumber,
         search: isEmpty(searchString) ? null : searchString,
         order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
-        ...queryParams,
-      };
-      // TODO: migrate from legacy type to entitycore type when everything is migrated
+        within_brain_region: buildBrainRegionFilterQuery(brainRegion?.id),
+        ...transformQueryParamsArrayToString(transformFiltersToQuery(filters as any)),
+      });
+
       const entity = getEntityByLegacyType({ legacyType: scope.dataType as EntityCoreLegacyType });
       if (entity && entity.api.query.list) {
         const response = await entity.api.query.list({
@@ -255,10 +255,7 @@ export const dataAtom = atomFamily(
             ...(entity.api.config.allowedParams === 'all'
               ? queryParameters
               : pick(queryParameters, entity.api.config.allowedParams ?? [])),
-            // TODO: extend the brain region (in EntityCore) filter to support the children of the selected one
-            // brain_region_id: selectedBrainRegion?.id
-            //   ? Number(selectedBrainRegion?.id.split('/').pop())
-            //   : undefined,
+            within_brain_region: buildBrainRegionFilterQuery(brainRegion?.id),
           },
           context: scope.virtualLabInfo,
         });

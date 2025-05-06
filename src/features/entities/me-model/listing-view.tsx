@@ -11,7 +11,7 @@ import type { RenderButtonProps } from '@/components/explore-section/ExploreSect
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
 
-export default function ExploreMEModelTable({
+export default function ListingView({
   dataType,
   dataScope,
   virtualLabInfo,

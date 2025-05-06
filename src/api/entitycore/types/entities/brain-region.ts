@@ -1,12 +1,14 @@
-import { Timestamps } from '@/api/entitycore/types/shared/global';
+import { EntityCoreIdentifiable, Timestamps } from '@/api/entitycore/types/shared/global';
 
-type BrainRegionHierarchy = {
+export interface IBrainRegionHierarchy {
+  id: string;
   name: string;
   acronym: string;
-  children: number[];
-};
-
-export interface IBrainRegionHierarchy extends BrainRegionHierarchy, Timestamps {}
+  parent_structure_id: string;
+  color_hex_triplet: string;
+  annotation_value: number;
+  children: Array<IBrainRegionHierarchy>;
+}
 
 // order of values: id: number, name: string, acronym: string, children: Array, level: number
 export type TemporaryFlatBrainRegionHierarchy = Array<

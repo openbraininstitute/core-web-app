@@ -80,14 +80,7 @@ function MorphologyOverviewCard({ mode = 'summary', promise, reselectLink = fals
         exploreUrl={exploreUrl}
         modelDetails={details}
         reselectLink={reselectLink}
-        thumbnail={renderPreview<IReconstructionMorphology>(
-          {
-            ...mmodel,
-            // @ts-expect-error // TODO: need to the type form entitycore api
-            type: EntityTypeEnum.ReconstructionMorphology,
-          },
-          { height: 200, width: 200 }
-        )}
+        thumbnail={renderPreview<IReconstructionMorphology>(mmodel, { height: 200, width: 200 })}
       />
     );
   }
