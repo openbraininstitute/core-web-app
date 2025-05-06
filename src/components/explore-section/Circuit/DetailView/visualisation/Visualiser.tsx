@@ -10,7 +10,7 @@ export default function Visualiser({ content }: { content: CircuitSchemaProps })
   return (
     <div
       id="visualiser"
-      className="relative my-24 flex w-full items-center justify-center overflow-hidden bg-white"
+      className="relative my-24 flex w-full items-center justify-center overflow-hidden border border-solid border-neutral-2 bg-white"
     >
       <Image
         src={imageUrl || placeholderImage}

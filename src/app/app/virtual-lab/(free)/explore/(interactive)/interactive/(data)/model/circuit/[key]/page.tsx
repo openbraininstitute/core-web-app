@@ -9,6 +9,8 @@ import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circ
 
 export default function CircuitDetailPage() {
   const [circuitData, setCircuitData] = useState<CircuitSchemaProps | null>(null);
+  const [parentCircuitData, setParentCircuitData] = useState<CircuitSchemaProps | null>(null);
+  const [derivedCircuitsData, setDerivedCircuitsData] = useState<CircuitSchemaProps[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,13 +43,29 @@ export default function CircuitDetailPage() {
 
         const { circuits } = data;
         const circuitMap = buildCircuitMap(circuits);
-        const matchingCircuit = circuitMap.get(circuitKey);
 
+        // Current Circuit content
+        const matchingCircuit = circuitMap.get(circuitKey);
         if (!matchingCircuit) {
           throw new Error(`Circuit with key ${circuitKey} not found!`);
         }
 
+        // Parent Circuit content
+        let parentCircuit: CircuitSchemaProps | null = null;
+        if (matchingCircuit.parent) {
+          parentCircuit = circuitMap.get(matchingCircuit.parent) || null;
+        }
+
+        // Derived Circuit content
+        const derivedCircuits: CircuitSchemaProps[] = matchingCircuit.derivedFrom
+          .map((key: string) => circuitMap.get(key))
+          .filter(
+            (circuit: CircuitSchemaProps | undefined): circuit is CircuitSchemaProps => !!circuit
+          );
+
         setCircuitData(matchingCircuit);
+        setParentCircuitData(parentCircuit);
+        setDerivedCircuitsData(derivedCircuits);
       } catch (er) {
         setError(
           er instanceof Error ? er.message : 'An error occurred while fetching the circuit data'
@@ -77,8 +95,14 @@ export default function CircuitDetailPage() {
   }
 
   return (
-    <div className="relative flex w-full flex-col">
-      {circuitData && <MainDetailViewCore content={circuitData} />}
+    <div className="relative flex w-full flex-col bg-white p-10">
+      {circuitData && (
+        <MainDetailViewCore
+          content={circuitData}
+          parentCircuit={parentCircuitData}
+          derivedCircuits={derivedCircuitsData}
+        />
+      )}
     </div>
   );
 }

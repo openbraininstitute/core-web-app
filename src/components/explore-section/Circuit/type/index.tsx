@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type PaperLitteratureProps = {
+export type PaperLiteratureProps = {
   title: string;
   type: string;
   authors: string[];
@@ -73,16 +73,13 @@ export type CircuitSchemaProps = {
     }[];
   };
 
-  literature: {
-    category: string;
-    title: string;
-    authors: string;
-    doi: string;
-    url: string;
-    journal: string;
-    publicationDate: string;
-    abstract: string;
-  }[];
+  literature: PaperLiteratureProps[];
+};
+
+export type FullCircuitData = {
+  content: CircuitSchemaProps;
+  parent: CircuitSchemaProps | null;
+  derivedFrom: CircuitSchemaProps[] | null;
 };
 
 export type CircuitCellValue = {
