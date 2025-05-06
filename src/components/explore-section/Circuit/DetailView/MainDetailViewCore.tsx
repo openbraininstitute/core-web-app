@@ -13,7 +13,7 @@ export default function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="relative flex w-full flex-col text-primary-9">
+    <div className="text-primary-9">
       <HeaderDetailView content={content} />
       <Visualiser content={content} />
       <SectionMainContainer

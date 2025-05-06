@@ -101,14 +101,16 @@ export default function CircuitDetailPage() {
   }
 
   return (
-    <div className="relative flex w-full flex-col bg-white p-10">
-      {circuitData && (
-        <MainDetailViewCore
-          content={circuitData}
-          parentCircuit={parentCircuitData}
-          derivedCircuits={derivedCircuitsData}
-        />
-      )}
+    <div className="relative overflow-y-scroll bg-white">
+      <div className="p-10">
+        {circuitData && (
+          <MainDetailViewCore
+            content={circuitData}
+            parentCircuit={parentCircuitData}
+            derivedCircuits={derivedCircuitsData}
+          />
+        )}
+      </div>
     </div>
   );
 }
