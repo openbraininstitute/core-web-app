@@ -3,15 +3,21 @@ import path from 'path';
 
 import { NextResponse } from 'next/server';
 
-function countAllCircuits(circuits: any[]): number {
-  return circuits.reduce((total, circuit) => {
-    let count = 1;
+function flattenCircuits(circuits: any[]): any[] {
+  return circuits.reduce((flatList, circuit) => {
+    const updatedList = [...flatList, circuit];
 
-    if (circuit.subcircuit && Array.isArray(circuit.subcircuit)) {
-      count += countAllCircuits(circuit.subcircuit);
+    if (circuit.subcircuits && Array.isArray(circuit.subcircuits)) {
+      return [...updatedList, ...flattenCircuits(circuit.subcircuits)];
     }
-    return total + count;
-  }, 0);
+
+    return updatedList;
+  }, []);
+}
+
+function countAllCircuits(circuits: any[]): number {
+  const flattened = flattenCircuits(circuits);
+  return flattened.length;
 }
 
 export async function GET() {
@@ -33,7 +39,6 @@ export async function GET() {
 
     return NextResponse.json({ count: totalCount });
   } catch (error) {
-    throw new Error(`Failed to load ALL_CIRCUITS.json: ${error}`);
     return NextResponse.json({ error: 'Failed to load circuits data', count: 0 }, { status: 500 });
   }
 }
