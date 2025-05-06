@@ -31,7 +31,7 @@ function buildEModelEntry(source: IEModel): EModelMenuItem {
   } as EModelMenuItem;
 }
 
-export default function ExploreEModelTable({
+export default function ListingView({
   dataType,
   dataScope,
   renderButton,

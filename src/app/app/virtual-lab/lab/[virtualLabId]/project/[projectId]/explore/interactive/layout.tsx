@@ -22,6 +22,9 @@ type Props = {
 };
 
 const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
+const BrainRegionsTreeLatest = dynamic(() => import('@/features/brain-region-tree/latest/index'), {
+  ssr: false,
+});
 
 export default function Layout(props: Props) {
   const { virtualLabId, projectId } = useParams<{
@@ -70,7 +73,8 @@ export default function Layout(props: Props) {
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <BrainRegionsTree />
+        {/* <BrainRegionsTree /> */}
+        <BrainRegionsTreeLatest />
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>
     </div>

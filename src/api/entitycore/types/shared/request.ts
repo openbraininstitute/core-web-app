@@ -11,6 +11,8 @@ export type BrainLocationFilter = {
 
 export type BrainRegionFilter = {
   brain_region_id: number | null;
+  // NOTE: format: hierarchy_id, hierarchy_name, include_ascendants
+  within_brain_region: string;
 };
 
 export type ContributionFilter = {

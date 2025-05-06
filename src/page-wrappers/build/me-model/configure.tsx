@@ -13,25 +13,21 @@ import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-vi
 
 import { usePendingValidationModal } from '@/components/build-section/virtual-lab/me-model/pending-validation-modal-hook';
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
+import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
-import { classNames } from '@/util/utils';
-
-import { WorkspaceContextSchema, type WorkspaceContext } from '@/types/common';
-import {
-  CreateMEModelSchema,
-  IMEModel,
-  ValidationStatus,
-} from '@/api/entitycore/types/entities/me-model';
 import { createMEModel } from '@/api/entitycore/queries';
-import { tryCatch } from '@/api/utils';
+import { WorkspaceContextSchema } from '@/types/common';
 import { OneshotSession } from '@/services/accounting';
 import { ServiceSubtype } from '@/types/accounting';
 import { messages } from '@/i18n/en/me-model';
+import { classNames } from '@/util/utils';
+import { tryCatch } from '@/api/utils';
+
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { WorkspaceContext } from '@/types/common';
 
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
@@ -123,14 +119,14 @@ export default function Configure({ params, searchParams }: Props) {
     return;
   }
 
-  const refreshMeModels = useSetAtom(
-    queryAtom({
-      dataType: DataType.CircuitMEModel,
-      dataScope: ExploreDataScope.NoScope,
-      virtualLabInfo: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-      key: useId(),
-    })
-  );
+  // const refreshMeModels = useSetAtom(
+  //   dataAtom({
+  //     dataType: DataType.CircuitMEModel,
+  //     dataScope: ExploreDataScope.NoScope,
+  //     virtualLabInfo: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+  //     key: useId(),
+  //   })
+  // );
 
   const [activeProcess, setActiveProcess] = useState<
     null | 'modelCreation' | 'modelCreationWithValidation'
@@ -223,7 +219,7 @@ export default function Configure({ params, searchParams }: Props) {
       }
     );
     if (data) {
-      refreshMeModels();
+      // refreshMeModels();
       navigate(
         resolveExploreDetailsPageUrl({
           ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },

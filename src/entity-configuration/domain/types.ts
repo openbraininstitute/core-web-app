@@ -8,7 +8,7 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: EntityCoreTypeGroup;
-  legacyType?: DataType;
+  legacyType: DataType;
   type: EntityTypeValue;
   slug: EntitySlugValue;
   title: string;
