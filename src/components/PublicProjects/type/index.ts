@@ -95,3 +95,8 @@ export type ShowCaseProjectQueryType = {
   minimalMeModel: MinimalMeModelProps[];
   _updatedAt: string;
 };
+
+export type HeaderPublicProjectProps = {
+  title: string;
+  headerImage: string;
+};

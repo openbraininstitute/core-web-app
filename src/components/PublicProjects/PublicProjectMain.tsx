@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { tryType } from '../LandingPage/content';
 
@@ -150,34 +151,58 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
 };
 
 export default function PublicProjectMain({ slug }: { slug: string }) {
-  const content = useSanity(singleCaseQuery(slug), isShowCaseProjectProps) ?? null;
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('section') ?? 'description';
+  const [activeSection, setActiveSection] = useState<string>(initialTab);
 
-  const [activeSection, setActiveSection] = useState<string>('description');
+  const content =
+    useSanity<ShowCaseProjectQueryType>(singleCaseQuery(slug), isShowCaseProjectProps) ?? null;
+
+  useEffect(() => {
+    const section = searchParams.get('section') ?? 'description';
+    const validSections = ['description', 'notebook', 'artifacts'];
+
+    const newSection = validSections.includes(section) ? section : 'description';
+    setActiveSection(newSection);
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    const validSections = ['description', 'notebook', 'artifacts'];
+    if (!validSections.includes(tab)) return;
+
+    setActiveSection(tab);
+
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('section', tab);
+    window.history.pushState({}, '', newUrl);
+  };
 
   let activeSectionContent;
 
-  switch (activeSection) {
-    case 'description':
-      activeSectionContent = content !== null && <DescriptionSection content={content} />;
-      break;
-    case 'artifacts':
-      activeSectionContent = content !== null && <ArtifactsSection content={content} />;
-      break;
-    case 'notebooks':
-      activeSectionContent = content !== null && <NotebookSection content={content} />;
-      break;
-    default:
-      activeSectionContent = content !== null && <DescriptionSection content={content} />;
-      break;
+  if (content !== null) {
+    switch (activeSection) {
+      case 'description':
+        activeSectionContent = <DescriptionSection content={content} />;
+        break;
+      case 'artifacts':
+        activeSectionContent = <ArtifactsSection content={content} />;
+        break;
+      case 'notebooks':
+        activeSectionContent = <NotebookSection content={content} />;
+        break;
+      default:
+        activeSectionContent = <DescriptionSection content={content} />;
+        break;
+    }
   }
 
   return (
     content !== null && (
       <div className="relative flex min-h-screen w-full flex-col gap-y-12 bg-primary-9 py-6 pl-28 pr-10">
-        <HeaderPublicProject title={content.name} headerImage={content?.heroImage} />
+        <HeaderPublicProject title={content.name} headerImage={content.heroImage} />
 
         <div className="flex flex-col">
-          <NavigationSections activeSection={activeSection} setActiveSection={setActiveSection} />
+          <NavigationSections activeSection={activeSection} setActiveSection={handleTabChange} />
           <div className="scroll-behavior: smooth; flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8 text-primary-9">
             {activeSectionContent}
           </div>
