@@ -1,21 +1,25 @@
 'use client';
 
+import { useSetAtom } from 'jotai';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import MainDetailViewCore from '@/components/explore-section/Circuit/DetailView/MainDetailViewCore';
 import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
+import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
 
 export default function CircuitDetailPage() {
+  const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
+  const params = useParams();
+
   const [circuitData, setCircuitData] = useState<CircuitSchemaProps | null>(null);
   const [parentCircuitData, setParentCircuitData] = useState<CircuitSchemaProps | null>(null);
   const [derivedCircuitsData, setDerivedCircuitsData] = useState<CircuitSchemaProps[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const params = useParams();
-  const circuitKey = params.key as string | undefined;
+  const circuitKey = params.id as string | undefined;
 
   useEffect(() => {
     const fetchCircuit = async () => {
@@ -24,6 +28,8 @@ export default function CircuitDetailPage() {
         setLoading(false);
         return;
       }
+
+      setBrainRegionSidebarIsCollapsed(true);
 
       try {
         setLoading(true);

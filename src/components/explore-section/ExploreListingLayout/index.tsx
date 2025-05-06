@@ -97,9 +97,6 @@ export default function ExploreListingLayout({
   const nMenuItems = Object.keys(config).length + (showCircuitMenu ? 1 : 0);
   const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
-  // eslint-disable-next-line
-  const isCircuitPage = /\/model\/circuit\/[^\/]+$/.test(pathname);
-
   const items: {
     key: string;
     title: string;
@@ -172,13 +169,14 @@ export default function ExploreListingLayout({
     });
   }
 
+  // ! The menu is not rendered for details pages (where the route contains `id` segment)
   if (params?.id)
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
   return (
     <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        {!isCircuitPage && <BackToInteractiveExplorationBtn href={interactivePageHref} />}
+        <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
         <div className="flex grow flex-col overflow-x-hidden">
           <Menu
