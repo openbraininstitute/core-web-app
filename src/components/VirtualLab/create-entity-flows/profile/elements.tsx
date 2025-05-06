@@ -1,4 +1,8 @@
 import { CloseCircleFilled } from '@ant-design/icons';
+import { InputProps, InputRef, Input } from 'antd';
+import { ForwardedRef } from 'react';
+
+import { classNames } from '@/util/utils';
 
 export function ProfileError() {
   return (
@@ -18,4 +22,31 @@ export function ProfileError() {
       </div>
     </div>
   );
+}
+
+export function XInput(
+  { placeholder, className, ...props }: InputProps,
+  ref: ForwardedRef<InputRef>
+) {
+  return (
+    <Input
+      ref={ref}
+      placeholder={placeholder}
+      className={classNames(
+        'rounded-none border-0 border-b !border-primary-4 !bg-transparent px-1 font-bold tracking-wide text-white focus:ring-0',
+        'hover:!bg-transparent hover:!text-white focus:!bg-transparent focus:!text-white [&_.ant-input-outlined]:!bg-transparent',
+        'focus:border-pr placeholder:text-white hover:border-white focus:border-b-2',
+        'focus-within:!border-b-2 focus-within:!border-primary-4 focus-within:!ring-0',
+        '[&.ant-XInput-status-error]:!border-0 [&.ant-XInput-status-error]:!border-b-2 [&.ant-XInput-status-error]:!border-red-300',
+        '[&.ant-XInput-status-error]:focus:!ring-0 ',
+        className
+      )}
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...props}
+    />
+  );
+}
+
+export function Label({ title }: { title: string }) {
+  return <span className="text-sm font-light text-primary-4">{title}</span>;
 }

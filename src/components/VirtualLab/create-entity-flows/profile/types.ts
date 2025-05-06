@@ -1,0 +1,10 @@
+export interface ProfileFormData {
+  email: string;
+  first_name: string;
+  last_name: string;
+  street: string;
+  postal_code: string;
+  locality: string;
+  region: string;
+  country: string;
+}
