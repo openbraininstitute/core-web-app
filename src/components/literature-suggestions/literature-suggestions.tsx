@@ -50,9 +50,9 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
     <div
       className={classNames(
         className,
-        styles.literatureSuggestions,
-        collapsedPanel && styles.collapsed
+        styles.literatureSuggestions
       )}
+      data-collapsed={collapsedPanel}
     >
       <button
         className={styles.header}
@@ -99,6 +99,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               <footer>
                 {status === 'ready' && (
                   <SuggestedQuestions
+                  threadId={threadId}
                     messagesLength={messages.length}
                     onClick={(selectedPrompt) => {
                       setPrompt(selectedPrompt);
