@@ -1,3 +1,4 @@
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -29,4 +30,6 @@ export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
   asset: {
     extension: 'application/json',
   },
+  // viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalNeuronDensity],
+  isBookmarkable: true,
 } as const;

@@ -35,7 +35,8 @@ import {
 } from '@/components/VirtualLab/ScopeSelector';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import Styles from '@/styles/vlabs.module.css';
-import { isSimulation } from '@/features/bookmark/helpers';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { ensureArray } from '@/utils/array';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -94,6 +95,12 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     projectId + 'simulate' + dataType
   );
 
+  const entity = getEntityByLegacyType({
+    // @ts-expect-error
+    // TODO: fix it when we have simulations
+    legacyType: selectedSimType ?? DataType.CircuitMEModel,
+  });
+
   return (
     <>
       <div className="flex w-full grow flex-col">
@@ -132,14 +139,13 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 >
                   View
                 </Btn>
-                {isSimulation(SIMULATION_DATA_TYPE_CONFIG[dataType].name) && (
+                {entity && entity.isBookmarkable && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}
-                    entityId="" // TODO: fix it when whe have simulation data
-                    // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
-                    resourceId={selectedRows[0]?._source['@id']}
-                    typeSlug={SIMULATION_DATA_TYPE_CONFIG[dataType].name}
+                    entityId={selectedRows[0].id}
+                    resourceId={ensureArray({ input: selectedRows[0] }).at(0)?.legacy_id}
+                    type={entity.type}
                     customButton={customBookmarkButton}
                   />
                 )}

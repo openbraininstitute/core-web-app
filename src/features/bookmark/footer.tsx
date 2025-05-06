@@ -83,8 +83,9 @@ export default function Footer<T extends EntityCoreIdentifiable>({
         className="fit-content animate-slide-up bg-primary-6 sticky bottom-0 ml-2 w-fit"
         onClick={removeFromLibrary}
         loading={loading}
+        disabled={loading}
       >
-        Remove from library
+        {loading ? 'Removing...' : 'Remove from library'}
       </Btn>
     </div>
   );

@@ -1,8 +1,7 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { ExperimentTypeNames } from '@/entity-configuration/domain/experimental';
-import { ModelTypeNames } from '@/entity-configuration/domain/model';
 import { DataType } from '@/constants/explore-section/list-views';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type {
   TypeSummaryProps,
@@ -19,7 +18,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.CircuitEModel]: {
     title: 'E-model',
     group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.E_MODEL,
+    name: EntitySlug.EModel,
     columns: [
       EntityCoreFields.Name,
       EntityCoreFields.EModelResponse,
@@ -42,7 +41,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.CircuitMEModel]: {
     title: 'ME-model',
     group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.ME_MODEL,
+    name: EntitySlug.MeModel,
     columns: [
       EntityCoreFields.Name,
       EntityCoreFields.MEModelMorphologyPreview,
@@ -65,7 +64,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.SingleNeuronSynaptome]: {
     title: 'Synaptome',
     group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.SINGLE_NEURON_SYNAPTOME,
+    name: EntitySlug.SingleNeuronSynaptome,
     columns: [
       EntityCoreFields.Name,
       EntityCoreFields.Description,

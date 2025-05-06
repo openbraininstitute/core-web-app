@@ -317,6 +317,7 @@ class ApiClient {
           await new Promise((resolve) => setTimeout(resolve, delay));
           return runRequest();
         }
+
         throw Error(`Request ${request.url} failed `, {
           cause: {
             status: response.status,

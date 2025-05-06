@@ -31,6 +31,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   const { push: navigate } = useRouter();
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
+
   const dataScope = ExploreDataScope.BookmarkedResources;
 
   const dataSource = useDataAtom<T>(

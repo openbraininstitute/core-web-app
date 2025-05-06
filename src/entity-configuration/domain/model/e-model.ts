@@ -29,4 +29,5 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
   asset: {
     extension: undefined,
   },
+  isBookmarkable: true,
 } as const;

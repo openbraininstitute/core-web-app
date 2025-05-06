@@ -9,9 +9,13 @@ import { getAllBookmarksByCategory } from '@/api/virtual-lab-svc/queries/bookmar
 import { tryCatch } from '@/api/utils';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { BookmarkCategoryType } from '@/features/bookmark/helpers';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 
-type Props = ServerSideComponentProp<WorkspaceContext, { c: BookmarkCategoryType; t: string }>;
+type Props = ServerSideComponentProp<
+  WorkspaceContext,
+  { c: EntityCoreTypeGroup; t: EntitySlugValue }
+>;
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +33,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function Page(props: Props) {
-  const { c: category, t: type } = await props.searchParams;
+  const { c: category, t: slug } = await props.searchParams;
   const { virtualLabId, projectId } = await props.params;
   const { data: result, error } = await tryCatch(
     getAllBookmarksByCategory({ virtualLabId, projectId }, {})
@@ -37,7 +41,7 @@ export default async function Page(props: Props) {
   const { list } = groupBookmarksByCategory(result?.data);
 
   const { activeCategory, tabs, availableTypeKeysPerCategory } = getAvailableTabs(category, list);
-  const activeType = tabs.at(0)?.key!;
+  const activeSlug = tabs.at(0)?.key!;
 
   if (error) {
     return (
@@ -47,13 +51,14 @@ export default async function Page(props: Props) {
       />
     );
   }
+
   return (
     <BookmarksView
-      key={`widget-${category}/${type}`}
+      key={`widget-${category}/${slug}`}
       categoryTypes={availableTypeKeysPerCategory}
       activeCategory={activeCategory}
       virtualLabId={virtualLabId}
-      activeType={activeType}
+      activeSlug={activeSlug}
       projectId={projectId}
       tabs={tabs}
       list={list}

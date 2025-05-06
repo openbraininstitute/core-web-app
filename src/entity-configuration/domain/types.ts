@@ -5,8 +5,9 @@ import type { DataType } from '@/constants/explore-section/list-views';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
+export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
-  group: 'experimental' | 'models' | 'simulations';
+  group: EntityCoreTypeGroup;
   legacyType?: DataType;
   type: EntityTypeValue;
   slug: EntitySlugValue;
@@ -30,7 +31,8 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     extension?: string;
     configfile?: string;
   };
-  viewDefinition?: ViewDefinitionConfig;
+  viewDefinition?: ViewDefinitionConfig | null;
+  isBookmarkable: boolean;
 };
 
 export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<

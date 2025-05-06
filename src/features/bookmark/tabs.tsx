@@ -9,29 +9,29 @@ import get from 'lodash/get';
 
 import useHorizontalScrollInfo from '@/hooks/useHorizontalScrollInfo';
 import { DotsHorizontal } from '@/components/icons/EditorIcons';
-import { toPascalCase } from '@/utils/string';
 import { classNames } from '@/util/utils';
 
-type Tab = {
-  key: string;
-  label: string;
-};
+import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
 type EntityTypeTabsProps = {
-  items: Tab[];
-  activeType: string;
+  items: Array<{
+    key: EntitySlugValue | undefined;
+    label: string;
+  }>;
+  activeSlug: string;
   basePath: string;
   category: string;
 };
 
 type DataTypeTabsProps = {
-  items: Tab[];
+  items: Array<{ key: EntityCoreTypeGroup; label: string }>;
   basePath: string;
   activeCategory: string;
   categoryTypes: Record<string, string[]>;
 };
 
-export function EntityTypeTabs({ items, activeType, basePath, category }: EntityTypeTabsProps) {
+export function EntityTypeTabs({ items, activeSlug, basePath, category }: EntityTypeTabsProps) {
   const { ref, canScrollLeft, canScrollRight } = useHorizontalScrollInfo();
 
   return (
@@ -41,19 +41,19 @@ export function EntityTypeTabs({ items, activeType, basePath, category }: Entity
           ref={ref}
           className={classNames(
             'no-scrollbar relative w-full overflow-x-auto scroll-smooth',
-            items.length > 1 ? 'flex' : 'inline-block',
-            'border-primary-6 border-0 border-r border-l'
+            'border-primary-6 border-0',
+            items.length > 1 ? 'flex' : 'inline-block'
           )}
         >
           {canScrollLeft && (
-            <div className="bg-primary-9 border-primary-6 sticky top-0 left-0 flex h-14 items-center justify-center border-t px-4">
+            <div className="bg-primary-9 border-primary-6 sticky top-0 left-0 flex h-14 items-center justify-center border-0 border-t border-l px-4">
               <DotsHorizontal className="text-xl" />
             </div>
           )}
           {items?.map((tab) => (
             <NestedTypeLink
               key={tab.key}
-              active={toPascalCase(activeType) === tab?.key}
+              active={activeSlug === tab?.key}
               titleCls={items.length > 1 ? 'grow w-full' : 'inline-block'}
               title={tab.label}
               basePath={basePath}
@@ -62,7 +62,7 @@ export function EntityTypeTabs({ items, activeType, basePath, category }: Entity
             />
           ))}
           {canScrollRight && (
-            <div className="bg-primary-9 border-primary-6 sticky top-0 right-0 flex h-14 items-center justify-center border-t px-4">
+            <div className="bg-primary-9 border-primary-6 sticky top-0 right-0 flex h-14 items-center justify-center border-0 border-t border-r px-4">
               <DotsHorizontal className="text-xl" />
             </div>
           )}
@@ -72,12 +72,7 @@ export function EntityTypeTabs({ items, activeType, basePath, category }: Entity
   );
 }
 
-export function DataTypeTabs({
-  items,
-  categoryTypes,
-  activeCategory,
-  basePath,
-}: DataTypeTabsProps) {
+export function GroupTabs({ items, categoryTypes, activeCategory, basePath }: DataTypeTabsProps) {
   return (
     <div className="relative mx-auto mb-6 flex w-full max-w-7xl items-center justify-between">
       <div className="border-primary-6 divide-primary-6 sticky top-0 right-0 left-0 z-10 grid grid-cols-3 items-center justify-center divide-x border">
@@ -90,7 +85,7 @@ export function DataTypeTabs({
               category={key}
               label={label}
               basePath={basePath}
-              type={kebabCase(couldBeActive)}
+              type={couldBeActive}
             />
           );
         })}
@@ -177,7 +172,12 @@ function NestedTypeLink({
         pathname: basePath,
         query: pickBy({ c: category, t: type }, (q) => !isNil(q) && !isEmpty(q)),
       }}
-      className={titleCls}
+      className={classNames(
+        titleCls,
+        'border-primary-6 !border-r border-b-0',
+        '[&:first-child]:!border-l',
+        '[&:last-child]:!border-r'
+      )}
     >
       <NestedTypeTitle title={title} active={active} />
     </Link>
