@@ -4,6 +4,7 @@ import { ReactNode, useState } from 'react';
 import { Spin, Button } from 'antd';
 import { useAtomValue } from 'jotai';
 
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import BookmarkButton from '@/features/bookmark/control';
 import useNotification from '@/hooks/notifications';
 import usePathname from '@/hooks/pathname';
@@ -11,14 +12,11 @@ import sessionAtom from '@/state/session';
 import fetchArchive from '@/api/archive';
 import Link from '@/components/Link';
 
-import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
-import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
-import { SimulationTypeNames } from '@/types/simulation/single-neuron';
 import { InteractiveViewIcon } from '@/components/icons';
 import { ensureArray } from '@/utils/array';
 
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { BookmarksSupportedTypes } from '@/features/bookmark/helpers';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
 export default function Header<T extends EntityCoreIdentifiableNamed>({
   detail,
@@ -37,18 +35,13 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
   const [fetching, setFetching] = useState<boolean>(false);
   const hasDistribution = 'distribution' in detail && detail.distribution !== undefined;
 
-  const { virtualLabId, projectId, experimentType, modelType, simulationType, synaptome } =
-    useParams<{
-      virtualLabId?: string;
-      projectId?: string;
-      experimentType?: ExperimentTypeNames;
-      modelType?: ModelTypeNames;
-      simulationType?: SimulationTypeNames;
-      synaptome?: ModelTypeNames;
-    }>();
+  const { virtualLabId, projectId, type } = useParams<{
+    virtualLabId?: string;
+    projectId?: string;
+    type: EntitySlugValue;
+  }>();
 
-  const supportedBookmarkType: BookmarksSupportedTypes | undefined =
-    experimentType ?? modelType ?? simulationType ?? synaptome;
+  const entity = getEntityBySlug({ slug: type });
 
   const errorOnDownload = () => {
     setFetching(false);
@@ -65,13 +58,13 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
         {session && (
           <div className="flex items-center gap-2">
             {extraHeaderAction}
-            {virtualLabId && projectId && supportedBookmarkType && (
+            {virtualLabId && projectId && entity?.isBookmarkable && (
               <BookmarkButton
                 virtualLabId={virtualLabId}
                 entityId={detail.id}
                 projectId={projectId}
                 resourceId={ensureArray({ input: detail.legacy_id }).at(0)!}
-                typeSlug={supportedBookmarkType}
+                type={entity.type}
               />
             )}
             <Button

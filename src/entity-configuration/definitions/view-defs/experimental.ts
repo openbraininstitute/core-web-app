@@ -1,7 +1,7 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { ExperimentTypeNames } from '@/entity-configuration/domain/experimental';
 import { DataType } from '@/constants/explore-section/list-views';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
@@ -9,7 +9,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.ExperimentalNeuronMorphology]: {
     title: 'Morphology',
     group: DataTypeGroup.ExperimentalData,
-    name: ExperimentTypeNames.MORPHOLOGY,
+    name: EntitySlug.ReconstructionMorphology,
     columns: [
       EntityCoreFields.Preview,
       EntityCoreFields.BrainRegion,
@@ -105,7 +105,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.ExperimentalElectroPhysiology]: {
     title: 'Electrophysiology',
     group: DataTypeGroup.ExperimentalData,
-    name: ExperimentTypeNames.ELECTROPHYSIOLOGY,
+    name: EntitySlug.ElectricalCellRecording,
     columns: [
       EntityCoreFields.Preview,
       EntityCoreFields.BrainRegion,
@@ -127,7 +127,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.ExperimentalNeuronDensity]: {
     title: 'Neuron density',
     group: DataTypeGroup.ExperimentalData,
-    name: ExperimentTypeNames.NEURON_DENSITY,
+    name: EntitySlug.ExperimentalNeuronDensity,
     columns: [
       EntityCoreFields.BrainRegion,
       EntityCoreFields.MType,
@@ -175,7 +175,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.ExperimentalBoutonDensity]: {
     title: 'Bouton density',
     group: DataTypeGroup.ExperimentalData,
-    name: 'bouton-density',
+    name: EntitySlug.ExperimentalBoutonDensity,
     columns: [
       EntityCoreFields.BrainRegion,
       EntityCoreFields.MType,
@@ -202,7 +202,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.ExperimentalSynapsePerConnection]: {
     title: 'Synapse per connection',
     group: DataTypeGroup.ExperimentalData,
-    name: ExperimentTypeNames.SYNAPSE_PER_CONNECTION,
+    name: EntitySlug.ExperimentalSynapsesPerConnection,
     columns: [
       EntityCoreFields.PreSynapticBrainRegion,
       EntityCoreFields.PostSynapticBrainRegion,

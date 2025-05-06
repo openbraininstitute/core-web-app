@@ -44,8 +44,18 @@ export default function useHorizontalScrollInfo(): HorizontalScrollInfo {
     };
 
     updateScrollInfo();
-    el.addEventListener('scroll', handleScroll);
-    return () => el.removeEventListener('scroll', handleScroll);
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    el.addEventListener('scroll', handleScroll, { signal });
+
+    const resizeObserver = new ResizeObserver(updateScrollInfo);
+    resizeObserver.observe(el);
+
+    return () => {
+      controller.abort();
+      resizeObserver.disconnect();
+    };
   }, []);
 
   return { ref, isScrollable, scrollDirection, canScrollLeft, canScrollRight };
