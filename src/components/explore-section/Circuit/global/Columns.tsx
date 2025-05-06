@@ -25,10 +25,7 @@ const columns = (
     key: 'name',
     width: 150,
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-      <Link
-        href={`/app/virtual-lab/explore/interactive/model/circuit/${record.key}`}
-        className="whitespace-nowrap"
-      >
+      <Link href={`./circuit/${record.key}`} className="whitespace-nowrap">
         {record.name}
       </Link>
     ),
