@@ -1,7 +1,7 @@
 'use client';
 
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React from 'react';
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 
 import SuggestedQuestions from './suggested-questions';
 import MessageItem from './message-item';
@@ -48,10 +48,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
 
   return (
     <div
-      className={classNames(
-        className,
-        styles.literatureSuggestions
-      )}
+      className={classNames(className, styles.literatureSuggestions)}
       data-collapsed={collapsedPanel}
     >
       <button
@@ -99,7 +96,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               <footer>
                 {status === 'ready' && (
                   <SuggestedQuestions
-                  threadId={threadId}
+                    threadId={threadId}
                     messagesLength={messages.length}
                     onClick={(selectedPrompt) => {
                       setPrompt(selectedPrompt);
@@ -123,7 +120,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               </footer>
             </>
           ) : (
-            status !== 'error' && !threadError && <Spinner />
+            status !== 'error' && <Spinner />
           )}
         </>
       )}
