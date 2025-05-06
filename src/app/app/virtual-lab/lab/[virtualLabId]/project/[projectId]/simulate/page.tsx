@@ -36,6 +36,7 @@ import {
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import Styles from '@/styles/vlabs.module.css';
 import { isSimulation } from '@/features/bookmark/helpers';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -160,7 +161,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   const selectedSimulationScope = useAtomValue(selectedSimTypeFamily(atomKey));
   const modelType = SimulationScopeToModelType[selectedSimulationScope] ?? DataType.CircuitMEModel;
 
-  const onModelSelected = (model: ExploreESHit<ExploreSectionResource>) => {
+  const onModelSelected = (model: EntityCoreIdentifiable) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
     const baseBuildUrl = `${vlProjectUrl}/simulate/${selectedSimulationScope}/new`;
     router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);

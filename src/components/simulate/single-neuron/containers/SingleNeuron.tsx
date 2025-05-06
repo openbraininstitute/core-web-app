@@ -8,6 +8,7 @@ import { ModelResource } from '@/types/simulation/single-neuron';
 import { SimulationType } from '@/types/simulation/common';
 
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
+import { usePathname } from 'next/navigation';
 
 type Props = {
   projectId: string;
@@ -17,7 +18,8 @@ type Props = {
 const SIMULATION_TYPE: SimulationType = 'single-neuron-simulation';
 
 function SingleNeuron({ projectId, virtualLabId }: Props) {
-  const { id: modelId } = useResourceInfoFromPath();
+  const modelId = usePathname().split('/').pop();
+
   const { resource, loading } = useModel<ModelResource>({
     modelId,
     org: virtualLabId,
