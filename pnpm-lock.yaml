@@ -206,6 +206,9 @@ importers:
       jotai-devtools:
         specifier: ^0.11.0
         version: 0.11.0(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(redux@5.0.1)
+      jotai-location:
+        specifier: ^0.6.0
+        version: 0.6.0(jotai@2.12.2(@types/react@19.1.0)(react@19.1.0))
       jotai-optics:
         specifier: ^0.4.0
         version: 0.4.0(jotai@2.12.2(@types/react@19.1.0)(react@19.1.0))(optics-ts@2.4.1)
@@ -7530,6 +7533,11 @@ packages:
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=17.0.0'
+
+  jotai-location@0.6.0:
+    resolution: {integrity: sha512-BgIRnX7ZUYWv7VFgqCvm1UIjYSNWD2+lOo+TJfHCWdUqfJDSes7ujYgNi0gYo80ax1mOFJ2INdX6wNu/UB2NbQ==}
+    peerDependencies:
+      jotai: '>=1.11.0'
 
   jotai-optics@0.4.0:
     resolution: {integrity: sha512-osbEt9AgS55hC4YTZDew2urXKZkaiLmLqkTS/wfW5/l0ib8bmmQ7kBXSFaosV6jDDWSp00IipITcJARFHdp42g==}
@@ -19646,6 +19654,10 @@ snapshots:
       - '@types/react'
       - react-dom
       - redux
+
+  jotai-location@0.6.0(jotai@2.12.2(@types/react@19.1.0)(react@19.1.0)):
+    dependencies:
+      jotai: 2.12.2(@types/react@19.1.0)(react@19.1.0)
 
   jotai-optics@0.4.0(jotai@2.12.2(@types/react@19.1.0)(react@19.1.0))(optics-ts@2.4.1):
     dependencies:

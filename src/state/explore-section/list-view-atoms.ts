@@ -25,6 +25,7 @@ import {
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
 } from '@/state/brain-regions';
 import {
+  buildBrainRegionFilterQuery,
   transformFiltersToQuery,
   transformQueryParamsArrayToString,
 } from '@/api/entitycore/transformers';

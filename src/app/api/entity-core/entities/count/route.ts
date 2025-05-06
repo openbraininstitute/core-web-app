@@ -5,6 +5,7 @@ import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
+import { buildBrainRegionFilterQuery } from '@/api/entitycore/transformers';
 
 // NOTE: this is temporary hack to get the counts of a specific entity type
 // TODO: this should be replaced by the /count endpoint when it's ready
