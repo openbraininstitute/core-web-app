@@ -320,9 +320,11 @@ class ApiClient {
       if (!response.ok) {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
+
           await new Promise((resolve) => setTimeout(resolve, delay));
           return runRequest();
         }
+        console.log('–– – apiClient.ts:318 – runRequest – response:', response);
 
         throw Error(`Request ${request.url} failed `, {
           cause: {

@@ -152,3 +152,13 @@ export function transformAgentToNames(
 
   return map(sortBy(processedAgents, ['type', 'name']), 'name').join('\n');
 }
+
+export function buildBrainRegionFilterQuery(
+  brainRegionUrl?: string | null,
+  hierarchyName: string = 'aibs',
+  includeAscendants: boolean = true
+) {
+  // if (!brainRegionUrl) return undefined;
+  const hierarchyId = Number(brainRegionUrl?.split('/').pop() ?? 997);
+  return `${hierarchyId},${hierarchyName},${String(includeAscendants)}`;
+}

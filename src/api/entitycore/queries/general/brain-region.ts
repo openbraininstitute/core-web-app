@@ -43,3 +43,25 @@ export async function getTemporaryBrainRegionById({ id }: { id: string }) {
   const api = await entityCoreApi();
   return await api.get<IBrainRegionHierarchy>(`/brain-region/${id}`);
 }
+
+/**
+ * Retrieves the brain region hierarchy from the entity core API.
+ *
+ * @param params - An object containing the name of the brain region hierarchy to fetch.
+ * @param params.name - The name of the brain region hierarchy. Defaults to 'aibs'.
+ * @returns A promise that resolves to the brain region hierarchy data.
+ */
+export async function getBrainRegionHierarchy({
+  id = 'e3e70682-c209-4cac-a29f-6fbed82c07cd',
+}: {
+  id?: string;
+}) {
+  const api = await entityCoreApi();
+  return await api.get<IBrainRegionHierarchy>(
+    `/brain-region-hierarchy/${id}/hierarchy`,
+    {},
+    {
+      cache: { cacheName: 'brain-region-hierarchy', enabled: true, ttlInSeconds: 86_400 },
+    }
+  );
+}

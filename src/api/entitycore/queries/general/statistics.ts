@@ -3,6 +3,7 @@ import authApiClient from '@/api/apiClient';
 import { EntityCountsResponse } from '@/api/entitycore/types/entities/statistics';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
+import { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/entity-stats';
 
@@ -30,8 +31,10 @@ const baseUri = '/entity-stats';
  * }
  */
 export async function getEntityCounts({
+  ctx,
   entityNames,
 }: {
+  ctx: WorkspaceContext;
   entityNames: string[];
 }): Promise<EntityCountsResponse> {
   const api = await authApiClient(entityCoreUrl);
@@ -46,7 +49,7 @@ export async function getEntityCounts({
   );
 
   return await api.get<EntityCountsResponse>(`${baseUri}/counts`, {
-    ...getEntityCoreContext(),
+    ...getEntityCoreContext(ctx),
     queryParams,
   });
 }

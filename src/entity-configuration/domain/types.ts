@@ -9,7 +9,7 @@ import type { WorkspaceContext } from '@/types/common';
 export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: EntityCoreTypeGroup;
-  legacyType?: DataType;
+  legacyType: DataType;
   type: EntityTypeValue;
   slug: EntitySlugValue;
   title: string;
