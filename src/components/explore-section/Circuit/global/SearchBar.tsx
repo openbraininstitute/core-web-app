@@ -15,6 +15,7 @@ export default function SearchBar({ searchQuery, onSearchChange }: SearchBarProp
 
   const handleClose = () => {
     setSearchOpen(false);
+    onSearchChange('');
   };
 
   useEffect(() => {
