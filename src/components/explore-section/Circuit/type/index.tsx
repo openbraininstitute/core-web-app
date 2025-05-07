@@ -106,3 +106,18 @@ export type InteractiveImageProps = {
   width: number;
   height: number;
 };
+
+export type NumericFilterProperty = 'neurons' | 'connections' | 'synapses';
+export type NumericFilterType = 'greaterThan' | 'lessThan' | 'between';
+
+export type FilterOptionsProps = {
+  searchQuery?: string;
+  numericFilter?: NumericFilterOptions | null;
+};
+
+export type NumericFilterOptions = {
+  property: NumericFilterProperty;
+  type: NumericFilterType;
+  min?: number;
+  max?: number;
+};

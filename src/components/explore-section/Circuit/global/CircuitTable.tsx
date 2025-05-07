@@ -5,14 +5,10 @@ import { Key, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
 import { CircuitSchemaProps } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
-import { NumericFilterOptions } from '../utils/filter-circuits-by-numeric';
-import { useFilteredData } from '../utils/use-filtered-data';
 import columns from './Columns';
 import CustomRow from './CustomRow';
 import DownloadCircuitButton from './DownloadCircuitButton';
-import NumericFilters from './NumericFilters';
 import ResizableTitle from './ResizableTitle';
-import SearchBar from './SearchBar';
 import SubcircuitTable from './SubcircuitsTable';
 
 import styles from './exploreCircuitTable.module.scss';
@@ -52,11 +48,11 @@ function RowWrapper({
 export default function CircuitTable({
   data,
   downloadable = true,
-  hasSearch = true,
+  // hasSearch = true,
 }: {
   data: CircuitSchemaProps[];
   downloadable?: boolean;
-  hasSearch?: boolean;
+  // hasSearch?: boolean;
 }) {
   // ROWS
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
@@ -73,12 +69,12 @@ export default function CircuitTable({
   });
 
   // FILTERING
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
-  const [minValue, setMinValue] = useState<number | undefined>(undefined);
-  const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
+  // const [searchQuery, setSearchQuery] = useState<string>('');
+  // const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
+  // const [minValue, setMinValue] = useState<number | undefined>(undefined);
+  // const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
-  const filteredData = useFilteredData(data, { searchQuery, numericFilter });
+  // const filteredData = useFilteredData(data, { searchQuery, numericFilter });
 
   const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
     const rowKey = row.key;
@@ -170,7 +166,7 @@ export default function CircuitTable({
 
   return (
     <div className="relative flex w-full flex-col">
-      {hasSearch && (
+      {/* {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
           <NumericFilters
@@ -182,7 +178,7 @@ export default function CircuitTable({
             onMaxChange={setMaxValue}
           />
         </div>
-      )}
+      )} */}
       <div className="relative w-full overflow-x-scroll">
         <div className="tableAndButton">
           <Table
@@ -201,7 +197,7 @@ export default function CircuitTable({
                 row: rowWrapperWithColumns,
               },
             }}
-            dataSource={filteredData}
+            dataSource={data}
             columns={mergedColumns}
             pagination={false}
             rowSelection={downloadable ? rowSelection : undefined}
