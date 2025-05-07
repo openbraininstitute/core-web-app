@@ -12,6 +12,7 @@ import { classNames } from '@/util/utils';
 import VerificationCode from '@/components/VirtualLab/create-entity-flows/common/otp-code';
 import { VirtualLabPayloadSchema } from '@/api/virtual-lab-svc/validation';
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
+import { validateEMail } from '../profile/validator';
 
 const schema = VirtualLabPayloadSchema.partial({
   entity: true,
@@ -94,6 +95,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
           rules={[
             { required: true, message: 'Please enter email' },
             { type: 'email', message: 'Please enter a valid email' },
+            { validator: validateEMail },
           ]}
         >
           <Input type="email" placeholder="Enter the email here..." />
