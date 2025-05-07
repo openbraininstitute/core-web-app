@@ -1,11 +1,12 @@
-import { ColumnsType } from 'antd/es/table';
+import { ColumnsType, ColumnType } from 'antd/es/table';
 import Link from 'next/link';
-import { Key, SyntheticEvent } from 'react';
+import { Key, ReactEventHandler, SyntheticEvent } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
 import { CircuitSchemaProps } from '../type';
 
 import { ChevronRight } from '@/components/icons';
 import { classNames } from '@/util/utils';
+import { ensureNumber } from '@/util/type-guards';
 
 export type ResizableColumnType = ColumnsType<CircuitSchemaProps>[number] & {
   onHeaderCell?: (column: ResizableColumnType) => React.HTMLAttributes<HTMLElement> & {
@@ -13,6 +14,10 @@ export type ResizableColumnType = ColumnsType<CircuitSchemaProps>[number] & {
     onResize: (e: SyntheticEvent, data: ResizeCallbackData) => void;
   };
 };
+
+type HeaderCellHandler = ReactEventHandler<any> &
+  ReactEventHandler<HTMLElement> &
+  ((e: SyntheticEvent, data: ResizeCallbackData) => void);
 
 const columns = (
   expandedRowKeys: Key | Key[],
@@ -29,9 +34,9 @@ const columns = (
         {record.name}
       </Link>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
   {
@@ -65,9 +70,9 @@ const columns = (
         </button>
       );
     },
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
   {
@@ -77,9 +82,9 @@ const columns = (
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <div className="text-ellipsis whitespace-nowrap font-normal">{record.description}</div>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
   {
@@ -89,9 +94,9 @@ const columns = (
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <div className="whitespace-nowrap font-normal">{record.brainRegion}</div>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
   {
@@ -101,9 +106,9 @@ const columns = (
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <div className="whitespace-nowrap font-normal">{record.numberOfNeurons}</div>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
   {
@@ -113,9 +118,9 @@ const columns = (
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <div className="whitespace-nowrap font-normal">{record.species}</div>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
   {
@@ -125,9 +130,9 @@ const columns = (
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <div className="whitespace-nowrap font-normal">{record.metadata.contributorSimple}</div>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
   {
@@ -137,9 +142,9 @@ const columns = (
     render: (_value: any, record: CircuitSchemaProps, _index: number) => (
       <div className="whitespace-nowrap font-normal">{record.metadata.registrationDate}</div>
     ),
-    onHeaderCell: (column) => ({
-      width: column.width ?? 150,
-      onResize: handleResize(column.key as string),
+    onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
+      width: ensureNumber(column.width, 150),
+      onResize: handleResize(column.key as string) as HeaderCellHandler,
     }),
   },
 ];
