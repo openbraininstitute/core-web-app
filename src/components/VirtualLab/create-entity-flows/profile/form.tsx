@@ -154,17 +154,15 @@ function Profile({ data }: ProfileProps) {
 export default Profile;
 
 function useInitialValues(data: UserProfileResponse | undefined): ProfileFormData {
-  return React.useMemo(() => {
-    const initialValues: ProfileFormData = {
-      email: data?.email ?? '',
-      first_name: data?.first_name ?? '',
-      last_name: data?.last_name ?? '',
-      street: data?.address.street ?? '',
-      postal_code: data?.address.postal_code ?? '',
-      locality: data?.address.locality ?? '',
-      region: data?.address.region ?? '',
-      country: data?.address.country ?? '',
-    };
-    return initialValues;
-  }, [data]);
+  const initialValues: ProfileFormData = {
+    email: data?.email ?? '',
+    first_name: data?.first_name ?? '',
+    last_name: data?.last_name ?? '',
+    street: data?.address.street ?? '',
+    postal_code: data?.address.postal_code ?? '',
+    locality: data?.address.locality ?? '',
+    region: data?.address.region ?? '',
+    country: data?.address.country ?? '',
+  };
+  return initialValues;
 }
