@@ -129,6 +129,14 @@ export default function CircuitTable({
     );
   }, []);
 
+
+
+  const selectedRows = data.flatMap((circuit) =>
+    circuit.key === selectedRowKeys[0]
+      ? [circuit]
+      : (circuit.subcircuits || []).filter((sub) => sub.key === selectedRowKeys[0])
+  );
+
   const renderSubcircuits = useCallback(
     (circuit: CircuitSchemaProps) =>
       circuit.subcircuits && circuit.subcircuits.length > 0 ? (
@@ -139,15 +147,11 @@ export default function CircuitTable({
           expandedRowKeys={expandedRowKeys}
           onExpand={handleExpandRow}
           downloadable={downloadable}
+          selectedRows={selectedRows}
+          selectedRowKeys={selectedRowKeys}
         />
       ) : null,
-    [mergedColumns, rowSelection, expandedRowKeys, handleExpandRow, downloadable]
-  );
-
-  const selectedRows = data.flatMap((circuit) =>
-    circuit.key === selectedRowKeys[0]
-      ? [circuit]
-      : (circuit.subcircuits || []).filter((sub) => sub.key === selectedRowKeys[0])
+    [mergedColumns, rowSelection, expandedRowKeys, handleExpandRow, downloadable, selectedRowKeys, selectedRows]
   );
 
   const rowWrapperWithColumns = (props: CustomRowProps) => (

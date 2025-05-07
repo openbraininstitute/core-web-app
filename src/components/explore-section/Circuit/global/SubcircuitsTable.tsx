@@ -15,10 +15,10 @@ export type SubcircuitsTableProps = {
   rowSelection: TableRowSelection<CircuitSchemaProps>;
   expandedRowKeys: Key[];
   onExpand: (expanded: boolean, row: CircuitSchemaProps) => void;
-  downloadable?: boolean;
+  downloadable: boolean;
   handleExpandRow?: (expanded: boolean, row: CircuitSchemaProps) => void;
-  selectedRows?: CircuitSchemaProps[];
-  selectedRowKeys?: string[];
+  selectedRows: CircuitSchemaProps[];
+  selectedRowKeys: string[];
 };
 
 export default function SubcircuitTable({
@@ -40,6 +40,8 @@ export default function SubcircuitTable({
       expandedRowKeys={expandedRowKeys}
       onExpand={onExpand}
       downloadable={downloadable}
+      selectedRows={selectedRows}
+      selectedRowKeys={selectedRowKeys}
     />
   );
 
