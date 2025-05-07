@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Form, Button, Alert } from 'antd';
 import { CheckCircleFilled, LoadingOutlined } from '@ant-design/icons';
 
+import { validateEMail } from '../profile/validator';
 import {
   getEmailVerificationCode,
   verifyOtpCode,
@@ -12,7 +13,6 @@ import { classNames } from '@/util/utils';
 import VerificationCode from '@/components/VirtualLab/create-entity-flows/common/otp-code';
 import { VirtualLabPayloadSchema } from '@/api/virtual-lab-svc/validation';
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
-import { validateEMail } from '../profile/validator';
 
 const schema = VirtualLabPayloadSchema.partial({
   entity: true,
