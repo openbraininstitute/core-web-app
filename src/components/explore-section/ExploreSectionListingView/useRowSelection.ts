@@ -12,6 +12,7 @@ type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange'
 export type RenderButtonProps<T> = {
   selectedRows: Array<T>;
   clearSelectedRows: () => void;
+  dataType: string;
 };
 
 export default function useRowSelection<T extends { id: string }>({
