@@ -8,7 +8,7 @@ import getMorphology from '@/api/bluenaas/getMorphology';
 import { isBluenaasError } from '@/types/simulation/single-neuron';
 
 export default function useMorphology({
-  modelSelfUrl,
+  modelId,
   callback,
 }: {
   modelSelfUrl: string;

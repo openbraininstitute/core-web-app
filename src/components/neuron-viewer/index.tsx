@@ -15,7 +15,7 @@ import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categorie
 import useNotification from '@/hooks/notifications';
 
 type Props = {
-  modelSelfUrl: string;
+  modelId: string;
   useEvents?: boolean;
   useActions?: boolean;
   useZoomer?: boolean;
@@ -41,7 +41,7 @@ type Props = {
 
 export default function NeuronViewer({
   children,
-  modelSelfUrl,
+  modelId,
   useEvents,
   useActions,
   useZoomer,
@@ -87,7 +87,7 @@ export default function NeuronViewer({
   }, []);
 
   const { loading, error } = useMorphology({
-    modelSelfUrl,
+    modelId,
     callback: runRenderer,
   });
 

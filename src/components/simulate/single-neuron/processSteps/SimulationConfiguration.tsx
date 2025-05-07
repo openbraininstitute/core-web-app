@@ -10,7 +10,7 @@ type Props = {
   type: SimulationType;
 };
 
-export default function SimulationConfiguration({ meModelUrl, type }: Props) {
+export default function SimulationConfiguration({ modelId, type }: Props) {
   return (
     <Wrapper
       viewer={
