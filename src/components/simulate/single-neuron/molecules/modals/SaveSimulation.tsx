@@ -13,7 +13,7 @@ import useNotification from '@/hooks/notifications';
 
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
-import { CREATE_SYNAPTOME_SIMULATION_SUCCESS } from '@/features/entities/synaptome/elements/constants';
+import { messages } from '@/i18n/en/synaptome';
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -78,7 +78,7 @@ export default function SaveSimulationModal({
         projectId,
         simulationType
       );
-      successNotify(CREATE_SYNAPTOME_SIMULATION_SUCCESS, 7, 'topRight');
+      successNotify(messages.CreationSimulationSucceed, 7, 'topRight');
       refreshSimulations();
       navigate(generateSimulationDetailUrl(savedSimulation!['@id']));
     } catch (error) {

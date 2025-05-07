@@ -13,7 +13,7 @@ import EntityTypeStatsPanelContainer, {
 import { EntityTypeCountSkeleton } from '@/components/entities-type-stats/stat-item';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 
-import type { BulkEntityCoreCountResult } from '@/app/api/entitycore/entities/count/route';
+import type { BulkEntityCoreCountResult } from '@/app/api/entity-core/entities/count/route';
 import type { Result } from '@/api/utils';
 
 type Props = {

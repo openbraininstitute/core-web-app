@@ -1,4 +1,4 @@
-import type { BulkEntityCoreCountResult } from '@/app/api/entitycore/entities/count/route';
+import type { BulkEntityCoreCountResult } from '@/app/api/entity-core/entities/count/route';
 
 export const getBulkEntityCoreCount = async ({
   virtualLabId,
@@ -14,7 +14,7 @@ export const getBulkEntityCoreCount = async ({
   if (projectId) searchParam.set('projectId', projectId);
   if (brainRegion) searchParam.set('brainRegion', brainRegion);
   try {
-    const result = await fetch(`/api/entitycore/entities/count?${searchParam.toString()}`);
+    const result = await fetch(`/api/entity-core/entities/count?${searchParam.toString()}`);
     return await result.json();
   } catch (error) {
     throw error;
