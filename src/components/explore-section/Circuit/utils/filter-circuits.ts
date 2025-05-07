@@ -12,8 +12,8 @@ export const filterCircuits = (
         (circuit.name?.toLowerCase().includes(lowerCaseQuery) ?? false) ||
         (circuit.brainRegion?.toLowerCase().includes(lowerCaseQuery) ?? false);
 
-      const filteredSubcircuits = circuit.subcircuit
-        ? filterCircuits(circuit.subcircuit, query)
+      const filteredSubcircuits = circuit.subcircuits
+        ? filterCircuits(circuit.subcircuits, query)
         : [];
 
       if (matches || filteredSubcircuits.length > 0) {
@@ -25,5 +25,5 @@ export const filterCircuits = (
 
       return null;
     })
-    .filter((circuit): circuit is CircuitSchemaProps => circuit !== null);
+    .filter((circuit) => circuit !== null);
 };
