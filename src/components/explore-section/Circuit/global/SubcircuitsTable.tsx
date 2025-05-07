@@ -4,9 +4,8 @@ import { Key } from 'react';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitSchemaProps } from '../type';
 
+import DownloadCircuitButton from './DownloadCircuitButton';
 import ResizableTitle from './ResizableTitle';
-
-import { classNames } from '@/util/utils';
 
 import styles from './exploreCircuitTable.module.scss';
 
@@ -16,7 +15,10 @@ export type SubcircuitsTableProps = {
   rowSelection: TableRowSelection<CircuitSchemaProps>;
   expandedRowKeys: Key[];
   onExpand: (expanded: boolean, row: CircuitSchemaProps) => void;
-  downloadable?: boolean;
+  downloadable: boolean;
+  handleExpandRow?: (expanded: boolean, row: CircuitSchemaProps) => void;
+  selectedRows: CircuitSchemaProps[];
+  selectedRowKeys: string[];
 };
 
 export default function SubcircuitTable({
@@ -26,6 +28,9 @@ export default function SubcircuitTable({
   expandedRowKeys,
   onExpand,
   downloadable = true,
+  handleExpandRow,
+  selectedRows,
+  selectedRowKeys,
 }: SubcircuitsTableProps) {
   const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
     <SubcircuitTable
@@ -35,8 +40,13 @@ export default function SubcircuitTable({
       expandedRowKeys={expandedRowKeys}
       onExpand={onExpand}
       downloadable={downloadable}
+      selectedRows={selectedRows}
+      selectedRowKeys={selectedRowKeys}
     />
   );
+
+  const lastRow = selectedRows?.at(-1);
+  const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
     <div className="relative flex flex-col">
@@ -46,74 +56,33 @@ export default function SubcircuitTable({
           Subcircuits
         </span>
       </div>
-      {downloadable ? (
-        <Table<CircuitSchemaProps>
-          className={classNames(
-            '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-            '[&_.ant-table-row]:bg-[#FAFAFA]',
-            '[&_.ant-table-thead_th]:!text-sm',
-            '[&_.ant-table-thead_th]:!font-normal',
-            '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
-            '[&_.ant-table-thead_th]:uppercase',
-            '[&_.ant-table-thead_th]:tracking-[0.05em]',
-            '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-            '[&_.ant-table-thead > tr > th]:border-b-0',
-            '[&_.ant-table-expand-icon-col]:w-0',
-            '[&_.ant-table-expand-icon-col]:hidden',
-            styles.circuitTable
-          )}
-          style={
-            {
-              '--ant-table-expand-icon-col-width': '0px',
-            } as React.CSSProperties
-          }
-          components={{
-            header: {
-              cell: ResizableTitle,
-            },
-          }}
-          columns={mergedColumns}
-          dataSource={circuit.subcircuits || []}
-          pagination={false}
-          rowSelection={rowSelection}
-          expandable={{
-            expandedRowRender: renderSubcircuits,
-            expandedRowKeys,
-            onExpand,
-            expandIcon: () => null,
-          }}
-        />
-      ) : (
-        <Table<CircuitSchemaProps>
-          className={classNames(
-            '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-            '[&_.ant-table-row]:bg-[#FAFAFA]',
-            '[&_.ant-table-thead_th]:!text-sm',
-            '[&_.ant-table-thead_th]:!font-normal',
-            '[&_.ant-table-thead_th]:!text-[#8C8C8C]',
-            '[&_.ant-table-thead_th]:uppercase',
-            '[&_.ant-table-thead_th]:tracking-[0.05em]',
-            '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-            '[&_.ant-table-thead > tr > th]:border-b-0',
-            '[&_.ant-table-expand-icon-col]:w-0',
-            '[&_.ant-table-expand-icon-col]:hidden',
-            styles.circuitTable
-          )}
-          components={{
-            header: {
-              cell: ResizableTitle,
-            },
-          }}
-          columns={mergedColumns}
-          dataSource={circuit.subcircuits || []}
-          pagination={false}
-          expandable={{
-            expandedRowRender: renderSubcircuits,
-            expandedRowKeys,
-            onExpand,
-            expandIcon: () => null,
-          }}
-        />
+      <Table
+        className={styles.circuitTable}
+        style={
+          {
+            '--ant-table-expand-icon-col-width': '0px',
+          } as React.CSSProperties
+        }
+        data-row-selection={downloadable && downloadable.toString()}
+        components={{
+          header: {
+            cell: ResizableTitle,
+          },
+        }}
+        dataSource={circuit.subcircuits || []}
+        columns={mergedColumns}
+        pagination={false}
+        rowSelection={downloadable ? rowSelection : undefined}
+        expandable={{
+          expandedRowRender: renderSubcircuits,
+          expandedRowKeys,
+          onExpand: handleExpandRow,
+          expandIcon: () => null,
+          rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
+        }}
+      />
+      {fileUrl && (
+        <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys || []} />
       )}
     </div>
   );

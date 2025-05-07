@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import HeaderDetailView from './HeaderDetailView';
 import SectionMainContainer from './sections/SectionMainContainer';
 import Visualiser from './visualisation/Visualiser';
+
 import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
 import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
