@@ -1,7 +1,4 @@
-import { CircuitSchemaProps } from '../type';
-
-export type NumericFilterProperty = 'neurons' | 'connections' | 'synapses';
-export type NumericFilterType = 'greaterThan' | 'lessThan' | 'between';
+import { CircuitSchemaProps, NumericFilterProperty, NumericFilterType } from '../type';
 
 export type NumericFilterOptions = {
   property: NumericFilterProperty;

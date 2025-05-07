@@ -1,12 +1,9 @@
 import { useMemo } from 'react';
-import { CircuitSchemaProps } from '../type';
+import { CircuitSchemaProps, NumericFilterProperty, NumericFilterType } from '../type';
 import { filterCircuits } from './filter-circuits';
-import filterCircuitsByNumeric, {
-  NumericFilterProperty,
-  NumericFilterType,
-} from './filter-circuits-by-numeric';
+import filterCircuitsByNumeric from './filter-circuits-by-numeric';
 
-type NumericFilterOptions = {
+export type NumericFilterOptions = {
   property: NumericFilterProperty;
   type: NumericFilterType;
   min?: number;
