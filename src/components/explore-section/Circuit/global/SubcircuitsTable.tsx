@@ -14,9 +14,8 @@ export type SubcircuitsTableProps = {
   mergedColumns: ColumnsType<CircuitSchemaProps>;
   rowSelection: TableRowSelection<CircuitSchemaProps>;
   expandedRowKeys: Key[];
-  onExpand: (expanded: boolean, row: CircuitSchemaProps) => void;
   downloadable: boolean;
-  handleExpandRow?: (expanded: boolean, row: CircuitSchemaProps) => void;
+  onExpand?: (expanded: boolean, row: CircuitSchemaProps) => void;
   selectedRows: CircuitSchemaProps[];
   selectedRowKeys: string[];
 };
@@ -26,9 +25,8 @@ export default function SubcircuitTable({
   mergedColumns,
   rowSelection,
   expandedRowKeys,
-  onExpand,
   downloadable = true,
-  handleExpandRow,
+  onExpand,
   selectedRows,
   selectedRowKeys,
 }: SubcircuitsTableProps) {
@@ -76,7 +74,7 @@ export default function SubcircuitTable({
         expandable={{
           expandedRowRender: renderSubcircuits,
           expandedRowKeys,
-          onExpand: handleExpandRow,
+          onExpand,
           expandIcon: () => null,
           rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
         }}
