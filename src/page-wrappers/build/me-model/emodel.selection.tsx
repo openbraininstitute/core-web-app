@@ -5,7 +5,7 @@ import { useId } from 'react';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
-import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state.session';
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';

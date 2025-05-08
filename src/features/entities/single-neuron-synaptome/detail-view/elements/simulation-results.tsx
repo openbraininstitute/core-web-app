@@ -8,8 +8,8 @@ import { SynaptomeSimulation } from '@/types/nexus';
 import { getSession } from '@/authFetch';
 import { queryES } from '@/api/nexus';
 
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import SimulationDetail from '@/features/entities/me-model/detail-view/simulation-details';
-import ConfigItem from '@/components/build-section/virtual-lab/synaptome/molecules/ConfigItem';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
 type LocationParams = {
@@ -17,6 +17,7 @@ type LocationParams = {
   virtualLabId: string;
 };
 
+const Error = ({ error }: { error: unknown }) => <SimpleErrorComponent error={error as Error} />;
 export default function Results({ params, modelId }: { params: LocationParams; modelId: string }) {
   const [simulations, setSimulations] = useState<SynaptomeSimulation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,7 +90,7 @@ export default function Results({ params, modelId }: { params: LocationParams; m
   return (
     <div className="flex w-full flex-col gap-2">
       {simulations.map((sim, indx) => (
-        <ErrorBoundary fallback={SimpleErrorComponent} key={sim['@id']}>
+        <ErrorBoundary fallback={Error} key={sim['@id']}>
           <SimulationDetail<SynaptomeSimulation> simulation={sim} index={indx}>
             {({ config }) => {
               if (!config.synaptome) return null;

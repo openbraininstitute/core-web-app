@@ -5,8 +5,8 @@ import { useQueryState } from 'nuqs';
 import { useEffect, use } from 'react';
 
 import { selectedEModelAtom, selectedMModelAtom } from '@/state/virtual-lab/build/me-model';
-import MorphologyOverviewCard from '@/features/entities/me-model/card-viewers/morphology-overview-card';
-import EModelOverviewCard from '@/features/entities/me-model/card-viewers/emodel-overview-card';
+import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
+import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
 import SaveButton from '@/components/build-section/virtual-lab/me-model/SaveButton';
 import { initializeSummaryAtom } from '@/state/virtual-lab/build/me-model-setter';
 import { useSessionAtomValue } from '@/hooks/hooks';

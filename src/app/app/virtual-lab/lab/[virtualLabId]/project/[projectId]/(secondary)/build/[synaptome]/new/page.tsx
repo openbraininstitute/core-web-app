@@ -1,162 +1,113 @@
-'use client';
+import type { Metadata } from 'next';
 
-import { ConfigProvider, Form, Spin } from 'antd';
-import { useEffect, useState, use } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue, useSetAtom } from 'jotai';
+import Configuration from '@/page-wrappers/build/single-neuron-synaptome';
+import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { ErrorComponent } from '@/components/GenericErrorFallback';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { tryCatch } from '@/api/utils';
 
-import { Content, Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import { generateLabUrl } from '@/util/virtual-lab/urls';
-import { SynaptomeModelConfiguration } from '@/types/synaptome';
-import { SynaptomeModelConfigSteps } from '@/components/build-section/virtual-lab/synaptome/molecules/types';
-import { ConfigStepHeader } from '@/components/build-section/virtual-lab/synaptome/molecules';
-import {
-  CreateBaseSynaptome,
-  MeModelsListing,
-  SynaptomePlacementConfiguration,
-} from '@/components/build-section/virtual-lab/synaptome/steps';
-import { DEFAULT_SYNAPSE_VALUE } from '@/components/build-section/virtual-lab/synaptome/molecules/constants';
-import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
-import { from64 } from '@/util/common';
-import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
-import { DataType } from '@/constants/explore-section/list-views';
-import { useSessionStorage } from '@/hooks/useSessionStorage';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-import useSynaptomeModel from '@/components/simulate/single-neuron/hooks/useSynaptomeModel';
-import SideMenu from '@/components/SideMenu';
-import { selectedSimulationScopeAtom } from '@/state/simulate';
-import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+type Props = ServerSideComponentProp<WorkspaceContext, { mode: 'clone'; model: string; s: string }>;
 
-type Props = {
-  params: Promise<{
-    projectId: string;
-    virtualLabId: string;
-  }>;
-};
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+  let title = 'Single Neuron Synaptome';
+  let description = 'View and manage your virtual labs, create new projects.';
 
-function Synaptome({
-  params: urlParams,
-  searchParams,
-}: ServerSideComponentProp<WorkspaceContext, { mode: 'clone' | ''; model: string }>) {
-  const { virtualLabId, projectId } = use(urlParams);
-  const queryParams = use(searchParams);
-
-  const [form] = Form.useForm();
-  const { sessionValue } = useSessionStorage<{
-    name: string;
-    description: string;
-    basePath: string;
-    record: ExploreESHit<ExploreResource>;
-    selectedRows: Array<ExploreESHit<ExploreResource>> | null;
-  } | null>(`me-model/${virtualLabId}/${projectId}`, null);
-  const scope = useAtomValue(selectedSimulationScopeAtom);
-  const [configStep, setConfigStep] = useState<SynaptomeModelConfigSteps>('basic-config');
-  const setSelectedRows = useSetAtom(selectedRowsAtom(DataType.CircuitMEModel));
-  const onConfigStep = (value: SynaptomeModelConfigSteps) => setConfigStep(value);
-
-  const labUrl = generateLabUrl(virtualLabId);
-  const labProjectUrl = `${labUrl}/project/${projectId}`;
-
-  const { model, configuration } = useSynaptomeModel({
-    virtualLabId,
-    projectId,
-    modelId: queryParams.mode === 'clone' && queryParams.model ? from64(queryParams.model) : null,
-    callback: (m, c) => {
-      // FIXME: add model row to the table selected row state to show it as selected in the second step
-      form.setFieldsValue({
-        name: m.name,
-        description: m.description,
-        modelUrl: m.used['@id'],
-        seed: m.seed,
-        synapses: c.synapses,
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (sessionValue) {
-      form.setFieldValue('name', sessionValue.name);
-      form.setFieldValue('description', sessionValue.description);
-      if (sessionValue.selectedRows && sessionValue.selectedRows.length) {
-        setSelectedRows(sessionValue.selectedRows);
-        form.setFieldValue('modelUrl', sessionValue.selectedRows.at(0)?._id);
-      }
-      setConfigStep('me-model-config');
-    }
-  }, [sessionValue, form, setSelectedRows]);
-
-  if (queryParams.mode === 'clone' && (!model || !configuration)) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
-        <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading current configuration ...</h2>
-      </div>
+  if (searchParams.mode === 'clone' && searchParams.model) {
+    const { data, error } = await tryCatch(
+      getSingleNeuronSynaptome({
+        id: searchParams.model,
+        context: params,
+      })
     );
+    if (error) {
+      title = 'Error Cloning Single Neuron Synaptome';
+      description = 'An error occurred while cloning the single neuron synaptome.';
+    }
+    title = `Clone Single Neuron Synaptome (${data?.name})`;
+    description = `Clone the single neuron synaptome ${data?.name}`;
   }
 
-  return (
-    <div className="grid h-screen max-h-screen w-full grid-cols-[min-content_auto] overflow-hidden bg-white">
-      <SideMenu
-        links={[
-          {
-            key: 'scope',
-            href: '#',
-            content: <>{scope.replace('-', ' ')}</>,
-            styles: 'text-primary-5 hover:text-primary-5! cursor-default',
-          },
-          {
-            key: LinkItemKey.Build,
-            href: `${labProjectUrl}/build`,
-            content: Content.Build,
-            styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
-          },
-        ]}
-        lab={{
-          key: LinkItemKey.VirtualLab,
-          id: virtualLabId,
-          label: Label.VirtualLab,
-          href: `${labUrl}/overview`,
-        }}
-        project={{
-          key: LinkItemKey.Project,
-          id: projectId,
-          virtualLabId,
-          label: Label.Project,
-          href: `${labProjectUrl}/home`,
-        }}
-      />
-
-      <ConfigProvider theme={{ hashed: false, token: { borderRadius: 0 } }}>
-        <Form<SynaptomeModelConfiguration>
-          form={form}
-          name="synaptome-model-configuration-form"
-          className="h-full"
-          layout="vertical"
-          initialValues={{
-            name: undefined,
-            description: undefined,
-            modelUrl: undefined,
-            seed: 100,
-            synapses: [
-              {
-                ...DEFAULT_SYNAPSE_VALUE,
-                id: crypto.randomUUID(),
-                seed: 100,
-              },
-            ],
-          }}
-        >
-          {configStep !== 'basic-config' && <ConfigStepHeader {...{ configStep }} />}
-          <CreateBaseSynaptome {...{ configStep, onConfigStep }} />
-          <MeModelsListing {...{ virtualLabId, projectId, configStep, onConfigStep }} />
-          {configStep === 'placement-config' && (
-            <SynaptomePlacementConfiguration {...{ virtualLabId, projectId }} />
-          )}
-        </Form>
-      </ConfigProvider>
-    </div>
-  );
+  return {
+    title,
+    description,
+  };
 }
 
-export default Synaptome;
+async function getSingleNeuronSynaptomeConfiguration({
+  ctx,
+  mode,
+  model,
+}: {
+  ctx: WorkspaceContext;
+  mode: 'clone';
+  model: string;
+}) {
+  if (mode === 'clone' && model) {
+    const data = await getSingleNeuronSynaptome({
+      id: model,
+      context: ctx,
+    });
+    const configAsset = getAssetElement({
+      assets: data.assets,
+      path: `${SingleNeuronSynaptome.asset.configfile}_${data.id}.json`,
+      type: SingleNeuronSynaptome.asset.extension!,
+    });
+
+    if (!configAsset) {
+      throw new Error('No Single Neuron Synaptome configuration found');
+    }
+
+    const asset = await downloadAsset({
+      ctx,
+      entityId: data.id,
+      entityType: EntityTypeEnum.SingleNeuronSynaptome,
+      id: configAsset.id,
+    });
+
+    return {
+      entity: data,
+      config: asset,
+    };
+  }
+
+  return null;
+}
+
+export default async function Page(props: Props) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+  const stateId = searchParams.s ?? crypto.randomUUID();
+
+  const { data, error } = await tryCatch(
+    getSingleNeuronSynaptomeConfiguration({
+      ctx: params,
+      mode: searchParams.mode,
+      model: searchParams.model,
+    })
+  );
+
+  if (error) {
+    return <ErrorComponent error={error} />;
+  }
+  const phase = data?.entity && data.config ? 'me-model' : 'basic';
+
+  return (
+    <Configuration
+      stateId={stateId}
+      origin={{
+        entity: data?.entity,
+        config: data?.config,
+      }}
+      virtualLabId={params.virtualLabId}
+      projectId={params.projectId}
+      phase={phase}
+    />
+  );
+}

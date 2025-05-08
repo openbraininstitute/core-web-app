@@ -11,7 +11,7 @@ import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/globa
 import type { FieldDefinition } from '@/entity-configuration/definitions/types';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-const FieldsDefinitionRegistry: FieldsDefinitionRegistry<EntityCoreObjectTypes> = {
+const FieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   ...CommonFieldsDefinition,
   ...ExperimentalFieldsDefinition,
   ...ModelFieldsDefinition,

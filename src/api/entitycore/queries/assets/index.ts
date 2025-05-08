@@ -1,3 +1,5 @@
+import kebabCase from 'lodash/kebabCase';
+
 import authApiClient from '@/api/apiClient';
 
 import { getEntityCoreContext } from '@/api/entitycore/utils';
@@ -77,7 +79,57 @@ export async function downloadAsset({
   id: string;
 }) {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<ArrayBuffer>(`/${entityType}/${entityId}/assets/${id}/download`, {
+  return await api.get<ArrayBuffer>(`/${kebabCase(entityType)}/${entityId}/assets/${id}/download`, {
     ...getEntityCoreContext(ctx),
+  });
+}
+
+/**
+ * Creates a JSON asset by converting a payload into a JSON file and uploading it using FormData.
+ *
+ * @param options - The options for creating the JSON asset
+ * @param {WorkspaceContext} [options.ctx] - Optional workspace context
+ * @param {EntityCoreDataType} options.entityType - The type of entity
+ * @param {string} options.entityId - The ID of the entity
+ * @param {string} options.path - The path where the JSON file will be stored
+ * @param {Record<string, any>} options.payload - The data to be converted to JSON
+ * @param {Record<string, any>} [options.meta] - Optional metadata to be included with the asset
+ *
+ * @returns {Promise<IAsset>} A promise that resolves to the created asset
+ *
+ * @throws Will throw an error if the API request fails
+ */
+export async function createJsonAsset({
+  ctx,
+  entityType,
+  entityId,
+  path,
+  payload,
+  meta,
+}: {
+  ctx?: WorkspaceContext;
+  entityType: EntityCoreDataType;
+  entityId: string;
+  path: string;
+  payload: Record<string, any>;
+  meta?: Record<string, any>;
+}): Promise<IAsset> {
+  const stringified = JSON.stringify(payload);
+  const jsonBlob = new Blob([stringified], { type: 'application/json' });
+  const jsonFile = new File([jsonBlob], `${path}.json`, { type: 'application/json' });
+  const formData = new FormData();
+
+  if (jsonFile) formData.append('file', jsonFile);
+  if (meta) formData.append('meta', JSON.stringify(meta));
+
+  const api = await authApiClient(entityCoreUrl);
+  return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
+    headers: {
+      ...getEntityCoreContext(ctx).headers,
+      // This is required due apiClient is using "application/json" as default content-type
+      // the browser should handle auto the multipart-form
+      'Content-Type': undefined,
+    },
+    body: formData,
   });
 }
