@@ -1,6 +1,7 @@
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { TableRowSelection } from 'antd/es/table/interface';
+import { usePathname } from 'next/navigation';
 import { Key, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
 import { CircuitSchemaProps } from '../type';
@@ -112,17 +113,21 @@ export default function CircuitTable({
     []
   );
 
+  const pathname = usePathname();
+  const isCircuitDetailPage = pathname.includes('/circuit/');
+
   const mergedColumns: ColumnsType<CircuitSchemaProps> = useMemo(() => {
     return columns(
       expandedRowKeys,
       calculateSubcircuitsForParent,
       handleRowExpandClick,
-      handleResize
+      handleResize,
+      isCircuitDetailPage
     ).map((col) => ({
       ...col,
       width: columnWidths[col.key as string] || col.width,
     }));
-  }, [expandedRowKeys, handleRowExpandClick, handleResize, columnWidths]);
+  }, [expandedRowKeys, handleRowExpandClick, handleResize, columnWidths, isCircuitDetailPage]);
 
   const rowSelection = useMemo(
     (): TableRowSelection<CircuitSchemaProps> | undefined =>
@@ -152,12 +157,6 @@ export default function CircuitTable({
     const selectedCircuit = findSelectedCircuit(data, selectedRowKeys[0]);
     return selectedCircuit ? [selectedCircuit] : [];
   }, [data, selectedRowKeys]);
-
-  // const selectedRows = data.flatMap((circuit) =>
-  //   circuit.key === selectedRowKeys[0]
-  //     ? [circuit]
-  //     : (circuit.subcircuits || []).filter((sub) => sub.key === selectedRowKeys[0])
-  // );
 
   const renderSubcircuits = useCallback(
     (circuit: CircuitSchemaProps) =>
