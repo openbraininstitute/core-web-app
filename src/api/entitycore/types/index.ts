@@ -7,7 +7,7 @@ import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
-export type * from '@/api/entitycore/types/entity-type';
+export * from '@/api/entitycore/types/entity-type';
 
 export {
   IExperimentalSynapsesPerConnection,
