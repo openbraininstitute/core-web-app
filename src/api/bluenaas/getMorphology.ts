@@ -8,15 +8,12 @@ export default async function getMorphology({
   modelId: string;
   token: string;
 }) {
-  const response = await fetch(
-    `${blueNaasUrl}/morphology?model_self=${encodeURIComponent(modelId)}`,
-    {
-      method: 'get',
-      headers: createHeaders(token, {
-        accept: 'application/x-ndjson',
-      }),
-    }
-  );
+  const response = await fetch(`${blueNaasUrl}/morphology?model_id=${modelId}`, {
+    method: 'get',
+    headers: createHeaders(token, {
+      accept: 'application/x-ndjson',
+    }),
+  });
 
   return response;
 }

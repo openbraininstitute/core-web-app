@@ -11,7 +11,7 @@ export default function useMorphology({
   modelId,
   callback,
 }: {
-  modelSelfUrl: string;
+  modelId: string;
   callback: (morphology: Morphology) => void;
 }) {
   const mountedRef = useRef(false);
@@ -24,7 +24,7 @@ export default function useMorphology({
       throw new Error('No session found');
     }
 
-    const response = await getMorphology({ modelId: modelSelfUrl, token: session.accessToken });
+    const response = await getMorphology({ modelId, token: session.accessToken });
     const reader = response.body?.getReader();
     let data: string = '';
     let value: Uint8Array | undefined;
@@ -49,7 +49,7 @@ export default function useMorphology({
       return null;
     }
     throw new Error('Neuron morphology could not be constructed');
-  }, [modelSelfUrl]);
+  }, [modelId]);
 
   useEffect(() => {
     mountedRef.current = true;

@@ -20,9 +20,11 @@ const SIMULATION_TYPE: SimulationType = 'single-neuron-simulation';
 function SingleNeuron({ projectId, virtualLabId }: Props) {
   const modelId = usePathname().split('/').pop() as string;
 
+  
+
   return (
     <>
-      <SimulationConfiguration meModelUrl={modelId} type={SIMULATION_TYPE} />
+      <SimulationConfiguration modelId={modelId} type={SIMULATION_TYPE} />
       <div className="fixed right-4 bottom-4 z-20 mt-auto">
         <SimulationButton
           modelSelfUrl={modelId}

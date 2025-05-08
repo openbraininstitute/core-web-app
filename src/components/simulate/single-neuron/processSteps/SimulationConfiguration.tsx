@@ -6,7 +6,7 @@ import NeuronViewerContainer from '@/components/neuron-viewer/NeuronViewerWithAc
 import { SimulationType } from '@/types/simulation/common';
 
 type Props = {
-  meModelUrl: string;
+  modelId: string;
   type: SimulationType;
 };
 
@@ -20,13 +20,13 @@ export default function SimulationConfiguration({ modelId, type }: Props) {
           useEvents
           useZoomer
           useLabels
-          modelUrl={meModelUrl}
+          modelUrl={modelId}
           zoomPlacement="right"
         />
       }
       type={type}
     >
-      <ParameterView meModelSelf={meModelUrl} type={type} />
+      <ParameterView meModelSelf={modelId} type={type} />
     </Wrapper>
   );
 }

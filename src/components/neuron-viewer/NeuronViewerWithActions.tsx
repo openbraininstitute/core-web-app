@@ -12,7 +12,7 @@ import {
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
 type Props = {
-  modelUrl: string;
+  modelId: string;
   zoomPlacement?: 'left' | 'right';
   useZoomer?: boolean;
   useCursor?: boolean;
@@ -21,7 +21,7 @@ type Props = {
   useLabels?: boolean;
 };
 export default function NeuronViewerContainer({
-  modelUrl,
+  modelId,
   zoomPlacement = 'right',
   useZoomer = false,
   useCursor = false,
@@ -38,7 +38,7 @@ export default function NeuronViewerContainer({
   return (
     <DefaultLoadingSuspense>
       <NeuronViewer
-        modelSelfUrl={modelUrl}
+        modelId={modelId}
         actions={{
           onClick: (data) => {
             setNeuronViewerOnClickData(data);
