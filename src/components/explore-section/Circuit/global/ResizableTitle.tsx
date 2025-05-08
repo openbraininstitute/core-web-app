@@ -1,15 +1,15 @@
+import { SyntheticEvent, ThHTMLAttributes } from 'react';
 import { Resizable, ResizeCallbackData } from 'react-resizable';
 
-export type ResizableTitleProps = {
-  onResize?: (e: React.SyntheticEvent, data: ResizeCallbackData) => void;
+export type ResizableTitleProps = ThHTMLAttributes<HTMLTableCellElement> & {
+  onResize?: (e: SyntheticEvent, data: ResizeCallbackData) => void;
   width?: number;
-  [key: string]: any;
 };
 
 export default function ResizableTitle(props: ResizableTitleProps) {
   const { onResize, width, ...restProps } = props;
 
-  if (!width) {
+  if (width === undefined) {
     // eslint-disable-next-line react/jsx-props-no-spreading
     return <th {...restProps} />;
   }
