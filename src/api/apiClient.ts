@@ -52,7 +52,7 @@ export type ErrorCause<T extends Record<string, any>> = {
   data: T;
 };
 
-export class ApiClient {
+class ApiClient {
   private _rootUrl: string;
 
   private _headers: Record<string, string>;
@@ -321,7 +321,7 @@ export class ApiClient {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
           await new Promise((resolve) => setTimeout(resolve, delay));
-          return await runRequest();
+          return runRequest();
         }
         throw Error(`Request ${request.url} failed `, {
           cause: {
@@ -337,7 +337,7 @@ export class ApiClient {
     };
 
     try {
-      return await runRequest();
+      return runRequest();
     } catch (error: any) {
       if (error.name === 'AbortError') {
         onAbort?.();
