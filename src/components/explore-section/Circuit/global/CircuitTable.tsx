@@ -24,7 +24,10 @@ export type CustomRowProps = {
   'data-row-key'?: string;
 };
 
-function findSelectedCircuit(circuits: CircuitSchemaProps[], key: string): CircuitSchemaProps | null {
+function findSelectedCircuit(
+  circuits: CircuitSchemaProps[],
+  key: string
+): CircuitSchemaProps | null {
   for (const circuit of circuits) {
     if (circuit.key === key) {
       return circuit;
@@ -144,12 +147,11 @@ export default function CircuitTable({
     );
   }, []);
 
-
   const selectedRows = useMemo(() => {
     if (!selectedRowKeys[0]) return [];
     const selectedCircuit = findSelectedCircuit(data, selectedRowKeys[0]);
     return selectedCircuit ? [selectedCircuit] : [];
-  }, [data, selectedRowKeys] )
+  }, [data, selectedRowKeys]);
 
   // const selectedRows = data.flatMap((circuit) =>
   //   circuit.key === selectedRowKeys[0]
@@ -171,7 +173,15 @@ export default function CircuitTable({
           selectedRowKeys={selectedRowKeys}
         />
       ) : null,
-    [mergedColumns, rowSelection, expandedRowKeys, handleExpandRow, downloadable, selectedRowKeys, selectedRows]
+    [
+      mergedColumns,
+      rowSelection,
+      expandedRowKeys,
+      handleExpandRow,
+      downloadable,
+      selectedRowKeys,
+      selectedRows,
+    ]
   );
 
   const rowWrapperWithColumns = (props: CustomRowProps) => (
