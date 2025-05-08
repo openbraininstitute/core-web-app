@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Form, Button, Alert } from 'antd';
 import { CheckCircleFilled, LoadingOutlined } from '@ant-design/icons';
 
+import { validateEMail } from '../profile/validator';
 import {
   getEmailVerificationCode,
   verifyOtpCode,
@@ -94,6 +95,7 @@ export default function AdministratorEmail({ allowAskCode }: Props) {
           rules={[
             { required: true, message: 'Please enter email' },
             { type: 'email', message: 'Please enter a valid email' },
+            { validator: validateEMail },
           ]}
         >
           <Input type="email" placeholder="Enter the email here..." />

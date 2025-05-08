@@ -150,7 +150,7 @@ export const queryAtom = atomFamily(
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+        scope.dataScope === ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
               selectedBrainRegionWithDescendantsAndAncestorsFamily(
                 scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'

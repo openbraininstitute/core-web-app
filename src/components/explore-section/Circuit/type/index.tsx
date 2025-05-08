@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type PaperLitteratureProps = {
+export type PaperLiteratureProps = {
   title: string;
   type: string;
   authors: string[];
@@ -29,7 +29,8 @@ export type CircuitSchemaProps = {
   key: string;
   name: string;
   description: string;
-  parent?: string;
+  parent?: string | null;
+  derivedFrom: string[];
   hasSubcircuits: boolean;
   brainRegion: string;
   species: string;
@@ -38,11 +39,11 @@ export type CircuitSchemaProps = {
   numberOfSynapses: number;
   metadata: {
     contributorSimple?: string;
-    contributor?: string;
+    contributor?: string | null;
     contributingInstitution?: string;
     registrationDate?: string;
     revision: number | null;
-    createdBy: string;
+    createdBy: string | null;
     creationDate: string;
     license: {
       name: string;
@@ -55,24 +56,30 @@ export type CircuitSchemaProps = {
     key: string;
     isAvailable: boolean;
   }[];
-  subcircuits: CircuitSchemaProps[] | null;
+  subcircuits: CircuitSchemaProps[];
 
-  // TO BE REVISED
-  provenance: {
-    isASubcircuit: boolean;
-    subcircuitOf: string | null;
-    literature: PaperLitteratureProps[];
-  };
-  relatedPublications: PaperLitteratureProps[];
-  images: {
-    low?: string | null;
-    normal?: string | null;
-    high: string | null;
-  };
   overview: {
-    cellStatistics: GraphDataImageProps[];
-    networkStatistics: GraphDataImageProps[];
+    mainDisplay: {
+      name: string;
+      url: string;
+    }[];
+    cellStatistics: {
+      name: string;
+      url: string;
+    }[];
+    networkStatistics: {
+      name: string;
+      url: string;
+    }[];
   };
+
+  literature: PaperLiteratureProps[];
+};
+
+export type FullCircuitData = {
+  content: CircuitSchemaProps;
+  parent: CircuitSchemaProps | null;
+  derivedFrom: CircuitSchemaProps[] | null;
 };
 
 export type CircuitCellValue = {
@@ -98,4 +105,19 @@ export type InteractiveImageProps = {
   alt: string;
   width: number;
   height: number;
+};
+
+export type NumericFilterProperty = 'neurons' | 'connections' | 'synapses';
+export type NumericFilterType = 'greaterThan' | 'lessThan' | 'between';
+
+export type FilterOptionsProps = {
+  searchQuery?: string;
+  numericFilter?: NumericFilterOptions | null;
+};
+
+export type NumericFilterOptions = {
+  property: NumericFilterProperty;
+  type: NumericFilterType;
+  min?: number;
+  max?: number;
 };
