@@ -265,6 +265,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
           selectedRows={selectedRows}
           clearSelectedRows={clearSelectedRows}
           visible={controlsVisible}
+          dataType={dataContext.dataType}
         >
           {displayLoadMoreBtn && (
             <LoadMoreButton hide={toggleDisplayMore} dataKey={dataKey} dataContext={dataContext} />

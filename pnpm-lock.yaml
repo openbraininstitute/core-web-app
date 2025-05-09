@@ -176,9 +176,15 @@ importers:
       elastic-builder:
         specifier: ^2.20.0
         version: 2.31.0
+      fast-csv:
+        specifier: ^5.0.2
+        version: 5.0.2
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
+      flat:
+        specifier: ^6.0.1
+        version: 6.0.1
       framer-motion:
         specifier: ^12.4.7
         version: 12.6.3(@emotion/is-prop-valid@1.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -287,6 +293,9 @@ importers:
       swiper:
         specifier: ^11.1.14
         version: 11.2.6
+      tar-stream:
+        specifier: ^3.1.7
+        version: 3.1.7
       three:
         specifier: ^0.159.0
         version: 0.159.0
@@ -351,6 +360,9 @@ importers:
       '@types/react-syntax-highlighter':
         specifier: ^15.5.13
         version: 15.5.13
+      '@types/tar-stream':
+        specifier: ^3.1.3
+        version: 3.1.3
       '@types/three':
         specifier: ^0.159.0
         version: 0.159.0
@@ -1662,6 +1674,12 @@ packages:
 
   '@exodus/schemasafe@1.3.0':
     resolution: {integrity: sha512-5Aap/GaRupgNx/feGBwLLTVv8OQFfv3pq2lPRzPg9R+IOBnDgghTGW7l7EuVXOvg5cc/xSAlRW8rBrjIC3Nvqw==}
+
+  '@fast-csv/format@5.0.2':
+    resolution: {integrity: sha512-fRYcWvI8vs0Zxa/8fXd/QlmQYWWkJqKZPAXM+vksnplb3owQFKTPPh9JqOtD0L3flQw/AZjjXdPkD7Kp/uHm8g==}
+
+  '@fast-csv/parse@5.0.2':
+    resolution: {integrity: sha512-gMu1Btmm99TP+wc0tZnlH30E/F1Gw1Tah3oMDBHNPe9W8S68ixVHjt89Wg5lh7d9RuQMtwN+sGl5kxR891+fzw==}
 
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
@@ -6307,6 +6325,10 @@ packages:
     resolution: {integrity: sha512-HuC1qF9iTnHDnML9YZAdCDQwT0yKl/U55K4XSUXqGAA2GLoafFgWRqdAbhWJxXaYD4pyoVxAJ8wH670jMpI9DQ==}
     engines: {node: '>=0.4.0'}
 
+  fast-csv@5.0.2:
+    resolution: {integrity: sha512-CnB2zYAzzeh5Ta0UhSf32NexLy2SsEsSMY+fMWPV40k1OgaLEbm9Hf5dms3z/9fASZHBjB6i834079gVeksEqQ==}
+    engines: {node: '>=10.0.0'}
+
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
 
@@ -6420,6 +6442,11 @@ packages:
   flat-cache@3.2.0:
     resolution: {integrity: sha512-CYcENa+FtcUKLmhhqyctpclsq7QF38pKjZHsGNiSQF5r4FtoKDWabFDl3hzaEQMvT1LHEysw5twgLvpYYb4vbw==}
     engines: {node: ^10.12.0 || >=12.0.0}
+
+  flat@6.0.1:
+    resolution: {integrity: sha512-/3FfIa8mbrg3xE7+wAhWeV+bd7L2Mof+xtZb5dRDKZ+wDvYJK4WDYeIOuOhre5Yv5aQObZrlbRmk3RTSiuQBtw==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   flatbuffers@24.12.23:
     resolution: {integrity: sha512-dLVCAISd5mhls514keQzmEG6QHmUUsNuWsb4tFafIUwvvgDjXhtfAYSKOzt5SWOy+qByV5pbsDZ+Vb7HUOBEdA==}
@@ -7778,6 +7805,12 @@ packages:
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
 
+  lodash.escaperegexp@4.1.2:
+    resolution: {integrity: sha512-TM9YBvyC84ZxE3rgfefxUWiQKLilstD6k7PTGt6wfbtXF8ixIJLOL3VYyV/z+ZiPLsVxAsKAFVwWlWeb2Y8Yyw==}
+
+  lodash.groupby@4.6.0:
+    resolution: {integrity: sha512-5dcWxm23+VAoz+awKmBaiBvzox8+RqMgFhi7UvX9DHZr2HdxHXM/Wrf8cfKpsW37RNrvtPn6hSwNqurSILbmJw==}
+
   lodash.has@4.5.2:
     resolution: {integrity: sha512-rnYUdIo6xRCJnQmbVFEwcxF144erlD+M3YcJUVesflU9paQaE8p+fJDcIQrlMYbxoANFL+AB9hZrzSBBk5PL+g==}
 
@@ -7787,8 +7820,18 @@ packages:
   lodash.head@4.0.1:
     resolution: {integrity: sha512-cw2auMZNAJp4bAAbG0CITl68eE0j4SkbIPEskppHhIyQ2SFQWSrcoH6mnpcFPgsOqSI/lcrnCHKlz8r54D4jCA==}
 
+  lodash.isboolean@3.0.3:
+    resolution: {integrity: sha512-Bz5mupy2SVbPHURB98VAcw+aHh4vRV5IPNhILUCsOzRmsTmSQ17jIuqopAentWoehktxGd9e/hbIXq980/1QJg==}
+
   lodash.isempty@4.4.0:
     resolution: {integrity: sha512-oKMuF3xEeqDltrGMfDxAPGIVMSSRv8tbRSODbrs4KGsRRLEhrW8N8Rd4DRgB2+621hY8A8XwwrTVhXWpxFvMzg==}
+
+  lodash.isequal@4.5.0:
+    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+  lodash.isfunction@3.0.9:
+    resolution: {integrity: sha512-AirXNj15uRIMMPihnkInB4i3NHeb4iBtNg9WRWuK2o31S+ePwwNmDPaTL3o7dTJ+VXNZim7rFs4rxN4YU1oUJw==}
 
   lodash.isnil@4.0.0:
     resolution: {integrity: sha512-up2Mzq3545mwVnMhTDMdfoG1OurpA/s5t88JmQX809eH3C8491iu2sfKhTfhQtKY78oPNhiaHJUpT/dUDAAtng==}
@@ -7799,6 +7842,9 @@ packages:
   lodash.isstring@4.0.1:
     resolution: {integrity: sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw==}
 
+  lodash.isundefined@3.0.1:
+    resolution: {integrity: sha512-MXB1is3s899/cD8jheYYE2V9qTHwKvt+npCwpD+1Sxm3Q3cECXCiYHjeHWXNwr6Q0SOBPrYUDxendrO6goVTEA==}
+
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
@@ -7808,6 +7854,9 @@ packages:
 
   lodash.startcase@4.4.0:
     resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
+
+  lodash.uniq@4.5.0:
+    resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
@@ -12534,6 +12583,23 @@ snapshots:
   '@eslint/js@8.57.1': {}
 
   '@exodus/schemasafe@1.3.0': {}
+
+  '@fast-csv/format@5.0.2':
+    dependencies:
+      lodash.escaperegexp: 4.1.2
+      lodash.isboolean: 3.0.3
+      lodash.isequal: 4.5.0
+      lodash.isfunction: 3.0.9
+      lodash.isnil: 4.0.0
+
+  '@fast-csv/parse@5.0.2':
+    dependencies:
+      lodash.escaperegexp: 4.1.2
+      lodash.groupby: 4.6.0
+      lodash.isfunction: 3.0.9
+      lodash.isnil: 4.0.0
+      lodash.isundefined: 3.0.1
+      lodash.uniq: 4.5.0
 
   '@fastify/busboy@2.1.1': {}
 
@@ -18062,6 +18128,11 @@ snapshots:
       acorn: 7.4.1
       isarray: 2.0.5
 
+  fast-csv@5.0.2:
+    dependencies:
+      '@fast-csv/format': 5.0.2
+      '@fast-csv/parse': 5.0.2
+
   fast-deep-equal@3.1.3: {}
 
   fast-fifo@1.3.2: {}
@@ -18167,6 +18238,8 @@ snapshots:
       flatted: 3.3.3
       keyv: 4.5.4
       rimraf: 3.0.2
+
+  flat@6.0.1: {}
 
   flatbuffers@24.12.23: {}
 
@@ -19842,13 +19915,23 @@ snapshots:
 
   lodash.debounce@4.0.8: {}
 
+  lodash.escaperegexp@4.1.2: {}
+
+  lodash.groupby@4.6.0: {}
+
   lodash.has@4.5.2: {}
 
   lodash.hasin@4.5.2: {}
 
   lodash.head@4.0.1: {}
 
+  lodash.isboolean@3.0.3: {}
+
   lodash.isempty@4.4.0: {}
+
+  lodash.isequal@4.5.0: {}
+
+  lodash.isfunction@3.0.9: {}
 
   lodash.isnil@4.0.0: {}
 
@@ -19856,11 +19939,15 @@ snapshots:
 
   lodash.isstring@4.0.1: {}
 
+  lodash.isundefined@3.0.1: {}
+
   lodash.merge@4.6.2: {}
 
   lodash.omit@4.5.0: {}
 
   lodash.startcase@4.4.0: {}
+
+  lodash.uniq@4.5.0: {}
 
   lodash@4.17.21: {}
 
