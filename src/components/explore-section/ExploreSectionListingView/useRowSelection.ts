@@ -6,13 +6,14 @@ import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { EntityTypeValue } from '@/api/entitycore/types';
 
 type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
 
 export type RenderButtonProps<T> = {
   selectedRows: Array<T>;
   clearSelectedRows: () => void;
-  dataType: string;
+  dataType: EntityTypeValue;
 };
 
 export default function useRowSelection<T extends { id: string }>({

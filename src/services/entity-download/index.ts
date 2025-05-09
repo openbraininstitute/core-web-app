@@ -1,6 +1,8 @@
 import snakeCase from 'lodash/snakeCase';
 
-export async function downloadArchive(entityType: string, entityIds: []) {
+import { EntityTypeValue } from '@/api/entitycore/types';
+
+export async function downloadArchive(entityType: EntityTypeValue, entityIds: string[]) {
   const searchParams = new URLSearchParams();
   entityIds.forEach((id) => searchParams.append('entityIds', id));
 

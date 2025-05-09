@@ -9,7 +9,7 @@ import BookmarkButton from '@/features/bookmark/control';
 import useNotification from '@/hooks/notifications';
 import usePathname from '@/hooks/pathname';
 import sessionAtom from '@/state/session';
-import fetchArchive from '@/api/archive';
+import { downloadArchive } from '@/services/entity-download';
 import Link from '@/components/Link';
 
 import { InteractiveViewIcon } from '@/components/icons';
@@ -74,7 +74,8 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
               disabled={fetching || !hasDistribution}
               onClick={() => {
                 setFetching(true);
-                fetchArchive([detail.id], session, () => setFetching(false), errorOnDownload);
+                downloadArchive(entity!.type, [detail.id]);
+                setTimeout(() => setFetching(false), 1600);
               }}
             >
               Download

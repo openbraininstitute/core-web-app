@@ -8,7 +8,6 @@ import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 
 export function ExploreDownloadButton({
   children,
-  clearSelectedRows,
   selectedRows,
   dataType,
 }: RenderButtonProps & { children: ReactNode }) {
