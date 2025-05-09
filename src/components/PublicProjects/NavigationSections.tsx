@@ -1,5 +1,3 @@
-import { usePathname, useRouter } from 'next/navigation';
-
 import { Sections } from '@/types/public-projects';
 
 export default function NavigationSections({
@@ -9,18 +7,10 @@ export default function NavigationSections({
   section: string;
   updateSection: (section: Sections) => void;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-
   const SHOWCASE_TABS: Sections[] = ['description', 'artifacts', 'notebooks'];
 
   const handleTabChange = (tab: string) => {
     updateSection(tab as Sections);
-
-    const params = new URLSearchParams(window.location.search);
-    params.set('section', tab);
-
-    router.push(`${pathname}?${params.toString()}`);
   };
 
   return (
