@@ -20,8 +20,6 @@ const SIMULATION_TYPE: SimulationType = 'single-neuron-simulation';
 function SingleNeuron({ projectId, virtualLabId }: Props) {
   const modelId = usePathname().split('/').pop() as string;
 
-  
-
   return (
     <>
       <SimulationConfiguration modelId={modelId} type={SIMULATION_TYPE} />

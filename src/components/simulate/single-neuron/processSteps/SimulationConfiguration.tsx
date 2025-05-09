@@ -20,7 +20,7 @@ export default function SimulationConfiguration({ modelId, type }: Props) {
           useEvents
           useZoomer
           useLabels
-          modelUrl={modelId}
+          modelId={modelId}
           zoomPlacement="right"
         />
       }

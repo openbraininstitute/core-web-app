@@ -8,7 +8,7 @@ export default async function getMorphology({
   modelId: string;
   token: string;
 }) {
-  const response = await fetch(`${blueNaasUrl}/morphology?model_id=${modelId}`, {
+  const response = await fetch(`${blueNaasUrl}/entitycore/morphology?model_id=${modelId}`, {
     method: 'get',
     headers: createHeaders(token, {
       accept: 'application/x-ndjson',
