@@ -7,18 +7,15 @@ import Link from 'next/link';
 import { useAtomValue } from 'jotai';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { captureException } from '@sentry/nextjs';
 
 import { acceptInvite as sendInviteAcceptRequest, getInviteDetails } from './api';
-import { getErrorUrl, getLabUrl, getProjectUrl } from './utils';
+import { getErrorUrl, getLabUrl } from './utils';
 import Logo from '@/components/logo/as-svg';
 import { InviteDetailsData } from '@/types/virtual-lab/invites';
 import sessionAtom from '@/state/session';
 
 import inviteBgImgSrc from '@/../public/images/invite/invite-bg.webp';
 import { isVlmError } from '@/types/virtual-lab/common';
-import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
-import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 
 export default function InviteLoader() {
   const inviteToken = useSearchParams().get('token');
