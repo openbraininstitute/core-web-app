@@ -1,4 +1,5 @@
-import { isType } from '@/util/type-guards';
+import { logError, logInfo } from '@/util/logger';
+import { assertType } from '@/util/type-guards';
 
 export interface ScientificArticle {
   title: string;
@@ -14,16 +15,34 @@ export interface LiteratureSearchToolItem {
   abstract: string | null;
 }
 
-export function isLiteratureSearchToolResult(data: unknown): data is LiteratureSearchToolItem[] {
-  return isType(data, [
-    'array',
-    {
-      article_title: 'string',
-      article_doi: 'string',
-      article_authors: ['array', 'string'],
-      abstract: ['|', 'string', 'null'],
-    },
-  ]);
+export interface LiteratureSearchToolResult {
+  articles: LiteratureSearchToolItem[];
+  error: unknown;
+}
+
+export function isLiteratureSearchToolResult(data: unknown): data is LiteratureSearchToolResult {
+  try {
+    assertType(data, {
+      articles: [
+        'array',
+        {
+          article_title: 'string',
+          article_doi: 'string',
+          article_authors: ['array', 'string'],
+          abstract: ['|', 'string', 'null'],
+        },
+      ],
+      error: 'unknown',
+    });
+    return true;
+  } catch (ex) {
+    logError(
+      'Result of literature-search-tool has not the expected format:',
+      extractErrorMessage(ex)
+    );
+    logInfo('We received this:', data);
+    return false;
+  }
 }
 
 export interface WebSearchToolItem {
@@ -38,15 +57,28 @@ export interface WebSearchToolResult {
 }
 
 export function isWebSearchToolResult(data: unknown): data is WebSearchToolResult {
-  return isType(data, {
-    results: [
-      'array',
-      {
-        title: 'string',
-        content: 'string',
-        url: 'string',
-        score: 'number',
-      },
-    ],
-  });
+  try {
+    assertType(data, {
+      results: [
+        'array',
+        {
+          title: 'string',
+          content: 'string',
+          url: 'string',
+          score: 'number',
+        },
+      ],
+    });
+    return true;
+  } catch (ex) {
+    logError('Result of web-search-tool has not the expected format:', extractErrorMessage(ex));
+    logInfo('We received this:', data);
+    return false;
+  }
+}
+
+function extractErrorMessage(ex: unknown) {
+  if (typeof ex === 'string') return ex;
+  if (ex instanceof Error) return ex.message;
+  return JSON.stringify(ex);
 }
