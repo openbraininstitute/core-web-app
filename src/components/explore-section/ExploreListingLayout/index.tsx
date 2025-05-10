@@ -8,10 +8,10 @@ import { Menu, type MenuProps } from 'antd';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
-import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
+import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
 import {
@@ -33,16 +33,6 @@ import type { NavigationMenuItem } from '@/components/explore-section/ExploreLis
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
-import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
-// const NavigationMenu = dynamic(
-//   () => import('@/components/explore-section/ExploreListingLayout/navigation-menu'),
-//   {
-//     ssr: false,
-//     loading(loadingProps) {
-//       return <div className="h-32 bg-red-600">Loading ....</div>;
-//     },
-//   }
-// );
 
 export default function ExploreListingLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
