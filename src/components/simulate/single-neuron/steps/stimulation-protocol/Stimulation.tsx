@@ -17,14 +17,14 @@ import { StimulusModule } from '@/types/simulation/single-neuron';
 import SelectedIcon from '@/components/icons/SelectedIcon';
 
 type Props = {
-  modelSelfUrl: string;
+  modelId: string;
 };
 
 type FormItemProps = {
   stimulationId: number;
 };
 
-export default function Stimulation({ modelSelfUrl }: Props) {
+export default function Stimulation({ modelId }: Props) {
   const state = useAtomValue(currentInjectionSimulationConfigAtom);
   return (
     <ConfigProvider
@@ -83,7 +83,7 @@ export default function Stimulation({ modelSelfUrl }: Props) {
                         <AmperageRange
                           stimulationId={field.name}
                           amplitudes={state[field.name].stimulus.amplitudes}
-                          modelSelfUrl={modelSelfUrl}
+                          modelId={modelId}
                           protocol={
                             state[field.name].stimulus.stimulusProtocol ??
                             DEFAULT_STIM_CONFIG.stimulusProtocol!

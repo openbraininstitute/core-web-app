@@ -6,14 +6,14 @@ import {
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 export default async function getStimuliPlot(
-  modelSelfUrl: string,
+  modelId: string,
   token: string,
   config: CurrentInjectionGraphRequest,
   signal?: AbortSignal
 ): Promise<CurrentInjectionGraphResponse[]> {
   const formattedConfig = convertObjectKeysToSnakeCase(config);
   const response = await fetch(
-    `${blueNaasUrl}/graph/direct-current-plot?model_self=${encodeURIComponent(modelSelfUrl)}`,
+    `${blueNaasUrl}/entitycore/graph/direct-current-plot?model_id=${modelId}`,
     {
       signal,
       method: 'post',

@@ -58,7 +58,7 @@ type AmperageStateType = {
 type Props = {
   stimulationId: number;
   amplitudes: number[] | number;
-  modelSelfUrl: string;
+  modelId: string;
   protocol: StimulusModule;
 };
 
@@ -114,7 +114,7 @@ function rangeReducer(state: AmperageStateType, action: AmperageActionType) {
 export default function AmperageRange({
   amplitudes,
   stimulationId,
-  modelSelfUrl,
+  modelId,
   protocol,
 }: Props) {
   const morphologySections = useAtomValue(secNamesAtom);
@@ -288,7 +288,7 @@ export default function AmperageRange({
         <StimuliPreviewPlot
           amplitudes={amperageState.computed}
           protocol={amperageState.protocol}
-          modelSelfUrl={modelSelfUrl}
+          modelId={modelId}
         />
       )}
     </>

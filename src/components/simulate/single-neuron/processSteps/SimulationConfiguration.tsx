@@ -26,7 +26,7 @@ export default function SimulationConfiguration({ modelId, type }: Props) {
       }
       type={type}
     >
-      <ParameterView meModelSelf={modelId} type={type} />
+      <ParameterView modelId={modelId} type={type} />
     </Wrapper>
   );
 }
