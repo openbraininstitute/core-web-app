@@ -1,12 +1,11 @@
 import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
+import { ReactNode, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import Link from 'next/link';
-import { ReactNode, useMemo } from 'react';
 
 import { useQueryState } from 'nuqs';
 import { unwrap } from 'jotai/utils';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
