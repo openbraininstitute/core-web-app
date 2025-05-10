@@ -2,7 +2,7 @@
 
 import { atomFamily, atomWithRefresh } from 'jotai/utils';
 
-import { getBulkEntityCoreResult } from '@/app/api/entitycore/entities/count/route';
+import { getBulkEntityCoreResult } from '@/app/api/entity-core/entities/count/route';
 import { tryCatch } from '@/api/utils';
 
 import type { ExperimentalDataType } from '@/entity-configuration/domain/experimental';

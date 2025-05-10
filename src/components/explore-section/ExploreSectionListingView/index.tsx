@@ -13,6 +13,7 @@ import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
 import { sortStateAtom, dataAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
+import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -55,24 +56,25 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
 }) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
+  const { node } = useBrainRegionHierarchy({ dataKey });
 
   const result = useLoadableValue(
     dataAtom({
       dataType,
       dataScope,
-      virtualLabInfo,
+      workspace: virtualLabInfo,
       key: dataKey,
+      brainRegionId: node.id,
     })
   );
 
-  const dataSource = useDataAtom<T>(
-    {
-      dataType,
-      dataScope,
-      virtualLabInfo,
-    },
-    dataKey
-  );
+  const dataSource = useDataAtom<T>({
+    dataType,
+    dataScope,
+    workspace: virtualLabInfo,
+    brainRegionId: node.id,
+    key: dataKey,
+  });
 
   return (
     <div

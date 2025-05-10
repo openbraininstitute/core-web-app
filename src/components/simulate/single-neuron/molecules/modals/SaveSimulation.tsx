@@ -51,7 +51,7 @@ export default function SaveSimulationModal({
     queryAtom({
       dataType,
       dataScope: ExploreDataScope.NoScope,
-      virtualLabInfo: { virtualLabId: vLabId, projectId },
+      workspace: { virtualLabId: vLabId, projectId },
       key: projectId + 'simulate' + dataType,
     })
   );

@@ -37,7 +37,7 @@ type BrainRegionHierarchyAtomReturnType = {
 } | null;
 
 export const brainRegionSidebarAtom = atom(false);
-export const BrainRegionHierarchyAtom = atom(
+export const brainRegionHierarchyAtom = atom(
   async (): Promise<BrainRegionHierarchyAtomReturnType> => {
     const { data: brainRegions, error } = await tryCatch(getBrainRegionHierarchy({}));
     if (error) {
@@ -122,3 +122,6 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     updateHierarchyConfig,
   };
 };
+
+brainRegionHierarchyAtom.debugLabel = 'brainRegionHierarchyAtom';
+brainRegionSidebarAtom.debugLabel = 'brainRegionSidebarAtom';
