@@ -1,26 +1,15 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
-import { Suspense } from 'react';
 
 import SelectedBrainRegionMETypes from '@/components/explore-section/ExploreInteractive/SelectedBrainRegionMETypes';
 import DataTypeTabs from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
+import EntityTypeStatsPanel from '@/components/entities-type-stats/panel';
 import ThreeDeeBrain from '@/components/ThreeDeeBrain';
 
-import EntityTypeStatsPanelContainer, {
-  EntityTypeStatsPanel,
-} from '@/components/entities-type-stats/panel';
-import { EntityTypeCountSkeleton } from '@/components/entities-type-stats/stat-item';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 
-import type { BulkEntityCoreCountResult } from '@/app/api/entity-core/entities/count/route';
-import type { Result } from '@/api/utils';
-
-type Props = {
-  entityCounterPromise: Promise<Result<BulkEntityCoreCountResult, Error>>;
-};
-
-export default function ExploreInteractivePanel({ entityCounterPromise }: Props) {
+export default function ExploreInteractivePanel() {
   return (
     <div className="relative flex h-full min-w-0 flex-1 overflow-hidden">
       <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-[#012766]">
@@ -52,23 +41,7 @@ export default function ExploreInteractivePanel({ entityCounterPromise }: Props)
                 showButtons: false,
               })}
             >
-              <Suspense
-                fallback={
-                  <div className="relative grid h-full grid-flow-row grid-cols-2 gap-x-3 gap-y-1 p-4 pt-0">
-                    {Array.from({ length: 6 })
-                      .fill(0)
-                      .map((v, i) => (
-                        <EntityTypeCountSkeleton key={`skeleton-${i}`} />
-                      ))}
-                  </div>
-                }
-              >
-                <EntityTypeStatsPanelContainer entityCounterPromise={entityCounterPromise}>
-                  {({ data, error, pathName, selectedTab }) => (
-                    <EntityTypeStatsPanel {...{ data, error, pathName, selectedTab }} />
-                  )}
-                </EntityTypeStatsPanelContainer>
-              </Suspense>
+              <EntityTypeStatsPanel />
             </ErrorBoundary>
           </div>
         </div>

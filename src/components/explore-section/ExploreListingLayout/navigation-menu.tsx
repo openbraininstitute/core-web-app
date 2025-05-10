@@ -6,7 +6,7 @@ import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
-import { DEFAULT_BRAIN_REGION_QUERY_ID } from '@/features/brain-region-tree/latest/brain-region/context';
+import { DEFAULT_BRAIN_REGION_QUERY_ID } from '@/features/brain-region-tree/v2/brain-region/context';
 import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { DataType } from '@/constants/explore-section/list-views';
 

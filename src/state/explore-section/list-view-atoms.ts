@@ -1,4 +1,4 @@
-import { atom, useAtom, useAtomValue } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import uniq from 'lodash/uniq';
 import isEmpty from 'lodash/isEmpty';
@@ -14,8 +14,6 @@ import fetchDataQuery from '@/queries/explore-section/data';
 import {
   DataQuery,
   fetchDimensionAggs,
-  fetchEsResourcesByType,
-  fetchLinkedModel,
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
 import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
@@ -26,10 +24,7 @@ import {
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
   setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
-import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import {
-  buildBrainRegionFilterQuery,
   transformFiltersToQuery,
   transformQueryParamsArrayToString,
 } from '@/api/entitycore/transformers';
@@ -45,9 +40,9 @@ import {
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import filter from 'lodash/filter';
 import { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import { compactRecord } from '@/utils/dictionary';
+import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-tree/v2/brain-region/context';
 
 type DataAtomFamilyScopeType = {
   key: string;
@@ -243,7 +238,9 @@ export const dataAtom = atomFamily(
         page: pageNumber,
         search: isEmpty(searchString) ? null : searchString,
         order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
-        within_brain_region: buildBrainRegionFilterQuery(brainRegion?.id),
+        within_brain_region_hierachy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+        within_brain_region_brain_region_id: brainRegion?.id,
+        within_brain_region_ascendants: false,
         ...transformQueryParamsArrayToString(transformFiltersToQuery(filters as any)),
       });
 
@@ -255,7 +252,6 @@ export const dataAtom = atomFamily(
             ...(entity.api.config.allowedParams === 'all'
               ? queryParameters
               : pick(queryParameters, entity.api.config.allowedParams ?? [])),
-            within_brain_region: buildBrainRegionFilterQuery(brainRegion?.id),
           },
           context: scope.virtualLabInfo,
         });
