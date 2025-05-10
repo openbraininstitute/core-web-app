@@ -9,7 +9,7 @@ import Tree from '@/components/tree';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import {
   DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
-  BrainRegionHierarchyAtom,
+  brainRegionHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-tree/v2/brain-region/context';
@@ -19,7 +19,7 @@ import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brai
 
 export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
-  const brainRegionHierarchyResult = useAtomValue(BrainRegionHierarchyAtom);
+  const brainRegionHierarchyResult = useAtomValue(brainRegionHierarchyAtom);
   const { node, updateHierarchyConfig } = useBrainRegionHierarchy({ dataKey });
 
   if (!brainRegionHierarchyResult) {

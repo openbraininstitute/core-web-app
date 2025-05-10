@@ -1,13 +1,15 @@
 import { HTMLProps, useCallback } from 'react';
 import { useAtom } from 'jotai';
+
 import {
   dataAtom,
   useDataAtom,
   pageNumberAtom,
   previousDataAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { PAGE_SIZE } from '@/constants/explore-section/list-views';
+import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { PAGE_SIZE } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
@@ -30,7 +32,7 @@ function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonEle
 
 export function useLoadMore<T>(
   dataContext: {
-    virtualLabInfo?: VirtualLabInfo;
+    workspace?: VirtualLabInfo;
     dataScope: ExploreDataScope;
     dataType: DataType;
   },
@@ -38,11 +40,12 @@ export function useLoadMore<T>(
 ) {
   const [, setPrevData] = useAtom(previousDataAtom({ ...dataContext, key }));
   const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
-
-  const data = useDataAtom<T>(dataContext, key);
+  const { node } = useBrainRegionHierarchy({ dataKey: key });
+  const data = useDataAtom<T>({ ...dataContext, key, brainRegionId: node.id });
   const res = useLoadableValue(
     dataAtom({
       ...dataContext,
+      brainRegionId: node.id,
       key,
     })
   );

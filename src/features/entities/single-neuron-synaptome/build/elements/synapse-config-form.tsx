@@ -90,7 +90,7 @@ export default function SynaptomeConfigurationForm({
     queryAtom({
       dataType: DataType.SingleNeuronSynaptome,
       dataScope: ExploreDataScope.NoScope,
-      virtualLabInfo: { virtualLabId, projectId },
+      workspace: { virtualLabId, projectId },
       key: resolveDataKey({
         ctx: { virtualLabId, projectId },
         scope: 'explore',

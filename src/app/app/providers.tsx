@@ -13,6 +13,7 @@ import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { SessionOrNull } from '@/hooks/session';
 import { AtomProvider } from '@/state/state';
+import 'jotai-devtools/styles.css';
 
 type ProvidersProps = {
   children: ReactNode;
