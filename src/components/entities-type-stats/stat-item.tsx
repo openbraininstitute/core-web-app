@@ -1,4 +1,4 @@
-import { WarningOutlined } from '@ant-design/icons';
+import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { ReactNode } from 'react';
@@ -8,6 +8,8 @@ import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
+import { useQueryState } from 'nuqs';
+import { DEFAULT_BRAIN_REGION_QUERY_NAME } from '@/features/brain-region-tree/v2/brain-region/context';
 
 // TODO: to delete when confirm the LiteratureForExperimentType is not needed
 export default function StatItem({
@@ -73,19 +75,21 @@ export function EntityTypeCount({
   records,
   type,
   isError,
+  isLoading = false,
 }: {
   href: string;
   title: string;
   records: string;
   type: string;
   isError: boolean;
+  isLoading?: boolean;
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const [brainRegionName] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_NAME);
 
   const onClick = async () => {
     if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+      await userJourneyTracker.handleBrainRegionClick(brainRegionName!);
     }
     const artifact = ensureString(title, 'Morphology');
     setCurrentExplorerArtifact(artifact);
@@ -100,6 +104,7 @@ export function EntityTypeCount({
       data-testid={`dataset-${type}`}
     >
       <span className="text-base font-bold">{title}</span>
+      {isLoading && !isError && <LoadingOutlined className="ml-auto" />}
       {isError ? (
         <WarningOutlined className="text-xl" />
       ) : (
