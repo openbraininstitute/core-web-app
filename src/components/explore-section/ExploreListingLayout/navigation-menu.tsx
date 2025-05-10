@@ -1,12 +1,16 @@
-import { CSSProperties, ReactNode, use } from 'react';
 import { WarningOutlined } from '@ant-design/icons';
+import { CSSProperties, ReactNode } from 'react';
+import { useParams } from 'next/navigation';
 import { Menu, MenuProps } from 'antd';
+import { useAtomValue } from 'jotai';
+import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
+import { DEFAULT_BRAIN_REGION_QUERY_ID } from '@/features/brain-region-tree/latest/brain-region/context';
+import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { DataType } from '@/constants/explore-section/list-views';
 
-import type { BulkEntityCoreCountResult } from '@/services/entitycore/entities-types-count';
-import type { Result } from '@/api/utils';
+import type { WorkspaceContext } from '@/types/common';
 
 export type NavigationMenuItem = {
   key: string;
@@ -19,18 +23,16 @@ export type NavigationMenuItem = {
 
 type Props = {
   activePath: string;
-  entityCounterPromise: Promise<Result<BulkEntityCoreCountResult, Error>>;
   items: Array<NavigationMenuItem>;
   onClick: MenuProps['onClick'];
 };
 
-export default function NavigationMenu({
-  activePath,
-  items,
-  onClick,
-  entityCounterPromise,
-}: Props) {
-  const { data, error } = use(entityCounterPromise);
+export default function NavigationMenu({ activePath, items, onClick }: Props) {
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
+  const { data, error } = useAtomValue(
+    EntitiesCountAtom({ virtualLabId, projectId, brainRegionId })
+  );
   const allData = data ? { ...data.experimental, ...data.model } : {};
 
   const updatedItems = items.map(({ entitytype, label, ...rest }) => {

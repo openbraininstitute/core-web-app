@@ -2,34 +2,27 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { DataType } from '@/constants/explore-section/list-views';
 import { tryCatch } from '@/api/utils';
 
-import type { ExperimentalDataType } from '@/entity-configuration/domain/experimental';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { ModelDataType } from '@/entity-configuration/domain/model';
 import type { WorkspaceContext } from '@/types/common';
-import { buildBrainRegionFilterQuery } from '@/api/entitycore/transformers';
-
-export type BulkEntityCoreCountResult = {
-  experimental: Record<ExperimentalDataType, number | string>;
-  model: Record<ModelDataType, number | string>;
-};
+import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-tree/latest/brain-region/context';
 
 // NOTE: this is temporary hack to get the counts of a specific entity type
 // TODO: this should be replaced by the /count endpoint when it's ready
 
-async function getBulkEntityCoreResult({
-  brainRegion,
+export async function getBulkEntityCoreResult({
+  brainRegionId,
   context,
 }: {
-  brainRegion?: string | null;
+  brainRegionId?: string | null;
   context?: WorkspaceContext;
 }) {
   const api = await entityCoreApi();
   const queryParams = {
-    within_brain_region: buildBrainRegionFilterQuery(
-      brainRegion ? decodeURIComponent(brainRegion) : null
-    ),
     page: 1,
     page_size: 1,
+    within_brain_region_hierachy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+    within_brain_region_brain_region_id: brainRegionId,
+    within_brain_region_ascendants: false,
   };
   const headers = {
     accept: 'application/json',
@@ -132,12 +125,12 @@ export const GET = async (
 
   const virtualLabId = searchParams.get('virtualLabId');
   const projectId = searchParams.get('projectId');
-  const brainRegion = searchParams.get('brainRegion');
+  const brainRegionId = searchParams.get('brainRegionId');
 
   const { data, error } = await tryCatch(
     getBulkEntityCoreResult({
       context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-      brainRegion: brainRegion,
+      brainRegionId,
     })
   );
   if (error) throw error;
