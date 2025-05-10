@@ -1,36 +1,37 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
-import { useParams, useSearchParams } from 'next/navigation';
+import { Suspense, use, useEffect } from 'react';
 import { useSetAtom } from 'jotai';
-import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
+
 // import BrainRegionsTree from '@/features/brain-region-tree';
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideMenu from '@/components/SideMenu';
 
 import { Label, Content, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
-import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { defaultModelRelease } from '@/config';
 
-type Props = {
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
+type Props = ServerSideComponentProp<WorkspaceContext, null> & {
   children: React.ReactNode;
-  params: ServerSideComponentProp<WorkspaceContext, { brainRegion: string }>;
 };
 
-const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
-const BrainRegionsTreeLatest = dynamic(() => import('@/features/brain-region-tree/latest/index'), {
-  ssr: false,
-});
+// remove this when the new brain region tree is ready
+// const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
+const BrainRegionsTree = dynamic(
+  () => import('@/features/brain-region-tree/v2/brain-region/index'),
+  {
+    ssr: false,
+  }
+);
 
 export default function Layout(props: Props) {
-  const { virtualLabId, projectId } = useParams<{
-    virtualLabId: string;
-    projectId: string;
-  }>();
+  const { virtualLabId, projectId } = use(props.params);
 
   const { children } = props;
 
@@ -72,9 +73,15 @@ export default function Layout(props: Props) {
           />
         </div>
       </ErrorBoundary>
+      {/* <BrainRegionsTree /> */}
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        {/* <BrainRegionsTree /> */}
-        <BrainRegionsTreeLatest />
+        <Suspense
+          fallback={
+            <div className="flex h-full w-full items-center justify-center">Loading...</div>
+          }
+        >
+          <BrainRegionsTree dataKey={`explore/${projectId}`} />
+        </Suspense>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>
     </div>
