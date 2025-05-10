@@ -7,6 +7,7 @@ import FilterControls from '@/components/explore-section/ExploreSectionListingVi
 import useExploreColumns from '@/hooks/useExploreColumns';
 import Footer from '@/features/bookmark/footer';
 
+import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
 import { sortStateAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
@@ -31,19 +32,18 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   const { push: navigate } = useRouter();
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
-
+  const { node } = useBrainRegionHierarchy({ dataKey });
   const dataScope = ExploreDataScope.BookmarkedResources;
 
-  const dataSource = useDataAtom<T>(
-    {
-      dataType,
-      dataScope,
-      targetIds,
-      shouldUseIds: true,
-      virtualLabInfo: { virtualLabId, projectId },
-    },
-    dataKey
-  );
+  const dataSource = useDataAtom<T>({
+    dataType,
+    dataScope,
+    targetIds,
+    shouldUseIds: true,
+    workspace: { virtualLabId, projectId },
+    brainRegionId: node.id,
+    key: dataKey,
+  });
 
   const onCellClick = (_: string, record: T) => {
     navigate(

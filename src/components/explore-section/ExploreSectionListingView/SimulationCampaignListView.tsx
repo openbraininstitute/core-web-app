@@ -15,13 +15,15 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
 
 export default function SimulationCampaignListView({ dataType }: { dataType: DataType }) {
+  const { node } = useBrainRegionHierarchy({ dataKey: dataType });
   const activeColumns = useAtomValue(
     useMemo(() => unwrap(activeColumnsAtom({ dataType, key: dataType })), [dataType])
   );
   const dataSource = useAtomValue(
-    useMemo(() => unwrap(dataAtom({ dataType, key: dataType })), [dataType])
+    useMemo(() => unwrap(dataAtom({ dataType, key: dataType, brainRegionId: node.id })), [dataType])
   );
 
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataType }));

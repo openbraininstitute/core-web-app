@@ -1,9 +1,10 @@
 'use client';
 
-import { dataAtom } from '@/state/explore-section/list-view-atoms';
+import { useBrainRegionHierarchy } from '../brain-region-tree/v2/brain-region/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { useUnwrappedValue } from '@/hooks/hooks';
+import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
+import { useUnwrappedValue } from '@/hooks/hooks';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -18,7 +19,16 @@ function NumericResultsInfo({
   virtualLabInfo?: WorkspaceContext;
   dataKey: string;
 }) {
-  const res = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
+  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
+  const res = useUnwrappedValue(
+    dataAtom({
+      dataType,
+      dataScope,
+      workspace: virtualLabInfo,
+      key: dataKey,
+      brainRegionId: node.id,
+    })
+  );
   let current = res ? (res.pagination.page - 1) * res.pagination.page_size + res.data.length : 0;
 
   const total = res ? res.pagination.total_items : 0;

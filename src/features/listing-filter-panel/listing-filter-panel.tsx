@@ -32,9 +32,10 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
 import { getFieldDefinition, getFieldsDefinition } from '@/entity-configuration/definitions';
+import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
-import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
+import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { Facets } from '@/api/entitycore/types/shared/response';
 import { defaultList } from './checklist/default-checklist';
 import { fieldTitleSentenceCase } from '@/util/utils';
@@ -179,11 +180,20 @@ export default function ListingFilterPanel({
   resourceId,
   virtualLabInfo,
 }: Props) {
+  const { node } = useBrainRegionHierarchy({ dataKey: dataType });
   const [filterValues, setFilterValues] = useState<FilterValues>({});
-  const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId, key: dataKey }));
+  const resetFilters = useResetAtom(
+    filtersAtom({ dataType, dataScope, resourceId, key: dataKey, brainRegionId: node.id })
+  );
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
   const setPrevData = useSetAtom(
-    previousDataAtom({ virtualLabInfo, dataType, dataScope, key: dataKey })
+    previousDataAtom({
+      workspace: virtualLabInfo,
+      dataType,
+      dataScope,
+      key: dataKey,
+      brainRegionId: node.id,
+    })
   );
   const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
   const [activeColumns, setActiveColumns] = useAtom(
@@ -193,8 +203,6 @@ export default function ListingFilterPanel({
     )
   );
   const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
-
-  console.log('ᦨ #  listing-filter-panel.tsx:197 #  activeColumns:', activeColumns);
 
   const onToggleActive = (key: string) => {
     if (!activeColumns) return;
