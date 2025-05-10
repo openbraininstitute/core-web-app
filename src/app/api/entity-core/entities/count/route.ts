@@ -4,7 +4,7 @@ import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-tree/latest/brain-region/context';
+import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-tree/v2/brain-region/context';
 
 // NOTE: this is temporary hack to get the counts of a specific entity type
 // TODO: this should be replaced by the /count endpoint when it's ready

@@ -2,24 +2,23 @@
 
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
-import { ReactNode, Suspense, useMemo } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { Menu, type MenuProps } from 'antd';
 import { useAtomValue } from 'jotai';
+import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
+import { DEFAULT_BRAIN_REGION_QUERY_NAME } from '@/features/brain-region-tree/v2/brain-region/context';
 import { circuitCountAtom } from '@/components/explore-section/Circuit/content/circuits_flat';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
-import { getBulkEntityCoreCount } from '@/services/entitycore/entities-types-count';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
-import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { ensureString } from '@/util/type-guards';
-import { tryCatch } from '@/api/utils';
 import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
@@ -28,22 +27,13 @@ import {
 import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { WorkspaceContext } from '@/types/common';
-import { useQueryState } from 'nuqs';
 
-export default function ExploreListingLayout({
-  children,
-  virtualLabInfo,
-}: {
-  children: ReactNode;
-  virtualLabInfo?: WorkspaceContext;
-}) {
+export default function ExploreListingLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
-  const [brainRegionId] = useQueryState('brainRegion');
+  const [brainRegionName] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_NAME);
 
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
 
   const splittedPathname = pathname?.split('/');
@@ -62,25 +52,13 @@ export default function ExploreListingLayout({
   const activePath = pathname?.split('/').pop() || 'morphology';
   const circuitCount = useAtomValue(circuitCountAtom);
 
-  const entityCounterPromise = useMemo(
-    () =>
-      tryCatch(
-        getBulkEntityCoreCount({
-          virtualLabId: virtualLabInfo?.virtualLabId,
-          projectId: virtualLabInfo?.projectId,
-          brainRegion: brainRegionId,
-        })
-      ),
-    [brainRegionId]
-  );
-
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
     domEvent.preventDefault();
     domEvent.stopPropagation();
 
     if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+      await userJourneyTracker.handleBrainRegionClick(brainRegionName!);
     }
     const artifact = ensureString(
       getEntityBySlug({ slug: key as EntitySlugValue })?.title,
@@ -155,12 +133,7 @@ export default function ExploreListingLayout({
               />
             }
           >
-            <NavigationMenu
-              activePath={activePath}
-              items={items}
-              onClick={onClick}
-              entityCounterPromise={entityCounterPromise}
-            />
+            <NavigationMenu activePath={activePath} items={items} onClick={onClick} />
           </Suspense>
           <div className="bg-primary-9 grow text-white">{children}</div>
         </div>
