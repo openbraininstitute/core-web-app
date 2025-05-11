@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { Form, Button, Space, InputNumber } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
@@ -22,10 +22,7 @@ import {
 } from '@/components/neuron-viewer/hooks/events';
 
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
-import { ExploreDataScope } from '@/types/explore-section/application';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
-import { queryAtom } from '@/state/explore-section/list-view-atoms';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -34,7 +31,6 @@ import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import { SimulationType } from '@/types/virtual-lab/lab';
 import { OneshotSession } from '@/services/accounting';
-import { resolveDataKey } from '@/utils/key-builder';
 import { ServiceSubtype } from '@/types/accounting';
 import { messages } from '@/i18n/en/synaptome';
 import { getSession } from '@/authFetch';
@@ -45,6 +41,13 @@ import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import {
+  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+  DEFAULT_BRAIN_REGION_QUERY_NAME,
+  useBrainRegionHierarchy,
+} from '@/features/brain-region-tree/v2/brain-region/context';
+import { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
@@ -85,19 +88,15 @@ export default function SynaptomeConfigurationForm({
   const watchedSynapses = Form.useWatch<number>('synapses', form);
   const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
   const setSimulationScope = useSetAtom(selectedSimulationScopeAtom);
-
-  const refreshSynaptomeModels = useSetAtom(
-    queryAtom({
-      dataType: DataType.SingleNeuronSynaptome,
-      dataScope: ExploreDataScope.NoScope,
-      workspace: { virtualLabId, projectId },
-      key: resolveDataKey({
-        ctx: { virtualLabId, projectId },
-        scope: 'explore',
-        type: EntityTypeEnum.SingleNeuronSynaptome,
-      }),
-    })
-  );
+  const [isPending, startTransition] = useTransition();
+  // const refreshSynaptomeModels = useSetAtom(
+  //   queryAtom({
+  //     dataType: DataType.SingleNeuronSynaptome,
+  //     dataScope: ExploreDataScope.NoScope,
+  //     workspace: { virtualLabId, projectId },
+  //     key: dataKey,
+  //   })
+  // );
 
   const addNewSynapse = useCallback(() => {
     const synapses = form.getFieldValue('synapses');
@@ -197,25 +196,33 @@ export default function SynaptomeConfigurationForm({
         subtype: ServiceSubtype.SynaptomeBuild,
         count: 1,
       });
+      startTransition(async () => {
+        const result = await accountingSession.useWith<{
+          entity: ISingleNeuronSynaptome;
+          asset: IAsset;
+        } | null>(() => buildSingleNeuronSynaptome());
+        if (result) {
+          sendResetSynapses3DEvent();
+          form.resetFields();
+          setSimulationScope(SimulationType.Synaptome);
+          notifySuccess(messages.CreationModelSucceed, 7, 'topRight');
+          setLoading(false);
+          const urlParams = new URLSearchParams();
+          urlParams.set(DEFAULT_BRAIN_REGION_QUERY_NAME, entity.brain_region.name);
+          urlParams.set(DEFAULT_BRAIN_REGION_QUERY_ID, entity.brain_region.id);
+          urlParams.set(
+            DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+            String(entity.brain_region.annotation_value)
+          );
+          const url = resolveExploreDetailsPageUrl({
+            ctx: { virtualLabId, projectId },
+            dataType: DataType.SingleNeuronSynaptome,
+            entityId: result?.entity.id,
+          });
 
-      const result = await accountingSession.useWith<{
-        entity: ISingleNeuronSynaptome;
-        asset: IAsset;
-      } | null>(() => buildSingleNeuronSynaptome());
-
-      refreshSynaptomeModels();
-      sendResetSynapses3DEvent();
-      form.resetFields();
-      setSimulationScope(SimulationType.Synaptome);
-      notifySuccess(messages.CreationModelSucceed, 7, 'topRight');
-      setLoading(false);
-      navigate(
-        resolveExploreDetailsPageUrl({
-          ctx: { virtualLabId, projectId },
-          dataType: DataType.SingleNeuronSynaptome,
-          entityId: result?.entity.id,
-        })
-      );
+          navigate(`${url}?${urlParams.toString()}`);
+        }
+      });
     } catch (error) {
       const errorMessage =
         (error as any)?.cause?.error_code === LOW_FUNDS_ERROR_CODE
@@ -301,11 +308,13 @@ export default function SynaptomeConfigurationForm({
               'bg-primary-8 flex items-center justify-between gap-2 px-12 py-4 text-white',
               'disabled:bg-gray-100 disabled:text-gray-400'
             )}
-            disabled={loading || Boolean(synapsesHasErrors.length)}
+            disabled={loading || isPending || Boolean(synapsesHasErrors.length)}
             onClick={onConfigurationSubmission}
           >
-            {loading && <LoadingOutlined />}
-            <span className="text-lg font-bold">{loading ? 'Saving ...' : 'Save'}</span>
+            {loading || (isPending && <LoadingOutlined />)}
+            <span className="text-lg font-bold">
+              {loading || isPending ? 'Saving ...' : 'Save'}
+            </span>
           </button>
         </Space>
       </Form.Item>
