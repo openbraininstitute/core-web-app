@@ -101,7 +101,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
 
   const selectedModelType = SimulationScopeToModelType[selectedSimType] ?? DataType.CircuitMEModel;
-
+  const dataKey = `${projectId ? `${projectId}/` : ''}build/${selectedModelType || DataType.CircuitMEModel}`;
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'build' + selectedModelType));
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
@@ -123,6 +123,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const entity = getEntityByLegacyType({
     legacyType: selectedModelType ?? DataType.CircuitMEModel,
   });
+
   return (
     <>
       <div className="flex grow flex-col">
@@ -145,7 +146,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               style={{ background: 'bg-white' }}
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
-              dataKey={projectId + 'build' + selectedModelType || DataType.CircuitMEModel}
+              dataKey={dataKey}
               showLoadingState={false}
             />
 

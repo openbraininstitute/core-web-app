@@ -203,10 +203,11 @@ export const queryAtom = atomFamily(
   isListAtomEqual
 );
 
-export const previousDataAtom = atomFamily(
-  <T>(_scope: DataAtomBinding) => atom<Array<T>>([]),
-  isListAtomEqual
-);
+export const previousDataAtom = atomFamily(<T>(ctx: DataAtomBinding) => {
+  const childAtom = atom<T[]>([]);
+  childAtom.debugLabel = `previous-data-atom/${ctx.key}/${ctx.brainRegionId}`;
+  return childAtom;
+}, isListAtomEqual);
 
 export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAtomBinding) => {
   const childAtom = atom<Promise<EntityCoreResponse<T>>>(
@@ -278,9 +279,9 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
   return childAtom;
 }, isListAtomEqual);
 
-export function useDataAtom<T>(dataContext: DataAtomBinding): Array<T> {
-  const prevData = useAtomValue(previousDataAtom(dataContext));
-  const data = useUnwrappedValue(dataAtom(dataContext));
+export function useDataAtom<T>(ctx: DataAtomBinding): Array<T> {
+  const prevData = useAtomValue(previousDataAtom(ctx));
+  const data = useUnwrappedValue(dataAtom(ctx));
 
   return [...prevData, ...(data?.data ?? [])] as Array<T>;
 }

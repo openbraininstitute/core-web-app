@@ -19,6 +19,8 @@ import {
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import { resolveDataKey } from '@/utils/key-builder';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 
 function buildEModelEntry(source: IEModel): EModelMenuItem {
   return {
@@ -42,8 +44,6 @@ export default function ListingView({
   virtualLabInfo?: VirtualLabInfo;
   renderButton?: (props: RenderButtonProps<IEModel>) => ReactNode;
 }) {
-  const dataKey = `${virtualLabInfo?.projectId ?? ''}/explore/${dataType}`;
-
   const { push: navigate } = useRouter();
   const setSelectedEModel = useSetAtom(selectedEModelAtom);
   const setEModelUIConfig = useSetAtom(eModelUIConfigAtom);
@@ -64,7 +64,12 @@ export default function ListingView({
     });
     navigate(exploreUrl);
   };
-
+  const entity = getEntityByLegacyType({ legacyType: dataType });
+  const dataKey = resolveDataKey({
+    section: 'explore',
+    projectId: virtualLabInfo?.projectId,
+    entity,
+  });
   return (
     <ExploreSectionListingView<IEModel>
       {...{

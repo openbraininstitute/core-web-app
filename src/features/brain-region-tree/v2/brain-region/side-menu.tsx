@@ -1,12 +1,16 @@
-import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
 import { Button } from 'antd';
+import { useMemo } from 'react';
+import find from 'lodash/find';
 
 import {
+  brainRegionHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-tree/v2/brain-region/context';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 import { BrainIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
@@ -17,7 +21,9 @@ type Props = {
 export default function TreeSideMenu({ dataKey }: Props) {
   const [isCollapsed, setIsCollapsed] = useAtom(brainRegionSidebarAtom);
   const onToggleCollapse = () => setIsCollapsed((prev) => !prev);
-  const { node } = useBrainRegionHierarchy({ dataKey });
+  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
+  const result = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), [dataKey]));
+  const nodeLabel = find(result?.options, (o) => o.data.id === node.id)?.label;
 
   return (
     <>
@@ -67,7 +73,7 @@ export default function TreeSideMenu({ dataKey }: Props) {
           role="presentation"
           onClick={() => setIsCollapsed(false)}
         >
-          <div className="text-secondary-4 text-sm whitespace-nowrap">{node.name}</div>
+          <div className="text-secondary-4 text-sm whitespace-nowrap">{nodeLabel}</div>
           <div className="text-lg font-bold whitespace-nowrap">Brain region</div>
         </div>
       </div>

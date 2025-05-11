@@ -8,7 +8,7 @@ import FilterControls from '@/components/explore-section/ExploreSectionListingVi
 import ExploreSectionTable, {
   OnCellClick,
 } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import NumericResultsInfo from '@/features/listing-filter-panel/numeric-results-info';
+import ResultsCount from '@/features/listing-filter-panel/numeric-results-info';
 import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
@@ -17,6 +17,7 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-r
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
@@ -56,7 +57,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
 }) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
-  const { node } = useBrainRegionHierarchy({ dataKey });
+  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
 
   const result = useLoadableValue(
     dataAtom({
@@ -106,7 +107,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
               >
-                <NumericResultsInfo
+                <ResultsCount
                   dataType={dataType}
                   dataScope={dataScope}
                   virtualLabInfo={virtualLabInfo}
