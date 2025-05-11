@@ -55,7 +55,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
     }
   };
 
-  const onNavigateToMeModel = (basePath: string, record: IMEModel): void => {
+  const onNavigateToMeModel = (_: string, record: IMEModel): void => {
     setSessionValue({
       name: form.getFieldValue('name'),
       description: form.getFieldValue('description'),
@@ -109,6 +109,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
           }}
           onCellClick={onNavigateToMeModel}
           dataKey={stateId}
+          useBrainRegion={false}
         />
       </div>
       <button

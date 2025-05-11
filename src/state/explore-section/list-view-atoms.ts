@@ -168,19 +168,19 @@ export const queryAtom = atomFamily(
       const bookmarkResourceIds = (
         scope.dataScope === ExploreDataScope.BookmarkedResources && scope.workspace
           ? ((await get(bookmarksForProjectAtomFamily(scope.workspace))) as Record<string, any>)[
-              scope.dataType
-            ] || []
+          scope.dataType
+          ] || []
           : []
       ).map((b: { resourceId: string }) => b.resourceId);
 
       const descendantIds: string[] =
         scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        ExploreDataScope.BuildSelectedBrainRegion
+          ExploreDataScope.BuildSelectedBrainRegion
           ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
+            selectedBrainRegionWithDescendantsAndAncestorsFamily(
+              scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
+            )
+          )) || []
           : [];
 
       const filters = await get(filtersAtom(scope));

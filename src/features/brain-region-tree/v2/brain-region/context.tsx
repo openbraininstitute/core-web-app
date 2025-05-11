@@ -85,7 +85,11 @@ export const brainRegionHierarchyAtom = atom(
  * getSectionFromDataKey to extract the right key for brain region used
  */
 export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
-  const [brainRegionHierarchyFamily, updateLocalStorage] = useLocalStorage(dataKey, {
+  const [brainRegionHierarchyFamily, updateLocalStorage] = useLocalStorage<{
+    id: string;
+    name: string;
+    annotation_value: number;
+  } | null>(dataKey, {
     id: DEFAULT_SELECTED_BRAIN_REGION_ID,
     name: DEFAULT_SELECTED_BRAIN_REGION_NAME,
     annotation_value: DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
@@ -93,9 +97,11 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
 
   const [{ id, annotation_value, name }, setHierarchyConfig] = useQueryStates(
     {
-      id: parseAsString.withDefault(brainRegionHierarchyFamily.id),
-      name: parseAsString.withDefault(brainRegionHierarchyFamily.name),
-      annotation_value: parseAsInteger.withDefault(brainRegionHierarchyFamily.annotation_value),
+      id: parseAsString.withDefault(brainRegionHierarchyFamily?.id ?? ''),
+      name: parseAsString.withDefault(brainRegionHierarchyFamily?.name ?? ''),
+      annotation_value: parseAsInteger.withDefault(
+        brainRegionHierarchyFamily?.annotation_value ?? 0
+      ),
     },
     {
       urlKeys: {
@@ -132,14 +138,19 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
    * @param node - An object representing a brain region hierarchy,
    * containing the `id`, `name`, and `annotation_value` properties.
    */
-  const updateHierarchyConfig = (node: IBrainRegionHierarchy) => {
-    const { id, name, annotation_value } = node;
-    setHierarchyConfig({ id, name, annotation_value });
-    updateLocalStorage({
-      id,
-      name,
-      annotation_value,
-    });
+  const updateHierarchyConfig = (node: IBrainRegionHierarchy | null) => {
+    setHierarchyConfig(
+      node ? { id: node.id, name: node.name, annotation_value: node?.annotation_value } : null
+    );
+    updateLocalStorage(
+      node
+        ? {
+            id: node.id,
+            name: node.name,
+            annotation_value: node.annotation_value,
+          }
+        : null
+    );
   };
 
   return {
