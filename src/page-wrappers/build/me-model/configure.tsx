@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useSetAtom, useAtomValue } from 'jotai';
-import { useId, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { useState } from 'react';
 import { App, Spin } from 'antd';
 import omit from 'lodash/omit';
 import get from 'lodash/get';
@@ -59,7 +59,7 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
     },
     {
       title: 'brain region',
-      value: sessionValue.brainRegion?.title,
+      value: sessionValue.brainRegion?.name,
     },
     {
       title: 'created by',
@@ -174,13 +174,11 @@ export default function Configure({ params, searchParams }: Props) {
       virtualLabId: params.virtualLabId,
       projectId: params.projectId,
       name: sessionValue.name,
-      description: sessionValue.description,
+      description: sessionValue.description ?? '',
       emodel_id: sessionValue.emodel?.id,
       morphology_id: sessionValue.mmodel?.id,
       species_id: sessionValue.mmodel?.species.id,
-      brain_region_id:
-        Number(sessionValue.brainRegion?.id.split('/').pop()) ??
-        sessionValue.mmodel?.brain_region.id,
+      brain_region_id: sessionValue.mmodel?.brain_region.id ?? sessionValue.brainRegion?.id,
       strain_id: sessionValue.mmodel?.strain?.id ?? null,
       validation_status: ValidationStatus.Initialized,
     };

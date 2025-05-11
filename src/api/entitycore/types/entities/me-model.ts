@@ -73,7 +73,7 @@ export const CreateMEModelSchema = z.object({
   name: z.string(),
   description: z.string(),
   validation_status: z.nativeEnum(ValidationStatus),
-  brain_region_id: z.number(),
+  brain_region_id: z.string().uuid(),
   morphology_id: z.string().uuid(),
   emodel_id: z.string().uuid(),
   species_id: z.string().uuid(),

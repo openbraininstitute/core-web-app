@@ -10,6 +10,7 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { Btn } from '@/components/buttons/base/legacy-btn';
+import { resolveDataKey } from '@/utils/key-builder';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { WorkspaceContext } from '@/types/common';
@@ -43,7 +44,7 @@ export default function MorphologySelection({ params, searchParams }: Props) {
     }
 
     const morphology = selectedRows.at(0);
-    setSessionValue({ ...sessionValue, mmodel: morphology });
+    setSessionValue({ ...sessionValue, mmodel: morphology, brainRegion: morphology?.brain_region });
 
     const upOneLevel = pathname?.split('/').slice(0, -1).join('/');
     const _params = new URLSearchParams(searchParams);
@@ -62,11 +63,11 @@ export default function MorphologySelection({ params, searchParams }: Props) {
       })
     );
   };
-
+  const dataKey = resolveDataKey({ projectId, section: 'build', suffix: useId() });
   return (
     <div className="h-full" id="explore-table-container-for-observable">
       <ExploreSectionListingView<IReconstructionMorphology>
-        dataKey={useId()}
+        dataKey={dataKey}
         dataType={DataType.ExperimentalNeuronMorphology}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}

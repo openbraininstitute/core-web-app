@@ -25,6 +25,7 @@ import type {
   IMType,
   EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 export type ReconstructionMorphologyExpandFields =
   | 'brain_location'
@@ -66,7 +67,7 @@ export interface IReconstructionMorphology
   license?: ILicense | null;
   species: ISpecies;
   strain?: IStrain | null;
-  brain_region: IBrainRegion;
+  brain_region: BrainRegionHierarchyBase;
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
 }
