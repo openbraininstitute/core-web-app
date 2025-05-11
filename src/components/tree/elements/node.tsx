@@ -128,7 +128,12 @@ function Node<TNode extends TTreeNode>({
         </div>
       </div>
       {isExpanded && hasChildren && (
-        <div className={classNames('relative block')}>
+        <div
+          className={classNames(
+            'relative block overflow-hidden transition-all duration-300 ease-in-out',
+            'animate-[fade-in_0.3s_ease-in-out]'
+          )}
+        >
           {indentation?.v && (
             <VerticalIndentationLine
               left={level * (indentation?.size || 18) + (indentation?.size || 18) / 2 - 1}
