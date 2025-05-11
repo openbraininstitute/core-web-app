@@ -24,6 +24,7 @@ export default function WithListingFilterPanel({
   dataScope,
   dataKey,
   className,
+  useBrainRegion,
 }: {
   children: (props: {
     activeColumns?: string[];
@@ -36,6 +37,7 @@ export default function WithListingFilterPanel({
   virtualLabInfo?: WorkspaceContext;
   className?: string;
   dataKey: string;
+  useBrainRegion?: boolean;
 }) {
   const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
 
@@ -47,7 +49,7 @@ export default function WithListingFilterPanel({
             dataType,
             dataScope,
             key: `${dataKey}/${node.id}`,
-            brainRegionId: node.id,
+            brainRegionId: useBrainRegion ? node.id : undefined,
           })
         ),
       [dataType, dataScope, dataKey]
@@ -62,7 +64,7 @@ export default function WithListingFilterPanel({
       dataScope,
       workspace: virtualLabInfo,
       key: dataKey,
-      brainRegionId: node.id,
+      brainRegionId: useBrainRegion ? node.id : undefined,
     })
   );
   const facets = data?.facets;

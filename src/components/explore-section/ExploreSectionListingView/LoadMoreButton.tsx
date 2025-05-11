@@ -37,17 +37,24 @@ export function useLoadMore<T>(
     dataScope: ExploreDataScope;
     dataType: DataType;
   },
-  key: string
+  key: string,
+  useBrainRegion?: boolean
 ) {
   const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(key) });
 
   const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
-  const setPrevData = useSetAtom(previousDataAtom({ ...dataContext, brainRegionId: node.id, key }));
-  const data = useDataAtom<T>({ ...dataContext, key, brainRegionId: node.id });
+  const setPrevData = useSetAtom(
+    previousDataAtom({ ...dataContext, brainRegionId: useBrainRegion ? node.id : undefined, key })
+  );
+  const data = useDataAtom<T>({
+    ...dataContext,
+    key,
+    brainRegionId: useBrainRegion ? node.id : undefined,
+  });
   const res = useLoadableValue(
     dataAtom({
       ...dataContext,
-      brainRegionId: node.id,
+      brainRegionId: useBrainRegion ? node.id : undefined,
       key,
     })
   );
@@ -81,6 +88,7 @@ export default function LoadMoreButton({
   dataContext,
   dataKey,
   hide,
+  useBrainRegion,
 }: HTMLProps<HTMLButtonElement> & {
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
@@ -89,8 +97,9 @@ export default function LoadMoreButton({
   };
   dataKey: string;
   hide: () => void;
+  useBrainRegion?: boolean;
 }) {
-  const { loadMore, showLoadMore } = useLoadMore(dataContext, dataKey);
+  const { loadMore, showLoadMore } = useLoadMore(dataContext, dataKey, useBrainRegion);
 
   if (!showLoadMore) return null;
   return (

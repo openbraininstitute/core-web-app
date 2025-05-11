@@ -47,11 +47,13 @@ function ResultsCount({
   dataScope,
   virtualLabInfo,
   dataKey,
+  useBrainRegion,
 }: {
   dataType: DataType;
   dataScope: ExploreDataScope;
   virtualLabInfo?: WorkspaceContext;
   dataKey: string;
+  useBrainRegion?: boolean;
 }) {
   const [persistedDisplay, setPersistedDisplay] = useState<JSX.Element | null>(null);
   const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
@@ -61,7 +63,7 @@ function ResultsCount({
       dataScope,
       workspace: virtualLabInfo,
       key: dataKey,
-      brainRegionId: node.id,
+      brainRegionId: useBrainRegion ? node.id : undefined,
     })
   );
 
