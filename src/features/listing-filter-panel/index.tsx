@@ -10,6 +10,7 @@ import { activeColumnsAtom, dataAtom, filtersAtom } from '@/state/explore-sectio
 import { useBrainRegionHierarchy } from '../brain-region-tree/v2/brain-region/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
@@ -36,7 +37,7 @@ export default function WithListingFilterPanel({
   className?: string;
   dataKey: string;
 }) {
-  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
+  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
 
   const activeColumns = useAtomValue(
     useMemo(

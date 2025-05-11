@@ -5,6 +5,7 @@ import { scrollToNode } from '@/components/tree/elements/helpers';
 import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
 
 import type { TTreeNode } from '@/components/tree/types';
+import { classNames } from '@/util/utils';
 
 interface Props {
   options: Array<{ value: string; label: string; data: TTreeNode }>;
@@ -30,6 +31,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
     <div className="w-full">
       <ConfigProvider
         theme={{
+          hashed: false,
           token: {
             colorBgContainer: '#003A8C',
             colorBgElevated: '#003A8C',
@@ -48,6 +50,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
         <Select
           showSearch
           allowClear
+          size="large"
           autoClearSearchValue
           placeholder="Search region..."
           optionFilterProp="label"
@@ -61,6 +64,14 @@ export default function TreeSearch({ options, onSelect }: Props) {
           onSearch={(value) => {
             return filterAndSortBasedOnPosition(value, options);
           }}
+          className={classNames(
+            'outline-none',
+            '[&:hover_.ant-select-selector]:border-white!',
+            '[&.ant-select-focused_.ant-select-selector]:border-white!',
+            '[&.ant-select-focused_.ant-select-selector]:shadow-none!',
+            'has-[.ant-select-clear]:[&_.ant-select-arrow]:hidden!',
+            '[&_.ant-select-clear]:bg-transparent!'
+          )}
         />
       </ConfigProvider>
     </div>

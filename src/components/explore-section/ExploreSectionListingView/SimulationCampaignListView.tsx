@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { axesAtom } from '../Simulations/state';
-import NumericResultsInfo from '../../../features/listing-filter-panel/numeric-results-info';
+import ResultsCount from '../../../features/listing-filter-panel/numeric-results-info';
 import FilterControls from './FilterControls';
 import ListTable from '@/components/ListTable';
 import WithListingFilterPanel from '@/features/listing-filter-panel';
@@ -16,9 +16,10 @@ import {
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 
 export default function SimulationCampaignListView({ dataType }: { dataType: DataType }) {
-  const { node } = useBrainRegionHierarchy({ dataKey: dataType });
+  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataType) });
   const activeColumns = useAtomValue(
     useMemo(() => unwrap(activeColumnsAtom({ dataType, key: dataType })), [dataType])
   );
@@ -56,7 +57,7 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
           {({ displayControlPanel, setDisplayControlPanel }) => (
             <>
               <div className="sticky top-0 grid w-full grid-cols-[max-content_1fr_max-content] items-center justify-between gap-5 px-5">
-                <NumericResultsInfo
+                <ResultsCount
                   dataType={dataType}
                   dataScope={ExploreDataScope.NoScope}
                   dataKey={dataType}

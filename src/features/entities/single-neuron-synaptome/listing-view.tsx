@@ -2,8 +2,10 @@ import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { resolveDataKey } from '@/utils/key-builder';
 import { detailUrlBuilder } from '@/util/common';
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
@@ -28,8 +30,12 @@ export default function ExploreSynaptomeModelTable({
     navigate(exploreUrl);
   };
 
-  const dataKey = `${virtualLabInfo?.projectId ?? ''}/explore/${dataType}`;
-
+  const entity = getEntityByLegacyType({ legacyType: dataType });
+  const dataKey = resolveDataKey({
+    section: 'explore',
+    projectId: virtualLabInfo?.projectId,
+    entity,
+  });
   return (
     <ExploreSectionListingView<ISingleNeuronSynaptome>
       {...{

@@ -43,6 +43,7 @@ import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -180,7 +181,7 @@ export default function ListingFilterPanel({
   resourceId,
   virtualLabInfo,
 }: Props) {
-  const { node } = useBrainRegionHierarchy({ dataKey: dataType });
+  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(
     filtersAtom({ dataType, dataScope, resourceId, key: dataKey, brainRegionId: node.id })

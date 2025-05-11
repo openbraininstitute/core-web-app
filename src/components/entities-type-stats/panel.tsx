@@ -3,16 +3,16 @@
 import { useParams, usePathname } from 'next/navigation';
 import { memo, ReactNode, Suspense, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useQueryState } from 'nuqs';
 import { match } from 'ts-pattern';
 import get from 'lodash/get';
 
 import circuitsFlat from '@/components/explore-section/Circuit/content/circuits_flat';
 
-import { DEFAULT_BRAIN_REGION_QUERY_ID } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
 import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
-import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
+import { getSectionFromDataKey, resolveDataKey } from '@/utils/key-builder';
+import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
 import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
@@ -132,12 +132,16 @@ export function EntityTypeStats(props: StatsPanelProps) {
 
 function EntityTypeStatsPanelContainer({ children }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
+  const { node } = useBrainRegionHierarchy({
+    dataKey: getSectionFromDataKey(resolveDataKey({ section: 'explore', projectId })),
+  });
+
+  console.log('–– – panel.tsx:140 – EntityTypeStatsPanelContainer – node:', node);
 
   const { data, error } = useAtomValue(
     useMemo(
-      () => EntitiesCountAtom({ virtualLabId, projectId, brainRegionId }),
-      [virtualLabId, projectId, brainRegionId]
+      () => EntitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id }),
+      [virtualLabId, projectId, node.id]
     )
   );
 
