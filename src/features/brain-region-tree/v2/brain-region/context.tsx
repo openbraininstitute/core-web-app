@@ -1,3 +1,5 @@
+'use client';
+
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect } from 'react';
 import { atom } from 'jotai';
@@ -139,18 +141,11 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
    * containing the `id`, `name`, and `annotation_value` properties.
    */
   const updateHierarchyConfig = (node: IBrainRegionHierarchy | null) => {
-    setHierarchyConfig(
-      node ? { id: node.id, name: node.name, annotation_value: node?.annotation_value } : null
-    );
-    updateLocalStorage(
-      node
-        ? {
-            id: node.id,
-            name: node.name,
-            annotation_value: node.annotation_value,
-          }
-        : null
-    );
+    const region = node
+      ? { id: node.id, name: node.name, annotation_value: node?.annotation_value }
+      : null;
+    setHierarchyConfig(region);
+    updateLocalStorage(region);
   };
 
   return {

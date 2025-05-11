@@ -1,9 +1,9 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import { useState } from 'react';
-import { App, Spin } from 'antd';
+import { App, Button } from 'antd';
 import omit from 'lodash/omit';
 import get from 'lodash/get';
 import z from 'zod';
@@ -100,10 +100,43 @@ type Props = {
   };
 };
 
+function CustomButton({
+  loading,
+  disable,
+  className,
+  onClick,
+  children,
+}: {
+  loading: boolean;
+  disable: boolean;
+  className?: string;
+  onClick?: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Button
+      key="create-project-btn"
+      className={classNames(
+        'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
+        'hover:border-primary-8! hover:bg-primary-8! hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
+        'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
+        'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
+      )}
+      type="default"
+      size="large"
+      htmlType="button"
+      disabled={disable}
+      loading={loading}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  );
+}
 export default function Configure({ params, searchParams }: Props) {
   const { push: navigate } = useRouter();
   const { notification } = App.useApp();
-
+  const [isPending, startTransition] = useTransition();
   const emodelId = get(searchParams, 'e', undefined);
   const morphologyId = get(searchParams, 'm', undefined);
   const stateId = get(searchParams, 's', undefined);
@@ -196,68 +229,61 @@ export default function Configure({ params, searchParams }: Props) {
       count: 1,
     });
 
-    const { data, error } = await tryCatch(
-      accountingSession.useWith<IMEModel>(() =>
-        createMEModel({
-          body: omit(validationData, ['virtualLabId', 'projectId']),
-          context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-        })
-      ),
-      () => {
-        setActiveProcess(null);
-      },
-      {
-        feature: 'create-me-model',
-        section: 'build/create-me-model',
-        extra: {
-          ...validationData,
-          virtualLabId: params.virtualLabId,
-          projectId: params.projectId,
+    startTransition(async () => {
+      const { data, error } = await tryCatch(
+        accountingSession.useWith<IMEModel>(() =>
+          createMEModel({
+            body: omit(validationData, ['virtualLabId', 'projectId']),
+            context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+          })
+        ),
+        () => {
+          setActiveProcess(null);
         },
-      }
-    );
-    if (data) {
-      // refreshMeModels();
-      navigate(
-        resolveExploreDetailsPageUrl({
-          ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-          dataType: DataType.CircuitMEModel,
-          entityId: data.id,
-        })
+        {
+          feature: 'create-me-model',
+          section: 'build/create-me-model',
+          extra: {
+            ...validationData,
+            virtualLabId: params.virtualLabId,
+            projectId: params.projectId,
+          },
+        }
       );
-    }
-    if (error) {
-      showErrorNotification(error, 'http');
-      return;
-    }
-    // createMEModel({ virtualLabId, projectId })
-    //   .then((record) => {
-    //     notification.success({
-    //       duration: 7,
-    //       message: 'ME-model created successfully',
-    //     });
-    //     refreshMeModels();
-    //     removeSessionValue();
-    //     navigate(
-    //       resolveExploreDetailsPageUrl({
-    //         ctx: { virtualLabId, projectId },
-    //         dataType: DataType.CircuitMEModel,
-    //         // @ts-expect-error
-    //         entityId: record.id, // TODO: fix it after add create me model endpoint
-    //       })
-    //     );
-    //   })
-    //   .catch((err) => {
-    //     showErrorNotification(err);
-    //   })
-    //   .finally(() => {
-    //     setActiveProcess(null);
-    //   });
+      if (data) {
+        // refreshMeModels();
+        navigate(
+          resolveExploreDetailsPageUrl({
+            ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+            dataType: DataType.CircuitMEModel,
+            entityId: data.id,
+          })
+        );
+      }
+      if (error) {
+        showErrorNotification(error, 'http');
+        return;
+      }
+    });
   };
 
   const validateTrigger = sessionValue.emodel && sessionValue.mmodel && (
     <div className="fixed right-10 bottom-10 flex flex-row gap-4 text-white">
-      <button
+      <CustomButton
+        loading={isPending && activeProcess === 'modelCreation'}
+        disable={isPending}
+        onClick={onClickWithoutValidation}
+      >
+        {isPending && activeProcess === 'modelCreation' ? 'Creating ME-model' : 'Save'}
+      </CustomButton>
+      <CustomButton
+        loading={isPending && activeProcess === 'modelCreationWithValidation'}
+        disable={isPending}
+        // onClick={onClickWithValidation}
+      >
+        Launch validation
+      </CustomButton>
+      {/* <button
         className={classNames(
           'fit-content ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',
           activeProcess ? 'bg-neutral-4' : 'bg-primary-8'
@@ -291,7 +317,7 @@ export default function Configure({ params, searchParams }: Props) {
         ) : (
           'Launch validation'
         )}
-      </button>
+      </button> */}
     </div>
   );
 

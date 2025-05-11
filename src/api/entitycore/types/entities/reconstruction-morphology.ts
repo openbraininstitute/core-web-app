@@ -1,3 +1,4 @@
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   BrainLocationFilter,
   BrainRegionFilter,
@@ -15,7 +16,6 @@ import type {
   EntityCoreBaseAsset,
   EntityAuthorization,
   IBrainLocation,
-  IBrainRegion,
   IContributor,
   Measurement,
   Timestamps,
@@ -25,7 +25,6 @@ import type {
   IMType,
   EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 export type ReconstructionMorphologyExpandFields =
   | 'brain_location'
