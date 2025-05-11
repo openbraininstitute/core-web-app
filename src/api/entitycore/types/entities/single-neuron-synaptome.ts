@@ -2,12 +2,12 @@ import isNil from 'lodash/isNil';
 import { z } from 'zod';
 
 import { validateFormula } from '@/api/bluenaas/validate-synapse-formula';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
-  IBrainRegion,
   IContributor,
   Timestamps,
   EntityCoreOwnership,
@@ -37,7 +37,7 @@ export interface ISingleNeuronSynaptome
     EntityCoreType,
     EntityCoreBaseAsset {
   contributions?: Array<IContributor> | null;
-  brain_region: IBrainRegion;
+  brain_region: BrainRegionHierarchyBase;
   me_model: IMEModel;
 }
 

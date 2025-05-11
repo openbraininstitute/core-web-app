@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
 function dispatchStorageEvent(key: string, newValue: string | null): void {
@@ -25,7 +27,7 @@ const useLocalStorageSubscribe = (callback: (event: StorageEvent) => void): (() 
 };
 
 const getLocalStorageServerSnapshot = (): never => {
-  throw Error('useLocalStorage is a client-only hook');
+  throw new Error('useLocalStorage is a client-only hook');
 };
 
 export function useLocalStorage<T>(

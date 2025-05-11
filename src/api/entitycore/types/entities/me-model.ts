@@ -1,12 +1,11 @@
 import z from 'zod';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
-  IBrainRegion,
   IContributor,
   Timestamps,
   ISpecies,
@@ -46,7 +45,7 @@ export interface IMEModel
     EntityAuthorization {
   species: ISpecies;
   strain?: IStrain | null;
-  brain_region: IBrainRegion;
+  brain_region: BrainRegionHierarchyBase;
   contributions?: Array<IContributor> | null;
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
