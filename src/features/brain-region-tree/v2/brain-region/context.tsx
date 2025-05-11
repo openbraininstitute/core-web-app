@@ -1,4 +1,5 @@
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
+import { useEffect } from 'react';
 import { atom } from 'jotai';
 
 import {
@@ -16,11 +17,11 @@ type Props = {
   dataKey: string;
 };
 
-export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = 'e3e70682-c209-4cac-a29f-6fbed82c07cd';
-export const DEFAULT_SELECTED_BRAIN_REGION_ID = '4642cddb-4fbe-4aae-bbf7-0946d6ada066';
-export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567;
-export const DEFAULT_SELECTED_BRAIN_REGION_NAME = 'Cerebrum';
-export const DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE = 8;
+export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = 'e3e70682-c209-4cac-a29f-6fbed82c07cd'; // this should be an env variable
+export const DEFAULT_SELECTED_BRAIN_REGION_ID = '4642cddb-4fbe-4aae-bbf7-0946d6ada066'; // this should be an env variable
+export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567; // this should be an env variable
+export const DEFAULT_SELECTED_BRAIN_REGION_NAME = 'Cerebrum'; // this should be an env variable
+export const DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE = 8; // this should be an env variable
 export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
 export const DEFAULT_BRAIN_REGION_QUERY_NAME = 'br_name';
@@ -102,13 +103,34 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
         name: DEFAULT_BRAIN_REGION_QUERY_NAME,
         annotation_value: DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
       },
+      shallow: false,
+      clearOnDefault: false,
     }
   );
 
+  // This is to update the url if the params are not present
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const hasIdParam = url.searchParams.has(DEFAULT_BRAIN_REGION_QUERY_ID);
+    const hasNameParam = url.searchParams.has(DEFAULT_BRAIN_REGION_QUERY_NAME);
+    const hasAnnotationValueParam = url.searchParams.has(
+      DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE
+    );
+    if (!hasIdParam || !hasNameParam || !hasAnnotationValueParam) {
+      setHierarchyConfig({
+        id: id,
+        name: name,
+        annotation_value: annotation_value,
+      });
+    }
+  }, []);
+
   /**
-   * Updates the hierarchy configuration state and persists the changes to local storage.
+   * Updates the hierarchy configuration state
+   * and persists the changes to local storage.
    *
-   * @param node - An object representing a brain region hierarchy, containing the `id`, `name`, and `annotation_value` properties.
+   * @param node - An object representing a brain region hierarchy,
+   * containing the `id`, `name`, and `annotation_value` properties.
    */
   const updateHierarchyConfig = (node: IBrainRegionHierarchy) => {
     const { id, name, annotation_value } = node;

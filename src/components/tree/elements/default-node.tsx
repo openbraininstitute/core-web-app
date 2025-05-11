@@ -67,7 +67,10 @@ export default function DefaultNode<TNode extends TTreeNode>({
         >
           <CaretRightFilled
             size={14}
-            className={classNames('text-base text-current', isExpanded ? 'rotate-90' : '')}
+            className={classNames(
+              'text-base text-current transition-transform duration-300 ease-in-out',
+              isExpanded ? 'rotate-90' : ''
+            )}
           />
         </button>
       )}

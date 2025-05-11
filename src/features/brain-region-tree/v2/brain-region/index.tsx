@@ -17,6 +17,7 @@ import { getSectionFromDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { TTreeNode } from '@/components/tree/types';
 
 export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
@@ -65,16 +66,16 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
               <Tree
                 dataKey={dataKey}
                 data={brainRegionHierarchyResult.nodes}
-                height="calc(100vh - 130px)"
+                height="calc(100vh - 130px)" // 130px for header and search
                 defaultExpandedNodes={defaultBrainRegion ? [defaultBrainRegion] : []}
                 indentation={{
                   v: true,
                   h: false,
                 }}
-                selectedNode={node as unknown as IBrainRegionHierarchy}
+                selectedNode={node as TTreeNode}
                 onClick={(node) => {
-                  updateHierarchyConfig(node as unknown as IBrainRegionHierarchy);
-                  scrollToNode(node as unknown as IBrainRegionHierarchy, 'center');
+                  updateHierarchyConfig(node as IBrainRegionHierarchy);
+                  scrollToNode(node as IBrainRegionHierarchy, 'center');
                 }}
               />
             )}
