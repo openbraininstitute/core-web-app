@@ -1,18 +1,22 @@
 'use client';
 
 import { ConfigProvider, Form, Input, Select } from 'antd';
-import { useAtomValue, useSetAtom } from 'jotai';
 import { UserOutlined } from '@ant-design/icons';
 import { useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
+import { unwrap } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
 
 import {
-  brainRegionsWithRepresentationAtom,
-  setSelectedBrainRegionAtomGetter,
-} from '@/state/brain-regions';
-
+  brainRegionHierarchyAtom,
+  DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+  DEFAULT_BRAIN_REGION_QUERY_NAME,
+  useBrainRegionHierarchy,
+} from '@/features/brain-region-tree/v2/brain-region/context';
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { getSectionFromDataKey, resolveDataKey } from '@/utils/key-builder';
 import { renderDate } from '@/entity-configuration/definitions/renderer';
 import { label } from '@/components/form-label';
 import { ensureArray } from '@/utils/array';
@@ -25,22 +29,25 @@ type Params = {
 };
 
 export default function NewMEModelPage(props: Params) {
+  const [isFormValid, setIsFormValid] = useState(false);
   const { projectId, virtualLabId } = use(props.params);
+
   const { push: navigate } = useRouter();
   const [form] = Form.useForm();
 
   const stateId = useMemo(() => `bme-${crypto.randomUUID()}`, []);
-  const { setSessionValue, sessionValue, removeSessionValue } = useBuildMeModelSessionState({
+  const { setSessionValue, sessionValue } = useBuildMeModelSessionState({
     stateId,
     virtualLabId,
     projectId,
   });
-
+  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
-  const [isFormValid, setIsFormValid] = useState(false);
-  const brainRegions = useAtomValue(brainRegionsWithRepresentationAtom);
-  const setBrainRegion = useSetAtom(setSelectedBrainRegionAtomGetter('build'));
+
+  const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
+    dataKey: getSectionFromDataKey(resolveDataKey({ projectId, section: 'build' })),
+  });
 
   const onValuesChange = () => {
     form
@@ -59,8 +66,8 @@ export default function NewMEModelPage(props: Params) {
 
   const onSubmit = () => {
     const values = form.getFieldsValue();
-    const brainRegion = brainRegions?.find((br) => br.id === values.brainRegion);
-    // delete all building memodels session
+    const brainRegion = brainRegionHierarchy?.options.find((o) => o.value === values.brainRegion);
+    // delete all building me-models session
     if (typeof window !== 'undefined') {
       for (const key of Object.keys(window.sessionStorage)) {
         if (key.startsWith('bme')) {
@@ -68,31 +75,28 @@ export default function NewMEModelPage(props: Params) {
         }
       }
     }
-    if (values.brainRegion && !brainRegion) return;
 
-    // if a brain region is selected and found, set it as selected brain region on sidebar
-    if (brainRegion) {
-      setBrainRegion(brainRegion.id, brainRegion.title, brainRegion.leaves || []);
-    }
+    if (!values.brainRegion && !node) return;
 
     setSessionValue({
       virtualLabId,
       projectId,
       name: values.name,
       description: values.description,
-      brainRegion: brainRegion && { id: brainRegion.id, title: brainRegion.title },
+      brainRegion: brainRegion?.data ?? node,
     });
 
     const params = new URLSearchParams();
     params.set('s', stateId);
+    params.set(
+      DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
+      String(brainRegion?.data?.annotation_value ?? node?.annotation_value ?? '')
+    );
+    params.set(DEFAULT_BRAIN_REGION_QUERY_ID, brainRegion?.data?.id ?? node?.id ?? '');
+    params.set(DEFAULT_BRAIN_REGION_QUERY_NAME, brainRegion?.data?.name ?? node?.name ?? '');
 
     navigate(`new/configure?${params.toString()}`);
   };
-
-  const brainRegionOptions = useMemo(
-    () => brainRegions?.map((brainRegion) => ({ label: brainRegion.title, value: brainRegion.id })),
-    [brainRegions]
-  );
 
   return (
     <div className="m-10 flex h-full flex-col gap-5">
@@ -143,7 +147,7 @@ export default function NewMEModelPage(props: Params) {
                   allowClear
                   showSearch
                   size="large"
-                  options={brainRegionOptions}
+                  options={brainRegionHierarchy?.options}
                   className="border-neutral-2! text-primary-8! rounded-sm! [&_.ant-select-selector]:!rounded-sm"
                 />
               </Form.Item>

@@ -1,12 +1,13 @@
-import { EntityCoreIdentifiable, Timestamps } from '@/api/entitycore/types/shared/global';
-
-export interface IBrainRegionHierarchy {
+export type BrainRegionHierarchyBase = {
   id: string;
   name: string;
   acronym: string;
   parent_structure_id: string;
   color_hex_triplet: string;
   annotation_value: number;
+  hierarchy_id: string;
+};
+export interface IBrainRegionHierarchy extends BrainRegionHierarchyBase {
   children: Array<IBrainRegionHierarchy>;
 }
 
