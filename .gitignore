@@ -216,3 +216,5 @@ notes.md
 /playwright/.cache/
 
 playwright/.auth
+
+playwright/.auth

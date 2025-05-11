@@ -1,6 +1,6 @@
 import { test as setup, expect } from '@playwright/test';
 import path from 'path';
-import { completeLogin } from './utils/auth';
+import { completeLogin, handleTermsAcceptance } from './utils/auth';
 
 const authFile = path.join(__dirname, '../playwright/.auth/user.json');
 
