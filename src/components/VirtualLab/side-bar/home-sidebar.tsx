@@ -1,9 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+
+import kebabCase from 'lodash/kebabCase';
+import Link from 'next/link';
 
 import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import Base from '@/components/VirtualLab/side-bar/base';
@@ -23,7 +25,7 @@ export default function SideBar() {
       },
       {
         url: '/app/virtual-lab/public-projects',
-        title: 'Public project',
+        title: 'Public projects',
         count: 3,
       },
     ],
@@ -36,6 +38,7 @@ export default function SideBar() {
         <div className="border-primary-5 mt-20 border">
           {menu.map(({ url, title, count }) => (
             <Item
+              data-testid={kebabCase(title as string)}
               key={url}
               url={url}
               title={title}
@@ -46,6 +49,7 @@ export default function SideBar() {
           ))}
         </div>
         <Link
+          data-testid="public-explore"
           href="/app/virtual-lab/explore/interactive"
           className="bg-primary-8 relative mt-4 h-44 rounded-md px-4 py-2 opacity-90 hover:opacity-100"
           style={{

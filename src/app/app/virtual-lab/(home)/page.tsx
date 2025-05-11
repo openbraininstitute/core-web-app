@@ -14,7 +14,8 @@ import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscri
 import { ErrorListing } from '@/components/VirtualLab/labs-listing/elements';
 import { getUserStats } from '@/api/virtual-lab-svc/queries/stats';
 import { tryCatch } from '@/api/utils';
-import { ServerSideComponentProp } from '@/types/common';
+
+import type { ServerSideComponentProp } from '@/types/common';
 
 const tabs = [
   {
