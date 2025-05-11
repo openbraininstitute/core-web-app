@@ -37,6 +37,7 @@ import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs
 import Styles from '@/styles/vlabs.module.css';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { ensureArray } from '@/utils/array';
+import { resolveDataKey } from '@/utils/key-builder';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -100,7 +101,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     // TODO: fix it when we have simulations
     legacyType: selectedSimType ?? DataType.CircuitMEModel,
   });
-
+  const dataKey = resolveDataKey({ section: 'experiment', projectId, entity });
   return (
     <>
       <div className="flex w-full grow flex-col">
@@ -125,7 +126,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 style={{ background: 'bg-white' }}
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
-                dataKey={projectId + 'simulate' + dataType}
+                dataKey={dataKey}
                 showLoadingState={false}
               />
               {loadMoreDiv}

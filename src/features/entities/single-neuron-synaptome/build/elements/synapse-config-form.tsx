@@ -202,7 +202,6 @@ export default function SynaptomeConfigurationForm({
         entity: ISingleNeuronSynaptome;
         asset: IAsset;
       } | null>(() => buildSingleNeuronSynaptome());
-      console.log('–– – synapse-config-form.tsx:222 – onConfigurationSubmission – result:', result);
 
       refreshSynaptomeModels();
       sendResetSynapses3DEvent();

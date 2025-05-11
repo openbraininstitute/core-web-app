@@ -1,5 +1,5 @@
 import { HTMLProps, useCallback } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 
 import {
   dataAtom,
@@ -11,6 +11,7 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-r
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { PAGE_SIZE } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
@@ -38,9 +39,10 @@ export function useLoadMore<T>(
   },
   key: string
 ) {
-  const [, setPrevData] = useAtom(previousDataAtom({ ...dataContext, key }));
+  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(key) });
+
   const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
-  const { node } = useBrainRegionHierarchy({ dataKey: key });
+  const setPrevData = useSetAtom(previousDataAtom({ ...dataContext, brainRegionId: node.id, key }));
   const data = useDataAtom<T>({ ...dataContext, key, brainRegionId: node.id });
   const res = useLoadableValue(
     dataAtom({

@@ -7,10 +7,10 @@ import {
   renameKeyDeep,
 } from '@/components/tree/elements/helpers';
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { tryCatch } from '@/api/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { useLocalStorage } from '@/hooks/use-local-storage';
 
 type Props = {
   dataKey: string;
@@ -44,20 +44,20 @@ export const brainRegionHierarchyAtom = atom(
       console.error('Failed to fetch brain regions:', error);
       throw error;
     }
-    const targetNode = findNodeByKey<IBrainRegionHierarchy>(
+    const root = findNodeByKey<IBrainRegionHierarchy>(
       DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
       DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE,
       brainRegions
     );
 
-    if (!targetNode) {
+    if (!root) {
       console.warn("Brain region with annotation_value '8' not found.");
       return null;
     }
     let options: Array<BrainRegionHierarchyOption> = [];
-    const nodes = renameKeyDeep<IBrainRegionHierarchy>(targetNode, 'color_hex_triplet', 'color');
+    const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color');
     if (nodes) {
-      options = flattenTreeAsObject<IBrainRegionHierarchy>(nodes).map((region) => ({
+      options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map((region) => ({
         value: region.id,
         label: `${region.name}`,
         data: region,
@@ -79,6 +79,9 @@ export const brainRegionHierarchyAtom = atom(
  * @returns An object containing:
  *   - `node`: The currently selected brain region hierarchy node, including `id`, `name`, and `annotation_value`.
  *   - `updateHierarchyConfig`: A function to update the selected brain region node and persist the changes.
+ *
+ * NOTE: The `dataKey` should be unique for each context, you should use the resolveDataKey along with
+ * getSectionFromDataKey to extract the right key for brain region used
  */
 export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   const [brainRegionHierarchyFamily, updateLocalStorage] = useLocalStorage(dataKey, {

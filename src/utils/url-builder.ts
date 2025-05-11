@@ -4,6 +4,7 @@ import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
+import { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 const baseUri = '/app/virtual-lab';
 

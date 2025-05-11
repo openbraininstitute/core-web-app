@@ -1,6 +1,7 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
+import { useParams } from 'next/navigation';
 
 import SelectedBrainRegionMETypes from '@/components/explore-section/ExploreInteractive/SelectedBrainRegionMETypes';
 import DataTypeTabs from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
@@ -8,8 +9,14 @@ import EntityTypeStatsPanel from '@/components/entities-type-stats/panel';
 import ThreeDeeBrain from '@/components/ThreeDeeBrain';
 
 import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { resolveDataKey } from '@/utils/key-builder';
+
+import type { WorkspaceContext } from '@/types/common';
 
 export default function ExploreInteractivePanel() {
+  const { projectId } = useParams<WorkspaceContext>();
+  const dataKey = resolveDataKey({ projectId, section: 'explore' });
+
   return (
     <div className="relative flex h-full min-w-0 flex-1 overflow-hidden">
       <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-[#012766]">
@@ -18,7 +25,7 @@ export default function ExploreInteractivePanel() {
           className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px_repeat(4,1fr)_minmax(80px,max-content)] gap-y-4"
         >
           <div id="interactive-header" style={{ gridArea: '1 / 1 / 2 / 6' }}>
-            <DataTypeTabs />
+            <DataTypeTabs dataKey={dataKey} />
           </div>
           <div
             id="neurons-panel"
