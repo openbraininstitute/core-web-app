@@ -7,10 +7,12 @@ export const resolveDataKey = ({
   projectId,
   entity,
   section,
+  suffix,
 }: {
   section: 'explore' | 'build' | 'experiment' | 'public-explore';
   projectId?: string | undefined;
   entity?: SerializedEntityCoreTypeConfig<any> | EntityCoreTypeConfig<any> | undefined;
+  suffix?: string;
 }): string => {
   let dataKey = '';
   if (projectId) {
@@ -21,6 +23,9 @@ export const resolveDataKey = ({
   }
   if (!projectId && entity && section === 'explore') return `public-explore/${entity.type}`;
   else if (!projectId && !entity && section === 'explore') return 'public-explore';
+  if (suffix) {
+    dataKey = `${dataKey}/${suffix}`;
+  }
   return dataKey;
 };
 
