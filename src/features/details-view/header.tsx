@@ -72,9 +72,9 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
               className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
               // disabling download button if currently fetching or if resource does not have a distribution
               disabled={fetching || !hasDistribution}
-              onClick={() => {
+              onClick={async () => {
                 setFetching(true);
-                downloadArchive(entity!.type, [detail.id]);
+                await downloadArchive(entity!.type, [detail.id]);
                 setTimeout(() => setFetching(false), 1600);
               }}
             >
