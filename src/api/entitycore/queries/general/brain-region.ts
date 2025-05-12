@@ -4,7 +4,7 @@ import {
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
-
+import { env } from '@/env';
 /**
  * Retrieves the brain region hierarchy from the Entity Core API.
  *
@@ -52,7 +52,7 @@ export async function getTemporaryBrainRegionById({ id }: { id: string }) {
  * @returns A promise that resolves to the brain region hierarchy data.
  */
 export async function getBrainRegionHierarchy({
-  id = 'e3e70682-c209-4cac-a29f-6fbed82c07cd',
+  id = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
 }: {
   id?: string;
 }) {
