@@ -44,6 +44,7 @@ import { nexus } from '@/config';
 import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/runSimulation';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import updateArray from '@/util/updateArray';
+import { getMEModel } from '@/api/entitycore/queries';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
 export const STIMULUS_PLOT_NAME = 'stimulus-plot';
@@ -59,7 +60,7 @@ export const createSingleNeuronSimulationAtom = atom<
   null,
   [string, string, string, string, string, SimulationType],
   Promise<SingleNeuronSimulationResource | null>
->(null, async (get, set, name, description, modelSelfUrl, vLabId, projectId, simulationType) => {
+>(null, async (get, set, name, description, modelId, vLabId, projectId, simulationType) => {
   const session = await getSession();
   if (!session) {
     throw new Error('No valid session found');
@@ -72,9 +73,7 @@ export const createSingleNeuronSimulationAtom = atom<
   const simulationResult = get(genericSingleNeuronSimulationPlotDataAtom);
   const stimulusResults = get(stimulusPreviewPlotDataAtom);
 
-  const singleNeuronId = getIdFromSelfUrl(modelSelfUrl);
-
-  if (!simulationResult || !singleNeuronId) return null;
+  if (!simulationResult || !modelId) return null;
 
   const recordFromUniq = uniqBy(recordFromConfig, (item) =>
     values(pick(item, ['section', 'offset']))
@@ -89,18 +88,15 @@ export const createSingleNeuronSimulationAtom = atom<
     synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
   };
 
-  const resource = await fetchResourceById<EModel | MEModel>(
-    singleNeuronId,
-    session,
-    singleNeuronId.startsWith(nexus.defaultIdBaseUrl) ? {} : { org: vLabId, project: projectId }
-  );
+  const meModel = await getMEModel({
+    id: modelId,
+    context: {
+      virtualLabId: vLabId,
+      projectId,
+    },
+  });
 
-  if (
-    !resource ||
-    resource['@context'] === 'https://bluebrain.github.io/nexus/contexts/error.json'
-  ) {
-    throw new Error('Model not found');
-  }
+   console.log('meModel', meModel);
 
   const simulationConfigFile = await createJsonFileOnVlabProject(
     {
@@ -121,51 +117,51 @@ export const createSingleNeuronSimulationAtom = atom<
     projectId
   );
 
-  let entity: EntityCreation<SingleNeuronSimulation> | EntityCreation<SynaptomeSimulation> | null =
-    null;
+  // let entity: EntityCreation<SingleNeuronSimulation> | EntityCreation<SynaptomeSimulation> | null =
+  //   null;
 
-  const commonProperties = {
-    name,
-    description,
-    '@context': 'https://bbp.neuroshapes.org',
-    distribution: [
-      createDistribution(
-        simulationConfigFile,
-        composeUrl('file', simulationConfigFile['@id'], {
-          rev: simulationConfigFile._rev,
-          org: vLabId,
-          project: projectId,
-        })
-      ),
-    ],
-    injectionLocation: singleNeuronSimulationConfig.currentInjection.injectTo,
-    recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
-      (r) => `${r.section}_${r.offset}`
-    ),
-    brainLocation: resource.brainLocation,
-    isDraft: false,
-    status: 'success',
-  };
+  // const commonProperties = {
+  //   name,
+  //   description,
+  //   // '@context': 'https://bbp.neuroshapes.org',
+  //   // distribution: [
+  //   //   createDistribution(
+  //   //     simulationConfigFile,
+  //   //     composeUrl('file', simulationConfigFile['@id'], {
+  //   //       rev: simulationConfigFile._rev,
+  //   //       org: vLabId,
+  //   //       project: projectId,
+  //   //     })
+  //   //   ),
+  //   // ],
+  //   injectionLocation: singleNeuronSimulationConfig.currentInjection.injectTo,
+  //   recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
+  //     (r) => `${r.section}_${r.offset}`
+  //   ),
+  //   brainLocation: meModel.brainLocation.
+  //   isDraft: false,
+  //   status: 'success',
+  // };
 
-  if (simulationType === 'single-neuron-simulation') {
-    entity = {
-      ...commonProperties,
-      '@type': ['Entity', 'SingleNeuronSimulation'],
-      used: {
-        '@type': 'MEModel',
-        '@id': singleNeuronId,
-      },
-    } as EntityCreation<SingleNeuronSimulation>;
-  } else if (simulationType === 'synaptome-simulation') {
-    entity = {
-      ...commonProperties,
-      '@type': ['Entity', 'SynaptomeSimulation'],
-      used: {
-        '@id': resource['@id'],
-        '@type': resource['@type'],
-      },
-    } as EntityCreation<SynaptomeSimulation>;
-  }
+  // if (simulationType === 'single-neuron-simulation') {
+  //   entity = {
+  //     ...commonProperties,
+  //     '@type': ['Entity', 'SingleNeuronSimulation'],
+  //     used: {
+  //       '@type': 'MEModel',
+  //       '@id': singleNeuronId,
+  //     },
+  //   } as EntityCreation<SingleNeuronSimulation>;
+  // } else if (simulationType === 'synaptome-simulation') {
+  //   entity = {
+  //     ...commonProperties,
+  //     '@type': ['Entity', 'SynaptomeSimulation'],
+  //     used: {
+  //       '@id': resource['@id'],
+  //       '@type': resource['@type'],
+  //     },
+  //   } as EntityCreation<SynaptomeSimulation>;
+  // }
 
   const resourceUrl = composeUrl('resource', '', {
     sync: true,
