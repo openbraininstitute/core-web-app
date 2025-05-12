@@ -7,7 +7,7 @@ import {
   pageNumberAtom,
   previousDataAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { PAGE_SIZE } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';

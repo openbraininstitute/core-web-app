@@ -7,7 +7,7 @@ import { Menu, MenuProps } from 'antd';
 import { useAtomValue } from 'jotai';
 import get from 'lodash/get';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { DataType } from '@/constants/explore-section/list-views';
 import { resolveDataKey } from '@/utils/key-builder';

@@ -37,7 +37,7 @@ import {
   getViewDefinitionByLegacyType,
   ViewsDefinitionRegistry,
 } from '@/entity-configuration/definitions/view-defs';
-import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-tree/v2/brain-region/context';
+import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { CoreFilter } from '@/entity-configuration/definitions/types';

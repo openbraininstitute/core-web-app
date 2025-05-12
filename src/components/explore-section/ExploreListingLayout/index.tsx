@@ -16,7 +16,7 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import {
   brainRegionHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
-} from '@/features/brain-region-tree/v2/brain-region/context';
+} from '@/features/brain-region-hierarchy/context';
 import { circuitCountAtom } from '@/components/explore-section/Circuit/content/circuits_flat';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';

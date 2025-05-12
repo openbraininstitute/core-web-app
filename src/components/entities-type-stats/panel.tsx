@@ -8,11 +8,11 @@ import get from 'lodash/get';
 
 import circuitsFlat from '@/components/explore-section/Circuit/content/circuits_flat';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
-import { getSectionFromDataKey, resolveDataKey } from '@/utils/key-builder';
 import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { resolveDataKey } from '@/utils/key-builder';
 import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
@@ -135,8 +135,6 @@ function EntityTypeStatsPanelContainer({ children }: Props) {
   const { node } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
-
-  console.log('–– – panel.tsx:140 – EntityTypeStatsPanelContainer – node:', node);
 
   const { data, error } = useAtomValue(
     useMemo(

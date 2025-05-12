@@ -1,4 +1,4 @@
-import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-tree/v2/brain-region/context';
+import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { DataType } from '@/constants/explore-section/list-views';
 import { tryCatch } from '@/api/utils';

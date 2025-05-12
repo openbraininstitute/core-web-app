@@ -7,7 +7,7 @@ import FilterControls from '@/components/explore-section/ExploreSectionListingVi
 import useExploreColumns from '@/hooks/useExploreColumns';
 import Footer from '@/features/bookmark/footer';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { sortStateAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';

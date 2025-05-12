@@ -13,7 +13,7 @@ import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
 import { sortStateAtom, dataAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';

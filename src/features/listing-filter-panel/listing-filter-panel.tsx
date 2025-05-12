@@ -32,7 +32,7 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
 import { getFieldDefinition, getFieldsDefinition } from '@/entity-configuration/definitions';
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
