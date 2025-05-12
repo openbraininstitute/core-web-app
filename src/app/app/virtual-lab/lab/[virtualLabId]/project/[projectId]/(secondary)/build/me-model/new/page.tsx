@@ -12,7 +12,7 @@ import {
   DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
   DEFAULT_BRAIN_REGION_QUERY_ID,
   useBrainRegionHierarchy,
-} from '@/features/brain-region-tree/v2/brain-region/context';
+} from '@/features/brain-region-hierarchy/context';
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { resolveDataKey } from '@/utils/key-builder';

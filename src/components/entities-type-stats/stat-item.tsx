@@ -12,7 +12,7 @@ import { useQueryState } from 'nuqs';
 import {
   brainRegionHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
-} from '@/features/brain-region-tree/v2/brain-region/context';
+} from '@/features/brain-region-hierarchy/context';
 import { unwrap } from 'jotai/utils';
 
 // TODO: to delete when confirm the LiteratureForExperimentType is not needed

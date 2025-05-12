@@ -31,7 +31,7 @@ import { selectedSimulationScopeAtom } from '@/state/simulate';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
   DEFAULT_BRAIN_REGION_QUERY_ID,
-} from '@/features/brain-region-tree/v2/brain-region/context';
+} from '@/features/brain-region-hierarchy/context';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import { SimulationType } from '@/types/virtual-lab/lab';
 import { OneshotSession } from '@/services/accounting';

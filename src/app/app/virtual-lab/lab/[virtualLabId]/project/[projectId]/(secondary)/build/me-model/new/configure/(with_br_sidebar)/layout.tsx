@@ -14,7 +14,7 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 type GenericLayoutProps = ServerSideComponentProp<WorkspaceContext, null> & {
   children: ReactNode;
 };
-const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree/v2/brain-region'), {
+const BrainRegionsTree = dynamic(() => import('@/features/brain-region-hierarchy'), {
   ssr: false,
 });
 export default function BuildMEModelLayout({ params, children }: GenericLayoutProps) {

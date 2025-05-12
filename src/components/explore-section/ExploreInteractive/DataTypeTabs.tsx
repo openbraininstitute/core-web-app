@@ -10,7 +10,7 @@ import MenuTabs from '@/components/MenuTabs';
 import {
   brainRegionHierarchyAtom,
   useBrainRegionHierarchy,
-} from '@/features/brain-region-tree/v2/brain-region/context';
+} from '@/features/brain-region-hierarchy/context';
 import { getSectionFromDataKey } from '@/utils/key-builder';
 
 enum DataTypeTabsEnum {

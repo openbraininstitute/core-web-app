@@ -7,10 +7,9 @@ import { unwrap } from 'jotai/utils';
 import ListingFilterPanel from '@/features/listing-filter-panel/listing-filter-panel';
 
 import { activeColumnsAtom, dataAtom, filtersAtom } from '@/state/explore-section/list-view-atoms';
-import { useBrainRegionHierarchy } from '../brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 

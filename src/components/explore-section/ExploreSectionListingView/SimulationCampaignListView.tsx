@@ -15,8 +15,7 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
-import { getSectionFromDataKey } from '@/utils/key-builder';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 
 export default function SimulationCampaignListView({ dataType }: { dataType: DataType }) {
   const { node } = useBrainRegionHierarchy({ dataKey: dataType });

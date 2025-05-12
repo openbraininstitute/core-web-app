@@ -14,7 +14,7 @@ import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 
 // TODO: remove this when the new new brain region tree is ready
 // const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
-const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree/v2/brain-region'), {
+const BrainRegionsTree = dynamic(() => import('@/features/brain-region-hierarchy'), {
   ssr: false,
 });
 

@@ -23,12 +23,9 @@ type Props = ServerSideComponentProp<WorkspaceContext, null> & {
 
 // remove this when the new brain region tree is ready
 // const BrainRegionsTree = dynamic(() => import('@/features/brain-region-tree'), { ssr: false });
-const BrainRegionsTree = dynamic(
-  () => import('@/features/brain-region-tree/v2/brain-region/index'),
-  {
-    ssr: false,
-  }
-);
+const BrainRegionsTree = dynamic(() => import('@/features/brain-region-hierarchy'), {
+  ssr: false,
+});
 
 export default function Layout(props: Props) {
   const { virtualLabId, projectId } = use(props.params);
