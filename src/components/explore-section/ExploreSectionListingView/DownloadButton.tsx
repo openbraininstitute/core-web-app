@@ -15,7 +15,7 @@ export function ExploreDownloadButton({
 
   const [fetching, setFetching] = useState<boolean>(false);
 
-  const download = useCallback(() => {
+  const download = useCallback(async () => {
     setFetching(true);
 
     const entity = getEntityByLegacyType({ legacyType: dataType });
@@ -26,12 +26,16 @@ export function ExploreDownloadButton({
 
     const entityType = entity?.type;
 
-    downloadArchive(
-      entityType,
-      selectedRows.map((row) => row.id)
-    );
-
-    setTimeout(() => setFetching(false), 1600);
+    try {
+      await downloadArchive(
+        entityType,
+        selectedRows.map((row) => row.id)
+      );
+    } catch (error) {
+      // TODO: add error notification
+    } finally {
+      setTimeout(() => setFetching(false), 1600);
+    }
   }, [selectedRows, dataType, setFetching]);
 
   return session ? (
