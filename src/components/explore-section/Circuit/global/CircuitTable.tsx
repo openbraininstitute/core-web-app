@@ -29,7 +29,7 @@ export default function CircuitTable({
   downloadable?: boolean;
   // hasSearch?: boolean;
 }) {
-  const [circuitToDownoload, setCircuitToDownload] = useState<CircuitSchemaProps | null>(null);
+  const [circuitToDownload, setCircuitToDownload] = useState<CircuitSchemaProps | null>(null);
   const [downloadModalOpen, SetDownloadModalOpen] = useState<boolean>(false);
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
@@ -63,6 +63,7 @@ export default function CircuitTable({
     SetDownloadModalOpen(false);
   }, []);
 
+  // ROW EXPANSION & SUBCIRCUITS
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
@@ -143,9 +144,10 @@ export default function CircuitTable({
           />
           {/* {fileUrl && <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />} */}
         </div>
-        {downloadModalOpen && circuitToDownoload !== null && (
+        {circuitToDownload !== null && (
           <DownloadContainer
-            content={circuitToDownoload}
+            content={circuitToDownload}
+            downloadModalOpen={downloadModalOpen}
             handleCloseDownloadModal={handleCloseDownloadModal}
           />
         )}

@@ -118,7 +118,7 @@ export type NumericFilterOptions = {
 };
 
 export type DownloadItemProps = {
-  name: string;
+  fileType: string;
   children?: SingleSelectedDownloadableItemProps[];
 };
 
@@ -129,4 +129,10 @@ export type SingleSelectedDownloadableItemProps = {
   url: string;
   description: string;
   size: number;
+};
+
+export type FileTypeHeaderProps = {
+  name: string;
+  description: React.ReactNode;
+  extension: string;
 };

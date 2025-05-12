@@ -22,7 +22,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
           label="Simulate"
           action={futureActionsForButton}
           disabled
-          link={content.files[0].url}
+          link={content.files[0]?.children?.[0]?.url}
         >
           <SimulateIcon iconColor="#002766" className="h-4 w-4" />
         </ActionButton>
@@ -31,7 +31,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
           label="Clone model"
           action={futureActionsForButton}
           disabled
-          link={content.files[0].url}
+          link={content.files[0]?.children?.[0]?.url}
         >
           <CloneIcon className="h-4 w-4" />
         </ActionButton>
@@ -40,11 +40,11 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
           label="Save to Library"
           action={futureActionsForButton}
           disabled
-          link={content.files[0].url}
+          link={content.files[0]?.children?.[0]?.url}
         >
           <DownloadIcon iconColor="#002766" className="h-4 w-4" />
         </ActionButton>
-        <ActionButton type="link" label="Download" link={content.files[0].url}>
+        <ActionButton type="link" label="Download" link={content.files[0]?.children?.[0]?.url}>
           <DownloadIcon iconColor="#002766" className="h-4 w-4" />
         </ActionButton>
       </div>
