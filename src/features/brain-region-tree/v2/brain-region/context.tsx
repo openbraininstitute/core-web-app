@@ -22,9 +22,10 @@ type Props = {
 };
 
 export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
-export const DEFAULT_SELECTED_BRAIN_REGION_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_ID;
-export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567; // this should be an env variable
-export const DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE = 8; // this should be an env variable
+export const DEFAULT_SELECTED_BRAIN_REGION_ID = env.NEXT_PUBLIC_DEFAULT_SELECTED_BRAIN_REGION_ID;
+export const DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE =
+  env.NEXT_PUBLIC_DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE;
+export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567;
 export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
 export const DEFAULT_BRAIN_REGION_QUERY_NAME = 'br_name';
@@ -55,7 +56,9 @@ export const brainRegionHierarchyAtom = atom(
     );
 
     if (!root) {
-      console.warn("Brain region with annotation_value '8' not found.");
+      console.warn(
+        `Brain region with annotation_value ${DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE} not found.`
+      );
       return null;
     }
     let options: Array<BrainRegionHierarchyOption> = [];
