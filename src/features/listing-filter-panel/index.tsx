@@ -39,7 +39,7 @@ export default function WithListingFilterPanel({
   dataKey: string;
   useBrainRegion?: boolean;
 }) {
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
+  const { node } = useBrainRegionHierarchy({ dataKey });
 
   const activeColumns = useAtomValue(
     useMemo(

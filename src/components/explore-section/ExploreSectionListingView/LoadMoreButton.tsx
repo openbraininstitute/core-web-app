@@ -11,7 +11,6 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-r
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { PAGE_SIZE } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
@@ -40,7 +39,7 @@ export function useLoadMore<T>(
   key: string,
   useBrainRegion?: boolean
 ) {
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(key) });
+  const { node } = useBrainRegionHierarchy({ dataKey: key });
 
   const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
   const setPrevData = useSetAtom(

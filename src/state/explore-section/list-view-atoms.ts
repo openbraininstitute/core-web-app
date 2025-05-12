@@ -37,15 +37,12 @@ import {
   getViewDefinitionByLegacyType,
   ViewsDefinitionRegistry,
 } from '@/entity-configuration/definitions/view-defs';
+import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-tree/v2/brain-region/context';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
-import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import { compactRecord } from '@/utils/dictionary';
-import {
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-  useBrainRegionHierarchy,
-} from '@/features/brain-region-tree/v2/brain-region/context';
 
 type DataAtomBinding = {
   key: string;

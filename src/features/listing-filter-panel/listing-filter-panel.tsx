@@ -181,7 +181,7 @@ export default function ListingFilterPanel({
   resourceId,
   virtualLabInfo,
 }: Props) {
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
+  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(
     filtersAtom({ dataType, dataScope, resourceId, key: dataKey, brainRegionId: node.id })

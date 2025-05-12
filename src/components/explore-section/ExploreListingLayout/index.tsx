@@ -2,8 +2,9 @@
 
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
-import { ReactNode, Suspense } from 'react';
+import { ReactNode, Suspense, useMemo } from 'react';
 import { Menu, type MenuProps } from 'antd';
+import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
@@ -12,7 +13,10 @@ import BackToInteractiveExplorationBtn from '@/components/explore-section/BackTo
 import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
-import { DEFAULT_BRAIN_REGION_QUERY_NAME } from '@/features/brain-region-tree/v2/brain-region/context';
+import {
+  brainRegionHierarchyAtom,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+} from '@/features/brain-region-tree/v2/brain-region/context';
 import { circuitCountAtom } from '@/components/explore-section/Circuit/content/circuits_flat';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
@@ -32,7 +36,8 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
-  const [brainRegionName] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_NAME);
+  const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
+  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
 
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
 
@@ -56,6 +61,10 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     const { key, domEvent } = info;
     domEvent.preventDefault();
     domEvent.stopPropagation();
+
+    const brainRegionName = brainRegionHierarchy?.options.find(
+      (o) => o.value === brainRegionId
+    )?.label;
 
     if (!(await userJourneyTracker.getCurrentTuple())) {
       await userJourneyTracker.handleBrainRegionClick(brainRegionName!);

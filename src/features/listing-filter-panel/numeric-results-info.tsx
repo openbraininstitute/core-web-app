@@ -7,7 +7,6 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-r
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useLoadableValue } from '@/hooks/hooks';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -56,7 +55,7 @@ function ResultsCount({
   useBrainRegion?: boolean;
 }) {
   const [persistedDisplay, setPersistedDisplay] = useState<JSX.Element | null>(null);
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
+  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
   const result = useLoadableValue(
     dataAtom({
       dataType,

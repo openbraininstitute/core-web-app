@@ -34,7 +34,7 @@ const DATA_TYPE_TABS = Object.keys(DataTypeTabsEnum).map((key) => ({
 
 export default function DataTypeTabs({ dataKey }: { dataKey: string }) {
   const [dataTypeActiveTab, setDataTypeTab] = useAtom(dataTabAtom);
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
+  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
   const result = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), [dataKey]));
   const brainRegion = find(result?.options, (o) => o.data.id === node.id);
 
