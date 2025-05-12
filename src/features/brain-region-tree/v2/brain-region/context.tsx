@@ -11,17 +11,18 @@ import {
 } from '@/components/tree/elements/helpers';
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 import { tryCatch } from '@/api/utils';
+import { env } from '@/env';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 
 type Props = {
   dataKey: string;
 };
 
-export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = 'e3e70682-c209-4cac-a29f-6fbed82c07cd'; // this should be an env variable
-export const DEFAULT_SELECTED_BRAIN_REGION_ID = '4642cddb-4fbe-4aae-bbf7-0946d6ada066'; // this should be an env variable
+export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
+export const DEFAULT_SELECTED_BRAIN_REGION_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_ID;
 export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567; // this should be an env variable
 export const DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE = 8; // this should be an env variable
 export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
