@@ -22,6 +22,7 @@ import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
+import { resolveDataKey } from '@/utils/key-builder';
 
 const Categories: Array<{ key: EntityCoreTypeGroup; label: string }> = [
   {
@@ -71,7 +72,7 @@ export default function BookmarksView({
   }
 
   const ids = compact<string>(data?.map((o: LibraryBookmark) => o.entity_id));
-  const dataKey = `${projectId}/${category}/${slug}/bookmarks`;
+  const dataKey = resolveDataKey({ section: 'bookmark', projectId, suffix: `${category}/${slug}` });
 
   const tableList = match(tabs)
     .when(

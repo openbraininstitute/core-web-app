@@ -241,7 +241,7 @@ export default function Configure({ params, searchParams }: Props) {
           setActiveProcess(null);
         },
         {
-          feature: 'create-me-model',
+          feature: 'create-me-model-no-validation',
           section: 'build/create-me-model',
           extra: {
             ...validationData,
@@ -283,41 +283,6 @@ export default function Configure({ params, searchParams }: Props) {
       >
         Launch validation
       </CustomButton>
-      {/* <button
-        className={classNames(
-          'fit-content ml-auto flex w-fit min-w-40 items-center justify-center p-4 font-bold hover:brightness-110',
-          activeProcess ? 'bg-neutral-4' : 'bg-primary-8'
-        )}
-        onClick={onClickWithoutValidation}
-        type="button"
-        disabled={!!activeProcess}
-      >
-        {activeProcess === 'modelCreation' ? (
-          <span className="flex flex-row gap-4">
-            Creating ME-model <Spin />
-          </span>
-        ) : (
-          'Save'
-        )}
-      </button>
-      <button
-        className={classNames(
-          'fit-content ml-auto flex w-fit items-center p-4 font-bold hover:brightness-110',
-          activeProcess ? 'bg-neutral-4' : 'bg-primary-8'
-        )}
-        // onClick={onClickWithValidation}
-        onClick={() => {}}
-        type="button"
-        disabled={!!activeProcess}
-      >
-        {activeProcess === 'modelCreationWithValidation' ? (
-          <span className="flex flex-row gap-4">
-            Launch validation <Spin />
-          </span>
-        ) : (
-          'Launch validation'
-        )}
-      </button> */}
     </div>
   );
 

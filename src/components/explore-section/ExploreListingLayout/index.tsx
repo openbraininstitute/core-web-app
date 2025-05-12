@@ -31,10 +31,12 @@ import {
 import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { WorkspaceContext } from '@/types/common';
+import { LoadingOutlined } from '@ant-design/icons';
 
 export default function ExploreListingLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const params = useParams();
+  const params = useParams<WorkspaceContext & { type: EntitySlugValue; id: string }>();
   const pathname = usePathname();
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
   const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
@@ -120,13 +122,19 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
       },
     });
   }
+
+  // NOTE: this is legacy to handle details page,
+  // TODO: (this should change to layout per page type (one for listing and one for details))
   if (params?.id) {
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
   }
 
   return (
     <div className="bg-primary-9 flex h-screen w-full overflow-x-auto" id="interactive-data-layout">
-      <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
+      <ErrorBoundary
+        FallbackComponent={SimpleErrorComponent}
+        key={`${params.type}/${brainRegionId}`}
+      >
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
         <div className="flex w-full grow flex-col overflow-x-hidden">
@@ -138,7 +146,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
                 theme="dark"
                 style={{ backgroundColor: '#002766', opacity: 70 }}
                 className="flex w-[calc(100%+6px)] justify-start"
-                items={items}
+                items={items.map((p) => ({ ...p, itemIcon: <LoadingOutlined className="ml-2" /> }))}
               />
             }
           >

@@ -288,6 +288,7 @@ class ApiClient {
       }
 
       let response = await fetch(request);
+
       for (const interceptor of this.responseInterceptors) {
         response = await interceptor(response);
       }
