@@ -55,6 +55,12 @@ export interface IMEModel
   type: EntityTypeEnum.Memodel;
 }
 
+export interface INestedMEModel extends IMEModelBase, Timestamps {
+  id: string;
+  mtypes: Array<IMType>;
+  etypes: Array<IEType>;
+}
+
 export interface IMEModelFilter
   extends ContributionFilter,
     MtypeFilter,

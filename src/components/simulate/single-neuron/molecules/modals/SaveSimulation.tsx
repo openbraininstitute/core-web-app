@@ -80,7 +80,7 @@ export default function SaveSimulationModal({
       );
       successNotify(messages.CreationSimulationSucceed, 7, 'topRight');
       refreshSimulations();
-      navigate(generateSimulationDetailUrl(savedSimulation!['@id']));
+      // navigate(generateSimulationDetailUrl(savedSimulation!['@id']));
     } catch (error) {
       errorNotify('An error encountered when saving simulation', 7, 'topRight');
     } finally {
