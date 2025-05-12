@@ -1,3 +1,4 @@
+import { Tooltip } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import Link from 'next/link';
 import { Key, SyntheticEvent } from 'react';
@@ -23,7 +24,11 @@ const columns = (
 ): ResizableColumnType[] => {
   return [
     {
-      title: 'Download',
+      title: (
+        <Tooltip title="Download files">
+          <DownloadIcon iconColor="#A2A2A2" />
+        </Tooltip>
+      ),
       key: 'download',
       width: 80,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => {

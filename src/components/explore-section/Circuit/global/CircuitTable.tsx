@@ -7,6 +7,7 @@ import columns from './Columns';
 import SubcircuitTable from './SubcircuitsTable';
 import DownloadContainer from './download/DownloadContainer';
 
+import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
 
 export type CustomRowProps = {
@@ -144,13 +145,27 @@ export default function CircuitTable({
           />
           {/* {fileUrl && <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />} */}
         </div>
-        {circuitToDownload !== null && (
-          <DownloadContainer
-            content={circuitToDownload}
-            downloadModalOpen={downloadModalOpen}
-            handleCloseDownloadModal={handleCloseDownloadModal}
+        <>
+          <div
+            className={classNames(
+              'out-expo fixed bottom-3 z-[999999] h-screen w-[44vw] overflow-y-scroll bg-primary-9 p-8 transition-right duration-500',
+              downloadModalOpen ? 'right-0' : '-right-full'
+            )}
+          >
+            {circuitToDownload !== null && (
+              <DownloadContainer
+                content={circuitToDownload}
+                handleCloseDownloadModal={handleCloseDownloadModal}
+              />
+            )}
+          </div>
+          <div
+            className={classNames(
+              'fixed left-0 top-0 z-[999998] h-screen w-screen bg-black transition-opacity duration-500 ease-out-back',
+              downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
+            )}
           />
-        )}
+        </>
       </div>
     </div>
   );
