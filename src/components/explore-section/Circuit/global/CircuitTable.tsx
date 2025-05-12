@@ -8,9 +8,9 @@ import { CircuitSchemaProps } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
 import columns from './Columns';
 import CustomRow from './CustomRow';
-import DownloadCircuitButton from './DownloadCircuitButton';
 import ResizableTitle from './ResizableTitle';
 import SubcircuitTable from './SubcircuitsTable';
+import DownloadContainer from './download/DownloadContainer';
 
 import styles from './exploreCircuitTable.module.scss';
 
@@ -94,6 +94,8 @@ export default function CircuitTable({
   // const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
   // const filteredData = useFilteredData(data, { searchQuery, numericFilter });
+
+  const [downloadModalOpen, SetDownloadModalOpen] = useState<boolean>(false);
 
   const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
     const rowKey = row.key;
@@ -194,7 +196,7 @@ export default function CircuitTable({
     />
   );
 
-  const lastRow = selectedRows.at(-1);
+  const lastRow: CircuitSchemaProps | undefined = selectedRows.at(-1);
   const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
@@ -242,8 +244,31 @@ export default function CircuitTable({
               rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
             }}
           />
-          {fileUrl && <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />}
+          {/* {fileUrl && <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />} */}
+          {
+            fileUrl && (
+              <button
+                type="button"
+                aria-label='Open download modal'
+                className="fixed bottom-6 right-10 flex h-[60px] w-[180px] items-center justify-center bg-primary-8 text-xl transition-bottom duration-300 ease-in-out"
+                onClick={() => SetDownloadModalOpen(true)}
+                style={{
+                  visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
+                }}
+              >
+                Download files
+              </button>
+            )
+          }
         </div>
+        {
+          lastRow !== undefined && (
+            <DownloadContainer
+              content={lastRow}
+              setIsDownloadModalOpen={SetDownloadModalOpen}
+              />
+          )
+        }
       </div>
     </div>
   );

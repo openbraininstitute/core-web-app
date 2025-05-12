@@ -50,12 +50,7 @@ export type CircuitSchemaProps = {
       url: string;
     } | null;
   };
-  files: {
-    kind: string;
-    url: string;
-    key: string;
-    isAvailable: boolean;
-  }[];
+  files: DownloadItemProps[];
   subcircuits: CircuitSchemaProps[];
 
   overview: {
@@ -121,3 +116,17 @@ export type NumericFilterOptions = {
   min?: number;
   max?: number;
 };
+
+export type DownloadItemProps = {
+  name: string;
+  children?: SingleSelectedDownloadableItemProps[]
+}
+
+export type SingleSelectedDownloadableItemProps = {
+  fileType: string;
+  extension: string;
+  name: string;
+  url: string;
+  description: string;
+  size: number;
+}
