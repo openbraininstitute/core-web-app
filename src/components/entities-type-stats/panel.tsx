@@ -133,7 +133,7 @@ export function EntityTypeStats(props: StatsPanelProps) {
 function EntityTypeStatsPanelContainer({ children }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const { node } = useBrainRegionHierarchy({
-    dataKey: getSectionFromDataKey(resolveDataKey({ section: 'explore', projectId })),
+    dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
 
   console.log('–– – panel.tsx:140 – EntityTypeStatsPanelContainer – node:', node);

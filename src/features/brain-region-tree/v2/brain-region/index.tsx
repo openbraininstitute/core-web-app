@@ -13,7 +13,6 @@ import {
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-tree/v2/brain-region/context';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
@@ -23,7 +22,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const brainRegionHierarchyResult = useAtomValue(brainRegionHierarchyAtom);
   const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
-    dataKey: getSectionFromDataKey(dataKey),
+    dataKey,
   });
 
   if (!brainRegionHierarchyResult) {
@@ -72,7 +71,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
                   v: true,
                   h: false,
                 }}
-                selectedNode={node as TTreeNode}
+                selectedNode={node as unknown as TTreeNode}
                 onClick={(node) => {
                   updateHierarchyConfig(node as IBrainRegionHierarchy);
                   scrollToNode(node as IBrainRegionHierarchy, 'center');

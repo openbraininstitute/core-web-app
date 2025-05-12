@@ -11,17 +11,17 @@ import {
   brainRegionHierarchyAtom,
   DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
   DEFAULT_BRAIN_REGION_QUERY_ID,
-  DEFAULT_BRAIN_REGION_QUERY_NAME,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-tree/v2/brain-region/context';
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
-import { getSectionFromDataKey, resolveDataKey } from '@/utils/key-builder';
+import { resolveDataKey } from '@/utils/key-builder';
 import { renderDate } from '@/entity-configuration/definitions/renderer';
 import { label } from '@/components/form-label';
 import { ensureArray } from '@/utils/array';
 import { classNames } from '@/util/utils';
 
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { WorkspaceContext } from '@/types/common';
 
 type Params = {
@@ -45,8 +45,8 @@ export default function NewMEModelPage(props: Params) {
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
 
-  const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
-    dataKey: getSectionFromDataKey(resolveDataKey({ projectId, section: 'build' })),
+  const { node } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ projectId, section: 'build' }),
   });
 
   const onValuesChange = () => {
@@ -83,7 +83,7 @@ export default function NewMEModelPage(props: Params) {
       projectId,
       name: values.name,
       description: values.description,
-      brainRegion: brainRegion?.data ?? node,
+      brainRegion: brainRegion?.data ?? (node as unknown as BrainRegionHierarchyBase),
     });
 
     const params = new URLSearchParams();
@@ -93,7 +93,6 @@ export default function NewMEModelPage(props: Params) {
       String(brainRegion?.data?.annotation_value ?? node?.annotation_value ?? '')
     );
     params.set(DEFAULT_BRAIN_REGION_QUERY_ID, brainRegion?.data?.id ?? node?.id ?? '');
-    params.set(DEFAULT_BRAIN_REGION_QUERY_NAME, brainRegion?.data?.name ?? node?.name ?? '');
 
     navigate(`new/configure?${params.toString()}`);
   };

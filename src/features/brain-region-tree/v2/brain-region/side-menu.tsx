@@ -21,7 +21,7 @@ type Props = {
 export default function TreeSideMenu({ dataKey }: Props) {
   const [isCollapsed, setIsCollapsed] = useAtom(brainRegionSidebarAtom);
   const onToggleCollapse = () => setIsCollapsed((prev) => !prev);
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
+  const { node } = useBrainRegionHierarchy({ dataKey });
   const result = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), [dataKey]));
   const nodeLabel = find(result?.options, (o) => o.data.id === node.id)?.label;
 
