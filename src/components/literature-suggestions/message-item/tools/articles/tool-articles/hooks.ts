@@ -17,7 +17,7 @@ function extractFromLiteratureSearch(message: UIMessage, articles: ScientificArt
   for (const { output } of invocations) {
     if (!isLiteratureSearchToolResult(output)) continue;
 
-    for (const item of output) {
+    for (const item of output.articles) {
       const article: ScientificArticle = {
         title: item.article_title,
         abstract: item.abstract ?? 'No abstract.',
