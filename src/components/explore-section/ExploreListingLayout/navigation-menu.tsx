@@ -3,16 +3,12 @@ import { CSSProperties, ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import { Menu, MenuProps } from 'antd';
 import { useAtomValue } from 'jotai';
-import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
-import {
-  DEFAULT_BRAIN_REGION_QUERY_ID,
-  useBrainRegionHierarchy,
-} from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
 import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { DataType } from '@/constants/explore-section/list-views';
-import { getSectionFromDataKey, resolveDataKey } from '@/utils/key-builder';
+import { resolveDataKey } from '@/utils/key-builder';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -34,7 +30,7 @@ type Props = {
 export default function NavigationMenu({ activePath, items, onClick }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const { node } = useBrainRegionHierarchy({
-    dataKey: getSectionFromDataKey(resolveDataKey({ section: 'explore', projectId })),
+    dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
   const { data, error } = useAtomValue(
     EntitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id })

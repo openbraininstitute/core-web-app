@@ -28,6 +28,10 @@ import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, getRandomIntInclusive } from '@/util/utils';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
+import {
+  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+} from '@/features/brain-region-tree/v2/brain-region/context';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import { SimulationType } from '@/types/virtual-lab/lab';
 import { OneshotSession } from '@/services/accounting';
@@ -41,13 +45,6 @@ import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import {
-  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-  DEFAULT_BRAIN_REGION_QUERY_ID,
-  DEFAULT_BRAIN_REGION_QUERY_NAME,
-  useBrainRegionHierarchy,
-} from '@/features/brain-region-tree/v2/brain-region/context';
-import { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
@@ -208,7 +205,6 @@ export default function SynaptomeConfigurationForm({
           notifySuccess(messages.CreationModelSucceed, 7, 'topRight');
           setLoading(false);
           const urlParams = new URLSearchParams();
-          urlParams.set(DEFAULT_BRAIN_REGION_QUERY_NAME, entity.brain_region.name);
           urlParams.set(DEFAULT_BRAIN_REGION_QUERY_ID, entity.brain_region.id);
           urlParams.set(
             DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,

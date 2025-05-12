@@ -14,6 +14,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { tryCatch } from '@/api/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { getSectionFromDataKey } from '@/utils/key-builder';
 
 type Props = {
   dataKey: string;
@@ -22,7 +23,6 @@ type Props = {
 export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = 'e3e70682-c209-4cac-a29f-6fbed82c07cd'; // this should be an env variable
 export const DEFAULT_SELECTED_BRAIN_REGION_ID = '4642cddb-4fbe-4aae-bbf7-0946d6ada066'; // this should be an env variable
 export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567; // this should be an env variable
-export const DEFAULT_SELECTED_BRAIN_REGION_NAME = 'Cerebrum'; // this should be an env variable
 export const DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE = 8; // this should be an env variable
 export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
@@ -87,20 +87,18 @@ export const brainRegionHierarchyAtom = atom(
  * getSectionFromDataKey to extract the right key for brain region used
  */
 export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
+  const key = getSectionFromDataKey(dataKey);
   const [brainRegionHierarchyFamily, updateLocalStorage] = useLocalStorage<{
     id: string;
-    name: string;
     annotation_value: number;
-  } | null>(dataKey, {
+  } | null>(key, {
     id: DEFAULT_SELECTED_BRAIN_REGION_ID,
-    name: DEFAULT_SELECTED_BRAIN_REGION_NAME,
     annotation_value: DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
   });
 
-  const [{ id, annotation_value, name }, setHierarchyConfig] = useQueryStates(
+  const [{ id, annotation_value }, setHierarchyConfig] = useQueryStates(
     {
       id: parseAsString.withDefault(brainRegionHierarchyFamily?.id ?? ''),
-      name: parseAsString.withDefault(brainRegionHierarchyFamily?.name ?? ''),
       annotation_value: parseAsInteger.withDefault(
         brainRegionHierarchyFamily?.annotation_value ?? 0
       ),
@@ -108,7 +106,6 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     {
       urlKeys: {
         id: DEFAULT_BRAIN_REGION_QUERY_ID,
-        name: DEFAULT_BRAIN_REGION_QUERY_NAME,
         annotation_value: DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
       },
       shallow: false,
@@ -120,14 +117,12 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   useEffect(() => {
     const url = new URL(window.location.href);
     const hasIdParam = url.searchParams.has(DEFAULT_BRAIN_REGION_QUERY_ID);
-    const hasNameParam = url.searchParams.has(DEFAULT_BRAIN_REGION_QUERY_NAME);
     const hasAnnotationValueParam = url.searchParams.has(
       DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE
     );
-    if (!hasIdParam || !hasNameParam || !hasAnnotationValueParam) {
+    if (!hasIdParam || !hasAnnotationValueParam) {
       setHierarchyConfig({
         id: id,
-        name: name,
         annotation_value: annotation_value,
       });
     }

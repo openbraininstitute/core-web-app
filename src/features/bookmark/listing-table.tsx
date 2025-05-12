@@ -11,7 +11,6 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-r
 import { sortStateAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { DataType } from '@/constants/explore-section/list-views';
@@ -33,7 +32,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   const { push: navigate } = useRouter();
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataKey) });
+  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
   const dataScope = ExploreDataScope.BookmarkedResources;
 
   const dataSource = useDataAtom<T>({

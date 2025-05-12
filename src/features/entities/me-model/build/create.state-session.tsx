@@ -1,7 +1,8 @@
-import { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { IEModel } from '@/api/entitycore/types/entities/e-model';
-import { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import { useSessionStorage } from '@/hooks/useSessionStorage';
+
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 export const useBuildMeModelSessionState = ({
   stateId,
@@ -17,7 +18,7 @@ export const useBuildMeModelSessionState = ({
     projectId: string;
     name?: string;
     description?: string;
-    brainRegion?: Partial<IBrainRegionHierarchy>;
+    brainRegion?: BrainRegionHierarchyBase;
     mmodel?: IReconstructionMorphology;
     emodel?: IEModel;
   }>(stateId, {

@@ -19,7 +19,7 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-r
 import { getSectionFromDataKey } from '@/utils/key-builder';
 
 export default function SimulationCampaignListView({ dataType }: { dataType: DataType }) {
-  const { node } = useBrainRegionHierarchy({ dataKey: getSectionFromDataKey(dataType) });
+  const { node } = useBrainRegionHierarchy({ dataKey: dataType });
   const activeColumns = useAtomValue(
     useMemo(() => unwrap(activeColumnsAtom({ dataType, key: dataType })), [dataType])
   );
