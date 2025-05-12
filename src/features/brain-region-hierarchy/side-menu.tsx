@@ -9,8 +9,7 @@ import {
   brainRegionHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
-} from '@/features/brain-region-tree/v2/brain-region/context';
-import { getSectionFromDataKey } from '@/utils/key-builder';
+} from '@/features/brain-region-hierarchy/context';
 import { BrainIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 

@@ -3,7 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { JSX, useState, useEffect } from 'react';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-tree/v2/brain-region/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';

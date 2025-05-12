@@ -2,7 +2,7 @@
 
 import { useAtomValue } from 'jotai';
 
-import TreeSideMenu from '@/features/brain-region-tree/v2/brain-region/side-menu';
+import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
@@ -12,7 +12,7 @@ import {
   brainRegionHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
-} from '@/features/brain-region-tree/v2/brain-region/context';
+} from '@/features/brain-region-hierarchy/context';
 import { classNames } from '@/util/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
