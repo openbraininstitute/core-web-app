@@ -1,21 +1,21 @@
-import { CloseIcon } from "@/components/icons";
+import { CloseIcon } from '@/components/icons';
 
 export default function HeaderDownloadModal({
-    setIsDownloadModalOpen,
+  handleCloseDownloadModal,
 }: {
-    setIsDownloadModalOpen: (isOpen: boolean) => void;
+  handleCloseDownloadModal: () => void;
 }) {
-    return (
-        <header className="w-full flex flex-row justify-between mb-8">
-            <div className="font-bold text-white text-lg">Download Files</div>
-            <button
-                type="button"
-                aria-label="Close download modal"
-                className="text-white text-lg"
-                onClick={() => setIsDownloadModalOpen(false)}
-                >
-                    <CloseIcon iconColor="white" className="h-4 w-4" />
-                </button>
-        </header>
-    );
+  return (
+    <header className="mb-8 flex w-full flex-row justify-between">
+      <div className="text-lg font-bold text-white">Download Files</div>
+      <button
+        type="button"
+        aria-label="Close download modal"
+        className="text-lg text-white"
+        onClick={() => handleCloseDownloadModal()}
+      >
+        <CloseIcon iconColor="white" className="h-4 w-4" />
+      </button>
+    </header>
+  );
 }

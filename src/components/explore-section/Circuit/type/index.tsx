@@ -119,8 +119,8 @@ export type NumericFilterOptions = {
 
 export type DownloadItemProps = {
   name: string;
-  children?: SingleSelectedDownloadableItemProps[]
-}
+  children?: SingleSelectedDownloadableItemProps[];
+};
 
 export type SingleSelectedDownloadableItemProps = {
   fileType: string;
@@ -129,4 +129,4 @@ export type SingleSelectedDownloadableItemProps = {
   url: string;
   description: string;
   size: number;
-}
+};

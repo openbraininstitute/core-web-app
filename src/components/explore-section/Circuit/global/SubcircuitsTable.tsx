@@ -1,50 +1,40 @@
 import { Table } from 'antd';
-import { ColumnsType, TableRowSelection } from 'antd/es/table/interface';
+import { ColumnsType } from 'antd/es/table/interface';
 import { Key } from 'react';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitSchemaProps } from '../type';
 
-import DownloadCircuitButton from './DownloadCircuitButton';
 import ResizableTitle from './ResizableTitle';
 
 import styles from './exploreCircuitTable.module.scss';
 
 export type SubcircuitsTableProps = {
   circuit: CircuitSchemaProps;
-  mergedColumns: ColumnsType<CircuitSchemaProps>;
-  rowSelection: TableRowSelection<CircuitSchemaProps>;
+  columns: ColumnsType<CircuitSchemaProps>;
   expandedRowKeys: Key[];
   downloadable: boolean;
   onExpand?: (expanded: boolean, row: CircuitSchemaProps) => void;
-  selectedRows: CircuitSchemaProps[];
-  selectedRowKeys: string[];
 };
 
 export default function SubcircuitTable({
   circuit,
-  mergedColumns,
-  rowSelection,
+  columns,
   expandedRowKeys,
   downloadable = true,
   onExpand,
-  selectedRows,
-  selectedRowKeys,
 }: SubcircuitsTableProps) {
   const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
     <SubcircuitTable
       circuit={subCircuit}
-      mergedColumns={mergedColumns}
-      rowSelection={rowSelection}
+      columns={columns}
       expandedRowKeys={expandedRowKeys}
       onExpand={onExpand}
       downloadable={downloadable}
-      selectedRows={selectedRows}
-      selectedRowKeys={selectedRowKeys}
     />
   );
 
-  const lastRow = selectedRows?.at(-1);
-  const fileUrl = lastRow?.files?.[0]?.url;
+  // const lastRow = selectedRows?.at(-1);
+  // const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
     <div className="relative flex flex-col">
@@ -61,16 +51,14 @@ export default function SubcircuitTable({
             '--ant-table-expand-icon-col-width': '0px',
           } as React.CSSProperties
         }
-        data-row-selection={downloadable && downloadable.toString()}
         components={{
           header: {
             cell: ResizableTitle,
           },
         }}
         dataSource={circuit.subcircuits || []}
-        columns={mergedColumns}
+        columns={columns}
         pagination={false}
-        rowSelection={downloadable ? rowSelection : undefined}
         expandable={{
           expandedRowRender: renderSubcircuits,
           expandedRowKeys,
@@ -79,9 +67,6 @@ export default function SubcircuitTable({
           rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
         }}
       />
-      {fileUrl && (
-        <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys || []} />
-      )}
     </div>
   );
 }

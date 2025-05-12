@@ -4,7 +4,7 @@ import { Key, SyntheticEvent } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
 import { CircuitSchemaProps } from '../type';
 
-import { ChevronRight } from '@/components/icons';
+import { ChevronRight, DownloadIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
 export type ResizableColumnType = ColumnType<CircuitSchemaProps> & {
@@ -18,10 +18,26 @@ const columns = (
   expandedRowKeys: Key | Key[],
   calculateSubcircuitsForParent: (row: CircuitSchemaProps) => number,
   handleExpandRow: (row: CircuitSchemaProps, index: number) => void,
-  handleResize: (key: string) => (e: SyntheticEvent, data: ResizeCallbackData) => void,
-  isCircuitDetailPage: boolean
+  isCircuitDetailPage: boolean,
+  handleOpenDownloadModal: (record: CircuitSchemaProps) => void
 ): ResizableColumnType[] => {
   return [
+    {
+      title: 'Download',
+      key: 'download',
+      width: 80,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => {
+        return (
+          <button
+            type="button"
+            aria-label="Open download modal"
+            onClick={() => handleOpenDownloadModal(record)}
+          >
+            <DownloadIcon iconColor="#003A8C" />
+          </button>
+        );
+      },
+    },
     {
       title: 'Name',
       key: 'name',
@@ -34,10 +50,6 @@ const columns = (
           </Link>
         );
       },
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 150,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
     {
       title: 'Subcircuits',
@@ -70,10 +82,6 @@ const columns = (
           </button>
         );
       },
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 120,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
     {
       title: 'Description',
@@ -82,10 +90,6 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="text-ellipsis whitespace-nowrap font-normal">{record.description}</div>
       ),
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 200,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
     {
       title: 'Brain region',
@@ -94,10 +98,6 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="whitespace-nowrap font-normal">{record.brainRegion}</div>
       ),
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 150,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
     {
       title: '# Neurons',
@@ -106,10 +106,6 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="whitespace-nowrap font-normal">{record.numberOfNeurons}</div>
       ),
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 150,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
     {
       title: 'Species',
@@ -118,10 +114,6 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="whitespace-nowrap font-normal">{record.species}</div>
       ),
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 150,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
     {
       title: 'Contributor',
@@ -130,10 +122,6 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="whitespace-nowrap font-normal">{record.metadata.contributorSimple}</div>
       ),
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 150,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
     {
       title: 'Registration date',
@@ -142,10 +130,6 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="whitespace-nowrap font-normal">{record.metadata.registrationDate}</div>
       ),
-      onHeaderCell: (column: ColumnType<CircuitSchemaProps>) => ({
-        width: typeof column.width === 'number' ? column.width : 150,
-        onResize: handleResize(column.key as string) as any,
-      }),
     },
   ];
 };
