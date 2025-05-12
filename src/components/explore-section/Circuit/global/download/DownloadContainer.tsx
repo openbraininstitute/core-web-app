@@ -90,7 +90,7 @@ const [
 
 export function FullCircuitItem() {
   return (
-    <div className="mb-8 flex w-full flex-row justify-between border-b border-solid border-primary-7 pb-8">
+    <div className="flex w-full flex-row justify-between rounded-lg bg-primary-8 p-8 shadow-xl">
       <div className="w-3/4 hyphens-auto">
         <div className="text-xl font-bold uppercase tracking-wide text-white">
           Download full circuit
@@ -135,7 +135,9 @@ export default function DownloadContainer({
       <HeaderDownloadModal handleCloseDownloadModal={handleCloseDownloadModal} />
 
       <FullCircuitItem />
-
+      <div className="my-8 border-y border-solid border-primary-7 py-4 text-base font-bold text-primary-4">
+        Download components only
+      </div>
       <div className="flex w-full flex-col gap-y-12">
         {content.files.map((item: DownloadItemProps) => {
           let headerType: FileTypeHeaderProps | null = null;

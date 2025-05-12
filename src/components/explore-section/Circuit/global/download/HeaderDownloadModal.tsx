@@ -7,7 +7,7 @@ export default function HeaderDownloadModal({
 }) {
   return (
     <header className="mb-8 flex w-full flex-row justify-between">
-      <div className="text-lg font-bold text-primary-4">Download Files</div>
+      <div className="text-base font-bold text-primary-4">Download Files</div>
       <button
         type="button"
         aria-label="Close download modal"
