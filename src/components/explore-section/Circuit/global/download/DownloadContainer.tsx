@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { CircuitSchemaProps, DownloadItemProps, FileTypeHeaderProps } from '../../type';
 import DownloadItem from './DownloadItem';
 
+import { DownloadIcon } from '@/components/icons';
 import HeaderDownloadModal from './HeaderDownloadModal';
 
 const [
@@ -86,6 +88,34 @@ const [
   },
 ];
 
+export function FullCircuitItem() {
+
+  return (
+    <div className="flex w-full flex-row justify-between mb-8 pb-8 border-b border-solid border-primary-7">
+      <div className="w-3/4 hyphens-auto">
+        <div className="text-xl uppercase tracking-wide font-bold text-white">Download full circuit</div>
+        <p className="text-sm font-light text-primary-2 hyphens-auto leading-normal">
+          The complete circuit compressed in SONATA format, 
+          <a href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md" target='_blank' rel="noopener noreferrer" className="underline underline-offset-2">
+            {' '}see more here
+          </a>
+        </p>
+      </div>
+      <div className="flex flex-row gap-x-3 font-semibold text-primary-1">
+        <div>1.6 TB</div>
+        <div>h5</div>
+        <Link
+          href="#"
+          className="flex h-7 w-7 items-center justify-center border border-solid border-primary-6"
+          aria-label={`Download the full circuit`}
+        >
+          <DownloadIcon iconColor="white" />
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 export default function DownloadContainer({
   content,
   handleCloseDownloadModal,
@@ -106,6 +136,8 @@ export default function DownloadContainer({
       }}
     >
       <HeaderDownloadModal handleCloseDownloadModal={handleCloseDownloadModal} />
+
+        <FullCircuitItem />
 
       <div className="flex w-full flex-col gap-y-12">
         {content.files.map((item: DownloadItemProps) => {
