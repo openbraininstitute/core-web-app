@@ -190,7 +190,7 @@ export const launchSimulationAtom = atom<
     set,
     vlabId: string,
     projectId: string,
-    modelSelfUrl: string,
+    modelId: string,
     simulationType: SimulationType,
     duration: number
   ) => {
@@ -242,7 +242,7 @@ export const launchSimulationAtom = atom<
       const response = await runGenericSingleNeuronSimulation({
         vlabId,
         projectId,
-        modelUrl: modelSelfUrl,
+        modelId,
         token: session.accessToken,
         config: {
           recordFrom: recordFromUniq,
@@ -317,7 +317,7 @@ export const launchSimulationAtom = atom<
       captureException(error, {
         tags: { section: 'simulation', type: 'simulationType' },
         extra: {
-          modelSelfUrl,
+          modelId,
           config: {
             recordFrom: recordFromUniq,
             conditions: conditionsConfig,

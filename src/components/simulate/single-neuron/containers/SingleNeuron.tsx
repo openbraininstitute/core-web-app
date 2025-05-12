@@ -25,7 +25,7 @@ function SingleNeuron({ projectId, virtualLabId }: Props) {
       <SimulationConfiguration modelId={modelId} type={SIMULATION_TYPE} />
       <div className="fixed right-4 bottom-4 z-20 mt-auto">
         <SimulationButton
-          modelSelfUrl={modelId}
+          modelId={modelId}
           vLabId={virtualLabId}
           projectId={projectId}
           simulationType={SIMULATION_TYPE}

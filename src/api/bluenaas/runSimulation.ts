@@ -11,13 +11,13 @@ import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 export const runGenericSingleNeuronSimulation = async ({
   vlabId,
   projectId,
-  modelUrl,
+  modelId,
   token,
   config,
 }: {
   vlabId: string;
   projectId: string;
-  modelUrl: string;
+  modelId: string;
   token: string;
   config: {
     recordFrom: Array<RecordLocation>;
@@ -30,7 +30,7 @@ export const runGenericSingleNeuronSimulation = async ({
 }) => {
   const formattedConfig = convertObjectKeysToSnakeCase(config);
   return await fetch(
-    `${blueNaasUrl}/simulation/single-neuron/${vlabId}/${projectId}/run?model_id=${encodeURIComponent(modelUrl)}&realtime=True`,
+    `${blueNaasUrl}/entitycore/simulation/single-neuron/${vlabId}/${projectId}/run?model_id=${modelId}&realtime=True`,
     {
       method: 'post',
       headers: {

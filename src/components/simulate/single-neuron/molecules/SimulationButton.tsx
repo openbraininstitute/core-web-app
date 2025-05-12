@@ -22,14 +22,14 @@ import { PROTOCOL_DETAILS } from '@/constants/simulate/single-neuron';
 import useNotification from '@/hooks/notifications';
 
 type Props = {
-  modelSelfUrl: string;
+  modelId: string;
   vLabId: string;
   projectId: string;
   simulationType: SimulationType;
 };
 
 export default function SimulationButton({
-  modelSelfUrl,
+  modelId,
   vLabId,
   projectId,
   simulationType,
@@ -58,7 +58,7 @@ export default function SimulationButton({
     launchSimulation(
       vLabId,
       projectId,
-      modelSelfUrl,
+      modelId,
       simulationType,
       experimentalSetupConfig.maxTime ?? currentInjectionDuration
     );
@@ -66,7 +66,7 @@ export default function SimulationButton({
 
   const [saveSimulation, saveModalContext] = onCompleteSimulation({
     id: 'save-simulation',
-    modelSelfUrl,
+    modelId,
     vLabId,
     projectId,
     simulationType,

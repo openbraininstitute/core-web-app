@@ -20,7 +20,7 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
 
 export type Props = {
-  modelSelfUrl: string;
+  modelId:string;
   vLabId: string;
   projectId: string;
   simulationType: SimulationType;
@@ -33,7 +33,7 @@ type SimulationForm = {
 };
 
 export default function SaveSimulationModal({
-  modelSelfUrl,
+  modelId,
   vLabId,
   projectId,
   simulationType,
@@ -73,7 +73,7 @@ export default function SaveSimulationModal({
       const savedSimulation = await createSingleNeuronSimulation(
         name,
         description ?? '',
-        modelSelfUrl,
+        modelId,
         vLabId,
         projectId,
         simulationType
