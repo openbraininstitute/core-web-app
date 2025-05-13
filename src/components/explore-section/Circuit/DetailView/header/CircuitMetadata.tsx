@@ -8,7 +8,7 @@ export default function CircuitMetadata({ content }: { content: CircuitSchemaPro
         <ParameterBox name="Description" value={content.description} />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-4">
-        <ParameterBox name="Created by" value={content.metadata.contributorSimple || '–'} />
+        <ParameterBox name="Contributors" value={content.metadata.contributorSimple || '–'} />
 
         <ParameterBox name="Creation date" value={content.metadata.creationDate} />
       </div>
