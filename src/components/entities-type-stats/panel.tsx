@@ -37,7 +37,7 @@ type Props = {
 };
 
 function isEntityTypeCountProps(p: StatsPanelProps): p is EntityTypeCountProps {
-  return 'data' in p && 'error' in p;
+  return 'data' in p;
 }
 
 export function EntityTypeStats(props: StatsPanelProps) {

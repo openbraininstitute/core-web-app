@@ -62,7 +62,11 @@ const isListAtomEqual = (a: DataAtomBinding, b: DataAtomBinding): boolean => {
   );
 };
 
-export const pageNumberAtom = atomFamily((_key: string) => atom<number>(PAGE_NUMBER));
+export const pageNumberAtom = atomFamily((_key: string) => {
+  const childAtom = atom<number>(PAGE_NUMBER);
+  childAtom.debugLabel = `page-number/${_key}`;
+  return childAtom;
+});
 
 export const selectedRowsAtom = atomFamily(
   (_key: string) => atom<Array<any>>([]) // FIXME: get the right type
@@ -210,7 +214,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
   const childAtom = atom<Promise<EntityCoreResponse<T>>>(
     async (get): Promise<EntityCoreResponse<T>> => {
       const searchString = get(searchStringAtom(ctx.key));
-      const pageNumber = get(pageNumberAtom(ctx.key));
+      const pageNumber = get(pageNumberAtom(`${ctx.key}/${ctx.brainRegionId}`));
       const filters = await get(filtersAtom(ctx));
 
       // TODO: better handling when we have IDs filter

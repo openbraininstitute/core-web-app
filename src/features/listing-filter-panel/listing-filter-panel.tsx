@@ -196,7 +196,7 @@ export default function ListingFilterPanel({
       brainRegionId: node.id,
     })
   );
-  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
+  const setPageNumber = useSetAtom(pageNumberAtom(`${dataKey}/${node.id}`));
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
       () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey })),
