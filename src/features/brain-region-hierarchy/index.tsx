@@ -1,11 +1,13 @@
 'use client';
 
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 
 import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
+import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
+import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import {
   DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
@@ -24,12 +26,13 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
+  const setPageNumber = useSetAtom(pageNumberAtom(`${dataKey}/${node.id}`));
 
   if (!brainRegionHierarchyResult) {
     return (
       <div className="p-4 text-center text-yellow-600">
         <p className="text-lg font-semibold">
-          Brain region data processed, but the target node was not found or resulted in null.
+          Brain region data processed, but the target node was not found or result is null.
         </p>
       </div>
     );
@@ -38,6 +41,12 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const defaultBrainRegion = brainRegionHierarchyResult.options.find(
     (o) => o.data.annotation_value === DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE
   )?.value;
+
+  const onClick = (node: TTreeNode) => {
+    updateHierarchyConfig(node as IBrainRegionHierarchy);
+    scrollToNode(node as IBrainRegionHierarchy, 'center');
+    setPageNumber(PAGE_NUMBER);
+  };
 
   return (
     <div
@@ -72,10 +81,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
                   h: false,
                 }}
                 selectedNode={node as unknown as TTreeNode}
-                onClick={(node) => {
-                  updateHierarchyConfig(node as IBrainRegionHierarchy);
-                  scrollToNode(node as IBrainRegionHierarchy, 'center');
-                }}
+                onClick={onClick}
               />
             )}
           </div>

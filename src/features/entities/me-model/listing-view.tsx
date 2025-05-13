@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { ReactElement, ReactNode } from 'react';
 
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import dynamic from 'next/dynamic';
 
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -9,9 +9,17 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { resolveDataKey } from '@/utils/key-builder';
 import { detailUrlBuilder } from '@/util/common';
 
+import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
+
+const ExploreSectionListingView = dynamic(
+  () => import('@/components/explore-section/ExploreSectionListingView'),
+  {
+    ssr: false,
+  }
+) as (props: ExploreSectionListingViewProps<IMEModel>) => ReactElement | null;
 
 export default function ListingView({
   dataType,
@@ -37,7 +45,7 @@ export default function ListingView({
     entity,
   });
   return (
-    <ExploreSectionListingView<IMEModel>
+    <ExploreSectionListingView
       {...{
         dataKey,
         dataType,

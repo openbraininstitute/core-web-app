@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import isNil from 'lodash/isNil';
 
 function dispatchStorageEvent(key: string, newValue: string | null): void {
   window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
@@ -26,21 +27,40 @@ const useLocalStorageSubscribe = (callback: (event: StorageEvent) => void): (() 
   return () => window.removeEventListener('storage', callback);
 };
 
-const getLocalStorageServerSnapshot = (): never => {
-  throw new Error('useLocalStorage is a client-only hook');
-};
-
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | ((val: T) => T)) => void] {
   const getSnapshot = () => getLocalStorageItem(key);
 
-  const store = useSyncExternalStore(
-    useLocalStorageSubscribe,
-    getSnapshot,
-    getLocalStorageServerSnapshot
-  );
+  const getServerSnapshot = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return getLocalStorageItem(key);
+      } catch (e) {
+        console.warn(
+          'useLocalStorage: Error reading from localStorage on client during getServerSnapshot call',
+          e
+        );
+        return null;
+      }
+    }
+
+    if (isNil(initialValue)) {
+      return null;
+    }
+    try {
+      return JSON.stringify(initialValue);
+    } catch (error) {
+      console.warn(
+        `useLocalStorage: Non-JSON serializable initialValue for key "${key}" during SSR. Falling back to null snapshot.`,
+        error
+      );
+      return null;
+    }
+  }, [key, initialValue]);
+
+  const store = useSyncExternalStore(useLocalStorageSubscribe, getSnapshot, getServerSnapshot);
 
   const setState = useCallback(
     (v: T | ((val: T) => T)) => {

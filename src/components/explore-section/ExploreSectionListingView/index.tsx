@@ -17,12 +17,29 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/conte
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import type { WorkspaceContext } from '@/types/common';
+
+export interface Props<T extends EntityCoreIdentifiable> {
+  dataKey: string;
+  dataType: DataType;
+  dataScope: ExploreDataScope;
+  onCellClick?: OnCellClick<T>;
+  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
+  virtualLabInfo?: WorkspaceContext;
+  containerClass?: string;
+  tableClass?: string;
+  onRowsSelected?: (rows: Array<T>) => void;
+  selectionType?: RowSelectionType;
+  tableScrollable?: boolean;
+  controlsVisible?: boolean;
+  style?: Record<'background', string>;
+  showLoadingState?: boolean;
+  useBrainRegion?: boolean;
+}
 
 export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
   dataKey,
@@ -40,23 +57,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   tableClass = 'h-full overflow-y-hidden',
   showLoadingState = true,
   useBrainRegion = true,
-}: {
-  dataKey: string;
-  containerClass?: string;
-  tableClass?: string;
-  dataType: DataType;
-  dataScope: ExploreDataScope;
-  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
-  onRowsSelected?: (rows: Array<T>) => void;
-  onCellClick?: OnCellClick<T>;
-  selectionType?: RowSelectionType;
-  virtualLabInfo?: WorkspaceContext;
-  tableScrollable?: boolean;
-  controlsVisible?: boolean;
-  style?: Record<'background', string>;
-  showLoadingState?: boolean;
-  useBrainRegion?: boolean;
-}) {
+}: Props<T>) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
   const { node } = useBrainRegionHierarchy({ dataKey });

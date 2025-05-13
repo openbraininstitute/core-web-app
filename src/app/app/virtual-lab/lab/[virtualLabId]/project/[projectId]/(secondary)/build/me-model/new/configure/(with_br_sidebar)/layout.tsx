@@ -5,8 +5,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai';
 import dynamic from 'next/dynamic';
 import ErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
-// import BrainRegionsTree from '@/features/brain-region-tree';
-// import BrainRegionsTree from '@/features/brain-region-tree/v2/brain-region';
+
 import { resolveDataKey } from '@/utils/key-builder';
 import { sectionAtom } from '@/state/application';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -14,7 +13,7 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 type GenericLayoutProps = ServerSideComponentProp<WorkspaceContext, null> & {
   children: ReactNode;
 };
-const BrainRegionsTree = dynamic(() => import('@/features/brain-region-hierarchy'), {
+const BrainRegionsHierarchy = dynamic(() => import('@/features/brain-region-hierarchy'), {
   ssr: false,
 });
 export default function BuildMEModelLayout({ params, children }: GenericLayoutProps) {
@@ -30,7 +29,7 @@ export default function BuildMEModelLayout({ params, children }: GenericLayoutPr
           showButtons: false,
         })}
       >
-        <BrainRegionsTree dataKey={dataKey} />
+        <BrainRegionsHierarchy dataKey={dataKey} />
       </ErrorBoundary>
 
       <div className="flex flex-col">

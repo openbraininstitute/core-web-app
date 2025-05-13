@@ -41,7 +41,7 @@ export function useLoadMore<T>(
 ) {
   const { node } = useBrainRegionHierarchy({ dataKey: key });
 
-  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
+  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(`${key}/${node.id}`));
   const setPrevData = useSetAtom(
     previousDataAtom({ ...dataContext, brainRegionId: useBrainRegion ? node.id : undefined, key })
   );
