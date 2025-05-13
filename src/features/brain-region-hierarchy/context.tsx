@@ -148,7 +148,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   };
 
   return {
-    node: { id, name, annotation_value },
+    node: { id, annotation_value },
     updateHierarchyConfig,
   };
 };
