@@ -1,6 +1,6 @@
 'use client';
 
-import CircuitTable from '../../../global/CircuitTable';
+import CircuitTable from '../../../global/circuit-table';
 import { CircuitSchemaProps } from '../../../type';
 import SubtitleBar from '../global/SubtitleBar';
 

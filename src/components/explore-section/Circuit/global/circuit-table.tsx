@@ -7,10 +7,10 @@ import { circuitMatchFilter } from '../utils/circuits-match-filter';
 import collectExpandableKeys from '../utils/collectExpandableKeys';
 
 import columns from './Columns';
-import SubcircuitTable from './SubcircuitsTable';
-import DownloadContainer from './download/DownloadContainer';
+import DownloadContainer from './download/download-container';
+import SubcircuitTable from './subcircuit-table';
 
-import NumericFilters from './NumericFilters';
+import NumericFilters from './numeric-filter';
 
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
@@ -121,11 +121,6 @@ export default function CircuitTable({
         <div className="tableAndButton">
           <Table
             className={styles.circuitTable}
-            style={
-              {
-                '--ant-table-expand-icon-col-width': '0px',
-              } as React.CSSProperties
-            }
             dataSource={data}
             columns={columns(
               expandedRowKeys,

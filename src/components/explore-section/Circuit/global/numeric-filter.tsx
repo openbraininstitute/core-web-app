@@ -57,7 +57,6 @@ export default function NumericFilters({
         max: localMax,
       };
       onFilterChange(newFilter);
-      // Sync parent state with applied values
       onMinChange(localMin);
       onMaxChange(localMax);
     }

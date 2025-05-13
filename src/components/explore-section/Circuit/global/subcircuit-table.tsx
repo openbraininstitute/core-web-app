@@ -51,11 +51,6 @@ export default function SubcircuitTable({
       </div>
       <Table
         className={styles.circuitTable}
-        style={
-          {
-            '--ant-table-expand-icon-col-width': '0px',
-          } as React.CSSProperties
-        }
         dataSource={circuit.subcircuits || []}
         columns={columns}
         pagination={false}

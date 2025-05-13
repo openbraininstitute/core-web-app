@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { CircuitSchemaProps, DownloadItemProps, FileTypeHeaderProps } from '../../type';
-import DownloadItem from './DownloadItem';
-import HeaderDownloadModal from './HeaderDownloadModal';
+import DownloadItem from './download-item';
+import HeaderDownloadModal from './header-download-modal';
 
 import fileTypeDescriptions from '@/components/explore-section/Constant/file-type-descriptions';
 import { DownloadIcon } from '@/components/icons';
