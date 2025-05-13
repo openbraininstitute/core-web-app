@@ -20,7 +20,8 @@ const columns = (
   calculateSubcircuitsForParent: (row: CircuitSchemaProps) => number,
   handleExpandRow: (row: CircuitSchemaProps, index: number) => void,
   isCircuitDetailPage: boolean,
-  handleOpenDownloadModal: (record: CircuitSchemaProps) => void
+  handleOpenDownloadModal: (record: CircuitSchemaProps) => void,
+  toggle: 'hierarchical' | 'flat'
 ): ResizableColumnType[] => {
   return [
     {
@@ -75,7 +76,7 @@ const columns = (
             disabled={!record.hasSubcircuits}
           >
             <div className="relative mr-6 block whitespace-nowrap">{subcircuitCount}</div>
-            {record.subcircuits?.length !== 0 && (
+            {record.subcircuits?.length !== 0 && toggle === 'hierarchical' && (
               <ChevronRight
                 fill="#003A8C"
                 className={classNames(
