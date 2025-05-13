@@ -12,7 +12,7 @@ import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-ty
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import DataTypeTabs, {
   dataTabAtom,
-} from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
+} from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import DataTypeStatPanel from '@/components/entities-type-stats/panel';
 
 jest.mock('next/navigation', () => ({

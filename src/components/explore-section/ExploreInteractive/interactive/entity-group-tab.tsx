@@ -11,16 +11,10 @@ import {
   brainRegionHierarchyAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 
 enum DataTypeTabsEnum {
   'Experimental data' = 'experimental-data',
   'Model data' = 'model-data',
-  /**
-   * Daniela asked to remove it in this ticket:
-   * https://github.com/openbraininstitute/prod-explore-functionality/issues/47#issuecomment-2729269604
-   */
-  // 'Literature' = 'literature',
 }
 
 type DataTypeActiveTab = `${DataTypeTabsEnum}`;

@@ -50,6 +50,9 @@ export async function getTemporaryBrainRegionById({ id }: { id: string }) {
  * @param params - An object containing the name of the brain region hierarchy to fetch.
  * @param params.name - The name of the brain region hierarchy. Defaults to 'aibs'.
  * @returns A promise that resolves to the brain region hierarchy data.
+ *
+ * @remarks
+ * The result is cached with a cache name of 'brain-region-hierarchy' for 24 hours (86,400 seconds).
  */
 export async function getBrainRegionHierarchy({
   id = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,

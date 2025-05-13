@@ -1,10 +1,12 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
+import { LoadingOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-import SelectedBrainRegionMETypes from '@/components/explore-section/ExploreInteractive/SelectedBrainRegionMETypes';
-import DataTypeTabs from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
+import EntityGroupTabs from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
+import CellCompositionExplorer from '@/features/cell-composition/elements/cell-composition-explorer';
 import EntityTypeStatsPanel from '@/components/entities-type-stats/panel';
 import ThreeDeeBrain from '@/components/ThreeDeeBrain';
 
@@ -25,14 +27,29 @@ export default function ExploreInteractivePanel() {
           className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px_repeat(4,1fr)_minmax(80px,max-content)] gap-y-4"
         >
           <div id="interactive-header" style={{ gridArea: '1 / 1 / 2 / 6' }}>
-            <DataTypeTabs dataKey={dataKey} />
+            <EntityGroupTabs dataKey={dataKey} />
           </div>
           <div
             id="neurons-panel"
             className="relative mr-2 ml-4 rounded-md"
             style={{ gridArea: '2 / 1 / 6 / 3' }}
           >
-            <SelectedBrainRegionMETypes />
+            <ErrorBoundary
+              FallbackComponent={withErrorConfig({
+                customError: 'failed to load cell composition',
+                showButtons: false,
+              })}
+            >
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center">
+                    <LoadingOutlined className="text-white" />
+                  </div>
+                }
+              >
+                <CellCompositionExplorer />
+              </Suspense>
+            </ErrorBoundary>
           </div>
           <div
             id="3d-area"

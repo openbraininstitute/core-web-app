@@ -10,12 +10,14 @@ import {
   renameKeyDeep,
 } from '@/components/tree/elements/helpers';
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
 import { tryCatch } from '@/api/utils';
 import { env } from '@/env';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { IBrainRegionLeaves } from '@/features/brain-region-hierarchy/helpers';
 
 type Props = {
   dataKey: string;
@@ -40,6 +42,7 @@ type BrainRegionHierarchyAtomReturnType = {
   root: IBrainRegionHierarchy;
   nodes: IBrainRegionHierarchy | null;
   options: Array<BrainRegionHierarchyOption>;
+  leaves: Array<IBrainRegionLeaves>;
 } | null;
 
 export const brainRegionSidebarAtom = atom(false);
@@ -63,6 +66,7 @@ export const brainRegionHierarchyAtom = atom(
       return null;
     }
     let options: Array<BrainRegionHierarchyOption> = [];
+    let leaves: Array<IBrainRegionLeaves> = [];
     const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color');
     if (nodes) {
       options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map((region) => ({
@@ -70,9 +74,10 @@ export const brainRegionHierarchyAtom = atom(
         label: `${region.name}`,
         data: region,
       }));
+      leaves = getLeavesForEachRegion(root);
     }
 
-    return { root, nodes, options };
+    return { root, nodes, options, leaves };
   }
 );
 
