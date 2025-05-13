@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { CircuitSchemaProps } from '../../type';
 
-import SectionContentBlock from './SectionContentBlock';
-import SectionTabs from './SectionTabs';
+import SectionContentBlock from './section-content-bloc';
+import SectionTabs from './section-tabs';
 
 export default function SectionMainContainer({
   content,

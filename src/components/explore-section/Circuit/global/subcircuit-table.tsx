@@ -1,10 +1,12 @@
+'use client';
+
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table/interface';
 import { Key } from 'react';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-import { CircuitSchemaProps } from '../type';
+import { CircuitSchemaProps, NumericFilterOptions } from '../type';
 
-import ResizableTitle from './ResizableTitle';
+import { circuitMatchFilter } from '../utils/circuits-match-filter';
 
 import styles from './exploreCircuitTable.module.scss';
 
@@ -12,16 +14,20 @@ export type SubcircuitsTableProps = {
   circuit: CircuitSchemaProps;
   columns: ColumnsType<CircuitSchemaProps>;
   expandedRowKeys: Key[];
-  downloadable: boolean;
   onExpand?: (expanded: boolean, row: CircuitSchemaProps) => void;
+  numericFilter: NumericFilterOptions | null;
+  minValue: number | undefined;
+  maxValue: number | undefined;
 };
 
 export default function SubcircuitTable({
   circuit,
   columns,
   expandedRowKeys,
-  downloadable = true,
   onExpand,
+  numericFilter,
+  minValue,
+  maxValue,
 }: SubcircuitsTableProps) {
   const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
     <SubcircuitTable
@@ -29,12 +35,11 @@ export default function SubcircuitTable({
       columns={columns}
       expandedRowKeys={expandedRowKeys}
       onExpand={onExpand}
-      downloadable={downloadable}
+      numericFilter={numericFilter}
+      minValue={minValue}
+      maxValue={maxValue}
     />
   );
-
-  // const lastRow = selectedRows?.at(-1);
-  // const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
     <div className="relative flex flex-col">
@@ -46,16 +51,6 @@ export default function SubcircuitTable({
       </div>
       <Table
         className={styles.circuitTable}
-        style={
-          {
-            '--ant-table-expand-icon-col-width': '0px',
-          } as React.CSSProperties
-        }
-        components={{
-          header: {
-            cell: ResizableTitle,
-          },
-        }}
         dataSource={circuit.subcircuits || []}
         columns={columns}
         pagination={false}
@@ -66,6 +61,11 @@ export default function SubcircuitTable({
           expandIcon: () => null,
           rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
         }}
+        rowClassName={(record) =>
+          circuitMatchFilter(record, numericFilter, minValue, maxValue)
+            ? styles.matchingRow
+            : styles.nonMatchingRow
+        }
       />
     </div>
   );

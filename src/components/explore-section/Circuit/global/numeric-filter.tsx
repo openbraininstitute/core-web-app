@@ -57,7 +57,6 @@ export default function NumericFilters({
         max: localMax,
       };
       onFilterChange(newFilter);
-      // Sync parent state with applied values
       onMinChange(localMin);
       onMaxChange(localMax);
     }
@@ -82,9 +81,9 @@ export default function NumericFilters({
         value={localProperty}
         onChange={handlePropertyChange}
       >
-        <Option value="neurons"># of Neurons</Option>
-        <Option value="connections"># of Connections</Option>
-        <Option value="synapses"># of Synapses</Option>
+        <Option value="numberOfNeurons"># of Neurons</Option>
+        <Option value="numberOfConnections"># of Connections</Option>
+        <Option value="numberOfSynapses"># of Synapses</Option>
       </Select>
       <Select
         className="mr-2 w-[150px]"

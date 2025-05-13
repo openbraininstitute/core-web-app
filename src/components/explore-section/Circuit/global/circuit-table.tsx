@@ -1,34 +1,26 @@
 import { Table } from 'antd';
 import { usePathname } from 'next/navigation';
-import { Key, ReactNode, useCallback, useState } from 'react';
-import { CircuitSchemaProps } from '../type';
+import { Key, useCallback, useEffect, useState } from 'react';
+import { CircuitSchemaProps, NumericFilterOptions } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
+import { circuitMatchFilter } from '../utils/circuits-match-filter';
+import collectExpandableKeys from '../utils/collectExpandableKeys';
+
 import columns from './Columns';
-import SubcircuitTable from './SubcircuitsTable';
-import DownloadContainer from './download/DownloadContainer';
+import DownloadContainer from './download/download-container';
+import SubcircuitTable from './subcircuit-table';
+
+import NumericFilters from './numeric-filter';
 
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
 
-export type CustomRowProps = {
-  circuit?: CircuitSchemaProps;
-  children: ReactNode;
-  record?: CircuitSchemaProps;
-  handleExpandRow: (expanded: boolean, record: CircuitSchemaProps) => void;
-  expandedRowKeys: Key[];
-  className?: string;
-  style?: React.CSSProperties;
-  'data-row-key'?: string;
-};
-
 export default function CircuitTable({
   data,
-  downloadable = true,
-  // hasSearch = true,
+  hasSearch = true,
 }: {
   data: CircuitSchemaProps[];
-  downloadable?: boolean;
-  // hasSearch?: boolean;
+  hasSearch?: boolean;
 }) {
   const [circuitToDownload, setCircuitToDownload] = useState<CircuitSchemaProps | null>(null);
   const [downloadModalOpen, SetDownloadModalOpen] = useState<boolean>(false);
@@ -37,11 +29,18 @@ export default function CircuitTable({
 
   // FILTERING
   // const [searchQuery, setSearchQuery] = useState<string>('');
-  // const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
-  // const [minValue, setMinValue] = useState<number | undefined>(undefined);
-  // const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
+  const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
+  const [minValue, setMinValue] = useState<number | undefined>(undefined);
+  const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
-  // const filteredData = useFilteredData(data, { searchQuery, numericFilter });
+  useEffect(() => {
+    if (numericFilter) {
+      const expandableKeys = collectExpandableKeys(data);
+      setExpandedRowKeys(expandableKeys);
+    } else {
+      setExpandedRowKeys([]);
+    }
+  }, [numericFilter, data]);
 
   const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
     const rowKey = row.key;
@@ -86,27 +85,28 @@ export default function CircuitTable({
           circuit={circuit}
           expandedRowKeys={expandedRowKeys}
           onExpand={handleExpandRow}
-          downloadable={downloadable}
+          numericFilter={numericFilter} // Pass filter props
+          minValue={minValue}
+          maxValue={maxValue}
         />
       ) : null,
     [
       expandedRowKeys,
       handleExpandRow,
-      downloadable,
       handleOpenDownloadModal,
       handleRowExpandClick,
       isCircuitDetailPage,
+      numericFilter,
+      minValue,
+      maxValue,
     ]
   );
 
-  // const lastRow: CircuitSchemaProps | undefined = selectedRows.at(-1);
-  // const fileUrl = lastRow?.files?.[0]?.url;
-
   return (
     <div className="relative flex w-full flex-col">
-      {/* {hasSearch && (
+      {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
-          <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+          {/* <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} /> */}
           <NumericFilters
             filter={numericFilter}
             minValue={minValue}
@@ -116,16 +116,11 @@ export default function CircuitTable({
             onMaxChange={setMaxValue}
           />
         </div>
-      )} */}
+      )}
       <div className="relative w-full overflow-x-scroll">
         <div className="tableAndButton">
           <Table
             className={styles.circuitTable}
-            style={
-              {
-                '--ant-table-expand-icon-col-width': '0px',
-              } as React.CSSProperties
-            }
             dataSource={data}
             columns={columns(
               expandedRowKeys,
@@ -142,8 +137,12 @@ export default function CircuitTable({
               expandIcon: () => null,
               rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
             }}
+            rowClassName={(record) =>
+              circuitMatchFilter(record, numericFilter, minValue, maxValue)
+                ? styles.matchingRow
+                : styles.nonMatchingRow
+            }
           />
-          {/* {fileUrl && <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys} />} */}
         </div>
         <>
           <div

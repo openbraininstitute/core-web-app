@@ -4,8 +4,8 @@ import { useSetAtom } from 'jotai';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import HeaderDetailView from './HeaderDetailView';
-import SectionMainContainer from './sections/SectionMainContainer';
+import HeaderDetailView from './header-detail-view';
+import SectionMainContainer from './sections/section-main-container';
 import Visualiser from './visualisation/Visualiser';
 
 import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';

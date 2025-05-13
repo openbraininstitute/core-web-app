@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { CircuitSchemaProps, DownloadItemProps, FileTypeHeaderProps } from '../../type';
-import DownloadItem from './DownloadItem';
-import HeaderDownloadModal from './HeaderDownloadModal';
+import DownloadItem from './download-item';
+import HeaderDownloadModal from './header-download-modal';
 
 import fileTypeDescriptions from '@/components/explore-section/Constant/file-type-descriptions';
 import { DownloadIcon } from '@/components/icons';
@@ -25,7 +25,7 @@ export function FullCircuitItem({ content }: { content: DownloadItemProps }) {
         <p className="hyphens-auto text-sm font-light leading-normal text-primary-2">
           The complete circuit compressed in SONATA format,
           <a
-            href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md"
+            href="https://sonata-extension.readthedocs.io/en/latest/"
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2"
