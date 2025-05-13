@@ -6,6 +6,7 @@ import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { ISingleNeuronSimulation } from './entities/single-neuron-simulation';
 
 export type * from '@/api/entitycore/types/entity-type';
 
@@ -18,6 +19,7 @@ export {
   ISingleNeuronSynaptome,
   IMEModel,
   IEModel,
+  ISingleNeuronSimulation,
 };
 
 export type EntityCoreDensityObjectTypes =
@@ -33,4 +35,5 @@ export type EntityCoreObjectTypes =
   | IElectricalCellRecording
   | ISingleNeuronSynaptome
   | IMEModel
-  | IEModel;
+  | IEModel
+  | ISingleNeuronSimulation;

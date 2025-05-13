@@ -26,7 +26,6 @@ import type {
   EtypeFilter,
 } from '@/api/entitycore/types/shared/request';
 import { INestedMEModel } from './me-model';
-import { inject } from 'vitest';
 
 export enum SingleNeuronSimulationStatus {
   started = 'started',

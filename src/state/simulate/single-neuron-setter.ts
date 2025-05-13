@@ -21,14 +21,7 @@ import { simulationExperimentalSetupAtom } from './categories/simulation-conditi
 import { currentInjectionSimulationConfigAtom } from './categories/current-injection-simulation';
 import { synaptomeSimulationConfigAtom } from './categories/synaptome-simulation-config';
 import { recordingSourceForSimulationAtom } from './categories/recording-source-for-simulation';
-import {
-  EntityCreation,
-  SingleNeuronSimulation,
-  SingleNeuronSimulationResource,
-  SynaptomeSimulation,
-} from '@/types/nexus';
-import { createJsonFileOnVlabProject, createResource, fetchResourceById } from '@/api/nexus';
-import { composeUrl, createDistribution, getIdFromSelfUrl } from '@/util/nexus';
+import { createJsonFileOnVlabProject } from '@/api/nexus';
 import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 
 import {
@@ -39,12 +32,15 @@ import {
 import { SimulationType } from '@/types/simulation/common';
 import { isJSON } from '@/util/utils';
 import { getSession } from '@/authFetch';
-import { nexus } from '@/config';
 import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/runSimulation';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import updateArray from '@/util/updateArray';
 import { getMEModel, createSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/entities/single-neuron-simulation';
+import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
+import { notification } from '@/api/notifications';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
 export const STIMULUS_PLOT_NAME = 'stimulus-plot';
@@ -95,13 +91,20 @@ export const createSingleNeuronSimulationAtom = atom(
       synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
     };
 
-    const meModel = await getMEModel({
-      id: modelId,
-      context: {
-        virtualLabId: vLabId,
-        projectId,
-      },
-    });
+    let meModel: IMEModel | null = null;
+
+    try {
+      meModel = await getMEModel({
+        id: modelId,
+        context: {
+          virtualLabId: vLabId,
+          projectId,
+        },
+      });
+    } catch (error) {
+      notification.error('Error fetching model');
+      return null;
+    }
 
     console.log('meModel', meModel);
 
@@ -170,37 +173,51 @@ export const createSingleNeuronSimulationAtom = atom(
     //   } as EntityCreation<SynaptomeSimulation>;
     // }
 
-    // export const CreateSingleNeuronSimulationSchema = z.object({
-    //   name: z.string(),
-    //   description: z.string(),
-    //   status: z.nativeEnum(SingleNeuronSimulationStatus),
-    //   seed: z.number().int(),
-    //   injectionLocation: z.array(z.string()),
-    //   recordingLocation: z.array(z.string()),
-    //   brain_region_id: z.string().uuid(),
-    //   me_model_id: z.string().uuid(),
-    // });
+    try {
+      const simulation = await createSingleNeuronSimulation({
+        body: {
+          name,
+          description,
+          status: SingleNeuronSimulationStatus.success,
+          seed: experimentalSetupConfig.seed,
+          injectionLocation: [singleNeuronSimulationConfig.currentInjection.injectTo],
+          recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
+            (r) => `${r.section}_${r.offset}`
+          ),
+          brain_region_id: meModel.brain_region.id,
+          me_model_id: meModel.id,
+        },
+        context: {
+          virtualLabId: vLabId,
+          projectId,
+        },
+      });
 
-    const simulation = await createSingleNeuronSimulation({
-      body: {
-        name,
-        description,
-        status: SingleNeuronSimulationStatus.success,
-        seed: 0,
-        injectionLocation: [singleNeuronSimulationConfig.currentInjection.injectTo],
-        recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
-          (r) => `${r.section}_${r.offset}`
-        ),
-        brain_region_id: meModel.brain_region.id,
-        me_model_id: meModel.id,
-      },
-      context: {
-        virtualLabId: vLabId,
-        projectId,
-      },
-    });
+      createJsonAsset({
+        ctx: {
+          virtualLabId: vLabId,
+          projectId,
+        },
+        entityType: SingleNeuronSimulation.type,
+        entityId: simulation.id,
+        path: `single-neuron-simulation-${simulation.id}.json`,
+        payload: {
+          simulation: Object.keys(simulationResult).reduce((prev, curr) => {
+            return {
+              ...prev,
+              [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
+            };
+          }, {}),
+          stimulus: convertObjectKeysToSnakeCase(stimulusResults),
+          config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
+        },
+      });
 
-    return simulation;
+      return simulation;
+    } catch (error) {
+      notification.error('Error creating simulation');
+      return null;
+    }
   }
 );
 
