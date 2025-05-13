@@ -77,27 +77,29 @@ function Profile({ data }: ProfileProps) {
             </Form.Item>
             <Form.Item name="country" className="space-y-1" label={<Label title="Country" />}>
               <Select
-                showSearch
-                id="country"
-                placeholder="Select a country"
-                className={classNames(
-                  'min-w-36 border-0 border-b !border-primary-4 ring-0 focus:!border-b-2 [&.ant-select-focused]:border-b-2',
-                  'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:!ring-0',
-                  '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:focus:!ring-0',
-                  '!bg-transparent hover:border-primary-4 hover:!bg-transparent [&_.ant-select-selection-item]:!text-white',
-                  '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-search-input]:!text-white',
-                  '[&_.ant-select-selection-placeholder]:!text-white'
-                )}
-                popupClassName="rounded-none shadow-md"
-                onSearch={(va) => {
-                  const countriesObject = countries.filter((o) =>
-                    o.name.toLowerCase().includes(va.toLowerCase())
-                  );
-                  return countriesObject.map((o) => ({ label: o.name, value: o.name }));
-                }}
-                options={countries.map((o) => ({
-                  label: o.name,
-                  value: o.name,
+              showSearch
+              id="country"
+              placeholder="Select a country"
+              className={classNames(
+                'min-w-36 border-0 border-b !border-primary-4 ring-0 focus:!border-b-2 [&.ant-select-focused]:border-b-2',
+                'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:!ring-0',
+                '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:focus:!ring-0',
+                '!bg-transparent hover:border-primary-4 hover:!bg-transparent [&_.ant-select-selection-item]:!text-white',
+                '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-search-input]:!text-white',
+                '[&_.ant-select-selection-placeholder]:!text-white'
+              )}
+              popupClassName="rounded-none shadow-md"
+              onSearch={(va) => {
+                const countriesObject = countries
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .filter((o) => o.name.toLowerCase().includes(va.toLowerCase()));
+                return countriesObject.map((o) => ({ label: o.name, value: o.name }));
+              }}
+              options={countries
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((o) => ({
+                label: o.name,
+                value: o.name,
                 }))}
               />
             </Form.Item>
