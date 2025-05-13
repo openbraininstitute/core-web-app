@@ -83,6 +83,22 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
   },
   [DataType.SingleNeuronSimulation]: {
-    columns: [],
+    title: 'Simulation',
+    group: DataTypeGroup.ModelData,
+    name: ModelTypeNames.SINGLE_NEURON_SIMULATION,
+    curated: false,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.CreationDate,
+      EntityCoreFields.SynaptomeUsedMEModelName,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.BrainRegion,
+      EntityCoreFields.SimulationSeed,
+      EntityCoreFields.InjectionLocation,
+      EntityCoreFields.RecordingLocation,
+      EntityCoreFields.SimulationStatus,
+      EntityCoreFields.SimulationResponse,
+      EntityCoreFields.SimulationStimulus,
+    ],
   },
 };

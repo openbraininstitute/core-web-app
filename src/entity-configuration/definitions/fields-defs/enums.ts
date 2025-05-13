@@ -53,6 +53,12 @@ export enum EntityCoreFields {
   SynaptomeUsedMEModelName = 'me_model',
   CreatedBy = 'createdBy',
   UpdatedBy = 'updatedBy',
+  SimulationSeed = 'simulation_seed',
+  InjectionLocation = 'injection_location',
+  RecordingLocation = 'recording_location',
+  SimulationStatus = 'simulation_status',
+  SimulationResponse = 'simulation_response',
+  SimulationStimulus = 'simulation_stimulus',
 }
 
 export type EntityCoreFieldsUnion = keyof typeof EntityCoreFields;

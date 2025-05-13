@@ -25,7 +25,7 @@ import type {
   MtypeFilter,
   EtypeFilter,
 } from '@/api/entitycore/types/shared/request';
-import { INestedMEModel } from './me-model';
+import { INestedMEModel, IMEModelFilter } from './me-model';
 
 export enum SingleNeuronSimulationStatus {
   started = 'started',
@@ -50,6 +50,14 @@ export interface ISingleNeuronSimulation
   me_model: INestedMEModel;
   type: EntityTypeEnum.SingleNeuronSimulation;
 }
+
+export interface ISingleNeuronSimulationFilter
+  extends ContributionFilter,
+    MtypeFilter,
+    EtypeFilter,
+    BrainRegionFilter,
+    SharedFilter,
+    IMEModelFilter {}
 
 export const CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),

@@ -54,6 +54,8 @@ export default function WithListingFilterPanel({
     )
   );
 
+  console.log('filters', filters);
+
   return (
     <>
       <section

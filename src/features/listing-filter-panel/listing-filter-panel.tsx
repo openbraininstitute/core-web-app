@@ -5,6 +5,7 @@ import {
   Dispatch,
   ReactNode,
   SetStateAction,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -196,19 +197,22 @@ export default function ListingFilterPanel({
 
   console.log('ᦨ #  listing-filter-panel.tsx:197 #  activeColumns:', activeColumns);
 
-  const onToggleActive = (key: string) => {
-    if (!activeColumns) return;
-    const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
+  const onToggleActive = useCallback(
+    (key: string) => {
+      if (!activeColumns) return;
+      const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
 
-    if (existingIndex === -1) {
-      setActiveColumns([...activeColumns, key]);
-    } else {
-      setActiveColumns([
-        ...activeColumns.slice(0, existingIndex),
-        ...activeColumns.slice(existingIndex + 1),
-      ]);
-    }
-  };
+      if (existingIndex === -1) {
+        setActiveColumns([...activeColumns, key]);
+      } else {
+        setActiveColumns([
+          ...activeColumns.slice(0, existingIndex),
+          ...activeColumns.slice(existingIndex + 1),
+        ]);
+      }
+    },
+    [activeColumns, setActiveColumns]
+  );
 
   useEffect(() => {
     const values: FilterValues = {};

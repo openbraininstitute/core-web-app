@@ -1,11 +1,56 @@
-import {
-  TCreateSingleNeuronSimulation,
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
+import type {
+  ISingleNeuronSynaptome,
+  ISingleNeuronSynaptomeFilter,
+  TCreateSingleNeuronSymulation,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+
+import type {
   ISingleNeuronSimulation,
-} from '../../types/entities/single-neuron-simulation';
-import { entityCoreApi, getEntityCoreContext } from '../../utils';
+  TCreateSingleNeuronSimulation,
+  ISingleNeuronSimulationFilter
+} from '@/api/entitycore/types/entities/single-neuron-simulation';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/single-neuron-simulation';
+
+/**
+ * Retrieves a list of synaptomes data from the Entity Core API.
+ *
+ * @param params - The parameters for the API request.
+ * @param params.withFacets - Optional flag to include facets in the response.
+ * @param params.filters - Optional filters to apply to the synaptome data query.
+ * @param params.context - Optional workspace context for the API request.
+ *
+ * @returns A promise that resolves to the synaptome data for a single neuron.
+ *
+ * @throws Will throw an error if the API request fails.
+ */
+export async function getSingleNeuronSimulations({
+  withFacets,
+  filters,
+  context,
+}: {
+  withFacets?: boolean;
+  filters?: ISingleNeuronSimulationFilter;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.get<EntityCoreResponse<ISingleNeuronSimulation>>(baseUri, {
+    queryParams: {
+      ...filters,
+      with_facets: withFacets,
+    },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
 /**
  * Creates a new ME model in entity core API.
  *
