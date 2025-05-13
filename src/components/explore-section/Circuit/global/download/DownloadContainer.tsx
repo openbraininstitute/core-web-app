@@ -132,7 +132,10 @@ export default function DownloadContainer({
 }) {
   return (
     <div className="w-full">
-      <HeaderDownloadModal handleCloseDownloadModal={handleCloseDownloadModal} />
+      <HeaderDownloadModal
+        handleCloseDownloadModal={handleCloseDownloadModal}
+        content={content.files}
+      />
 
       <FullCircuitItem />
       <div className="my-8 border-y border-solid border-primary-7 py-4 text-base font-bold text-primary-4">
