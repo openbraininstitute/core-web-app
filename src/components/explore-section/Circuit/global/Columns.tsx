@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Key, SyntheticEvent } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
 import { CircuitSchemaProps } from '../type';
+import formatNumberWithComma from '../utils/format-number-with-comma';
 
 import { ChevronRight, DownloadIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
@@ -107,9 +108,31 @@ const columns = (
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
-      width: 130,
+      width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">{record.numberOfNeurons}</div>
+        <div className="whitespace-nowrap font-normal">
+          {formatNumberWithComma(record.numberOfNeurons)}
+        </div>
+      ),
+    },
+    {
+      title: '# Connections',
+      key: 'numberOfConnections',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="whitespace-nowrap font-normal">
+          {formatNumberWithComma(record.numberOfConnections)}
+        </div>
+      ),
+    },
+    {
+      title: '# Synapses',
+      key: 'numberOfSynapses',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="whitespace-nowrap font-normal">
+          {formatNumberWithComma(record.numberOfSynapses)}
+        </div>
       ),
     },
     {
