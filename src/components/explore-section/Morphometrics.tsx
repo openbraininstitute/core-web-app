@@ -1,19 +1,19 @@
 import { Divider } from 'antd';
 import startCase from 'lodash/startCase';
 import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
-import { sourceMorphoMetricsAtom } from '@/state/explore-section/generalization';
+import { measurementAnnotationsAtomFamily } from '@/state/explore-section/generalization';
 import { DataType } from '@/constants/explore-section/list-views';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
 export default function Morphometrics({
   dataType,
-  legacyId,
+  entityId,
 }: {
   dataType: DataType;
-  legacyId: string;
+  entityId: string;
 }) {
-  const metrics = useUnwrappedValue(sourceMorphoMetricsAtom(legacyId));
+  const metrics = useUnwrappedValue(measurementAnnotationsAtomFamily(entityId));
   const { filteredGroupedCardFields, renderMetric } = useMorphometrics(dataType, metrics, true);
 
   return (
@@ -24,22 +24,11 @@ export default function Morphometrics({
         {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
           <div key={group}>
             <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
-            {fields.map((field) => {
-              switch (group) {
-                case MorphoMetricCompartment.NeuronMorphology:
-                  return renderMetric(MorphoMetricCompartment.NeuronMorphology, field);
-                case MorphoMetricCompartment.ApicalDendrite:
-                  return renderMetric(MorphoMetricCompartment.ApicalDendrite, field);
-                case MorphoMetricCompartment.BasalDendrite:
-                  return renderMetric(MorphoMetricCompartment.BasalDendrite, field);
-                case MorphoMetricCompartment.Axon:
-                  return renderMetric(MorphoMetricCompartment.Axon, field);
-                case MorphoMetricCompartment.Soma:
-                  return renderMetric(MorphoMetricCompartment.Soma, field);
-                default:
-                  return null;
-              }
-            })}
+            {fields.map((field) =>
+              Object.keys(MorphoMetricCompartment).includes(group)
+                ? renderMetric(MorphoMetricCompartment.NeuronMorphology, field)
+                : null
+            )}
           </div>
         ))}
       </div>

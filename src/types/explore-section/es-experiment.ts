@@ -74,12 +74,13 @@ export type ReconstructedNeuronMorphology = ExperimentProps & {
   mType?: MType;
 };
 
+// TODO: this doesn't belong to ES types anymore, move it to a new file
 export enum MorphoMetricCompartment {
-  Axon = 'Axon',
-  Soma = 'Soma',
-  ApicalDendrite = 'ApicalDendrite',
-  BasalDendrite = 'BasalDendrite',
-  NeuronMorphology = 'NeuronMorphology',
+  Axon = 'axon',
+  Soma = 'soma',
+  ApicalDendrite = 'apical_dendrite',
+  BasalDendrite = 'basal_dendrite',
+  NeuronMorphology = 'neuron_morphology',
 }
 
 type MorphologyFeature = {

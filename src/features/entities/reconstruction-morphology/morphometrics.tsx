@@ -2,7 +2,7 @@ import { Divider } from 'antd';
 import startCase from 'lodash/startCase';
 
 import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
-import { sourceMorphoMetricsAtom } from '@/state/explore-section/generalization';
+import { measurementAnnotationsAtomFamily } from '@/state/explore-section/generalization';
 import { DetailType } from '@/constants/explore-section/fields-config/types';
 import { DataType } from '@/constants/explore-section/list-views';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
@@ -15,7 +15,7 @@ export default function Morphometrics({
   dataType: DataType;
   resource: DetailType;
 }) {
-  const metrics = useUnwrappedValue(sourceMorphoMetricsAtom(resource['@id']));
+  const metrics = useUnwrappedValue(measurementAnnotationsAtomFamily(resource['@id']));
   const { filteredGroupedCardFields, renderMetric } = useMorphometrics(dataType, metrics, true);
 
   return (
