@@ -4,22 +4,42 @@ export function circuitMatchFilter(
   circuit: CircuitSchemaProps,
   filter: NumericFilterOptions | null,
   minValue: number | undefined,
-  maxValue: number | undefined
+  maxValue: number | undefined,
+  searchQuery: string
 ): boolean {
-  if (!filter) return true;
+  let numericMatch = true;
 
-  const { property, type } = filter;
-  const value = circuit[property] as number;
+  if (filter) {
+    const { property, type } = filter;
+    const value = circuit[property];
 
-  if (type === 'greaterThan' && minValue !== undefined) {
-    return value > minValue;
-  }
-  if (type === 'lessThan' && maxValue !== undefined) {
-    return value < maxValue;
-  }
-  if (type === 'between' && minValue !== undefined && maxValue !== undefined) {
-    return value >= minValue && value <= maxValue;
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      numericMatch = false;
+    } else {
+      if (type === 'greaterThan' && minValue !== undefined) {
+        numericMatch = value > minValue;
+      }
+      if (type === 'lessThan' && maxValue !== undefined) {
+        numericMatch = value < maxValue;
+      }
+      if (type === 'between' && minValue !== undefined && maxValue !== undefined) {
+        numericMatch = value >= minValue && value <= maxValue;
+      }
+    }
   }
 
-  return true;
+  let searchMatch = true;
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+
+    searchMatch =
+      circuit.name?.toLowerCase().includes(query) ||
+      false ||
+      circuit.brainRegion?.toLowerCase().includes(query) ||
+      false ||
+      circuit.description?.toLowerCase().includes(query) ||
+      false;
+  }
+
+  return numericMatch && searchMatch;
 }
