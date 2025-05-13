@@ -22,11 +22,11 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
       allowedFacets: true,
       allowedParams: 'all',
     },
-    // query: {
-    //   list: getSingleNeuronSynaptomes,
-    //   one: getSingleNeuronSynaptome,
-    //   create: createSingleNeuronSynaptome,
-    // },
+    query: {
+      list: getSingleNeuronSynaptomes,
+      one: getSingleNeuronSynaptome,
+      create: createSingleNeuronSynaptome,
+    },
   },
   explore: {
     basePrefix: 'model',

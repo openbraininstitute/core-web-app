@@ -78,6 +78,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
   const dataType = SimulationScopeToDataType[selectedSimType];
+
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
 
   const generateDetailUrl = (selectedRow: ExploreESHit<ExploreResource>) => {

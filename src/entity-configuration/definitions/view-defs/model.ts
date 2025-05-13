@@ -82,4 +82,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.License, className: 'col-span-1' },
     ],
   },
+  [DataType.SingleNeuronSimulation]: {
+    columns: [],
+  },
 };

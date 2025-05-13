@@ -32,4 +32,5 @@ export const EntityCoreModelConfiguration = {
 export const EntityCoreConfiguration = {
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
+  SingleNeuronSimulation
 } as const;

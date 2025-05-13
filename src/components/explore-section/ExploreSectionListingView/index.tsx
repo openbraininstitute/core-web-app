@@ -54,6 +54,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   showLoadingState?: boolean;
 }) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
+
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
 
   const result = useLoadableValue(
