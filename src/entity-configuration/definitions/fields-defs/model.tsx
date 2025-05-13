@@ -119,14 +119,17 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SynaptomeUsedMEModelName]: {
     className: 'text-center',
     title: 'ME-model',
-    filter: null,
-    render: (r) => renderEmptyOrValue((r as ISingleNeuronSynaptome).me_model.name),
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => 'me_model' in r && r.me_model.name,
     vocabulary: {
       plural: 'ME-models',
       singular: 'ME-model',
     },
     style: { width: 184, align: 'left' },
+    isFilterable: true,
+    isDisplayable: true,
   },
+
   [EntityCoreFields.SimulationSeed]: {
     className: 'text-center',
     title: 'Seed',
@@ -137,6 +140,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Seed',
     },
     style: { width: 184, align: 'left' },
+    isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.InjectionLocation]: {
     className: 'text-center',
@@ -148,6 +153,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Injection location',
     },
     style: { width: 184, align: 'left' },
+    isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.RecordingLocation]: {
     className: 'text-center',
@@ -159,17 +166,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Recording location',
     },
     style: { width: 184, align: 'left' },
+    isFilterable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.SimulationStatus]: {
     className: 'text-center',
     title: 'Status',
-    filter: null,
+    filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => ('status' in r ? r.status : undefined),
     vocabulary: {
       plural: 'Statuses',
       singular: 'Status',
     },
     style: { width: 184, align: 'left' },
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.SimulationStimulus]: {
     className: 'text-center',
@@ -181,6 +192,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Stimulus',
     },
     style: { width: 184, align: 'left' },
+    isDisplayable: true,
+    isFilterable: false,
   },
   [EntityCoreFields.SimulationResponse]: {
     className: 'text-center',
@@ -192,5 +205,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Response',
     },
     style: { width: 184, align: 'left' },
+    isDisplayable: true,
+    isFilterable: false,
   },
 };
