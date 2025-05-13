@@ -8,6 +8,14 @@
   }
 }
 
+.nonMatchingRow {
+  opacity: 0.3;
+}
+
+.matchingRow {
+  opacity: 1;
+}
+
 .circuitTable th {
   width: auto !important;
 }

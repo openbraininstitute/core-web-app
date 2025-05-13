@@ -18,20 +18,20 @@ export default function RelatedCircuitsSection({
       {content.parent !== null && (
         <>
           <SubtitleBar title="Parent circuit" />
-          <CircuitTable data={parentCircuit ? [parentCircuit] : []} downloadable={false} />
+          <CircuitTable data={parentCircuit ? [parentCircuit] : []} />
         </>
       )}
       {content.subcircuits.length > 0 && (
         <>
           <SubtitleBar title={content.subcircuits.length > 1 ? 'Subcircuits' : 'Subcircuit'} />
-          <CircuitTable data={content.subcircuits} downloadable={false} />
+          <CircuitTable data={content.subcircuits} />
         </>
       )}
       {(derivedCircuits && derivedCircuits.length > 0) ||
         (derivedCircuits === null && (
           <>
             <SubtitleBar title="Derived from" />
-            <CircuitTable data={derivedCircuits || []} downloadable={false} />
+            <CircuitTable data={derivedCircuits || []} />
           </>
         ))}
     </div>

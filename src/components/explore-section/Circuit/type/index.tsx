@@ -102,7 +102,7 @@ export type InteractiveImageProps = {
   height: number;
 };
 
-export type NumericFilterProperty = 'neurons' | 'connections' | 'synapses';
+export type NumericFilterProperty = 'numberOfNeurons' | 'numberOfConnections' | 'numberOfSynapses';
 export type NumericFilterType = 'greaterThan' | 'lessThan' | 'between';
 
 export type FilterOptionsProps = {
