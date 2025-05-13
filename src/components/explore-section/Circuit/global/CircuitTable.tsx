@@ -40,7 +40,7 @@ export default function CircuitTable({
     } else {
       setExpandedRowKeys([]);
     }
-  }, [numericFilter, minValue, maxValue, data]);
+  }, [numericFilter, data]);
 
   const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
     const rowKey = row.key;
