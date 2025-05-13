@@ -73,7 +73,7 @@ export default function DownloadContainer({
       ) : (
         <div className="text-primary-2">Full circuit data is not available.</div>
       )}
-      <div className="my-8 border-y border-solid border-primary-7 py-4 text-base font-bold text-primary-4">
+      <div className="my-8 border-y border-solid border-primary-7 py-4 text-xl font-bold uppercase tracking-wide text-primary-4">
         Download components only
       </div>
       <div className="flex w-full flex-col gap-y-12">

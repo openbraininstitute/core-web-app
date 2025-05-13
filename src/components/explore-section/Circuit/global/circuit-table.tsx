@@ -11,6 +11,7 @@ import DownloadContainer from './download/download-container';
 import SubcircuitTable from './subcircuit-table';
 
 import NumericFilters from './numeric-filter';
+import SearchBar from './search-bar';
 
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
@@ -28,7 +29,7 @@ export default function CircuitTable({
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
 
   // FILTERING
-  // const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
@@ -88,6 +89,7 @@ export default function CircuitTable({
           numericFilter={numericFilter} // Pass filter props
           minValue={minValue}
           maxValue={maxValue}
+          searchQuery={searchQuery}
         />
       ) : null,
     [
@@ -99,6 +101,7 @@ export default function CircuitTable({
       numericFilter,
       minValue,
       maxValue,
+      searchQuery,
     ]
   );
 
@@ -106,7 +109,7 @@ export default function CircuitTable({
     <div className="relative flex w-full flex-col">
       {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
-          {/* <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} /> */}
+          <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
           <NumericFilters
             filter={numericFilter}
             minValue={minValue}
@@ -138,7 +141,7 @@ export default function CircuitTable({
               rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
             }}
             rowClassName={(record) =>
-              circuitMatchFilter(record, numericFilter, minValue, maxValue)
+              circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery)
                 ? styles.matchingRow
                 : styles.nonMatchingRow
             }
