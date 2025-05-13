@@ -63,7 +63,7 @@ export default function NumericFilters({
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 flex flex-row items-center">
       {filter && (
         <button
           className="mr-8 text-sm text-gray-500 hover:text-gray-700"

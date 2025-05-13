@@ -12,6 +12,7 @@ import SubcircuitTable from './subcircuit-table';
 
 import NumericFilters from './numeric-filter';
 import SearchBar from './search-bar';
+import ViewToggle from './ViewToggle';
 
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
@@ -33,6 +34,9 @@ export default function CircuitTable({
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
+
+  // VIEWS
+  const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
 
   useEffect(() => {
     if (numericFilter) {
@@ -110,14 +114,18 @@ export default function CircuitTable({
       {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-          <NumericFilters
-            filter={numericFilter}
-            minValue={minValue}
-            maxValue={maxValue}
-            onFilterChange={setNumericFilter}
-            onMinChange={setMinValue}
-            onMaxChange={setMaxValue}
-          />
+
+          <div className="relative flex flex-row items-center gap-x-4">
+            <ViewToggle toggle={toggle} setToggle={setToggle} />
+            <NumericFilters
+              filter={numericFilter}
+              minValue={minValue}
+              maxValue={maxValue}
+              onFilterChange={setNumericFilter}
+              onMinChange={setMinValue}
+              onMaxChange={setMaxValue}
+            />
+          </div>
         </div>
       )}
       <div className="relative w-full overflow-x-scroll">
