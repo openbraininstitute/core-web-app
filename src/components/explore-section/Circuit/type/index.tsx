@@ -50,12 +50,7 @@ export type CircuitSchemaProps = {
       url: string;
     } | null;
   };
-  files: {
-    kind: string;
-    url: string;
-    key: string;
-    isAvailable: boolean;
-  }[];
+  files: DownloadItemProps[];
   subcircuits: CircuitSchemaProps[];
 
   overview: {
@@ -120,4 +115,24 @@ export type NumericFilterOptions = {
   type: NumericFilterType;
   min?: number;
   max?: number;
+};
+
+export type DownloadItemProps = {
+  fileType: string;
+  children?: SingleSelectedDownloadableItemProps[];
+};
+
+export type SingleSelectedDownloadableItemProps = {
+  fileType: string;
+  extension: string;
+  name: string;
+  url: string;
+  description: string;
+  size: number;
+};
+
+export type FileTypeHeaderProps = {
+  name: string;
+  description: React.ReactNode;
+  extension: string;
 };
