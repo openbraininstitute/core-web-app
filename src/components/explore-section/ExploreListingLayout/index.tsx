@@ -8,6 +8,7 @@ import { Menu, type MenuProps } from 'antd';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
+import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
