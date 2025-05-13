@@ -13,7 +13,7 @@ import { ISingleNeuronSimulation } from '@/api/entitycore/types';
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
   group: 'models',
-  title: 'Synaptome',
+  title: 'Single Neuron Simulation',
   legacyType: DataType.SingleNeuronSimulation,
   type: EntityTypeEnum.SingleNeuronSimulation,
   slug: EntitySlug.SingleNeuronSimulation,

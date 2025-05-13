@@ -27,7 +27,6 @@ export const EntityCoreModelConfiguration = {
   Emodel,
   MEmodel,
   SingleNeuronSynaptome,
-  SingleNeuronSimulation,
 };
 
 export const EntityCoreConfiguration = {
