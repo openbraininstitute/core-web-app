@@ -5,6 +5,7 @@ import { CircuitSchemaProps, DownloadItemProps, FileTypeHeaderProps } from '../.
 import DownloadItem from './DownloadItem';
 import HeaderDownloadModal from './HeaderDownloadModal';
 
+import fileTypeDescriptions from '@/components/explore-section/Constant/file-type-descriptions';
 import { DownloadIcon } from '@/components/icons';
 
 const [
@@ -12,83 +13,9 @@ const [
   MORPHOLOGY_DESCRIPTION,
   NODE_DESCRIPTION,
   EDGE_DESCRIPTION,
-]: FileTypeHeaderProps[] = [
-  {
-    name: 'Connectivity Matrices',
-    description: (
-      <p className="w-3/4 text-base font-light text-primary-1">
-        The connectome, sparse connectivity matrix and node properties in Connectome Utilities
-        format.{' '}
-        <a
-          href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2"
-        >
-          See more here
-        </a>
-        .
-      </p>
-    ),
-    extension: 'h5',
-  },
-  {
-    name: 'Morphology',
-    description: (
-      <p className="w-3/4 text-base font-light text-primary-1">
-        The neuronal morphologies used in the circuit grouped in h5 containers.{' '}
-        <a
-          href="https://morphio.readthedocs.io/en/latest/python.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2"
-        >
-          See more here
-        </a>
-        .
-      </p>
-    ),
-    extension: 'h5',
-  },
-  {
-    name: 'Node files',
-    description: (
-      <p className="w-3/4 text-base font-light text-primary-1">
-        Files containing information on the population of neurons in the circuit.{' '}
-        <a
-          href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#neuron_networks_nodes"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2"
-        >
-          See more here
-        </a>
-        .
-      </p>
-    ),
-    extension: 'h5',
-  },
-  {
-    name: 'Edge files',
-    description: (
-      <p className="w-3/4 text-base font-light text-primary-1">
-        Files containing information on the connections between neurons in the circuit.{' '}
-        <a
-          href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#neuron_networks_edges"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2"
-        >
-          See more here
-        </a>
-        .
-      </p>
-    ),
-    extension: 'h5',
-  },
-];
+]: FileTypeHeaderProps[] = fileTypeDescriptions;
 
-export function FullCircuitItem() {
+export function FullCircuitItem({ content }: { content: DownloadItemProps }) {
   return (
     <div className="flex w-full flex-row justify-between rounded-lg bg-primary-8 p-8 shadow-xl">
       <div className="w-3/4 hyphens-auto">
@@ -109,10 +36,10 @@ export function FullCircuitItem() {
         </p>
       </div>
       <div className="flex flex-row gap-x-3 font-semibold text-primary-1">
-        <div>1.6 TB</div>
+        <div>{content.children?.[0]?.size || 'N/A'}</div>
         <div>h5</div>
         <Link
-          href="/"
+          href={content.children?.[0]?.url || '#'}
           className="flex h-7 w-7 items-center justify-center border border-solid border-primary-6"
           aria-label="Download the full circuit"
         >
@@ -130,6 +57,10 @@ export default function DownloadContainer({
   content: CircuitSchemaProps;
   handleCloseDownloadModal: () => void;
 }) {
+  const fullCircuitData = content.files.find(
+    (item: DownloadItemProps) => item.fileType === 'fullCircuit'
+  );
+
   return (
     <div className="w-full">
       <HeaderDownloadModal
@@ -137,32 +68,38 @@ export default function DownloadContainer({
         content={content.files}
       />
 
-      <FullCircuitItem />
+      {fullCircuitData ? (
+        <FullCircuitItem content={fullCircuitData} />
+      ) : (
+        <div className="text-primary-2">Full circuit data is not available.</div>
+      )}
       <div className="my-8 border-y border-solid border-primary-7 py-4 text-base font-bold text-primary-4">
         Download components only
       </div>
       <div className="flex w-full flex-col gap-y-12">
-        {content.files.map((item: DownloadItemProps) => {
-          let headerType: FileTypeHeaderProps | null = null;
+        {content.files
+          .filter((item: DownloadItemProps) => item.fileType !== 'fullCircuit')
+          .map((item: DownloadItemProps) => {
+            let headerType: FileTypeHeaderProps | null = null;
 
-          if (item.fileType === 'connectivityMatrix') {
-            headerType = CONNECTIVITY_DESCRIPTION;
-          } else if (item.fileType === 'morphology') {
-            headerType = MORPHOLOGY_DESCRIPTION;
-          } else if (item.fileType === 'nodes') {
-            headerType = NODE_DESCRIPTION;
-          } else if (item.fileType === 'edges') {
-            headerType = EDGE_DESCRIPTION;
-          }
+            if (item.fileType === 'connectivityMatrix') {
+              headerType = CONNECTIVITY_DESCRIPTION;
+            } else if (item.fileType === 'morphology') {
+              headerType = MORPHOLOGY_DESCRIPTION;
+            } else if (item.fileType === 'nodes') {
+              headerType = NODE_DESCRIPTION;
+            } else if (item.fileType === 'edges') {
+              headerType = EDGE_DESCRIPTION;
+            }
 
-          return (
-            <DownloadItem
-              key={item.fileType}
-              item={item}
-              header={headerType || { name: '', description: '', extension: '' }}
-            />
-          );
-        })}
+            return (
+              <DownloadItem
+                key={item.fileType}
+                item={item}
+                header={headerType || { name: '', description: '', extension: '' }}
+              />
+            );
+          })}
       </div>
     </div>
   );

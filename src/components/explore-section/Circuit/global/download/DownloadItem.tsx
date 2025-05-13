@@ -61,12 +61,18 @@ export default function DownloadItem({
         </div>
       </header>
       <div className="flex flex-col gap-y-6 border-l border-solid border-primary-7 pl-8">
-        {item.children?.map((childrenItem: SingleSelectedDownloadableItemProps) => (
-          <DownloadChildrenItem
-            childrenItem={childrenItem}
-            key={`downloading_item-${childrenItem.name}_${childrenItem.description}`}
-          />
-        ))}
+        {item.children?.length !== 0 ? (
+          item.children?.map((childrenItem: SingleSelectedDownloadableItemProps) => (
+            <DownloadChildrenItem
+              childrenItem={childrenItem}
+              key={`downloading_item-${childrenItem.name}_${childrenItem.description}`}
+            />
+          ))
+        ) : (
+          <div className="w-full border border-solid border-primary-7 p-8 text-base font-light text-primary-2">
+            No files available for this type.
+          </div>
+        )}
       </div>
     </div>
   );
