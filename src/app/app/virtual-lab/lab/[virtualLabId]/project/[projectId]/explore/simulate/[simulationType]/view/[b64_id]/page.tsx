@@ -20,6 +20,7 @@ import { DeltaResource } from '@/types/explore-section/resources';
 import { SingleNeuronSimulation, SynaptomeSimulation } from '@/types/nexus';
 import { MEModelResource } from '@/types/me-model';
 import { EModel, NeuronMorphology } from '@/types/e-model';
+import { usePathname } from 'next/navigation';
 
 type Props = {
   params: Promise<{
@@ -38,8 +39,10 @@ export type SimulationWithLinkedData = DeltaResource &
 
 export default function SimulationDetailPage(props: Props) {
   const params = use(props.params);
-  const info = useResourceInfoFromPath();
+  const modelId = usePathname().split('/').pop() as string;
   const setBackPath = useSetAtom(backToListPathAtom);
+
+  
 
   const { simulationResource, simulationConfig, meModel, synaptomeModel } = useSimulation({
     modelId: info.id,
@@ -50,9 +53,14 @@ export default function SimulationDetailPage(props: Props) {
 
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
   const baseBuildUrl = `${vlProjectUrl}/simulate`;
+
+
+
   useEffect(() => {
     setBackPath(baseBuildUrl);
   }, [baseBuildUrl, setBackPath]);
+
+  return null;
 
   if (!simulationResource) {
     return (

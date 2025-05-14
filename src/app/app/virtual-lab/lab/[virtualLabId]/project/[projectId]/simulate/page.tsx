@@ -13,7 +13,7 @@ import {
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64, detailUrlBuilder } from '@/util/common';
-import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
+import { ExploreESHit } from '@/types/explore-section/es';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import BookmarkButton from '@/features/bookmark/control';
 import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
@@ -34,9 +34,10 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.css';
 import { isSimulation } from '@/features/bookmark/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { ISingleNeuronSimulation } from '@/api/entitycore/types';
+import Styles from '@/styles/vlabs.module.css';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
   [SimulationType.SingleNeuron]: {
@@ -81,10 +82,10 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
 
-  const generateDetailUrl = (selectedRow: ExploreESHit<ExploreResource>) => {
+  const generateDetailUrl = (selectedRow: ISingleNeuronSimulation) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
     const baseBuildUrl = `${vlProjectUrl}/explore/simulate/${SimTypeURLParams[selectedSimType].view}/view`;
-    return `${baseBuildUrl}/${to64(`${virtualLabId}/${projectId}!/!${selectedRow._id}`)}`;
+    return `${baseBuildUrl}/${selectedRow.id}`;
   };
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
@@ -140,7 +141,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                     projectId={projectId}
                     entityId="" // TODO: fix it when whe have simulation data
                     // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
-                    resourceId={selectedRows[0]?._source['@id']}
+                    resourceId={selectedRows[0].id}
                     typeSlug={SIMULATION_DATA_TYPE_CONFIG[dataType].name}
                     customButton={customBookmarkButton}
                   />
