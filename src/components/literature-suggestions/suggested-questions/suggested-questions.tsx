@@ -14,7 +14,7 @@ export interface SuggestedQuestionsProps {
   /**
    * Suggestions depend on the current chat's thread.
    */
-  threadId: string
+  threadId: string;
   /**
    * When there is no message yet, we only use 1 generated suggestion and 2 hard-coded ones.
    * Otherwise, we use 3 generated suggestions.
