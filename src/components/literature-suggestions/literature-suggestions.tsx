@@ -20,7 +20,7 @@ export interface LiteratureSuggestionsProps {
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
   const [collapsedPanel, setCollapsedPanel] = React.useState(false);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
-  const [threadId, recreateThreadId, threadError] = useServiceAiAgentThread();
+  const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
   const { messages, clear, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
 
