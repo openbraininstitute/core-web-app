@@ -1,7 +1,6 @@
-import { TTreeNode } from '@/components/tree/types';
-import { Prettify } from '@/utils/type';
 import uniq from 'lodash/uniq';
-import { TreeItem } from 'performant-array-to-tree';
+
+import type { Prettify } from '@/utils/type';
 
 export const calculateNewExtendedNodeId = (
   extendedNodeId: string,
@@ -18,8 +17,6 @@ export const calculateNewExtendedNodeId = (
 };
 
 export type ICellCompositionRoot = {
-  version: number;
-  unitCode: { density: string };
   hasPart: { [key: string]: CellCompositionBrainRegion };
 };
 
@@ -273,6 +270,7 @@ export default async function resolveCellCompositions({
       totalCountPair = addCountPairs(totalCountPair, rootCountPair);
     }
   });
+
   const nodesArray: CalculatedCompositionNode[] = [];
   Object.entries(nodes).forEach(([nodeId, node]) => {
     nodesArray.push({

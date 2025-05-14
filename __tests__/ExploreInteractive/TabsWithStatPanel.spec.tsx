@@ -10,7 +10,7 @@ import { mockBrainRegions } from '__tests__/__utils__/SelectedBrainRegions';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
-import DataTypeTabs, {
+import EntityGroupTabs, {
   dataTabAtom,
 } from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import DataTypeStatPanel from '@/components/entities-type-stats/panel';
@@ -178,7 +178,7 @@ describe('SelectedBrainRegionPanel', () => {
         {mockBrainRegions.map((brainRegion) => (
           <VizButtons key={brainRegion.id} brainRegion={brainRegion} />
         ))}
-        <DataTypeTabs />
+        <EntityGroupTabs />
         <DataTypeStatPanel />
       </TestProvider>
     );

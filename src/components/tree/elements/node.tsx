@@ -45,8 +45,6 @@ function Node<TNode extends TTreeNode>({
   defaultColor,
   separator = true,
 }: NodeProps<TNode>) {
-  console.log('–– – node.tsx:49 – level:', level);
-
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedNode?.id === node.id;
   const hasChildren = Boolean(node.children && node.children.length > 0);

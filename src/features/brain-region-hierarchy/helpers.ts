@@ -30,7 +30,7 @@ export interface IBrainRegionLeaves {
  */
 function getLeafIds(region: IBrainRegionHierarchy): string[] {
   if (!region.children || region.children.length === 0) {
-    return [region.id]; // This region is a leaf
+    return [region.id];
   }
 
   let leaves: string[] = [];

@@ -20,7 +20,7 @@ const baseUri = '/cell-composition';
  */
 export async function getCellCompositionSummary(ctx?: WorkspaceContext) {
   const api = await entityCoreApi();
-  await sleep(30000);
+  // await sleep(30000);
   return await api.get<ICellCompositionRoot>(
     `${baseUri}`,
     { ...getEntityCoreContext(ctx) },

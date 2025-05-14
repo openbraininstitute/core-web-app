@@ -14,17 +14,18 @@ export default function DefaultNode<TNode extends TTreeNode>({
   hasChildren,
   onToggle,
   onClick,
-  defaultColor,
   subtitle,
   indentation,
-}: Props<TNode>) {
-  const color = 'color' in node ? node.color : defaultColor;
+  title,
+}: Props<TNode> & {
+  title?: string | undefined;
+}) {
   const nodeName = node.name;
 
   return (
     <div
       id={node.id.toString()}
-      title={nodeName}
+      title={title}
       aria-label={nodeName}
       className={classNames(
         'flex min-w-0 flex-1 cursor-default items-center transition-colors duration-200 ease-in-out',
@@ -45,12 +46,11 @@ export default function DefaultNode<TNode extends TTreeNode>({
                   isSelected ? 'text-primary-8' : 'text-[var(--color)]'
                 )}
                 onClick={onToggle}
-                style={{ '--color': `#${color}` } as CSSProperties}
               >
                 <CaretRightFilled
                   size={14}
                   className={classNames(
-                    'text-base text-current transition-transform duration-300 ease-in-out',
+                    'text-base text-gray-300 transition-transform duration-300 ease-in-out',
                     isExpanded ? 'rotate-90' : ''
                   )}
                 />
@@ -60,7 +60,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
         </div>
         {hasChildren && isExpanded && (
           <div
-            className="mt-2 font-light! text-gray-400"
+            className="mt-2 text-sm font-light! text-gray-400 uppercase"
             style={{ marginLeft: indentation?.size || 18 }}
           >
             E-Types

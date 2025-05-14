@@ -1,9 +1,7 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
-import { LoadingOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-import { Suspense } from 'react';
 
 import EntityGroupTabs from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import CellCompositionExplorer from '@/features/cell-composition/elements/cell-composition-explorer';
@@ -34,22 +32,7 @@ export default function ExploreInteractivePanel() {
             className="relative mr-2 ml-4 rounded-md"
             style={{ gridArea: '2 / 1 / 6 / 3' }}
           >
-            <ErrorBoundary
-              FallbackComponent={withErrorConfig({
-                customError: 'failed to load cell composition',
-                showButtons: false,
-              })}
-            >
-              <Suspense
-                fallback={
-                  <div className="flex h-full items-center justify-center">
-                    <LoadingOutlined className="text-white" />
-                  </div>
-                }
-              >
-                <CellCompositionExplorer />
-              </Suspense>
-            </ErrorBoundary>
+            <CellCompositionExplorer />
           </div>
           <div
             id="3d-area"

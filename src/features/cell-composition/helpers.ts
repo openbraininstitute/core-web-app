@@ -51,6 +51,7 @@ export const serializeBrainRegionsAndVolumes = (
         notation: brainRegionPayload.notation,
         leaves,
         representedInAnnotation: brainRegionPayload.representedInAnnotation,
+        volume: (brainRegionPayload.regionVolume?.value || 0) * 10 ** -9,
       });
       if (brainRegionPayload.regionVolume) {
         // retrieving region volume and converting it from cubic micrometer to cubic millimeter

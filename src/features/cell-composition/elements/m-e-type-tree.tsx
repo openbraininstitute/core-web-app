@@ -1,36 +1,56 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useAtomValue } from 'jotai';
 
 import Node from '@/features/cell-composition/elements/default-node';
 import Tree from '@/components/tree';
 
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
+import { cellCompositionAtom, annotationTypes } from '@/features/cell-composition/context';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { getMetric } from '@/components/build-section/BrainRegionSelector/util';
 import { metricToUnit } from '@/components/common/METypeHierarchy/MetricToUnit';
 import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
+import { resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
 
+import type { CompositionFormatted } from '@/features/cell-composition/parser';
 import type { DensityOrCount } from '@/features/cell-composition/types';
-import type {
-  CompositionFormatted,
-  ConstructedFullCellComposition,
-} from '@/features/cell-composition/parser';
 import type { RenderNodeProps } from '@/components/tree/types';
+import type { WorkspaceContext } from '@/types/common';
 
-type Props = {
-  composition: ConstructedFullCellComposition;
-  //   meTypesMetadata: Record<string, ClassNexus> | undefined | null;
-};
-
-export function METypeDetails({ composition }: Props) {
+export function METypeDetails() {
+  const { projectId } = useParams<WorkspaceContext>();
+  const { node } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: 'explore', projectId }),
+  });
   const [densityOrCount, setDensityOrCount] = useState<DensityOrCount>('count');
+  const composition = useAtomValue(
+    useMemo(() => cellCompositionAtom({ brainRegionId: node.id }), [node.id])
+  );
+
+  const annotations = useAtomValue(useMemo(() => annotationTypes, []));
+
+  if (!node) {
+    return null;
+  }
+
+  if (!composition.totalComposition.neuron) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-5 overflow-y-auto px-6 py-6">
+        No volume annotations available for this brain region
+      </div>
+    );
+  }
 
   const defaultNode = useCallback(
     (props: RenderNodeProps<CompositionFormatted>) => {
+      const annotation = annotations.find((o) => o.id === props.node.id);
       return (
         <Node<CompositionFormatted>
           {...props}
+          title={annotation?.alt_label ?? annotation?.definition}
           subtitle={({ node, props }) => {
-            console.log('–– – m-e-type-tree.tsx:48 – METypeDetails – props:', props);
             return (
               <div
                 className={classNames(

@@ -3,7 +3,6 @@
 import { useParams, usePathname } from 'next/navigation';
 import { memo, ReactNode, Suspense, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { useQueryState } from 'nuqs';
 import { match } from 'ts-pattern';
 import get from 'lodash/get';
 

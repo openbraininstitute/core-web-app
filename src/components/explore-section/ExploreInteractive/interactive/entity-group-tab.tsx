@@ -26,7 +26,7 @@ const DATA_TYPE_TABS = Object.keys(DataTypeTabsEnum).map((key) => ({
   label: key,
 }));
 
-export default function DataTypeTabs({ dataKey }: { dataKey: string }) {
+export default function EntityGroupTabs({ dataKey }: { dataKey: string }) {
   const [dataTypeActiveTab, setDataTypeTab] = useAtom(dataTabAtom);
   const { node } = useBrainRegionHierarchy({ dataKey });
   const result = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), [dataKey]));
