@@ -1,10 +1,11 @@
 import { Table } from 'antd';
 import { usePathname } from 'next/navigation';
-import { Key, useCallback, useEffect, useState } from 'react';
+import { Key, useCallback, useEffect, useMemo, useState } from 'react';
 import { CircuitSchemaProps, NumericFilterOptions } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
 import { circuitMatchFilter } from '../utils/circuits-match-filter';
 import collectExpandableKeys from '../utils/collectExpandableKeys';
+import { flattenCircuits } from '../utils/flatten-circuits';
 
 import columns from './Columns';
 import DownloadContainer from './download/download-container';
@@ -12,6 +13,7 @@ import SubcircuitTable from './subcircuit-table';
 
 import NumericFilters from './numeric-filter';
 import SearchBar from './search-bar';
+import ViewToggle from './ViewToggle';
 
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
@@ -33,6 +35,34 @@ export default function CircuitTable({
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
+
+  // VIEWS
+  const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
+
+  // DATA
+  const cleanedData = useMemo(
+    () =>
+      data.map((circuit: CircuitSchemaProps) => ({
+        ...circuit,
+        neurons:
+          typeof circuit.numberOfNeurons === 'number' && !Number.isNaN(circuit.numberOfNeurons)
+            ? circuit.numberOfNeurons
+            : 0,
+      })),
+    [data]
+  );
+
+  const flattenedData = useMemo(() => flattenCircuits(cleanedData), [cleanedData]);
+  const tableData = toggle === 'hierarchical' ? cleanedData : flattenedData;
+
+  useEffect(() => {
+    if (toggle === 'hierarchical' && (numericFilter || searchQuery)) {
+      const expandableKeys = collectExpandableKeys(cleanedData);
+      setExpandedRowKeys(expandableKeys);
+    } else {
+      setExpandedRowKeys([]);
+    }
+  }, [numericFilter, minValue, maxValue, searchQuery, cleanedData, toggle]);
 
   useEffect(() => {
     if (numericFilter) {
@@ -81,7 +111,8 @@ export default function CircuitTable({
             calculateSubcircuitsForParent,
             handleRowExpandClick,
             isCircuitDetailPage,
-            handleOpenDownloadModal
+            handleOpenDownloadModal,
+            toggle
           )}
           circuit={circuit}
           expandedRowKeys={expandedRowKeys}
@@ -102,6 +133,7 @@ export default function CircuitTable({
       minValue,
       maxValue,
       searchQuery,
+      toggle,
     ]
   );
 
@@ -110,36 +142,46 @@ export default function CircuitTable({
       {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-          <NumericFilters
-            filter={numericFilter}
-            minValue={minValue}
-            maxValue={maxValue}
-            onFilterChange={setNumericFilter}
-            onMinChange={setMinValue}
-            onMaxChange={setMaxValue}
-          />
+
+          <div className="relative flex flex-row items-center gap-x-8">
+            <ViewToggle toggle={toggle} setToggle={setToggle} />
+            <NumericFilters
+              filter={numericFilter}
+              minValue={minValue}
+              maxValue={maxValue}
+              onFilterChange={setNumericFilter}
+              onMinChange={setMinValue}
+              onMaxChange={setMaxValue}
+            />
+          </div>
         </div>
       )}
       <div className="relative w-full overflow-x-scroll">
         <div className="tableAndButton">
           <Table
             className={styles.circuitTable}
-            dataSource={data}
+            dataSource={tableData}
             columns={columns(
               expandedRowKeys,
               calculateSubcircuitsForParent,
               handleRowExpandClick,
               isCircuitDetailPage,
-              handleOpenDownloadModal
+              handleOpenDownloadModal,
+              toggle
             )}
             pagination={false}
-            expandable={{
-              expandedRowRender: renderSubcircuits,
-              expandedRowKeys,
-              onExpand: handleExpandRow,
-              expandIcon: () => null,
-              rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
-            }}
+            expandable={
+              toggle === 'hierarchical'
+                ? {
+                    expandedRowRender: renderSubcircuits,
+                    expandedRowKeys,
+                    onExpand: handleExpandRow,
+                    expandIcon: () => null,
+                    rowExpandable: (record) =>
+                      !!record.subcircuits && record.subcircuits.length > 0,
+                  }
+                : undefined
+            }
             rowClassName={(record) =>
               circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery)
                 ? styles.matchingRow

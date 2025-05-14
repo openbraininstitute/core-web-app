@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Key, SyntheticEvent } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
 import { CircuitSchemaProps } from '../type';
+import formatNumberWithComma from '../utils/format-number-with-comma';
 
 import { ChevronRight, DownloadIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
@@ -20,7 +21,8 @@ const columns = (
   calculateSubcircuitsForParent: (row: CircuitSchemaProps) => number,
   handleExpandRow: (row: CircuitSchemaProps, index: number) => void,
   isCircuitDetailPage: boolean,
-  handleOpenDownloadModal: (record: CircuitSchemaProps) => void
+  handleOpenDownloadModal: (record: CircuitSchemaProps) => void,
+  toggle: 'hierarchical' | 'flat'
 ): ResizableColumnType[] => {
   return [
     {
@@ -75,7 +77,7 @@ const columns = (
             disabled={!record.hasSubcircuits}
           >
             <div className="relative mr-6 block whitespace-nowrap">{subcircuitCount}</div>
-            {record.subcircuits?.length !== 0 && (
+            {record.subcircuits?.length !== 0 && toggle === 'hierarchical' && (
               <ChevronRight
                 fill="#003A8C"
                 className={classNames(
@@ -107,9 +109,31 @@ const columns = (
     {
       title: '# Neurons',
       key: 'numberOfNeurons',
-      width: 130,
+      width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">{record.numberOfNeurons}</div>
+        <div className="whitespace-nowrap font-normal">
+          {formatNumberWithComma(record.numberOfNeurons)}
+        </div>
+      ),
+    },
+    {
+      title: '# Connections',
+      key: 'numberOfConnections',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="whitespace-nowrap font-normal">
+          {formatNumberWithComma(record.numberOfConnections)}
+        </div>
+      ),
+    },
+    {
+      title: '# Synapses',
+      key: 'numberOfSynapses',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="whitespace-nowrap font-normal">
+          {formatNumberWithComma(record.numberOfSynapses)}
+        </div>
       ),
     },
     {
@@ -126,6 +150,14 @@ const columns = (
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="whitespace-nowrap font-normal">{record.metadata.contributorSimple}</div>
+      ),
+    },
+    {
+      title: 'Published in',
+      key: 'publishedIn',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="whitespace-nowrap font-normal">{record.metadata.publishedIn}</div>
       ),
     },
     {

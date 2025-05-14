@@ -19,7 +19,9 @@ import DownloadIcon from './DownloadIcon';
 import EyeIcon from './EyeIcon';
 import EyeTargetIcon from './EyeTarget';
 import FileIcon from './File';
+import FlatListViewIcon from './FlatListViewIcon';
 import GripDotsVerticalIcon from './GripDotsVerticalIcon';
+import HierarchicalViewIcon from './HierarchicalViewIcon';
 import HomeIcon from './Home';
 import HomeFillIcon from './HomeFillIcon';
 import InformationIcon from './InformationIcon';
@@ -63,7 +65,9 @@ export {
   EyeIcon,
   EyeTargetIcon,
   FileIcon,
+  FlatListViewIcon,
   GripDotsVerticalIcon,
+  HierarchicalViewIcon,
   HomeFillIcon,
   HomeIcon,
   InformationIcon,
