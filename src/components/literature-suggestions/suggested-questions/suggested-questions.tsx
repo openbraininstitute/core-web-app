@@ -12,6 +12,10 @@ import styles from './suggested-questions.module.css';
 export interface SuggestedQuestionsProps {
   className?: string;
   /**
+   * Suggestions depend on the current chat's thread.
+   */
+  threadId: string
+  /**
    * When there is no message yet, we only use 1 generated suggestion and 2 hard-coded ones.
    * Otherwise, we use 3 generated suggestions.
    */
@@ -21,10 +25,12 @@ export interface SuggestedQuestionsProps {
 
 export default function SuggestedQuestions({
   className,
+  threadId,
   messagesLength,
   onClick,
 }: SuggestedQuestionsProps) {
   const [suggestions, clearSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
+    threadId,
     messagesLength === 0 ? 1 : 3
   );
   const hardcodedSuggestions = useHardcodedSuggestions(messagesLength === 0 ? 2 : 0);
