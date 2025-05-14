@@ -1,5 +1,5 @@
 import { CircuitSchemaProps } from '../type';
-import CircuitData from './header/CircuitData';
+import CircuitData from './header/circuit-data';
 import Heading from './header/Heading';
 
 export default function HeaderDetailView({ content }: { content: CircuitSchemaProps }) {
