@@ -166,7 +166,7 @@ export default function SynaptomeConfigurationForm({
           SingleNeuronSynaptome.api.query.create!({
             context: { virtualLabId, projectId },
             body: {
-              brain_region_id: 31,
+              brain_region_id: '23a7711a-8133-4876-b7eb-dcd9e87a1613',
               name: values.name,
               description: values.description || '',
               seed: values.seed,
@@ -174,9 +174,7 @@ export default function SynaptomeConfigurationForm({
             },
           })
         );
-        if (error) {
-          return null;
-        }
+        if (error) throw error;
         const { data: assetData, error: err } = await tryCatch(
           createJsonAsset({
             ctx: { virtualLabId, projectId },
@@ -186,9 +184,7 @@ export default function SynaptomeConfigurationForm({
             payload: { synapses: values.synapses },
           })
         );
-        if (err) {
-          return null;
-        }
+        if (err) throw error;
         return {
           entity: data,
           asset: assetData,

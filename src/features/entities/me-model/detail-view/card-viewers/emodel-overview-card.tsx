@@ -19,14 +19,14 @@ import type { Result } from '@/api/utils';
 
 type Props = {
   mode: 'select' | 'summary';
-  promise?: Promise<Result<IEModel, Error>> | IEModel;
+  data?: IEModel;
   reselectLink?: boolean;
 };
 
 const title = 'E-Model';
 const selectUrl = 'configure/e-model';
 
-function EModelOverviewCard({ mode = 'summary', promise, reselectLink = false }: Props) {
+function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Props) {
   const searchParams = useSearchParams();
   let emodel: IEModel | null = null;
 
@@ -41,35 +41,27 @@ function EModelOverviewCard({ mode = 'summary', promise, reselectLink = false }:
     return _params.toString();
   };
 
-  if (promise) {
-    if (promise instanceof Promise) {
-      const { data, error } = use(promise);
-      if (error) throw error;
-      emodel = data;
-    } else {
-      emodel = promise;
-    }
-
+  if (data) {
     const exploreUrl = resolveExploreDetailsPageUrl({
       ctx: { ...(params ?? {}) },
       dataType: DataType.CircuitEModel,
-      entityId: emodel.id,
+      entityId: data.id,
     });
 
     const details = [
-      { label: 'Exemplar morphology', value: renderEmptyOrValue(emodel.exemplar_morphology.name) },
+      { label: 'Exemplar morphology', value: renderEmptyOrValue(data.exemplar_morphology.name) },
       { label: 'Optimization target', value: EmptyValue },
-      { label: 'Brain Region', value: renderEmptyOrValue(emodel.brain_region.name) },
+      { label: 'Brain Region', value: renderEmptyOrValue(data.brain_region.name) },
       {
         label: 'E-Type',
-        value: renderEmptyOrValue(renderArray(emodel.etypes?.map((m) => m.pref_label) || [])),
+        value: renderEmptyOrValue(renderArray(data.etypes?.map((m) => m.pref_label) || [])),
       },
     ];
 
     return (
       <CardContainer
         mode={mode}
-        model={emodel}
+        model={data}
         title={title}
         selectUrl={selectUrl}
         queryParams={getSelectUrlQueryParams()}
@@ -78,7 +70,7 @@ function EModelOverviewCard({ mode = 'summary', promise, reselectLink = false }:
         thumbnail={
           renderPreview(
             // TODO: use renderImage (emodel has a thumbnail image in `image`)
-            emodel,
+            data,
             { height: 200, width: 200 }
           )
           // selectedEModel && <EModelThumbnail emodel={selectedEModel} />

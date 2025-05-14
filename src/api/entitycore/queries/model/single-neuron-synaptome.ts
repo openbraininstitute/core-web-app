@@ -1,9 +1,16 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { arrayBufferToJson } from '@/utils/buffer';
+import { tryCatch } from '@/api/utils';
 
 import type {
   ISingleNeuronSynaptome,
   ISingleNeuronSynaptomeFilter,
   TCreateSingleNeuronSynaptome,
+  TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
@@ -89,4 +96,39 @@ export async function createSingleNeuronSynaptome({
     },
     body,
   });
+}
+
+export async function getSingleNeuronSynaptomeConfiguration({
+  source,
+  context,
+}: {
+  source: ISingleNeuronSynaptome;
+  context?: WorkspaceContext;
+}): Promise<{
+  synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+} | null> {
+  const configAsset = getAssetElement({
+    assets: source.assets,
+    path: `${SingleNeuronSynaptome.asset.configfile}_${source.id}.json`,
+    type: SingleNeuronSynaptome.asset.extension!,
+  });
+
+  if (configAsset) {
+    const { data: asset, error } = await tryCatch(
+      downloadAsset<ArrayBuffer>({
+        ctx: context,
+        entityId: source.id,
+        entityType: EntityTypeEnum.SingleNeuronSynaptome,
+        id: configAsset.id,
+      })
+    );
+
+    if (error) {
+      console.error('Could not read the single neuron configuration file');
+      return null;
+    }
+
+    return arrayBufferToJson(asset);
+  }
+  return null;
 }

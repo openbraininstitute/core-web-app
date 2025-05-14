@@ -10,7 +10,7 @@ export function resolveDataKey({
   ctx?: WorkspaceContext;
   type: EntityTypeEnum;
   scope: string;
-  extra: string;
+  extra?: string;
 }) {
   let base = `${scope}/${type}`;
   if (extra) {

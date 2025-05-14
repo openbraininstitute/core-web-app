@@ -1,8 +1,7 @@
-import { Loadable } from 'jotai/vanilla/utils/loadable';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Overview from '@/features/details-view/overview';
@@ -18,34 +17,39 @@ import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
 import { ErrorLink, withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
-import { useLoadableValue } from '@/hooks/hooks';
+import { conditionalAtom } from '@/hooks/use-conditional-atom';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { DetailViewUrlParams } from '@/types/explore-section/application';
 
 export default function Summary<T extends EntityCoreIdentifiableNamed>({
+  payload,
   showViewMode,
   extraHeaderAction,
   dataType,
   children,
   commonFields = CommonSummaryViewFields,
 }: {
+  payload?: T | undefined;
   showViewMode?: boolean;
   commonFields?: Array<TypeSummaryProps>;
   extraHeaderAction?: ReactNode;
   dataType: DataType;
   children?: (detail: T) => ReactNode;
 }) {
+  const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
   const fields = getViewDefinitionByLegacyType(dataType)?.summaryViewFields;
 
   const path = usePathname();
-  const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
 
-  const detail = useLoadableValue(
-    detailFamily({ id, virtualLabId, projectId, dataType, ...params })
-  ) as Loadable<T>;
+  const memoizedDetailAtom = useMemo(() => {
+    const detailFetchAtom = detailFamily({ id, virtualLabId, projectId, dataType, ...params });
+    return conditionalAtom<T>(payload, detailFetchAtom);
+  }, [payload, id, virtualLabId, projectId, dataType, JSON.stringify(params)]); // adjust dependencies as needed
+
+  const detail = useAtomValue(memoizedDetailAtom);
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);
@@ -55,7 +59,11 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   if (!fields || !detail) return null;
 
   const component = match(detail)
-    .with({ state: 'loading' }, () => <CentralLoadingSpinner />)
+    .with({ state: 'loading' }, () => (
+      <div className="h-vh! text-primary-8 flex w-[calc(100vw-80px)]! items-center justify-center">
+        <CentralLoadingSpinner />
+      </div>
+    ))
     .with({ state: 'hasError', error: P.any.select() }, () => {
       const Component = withErrorConfig({
         showButtons: false,
