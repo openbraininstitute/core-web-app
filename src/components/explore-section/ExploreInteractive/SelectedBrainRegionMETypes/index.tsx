@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
-import { METypeDetails } from './METypeDetails';
+
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { analysedCompositionAtom } from '@/state/build-composition';
 import { classNames } from '@/util/utils';
@@ -15,6 +15,7 @@ import { resolveDataKey } from '@/utils/key-builder';
 
 import type { WorkspaceContext } from '@/types/common';
 import { cellCompositionAtom } from '@/features/cell-composition/context';
+import { METypeDetails } from './METypeDetails';
 
 export default function SelectedBrainRegionMETypes() {
   const { projectId } = useParams<WorkspaceContext>();
