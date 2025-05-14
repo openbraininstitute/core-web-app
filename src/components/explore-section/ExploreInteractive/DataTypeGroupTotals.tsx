@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
+import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import StatItem, { StatError, StatItemSkeleton } from './StatItem';
 
 import { DATA_TYPE_GROUPS_CONFIG } from '@/constants/explore-section/data-type-groups';
@@ -70,30 +69,7 @@ export default function DataTypeGroupTotals({
   const { config, extensionPath } = DATA_TYPE_GROUPS_CONFIG[dataTypeGroup];
   const pathName = usePathname();
 
-  const [circuitCount, setCircuitCount] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchCircuitCount() {
-      try {
-        const response = await fetch('/api/explore-circuits/count');
-        if (!response.ok) {
-          throw new Error('Failed to fetch circuit count');
-        }
-
-        const data = await response.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        setCircuitCount(data.count);
-      } catch (err) {
-        setError('Failed to load circuit count');
-        setCircuitCount(0);
-      }
-    }
-    fetchCircuitCount();
-  }, []);
+  const { error, filteredCircuits } = useFilteredCircuits();
 
   if (error) {
     return <StatError text={error} />;
@@ -112,12 +88,12 @@ export default function DataTypeGroupTotals({
         );
       })}
 
-      {dataTypeGroup === DataTypeGroup.ModelData && circuitCount !== null && (
+      {dataTypeGroup === DataTypeGroup.ModelData && (
         <StatItem
           href={`${pathName}/model/circuit`}
           key="Circuit"
           title="Circuit"
-          subtitle={`${circuitCount} record${circuitCount !== 1 ? 's' : ''}`}
+          subtitle={`${filteredCircuits.count} record${filteredCircuits.count !== 1 ? 's' : ''}`}
           testId="experiment-dataset-Circuit"
         />
       )}
