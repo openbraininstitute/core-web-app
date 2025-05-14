@@ -1,6 +1,7 @@
 'use client';
 
 import { CircuitSchemaProps } from '../../type';
+import formatNumberWithComma from '../../utils/format-number-with-comma';
 import ParameterBox from '../global/ParameterBox';
 
 export default function CircuitParameters({ content }: { content: CircuitSchemaProps }) {
@@ -19,9 +20,18 @@ export default function CircuitParameters({ content }: { content: CircuitSchemaP
         />
       </div>
       <div className="relative flex flex-col gap-y-4">
-        <ParameterBox name="Number of neurons" value={content.numberOfNeurons} />
-        <ParameterBox name="Number of connections" value={content.numberOfConnections} />
-        <ParameterBox name="Number of synapses" value={content.numberOfSynapses} />
+        <ParameterBox
+          name="Number of neurons"
+          value={formatNumberWithComma(content.numberOfNeurons)}
+        />
+        <ParameterBox
+          name="Number of connections"
+          value={formatNumberWithComma(content.numberOfConnections)}
+        />
+        <ParameterBox
+          name="Number of synapses"
+          value={formatNumberWithComma(content.numberOfSynapses)}
+        />
       </div>
     </div>
   );
