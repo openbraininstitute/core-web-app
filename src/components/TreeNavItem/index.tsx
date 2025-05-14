@@ -49,9 +49,6 @@ export function TreeNavItem({
   ...props
 }: TreeNavItemProps) {
   const section = useAtomValue(sectionAtom);
-  if (!section) {
-    throw new Error('Section is not set');
-  }
 
   const renderedItems = items?.map(({ id: itemId, items: nestedItems, ...itemProps }) => {
     // children may return another render-prop
