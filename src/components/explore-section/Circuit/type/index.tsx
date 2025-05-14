@@ -41,6 +41,7 @@ export type CircuitSchemaProps = {
     contributorSimple?: string;
     contributor?: string | null;
     contributingInstitution?: string;
+    publishedIn?: string;
     registrationDate?: string;
     revision: number | null;
     createdBy: string | null;
