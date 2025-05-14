@@ -28,9 +28,9 @@
   gap: 1em;
 }
 
-.literatureSuggestions.collapsed {
+.literatureSuggestions[data-collapsed='true'] {
   padding: 0;
-  padding-top: 20px;
+  pading-top: 20px;
   width: 48px;
 }
 
@@ -45,7 +45,7 @@
   font-size: 24px;
 }
 
-.literatureSuggestions.collapsed > button.header {
+.literatureSuggestions[data-collapsed='true'] > button.header {
   flex-direction: column;
   padding: 0;
   gap: 0.5em;
@@ -56,7 +56,7 @@
   font-weight: bold;
 }
 
-.literatureSuggestions.collapsed > button.header > h1 {
+.literatureSuggestions[data-collapsed='true'] > button.header > h1 {
   order: 9;
   writing-mode: vertical-lr;
 }
