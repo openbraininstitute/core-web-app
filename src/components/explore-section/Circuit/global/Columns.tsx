@@ -129,6 +129,14 @@ const columns = (
       ),
     },
     {
+      title: 'Published in',
+      key: 'publishedIn',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="whitespace-nowrap font-normal">{record.metadata.publishedIn}</div>
+      ),
+    },
+    {
       title: 'Registration date',
       key: 'registrationDate',
       width: 150,
