@@ -131,7 +131,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   }
 
   return (
-    <div className="bg-primary-9 flex h-screen w-full overflow-x-auto" id="interactive-data-layout">
+    <div className="bg-primary-9 flex h-screen w-full overflow-x-auto secondary-scrollbar" id="interactive-data-layout">
       <ErrorBoundary
         FallbackComponent={SimpleErrorComponent}
         key={`${params.type}/${brainRegionId}`}

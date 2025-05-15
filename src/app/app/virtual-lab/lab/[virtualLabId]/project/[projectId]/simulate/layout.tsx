@@ -43,9 +43,9 @@ export default function VirtualLabProjectLayout({
     });
 
   return (
-    <div className="bg-primary-9 flex pr-5 text-white">
+    <div className="bg-primary-9 flex text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="top-0 flex h-screen w-1/4 flex-row gap-4">
+        <div className="top-0 flex h-screen min-w-1/4 w-1/4 flex-row gap-4">
           <SideMenu
             links={links}
             lab={{
@@ -70,7 +70,7 @@ export default function VirtualLabProjectLayout({
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="flex h-screen w-3/4 flex-col gap-10 overflow-y-auto pl-5">{children}</div>
+        <div className="flex h-screen w-auto flex-col gap-10 overflow-y-auto pl-5 secondary-scrollbar">{children}</div>
       </ErrorBoundary>
     </div>
   );
