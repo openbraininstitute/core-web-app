@@ -137,3 +137,7 @@ export type FileTypeHeaderProps = {
   description: React.ReactNode;
   extension: string;
 };
+
+export interface FilteredCircuit extends CircuitSchemaProps {
+  isNonMatchingParent?: boolean;
+}

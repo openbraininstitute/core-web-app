@@ -1,3 +1,5 @@
+import { Tooltip } from 'antd';
+
 import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
@@ -17,12 +19,14 @@ export default function ViewToggle({
     <div className="relative flex flex-row items-center gap-x-4">
       <div className="text-base font-medium text-primary-9">View:</div>
       <div className="relative flex flex-row items-center gap-x-2">
-        <div>
-          <HierarchicalViewIcon
-            iconColor={toggle === 'hierarchical' ? '#002766' : '#AAA'}
-            className="h-4 w-4"
-          />
-        </div>
+        <Tooltip title="Hierarchical view">
+          <div>
+            <HierarchicalViewIcon
+              iconColor={toggle === 'hierarchical' ? '#002766' : '#AAA'}
+              className="h-4 w-4"
+            />
+          </div>
+        </Tooltip>
         <button
           type="button"
           className="relative h-6 w-12 rounded-xl border border-solid border-gray-200"
@@ -37,12 +41,14 @@ export default function ViewToggle({
             )}
           />
         </button>
-        <div>
-          <FlatListViewIcon
-            iconColor={toggle === 'flat' ? '#002766' : '#AAA'}
-            className="h-4 w-4"
-          />
-        </div>
+        <Tooltip title="Flat list view">
+          <div>
+            <FlatListViewIcon
+              iconColor={toggle === 'flat' ? '#002766' : '#AAA'}
+              className="h-4 w-4"
+            />
+          </div>
+        </Tooltip>
       </div>
     </div>
   );

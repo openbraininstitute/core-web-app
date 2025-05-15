@@ -3,7 +3,8 @@ import { ColumnType } from 'antd/es/table';
 import Link from 'next/link';
 import { Key, SyntheticEvent } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
-import { CircuitSchemaProps } from '../type';
+import { CircuitSchemaProps, NumericFilterOptions } from '../type';
+import { circuitMatchFilter } from '../utils/circuits-match-filter';
 import formatNumberWithComma from '../utils/format-number-with-comma';
 
 import { ChevronRight, DownloadIcon } from '@/components/icons';
@@ -22,7 +23,11 @@ const columns = (
   handleExpandRow: (row: CircuitSchemaProps, index: number) => void,
   isCircuitDetailPage: boolean,
   handleOpenDownloadModal: (record: CircuitSchemaProps) => void,
-  toggle: 'hierarchical' | 'flat'
+  toggle: 'hierarchical' | 'flat',
+  numericFilter: NumericFilterOptions | null,
+  minValue: number | undefined,
+  maxValue: number | undefined,
+  searchQuery: string
 ): ResizableColumnType[] => {
   return [
     {
@@ -50,9 +55,19 @@ const columns = (
       key: 'name',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => {
+        const isFilterActive = numericFilter !== null || searchQuery.trim() !== '';
+        const isMatching =
+          isFilterActive &&
+          circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery);
         const href = isCircuitDetailPage ? `./${record.key}` : `./circuit/${record.key}`;
         return (
-          <Link href={href} className="whitespace-nowrap">
+          <Link
+            href={href}
+            className={classNames(
+              'whitespace-nowrap',
+              toggle === 'hierarchical' && isMatching ? 'font-bold' : ''
+            )}
+          >
             {record.name}
           </Link>
         );
@@ -60,7 +75,7 @@ const columns = (
     },
     {
       title: 'Subcircuits',
-      key: 'hasSubcircuits',
+      key: 'subcircuits',
       width: 120,
       render: (_value: any, record: CircuitSchemaProps, index: number) => {
         const isExpanded = Array.isArray(expandedRowKeys) && expandedRowKeys.includes(record.key);

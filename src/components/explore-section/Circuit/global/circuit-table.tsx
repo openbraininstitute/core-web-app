@@ -1,12 +1,13 @@
 import { Table } from 'antd';
 import { usePathname } from 'next/navigation';
 import { Key, useCallback, useEffect, useMemo, useState } from 'react';
-import { CircuitSchemaProps, NumericFilterOptions } from '../type';
+import { CircuitSchemaProps, FilteredCircuit, NumericFilterOptions } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
-import { circuitMatchFilter } from '../utils/circuits-match-filter';
 import collectExpandableKeys from '../utils/collectExpandableKeys';
 import { flattenCircuits } from '../utils/flatten-circuits';
 
+import { circuitMatchFilter } from '../utils/circuits-match-filter';
+import { filterCircuitsWithParents } from '../utils/filter-circuits-with-parent';
 import columns from './Columns';
 import DownloadContainer from './download/download-container';
 import SubcircuitTable from './subcircuit-table';
@@ -27,7 +28,6 @@ export default function CircuitTable({
 }) {
   const [circuitToDownload, setCircuitToDownload] = useState<CircuitSchemaProps | null>(null);
   const [downloadModalOpen, SetDownloadModalOpen] = useState<boolean>(false);
-
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
 
   // FILTERING
@@ -39,50 +39,6 @@ export default function CircuitTable({
   // VIEWS
   const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
 
-  // DATA
-  const cleanedData = useMemo(
-    () =>
-      data.map((circuit: CircuitSchemaProps) => ({
-        ...circuit,
-        neurons:
-          typeof circuit.numberOfNeurons === 'number' && !Number.isNaN(circuit.numberOfNeurons)
-            ? circuit.numberOfNeurons
-            : 0,
-      })),
-    [data]
-  );
-
-  const flattenedData = useMemo(() => flattenCircuits(cleanedData), [cleanedData]);
-  const tableData = toggle === 'hierarchical' ? cleanedData : flattenedData;
-
-  useEffect(() => {
-    if (toggle === 'hierarchical' && (numericFilter || searchQuery)) {
-      const expandableKeys = collectExpandableKeys(cleanedData);
-      setExpandedRowKeys(expandableKeys);
-    } else {
-      setExpandedRowKeys([]);
-    }
-  }, [numericFilter, minValue, maxValue, searchQuery, cleanedData, toggle]);
-
-  useEffect(() => {
-    if (numericFilter) {
-      const expandableKeys = collectExpandableKeys(data);
-      setExpandedRowKeys(expandableKeys);
-    } else {
-      setExpandedRowKeys([]);
-    }
-  }, [numericFilter, data]);
-
-  const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
-    const rowKey = row.key;
-    setExpandedRowKeys((prev) =>
-      prev.includes(rowKey) ? prev.filter((key) => key !== rowKey) : [...prev, rowKey]
-    );
-  }, []);
-
-  const pathname = usePathname();
-  const isCircuitDetailPage = pathname.includes('/circuit/');
-
   // DOWNLOAD MODAL
   const handleOpenDownloadModal = useCallback((record: CircuitSchemaProps) => {
     setCircuitToDownload(record);
@@ -93,6 +49,141 @@ export default function CircuitTable({
     setCircuitToDownload(null);
     SetDownloadModalOpen(false);
   }, []);
+
+  // PATHNAME
+  const pathname = usePathname();
+  const isCircuitDetailPage = pathname.includes('/circuit/');
+
+  // ROW EXPANSION
+  const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
+    const rowKey = row.key;
+    setExpandedRowKeys((prev) =>
+      prev.includes(rowKey) ? prev.filter((key) => key !== rowKey) : [...prev, rowKey]
+    );
+  }, []);
+
+  // DATA
+  const cleanedData = useMemo(() => {
+    const result = data.map((circuit: CircuitSchemaProps) => {
+      const numberOfNeurons =
+        typeof circuit.numberOfNeurons === 'number' && !Number.isNaN(circuit.numberOfNeurons)
+          ? circuit.numberOfNeurons
+          : 0;
+      if (numberOfNeurons === 0) {
+        throw new Error('Number of neurons is not a number or is NaN');
+      }
+
+      return {
+        ...circuit,
+        key: circuit.key || `circuit-${Math.random().toString(36).slice(2)}`,
+        numberOfNeurons,
+        name: circuit.name || 'Unknown',
+        brainRegion: circuit.brainRegion || 'Unknown',
+        subcircuits: Array.isArray(circuit.subcircuits)
+          ? circuit.subcircuits.map((sub) => ({
+              ...sub,
+              key: sub.key || `subcircuit-${Math.random().toString(36).slice(2)}`,
+              numberOfNeurons:
+                typeof sub.numberOfNeurons === 'number' && !Number.isNaN(sub.numberOfNeurons)
+                  ? sub.numberOfNeurons
+                  : 0,
+              name: sub.name || 'Unknown',
+              brainRegion: sub.brainRegion || 'Unknown',
+              subcircuits: Array.isArray(sub.subcircuits) ? sub.subcircuits : [],
+            }))
+          : [],
+      };
+    });
+
+    const flattened = flattenCircuits(result);
+
+    return { hierarchical: result, flattened };
+  }, [data]);
+
+  // IF FILTER ARE ACTIVE
+  const filteredData = useMemo(() => {
+    if (toggle === 'hierarchical') {
+      const result = filterCircuitsWithParents(
+        cleanedData.hierarchical,
+        numericFilter,
+        minValue,
+        maxValue,
+        searchQuery,
+        false
+      );
+      return result;
+    }
+    const result = cleanedData.flattened.filter((circuit) =>
+      circuitMatchFilter(circuit, numericFilter, minValue, maxValue, searchQuery)
+    );
+
+    return result;
+  }, [cleanedData, numericFilter, minValue, maxValue, searchQuery, toggle]);
+
+  const flattenedData = useMemo(() => {
+    if (toggle === 'hierarchical') {
+      return filteredData; // Use filteredData for hierarchical view
+    }
+    const keyCounts = filteredData.reduce(
+      (acc, circuit) => {
+        acc[circuit.key] = (acc[circuit.key] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+    const duplicates = Object.entries(keyCounts).filter(([_, count]) => count > 1);
+    if (duplicates.length > 0) {
+      throw new Error(
+        `Duplicate keys found in flattened data: ${duplicates
+          .map(([key, count]) => `${key} (${count})`)
+          .join(', ')}`
+      );
+    }
+    return filteredData;
+  }, [filteredData, toggle]);
+
+  const tableData = useMemo(() => {
+    const selectedData = toggle === 'hierarchical' ? filteredData : flattenedData;
+    return selectedData;
+  }, [toggle, filteredData, flattenedData]);
+
+  // COLUMN FILTERED
+  const filteredColumns = useMemo(() => {
+    const allColumns = columns(
+      expandedRowKeys,
+      calculateSubcircuitsForParent,
+      handleRowExpandClick,
+      isCircuitDetailPage,
+      handleOpenDownloadModal,
+      toggle,
+      numericFilter,
+      minValue,
+      maxValue,
+      searchQuery
+    );
+    const result =
+      toggle === 'flat' ? allColumns.filter((col) => col.key !== 'subcircuits') : allColumns;
+    return result;
+  }, [
+    toggle,
+    expandedRowKeys,
+    isCircuitDetailPage,
+    handleOpenDownloadModal,
+    handleRowExpandClick,
+    numericFilter,
+    minValue,
+    maxValue,
+    searchQuery,
+  ]);
+
+  useEffect(() => {
+    if (toggle === 'hierarchical' && (numericFilter || searchQuery)) {
+      const expandableKeys = collectExpandableKeys(cleanedData.hierarchical);
+      setExpandedRowKeys(expandableKeys);
+    } else {
+      setExpandedRowKeys([]);
+    }
+  }, [numericFilter, minValue, maxValue, searchQuery, cleanedData, toggle]);
 
   // ROW EXPANSION & SUBCIRCUITS
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
@@ -106,14 +197,7 @@ export default function CircuitTable({
     (circuit: CircuitSchemaProps) =>
       circuit.subcircuits && circuit.subcircuits.length > 0 ? (
         <SubcircuitTable
-          columns={columns(
-            expandedRowKeys,
-            calculateSubcircuitsForParent,
-            handleRowExpandClick,
-            isCircuitDetailPage,
-            handleOpenDownloadModal,
-            toggle
-          )}
+          columns={filteredColumns}
           circuit={circuit}
           expandedRowKeys={expandedRowKeys}
           onExpand={handleExpandRow}
@@ -126,14 +210,11 @@ export default function CircuitTable({
     [
       expandedRowKeys,
       handleExpandRow,
-      handleOpenDownloadModal,
-      handleRowExpandClick,
-      isCircuitDetailPage,
       numericFilter,
       minValue,
       maxValue,
       searchQuery,
-      toggle,
+      filteredColumns,
     ]
   );
 
@@ -158,36 +239,34 @@ export default function CircuitTable({
       )}
       <div className="relative w-full overflow-x-scroll">
         <div className="tableAndButton">
-          <Table
-            className={styles.circuitTable}
-            dataSource={tableData}
-            columns={columns(
-              expandedRowKeys,
-              calculateSubcircuitsForParent,
-              handleRowExpandClick,
-              isCircuitDetailPage,
-              handleOpenDownloadModal,
-              toggle
-            )}
-            pagination={false}
-            expandable={
-              toggle === 'hierarchical'
-                ? {
-                    expandedRowRender: renderSubcircuits,
-                    expandedRowKeys,
-                    onExpand: handleExpandRow,
-                    expandIcon: () => null,
-                    rowExpandable: (record) =>
-                      !!record.subcircuits && record.subcircuits.length > 0,
-                  }
-                : undefined
-            }
-            rowClassName={(record) =>
-              circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery)
-                ? styles.matchingRow
-                : styles.nonMatchingRow
-            }
-          />
+          {tableData.length === 0 ? (
+            <div className="text-center text-primary-9">No matching circuits found</div>
+          ) : (
+            <Table
+              className={styles.circuitTable}
+              rowKey="key"
+              dataSource={tableData}
+              columns={filteredColumns}
+              pagination={false}
+              expandable={
+                toggle === 'hierarchical'
+                  ? {
+                      expandedRowRender: renderSubcircuits,
+                      expandedRowKeys,
+                      onExpand: handleExpandRow,
+                      expandIcon: () => null,
+                      rowExpandable: (record) =>
+                        !!record.subcircuits && record.subcircuits.length > 0,
+                    }
+                  : undefined
+              }
+              rowClassName={(record: FilteredCircuit) =>
+                toggle === 'hierarchical' && record.isNonMatchingParent
+                  ? styles.nonMatchingRow
+                  : styles.matchingRow
+              }
+            />
+          )}
         </div>
         <>
           <div

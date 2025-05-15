@@ -29,17 +29,16 @@ export function circuitMatchFilter(
   }
 
   let searchMatch = true;
-  if (searchQuery.trim()) {
+  if (searchQuery && searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
-
     searchMatch =
       circuit.name?.toLowerCase().includes(query) ||
       false ||
       circuit.brainRegion?.toLowerCase().includes(query) ||
-      false ||
-      circuit.description?.toLowerCase().includes(query) ||
       false;
   }
 
-  return numericMatch && searchMatch;
+  const result = numericMatch && searchMatch;
+
+  return result;
 }
