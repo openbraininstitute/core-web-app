@@ -8,12 +8,17 @@ export default function CircuitMetadata({ content }: { content: CircuitSchemaPro
         <ParameterBox name="Description" value={content.description} />
       </div>
       <div>
-        <ParameterBox name="Contributors" value={content.metadata.contributors || '–'} />
+        <ParameterBox
+          name="Contributors"
+          value={content.metadata.contributors || '–'}
+          hasViewMore
+        />
       </div>
       <div>
         <ParameterBox
           name="Contributing institution"
           value={content.metadata.contributingInstitution || '–'}
+          hasViewMore
         />
       </div>
     </div>
