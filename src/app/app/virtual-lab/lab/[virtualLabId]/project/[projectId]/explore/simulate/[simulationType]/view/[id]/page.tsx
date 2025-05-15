@@ -56,7 +56,7 @@ export default function SimulationDetailPage(props: Props) {
   const params = use(props.params);
   const id = usePathname().split('/').pop() as string;
 
-  const { simulation, meModel } = useSimulation({
+  const { simulation, meModel, morphology } = useSimulation({
     id,
     virtualLabId: params.virtualLabId,
     projectId: params.projectId,

@@ -1,21 +1,9 @@
 import Link from 'next/link';
-import { Skeleton } from 'antd';
-
-import { EModelThumbnail } from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
-import { DisplayMessages } from '@/constants/display-messages';
-import { DataType } from '@/constants/explore-section/list-views';
-import { EModel, NeuronMorphology } from '@/types/e-model';
-import { MEModelResource } from '@/types/me-model';
 import { classNames } from '@/util/utils';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { to64 } from '@/util/common';
 
-import CardVisualization from '@/components/explore-section/CardView/CardVisualization';
-import { getEtype, getMtype } from '@/util/modelMEtypes';
 import { IMEModel } from '@/api/entitycore/types';
-import { useEffect, useState } from 'react';
-import { getMEModel } from '@/api/entitycore/queries';
-import { LoadingOutlined } from '@ant-design/icons';
+import PreviewThumbnail from '@/features/thumbnail/preview';
 
 type Props = {
   type: 'single-neuron-simulation' | 'synaptome-simulation';
@@ -55,25 +43,13 @@ export default function ModelDetails({ type, virtualLabId, projectId, meModel }:
             {type === 'single-neuron-simulation' ? 'Single neuron model' : 'Synaptome'}
           </span>
           <div className="flex items-start gap-2">
-            {/* {mModel ? (
-              <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-                <CardVisualization
-                  dataType={DataType.ExperimentalNeuronMorphology}
-                  resource={mModel}
-                  height={200}
-                  width={200}
-                />
-              </div>
-            ) : (
-              <Skeleton.Image className="h-full w-full rounded-none" />
-            )}
-            {eModel ? (
-              <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-                <EModelThumbnail emodel={eModel} />
-              </div>
-            ) : (
-              <Skeleton.Image className="h-full w-full rounded-none" />
-            )} */}
+            <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+              <PreviewThumbnail resource={meModel.morphology} size={{ height: 300, width: 400 }} />
+            </div>
+
+            <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+              <PreviewThumbnail resource={meModel.emodel} size={{ height: 300, width: 400 }} />
+            </div>
           </div>
         </div>
         <div className="mt-6 flex flex-col gap-3">

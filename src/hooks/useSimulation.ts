@@ -10,8 +10,19 @@ import { SingleNeuronSynaptomeResource } from '@/types/synaptome';
 import { ensureArray } from '@/util/nexus';
 import useNotification from '@/hooks/notifications';
 import { DeepSnakeCase, convertObjectKeystoCamelCase } from '@/util/object-keys-format';
-import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
-import { getMEModel, getSingleNeuronSimulation } from '@/api/entitycore/queries';
+import type { EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
+import {
+  IMEModel,
+  IReconstructionMorphology,
+  ISingleNeuronSimulation,
+} from '@/api/entitycore/types';
+import {
+  getMEModel,
+  getReconstructionMorphology,
+  getSingleNeuronSimulation,
+} from '@/api/entitycore/queries';
+import { getMorphology } from '@/api/bluenaas';
+import { downloadAsset, getAsset, getAssets } from '@/api/entitycore/queries/assets';
 
 export function useSimulation({
   id,
@@ -25,6 +36,7 @@ export function useSimulation({
   type: 'single-neuron-simulation' | 'synaptome-simulation';
 }) {
   const [simulation, setSimulation] = useState<ISingleNeuronSimulation | null>(null);
+  const [morphology, setMorphology] = useState<IReconstructionMorphology | null>(null);
   const [simulationConfig, setSimulationConfig] = useState<SimulationPayload | null>(null);
   // const [synaptomeModel, setSynaptomeModel] = useState<SingleNeuronSynaptomeResource | null>(null);
   const [meModel, setMeModel] = useState<IMEModel | null>(null);
@@ -65,6 +77,23 @@ export function useSimulation({
         const meModelData = await getMEModel({ id: simulationData.me_model.id, context });
         setMeModel(meModelData);
 
+        const assets = await getAssets({
+          entityType: 'single-neuron-simulation',
+          ctx: { virtualLabId, projectId },
+          entityId: simulationData.id,
+        });
+
+        if (!assets || assets.data.length === 0) throw new Error();
+
+        const config = await downloadAsset({
+          ctx: { virtualLabId, projectId },
+          entityType: 'single-neuron-simulation',
+          entityId: simulationData.id,
+          id: assets.data[0].id,
+        });
+
+        console.log(config)
+
         // const distribution = ensureArray(simulationResourceObject.distribution)[0].contentUrl;
         // const simulationDistribution = await fetchJsonFileByUrl<DeepSnakeCase<SimulationPayload>>(
         //   distribution,
@@ -88,6 +117,7 @@ export function useSimulation({
 
   return {
     simulation,
+    morphology,
     // simulationConfig,
     meModel,
     // synaptomeModel,
