@@ -100,5 +100,11 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.SimulationResponse,
       EntityCoreFields.SimulationStimulus,
     ],
+    summaryViewFields: [
+      { field: EntityCoreFields.Name, className: 'col-span-1' },
+      { field: EntityCoreFields.CreationDate, className: 'col-span-1' },
+      { field: EntityCoreFields.CreatedBy, className: 'col-span-1' },
+      { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
+    ],
   },
 };

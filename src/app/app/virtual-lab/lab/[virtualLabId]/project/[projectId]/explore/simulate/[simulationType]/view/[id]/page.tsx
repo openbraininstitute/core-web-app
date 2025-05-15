@@ -2,8 +2,10 @@
 
 import { useEffect, use } from 'react';
 import { useSetAtom } from 'jotai';
-import { LoadingOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
+import { Suspense } from 'react';
+import Summary from '@/features/details-view/summary';
 
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
@@ -21,9 +23,20 @@ import { SingleNeuronSimulation, SynaptomeSimulation } from '@/types/nexus';
 import { MEModelResource } from '@/types/me-model';
 import { EModel, NeuronMorphology } from '@/types/e-model';
 import { usePathname } from 'next/navigation';
+import DetailView from '@/features/views/details/model';
+import { virtualLabApi } from '@/config';
+import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
+import { DataType } from '@/constants/explore-section/list-views';
+import { ISingleNeuronSimulation } from '@/api/entitycore/types';
+import Link from '@/components/Link';
+import Overview from '@/features/details-view/overview';
+import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+
+export const dynamic = 'force-dynamic';
 
 type Props = {
   params: Promise<{
+    id: string;
     projectId: string;
     virtualLabId: string;
     simulationType: 'single-neuron-simulation' | 'synaptome-simulation';
@@ -38,9 +51,10 @@ export type SimulationWithLinkedData = DeltaResource &
   };
 
 export default function SimulationDetailPage(props: Props) {
+  console.log('here');
+
   const params = use(props.params);
   const id = usePathname().split('/').pop() as string;
-  const setBackPath = useSetAtom(backToListPathAtom);
 
   const { simulation, meModel } = useSimulation({
     id,
@@ -50,11 +64,9 @@ export default function SimulationDetailPage(props: Props) {
   });
 
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
-  const baseBuildUrl = `${vlProjectUrl}/simulate`;
+  const prevPath = `${vlProjectUrl}/simulate`;
 
-  // useEffect(() => {
-  //   setBackPath(baseBuildUrl);
-  // }, [baseBuildUrl, setBackPath]);
+  const fields = getViewDefinitionByLegacyType(DataType.SingleNeuronSimulation)?.summaryViewFields;
 
   if (!simulation) {
     return (
@@ -65,8 +77,11 @@ export default function SimulationDetailPage(props: Props) {
     );
   }
 
+  if (!fields)
+    throw new Error(`Cannot find fields definition for ${DataType.SingleNeuronSimulation}`);
+
   return (
-    <div className="text-primary-8 grid grid-cols-[min-content_auto] overflow-hidden bg-white">
+    <div className="text-primary-8 grid grid-cols-[min-content_auto] bg-white">
       <Nav
         params={params}
         extraLinks={[
@@ -78,59 +93,23 @@ export default function SimulationDetailPage(props: Props) {
           },
         ]}
       />
-      <Detail
-        fields={[]}
-        commonFields={MODEL_DATA_COMMON_FIELDS}
-        // extraHeaderAction={
-        //   meModel &&
-        //   simulationConfig && (
-        //     <CloneSimulationButton
-        //       synaptomeModelId={simulationResource.used['@id']}
-        //       simulationConfig={simulationConfig}
-        //       virtualLabId={params.virtualLabId}
-        //       projectId={params.projectId}
-        //     />
-        //   )
-        // }
-      >
-        {(data: SimulationWithLinkedData) => {
-          return (
-            <>
-              {data.linkedMeModel && data.linkedMModel && data.linkedEModel ? (
-                <ModelDetails
-                  virtualLabId={params.virtualLabId}
-                  projectId={params.projectId}
-                  type={params.simulationType}
-                  name={
-                    params.simulationType === 'synaptome-simulation'
-                      ? (synaptomeModel?.name ?? '')
-                      : data.linkedMeModel.name
-                  }
-                  meModel={data.linkedMeModel}
-                  mModel={data.linkedMModel}
-                  eModel={data.linkedEModel}
-                />
-              ) : (
-                <Spin />
-              )}
-              {simulationConfig ? (
-                <ExperimentSetup
-                  type={params.simulationType}
-                  experimentSetup={simulationConfig}
-                  meModel={meModel}
-                />
-              ) : (
-                <div className="flex h-full min-h-96 w-full flex-col items-center justify-center gap-3">
-                  <Spin indicator={<LoadingOutlined />} size="large" />
-                  <h2 className="text-primary-9 font-light">
-                    Loading simulation configuration ...
-                  </h2>
-                </div>
-              )}
-            </>
-          );
-        }}
-      </Detail>
+      <div className="flex h-screen w-full">
+        <Link
+          className="bg-neutral-1 text-primary-8 flex h-full w-[40px] flex-col items-center pt-2 text-sm"
+          href={prevPath}
+        >
+          <ArrowRightOutlined className="mt-1.5 mb-4 rotate-180" />
+          <div style={{ writingMode: 'vertical-rl', rotate: '180deg' }}>Back to list</div>
+        </Link>
+        <div className="ml-10 flex h-full w-full flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12">
+          <Overview
+            fields={fields}
+            detail={simulation}
+            commonFields={[]}
+            fieldsClassName="grid w-full auto-rows-min grid-cols-2 gap-x-8 gap-y-6"
+          />
+        </div>
+      </div>
     </div>
   );
 }

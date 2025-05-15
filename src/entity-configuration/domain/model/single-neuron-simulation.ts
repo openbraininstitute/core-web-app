@@ -10,7 +10,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import { ISingleNeuronSimulation } from '@/api/entitycore/types';
-import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
+import { getSingleNeuronSimulation, getSingleNeuronSimulations } from '@/api/entitycore/queries';
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
   group: 'models',
@@ -25,8 +25,7 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
     },
     query: {
       list: getSingleNeuronSimulations,
-      // one: getSingleNeuronSynaptome,
-      // create: createSingleNeuronSynaptome,
+      one: getSingleNeuronSimulation,
     },
   },
   explore: {
