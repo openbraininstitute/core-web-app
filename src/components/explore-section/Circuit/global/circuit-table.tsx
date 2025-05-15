@@ -65,8 +65,7 @@ export default function CircuitTable({
   // DATA
   const cleanedData = useMemo(() => {
     const result = data.map((circuit: CircuitSchemaProps) => {
-      const numberOfNeurons = circuit.numberOfNeurons;
-
+      const { numberOfNeurons } = circuit;
       if (numberOfNeurons === 0) {
         throw new Error('Number of neurons is not a number or is NaN');
       }
