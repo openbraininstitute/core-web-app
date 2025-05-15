@@ -25,7 +25,7 @@ const fileTypeDescriptions: FileTypeHeaderProps[] = [
     extension: 'h5',
   },
   {
-    name: 'Morphology',
+    name: 'Morphologies',
     description: (
       <p className="w-3/4 text-base font-light text-primary-1">
         The neuronal morphologies used in the circuit grouped in h5 containers.{' '}

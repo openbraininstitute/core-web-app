@@ -10,6 +10,7 @@ export default function CircuitParameters({ content }: { content: CircuitSchemaP
 
   return (
     <div className="relative grid grid-cols-3 gap-12">
+      {/* COLUMN 1 */}
       <div className="relative flex flex-col gap-y-4">
         <ParameterBox name="Brain Region" value={content.brainRegion} />
         <ParameterBox name="Subcircuit of" value={content.parent ?? '–'} link={parentCircuitLink} />
@@ -19,6 +20,7 @@ export default function CircuitParameters({ content }: { content: CircuitSchemaP
           link={licenseLink}
         />
       </div>
+      {/* COLUMN 2 */}
       <div className="relative flex flex-col gap-y-4">
         <ParameterBox
           name="Number of neurons"
@@ -32,6 +34,12 @@ export default function CircuitParameters({ content }: { content: CircuitSchemaP
           name="Number of synapses"
           value={formatNumberWithComma(content.numberOfSynapses)}
         />
+      </div>
+      {/* COLUMN 3 */}
+      <div className="relative flex flex-col gap-y-4">
+        <ParameterBox name="Published in" value={content.metadata.publishedIn ?? '–'} />
+        <ParameterBox name="Registration date" value={content.metadata.registrationDate ?? '–'} />
+        <ParameterBox name="Contact" value={content.metadata.contact ?? '–'} />
       </div>
     </div>
   );
