@@ -26,12 +26,13 @@ export function useServiceAiAgentSuggestionFromUserJourney(
           }
         );
         setSuggestions(data.slice(0, count));
-      } catch {
+      } catch (ex) {
         setSuggestions([]);
       }
     };
     action();
   }, [threadId, count, accessToken, projectId, virtualLabId]);
+
   React.useEffect(fetchSuggestions, [fetchSuggestions]);
   useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
   return [suggestions, () => setSuggestions([])];

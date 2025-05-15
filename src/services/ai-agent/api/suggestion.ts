@@ -12,8 +12,8 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
     }
   ): Promise<string[]> => {
     const { threadId = null, virtualLabId = null, projectId = null } = options ?? {};
-    await userJourneyTracker.saveTuple();
     const journey = await userJourneyTracker.getLastTuples();
+
     const data = await fetchJSON({
       accessToken,
       path: 'qa/question_suggestions',
