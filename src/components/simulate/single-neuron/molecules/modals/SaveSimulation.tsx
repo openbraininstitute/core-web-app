@@ -12,7 +12,6 @@ import GenericButton from '@/components/Global/GenericButton';
 import useNotification from '@/hooks/notifications';
 
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { to64 } from '@/util/common';
 import { messages } from '@/i18n/en/synaptome';
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -20,7 +19,7 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
 
 export type Props = {
-  modelId:string;
+  modelId: string;
   vLabId: string;
   projectId: string;
   simulationType: SimulationType;
@@ -64,7 +63,7 @@ export default function SaveSimulationModal({
     const vlProjectUrl = generateVlProjectUrl(vLabId, projectId);
     const baseBuildUrl = `${vlProjectUrl}/explore/simulate/${simulationType}/view`;
 
-    return `${baseBuildUrl}/${to64(`${vLabId}/${projectId}!/!${simulationId}`)}`;
+    return `${baseBuildUrl}/${simulationId}`;
   };
 
   const saveSimulation: FormProps<SimulationForm>['onFinish'] = async ({ name, description }) => {
@@ -80,7 +79,7 @@ export default function SaveSimulationModal({
       );
       successNotify(messages.CreationSimulationSucceed, 7, 'topRight');
       refreshSimulations();
-      // navigate(generateSimulationDetailUrl(savedSimulation!['@id']));
+      navigate(generateSimulationDetailUrl(savedSimulation!.id));
     } catch (error) {
       errorNotify('An error encountered when saving simulation', 7, 'topRight');
     } finally {
