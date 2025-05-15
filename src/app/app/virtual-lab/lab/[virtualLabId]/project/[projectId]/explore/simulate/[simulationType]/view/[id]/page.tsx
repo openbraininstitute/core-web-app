@@ -68,7 +68,7 @@ export default function SimulationDetailPage(props: Props) {
 
   const fields = getViewDefinitionByLegacyType(DataType.SingleNeuronSimulation)?.summaryViewFields;
 
-  if (!simulation) {
+  if (!simulation || !meModel) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
@@ -101,12 +101,18 @@ export default function SimulationDetailPage(props: Props) {
           <ArrowRightOutlined className="mt-1.5 mb-4 rotate-180" />
           <div style={{ writingMode: 'vertical-rl', rotate: '180deg' }}>Back to list</div>
         </Link>
-        <div className="ml-10 flex h-full w-full flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12">
+        <div className="flex h-full w-full flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12">
           <Overview
             fields={fields}
             detail={simulation}
             commonFields={[]}
             fieldsClassName="grid w-full auto-rows-min grid-cols-2 gap-x-8 gap-y-6"
+          />
+          <ModelDetails
+            meModel={meModel}
+            type="single-neuron-simulation"
+            virtualLabId={params.virtualLabId}
+            projectId={params.projectId}
           />
         </div>
       </div>

@@ -13,9 +13,11 @@ import { to64 } from '@/util/common';
 import CardVisualization from '@/components/explore-section/CardView/CardVisualization';
 import { getEtype, getMtype } from '@/util/modelMEtypes';
 import { IMEModel } from '@/api/entitycore/types';
+import { useEffect, useState } from 'react';
+import { getMEModel } from '@/api/entitycore/queries';
+import { LoadingOutlined } from '@ant-design/icons';
 
 type Props = {
-  name: string;
   type: 'single-neuron-simulation' | 'synaptome-simulation';
   virtualLabId: string;
   projectId: string;
@@ -31,28 +33,23 @@ function Field({ label, value, className }: { label: string; value: string; clas
   );
 }
 
-export default function ModelDetails({ name, type, virtualLabId, projectId, meModel }: Props) {
-  // const generateMeModelDetailView = () => {
-  //   const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-  //   const baseExploreUrl = `${vlProjectUrl}/explore/interactive/model/me-model`;
-  //   return `${baseExploreUrl}/${to64(`${virtualLabId}/${projectId}!/!${meModel['@id']}`)}`;
-  // };
-
-  // const mType = getMtype(meModel, mModel) ?? DisplayMessages.NO_DATA_STRING;
-  // const eType = getEtype(meModel, eModel) ?? DisplayMessages.NO_DATA_STRING;
-
-  console.log(meModel);
+export default function ModelDetails({ type, virtualLabId, projectId, meModel }: Props) {
+  const generateMeModelDetailView = () => {
+    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
+    const baseExploreUrl = `${vlProjectUrl}/explore/interactive/model/me-model`;
+    return `${baseExploreUrl}/${meModel.id}`;
+  };
 
   return (
     <div>
       <h1 className="text-primary-8 mb-3 text-3xl font-bold">Model</h1>
       <div className="relative flex max-h-fit items-start gap-4 rounded-sm border border-neutral-200 px-8 py-6">
-        {/* <Link
+        <Link
           href={generateMeModelDetailView()}
           className="text-primary-8 hover:text-primary-7 absolute top-6 right-8 flex items-center justify-center font-bold"
         >
           View details
-        </Link> */}
+        </Link>
         <div className="flex flex-col">
           <span className="text-neutral-4 mb-2 text-base uppercase">
             {type === 'single-neuron-simulation' ? 'Single neuron model' : 'Synaptome'}
@@ -81,18 +78,25 @@ export default function ModelDetails({ name, type, virtualLabId, projectId, meMo
         </div>
         <div className="mt-6 flex flex-col gap-3">
           <div className="pl-12">
-            <Field label="Name" value={name} className="text-primary-8 my-1 text-3xl font-bold" />
+            <Field
+              label="Name"
+              value={meModel.name}
+              className="text-primary-8 my-1 text-3xl font-bold"
+            />
           </div>
-          <div className="flex items-start gap-4 pl-12">
-            <div className="flex flex-col gap-2">
-              <Field label="ME-Model" value={meModel.name} />
-              <Field label="E-Model" value={meModel.emodel.name} />
-              <Field label="M-Model" value={meModel.morphology.name} />
-              <Field label="Brain Region" value={meModel.brain_region.name} />
 
-              {meModel.mtypes?.map((m) => <Field key={m.id} label="M-Type" value={m.pref_label} />)}
-              {meModel.etypes?.map((e) => <Field key={e.id} label="E-Type" value={e.pref_label} />)}
-            </div>
+          <div className="grid grid-cols-2 gap-2 pl-12">
+            <Field label="ME-Model" value={meModel.name} />
+            <Field label="E-Model" value={meModel.emodel.name} />
+            <Field label="M-Model" value={meModel.morphology.name} />
+            <Field label="Brain Region" value={meModel.brain_region.name} />
+
+            {meModel.mtypes && meModel.mtypes.length > 0 && (
+              <Field label="M-Types" value={meModel.mtypes.map((m) => m.pref_label).join(',')} />
+            )}
+            {meModel.etypes && meModel.etypes.length > 0 && (
+              <Field label="E-Types" value={meModel.etypes.map((m) => m.pref_label).join(',')} />
+            )}
           </div>
         </div>
       </div>
