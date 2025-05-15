@@ -1,33 +1,22 @@
 'use client';
 
-import { useEffect, use } from 'react';
-import { useSetAtom } from 'jotai';
+import { use } from 'react';
 import { ArrowRightOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
-import { Suspense } from 'react';
-import Summary from '@/features/details-view/summary';
+import { usePathname } from 'next/navigation';
 
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
-import Detail from '@/components/explore-section/Detail';
 import ModelDetails from '@/components/simulate/SimulationDetails/MEModelDetails';
-import ExperimentSetup from '@/components/simulate/SimulationDetails/ExperimentSetup';
 
-import { MODEL_DATA_COMMON_FIELDS } from '@/constants/explore-section/detail-views-fields';
 import { useSimulation } from '@/hooks/useSimulation';
-import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { DeltaResource } from '@/types/explore-section/resources';
 import { SingleNeuronSimulation, SynaptomeSimulation } from '@/types/nexus';
 import { MEModelResource } from '@/types/me-model';
 import { EModel, NeuronMorphology } from '@/types/e-model';
-import { usePathname } from 'next/navigation';
-import DetailView from '@/features/views/details/model';
-import { virtualLabApi } from '@/config';
-import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
+
 import { DataType } from '@/constants/explore-section/list-views';
-import { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import Link from '@/components/Link';
 import Overview from '@/features/details-view/overview';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
@@ -51,8 +40,6 @@ export type SimulationWithLinkedData = DeltaResource &
   };
 
 export default function SimulationDetailPage(props: Props) {
-  console.log('here');
-
   const params = use(props.params);
   const id = usePathname().split('/').pop() as string;
 
@@ -79,8 +66,6 @@ export default function SimulationDetailPage(props: Props) {
 
   if (!fields)
     throw new Error(`Cannot find fields definition for ${DataType.SingleNeuronSimulation}`);
-
-  console.log(simulationConfig);
 
   return (
     <div className="text-primary-8 grid grid-cols-[min-content_auto] bg-white">
