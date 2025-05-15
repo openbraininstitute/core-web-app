@@ -39,7 +39,7 @@ export type CircuitSchemaProps = {
   numberOfSynapses: number;
   metadata: {
     contributorSimple?: string;
-    contributor?: string | null;
+    contributors?: string;
     contributingInstitution?: string;
     publishedIn?: string;
     registrationDate?: string;
@@ -50,6 +50,7 @@ export type CircuitSchemaProps = {
       name: string;
       url: string;
     } | null;
+    contact: string | null;
   };
   files: DownloadItemProps[];
   subcircuits: CircuitSchemaProps[];

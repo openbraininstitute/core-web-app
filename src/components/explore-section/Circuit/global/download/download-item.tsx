@@ -15,8 +15,8 @@ export function DownloadChildrenItem({
   return (
     <div className="flex w-full flex-row justify-between">
       <div className="w-3/4 hyphens-auto">
-        <div className="text-base font-bold text-white">{childrenItem.name}</div>
-        <p className="hyphens-auto text-sm font-light leading-normal text-primary-2">
+        <div className="text-lg font-bold text-white">{childrenItem.name}</div>
+        <p className="hyphens-auto text-base font-light leading-normal text-primary-2">
           {childrenItem.description}
         </p>
       </div>
