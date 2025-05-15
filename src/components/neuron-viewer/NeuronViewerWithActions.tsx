@@ -10,6 +10,7 @@ import {
   NeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
+import { virtualLabApi } from '@/config';
 
 type Props = {
   modelId: string;
@@ -19,6 +20,8 @@ type Props = {
   useEvents?: boolean;
   useActions?: boolean;
   useLabels?: boolean;
+  virtualLabId: string;
+  projectId: string;
 };
 export default function NeuronViewerContainer({
   modelId,
@@ -28,6 +31,8 @@ export default function NeuronViewerContainer({
   useEvents = false,
   useActions = false,
   useLabels = false,
+  virtualLabId,
+  projectId,
 }: Props) {
   const [disbaleHovering, setDisableHovering] = useState(() => !useActions);
   const [neuronViewerClickData, setNeuronViewerOnClickData] =
@@ -38,6 +43,8 @@ export default function NeuronViewerContainer({
   return (
     <DefaultLoadingSuspense>
       <NeuronViewer
+        projectId={projectId}
+        virtualLabId={virtualLabId}
         modelId={modelId}
         actions={{
           onClick: (data) => {

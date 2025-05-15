@@ -9,6 +9,8 @@ export default async function getStimuliPlot(
   modelId: string,
   token: string,
   config: CurrentInjectionGraphRequest,
+  projectId: string,
+  virtualLabId: string,
   signal?: AbortSignal
 ): Promise<CurrentInjectionGraphResponse[]> {
   const formattedConfig = convertObjectKeysToSnakeCase(config);
@@ -21,6 +23,8 @@ export default async function getStimuliPlot(
         accept: 'application/json',
         authorization: `bearer ${token}`,
         'Content-Type': 'application/json',
+        'virtual-lab-id': virtualLabId,
+        'project-id': projectId,
       },
       body: JSON.stringify(formattedConfig),
     }

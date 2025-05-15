@@ -18,13 +18,15 @@ import SelectedIcon from '@/components/icons/SelectedIcon';
 
 type Props = {
   modelId: string;
+  projectId: string;
+  virtualLabId: string;
 };
 
 type FormItemProps = {
   stimulationId: number;
 };
 
-export default function Stimulation({ modelId }: Props) {
+export default function Stimulation({ modelId, projectId, virtualLabId }: Props) {
   const state = useAtomValue(currentInjectionSimulationConfigAtom);
   return (
     <ConfigProvider
@@ -88,6 +90,8 @@ export default function Stimulation({ modelId }: Props) {
                             state[field.name].stimulus.stimulusProtocol ??
                             DEFAULT_STIM_CONFIG.stimulusProtocol!
                           }
+                          projectId={projectId}
+                          virtualLabId={virtualLabId}
                         />
                       </div>
                     ),

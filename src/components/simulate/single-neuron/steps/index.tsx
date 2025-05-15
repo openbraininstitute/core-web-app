@@ -14,9 +14,11 @@ import { SimulationType } from '@/types/simulation/common';
 type Props = {
   modelId: string;
   type: SimulationType;
+  projectId: string;
+  virtualLabId: string;
 };
 
-export default function ParameterView({ modelId, type }: Props) {
+export default function ParameterView({ modelId, type, projectId, virtualLabId }: Props) {
   const { current: currentSimulationStep } = useAtomValue(simulateStepTrackerAtom);
 
   return (
@@ -36,7 +38,7 @@ export default function ParameterView({ modelId, type }: Props) {
         <div
           className={currentSimulationStep.title === 'Stimulation protocol' ? 'w-full' : 'hidden'}
         >
-          <Stimulation modelId={modelId} />
+          <Stimulation modelId={modelId} projectId={projectId} virtualLabId={virtualLabId} />
         </div>
         <div className={currentSimulationStep.title === 'Recording' ? 'w-full' : 'hidden'}>
           <Recording />

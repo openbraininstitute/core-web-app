@@ -22,7 +22,12 @@ function SingleNeuron({ projectId, virtualLabId }: Props) {
 
   return (
     <>
-      <SimulationConfiguration modelId={modelId} type={SIMULATION_TYPE} />
+      <SimulationConfiguration
+        modelId={modelId}
+        type={SIMULATION_TYPE}
+        projectId={projectId}
+        virtualLabId={virtualLabId}
+      />
       <div className="fixed right-4 bottom-4 z-20 mt-auto">
         <SimulationButton
           modelId={modelId}

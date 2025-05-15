@@ -15,6 +15,8 @@ import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categorie
 import useNotification from '@/hooks/notifications';
 
 type Props = {
+  virtualLabId: string;
+  projectId: string;
   modelId: string;
   useEvents?: boolean;
   useActions?: boolean;
@@ -48,6 +50,8 @@ export default function NeuronViewer({
   useCursor,
   useLabels,
   actions,
+  virtualLabId,
+  projectId,
 }: Props) {
   const labelsCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -89,6 +93,8 @@ export default function NeuronViewer({
   const { loading, error } = useMorphology({
     modelId,
     callback: runRenderer,
+    projectId,
+    virtualLabId,
   });
 
   if (error) {

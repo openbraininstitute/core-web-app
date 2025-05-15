@@ -18,9 +18,17 @@ type Props = {
   modelId: string;
   amplitudes: number[];
   protocol: StimulusModule;
+  projectId: string;
+  virtualLabId: string;
 };
 
-export default function StimuliPreviewPlot({ modelId, amplitudes, protocol }: Props) {
+export default function StimuliPreviewPlot({
+  modelId,
+  amplitudes,
+  protocol,
+  projectId,
+  virtualLabId,
+}: Props) {
   const [stimuliPreviewPlotData, setStimuliPreviewPlotData] = useAtom(stimulusPreviewPlotDataAtom);
   const [loading, setLoading] = useState(false);
   const previousFetchController = useRef<AbortController>(undefined);
@@ -57,6 +65,8 @@ export default function StimuliPreviewPlot({ modelId, amplitudes, protocol }: Pr
           amplitudes,
           stimulusProtocol: protocol,
         },
+        projectId,
+        virtualLabId,
         controller.signal
       );
 
@@ -83,7 +93,15 @@ export default function StimuliPreviewPlot({ modelId, amplitudes, protocol }: Pr
         setLoading(false);
       }
     }
-  }, [amplitudes, protocol, modelId, notifyError, setStimuliPreviewPlotData]);
+  }, [
+    amplitudes,
+    protocol,
+    modelId,
+    notifyError,
+    setStimuliPreviewPlotData,
+    projectId,
+    virtualLabId,
+  ]);
 
   useEffect(() => {
     updateStimuliPreview();
