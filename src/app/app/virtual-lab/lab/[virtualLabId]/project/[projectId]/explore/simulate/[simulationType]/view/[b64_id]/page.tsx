@@ -39,30 +39,24 @@ export type SimulationWithLinkedData = DeltaResource &
 
 export default function SimulationDetailPage(props: Props) {
   const params = use(props.params);
-  const modelId = usePathname().split('/').pop() as string;
+  const id = usePathname().split('/').pop() as string;
   const setBackPath = useSetAtom(backToListPathAtom);
 
-  
-
-  const { simulationResource, simulationConfig, meModel, synaptomeModel } = useSimulation({
-    modelId: info.id,
-    org: params.virtualLabId,
-    project: params.projectId,
+  const { simulation, meModel } = useSimulation({
+    id,
+    virtualLabId: params.virtualLabId,
+    projectId: params.projectId,
     type: params.simulationType,
   });
 
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
   const baseBuildUrl = `${vlProjectUrl}/simulate`;
 
+  // useEffect(() => {
+  //   setBackPath(baseBuildUrl);
+  // }, [baseBuildUrl, setBackPath]);
 
-
-  useEffect(() => {
-    setBackPath(baseBuildUrl);
-  }, [baseBuildUrl, setBackPath]);
-
-  return null;
-
-  if (!simulationResource) {
+  if (!simulation) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />

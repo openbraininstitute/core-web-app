@@ -9,12 +9,34 @@ import type {
 import type {
   ISingleNeuronSimulation,
   TCreateSingleNeuronSimulation,
-  ISingleNeuronSimulationFilter
+  ISingleNeuronSimulationFilter,
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/single-neuron-simulation';
+
+/**
+ * Retrieves a specific single neuron simulation by its ID from the EntityCoreAPI.
+ *
+ *
+ */
+export async function getSingleNeuronSimulation({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.get<ISingleNeuronSimulation>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
 
 /**
  * Retrieves a list of synaptomes data from the Entity Core API.
