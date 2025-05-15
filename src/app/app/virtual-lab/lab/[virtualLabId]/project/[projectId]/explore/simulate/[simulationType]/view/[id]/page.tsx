@@ -56,7 +56,7 @@ export default function SimulationDetailPage(props: Props) {
   const params = use(props.params);
   const id = usePathname().split('/').pop() as string;
 
-  const { simulation, meModel, morphology } = useSimulation({
+  const { simulation, meModel, simulationConfig } = useSimulation({
     id,
     virtualLabId: params.virtualLabId,
     projectId: params.projectId,
@@ -68,7 +68,7 @@ export default function SimulationDetailPage(props: Props) {
 
   const fields = getViewDefinitionByLegacyType(DataType.SingleNeuronSimulation)?.summaryViewFields;
 
-  if (!simulation || !meModel) {
+  if (!simulation || !meModel || !simulationConfig) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
@@ -79,6 +79,8 @@ export default function SimulationDetailPage(props: Props) {
 
   if (!fields)
     throw new Error(`Cannot find fields definition for ${DataType.SingleNeuronSimulation}`);
+
+  console.log(simulationConfig);
 
   return (
     <div className="text-primary-8 grid grid-cols-[min-content_auto] bg-white">

@@ -85,14 +85,15 @@ export function useSimulation({
 
         if (!assets || assets.data.length === 0) throw new Error();
 
-        const config = await downloadAsset({
+        const file = await downloadAsset({
           ctx: { virtualLabId, projectId },
           entityType: 'single-neuron-simulation',
           entityId: simulationData.id,
           id: assets.data[0].id,
         });
 
-        console.log(config)
+        const json = JSON.parse(new TextDecoder('utf-8').decode(file));
+        setSimulationConfig(json);
 
         // const distribution = ensureArray(simulationResourceObject.distribution)[0].contentUrl;
         // const simulationDistribution = await fetchJsonFileByUrl<DeepSnakeCase<SimulationPayload>>(
@@ -118,7 +119,7 @@ export function useSimulation({
   return {
     simulation,
     morphology,
-    // simulationConfig,
+    simulationConfig,
     meModel,
     // synaptomeModel,
   };
