@@ -26,7 +26,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
           }
         );
         setSuggestions(data.slice(0, count));
-      } catch (ex) {
+      } catch {
         setSuggestions([]);
       }
     };
