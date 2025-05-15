@@ -30,7 +30,6 @@ export function circuitMatchFilter(
 
   let searchMatch = true;
   if (searchQuery) {
-
     const query = searchQuery.toLowerCase().trim();
     searchMatch =
       circuit.name?.toLowerCase().includes(query) ||
