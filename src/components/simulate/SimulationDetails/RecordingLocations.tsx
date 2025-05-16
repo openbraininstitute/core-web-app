@@ -1,5 +1,6 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
-import CustomPopover from '../single-neuron/molecules/Popover';
+
+import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { RecordLocation } from '@/types/simulation/single-neuron';
 
 type Props = {
@@ -12,7 +13,7 @@ export default function RecordingLocations({ recordingLocations }: Props) {
       {recordingLocations?.map((r, ind) => (
         <div key={`${r.section}_${r.offset}`} className="flex flex-col">
           <div className="text-gray-400 uppercase">Recording {ind + 1}</div>
-          <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100">
+          <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100 px-2">
             <span className="text-primary-8 text-base font-bold capitalize">{r.section}</span>
             <div className="ml-14 flex items-center gap-2">
               <span className="text-sm text-gray-400 uppercase">offset</span>

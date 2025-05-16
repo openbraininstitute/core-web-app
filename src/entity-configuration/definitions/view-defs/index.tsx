@@ -4,6 +4,7 @@ import pick from 'lodash/pick';
 import get from 'lodash/get';
 
 import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
+import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experiment';
 import { ViewsDefinition as ModelViewDefinition } from '@/entity-configuration/definitions/view-defs/model';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -19,6 +20,7 @@ export const CommonSummaryViewFields = [
 
 export const ViewsDefinitionRegistry = {
   ...ExperimentalViewDefinition,
+  ...ExperimentViewDefinition,
   ...ModelViewDefinition,
 } as const;
 

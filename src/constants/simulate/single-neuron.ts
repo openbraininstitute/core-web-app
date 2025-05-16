@@ -2,19 +2,20 @@ import range from 'lodash/range';
 import round from 'lodash/round';
 
 import {
+  CurrentInjectionSimulationConfig,
+  SimulationExperimentalSetup,
+  SimulationConfiguration,
   StimulusDropdownInfo,
   StimulusTypeOption,
-  SimulationConfiguration,
-  StimulusConfig,
-  CurrentInjectionSimulationConfig,
-  SynapseConfig,
-  RecordLocation,
-  SimulationExperimentalSetup,
-  StimulusModule,
   ProtocolDetails,
+  RecordLocation,
+  StimulusConfig,
+  StimulusModule,
+  SynapseConfig,
 } from '@/types/simulation/single-neuron';
-import { SingleSynaptomeConfig } from '@/types/synaptome';
-import { SynapseType } from '@/components/neuron-viewer/hooks/events';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { SynapseType } from '@/components/neuron-viewer/hooks/events';
 
 export const stimulusTypeParams: StimulusDropdownInfo & {
   options: StimulusTypeOption[];
@@ -132,14 +133,14 @@ export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup 
   celsius: 34,
   vinit: -73,
   hypamp: 0,
-  maxTime: 2000,
-  timeStep: 0.05,
+  max_time: 2000,
+  time_step: 0.05,
   seed: 100,
 };
 
 export const DEFAULT_PROTOCOL = 'idrest';
 
-export const DEFAULT_STIM_CONFIG: StimulusConfig = {
+export const DEFAULT_STIMULUS_CONFIG: StimulusConfig = {
   stimulusType: 'current_clamp',
   stimulusProtocol: DEFAULT_PROTOCOL,
   amplitudes: [40, 80, 120],
@@ -149,7 +150,7 @@ export const DEFAULT_CURRENT_INJECTION_CONFIG: CurrentInjectionSimulationConfig 
   id: 0,
   configId: crypto.randomUUID(),
   injectTo: DEFAULT_SECTION,
-  stimulus: DEFAULT_STIM_CONFIG,
+  stimulus: DEFAULT_STIMULUS_CONFIG,
 };
 
 export const DEFAULT_SIM_CONFIG: SimulationConfiguration = {
@@ -165,7 +166,7 @@ export const SYNAPSE_CODE_TO_TYPE: Record<number, SynapseType> = {
 };
 
 export const getDefaultSynapseConfig = (
-  synapsePlacementConfig?: SingleSynaptomeConfig[]
+  synapsePlacementConfig?: Array<TSingleNeuronSynaptomeConfiguration>
 ): SynapseConfig | null => {
   if (synapsePlacementConfig) {
     return {

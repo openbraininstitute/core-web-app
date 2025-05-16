@@ -97,13 +97,10 @@ export async function createSingleNeuronSynaptome({
   });
 }
 
-export async function getSingleNeuronSynaptomeConfiguration({
-  source,
-  context,
-}: {
-  source: ISingleNeuronSynaptome;
-  context?: WorkspaceContext;
-}): Promise<{
+export async function getSingleNeuronSynaptomeConfiguration(
+  source: ISingleNeuronSynaptome,
+  context?: WorkspaceContext
+): Promise<{
   synapses: Array<TSingleNeuronSynaptomeConfiguration>;
 } | null> {
   const configAsset = getAssetElement({
@@ -123,10 +120,8 @@ export async function getSingleNeuronSynaptomeConfiguration({
     );
 
     if (error) {
-      console.error('Could not read the single neuron configuration file');
       return null;
     }
-
     return arrayBufferToJson(asset);
   }
   return null;

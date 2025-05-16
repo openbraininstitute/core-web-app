@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import isNil from 'lodash/isNil';
 import Link from 'next/link';
 
+import Results from './elements/simulation-results';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import Configuration from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
@@ -19,6 +20,7 @@ import { resolveExperimentUrl } from '@/utils/url-builder';
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 type Props = {
   params: WorkspaceContext & { id: string };
@@ -88,9 +90,12 @@ export default function Page({
                       )}
                     </div>
                   </If>
-                  {/* <If id="simulation" condition={activeTab === 'simulation'}>
-                    <Results params={{ virtualLabId, projectId }} modelId={info.id} />
-                  </If> */}
+                  <If id="simulation" condition={activeTab === 'simulation'}>
+                    <Results
+                      type={EntitySlug.SingleNeuronSynaptomeSimulation}
+                      modelId={source.id}
+                    />
+                  </If>
                 </div>
               </div>
             );

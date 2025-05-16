@@ -1,54 +1,51 @@
-import React, { useEffect, useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import { LoadingOutlined } from '@ant-design/icons';
+import { ErrorBoundary } from '@sentry/nextjs';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 
-import SimulationDetail from './simulation-details';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { queryES } from '@/api/nexus';
-import { getSimulationsPerModelQuery } from '@/queries/es';
-import { selectedMEModelIdAtom } from '@/state/virtual-lab/build/me-model';
-import { SingleNeuronSimulation } from '@/types/nexus';
-import { getSession } from '@/authFetch';
+import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
+import { EntityTypeEnum } from '@/api/entitycore/types';
+import { tryCatch } from '@/api/utils';
 
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
-export default function Simulation() {
-  const params = useParams<WorkspaceContext>();
-  const selectedMEModelId = useAtomValue(selectedMEModelIdAtom);
-  const [simulations, setSimulations] = useState<SingleNeuronSimulation[]>([]);
+function Error({ error }: { error: unknown }) {
+  return <SimpleErrorComponent error={error as Error} />;
+}
+
+type Props = {
+  type: EntitySlugValue;
+  modelId: string;
+};
+
+export default function Results({ modelId }: Props) {
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const [simulations, setSimulations] = useState<Array<ISingleNeuronSimulation>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!selectedMEModelId) return;
-
-    const fetchSims = async () => {
+    async function getSimulations() {
       setLoading(true);
-      setError(false);
-      try {
-        const session = await getSession();
-        if (!session) return;
-        const simulationsPerMEModelQuery = getSimulationsPerModelQuery({
-          modelId: selectedMEModelId,
-          type: 'SingleNeuronSimulation',
-        });
-        const sims = await queryES<SingleNeuronSimulation>(simulationsPerMEModelQuery, session, {
-          org: params.virtualLabId,
-          project: params.projectId,
-        });
-        setSimulations(sims);
-      } catch (err) {
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const { data: result, error } = await tryCatch(
+        getSingleNeuronSimulations({
+          context: { virtualLabId, projectId },
+          filters: { me_model__id: modelId },
+          withFacets: false,
+        }),
+        () => setLoading(false)
+      );
+      if (result) setSimulations(result.data);
+      if (error) setError(!!error);
+    }
 
-    fetchSims();
-  }, [params.projectId, params.virtualLabId, selectedMEModelId]);
+    getSimulations();
+  }, [modelId]);
 
   if (loading) {
     return (
@@ -88,15 +85,12 @@ export default function Simulation() {
   return (
     <div className="flex w-full flex-col gap-2">
       {simulations.map((sim, indx) => (
-        <ErrorBoundary
-          FallbackComponent={withErrorConfig({
-            cls: { container: 'bg-white' },
-            showButtons: false,
-            customError: 'Error while loading simulation ',
-          })}
-          key={sim['@id']}
-        >
-          <SimulationDetail<SingleNeuronSimulation> simulation={sim} index={indx} />
+        <ErrorBoundary fallback={Error} key={sim.id}>
+          <SimulationDetail<ISingleNeuronSimulation>
+            index={indx}
+            type={EntityTypeEnum.SingleNeuronSimulation}
+            simulation={sim}
+          />
         </ErrorBoundary>
       ))}
     </div>

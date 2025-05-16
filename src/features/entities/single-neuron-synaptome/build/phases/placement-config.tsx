@@ -3,13 +3,19 @@
 import dynamic from 'next/dynamic';
 
 import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/single-neuron-synaptome/build/create.state-session';
-import SynaptomeConfigurationForm from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
 import type { WorkspaceContext } from '@/types/common';
 
 const NeuronViewerContainer = dynamic(
   () => import('@/components/neuron-viewer/NeuronViewerWithActions'),
+  {
+    ssr: false,
+  }
+);
+
+const SynaptomeConfigurationForm = dynamic(
+  () => import('@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form'),
   {
     ssr: false,
   }
@@ -35,7 +41,9 @@ function SynaptomeConfiguration({ virtualLabId, projectId, stateId }: Props) {
             useEvents
             useZoomer
             useActions
-            modelUrl={sessionValue?.selectedRows?.at(0)?.id!}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            meModelId={sessionValue?.selectedRows?.at(0)?.id!}
             zoomPlacement="right"
           />
         </DefaultLoadingSuspense>

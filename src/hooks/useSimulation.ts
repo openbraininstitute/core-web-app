@@ -11,7 +11,7 @@ import useNotification from '@/hooks/notifications';
 import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import { getMEModel, getSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 
 export function useSimulation({
   id,

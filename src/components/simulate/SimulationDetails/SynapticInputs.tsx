@@ -1,3 +1,4 @@
+import { renderAsString, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { SynaptomeConfig } from '@/types/simulation/single-neuron';
 import { classNames } from '@/util/utils';
 
@@ -49,10 +50,28 @@ export default function SynapticInputs({ synapses }: Props) {
             <Field label="Name" value="Synapses set" />
 
             <div className="flex">
-              <Field label="Delay" value={`${synapse.delay}`} unit="ms" className="mr-10" />
-              <Field label="Duration" value={`${synapse.duration}`} unit="ms" className="mr-10" />
-              <Field label="Frequency" value={`${synapse.frequency}`} unit="Hz" className="mr-10" />
-              <Field label="Weight scalar" value={`${synapse.weightScalar}`} />
+              <Field
+                label="Delay"
+                value={renderEmptyOrValue(renderAsString(synapse.delay))}
+                unit="ms"
+                className="mr-10"
+              />
+              <Field
+                label="Duration"
+                value={renderEmptyOrValue(renderAsString(synapse.duration))}
+                unit="ms"
+                className="mr-10"
+              />
+              <Field
+                label="Frequency"
+                value={renderEmptyOrValue(renderAsString(synapse.frequency))}
+                unit="Hz"
+                className="mr-10"
+              />
+              <Field
+                label="Weight scalar"
+                value={renderEmptyOrValue(renderAsString(synapse.weight_scalar))}
+              />
             </div>
           </div>
           <hr className="last:hidden" />

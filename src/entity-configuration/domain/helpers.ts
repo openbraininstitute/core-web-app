@@ -35,12 +35,13 @@ export const applyEntityExpansions = async <
   K extends Record<string, any>,
 >(
   entity: EntityCoreTypeConfig<T>,
-  source: T
+  source: T,
+  ...other: any
 ): Promise<K> => {
   const data = {} as K;
   if (entity.api.expand) {
     const promises = Object.entries(entity.api.expand).map(([k, fn]) => {
-      return fn(source).then((result) => ({ key: k, result }));
+      return fn(source, ...other).then((result) => ({ key: k, result }));
     });
 
     const results = await Promise.all(promises);

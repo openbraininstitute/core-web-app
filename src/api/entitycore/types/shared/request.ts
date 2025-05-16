@@ -89,3 +89,5 @@ export interface IMorphologyFilter {
   exemplar_morphology__species_id__in?: string | null;
   exemplar_morphology__order_by?: string | null;
 }
+
+export interface CreatorFilter {}

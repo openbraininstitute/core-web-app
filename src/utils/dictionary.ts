@@ -1,3 +1,5 @@
+import isNil from 'lodash/isNil';
+
 export function compactRecord<T>(
   values: Record<string, any> | undefined
 ): NonNullable<T> | NonNullable<Record<string, any>> {
@@ -8,7 +10,7 @@ export function compactRecord<T>(
   const out: Record<string, T> = {};
 
   for (const [k, v] of Object.entries(values)) {
-    if (typeof v !== 'undefined' && v !== null) {
+    if (!isNil(v)) {
       out[k] = v;
     }
   }

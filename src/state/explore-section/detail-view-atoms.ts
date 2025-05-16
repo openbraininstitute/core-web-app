@@ -7,7 +7,7 @@ import isEqual from 'lodash/isEqual';
 
 import sessionAtom from '@/state/session';
 import { fetchResourceById, queryES } from '@/api/nexus';
-import { DeltaResource, Contributor, Subject, ModelUsed } from '@/types/explore-section/resources';
+import { DeltaResource, Contributor, Subject } from '@/types/explore-section/resources';
 import { Contributor as DeltaContributor } from '@/types/explore-section/delta-contributor';
 import {
   ExperimentalTrace,
@@ -18,11 +18,8 @@ import { ensureArray } from '@/util/nexus';
 import { DetailViewUrlParams, ResourceInfo } from '@/types/explore-section/application';
 import { getLicenseByIdQuery } from '@/queries/es';
 import { subjectAgeSelectorFn, ageSelectorFn } from '@/util/explore-section/selector-functions';
-import { atlasESView, nexus } from '@/config';
+import { atlasESView } from '@/config';
 import { DataType } from '@/constants/explore-section/list-views';
-import { MEModelResource } from '@/types/me-model';
-import { fetchLinkedMandEModels } from '@/api/explore-section/resources';
-import { SynaptomeModelResource } from '@/types/explore-section/delta-model';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 
 export const backToListPathAtom = atom<string | null | undefined>(null);
@@ -38,135 +35,6 @@ export const sessionAndInfoFamily = atomFamily(
     }),
   isEqual
 );
-
-// export const detailFamily = atomFamily<ResourceInfo, Atom<Promise<DeltaResource>>>(
-//   (resourceInfo) =>
-//     atom(async (get) => {
-//       const { session, info } = get(sessionAndInfoFamily(resourceInfo));
-//       const resource = await fetchResourceById<DeltaResource>(
-//         info.id,
-//         session,
-//         info.id.startsWith(nexus.defaultIdBaseUrl)
-//           ? { rev: info.rev }
-//           : {
-//               org: info.org,
-//               project: info.project,
-//               rev: info.rev,
-//             }
-//       );
-//       // TODO: refactor constructing linkedModel
-//       if (ensureArray(resource['@type']).includes('MEModel')) {
-//         const { linkedMModel, linkedEModel } = await fetchLinkedMandEModels({
-//           org: info.org,
-//           project: info.project,
-//           meModel: resource as unknown as MEModelResource,
-//         });
-
-//         return {
-//           ...resource,
-//           linkedMModel,
-//           linkedEModel,
-//         };
-//       }
-//       if (
-//         ensureArray(resource['@type']).includes(DataType.SingleNeuronSynaptome) &&
-//         'used' in resource
-//       ) {
-//         const meModelId = (resource.used as ModelUsed)['@id'];
-//         const linkedMeModel = await fetchResourceById<MEModelResource>(meModelId, session, {
-//           ...(meModelId.startsWith(nexus.defaultIdBaseUrl)
-//             ? {}
-//             : {
-//                 org: info.org,
-//                 project: info.project,
-//               }),
-//         });
-//         const { linkedMModel, linkedEModel } = await fetchLinkedMandEModels({
-//           org: info.org,
-//           project: info.project,
-//           meModel: linkedMeModel,
-//         });
-
-//         return {
-//           ...resource,
-//           linkedMeModel,
-//           linkedMModel,
-//           linkedEModel,
-//         };
-//       }
-//       if (
-//         ensureArray(resource['@type']).includes(DataType.SingleNeuronSynaptomeSimulation) &&
-//         'used' in resource &&
-//         ensureArray(resource.used['@type']).includes('SingleNeuronSynaptome')
-//       ) {
-//         const synaptomeModelId = resource.used['@id'];
-//         const linkedsynaptomeModelModel = await fetchResourceById<SynaptomeModelResource>(
-//           synaptomeModelId,
-//           session,
-//           {
-//             ...(synaptomeModelId.startsWith(nexus.defaultIdBaseUrl)
-//               ? {}
-//               : {
-//                   org: info.org,
-//                   project: info.project,
-//                 }),
-//           }
-//         );
-//         const meModelId = linkedsynaptomeModelModel.used['@id'];
-//         const linkedMeModel = await fetchResourceById<MEModelResource>(meModelId, session, {
-//           ...(meModelId.startsWith(nexus.defaultIdBaseUrl)
-//             ? {}
-//             : {
-//                 org: info.org,
-//                 project: info.project,
-//               }),
-//         });
-
-//         const { linkedMModel, linkedEModel } = await fetchLinkedMandEModels({
-//           org: info.org,
-//           project: info.project,
-//           meModel: linkedMeModel,
-//         });
-
-//         return {
-//           ...resource,
-//           linkedMeModel,
-//           linkedMModel,
-//           linkedEModel,
-//         };
-//       }
-//       if (
-//         ensureArray(resource['@type']).includes(DataType.SingleNeuronSimulation) &&
-//         'used' in resource &&
-//         ensureArray(resource.used['@type']).includes('MEModel')
-//       ) {
-//         const meModelId = resource.used['@id'];
-//         const linkedMeModel = await fetchResourceById<MEModelResource>(meModelId, session, {
-//           ...(meModelId.startsWith(nexus.defaultIdBaseUrl)
-//             ? {}
-//             : {
-//                 org: info.org,
-//                 project: info.project,
-//               }),
-//         });
-
-//         const { linkedMModel, linkedEModel } = await fetchLinkedMandEModels({
-//           org: info.org,
-//           project: info.project,
-//           meModel: linkedMeModel,
-//         });
-
-//         return {
-//           ...resource,
-//           linkedMeModel,
-//           linkedMModel,
-//           linkedEModel,
-//         };
-//       }
-//       return resource;
-//     }),
-//   isEqual
-// );
 
 export const detailFamily = atomFamily<
   DetailViewUrlParams & { dataType: DataType },

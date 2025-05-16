@@ -52,7 +52,6 @@ export default function useExploreColumns<T>(
   dataType?: DataType
 ): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(FieldsDefinitionRegistry), []);
-
   const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
     [...keys, ...(dimensionColumns || [])].map((key) => ({
       key,

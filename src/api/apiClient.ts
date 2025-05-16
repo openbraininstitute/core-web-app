@@ -413,7 +413,7 @@ class ApiClient {
   post<T>(
     endpoint: string,
     options?: RequestOptions,
-    config?: RequestConfiguration & { cache?: CacheConfiguration }
+    config?: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean }
   ) {
     return this._request<T>('post', endpoint, options, config);
   }

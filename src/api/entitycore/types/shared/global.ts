@@ -144,6 +144,7 @@ enum AssetStatus {
 
 type AssetBase = {
   path: string;
+  label: string;
   full_path: string;
   bucket_name: string;
   is_directory: boolean;

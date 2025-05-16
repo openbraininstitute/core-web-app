@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 
 import { MEModel } from '@/types/me-model';
 import { SynaptomeModelResource } from '@/types/explore-section/delta-model';
-import { SynaptomeConfigDistribution } from '@/types/synaptome';
+import { SynapsesConfiguration } from '@/types/synaptome';
 
 type SimulationModel<T, S, K> = {
   base?: T | null;
@@ -20,6 +20,6 @@ export const simulationModelAtom = <T, S, K>() =>
 export const SynaptomeSimulationInstanceAtom = simulationModelAtom<
   MEModel,
   SynaptomeModelResource,
-  SynaptomeConfigDistribution
+  SynapsesConfiguration
 >();
 SynaptomeSimulationInstanceAtom.debugLabel = 'SynaptomeSimulationInstanceAtom';

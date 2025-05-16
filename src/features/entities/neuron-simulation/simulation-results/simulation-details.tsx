@@ -1,0 +1,227 @@
+import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { ReactNode, useEffect, useState } from 'react';
+import { ConfigProvider, Segmented, Spin } from 'antd';
+import { SegmentedValue } from 'antd/lib/segmented';
+import { useParams } from 'next/navigation';
+import get from 'lodash/get';
+
+import SimulationPlotAsImage from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-as-image';
+import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
+
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { EntityTypeEnum } from '@/api/entitycore/types';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { arrayBufferToJson } from '@/utils/buffer';
+import { classNames } from '@/util/utils';
+import { tryCatch } from '@/api/utils';
+
+import type {
+  SimulationPayload,
+  SingleNeuronModelSimulationConfig,
+} from '@/types/simulation/single-neuron';
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { WorkspaceContext } from '@/types/common';
+
+const subtitleStyle = 'font-thin text-neutral-4';
+type GenericSimulation = ISingleNeuronSynaptomeSimulation | ISingleNeuronSimulation;
+
+type Props<T> = {
+  index: number;
+  type: EntityTypeEnum;
+  simulation: T;
+  children?: ({ config }: { config: SingleNeuronModelSimulationConfig }) => ReactNode;
+};
+
+export default function SimulationDetail<T extends GenericSimulation>({
+  index,
+  type,
+  simulation,
+  children,
+}: Props<T>) {
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const [configAsset, setConfigAsset] = useState<SimulationPayload | null>(null);
+  const [simulationPlot, setSimulationPlot] = useState<SegmentedValue | undefined>(undefined);
+  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  console.log('–– – simulation-details.tsx:50 – loadingConfig:', loadingConfig);
+  console.log('–– – simulation-details.tsx:50 – error:', error);
+
+  useEffect(() => {
+    async function getConfigurationAsset() {
+      setLoadingConfig(true);
+      const entity = getEntityByCoreType({
+        type,
+      });
+      if (entity) {
+        const asset = getAssetElement({
+          assets: simulation.assets,
+          filter: (s) => s.label === entity?.asset.configfile,
+        });
+        if (asset) {
+          const { data, error } = await tryCatch(
+            downloadAsset<any>({
+              // TODO: to fix type
+              ctx: { virtualLabId, projectId },
+              entityId: simulation.id,
+              entityType: entity?.type,
+              id: asset?.id,
+            })
+          );
+          if (error) {
+            setError(error);
+          }
+          if (data) {
+            const config = arrayBufferToJson(data);
+            setConfigAsset(config);
+            setSimulationPlot(Object.keys(config.simulation).at(0));
+          }
+        }
+        setError(new Error('No configuration found'));
+      }
+      setLoadingConfig(false);
+    }
+
+    getConfigurationAsset();
+  }, [simulation]);
+
+  if (loadingConfig) {
+    return (
+      <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
+        <Spin indicator={<LoadingOutlined />} size="large" />
+        <h2 className="text-primary-9 font-light">Loading simulation {index + 1}...</h2>
+      </div>
+    );
+  }
+
+  if (!configAsset) return null;
+
+  return (
+    <div className="border-neutral-2 flex items-start gap-8 border p-8">
+      <div className="text-primary-8 flex flex-[0_1_60%] flex-col gap-10">
+        <NameDescription name={simulation.name} description={simulation.description} />
+        <Params payload={configAsset} />
+        <div className="flex w-full flex-col gap-2">
+          <div className="text-primary-8 text-lg font-bold">Injection location</div>
+          <div className="mt-2 flex max-w-max items-center justify-center border border-gray-100 px-5 py-1 font-bold">
+            {configAsset.config.current_injection.inject_to}
+          </div>
+        </div>
+        <div className="flex w-full flex-col gap-2">
+          <div className="text-primary-8 text-lg font-bold">Recording locations</div>
+          <div className="mt-2 flex items-center gap-4">
+            {configAsset.config.record_from.map((r, ind) => (
+              <div key={`${r.section}_${r.offset}`} className="flex flex-col gap-1">
+                <div className="text-gray-400 uppercase">Recording {ind + 1}</div>
+                <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100 px-5 py-1">
+                  <span className="text-primary-8 text-base font-bold capitalize">{r.section}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm uppercase">offset</span>
+                    <CustomPopover
+                      message="The recording position relative to the section. 0 being the start of the section and 1 being the end."
+                      placement="bottomRight"
+                      when={['hover']}
+                    >
+                      <InfoCircleOutlined className="cursor-pointer" />
+                    </CustomPopover>
+                    <span className="text-primary-8 py-1 text-base font-bold">{r.offset}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {children?.({ config: configAsset.config })}
+      </div>
+
+      <div className="flex w-full flex-[1_1_40%] flex-col items-end justify-center gap-5">
+        {configAsset.stimulus && (
+          <div className="flex w-full flex-col">
+            <div className="text-primary-8 mb-4 text-2xl font-bold">Stimulus</div>
+            <SimulationPlotAsImage yTitle="Current [nA]" plotData={configAsset.stimulus} />
+          </div>
+        )}
+
+        {configAsset.simulation && (
+          <div className="flex w-full flex-col">
+            <div className="text-primary-8 mb-4 text-2xl font-bold">Recording</div>
+            <ConfigProvider theme={{ hashed: false }}>
+              <Segmented
+                defaultValue="center"
+                className={classNames(
+                  'mb-4 max-w-max',
+                  'bg-white [&_.ant-segmented-group]:gap-2',
+                  '[&_.ant-segmented-item]:border [&_.ant-segmented-item]:border-gray-400 [&_.ant-segmented-item]:bg-white',
+                  '[&_.ant-segmented-item-selected]:border-primary-8! [&_.ant-segmented-item-selected]:bg-primary-8! [&_.ant-segmented-item-selected]:text-white [&_.ant-segmented-item-selected]:shadow-md!'
+                )}
+                onChange={(value) => setSimulationPlot(value)}
+                value={simulationPlot}
+                options={Object.entries(configAsset.simulation).map(([key]) => ({
+                  label: key,
+                  value: key,
+                }))}
+              />
+            </ConfigProvider>
+            {simulationPlot && (
+              <SimulationPlotAsImage plotData={get(configAsset.simulation, simulationPlot)} />
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NameDescription({ name, description }: { name: string; description: string }) {
+  return (
+    <div className="">
+      <div className={subtitleStyle}>Name</div>
+      <div className="text-2xl font-bold">{name}</div>
+      <p className="">{description}</p>
+    </div>
+  );
+}
+
+function Params({ payload }: { payload: SimulationPayload | null }) {
+  if (!payload) return null;
+
+  return (
+    <div className="flex justify-between gap-10">
+      <div>
+        <div className={subtitleStyle}>Temperature</div>
+        <div>
+          <span className="font-bold">{payload.config.conditions.celsius}</span>
+          <span>&nbsp;°C</span>
+        </div>
+      </div>
+
+      <div>
+        <div className={subtitleStyle}>Time step</div>
+        <div>
+          <span className="font-bold">0.01</span>
+          <span>&nbsp;ms</span>
+        </div>
+      </div>
+
+      <div>
+        <div className={subtitleStyle}>Initial voltage</div>
+        <div>
+          <span className="font-bold">{payload.config.conditions.vinit}</span>
+          <span>&nbsp;mV</span>
+        </div>
+      </div>
+
+      <div>
+        <div className={subtitleStyle}>Holding current</div>
+        <div>
+          <span className="font-bold">{payload.config.conditions.hypamp}</span>
+          <span>&nbsp;nA</span>
+        </div>
+      </div>
+    </div>
+  );
+}

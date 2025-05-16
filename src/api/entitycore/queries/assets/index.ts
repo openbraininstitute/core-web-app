@@ -114,12 +114,14 @@ export async function createJsonAsset({
   path,
   payload,
   meta,
+  label,
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityCoreDataType;
   entityId: string;
   path: string;
   payload: Record<string, any>;
+  label: string | null | undefined;
   meta?: Record<string, any>;
 }): Promise<IAsset> {
   const stringified = JSON.stringify(payload);
@@ -128,6 +130,7 @@ export async function createJsonAsset({
   const formData = new FormData();
 
   if (jsonFile) formData.append('file', jsonFile);
+  if (label) formData.append('label', label);
   if (meta) formData.append('meta', JSON.stringify(meta));
 
   const api = await authApiClient(entityCoreUrl);

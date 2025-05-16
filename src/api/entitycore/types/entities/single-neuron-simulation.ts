@@ -1,12 +1,16 @@
 import z from 'zod';
-import { INestedMEModel, IMEModelFilter } from './me-model';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { INestedMEModel } from '@/api/entitycore/types/entities/me-model';
 
+import {
+  SingleNeuronSimulationStatus,
+  type ISingleNeuronSimulationBase,
+} from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
   Timestamps,
   EntityCoreBaseAsset,
+  EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -16,47 +20,62 @@ import type {
   EtypeFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export enum SingleNeuronSimulationStatus {
-  started = 'started',
-  failure = 'failure',
-  success = 'success',
-}
-
-export interface ISingleNeuronSimulationBase {
-  name: string;
-  description: string;
-  seed: number;
-  status: SingleNeuronSimulationStatus;
-  injectionLocation: string[];
-  recordingLocation: string[];
-}
-
 export interface ISingleNeuronSimulation
   extends EntityCoreIdentifiable,
     EntityCoreBaseAsset,
     ISingleNeuronSimulationBase,
     Timestamps,
-    EntityAuthorization {
+    EntityAuthorization,
+    EntityCoreType {
   me_model: INestedMEModel;
-  type: EntityTypeEnum.SingleNeuronSimulation;
 }
 
+export interface MeTypeFilter {
+  me_type_creation_date__lte?: string | null;
+  me_type_creation_date__gte?: string | null;
+  me_type_update_date__lte?: string | null;
+  me_type_update_date__gte?: string | null;
+  me_type__name?: string | null;
+  me_type__name__in?: string | null;
+  me_type__name_ilike?: string | null;
+  me_type__id?: string | null;
+  me_type__id_in?: string | null;
+  me_type_species__id_in?: string | null;
+  me_type__validation_status?: string | null;
+  me_type__order_by?: string | null;
+}
+
+export interface MeModelFilter {
+  me_model__creation_date__lte?: string | null;
+  me_model__creation_date__gte?: string | null;
+  me_model__update_date__lte?: string | null;
+  me_model__update_date__gte?: string | null;
+  me_model__name?: string | null;
+  me_model__name__in?: Array<string | null>;
+  me_model__name__ilike?: string | null;
+  me_model__id?: string | null;
+  me_model__id__in?: Array<string | null>;
+  me_model__species_id__in?: Array<string | null>;
+  me_model__validation_status?: string | null;
+  me_model__order_by?: string | null;
+}
 export interface ISingleNeuronSimulationFilter
-  extends ContributionFilter,
-    MtypeFilter,
-    EtypeFilter,
-    BrainRegionFilter,
-    SharedFilter,
-    IMEModelFilter {}
+  extends Partial<ContributionFilter>,
+    Partial<MtypeFilter>,
+    Partial<EtypeFilter>,
+    Partial<BrainRegionFilter>,
+    Partial<SharedFilter>,
+    Partial<MeTypeFilter>,
+    Partial<MeModelFilter> {}
 
 export const CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
   status: z.nativeEnum(SingleNeuronSimulationStatus),
   seed: z.number().int(),
-  injectionLocation: z.array(z.string()),
-  recordingLocation: z.array(z.string()),
-  brain_region_id: z.number().int(),
+  injection_location: z.array(z.string()),
+  recording_location: z.array(z.string()),
+  brain_region_id: z.string().uuid(),
   me_model_id: z.string().uuid(),
 });
 

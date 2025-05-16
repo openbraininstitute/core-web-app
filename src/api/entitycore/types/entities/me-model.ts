@@ -1,6 +1,6 @@
 import z from 'zod';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
@@ -12,6 +12,7 @@ import type {
   IStrain,
   IEType,
   IMType,
+  EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -42,7 +43,8 @@ export interface IMEModel
   extends EntityCoreIdentifiable,
     IMEModelBase,
     Timestamps,
-    EntityAuthorization {
+    EntityAuthorization,
+    EntityCoreType {
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: BrainRegionHierarchyBase;
@@ -51,7 +53,6 @@ export interface IMEModel
   etypes: Array<IEType> | null;
   morphology: IReconstructionMorphology;
   emodel: IEModel;
-  type: EntityTypeEnum.Memodel;
 }
 
 export interface INestedMEModel extends IMEModelBase, Timestamps {

@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import isNil from 'lodash/isNil';
 
+import getMorphology from '@/api/bluenaas/get-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
-import { getSession } from '@/authFetch';
-import { isJSON } from '@/util/utils';
-import getMorphology from '@/api/bluenaas/getMorphology';
 import { isBluenaasError } from '@/types/simulation/single-neuron';
+import { isJSON } from '@/util/utils';
 
 export default function useMorphology({
   modelId,
@@ -23,17 +21,11 @@ export default function useMorphology({
   const [error, setError] = useState<string | null>(null);
 
   const readMorphology = useCallback(async (): Promise<Morphology | null> => {
-    const session = await getSession();
-    if (isNil(session)) {
-      throw new Error('No session found');
-    }
-
     const response = await getMorphology({
-      modelId,
-      token: session.accessToken,
-      virtualLabId,
-      projectId,
+      ctx: { virtualLabId, projectId },
+      model_id: modelId,
     });
+
     const reader = response.body?.getReader();
     let data: string = '';
     let value: Uint8Array | undefined;
@@ -48,7 +40,7 @@ export default function useMorphology({
         if (isJSON(data)) {
           const parsedJson = JSON.parse(data);
           if (isBluenaasError(parsedJson)) {
-            throw new Error(parsedJson.details ?? 'Morpholoy generation failed.', {
+            throw new Error(parsedJson.details ?? 'Morphology generation failed.', {
               cause: 'BluenaasError',
             });
           }

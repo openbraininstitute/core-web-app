@@ -237,9 +237,7 @@ export default function Configure({ params, searchParams }: Props) {
             context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
           })
         ),
-        () => {
-          setActiveProcess(null);
-        },
+        undefined,
         {
           feature: 'create-me-model-no-validation',
           section: 'build/create-me-model',
@@ -261,6 +259,7 @@ export default function Configure({ params, searchParams }: Props) {
         );
       }
       if (error) {
+        setActiveProcess(null);
         showErrorNotification(error, 'http');
       }
     });
@@ -299,12 +298,12 @@ export default function Configure({ params, searchParams }: Props) {
           <MorphologyOverviewCard
             reselectLink
             mode={morphologyId ? 'select' : 'summary'}
-            promise={sessionValue.mmodel}
+            data={sessionValue.mmodel}
           />
           <EModelOverviewCard
             reselectLink
             mode={emodelId ? 'select' : 'summary'}
-            promise={sessionValue.emodel}
+            data={sessionValue.emodel}
           />
         </div>
       </div>

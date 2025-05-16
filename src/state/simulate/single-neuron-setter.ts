@@ -1,14 +1,17 @@
 'use client';
 
-import { atom } from 'jotai';
-import { RESET } from 'jotai/utils';
 import { captureException } from '@sentry/nextjs';
+import { RESET } from 'jotai/utils';
+import { atom } from 'jotai';
 
 import uniqBy from 'lodash/uniqBy';
-import pick from 'lodash/pick';
 import values from 'lodash/values';
-import delay from 'lodash/delay';
 import sortBy from 'lodash/sortBy';
+import isNil from 'lodash/isNil';
+import delay from 'lodash/delay';
+import pick from 'lodash/pick';
+
+import updateArray from '@/util/updateArray';
 
 import {
   genericSingleNeuronSimulationPlotDataAtom,
@@ -16,39 +19,44 @@ import {
   simulateStepTrackerAtom,
   simulationStatusAtom,
   stimulusPreviewPlotDataAtom,
-} from './single-neuron';
-import { simulationExperimentalSetupAtom } from './categories/simulation-conditions';
-import { currentInjectionSimulationConfigAtom } from './categories/current-injection-simulation';
-import { synaptomeSimulationConfigAtom } from './categories/synaptome-simulation-config';
-import { recordingSourceForSimulationAtom } from './categories/recording-source-for-simulation';
-import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-
+} from '@/state/simulate/single-neuron';
+import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
+import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
+import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
+import { simulationExperimentalSetupAtom } from '@/state/simulate/categories/simulation-conditions';
+import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/run-single-neuron-simulation';
+import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
 import {
-  SingleNeuronModelSimulationConfig,
-  isBluenaasError,
-  SimulationStreamData,
-} from '@/types/simulation/single-neuron';
+  getMEModel,
+  createSingleNeuronSimulation,
+  createSingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/queries';
+import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+import { isBluenaasError } from '@/types/simulation/single-neuron';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { SimulationType } from '@/types/simulation/common';
 import { isJSON } from '@/util/utils';
-import { getSession } from '@/authFetch';
-import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/runSimulation';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import updateArray from '@/util/updateArray';
-import { getMEModel, createSingleNeuronSimulation } from '@/api/entitycore/queries';
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/entities/single-neuron-simulation';
-import { IMEModel } from '@/api/entitycore/types';
-import { notification } from '@/api/notifications';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
+import {
+  SingleNeuronSynaptomeSimulation,
+  SingleNeuronSimulation,
+} from '@/entity-configuration/domain/simulation';
+import { messages } from '@/i18n/en/simulation';
+import { tryCatch } from '@/api/utils';
+
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type {
+  SingleNeuronModelSimulationConfig,
+  SimulationStreamData,
+} from '@/types/simulation/single-neuron';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
 export const STIMULUS_PLOT_NAME = 'stimulus-plot';
 export const SIMULATION_PLOT_NAME = 'simulation-plot';
 
-const DEFAULT_ERROR_MSG =
-  'Simulation encountered an error, please be sure that the configuration is correct and try again';
-const LOW_FUNDS_ERROR_MSG =
-  'The project does not have enough credits to run the simulation, please add credits and try again';
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 export const createSingleNeuronSimulationAtom = atom(
@@ -59,15 +67,11 @@ export const createSingleNeuronSimulationAtom = atom(
     name: string,
     description: string,
     modelId: string,
-    vLabId: string,
+    meModelId: string,
+    virtualLabId: string,
     projectId: string,
     simulationType: SimulationType
   ) => {
-    const session = await getSession();
-    if (!session) {
-      throw new Error('No valid session found');
-    }
-
     const recordFromConfig = get(recordingSourceForSimulationAtom);
     const experimentalSetupConfig = get(simulationExperimentalSetupAtom);
     const currentInjectionConfig = get(currentInjectionSimulationConfigAtom);
@@ -84,71 +88,95 @@ export const createSingleNeuronSimulationAtom = atom(
     );
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
-      recordFrom: recordFromUniq,
+      record_from: recordFromUniq,
       conditions: experimentalSetupConfig,
-      currentInjection: currentInjectionConfig[0],
+      current_injection: currentInjectionConfig[0],
       synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
     };
 
-    let meModel: IMEModel | null = null;
-
-    try {
-      meModel = await getMEModel({
-        id: modelId,
-        context: {
-          virtualLabId: vLabId,
-          projectId,
-        },
-      });
-    } catch (error) {
-      notification.error('Error fetching model');
-      return null;
+    const { data: meModel, error } = await tryCatch(
+      getMEModel({
+        id: meModelId,
+        context: { virtualLabId, projectId },
+      })
+    );
+    if (error || isNil(meModel)) {
+      throw new Error(messages.SimulationPrerequisitesMEModelError);
     }
 
-    try {
-      const simulation = await createSingleNeuronSimulation({
-        body: {
-          name,
-          description,
-          status: SingleNeuronSimulationStatus.success,
-          seed: experimentalSetupConfig.seed,
-          injectionLocation: [singleNeuronSimulationConfig.currentInjection.injectTo],
-          recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
-            (r) => `${r.section}_${r.offset}`
-          ),
-          brain_region_id: meModel.brain_region.id,
-          me_model_id: meModel.id,
-        },
-        context: {
-          virtualLabId: vLabId,
-          projectId,
-        },
+    const basePayload = {
+      name,
+      description,
+      status: SingleNeuronSimulationStatus.success,
+      seed: experimentalSetupConfig.seed,
+      injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
+      recording_location: singleNeuronSimulationConfig.record_from.map(
+        (r) => `${r.section}_${r.offset}`
+      ),
+      brain_region_id: meModel.brain_region.id,
+    };
+    let simulationPromise: Promise<
+      ISingleNeuronSimulation | ISingleNeuronSynaptomeSimulation
+    > | null = null;
+    if (simulationType === 'single-neuron-simulation') {
+      simulationPromise = createSingleNeuronSimulation({
+        context: { virtualLabId, projectId },
+        body: { ...basePayload, me_model_id: meModel.id },
       });
-
-      createJsonAsset({
-        ctx: {
-          virtualLabId: vLabId,
-          projectId,
-        },
-        entityType: SingleNeuronSimulation.type,
-        entityId: simulation.id,
-        path: `single-neuron-simulation-${simulation.id}`,
-        payload: {
-          simulation: Object.keys(simulationResult).reduce((prev, curr) => {
-            return {
-              ...prev,
-              [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
+    } else if (simulationType === 'synaptome-simulation') {
+      simulationPromise = createSingleNeuronSynaptomeSimulation({
+        context: { virtualLabId, projectId },
+        body: { ...basePayload, synaptome_id: modelId },
+      });
+    }
+    if (simulationPromise) {
+      const { data: simulation, error: simulationError } = await tryCatch(simulationPromise);
+      if (simulationError) {
+        throw new Error(messages.CreationSimulationFailed);
+      }
+      const assetBasePayload =
+        simulationType === 'single-neuron-simulation'
+          ? {
+              label: SingleNeuronSimulation.asset.configfile,
+              entityType: SingleNeuronSimulation.type,
+              path: `single-neuron-simulation-${simulation.id}`,
+            }
+          : {
+              label: SingleNeuronSynaptomeSimulation.asset.configfile,
+              entityType: SingleNeuronSynaptomeSimulation.type,
+              path: `single-neuron-synaptome-simulation-${simulation.id}`,
             };
-          }, {}),
-          stimulus: convertObjectKeysToSnakeCase(stimulusResults),
-          config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
-        },
-      });
-
-      return simulation;
-    } catch (error) {
-      notification.error('Error creating simulation');
-      return null;
+      if (simulation) {
+        const { data: asset, error: assetError } = await tryCatch(
+          createJsonAsset({
+            ctx: {
+              virtualLabId,
+              projectId,
+            },
+            entityId: simulation.id,
+            payload: {
+              simulation: Object.keys(simulationResult).reduce((prev, curr) => {
+                return {
+                  ...prev,
+                  [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
+                };
+              }, {}),
+              stimulus: convertObjectKeysToSnakeCase(stimulusResults),
+              config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
+            },
+            ...assetBasePayload,
+          })
+        );
+        if (asset) {
+          return {
+            simulation,
+            asset,
+          };
+        }
+        if (assetError) {
+          throw new Error(messages.CreationSimulationIOAssetFailed);
+        }
+      }
     }
   }
 );
@@ -162,30 +190,26 @@ export const launchSimulationAtom = atom<
   async (
     get,
     set,
-    vlabId: string,
+    virtualLabId: string,
     projectId: string,
     modelId: string,
     simulationType: SimulationType,
     duration: number
   ) => {
-    const session = await getSession();
-    if (!session?.accessToken) {
-      throw new Error('Session token should be valid');
-    }
     const currentInjectionConfig = get(currentInjectionSimulationConfigAtom);
     const synaptomeConfig = get(synaptomeSimulationConfigAtom);
     const recordFromConfig = get(recordingSourceForSimulationAtom);
     const conditionsConfig = get(simulationExperimentalSetupAtom);
     if (simulationType === 'single-neuron-simulation') {
       if (!currentInjectionConfig) {
-        throw new Error('Cannot run simulation without valid configuration for current injection');
+        throw new Error(messages.CurrentInjectionConfigMissingError);
       }
     } else if (simulationType === 'synaptome-simulation') {
       if (
         (!currentInjectionConfig || !currentInjectionConfig.length) &&
         (!synaptomeConfig || !synaptomeConfig.length)
       ) {
-        throw new Error('Cannot run simulation without valid configuration');
+        throw new Error(messages.SynaptomeConfigurationError);
       }
     }
 
@@ -213,29 +237,32 @@ export const launchSimulationAtom = atom<
     );
 
     try {
-      const response = await runGenericSingleNeuronSimulation({
-        vlabId,
-        projectId,
-        modelId,
-        token: session.accessToken,
-        config: {
-          recordFrom: recordFromUniq,
-          conditions: conditionsConfig,
-          currentInjection:
-            currentInjectionConfig.length > 0 ? currentInjectionConfig[0] : undefined,
-          synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
-          type: simulationType,
-          duration,
-        },
-      });
+      const { data: response, error } = await tryCatch(
+        runGenericSingleNeuronSimulation({
+          ctx: { virtualLabId, projectId },
+          modelId,
+          config: {
+            recordFrom: recordFromUniq,
+            conditions: conditionsConfig,
+            currentInjection:
+              currentInjectionConfig.length > 0 ? currentInjectionConfig[0] : undefined,
+            synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
+            type: simulationType,
+            duration,
+          },
+        })
+      );
 
+      if (error) {
+        throw new Error('simulation failed');
+      }
       if (!response.ok) {
-        let errorMessage = DEFAULT_ERROR_MSG;
+        let errorMessage = messages.DefaultSimulationError;
 
         try {
-          const errResponseObj = await response.json();
+          const errResponseObj = await response?.json();
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
-            errorMessage = LOW_FUNDS_ERROR_MSG;
+            errorMessage = messages.LowFundsError;
           }
         } catch {
           // ignore
@@ -305,9 +332,7 @@ export const launchSimulationAtom = atom<
       });
       set(simulationStatusAtom, {
         status: 'error',
-        description: error.cause
-          ? `${error}`
-          : 'We are having trouble running the simulation, please wait a few moments, and try again',
+        description: error.cause ? `${error}` : messages.RunningSimulationDefaultError,
       });
       set(simulateStepTrackerAtom, {
         steps: get(simulateStepTrackerAtom).steps.map((p) => ({
@@ -323,11 +348,9 @@ export const launchSimulationAtom = atom<
         const jsonData = JSON.parse(part) as SimulationStreamData;
 
         if (isBluenaasError(jsonData)) {
-          throw new Error(
-            jsonData.details ??
-              'Simulation encountered an error, please be sure that the configuration is correct and try again',
-            { cause: 'BluenaasError' }
-          );
+          throw new Error(jsonData.details ?? messages.SteamingSimulationResultDefaultError, {
+            cause: 'BluenaasError',
+          });
         }
         const newPlot: PlotDataEntry = {
           x: jsonData.x,

@@ -17,7 +17,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const searchParams = await props.searchParams;
   let title = 'Single Neuron Synaptome';
-  let description = 'View and manage your virtual labs, create new projects.';
+  let description = 'Create a new single neuron synaptome';
 
   if (searchParams.mode === 'clone' && searchParams.model) {
     const { data, error } = await tryCatch(
@@ -96,6 +96,7 @@ export default async function Page(props: Props) {
   if (error) {
     return <ErrorComponent error={error} />;
   }
+
   const phase = data?.entity && data.config ? 'me-model' : 'basic';
 
   return (

@@ -17,7 +17,7 @@ import useNotification from '@/hooks/notifications';
 type Props = {
   virtualLabId: string;
   projectId: string;
-  modelId: string;
+  meModelId: string;
   useEvents?: boolean;
   useActions?: boolean;
   useZoomer?: boolean;
@@ -43,7 +43,7 @@ type Props = {
 
 export default function NeuronViewer({
   children,
-  modelId,
+  meModelId,
   useEvents,
   useActions,
   useZoomer,
@@ -91,7 +91,7 @@ export default function NeuronViewer({
   }, []);
 
   const { loading, error } = useMorphology({
-    modelId,
+    modelId: meModelId,
     callback: runRenderer,
     projectId,
     virtualLabId,

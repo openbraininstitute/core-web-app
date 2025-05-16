@@ -3,56 +3,57 @@ import { ErrorBoundary } from '@sentry/nextjs';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 
+import { useParams } from 'next/navigation';
+import { isNil } from 'lodash';
 import { getSimulationsPerModelQuery } from '@/queries/es';
 import { SynaptomeSimulation } from '@/types/nexus';
 import { getSession } from '@/authFetch';
 import { queryES } from '@/api/nexus';
 
 import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
-import SimulationDetail from '@/features/entities/me-model/detail-view/simulation-details';
+import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-
-type LocationParams = {
-  projectId: string;
-  virtualLabId: string;
-};
+import { WorkspaceContext } from '@/types/common';
+import { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import {
+  getSingleNeuronSimulations,
+  getSingleNeuronSynaptomeSimulations,
+} from '@/api/entitycore/queries';
+import { tryCatch } from '@/api/utils';
+import { EntityTypeEnum, ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
 
 function Error({ error }: { error: unknown }) {
   return <SimpleErrorComponent error={error as Error} />;
 }
-export default function Results({ params, modelId }: { params: LocationParams; modelId: string }) {
-  const [simulations, setSimulations] = useState<SynaptomeSimulation[]>([]);
+
+type Props = {
+  type: EntitySlugValue;
+  modelId: string;
+};
+
+export default function Results({ modelId }: Props) {
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const [simulations, setSimulations] = useState<Array<ISingleNeuronSynaptomeSimulation>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!modelId) return;
-
-    const fetchSims = async () => {
+    async function getSimulations() {
       setLoading(true);
-      setError(false);
-      try {
-        const session = await getSession();
-        if (!session) return;
+      const { data: result, error } = await tryCatch(
+        getSingleNeuronSynaptomeSimulations({
+          context: { virtualLabId, projectId },
+          filters: { synaptome__id: modelId },
+          withFacets: false,
+        }),
+        () => setLoading(false)
+      );
+      if (result) setSimulations(result.data);
+      if (error) setError(!!error);
+    }
 
-        const simulationsPerMEModelQuery = getSimulationsPerModelQuery({
-          modelId,
-          type: 'SynaptomeSimulation',
-        });
-        const sims = await queryES<SynaptomeSimulation>(simulationsPerMEModelQuery, session, {
-          org: params.virtualLabId,
-          project: params.projectId,
-        });
-        setSimulations(sims);
-      } catch (err) {
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSims();
-  }, [params.projectId, params.virtualLabId, modelId]);
+    getSimulations();
+  }, [modelId]);
 
   if (loading) {
     return (
@@ -92,8 +93,12 @@ export default function Results({ params, modelId }: { params: LocationParams; m
   return (
     <div className="flex w-full flex-col gap-2">
       {simulations.map((sim, indx) => (
-        <ErrorBoundary fallback={Error} key={sim['@id']}>
-          <SimulationDetail<SynaptomeSimulation> simulation={sim} index={indx}>
+        <ErrorBoundary fallback={Error} key={sim.id}>
+          <SimulationDetail<ISingleNeuronSynaptomeSimulation>
+            type={EntityTypeEnum.SingleNeuronSynaptomeSimulation}
+            simulation={sim}
+            index={indx}
+          >
             {({ config }) => {
               if (!config.synaptome) return null;
               return (
@@ -120,7 +125,7 @@ export default function Results({ params, modelId }: { params: LocationParams; m
                             <ConfigItem
                               {...{ label: 'frequency', value: c.frequency, unit: 'hz' }}
                             />
-                            <ConfigItem {...{ label: 'weight scalar', value: c.weightScalar }} />
+                            <ConfigItem {...{ label: 'weight scalar', value: c.weight_scalar }} />
                           </div>
                         </div>
                       </div>

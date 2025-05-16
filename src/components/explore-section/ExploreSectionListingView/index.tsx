@@ -62,7 +62,6 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
 
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
   const { node } = useBrainRegionHierarchy({ dataKey });
-
   const result = useLoadableValue(
     dataAtom({
       dataType,

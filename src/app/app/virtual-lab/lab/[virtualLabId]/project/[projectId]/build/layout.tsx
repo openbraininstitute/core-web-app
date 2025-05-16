@@ -1,16 +1,20 @@
 'use client';
 
-import { use } from 'react';
-
 import { ErrorBoundary } from 'react-error-boundary';
+import { ReactNode, use } from 'react';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import VirtualLabProjectSidebar from '@/components/VirtualLab/projects/VirtualLabProjectSidebar';
-import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 
-export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
-  const params = use(props.params);
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
+type Props = ServerSideComponentProp<WorkspaceContext, null> & {
+  children: ReactNode;
+};
+
+export default function VirtualLabProjectLayout(props: Props) {
+  const { virtualLabId, projectId } = use(props.params);
 
   const { children } = props;
 
@@ -18,12 +22,8 @@ export default function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
     <div className="bg-primary-9 flex pr-5 text-white">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <div className="top-0 flex h-screen w-1/4 flex-row gap-4">
-          <Nav params={params} />
-
-          <VirtualLabProjectSidebar
-            virtualLabId={params.virtualLabId}
-            projectId={params.projectId}
-          />
+          <Nav params={{ virtualLabId, projectId }} />
+          <VirtualLabProjectSidebar virtualLabId={virtualLabId} projectId={projectId} />
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>

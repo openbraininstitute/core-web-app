@@ -1,26 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
-import { Form, Button, Space, InputNumber } from 'antd';
+import { Form, Button, Space, InputNumber, App } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useAtom, useSetAtom } from 'jotai';
 import { z } from 'zod';
-
 import sample from 'lodash/sample';
 
+import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/single-neuron-synaptome/build/create.state-session';
 import SynapseSet from '@/features/entities/single-neuron-synaptome/build/elements/synapse-set';
-import useNotification from '@/hooks/notifications';
 
-import {
-  ISingleNeuronSynaptome,
-  SingleNeuronSynaptomeConfigurationSchema,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import {
-  sendRemoveSynapses3DEvent,
-  sendResetSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
-
+import { SingleNeuronSynaptomeConfigurationSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
@@ -35,12 +27,19 @@ import {
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import { SimulationType } from '@/types/virtual-lab/lab';
 import { OneshotSession } from '@/services/accounting';
+import { resolveDataKey } from '@/utils/key-builder';
 import { ServiceSubtype } from '@/types/accounting';
+import {
+  sendRemoveSynapses3DEvent,
+  sendResetSynapses3DEvent,
+} from '@/components/neuron-viewer/hooks/events';
 import { messages } from '@/i18n/en/synaptome';
-import { getSession } from '@/authFetch';
 import { tryCatch } from '@/api/utils';
 
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type {
+  TSingleNeuronSynaptomeConfiguration,
+  ISingleNeuronSynaptome,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
@@ -76,16 +75,26 @@ export default function SynaptomeConfigurationForm({
   virtualLabId,
   projectId,
 }: Props) {
+  const { notification } = App.useApp();
   const { push: navigate } = useRouter();
   const [loading, setLoading] = useState(false);
   const [synapsesHasErrors, setSynapsesHasErrors] = useState<Array<(string | number)[]>>([]);
-  const { error: notifyError, success: notifySuccess } = useNotification();
   const form = Form.useFormInstance<SynaptomeModelConfiguration>();
   const seed = Form.useWatch<number>('seed', form);
   const watchedSynapses = Form.useWatch<number>('synapses', form);
   const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
   const setSimulationScope = useSetAtom(selectedSimulationScopeAtom);
   const [isPending, startTransition] = useTransition();
+  const { sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
+    virtualLabId,
+    projectId,
+    stateId,
+  });
+  const dataKey = resolveDataKey({
+    section: 'explore',
+    projectId,
+  });
+  const refreshDataAtom = useRefreshDataAtom(dataKey);
   // const refreshSynaptomeModels = useSetAtom(
   //   queryAtom({
   //     dataType: DataType.SingleNeuronSynaptome,
@@ -154,15 +163,13 @@ export default function SynaptomeConfigurationForm({
 
     try {
       setLoading(true);
-      const session = await getSession();
-      if (!session) return;
 
       async function buildSingleNeuronSynaptome() {
         const { data, error } = await tryCatch(
           SingleNeuronSynaptome.api.query.create!({
             context: { virtualLabId, projectId },
             body: {
-              brain_region_id: '23a7711a-8133-4876-b7eb-dcd9e87a1613',
+              brain_region_id: sessionValue?.selectedRows?.at(0)?.brain_region.id,
               name: values.name,
               description: values.description || '',
               seed: values.seed,
@@ -177,6 +184,7 @@ export default function SynaptomeConfigurationForm({
             entityId: data?.id,
             entityType: SingleNeuronSynaptome.type,
             path: `${SingleNeuronSynaptome.asset.configfile}_${data?.id}`,
+            label: SingleNeuronSynaptome.asset.configfile ?? null,
             payload: { synapses: values.synapses },
           })
         );
@@ -193,17 +201,24 @@ export default function SynaptomeConfigurationForm({
         subtype: ServiceSubtype.SynaptomeBuild,
         count: 1,
       });
+
       startTransition(async () => {
         const result = await accountingSession.useWith<{
           entity: ISingleNeuronSynaptome;
           asset: IAsset;
         } | null>(() => buildSingleNeuronSynaptome());
         if (result) {
-          sendResetSynapses3DEvent();
-          form.resetFields();
-          setSimulationScope(SimulationType.Synaptome);
-          notifySuccess(messages.CreationModelSucceed, 7, 'topRight');
           setLoading(false);
+          form.resetFields();
+          sendResetSynapses3DEvent();
+          setSimulationScope(SimulationType.Synaptome);
+          notification.success({
+            message: messages.CreationModelSucceed,
+            duration: 7,
+            placement: 'topRight',
+            key: dataKey,
+          });
+          refreshDataAtom();
           const urlParams = new URLSearchParams();
           urlParams.set(DEFAULT_BRAIN_REGION_QUERY_ID, entity.brain_region.id);
           urlParams.set(
@@ -224,7 +239,12 @@ export default function SynaptomeConfigurationForm({
         (error as any)?.cause?.error_code === LOW_FUNDS_ERROR_CODE
           ? messages.LowFundsError
           : messages.CreationModelFailed;
-      notifyError(errorMessage, 7, 'topRight', undefined, 'synaptome-config');
+      notification.error({
+        message: errorMessage,
+        duration: 7,
+        placement: 'topRight',
+        key: 'synaptome-config',
+      });
       setLoading(false);
     }
   };

@@ -1,7 +1,7 @@
-import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
-import uniq from 'lodash/uniq';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import isEmpty from 'lodash/isEmpty';
+import uniq from 'lodash/uniq';
 import pick from 'lodash/pick';
 import _get from 'lodash/get';
 
@@ -20,12 +20,9 @@ import {
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
 import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import { Filter } from '@/features/listing-filter-panel/types';
 import {
-  selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
-  setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
 import {
   transformFiltersToQuery,
@@ -212,9 +209,20 @@ export const previousDataAtom = atomFamily(<T>(ctx: DataAtomBinding) => {
   return childAtom;
 }, isListAtomEqual);
 
+export const refreshDataAtomFamily = atomFamily((key: string) => atom<symbol>(Symbol()));
+export function useRefreshDataAtom(key: string): () => void {
+  const setRefresh = useSetAtom(refreshDataAtomFamily(key));
+
+  return () => {
+    setRefresh(Symbol());
+  };
+}
+
 export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAtomBinding) => {
+  const refreshDataAtom = refreshDataAtomFamily(ctx.key);
   const childAtom = atom<Promise<EntityCoreResponse<T>>>(
     async (get): Promise<EntityCoreResponse<T>> => {
+      get(refreshDataAtom);
       const searchString = get(searchStringAtom(ctx.key));
       const pageNumber = get(pageNumberAtom(`${ctx.key}/${ctx.brainRegionId}`));
       const filters = await get(filtersAtom(ctx));
