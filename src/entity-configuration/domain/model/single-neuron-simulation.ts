@@ -1,13 +1,7 @@
-import {
-  getSingleNeuronSynaptome,
-  getSingleNeuronSynaptomes,
-  createSingleNeuronSynaptome,
-} from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import { getSingleNeuronSimulation, getSingleNeuronSimulations } from '@/api/entitycore/queries';
@@ -18,6 +12,7 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
   legacyType: DataType.SingleNeuronSimulation,
   type: EntityTypeEnum.SingleNeuronSimulation,
   slug: EntitySlug.SingleNeuronSimulation,
+  isBookmarkable: true,
   api: {
     config: {
       allowedFacets: true,
