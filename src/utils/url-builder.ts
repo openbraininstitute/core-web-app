@@ -31,7 +31,6 @@ export function resolveExploreDetailsPageUrl({
   }
   if (ctx && ctx.virtualLabId && ctx.projectId) {
     if (entityId && usedSlug) {
-      console.log('\n \n', 'here', routePrefix, usedSlug);
       return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}/${entityId}`;
     }
     if (usedSlug) {

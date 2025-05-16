@@ -24,7 +24,7 @@ export type Props = {
 export default async function Detail(props: Props) {
   const { id, virtualLabId, projectId } = props.params;
   const source = await entity.api.query.one!({
-    id: id,
+    id,
     context: { virtualLabId, projectId },
   });
 

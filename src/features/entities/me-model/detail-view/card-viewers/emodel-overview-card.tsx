@@ -28,7 +28,7 @@ const selectUrl = 'configure/e-model';
 
 function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Props) {
   const searchParams = useSearchParams();
-  let emodel: IEModel | null = null;
+  const emodel: IEModel | null = null;
 
   const params = useParams<{
     virtualLabId?: string;

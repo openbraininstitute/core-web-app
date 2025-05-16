@@ -31,7 +31,9 @@ import {
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { IMEModel } from '@/api/entitycore/types';
+import { resolveDataKey } from '@/utils/key-builder';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/model/single-neuron-simulation';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import Styles from '@/styles/vlabs.module.css';
 
 export default function VirtualLabProjectSimulatePage(props: {
@@ -65,7 +67,13 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const dataType = SimulationScopeToDataType[selectedSimType];
 
-  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
+  const dataKey = resolveDataKey({
+    projectId,
+    section: 'experiment',
+    entity: SingleNeuronSimulation,
+  });
+
+  const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
@@ -81,18 +89,6 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     // TODO: fix it when we have simulations
     legacyType: selectedSimType ?? DataType.CircuitMEModel,
   });
-
-  if (selectedRows[0])
-    console.log(
-      resolveExploreDetailsPageUrl({
-        ctx: {
-          virtualLabId,
-          projectId,
-        },
-        entityId: selectedRows[0].id,
-        dataType,
-      })
-    );
 
   return (
     <>
@@ -118,7 +114,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 style={{ background: 'bg-white' }}
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
-                dataKey={projectId + 'simulate' + dataType}
+                dataKey={dataKey}
                 showLoadingState={false}
               />
               {loadMoreDiv}
@@ -181,9 +177,9 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
     router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
   };
 
-  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
+  const dataKey = resolveDataKey({ projectId, section: 'experiment', entity: MEmodel });
 
-  console.log(selectedRows);
+  const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
 
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -222,7 +218,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
           virtualLabInfo={{ virtualLabId, projectId }}
           selectionType="radio"
           renderButton={() => null}
-          dataKey={projectId + 'simulate' + modelType}
+          dataKey={dataKey}
           showLoadingState={false}
         />
         {buttonsVisible && selectedRows.length > 0 && (

@@ -27,7 +27,7 @@ const selectUrl = 'configure/morphology';
 
 function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }: Props) {
   const searchParams = useSearchParams();
-  let mmodel: IReconstructionMorphology | null = null;
+  const mmodel: IReconstructionMorphology | null = null;
   const params = useParams<{
     virtualLabId: string;
     projectId: string;
