@@ -10,7 +10,7 @@ export enum EntityTypeEnum {
   ElectricalCellRecording = 'electrical_cell_recording',
   SingleNeuronSimulation = 'single_neuron_simulation',
   SingleNeuronSynaptome = 'single_neuron_synaptome',
-  SingleNeuronSynaptomeSimulation = 'single_neuron_synaptome_simulation',
+  SynaptomeSimulation = 'single_neuron_synaptome_simulation',
   Subject = 'subject',
   SynapticPathway = 'synaptic_pathway',
 }

@@ -34,7 +34,7 @@ import {
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
+import { EntityTypeEnum, IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import Styles from '@/styles/vlabs.module.css';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
@@ -76,6 +76,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
   const atomKey = 'simulate' + selectedTab + projectId;
 
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
+
   const dataType = SimulationScopeToDataType[selectedSimType];
 
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
@@ -143,10 +144,14 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}
-                    entityId="" // TODO: fix it when whe have simulation data
+                    entityId={entity.id} // TODO: fix it when whe have simulation data
                     // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
                     resourceId={selectedRows[0].id}
-                    typeSlug={SIMULATION_DATA_TYPE_CONFIG[dataType].name}
+                    type={
+                      dataType === DataType.SingleNeuronSimulation
+                        ? 'single_neuron_simulation'
+                        : 'single_neuron_synaptome_simulation'
+                    }
                     customButton={customBookmarkButton}
                   />
                 )}

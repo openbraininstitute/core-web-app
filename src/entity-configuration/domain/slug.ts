@@ -1,5 +1,3 @@
-import SingleNeuron from '@/components/simulate/single-neuron/containers/SingleNeuron';
-
 export const ExperimentalEntitySlug = {
   ReconstructionMorphology: 'morphology',
   ExperimentalNeuronDensity: 'neuron-density',
