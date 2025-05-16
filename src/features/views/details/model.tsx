@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import { match } from 'ts-pattern';
-import dynamic from 'next/dynamic';
+
+import SynaptomeDetailView from '@/page-wrappers/explore/single-neuron-synaptome';
+import MEModelDetailView from '@/page-wrappers/explore/me-model';
+import EModelDetailView from '@/page-wrappers/explore/e-model';
 
 import { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
@@ -9,30 +12,18 @@ import { DataType } from '@/constants/explore-section/list-views';
 import type { ModelEntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
 
-const EModelDetailView = dynamic(() => import('@/page-wrappers/explore/e-model'));
-const MEModelDetailView = dynamic(() => import('@/page-wrappers/explore/me-model'));
-const SynaptomeDetailView = dynamic(
-  () => import('@/page-wrappers/explore/single-neuron-synaptome')
-);
-const SingleNeuronSimulationView = dynamic(
-  () => import('@/page-wrappers/explore/single-neuron-simulation')
-);
-
 type Props = WorkspaceContext & {
   id: string;
   type: ModelEntitySlugValue;
 };
 
-export default function DetailView(props: Props) {
+export default async function DetailView(props: Props) {
   const entity = getEntityBySlug({ slug: props.type });
   if (!entity) notFound();
 
   return match<EntityCoreTypeConfig<any>>(entity)
     .with({ legacyType: DataType.CircuitEModel }, () => <EModelDetailView params={props} />)
     .with({ legacyType: DataType.CircuitMEModel }, () => <MEModelDetailView params={props} />)
-    .with({ legacyType: DataType.SingleNeuronSimulation }, () => (
-      <SingleNeuronSimulationView params={props} simulationType="single-neuron-simulation" />
-    ))
     .with({ legacyType: DataType.SingleNeuronSynaptome }, () => (
       <SynaptomeDetailView params={props} />
     ))

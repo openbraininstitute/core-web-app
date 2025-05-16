@@ -1,4 +1,5 @@
 import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
@@ -50,6 +51,7 @@ export interface IEModel
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
   exemplar_morphology: ExemplarMorphology;
+  ion_channel_models: Array<IonChannelModel>;
 }
 
 export interface IEModelFilter

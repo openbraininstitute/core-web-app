@@ -20,8 +20,7 @@ import GenericButton from '@/components/Global/GenericButton';
 import type {
   IReconstructionMorphology,
   IReconstructionMorphologyExpanded,
-} from '@/api/entitycore/types/entities/reconstruction-morphology';
-import type { Result } from '@/api/utils';
+} from '@/api/entitycore/types';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -46,12 +45,10 @@ type Props = {
     projectId: string;
     virtualLabId: string;
   };
-  promise: Promise<Result<IReconstructionMorphology | IReconstructionMorphologyExpanded, Error>>;
+  exemplarMorphology: IReconstructionMorphology | IReconstructionMorphologyExpanded;
 };
 
-export default function ExemplarMorphology({ params, promise }: Props) {
-  const exemplarMorphology = use(promise).data;
-
+export default function ExemplarMorphology({ params, exemplarMorphology }: Props) {
   // const { id } = params;
 
   // const [orgProj] = from64(id).split('!/!');
