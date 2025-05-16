@@ -4,7 +4,11 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import { ISingleNeuronSimulation } from '@/api/entitycore/types';
-import { getSingleNeuronSimulation, getSingleNeuronSimulations } from '@/api/entitycore/queries';
+import {
+  getSingleNeuronSimulation,
+  getSingleNeuronSimulations,
+  createSingleNeuronSimulation,
+} from '@/api/entitycore/queries';
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
   group: 'models',
@@ -21,6 +25,7 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
     query: {
       list: getSingleNeuronSimulations,
       one: getSingleNeuronSimulation,
+      create: createSingleNeuronSimulation,
     },
   },
   explore: {
