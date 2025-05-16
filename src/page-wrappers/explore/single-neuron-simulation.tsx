@@ -1,13 +1,12 @@
 'use client';
 
-import { use } from 'react';
 import { ArrowRightOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { usePathname } from 'next/navigation';
 import { saveAs } from 'file-saver';
 
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
-import ModelDetails from '@/components/simulate/SimulationDetails/MEModelDetails';
+import ModelDetails from '@/features/entities/single-neuron-simulation/elements/me-model-details';
 
 import { useSimulation } from '@/hooks/useSimulation';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
