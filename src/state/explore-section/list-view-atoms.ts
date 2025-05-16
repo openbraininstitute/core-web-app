@@ -7,7 +7,10 @@ import _get from 'lodash/get';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
-import { EntityCoreFields , CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  EntityCoreFields,
+  CoreFieldFilterTypeEnum,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
 import fetchDataQuery from '@/queries/explore-section/data';

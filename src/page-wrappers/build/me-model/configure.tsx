@@ -44,8 +44,8 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
 
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
-  const {mmodel} = sessionValue;
-  const {emodel} = sessionValue;
+  const { mmodel } = sessionValue;
+  const { emodel } = sessionValue;
   const fields = [
     {
       className: 'col-span-6',
@@ -262,7 +262,6 @@ export default function Configure({ params, searchParams }: Props) {
       }
       if (error) {
         showErrorNotification(error, 'http');
-        
       }
     });
   };

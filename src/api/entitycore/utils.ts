@@ -2,7 +2,7 @@ import find from 'lodash/find';
 import { EntityCoreBaseAsset, IAsset } from './types/shared/global';
 import authApiClient from '@/api/apiClient';
 
-import { entityCorePublicProjectId, entityCorePublicVirtualLabId , entityCoreUrl } from '@/config';
+import { entityCorePublicProjectId, entityCorePublicVirtualLabId, entityCoreUrl } from '@/config';
 
 export const getEntityCorePublicContext = () => ({
   headers: {

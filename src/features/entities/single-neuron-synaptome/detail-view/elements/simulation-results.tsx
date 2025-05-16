@@ -18,7 +18,7 @@ type LocationParams = {
 };
 
 function Error({ error }: { error: unknown }) {
-  return <SimpleErrorComponent error={error as Error} />
+  return <SimpleErrorComponent error={error as Error} />;
 }
 export default function Results({ params, modelId }: { params: LocationParams; modelId: string }) {
   const [simulations, setSimulations] = useState<SynaptomeSimulation[]>([]);

@@ -8,7 +8,6 @@ import { classNames } from '@/util/utils';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 import styles from '@/features/listing-filter-panel/filters.module.css';
 
-
 type ContentProps = {
   filters: Array<CoreFilter>;
   setFilters: (filters: Array<CoreFilter>) => void;

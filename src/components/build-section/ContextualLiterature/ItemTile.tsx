@@ -3,7 +3,6 @@ import { LoadingOutlined, SendOutlined } from '@ant-design/icons';
 import type { JSX } from 'react';
 import { classNames } from '@/util/utils';
 
-
 type Props = {
   index?: number;
   question?: JSX.Element;

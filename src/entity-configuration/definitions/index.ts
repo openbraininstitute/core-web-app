@@ -6,7 +6,10 @@ import { FieldsDefinition as CommonFieldsDefinition } from '@/entity-configurati
 import { FieldsDefinition as ModelFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/model';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import type { FieldsDefinitionRegistry , FieldDefinition } from '@/entity-configuration/definitions/types';
+import type {
+  FieldsDefinitionRegistry,
+  FieldDefinition,
+} from '@/entity-configuration/definitions/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 

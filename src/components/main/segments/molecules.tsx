@@ -3,7 +3,6 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import type { JSX } from 'react';
 import { classNames } from '@/util/utils';
 
-
 export type SubMenuList<TKeys> = {
   id: TKeys;
   title: string;

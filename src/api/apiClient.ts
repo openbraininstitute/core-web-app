@@ -246,15 +246,17 @@ class ApiClient {
         const contentType = cachedResponse.headers.get('Content-Type') || '';
         if (config.asRawResponse) {
           return cachedResponse as unknown as T;
-        } if (contentType.includes('application/json')) {
+        }
+        if (contentType.includes('application/json')) {
           return cachedResponse.json();
-        } if (contentType.includes('text')) {
+        }
+        if (contentType.includes('text')) {
           return (await cachedResponse.text()) as unknown as T;
-        } if (contentType.includes('application/octet-stream')) {
+        }
+        if (contentType.includes('application/octet-stream')) {
           return (await cachedResponse.blob()) as unknown as T;
-        } 
-          return (await cachedResponse.arrayBuffer()) as unknown as T;
-        
+        }
+        return (await cachedResponse.arrayBuffer()) as unknown as T;
       }
 
       // if cache is invalid or expired, continue with the request

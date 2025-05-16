@@ -61,7 +61,7 @@ export function EntityTypeStats(props: StatsPanelProps) {
         {Object.entries(EntityCoreExperimentalConfiguration).map(([key, value]) => {
           const href = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
           let records = '';
-            let isError = false;
+          let isError = false;
 
           if (!isLoading) {
             const _result = get(data?.experimental, `${value.legacyType}`, '');
@@ -89,7 +89,7 @@ export function EntityTypeStats(props: StatsPanelProps) {
         {Object.entries(EntityCoreModelConfiguration).map(([key, value]) => {
           const href = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
           let records = '';
-            let isError = false;
+          let isError = false;
           if (!isLoading) {
             const _result = get(data?.model, `${value.legacyType}`, '');
             records =

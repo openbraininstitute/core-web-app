@@ -2,7 +2,6 @@ import type { JSX } from 'react';
 import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
 import { SelectedBrainRegion } from '@/state/brain-regions/types';
 
-
 export type HighlightHit = {
   start: number;
   end: number;

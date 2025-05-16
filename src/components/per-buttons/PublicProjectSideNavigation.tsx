@@ -3,7 +3,6 @@
 import type { JSX } from 'react';
 import { DocumentIcon, DocumentPileIcon, HomeFillIcon, UserIcon } from '../icons';
 
-
 type ButotnListProps = {
   name: string;
   href: string;

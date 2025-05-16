@@ -31,12 +31,13 @@ export function resolveExploreDetailsPageUrl({
   if (ctx && ctx.virtualLabId && ctx.projectId) {
     if (entityId && usedSlug) {
       return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}/${entityId}`;
-    } if (usedSlug) {
+    }
+    if (usedSlug) {
       return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}`;
-    } 
-      return (baseUrl = `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`);
-    
-  } if (!dataType && !entityId) {
+    }
+    return (baseUrl = `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`);
+  }
+  if (!dataType && !entityId) {
     baseUrl = `${baseUri}/explore/interactive`;
   }
   return baseUrl;

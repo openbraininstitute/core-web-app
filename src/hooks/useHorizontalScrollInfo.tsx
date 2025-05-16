@@ -45,7 +45,7 @@ export default function useHorizontalScrollInfo(): HorizontalScrollInfo {
 
     updateScrollInfo();
     const controller = new AbortController();
-    const {signal} = controller;
+    const { signal } = controller;
 
     el.addEventListener('scroll', handleScroll, { signal });
 

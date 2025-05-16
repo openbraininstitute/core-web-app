@@ -64,7 +64,7 @@ type ModelDetails = {
 
 function MeModelDetails({ memodel }: ModelDetails) {
   const mmodel = memodel.morphology;
-  const {emodel} = memodel;
+  const { emodel } = memodel;
 
   return (
     <div className="text-primary-8 mt-4 grid grid-cols-2 gap-4 gap-x-12">
