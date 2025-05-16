@@ -181,13 +181,9 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
     router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
   };
 
-  const navigateToDetailPage = (record: IMEModel) => {
-    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const baseExploreUrl = `${vlProjectUrl}/explore/interactive/model/me-model`;
-    router.push(`${baseExploreUrl}/${record.id}`);
-  };
-
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
+
+  console.log(selectedRows);
 
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -234,7 +230,15 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
             <Btn
               type="button"
               className="bg-primary-9 hover:bg-primary-7! h-12 text-white"
-              onClick={() => navigateToDetailPage(selectedRows[0])}
+              onClick={() =>
+                router.push(
+                  resolveExploreDetailsPageUrl({
+                    ctx: { virtualLabId, projectId },
+                    entityId: selectedRows[0]!.id,
+                    dataType: DataType.CircuitMEModel,
+                  })
+                )
+              }
             >
               View
             </Btn>
