@@ -4,6 +4,8 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
 import { HTMLProps, useRef, useState, use } from 'react';
 
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+
 import {
   SimulationScopeToDataType,
   SimulationScopeToModelType,
@@ -14,7 +16,6 @@ import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { detailUrlBuilder } from '@/util/common';
 import BookmarkButton from '@/features/bookmark/control';
-import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -34,19 +35,8 @@ import {
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { EntityTypeEnum, IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
+import { IMEModel } from '@/api/entitycore/types';
 import Styles from '@/styles/vlabs.module.css';
-
-const SimTypeURLParams: Record<string, { view: string; model: string }> = {
-  [SimulationType.SingleNeuron]: {
-    view: 'single-neuron-simulation',
-    model: 'explore/interactive/model/me-model',
-  },
-  [SimulationType.Synaptome]: {
-    view: 'synaptome-simulation',
-    model: 'explore/interactive/model/synaptome',
-  },
-};
 
 export default function VirtualLabProjectSimulatePage(props: {
   params: Promise<{ virtualLabId: string; projectId: string }>;
@@ -81,12 +71,6 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
 
-  const generateDetailUrl = (selectedRow: ISingleNeuronSimulation) => {
-    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const baseBuildUrl = `${vlProjectUrl}/explore/interactive/model/${SimTypeURLParams[selectedSimType].view}`;
-    return `${baseBuildUrl}/${selectedRow.id}`;
-  };
-
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
   const loadMoreDiv = useInfiniteScroll(
@@ -101,6 +85,18 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     // TODO: fix it when we have simulations
     legacyType: selectedSimType ?? DataType.CircuitMEModel,
   });
+
+  if (selectedRows[0])
+    console.log(
+      resolveExploreDetailsPageUrl({
+        ctx: {
+          virtualLabId,
+          projectId,
+        },
+        entityId: selectedRows[0].id,
+        dataType,
+      })
+    );
 
   return (
     <>
@@ -136,7 +132,18 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 <Btn
                   type="button"
                   className="bg-primary-9 hover:bg-primary-7! h-12 text-white"
-                  onClick={() => router.push(generateDetailUrl(selectedRows[0]))}
+                  onClick={() =>
+                    router.push(
+                      resolveExploreDetailsPageUrl({
+                        ctx: {
+                          virtualLabId,
+                          projectId,
+                        },
+                        entityId: selectedRows[0].id,
+                        dataType,
+                      })
+                    )
+                  }
                 >
                   View
                 </Btn>

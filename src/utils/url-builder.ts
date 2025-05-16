@@ -5,6 +5,7 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
 import { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import { head } from 'lodash';
 
 const baseUri = '/app/virtual-lab';
 
@@ -30,6 +31,7 @@ export function resolveExploreDetailsPageUrl({
   }
   if (ctx && ctx.virtualLabId && ctx.projectId) {
     if (entityId && usedSlug) {
+      console.log('\n \n', 'here', routePrefix, usedSlug);
       return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}/${entityId}`;
     }
     if (usedSlug) {
