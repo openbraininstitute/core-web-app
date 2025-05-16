@@ -14,6 +14,9 @@ const MEModelDetailView = dynamic(() => import('@/page-wrappers/explore/me-model
 const SynaptomeDetailView = dynamic(
   () => import('@/page-wrappers/explore/single-neuron-synaptome')
 );
+const SingleNeuronSimulationView = dynamic(
+  () => import('@/page-wrappers/explore/single-neuron-simulation')
+);
 
 type Props = WorkspaceContext & {
   id: string;
@@ -27,6 +30,9 @@ export default function DetailView(props: Props) {
   return match<EntityCoreTypeConfig<any>>(entity)
     .with({ legacyType: DataType.CircuitEModel }, () => <EModelDetailView params={props} />)
     .with({ legacyType: DataType.CircuitMEModel }, () => <MEModelDetailView params={props} />)
+    .with({ legacyType: DataType.SingleNeuronSimulation }, () => (
+      <SingleNeuronSimulationView params={props} simulationType="single-neuron-simulation" />
+    ))
     .with({ legacyType: DataType.SingleNeuronSynaptome }, () => (
       <SynaptomeDetailView params={props} />
     ))

@@ -82,7 +82,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
 
   const generateDetailUrl = (selectedRow: ISingleNeuronSimulation) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const baseBuildUrl = `${vlProjectUrl}/explore/simulate/${SimTypeURLParams[selectedSimType].view}/view`;
+    const baseBuildUrl = `${vlProjectUrl}/explore/interactive/model/${SimTypeURLParams[selectedSimType].view}`;
     return `${baseBuildUrl}/${selectedRow.id}`;
   };
 
