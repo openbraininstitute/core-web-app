@@ -119,7 +119,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SynaptomeUsedMEModelName]: {
     className: 'text-center',
     title: 'ME-model',
-    filter: CoreFieldFilterTypeEnum.CheckList,
+    filter: nil 
+    isFilterable: false
+    isDisplayable: false,
     render: (r) => 'me_model' in r && r.me_model.name,
     vocabulary: {
       plural: 'ME-models',
