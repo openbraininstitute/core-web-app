@@ -29,8 +29,8 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
     },
   },
   explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
+    basePrefix: 'simulate',
+    routePrefix: 'simulate/single-neuron-simulation/view',
   },
   asset: {
     extension: 'application/json',
