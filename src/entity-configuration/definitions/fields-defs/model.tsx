@@ -119,8 +119,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SynaptomeUsedMEModelName]: {
     className: 'text-center',
     title: 'ME-model',
-    filter: nil 
-    isFilterable: false
+    filter: null,
+    isFilterable: false,
     isDisplayable: false,
     render: (r) => 'me_model' in r && r.me_model.name,
     vocabulary: {
@@ -128,8 +128,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'ME-model',
     },
     style: { width: 184, align: 'left' },
-    isFilterable: true,
-    isDisplayable: true,
   },
 
   [EntityCoreFields.SimulationSeed]: {

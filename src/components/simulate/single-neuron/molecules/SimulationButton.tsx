@@ -28,12 +28,7 @@ type Props = {
   simulationType: SimulationType;
 };
 
-export default function SimulationButton({
-  modelId,
-  vLabId,
-  projectId,
-  simulationType,
-}: Props) {
+export default function SimulationButton({ modelId, vLabId, projectId, simulationType }: Props) {
   const form = Form.useFormInstance();
   const simulationStatus = useAtomValue(simulationStatusAtom);
   const simulationResults = useAtomValue(genericSingleNeuronSimulationPlotDataAtom);
