@@ -6,8 +6,7 @@ import throttle from 'lodash/throttle';
 
 import { SortState } from '@/types/explore-section/application';
 import { ValueArray } from '@/components/ListTable';
-import { getFieldDefinition } from 'src/entity-configuration/definitions';
-import FieldsDefinitionRegistry from 'src/entity-configuration/definitions';
+import FieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configuration/definitions';
 
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';

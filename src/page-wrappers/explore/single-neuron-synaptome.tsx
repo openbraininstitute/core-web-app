@@ -70,7 +70,7 @@ async function fetchSingleNeuronSynaptome({ id, virtualLabId, projectId }: Props
   return {
     entity: data,
     memodel,
-    config: config,
+    config,
   };
 }
 

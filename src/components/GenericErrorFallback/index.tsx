@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { classNames } from '@/util/utils';
+
 interface Props {
   error?: Error & { cause?: unknown };
   cls?: { container: string };

@@ -13,6 +13,7 @@ import type { Props as ExploreSectionListingViewProps } from '@/components/explo
 import type { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
+
 type Props = WorkspaceContext & {
   entity: SerializedEntityCoreTypeConfig<any>;
 };

@@ -57,7 +57,7 @@ function ResultsCount({
   useBrainRegion?: boolean;
 }) {
   const [persistedDisplay, setPersistedDisplay] = useState<JSX.Element | null>(null);
-  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
+  const { node } = useBrainRegionHierarchy({ dataKey });
   const result = useLoadableValue(
     dataAtom({
       dataType,

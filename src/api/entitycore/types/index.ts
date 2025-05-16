@@ -1,3 +1,4 @@
+import type { ISingleNeuronSimulation } from './entities/single-neuron-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
@@ -6,7 +7,6 @@ import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { ISingleNeuronSimulation } from './entities/single-neuron-simulation';
 
 export * from '@/api/entitycore/types/entity-type';
 

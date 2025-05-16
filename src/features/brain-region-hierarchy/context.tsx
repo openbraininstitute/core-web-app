@@ -126,8 +126,8 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     );
     if (!hasIdParam || !hasAnnotationValueParam) {
       setHierarchyConfig({
-        id: id,
-        annotation_value: annotation_value,
+        id,
+        annotation_value,
       });
     }
   }, []);

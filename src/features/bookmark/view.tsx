@@ -76,7 +76,7 @@ export default function BookmarksView({
 
   const tableList = match(tabs)
     .when(
-      (value) => !!Boolean(value.length),
+      (value) => !!value.length,
       () => (
         <Fragment key="bookmark-list">
           <EntityTypeTabs items={tabs} activeSlug={slug} basePath={pathname} category={category} />
@@ -88,7 +88,7 @@ export default function BookmarksView({
                     borderless
                     cls={{ container: '!text-primary-8 !bg-transparent' }}
                     title="Something went wrong"
-                    description={`We couldn’t load your bookmarked resources. Please try again later or contact support if the issue persists.`}
+                    description="We couldn’t load your bookmarked resources. Please try again later or contact support if the issue persists."
                   />
                 }
               >

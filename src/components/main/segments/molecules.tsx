@@ -1,8 +1,8 @@
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 
+import type { JSX } from 'react';
 import { classNames } from '@/util/utils';
 
-import type { JSX } from 'react';
 
 export type SubMenuList<TKeys> = {
   id: TKeys;

@@ -22,7 +22,7 @@ export const resolveDataKey = ({
     dataKey = `${dataKey}/${entity.type}`;
   }
   if (!projectId && entity && section === 'explore') return `public-explore/${entity.type}`;
-  else if (!projectId && !entity && section === 'explore') return 'public-explore';
+  if (!projectId && !entity && section === 'explore') return 'public-explore';
   if (suffix) {
     dataKey = `${dataKey}/${suffix}`;
   }

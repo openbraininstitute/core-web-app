@@ -31,12 +31,12 @@ export function resolveExploreDetailsPageUrl({
   if (ctx && ctx.virtualLabId && ctx.projectId) {
     if (entityId && usedSlug) {
       return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}/${entityId}`;
-    } else if (usedSlug) {
+    } if (usedSlug) {
       return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}`;
-    } else {
+    } 
       return (baseUrl = `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`);
-    }
-  } else if (!dataType && !entityId) {
+    
+  } if (!dataType && !entityId) {
     baseUrl = `${baseUri}/explore/interactive`;
   }
   return baseUrl;
@@ -76,7 +76,7 @@ export function resolveLibraryUrl({
   let querySegment = '';
   if (category) searchParams.set('c', category);
   if (slug) searchParams.set('t', slug);
-  if (Boolean(searchParams.size)) querySegment = `?${searchParams.toString()}`;
+  if (searchParams.size) querySegment = `?${searchParams.toString()}`;
 
   return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/library${querySegment}`;
 }

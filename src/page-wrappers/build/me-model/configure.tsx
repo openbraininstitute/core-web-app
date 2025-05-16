@@ -44,8 +44,8 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
 
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
-  const mmodel = sessionValue.mmodel;
-  const emodel = sessionValue.emodel;
+  const {mmodel} = sessionValue;
+  const {emodel} = sessionValue;
   const fields = [
     {
       className: 'col-span-6',
@@ -262,7 +262,7 @@ export default function Configure({ params, searchParams }: Props) {
       }
       if (error) {
         showErrorNotification(error, 'http');
-        return;
+        
       }
     });
   };
@@ -299,12 +299,12 @@ export default function Configure({ params, searchParams }: Props) {
         <div className="flex flex-col gap-4">
           <MorphologyOverviewCard
             reselectLink
-            mode={!!morphologyId ? 'select' : 'summary'}
+            mode={morphologyId ? 'select' : 'summary'}
             promise={sessionValue.mmodel}
           />
           <EModelOverviewCard
             reselectLink
-            mode={!!emodelId ? 'select' : 'summary'}
+            mode={emodelId ? 'select' : 'summary'}
             promise={sessionValue.emodel}
           />
         </div>

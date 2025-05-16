@@ -7,7 +7,7 @@ import _get from 'lodash/get';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityCoreFields , CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
 import fetchDataQuery from '@/queries/explore-section/data';
@@ -38,7 +38,6 @@ import {
   ViewsDefinitionRegistry,
 } from '@/entity-configuration/definitions/view-defs';
 import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { EntityCoreObjectTypes } from '@/api/entitycore/types';

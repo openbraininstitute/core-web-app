@@ -22,11 +22,11 @@ export default function Configuration({ model }: { model: IMEModel }) {
   const morphologyId = params?.get('m');
 
   // TODO: probably the promise here not needed, should be removed ?
-  const morphologyPromise = !!morphologyId
+  const morphologyPromise = morphologyId
     ? tryCatch(getReconstructionMorphology({ id: model.morphology.id, context: workspace }))
     : model.morphology;
 
-  const emodelPromise = !!emodelId
+  const emodelPromise = emodelId
     ? tryCatch(getEModel({ id: model.emodel.id, context: workspace }))
     : model.emodel;
 
@@ -36,7 +36,7 @@ export default function Configuration({ model }: { model: IMEModel }) {
         <Suspense fallback={<CardContainerSkeleton />}>
           <MorphologyOverviewCard
             key="morphology-overview-card"
-            mode={!!morphologyId ? 'select' : 'summary'}
+            mode={morphologyId ? 'select' : 'summary'}
             promise={morphologyPromise}
           />
         </Suspense>
@@ -45,7 +45,7 @@ export default function Configuration({ model }: { model: IMEModel }) {
         <Suspense fallback={<CardContainerSkeleton />}>
           <EModelOverviewCard
             key="e-model-overview-card"
-            mode={!!emodelId ? 'select' : 'summary'}
+            mode={emodelId ? 'select' : 'summary'}
             promise={emodelPromise}
           />
         </Suspense>

@@ -1,4 +1,5 @@
 import z from 'zod';
+import { INestedMEModel, IMEModelFilter } from './me-model';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
@@ -25,7 +26,6 @@ import type {
   MtypeFilter,
   EtypeFilter,
 } from '@/api/entitycore/types/shared/request';
-import { INestedMEModel, IMEModelFilter } from './me-model';
 
 export enum SingleNeuronSimulationStatus {
   started = 'started',

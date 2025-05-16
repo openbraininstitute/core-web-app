@@ -19,7 +19,7 @@ import type { EntityCoreDensityObjectTypes } from '@/api/entitycore/types';
 export const EmptyValue = '—';
 export const EmptyPreview = (
   <Empty
-    key={`no-asset-empty-thumbnail`}
+    key="no-asset-empty-thumbnail"
     description="Error loading thumbnail"
     image={Empty.PRESENTED_IMAGE_SIMPLE}
     className="h-full! w-full!"
@@ -97,7 +97,7 @@ export function renderMeanStd({
   //     µm<sup>-1</sup>
   //   </span>
   // );
-  let field = std
+  const field = std
     ? `${renderFloatNumber(mean?.value)} ± ${renderFloatNumber(std?.value)}`
     : `${renderFloatNumber(mean?.value)}`;
   return <>{field}</>;

@@ -44,7 +44,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         return renderEmptyOrValue(
           renderArray(ensureArray({ input: r.species }).map((s) => s.name))
         );
-      else if ('subject' in r && 'species' in r.subject)
+      if ('subject' in r && 'species' in r.subject)
         return renderEmptyOrValue(r.subject.species.name);
       return EmptyValue;
     },

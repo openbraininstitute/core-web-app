@@ -5,9 +5,8 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { notification as antd_notification } from 'antd';
-import { Key } from 'react';
+import { Key , ReactNode } from 'react';
 import { NotificationType, Placement } from '@/types/notifications';
-import { ReactNode } from 'react';
 
 /**
  * Function used in order to open a notification using the antD notification API

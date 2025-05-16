@@ -26,7 +26,7 @@ export function DensityOrCountToggle({
           }}
         >
           <Switch.Thumb
-            className={`block h-[10px] w-[10px] translate-x-[2px] rounded-full transition-transform duration-100 will-change-transform group-[data-disabled]:bg-gray-500 data-[state=checked]:translate-x-4 data-[state=checked]:bg-black data-[state=unchecked]:bg-white`}
+            className="block h-[10px] w-[10px] translate-x-[2px] rounded-full transition-transform duration-100 will-change-transform group-[data-disabled]:bg-gray-500 data-[state=checked]:translate-x-4 data-[state=checked]:bg-black data-[state=unchecked]:bg-white"
           />
         </Switch.Root>
         <span className={classNames(densityOrCount === 'density' && 'font-bold')}>density</span>

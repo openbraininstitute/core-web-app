@@ -1,4 +1,5 @@
 'use client';
+
 import { use } from 'react';
 
 import VirtualLabTeamTable from '@/components/VirtualLab/VirtualLabTeamTable';

@@ -69,12 +69,12 @@ export default function Footer<T extends EntityCoreIdentifiable>({
 
     if (error) {
       return notifyError();
-    } else {
+    } 
       // NOTE: this is required to avoid infinite loops
       setTimeout(() => dataAtom.remove({ key: dataKey, dataType: category }));
       notifySuccess();
       clearSelectedRows();
-    }
+    
   };
 
   return (

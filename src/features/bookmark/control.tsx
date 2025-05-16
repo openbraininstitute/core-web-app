@@ -114,7 +114,7 @@ export default function BookmarkButton({
           placement: 'bottom',
           key: `view-bookmark/${virtualLabId}/${projectId}`,
         });
-      } else if (action === 'remove') {
+      } if (action === 'remove') {
         return notification.success({
           message: 'Resource removed from library successfully',
           duration: 3,
@@ -174,7 +174,7 @@ export default function BookmarkButton({
     );
     if (error) {
       notifyError('add', error);
-      return;
+      
     } else {
       setTimeout(() =>
         dataAtom.remove({
@@ -218,7 +218,7 @@ export default function BookmarkButton({
     );
     if (error) {
       notifyError('remove', error);
-      return;
+      
     } else {
       notifySuccess('remove');
       refreshBookmarks();

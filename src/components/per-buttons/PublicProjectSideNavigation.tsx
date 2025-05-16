@@ -1,7 +1,8 @@
 'use client';
-import { DocumentIcon, DocumentPileIcon, HomeFillIcon, UserIcon } from '../icons';
 
 import type { JSX } from 'react';
+import { DocumentIcon, DocumentPileIcon, HomeFillIcon, UserIcon } from '../icons';
+
 
 type ButotnListProps = {
   name: string;

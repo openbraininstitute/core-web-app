@@ -3,17 +3,17 @@ import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { ReactNode, useMemo } from 'react';
 
+import { useQueryState } from 'nuqs';
+import { unwrap } from 'jotai/utils';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
-import { useQueryState } from 'nuqs';
 import {
   brainRegionHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
-import { unwrap } from 'jotai/utils';
 
 // TODO: to delete when confirm the LiteratureForExperimentType is not needed
 export default function StatItem({

@@ -104,7 +104,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
       key,
       entitytype,
       title: label,
-      label: label,
+      label,
       className: 'text-center font-semibold',
       style: {
         backgroundColor: active ? 'white' : '#002766',

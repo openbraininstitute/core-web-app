@@ -70,7 +70,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Morphology',
     filter: null,
     render: (r) => {
-      const morphology = (r as IMEModel).morphology;
+      const {morphology} = (r as IMEModel);
       if (hasAssets(morphology)) return renderPreview(morphology, { width: 184, height: 116 });
       return EmptyPreview;
     },
@@ -87,7 +87,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Trace',
     filter: null,
     render: (r) => {
-      const emodel = (r as IMEModel).emodel;
+      const {emodel} = (r as IMEModel);
       if (hasAssets(emodel)) return renderImage(emodel, { width: 184, height: 116 });
       return EmptyPreview;
     },

@@ -6,9 +6,8 @@ import { FieldsDefinition as CommonFieldsDefinition } from '@/entity-configurati
 import { FieldsDefinition as ModelFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/model';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { FieldsDefinitionRegistry , FieldDefinition } from '@/entity-configuration/definitions/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { FieldDefinition } from '@/entity-configuration/definitions/types';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 const FieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
