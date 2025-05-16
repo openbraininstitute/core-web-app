@@ -36,7 +36,7 @@ import {
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import { isSimulation } from '@/features/bookmark/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { ISingleNeuronSimulation } from '@/api/entitycore/types';
+import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import Styles from '@/styles/vlabs.module.css';
 
 const SimTypeURLParams: Record<string, { view: string; model: string }> = {
@@ -169,11 +169,10 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
     router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
   };
 
-  const navigateToDetailPage = (record: ExploreESHit<ExploreSectionResource>) => {
+  const navigateToDetailPage = (record: IMEModel) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
-    const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLParams[selectedSimulationScope].model}`;
-    router.push(`${baseExploreUrl}/${pathId}`);
+    const baseExploreUrl = `${vlProjectUrl}/explore/interactive/model/me-model`;
+    router.push(`${baseExploreUrl}/${record.id}`);
   };
 
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
@@ -192,7 +191,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   useIntersectionObserver({
     observedRef: tableRef,
     onIntersect: setButtonsVisible,
-    rootMargin: '-300px',
+    rootMargin: '-200px',
   });
 
   return (

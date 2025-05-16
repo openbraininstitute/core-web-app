@@ -27,7 +27,7 @@ export async function getAssets({
   ctx?: WorkspaceContext;
 }): Promise<EntityCoreResponse<IAsset>> {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<EntityCoreResponse<IAsset>>(`/${entityType}/${entityId}/assets`, {
+  return await api.get<EntityCoreResponse<IAsset>>(`/${kebabCase(entityType)}/${entityId}/assets`, {
     ...getEntityCoreContext(ctx),
   });
 }

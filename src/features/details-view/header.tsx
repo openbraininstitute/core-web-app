@@ -1,14 +1,12 @@
-import { DownloadOutlined, LoadingOutlined } from '@ant-design/icons';
+import { DownloadOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-import { ReactNode, useState } from 'react';
-import { Spin, Button } from 'antd';
+import { ReactNode } from 'react';
+import { Button } from 'antd';
 import { useAtomValue } from 'jotai';
 
 import BookmarkButton from '@/features/bookmark/control';
-import useNotification from '@/hooks/notifications';
 import usePathname from '@/hooks/pathname';
 import sessionAtom from '@/state/session';
-import fetchArchive from '@/api/archive';
 import Link from '@/components/Link';
 
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
@@ -22,20 +20,17 @@ import type { BookmarksSupportedTypes } from '@/features/bookmark/helpers';
 
 export default function Header<T extends EntityCoreIdentifiableNamed>({
   detail,
-  url,
   extraHeaderAction,
+  onDownload,
 }: {
   detail: T;
-  url?: string | null;
   extraHeaderAction?: ReactNode;
+  onDownload?: () => void;
 }) {
   const path = usePathname();
   const simCampMatch = path?.match(/\/explore\/simulation-campaigns\/[a-zA-Z0-9=]*/g);
   const isSimCampDetail = simCampMatch && path === simCampMatch[0];
-  const notification = useNotification();
   const session = useAtomValue(sessionAtom);
-  const [fetching, setFetching] = useState<boolean>(false);
-  const hasDistribution = 'distribution' in detail && detail.distribution !== undefined;
 
   const { virtualLabId, projectId, experimentType, modelType, simulationType, synaptome } =
     useParams<{
@@ -49,11 +44,6 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
 
   const supportedBookmarkType: BookmarksSupportedTypes | undefined =
     experimentType ?? modelType ?? simulationType ?? synaptome;
-
-  const errorOnDownload = () => {
-    setFetching(false);
-    notification.error('Resource could not be downloaded');
-  };
 
   return (
     <div className="text-primary-7 flex flex-col">
@@ -78,21 +68,11 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
               type="text"
               className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
               // disabling download button if currently fetching or if resource does not have a distribution
-              disabled={fetching || !hasDistribution}
-              onClick={() => {
-                setFetching(true);
-                fetchArchive([detail.id], session, () => setFetching(false), errorOnDownload);
-              }}
+              disabled={!onDownload}
+              onClick={onDownload}
             >
               Download
-              {fetching ? (
-                <Spin
-                  className="border-neutral-2 border px-4 py-3"
-                  indicator={<LoadingOutlined />}
-                />
-              ) : (
-                <DownloadOutlined className="border-neutral-2 border px-4 py-3" />
-              )}
+              <DownloadOutlined className="border-neutral-2 border px-4 py-3" />
             </Button>
           </div>
         )}

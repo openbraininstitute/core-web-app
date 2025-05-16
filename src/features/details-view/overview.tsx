@@ -8,7 +8,10 @@ import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { classNames } from '@/util/utils';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreIdentifiableNamed,
+  EntityCoreResource,
+} from '@/api/entitycore/types/shared/global';
 
 type FieldProps = {
   field: EntityCoreFields;
@@ -36,6 +39,7 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   commonFields = CommonSummaryViewFields,
   commonFieldsClassName,
   fieldsClassName,
+  onDownload,
 }: {
   fields: Array<TypeSummaryProps>;
   detail: T;
@@ -44,10 +48,11 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   extraHeaderAction?: ReactNode;
   commonFieldsClassName?: string;
   fieldsClassName?: string;
+  onDownload?: () => void;
 }) {
   return (
     <div className="flex w-full flex-col gap-10">
-      <Header<T> detail={detail} url={url} extraHeaderAction={extraHeaderAction} />
+      <Header<T> detail={detail} extraHeaderAction={extraHeaderAction} onDownload={onDownload} />
       <div className="flex w-full flex-row gap-x-8">
         {commonFields.length > 0 && (
           <div

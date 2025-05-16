@@ -21,7 +21,6 @@ import { simulationExperimentalSetupAtom } from './categories/simulation-conditi
 import { currentInjectionSimulationConfigAtom } from './categories/current-injection-simulation';
 import { synaptomeSimulationConfigAtom } from './categories/synaptome-simulation-config';
 import { recordingSourceForSimulationAtom } from './categories/recording-source-for-simulation';
-import { createJsonFileOnVlabProject } from '@/api/nexus';
 import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 
 import {
@@ -37,7 +36,7 @@ import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import updateArray from '@/util/updateArray';
 import { getMEModel, createSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/entities/single-neuron-simulation';
-import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
+import { IMEModel } from '@/api/entitycore/types';
 import { notification } from '@/api/notifications';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
@@ -106,73 +105,6 @@ export const createSingleNeuronSimulationAtom = atom(
       return null;
     }
 
-    console.log('meModel', meModel);
-
-    const simulationConfigFile = await createJsonFileOnVlabProject(
-      {
-        simulation: Object.keys(simulationResult).reduce((prev, curr) => {
-          return {
-            ...prev,
-            [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
-          };
-        }, {}),
-        stimulus: convertObjectKeysToSnakeCase(stimulusResults),
-        config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
-      },
-      simulationType === 'single-neuron-simulation'
-        ? `${SIMULATION_CONFIG_FILE_NAME_BASE}-single-neuron.json`
-        : `${SIMULATION_CONFIG_FILE_NAME_BASE}-synaptome.json`,
-      session,
-      vLabId,
-      projectId
-    );
-
-    // let entity: EntityCreation<SingleNeuronSimulation> | EntityCreation<SynaptomeSimulation> | null =
-    //   null;
-
-    // const commonProperties = {
-    //   name,
-    //   description,
-    //   // '@context': 'https://bbp.neuroshapes.org',
-    //   // distribution: [
-    //   //   createDistribution(
-    //   //     simulationConfigFile,
-    //   //     composeUrl('file', simulationConfigFile['@id'], {
-    //   //       rev: simulationConfigFile._rev,
-    //   //       org: vLabId,
-    //   //       project: projectId,
-    //   //     })
-    //   //   ),
-    //   // ],
-    //   injectionLocation: singleNeuronSimulationConfig.currentInjection.injectTo,
-    //   recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
-    //     (r) => `${r.section}_${r.offset}`
-    //   ),
-    //   brainLocation: meModel.brainLocation.
-    //   isDraft: false,
-    //   status: 'success',
-    // };
-
-    // if (simulationType === 'single-neuron-simulation') {
-    //   entity = {
-    //     ...commonProperties,
-    //     '@type': ['Entity', 'SingleNeuronSimulation'],
-    //     used: {
-    //       '@type': 'MEModel',
-    //       '@id': singleNeuronId,
-    //     },
-    //   } as EntityCreation<SingleNeuronSimulation>;
-    // } else if (simulationType === 'synaptome-simulation') {
-    //   entity = {
-    //     ...commonProperties,
-    //     '@type': ['Entity', 'SynaptomeSimulation'],
-    //     used: {
-    //       '@id': resource['@id'],
-    //       '@type': resource['@type'],
-    //     },
-    //   } as EntityCreation<SynaptomeSimulation>;
-    // }
-
     try {
       const simulation = await createSingleNeuronSimulation({
         body: {
@@ -200,7 +132,7 @@ export const createSingleNeuronSimulationAtom = atom(
         },
         entityType: SingleNeuronSimulation.type,
         entityId: simulation.id,
-        path: `single-neuron-simulation-${simulation.id}.json`,
+        path: `single-neuron-simulation-${simulation.id}`,
         payload: {
           simulation: Object.keys(simulationResult).reduce((prev, curr) => {
             return {

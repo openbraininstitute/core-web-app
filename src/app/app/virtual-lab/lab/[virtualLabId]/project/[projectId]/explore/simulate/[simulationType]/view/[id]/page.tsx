@@ -20,6 +20,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import Link from '@/components/Link';
 import Overview from '@/features/details-view/overview';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+import { saveAs } from 'file-saver';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +95,11 @@ export default function SimulationDetailPage(props: Props) {
             detail={simulation}
             commonFields={[]}
             fieldsClassName="grid w-full auto-rows-min grid-cols-2 gap-x-8 gap-y-6"
+            onDownload={() => {
+              const jsonString = JSON.stringify(simulationConfig);
+              const blob = new Blob([jsonString], { type: 'application/json' });
+              saveAs(blob, `simulation-${simulation.id}.json`);
+            }}
           />
           <ModelDetails
             meModel={meModel}
