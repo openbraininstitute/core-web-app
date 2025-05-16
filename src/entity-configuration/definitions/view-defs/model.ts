@@ -84,7 +84,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.SingleNeuronSimulation]: {
     title: 'Simulation',
     group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.SINGLE_NEURON_SIMULATION,
+    name: EntitySlug.SingleNeuronSimulation,
     curated: false,
     columns: [
       EntityCoreFields.Name,

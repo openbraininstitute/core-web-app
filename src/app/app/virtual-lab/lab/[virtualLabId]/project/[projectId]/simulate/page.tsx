@@ -12,9 +12,7 @@ import {
 
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { to64, detailUrlBuilder } from '@/util/common';
-import { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
+import { detailUrlBuilder } from '@/util/common';
 import BookmarkButton from '@/features/bookmark/control';
 import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
 import { Btn } from '@/components/buttons/base/legacy-btn';
@@ -34,7 +32,7 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
-import { isSimulation } from '@/features/bookmark/helpers';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import Styles from '@/styles/vlabs.module.css';
@@ -102,7 +100,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     // TODO: fix it when we have simulations
     legacyType: selectedSimType ?? DataType.CircuitMEModel,
   });
-  const dataKey = resolveDataKey({ section: 'experiment', projectId, entity });
+
   return (
     <>
       <div className="flex w-full grow flex-col">
@@ -127,7 +125,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 style={{ background: 'bg-white' }}
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
-                dataKey={dataKey}
+                dataKey={projectId + 'simulate' + dataType}
                 showLoadingState={false}
               />
               {loadMoreDiv}
