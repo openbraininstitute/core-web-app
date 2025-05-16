@@ -57,12 +57,12 @@
   left: -2px;
   font-size: 18px;
   font-weight: bold;
-  transform: rotate(180deg);
   transform-origin: center;
 }
 
 .literatureSuggestions[data-collapsed='true'] > button.header > h1 {
   order: 9;
+  transform: rotate(180deg);
   writing-mode: vertical-lr;
 }
 
