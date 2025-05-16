@@ -1,12 +1,11 @@
 import z from 'zod';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
-  IBrainRegion,
   IContributor,
   Timestamps,
   ISpecies,
@@ -46,7 +45,7 @@ export interface IMEModel
     EntityAuthorization {
   species: ISpecies;
   strain?: IStrain | null;
-  brain_region: IBrainRegion;
+  brain_region: BrainRegionHierarchyBase;
   contributions?: Array<IContributor> | null;
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
@@ -79,7 +78,7 @@ export const CreateMEModelSchema = z.object({
   name: z.string(),
   description: z.string(),
   validation_status: z.nativeEnum(ValidationStatus),
-  brain_region_id: z.number(),
+  brain_region_id: z.string().uuid(),
   morphology_id: z.string().uuid(),
   emodel_id: z.string().uuid(),
   species_id: z.string().uuid(),

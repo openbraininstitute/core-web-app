@@ -10,6 +10,7 @@ export function DefaultRenderButton<T>({
   children,
   clearSelectedRows,
   selectedRows,
+  dataType,
 }: RenderButtonProps<T> & {
   children?: (props: RenderButtonProps<T>) => ReactNode;
 }) {
@@ -18,6 +19,7 @@ export function DefaultRenderButton<T>({
   ) : (
     <ExploreDownloadButton
       selectedRows={selectedRows}
+      dataType={dataType}
       clearSelectedRows={clearSelectedRows}
       data-testid="listing-view-download-button"
     >
@@ -34,12 +36,14 @@ export default function TableControls<T>({
   renderButton,
   selectedRows,
   visible,
+  dataType,
 }: {
   clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
   renderButton?: (props: RenderButtonProps<T>) => ReactNode;
   selectedRows: RenderButtonProps<T>['selectedRows'];
   visible: boolean;
+  dataType: string;
 }) {
   const { left, right } = useScrollNav(
     typeof document !== 'undefined'
@@ -57,7 +61,11 @@ export default function TableControls<T>({
         <div className="ml-auto">{right}</div>
       </div>
       {!!selectedRows?.length && clearSelectedRows && (
-        <DefaultRenderButton clearSelectedRows={clearSelectedRows} selectedRows={selectedRows}>
+        <DefaultRenderButton
+          clearSelectedRows={clearSelectedRows}
+          selectedRows={selectedRows}
+          dataType={dataType}
+        >
           {renderButton}
         </DefaultRenderButton>
       )}

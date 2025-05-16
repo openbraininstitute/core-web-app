@@ -28,7 +28,6 @@ export default function BaseConfiguration({ virtualLabId, projectId, stateId }: 
   const name = Form.useWatch('name', form);
   const description = Form.useWatch('description', form);
   const [basicHasErrors, setBasicHasErrors] = useState(false);
-
   const { phase, updateQueryConfig, setSessionValue, sessionValue } =
     useBuildSingleNeuronSynaptomeSessionState({
       virtualLabId,

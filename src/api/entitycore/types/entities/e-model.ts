@@ -1,8 +1,8 @@
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
   PointLocationBase,
-  IBrainRegion,
   IContributor,
   Timestamps,
   ISpecies,
@@ -45,7 +45,7 @@ export interface IEModel
     EntityCoreBaseAsset {
   species: ISpecies;
   strain?: IStrain | null;
-  brain_region: IBrainRegion;
+  brain_region: BrainRegionHierarchyBase;
   contributions?: Array<IContributor> | null;
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;

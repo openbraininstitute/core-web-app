@@ -1,13 +1,15 @@
 import { HTMLProps, useCallback } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
+
 import {
   dataAtom,
   useDataAtom,
   pageNumberAtom,
   previousDataAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { PAGE_SIZE } from '@/constants/explore-section/list-views';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { PAGE_SIZE } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
@@ -30,19 +32,28 @@ function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonEle
 
 export function useLoadMore<T>(
   dataContext: {
-    virtualLabInfo?: VirtualLabInfo;
+    workspace?: VirtualLabInfo;
     dataScope: ExploreDataScope;
     dataType: DataType;
   },
-  key: string
+  key: string,
+  useBrainRegion?: boolean
 ) {
-  const [, setPrevData] = useAtom(previousDataAtom({ ...dataContext, key }));
-  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
+  const { node } = useBrainRegionHierarchy({ dataKey: key });
 
-  const data = useDataAtom<T>(dataContext, key);
+  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(`${key}/${node.id}`));
+  const setPrevData = useSetAtom(
+    previousDataAtom({ ...dataContext, brainRegionId: useBrainRegion ? node.id : undefined, key })
+  );
+  const data = useDataAtom<T>({
+    ...dataContext,
+    key,
+    brainRegionId: useBrainRegion ? node.id : undefined,
+  });
   const res = useLoadableValue(
     dataAtom({
       ...dataContext,
+      brainRegionId: useBrainRegion ? node.id : undefined,
       key,
     })
   );
@@ -76,6 +87,7 @@ export default function LoadMoreButton({
   dataContext,
   dataKey,
   hide,
+  useBrainRegion,
 }: HTMLProps<HTMLButtonElement> & {
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
@@ -84,8 +96,9 @@ export default function LoadMoreButton({
   };
   dataKey: string;
   hide: () => void;
+  useBrainRegion?: boolean;
 }) {
-  const { loadMore, showLoadMore } = useLoadMore(dataContext, dataKey);
+  const { loadMore, showLoadMore } = useLoadMore(dataContext, dataKey, useBrainRegion);
 
   if (!showLoadMore) return null;
   return (

@@ -54,6 +54,7 @@ export default function Tabs({ items, activeTabId, basePath }: TabsProps) {
       <div className="sticky top-0 right-0 left-0 z-10 flex">
         {items.map((tab) => (
           <Link
+            data-testid={tab.key}
             role="tab"
             key={tab.key}
             href={`${basePath}?t=${tab.key}`}

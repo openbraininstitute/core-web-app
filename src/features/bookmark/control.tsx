@@ -16,26 +16,18 @@ import Link from 'next/link';
 import get from 'lodash/get';
 
 import {
-  BookmarksSupportedTypes,
-  isExperiment,
-  isModel,
-  isSimulation,
-  MESSAGES,
-} from '@/features/bookmark/helpers';
-import {
   addBookmarksToProjectLibrary,
   deleteBookmarksFromProjectLibrary,
 } from '@/features/bookmark/actions';
-import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
-import { EXPERIMENT_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/experiment-data-types';
-import { MODEL_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/model-data-types';
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { resolveLibraryUrl } from '@/utils/url-builder';
+import { serverMessages } from '@/i18n/en/bookmark';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { EntityTypeValue } from '@/api/entitycore/types';
 import type { ErrorCause } from '@/api/apiClient';
 
 type Props = {
@@ -43,7 +35,7 @@ type Props = {
   projectId: string;
   entityId: string;
   resourceId?: string;
-  typeSlug: BookmarksSupportedTypes;
+  type: EntityTypeValue;
   customButton?: (props: HTMLProps<HTMLButtonElement>) => ReactNode;
 };
 
@@ -52,48 +44,23 @@ export default function BookmarkButton({
   projectId,
   entityId,
   resourceId,
-  typeSlug,
+  type,
   customButton,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { notification } = App.useApp();
 
-  const [saving, setSaving] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
+  const [loadingRemove, setLoadingRemove] = useState(false);
+  const loadingAction = loadingSave || loadingRemove;
 
-  const onSaving = () => setSaving(true);
-  const endSaving = () => setSaving(false);
+  const onSaving = () => setLoadingSave(true);
+  const endSaving = () => setLoadingSave(false);
 
-  // TODO: use better way to get the right type, (src/api/entitycore/types/shared/context.ts)
-  // use mapper that has slugs
-
-  const { category, dataType } = useMemo(() => {
-    if (isExperiment(typeSlug)) {
-      return {
-        dataType: Object.keys(EXPERIMENT_DATA_TYPE_CONFIG).find(
-          (experimentKey) => EXPERIMENT_DATA_TYPE_CONFIG[experimentKey].name === typeSlug
-        )! as DataType,
-        category: 'experimental',
-      };
-    }
-    if (isModel(typeSlug)) {
-      return {
-        dataType: Object.keys(MODEL_DATA_TYPE_CONFIG).find(
-          (model) => MODEL_DATA_TYPE_CONFIG[model].name === typeSlug
-        )! as DataType,
-        category: 'models',
-      };
-    }
-    if (isSimulation(typeSlug)) {
-      return {
-        dataType: Object.keys(SIMULATION_DATA_TYPE_CONFIG).find(
-          (simulation) => SIMULATION_DATA_TYPE_CONFIG[simulation].name === typeSlug
-        )! as DataType,
-        category: 'simulations',
-      };
-    }
-    throw new Error(`Resource of type ${typeSlug} cannot be bookmarked`);
-  }, [typeSlug]);
+  const entity = getEntityByCoreType({ type });
+  const dataType = entity?.legacyType;
+  const category = entity?.group;
 
   const bookmarks = useAtomValue(
     loadable(
@@ -112,7 +79,7 @@ export default function BookmarkButton({
   const libraryPage = resolveLibraryUrl({
     ctx: { virtualLabId, projectId },
     category,
-    dataType: dataType,
+    slug: entity?.slug,
   });
 
   const notifySuccess = useCallback(
@@ -166,14 +133,14 @@ export default function BookmarkButton({
     if (action === 'add') {
       notification.error({
         message: 'Resource could not be added to the library',
-        description: get(MESSAGES, get(cause, 'data.error_code'), ''),
+        description: get(serverMessages, get(cause, 'data.error_code'), ''),
         duration: 3,
         placement: 'topRight',
       });
     } else {
       notification.error({
         message: 'Resource could not be removed from the library',
-        description: get(MESSAGES, get(cause, 'data.error_code'), ''),
+        description: get(serverMessages, get(cause, 'data.error_code'), ''),
         duration: 3,
         placement: 'topRight',
       });
@@ -187,7 +154,7 @@ export default function BookmarkButton({
         virtualLabId,
         projectId,
         bookmark: {
-          category: dataType,
+          category: dataType!,
           entity_id: entityId,
           resource_id: resourceId,
         },
@@ -212,7 +179,7 @@ export default function BookmarkButton({
       setTimeout(() =>
         dataAtom.remove({
           key: `${projectId}/${category}/${kebabCase(dataType)}/bookmarks`,
-          dataType,
+          dataType: dataType!,
         })
       );
       refreshBookmarks();
@@ -230,14 +197,14 @@ export default function BookmarkButton({
   ]);
 
   const removeFromLibrary = useCallback(async () => {
-    onSaving();
+    setLoadingRemove(true);
     const { error } = await tryCatch(
       deleteBookmarksFromProjectLibrary({
         virtualLabId,
         projectId,
-        bookmarks: [{ category: dataType, entity_id: entityId, resource_id: resourceId }],
+        bookmarks: [{ category: dataType!, entity_id: entityId, resource_id: resourceId }],
       }),
-      endSaving,
+      () => setLoadingRemove(false),
       {
         feature: 'remove-bookmark-from-project',
         section: pathname,
@@ -260,14 +227,15 @@ export default function BookmarkButton({
 
   const isBookmarked = useMemo(() => {
     return (
+      dataType &&
       bookmarks.state === 'hasData' &&
       bookmarks.data.data?.[dataType]?.some((b) => b.entity_id === entityId)
     );
   }, [bookmarks, resourceId, category]);
 
-  if (saving || bookmarks.state === 'loading') {
+  if (bookmarks.state === 'loading') {
     return (
-      <div className="flex w-32 items-center justify-end">
+      <div className="flex w-32 items-center justify-center">
         <Spin className="px-3 py-2" indicator={<LoadingOutlined />} />
       </div>
     );
@@ -287,10 +255,12 @@ export default function BookmarkButton({
   ) : (
     <Button
       type="text"
-      className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
+      className="text-primary-7 hover:text-primary-6! flex items-center gap-2 hover:bg-transparent!"
       onClick={saveToLibrary}
+      loading={loadingAction}
+      disabled={loadingAction}
     >
-      Save to library
+      {loadingSave ? 'Saving...' : 'Save to library'}
       <PlusOutlined className="border-neutral-2 border px-4 py-3" />
     </Button>
   );
@@ -301,9 +271,11 @@ export default function BookmarkButton({
     <Button
       type="text"
       className="mr-3 flex h-[36px] items-center gap-2 px-1 text-gray-500 hover:bg-transparent!"
+      loading={loadingAction}
+      disabled={loadingAction}
       onClick={removeFromLibrary}
     >
-      Remove from library
+      {loadingRemove ? 'Removing...' : 'Remove from library'}
       <MinusCircleOutlined />
     </Button>
   );

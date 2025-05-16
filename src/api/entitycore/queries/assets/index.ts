@@ -67,21 +67,29 @@ export async function getAsset({
  * @param {string} params.id - The id of the asset to retrieve
  * @returns {Promise<Response>} A promise that resolves to the response from the API
  */
-export async function downloadAsset({
+export async function downloadAsset<T>({
   ctx,
   entityType,
   entityId,
   id,
+  asRawResponse = false,
+  retryOnError = false,
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityCoreDataType;
   entityId: string;
   id: string;
+  asRawResponse?: boolean;
+  retryOnError?: boolean;
 }) {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<ArrayBuffer>(`/${kebabCase(entityType)}/${entityId}/assets/${id}/download`, {
-    ...getEntityCoreContext(ctx),
-  });
+  return await api.get<T>(
+    `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,
+    {
+      ...getEntityCoreContext(ctx),
+    },
+    { asRawResponse, retryOnError }
+  );
 }
 
 /**

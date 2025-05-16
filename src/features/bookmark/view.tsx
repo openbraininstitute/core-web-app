@@ -4,8 +4,6 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
 import { match } from 'ts-pattern';
 import { Fragment } from 'react';
-
-import kebabCase from 'lodash/kebabCase';
 import compact from 'lodash/compact';
 import find from 'lodash/find';
 import get from 'lodash/get';
@@ -14,23 +12,40 @@ import ListingTable from '@/features/bookmark/listing-table';
 import EmptyData from '@/components/message-banners/info';
 import ErrorData from '@/components/message-banners/error';
 
-import { DATA_CATEGORY_TABS, GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
-import { EntityTypeTabs, DataTypeTabs } from '@/features/bookmark/tabs';
-import { toPascalCase } from '@/utils/string';
+import { GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
+import { EntityTypeTabs, GroupTabs } from '@/features/bookmark/tabs';
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
-import type { BookmarkCategoryType } from '@/features/bookmark/helpers';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
+import { resolveDataKey } from '@/utils/key-builder';
+
+const Categories: Array<{ key: EntityCoreTypeGroup; label: string }> = [
+  {
+    key: 'experimental',
+    label: 'Experimental data',
+  },
+  {
+    key: 'models',
+    label: 'Models',
+  },
+  {
+    key: 'simulations',
+    label: 'Simulations',
+  },
+];
 
 interface Props extends WorkspaceContext {
-  activeCategory: BookmarkCategoryType;
-  activeType: string;
+  activeCategory: EntityCoreTypeGroup;
+  activeSlug: EntitySlugValue;
   categoryTypes: Record<string, string[]>;
   list?: GroupedLibraryBookmarks | null;
   tabs: Array<{
-    key: string;
+    key: EntitySlugValue | undefined;
     label: string;
     name: string;
   }>;
@@ -39,7 +54,7 @@ interface Props extends WorkspaceContext {
 export default function BookmarksView({
   tabs,
   activeCategory,
-  activeType,
+  activeSlug,
   list,
   categoryTypes,
   virtualLabId,
@@ -47,19 +62,24 @@ export default function BookmarksView({
 }: Props) {
   const pathname = usePathname();
   const queryState = useSearchParams();
-  const category = queryState.get('c')! ?? (activeCategory as BookmarkCategoryType);
-  const type = queryState.get('t')! ?? kebabCase(activeType);
+  const category = queryState.get('c')! ?? (activeCategory as EntitySlugValue);
+  const slug = queryState.get('t')! ?? activeSlug;
+  let data = [];
 
-  const data = get(get(list, category), toPascalCase(type), []);
+  const entity = getEntityBySlug({ slug: slug as EntitySlugValue });
+  if (entity && entity.legacyType) {
+    data = get(get(list, category), entity.legacyType, []);
+  }
+
   const ids = compact<string>(data?.map((o: LibraryBookmark) => o.entity_id));
-  const dataKey = `${projectId}/${category}/${type}/bookmarks`;
+  const dataKey = resolveDataKey({ section: 'bookmark', projectId, suffix: `${category}/${slug}` });
 
   const tableList = match(tabs)
     .when(
       (value) => !!Boolean(value.length),
       () => (
         <Fragment key="bookmark-list">
-          <EntityTypeTabs items={tabs} activeType={type} basePath={pathname} category={category} />
+          <EntityTypeTabs items={tabs} activeSlug={slug} basePath={pathname} category={category} />
           <div className="text-primary-8 h-[calc(100%-50px)] bg-white">
             <div className="border-primary-6 h-full border border-t-0 p-5">
               <ErrorBoundary
@@ -73,10 +93,10 @@ export default function BookmarksView({
                 }
               >
                 <ListingTable<EntityCoreIdentifiable>
-                  key={`${activeCategory}/${activeType}`}
+                  key={`${activeCategory}/${activeSlug}`}
                   virtualLabId={virtualLabId}
                   projectId={projectId}
-                  dataType={toPascalCase(type) as DataType}
+                  dataType={entity?.legacyType as DataType}
                   targetIds={ids}
                   dataKey={dataKey}
                 />
@@ -95,9 +115,9 @@ export default function BookmarksView({
 
   return (
     <div className="mr-5 h-[calc(100%-2rem)] max-w-7xl px-4">
-      <DataTypeTabs
+      <GroupTabs
         categoryTypes={categoryTypes}
-        items={DATA_CATEGORY_TABS}
+        items={Categories}
         activeCategory={category}
         basePath={pathname}
       />
@@ -106,7 +126,7 @@ export default function BookmarksView({
           fallback={
             <ErrorData
               title="Something went wrong"
-              description={`We couldn’t load your bookmarked resources for ${get(find(DATA_CATEGORY_TABS, { key: category }), 'label') ?? ''} in project. Please try again later or contact support if the issue persists.`}
+              description={`We couldn’t load your bookmarked resources for ${category ?? ''} in project. Please try again later or contact support if the issue persists.`}
             />
           }
         >

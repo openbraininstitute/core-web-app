@@ -1,10 +1,10 @@
-import mapValues from 'lodash/mapValues';
 import fromPairs from 'lodash/fromPairs';
+import mapValues from 'lodash/mapValues';
+import compact from 'lodash/compact';
 import isEmpty from 'lodash/isEmpty';
 import groupBy from 'lodash/groupBy';
 import sortBy from 'lodash/sortBy';
 import isNil from 'lodash/isNil';
-import find from 'lodash/find';
 import pick from 'lodash/pick';
 import get from 'lodash/get';
 import map from 'lodash/map';
@@ -21,13 +21,13 @@ import {
   MODEL_DATA_TYPE_CONFIG,
   MODEL_DATATYPES,
 } from '@/constants/explore-section/data-types/model-data-types';
-import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
-import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
+import { getEntitiesByGroup, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getViewDefinitionsByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { SimulationTypeNames } from '@/types/simulation/single-neuron';
-import { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 import { DataType } from '@/constants/explore-section/list-views';
 
-export type BookmarksSupportedTypes = ExperimentTypeNames | ModelTypeNames | SimulationTypeNames;
+import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
+import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 
 export const BOOKMARK_CATEGORY = ['experimental', 'models', 'simulations'] as const;
 export type BookmarkCategoryType = (typeof BOOKMARK_CATEGORY)[number];
@@ -76,14 +76,6 @@ export const MESSAGES = {
   SERVER_ERROR: 'Something went wrong on our end. Please refresh the page or try again shortly.',
 };
 
-export const isExperiment = (t: string | null): t is ExperimentTypeNames => {
-  return t ? Object.values(ExperimentTypeNames).includes(t as ExperimentTypeNames) : false;
-};
-
-export const isModel = (t: string | null): t is ModelTypeNames => {
-  return t ? Object.values(ModelTypeNames).includes(t as ModelTypeNames) : false;
-};
-
 export const isSimulation = (t: string | null): t is SimulationTypeNames => {
   return t ? Object.values(SimulationTypeNames).includes(t as SimulationTypeNames) : false;
 };
@@ -116,7 +108,7 @@ export const groupBookmarksByCategory = (
 };
 
 export function getAvailableTabs(
-  category: BookmarkCategoryType,
+  category: EntityCoreTypeGroup,
   data: GroupedLibraryBookmarks | null
 ) {
   const categoriesResultKeys = data ? Object.keys(data).sort() : [];
@@ -124,32 +116,32 @@ export function getAvailableTabs(
   const activeCategory = category ?? pickedCategory ?? 'experimental';
   const categoryData = get(data, activeCategory);
   const categoryAvailableTypesKeys = categoryData ? Object.keys(categoryData) : [];
+  const items = getEntitiesByGroup({ group: activeCategory });
+  const viewDefinitions = getViewDefinitionsByLegacyType(compact(items.map((p) => p.legacyType)));
+  const picked = pick(viewDefinitions, categoryAvailableTypesKeys);
 
-  const items = (
-    find(DATA_CATEGORY_TABS, { key: activeCategory }) as (typeof DATA_CATEGORY_TABS)[number]
-  )?.items;
-  const picked = pick(items, categoryAvailableTypesKeys);
+  const tabs = map(picked, (item, key) => {
+    return {
+      key: getEntityByLegacyType({ legacyType: key as DataType })?.slug,
+      label: item!.title,
+      name: item!.name,
+    };
+  });
 
-  const tabs = map(picked, (item, key) => ({
-    key,
-    label: item.title,
-    name: item.name,
-  }));
-
-  const availableTypeKeysPerCategory = categoriesResultKeys.reduce(
-    (acc, categoryKey) => {
-      const categoryData = get(data, categoryKey);
-      if (categoryData) {
-        acc[categoryKey] = Object.keys(categoryData);
-      }
-      return acc;
-    },
-    {} as Record<string, string[]>
+  const availableTypeKeysPerCategory = Object.fromEntries(
+    Object.entries(data ?? {}).map(([group, categories]) => [
+      group,
+      compact(
+        Object.keys(categories).map(
+          (legacyType) => getEntityByLegacyType({ legacyType: legacyType as DataType })?.slug
+        )
+      ),
+    ])
   );
 
   return {
     activeCategory,
     availableTypeKeysPerCategory,
-    tabs: sortBy(tabs, 'key'),
+    tabs: sortBy(tabs, 'label'),
   };
 }

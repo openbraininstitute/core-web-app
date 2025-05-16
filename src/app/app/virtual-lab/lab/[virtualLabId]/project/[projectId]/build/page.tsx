@@ -33,7 +33,9 @@ import {
 } from '@/components/VirtualLab/ScopeSelector/state';
 import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
 import Styles from '@/styles/vlabs.module.css';
-import { isModel } from '@/features/bookmark/helpers';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import { ensureArray } from '@/utils/array';
 
 type Params = {
   params: Promise<{
@@ -99,7 +101,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
 
   const selectedModelType = SimulationScopeToModelType[selectedSimType] ?? DataType.CircuitMEModel;
-
+  const dataKey = `${projectId ? `${projectId}/` : ''}build/${selectedModelType || DataType.CircuitMEModel}`;
   const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'build' + selectedModelType));
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
@@ -118,6 +120,10 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
     projectId + 'build' + selectedModelType
   );
 
+  const entity = getEntityByLegacyType({
+    legacyType: selectedModelType ?? DataType.CircuitMEModel,
+  });
+
   return (
     <>
       <div className="flex grow flex-col">
@@ -130,7 +136,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               expanded ? 'bg-black opacity-30' : ''
             )}
           >
-            <ExploreSectionListingView
+            <ExploreSectionListingView<EntityCoreIdentifiableNamed>
               tableScrollable={false}
               controlsVisible={false}
               dataType={selectedModelType ?? DataType.CircuitMEModel}
@@ -140,7 +146,7 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
               style={{ background: 'bg-white' }}
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
-              dataKey={projectId + 'build' + selectedModelType || DataType.CircuitMEModel}
+              dataKey={dataKey}
               showLoadingState={false}
             />
 
@@ -155,13 +161,13 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
                 >
                   View
                 </Btn>
-                {isModel(MODEL_DATA_TYPE_CONFIG[selectedModelType].name) && (
+                {entity && entity.isBookmarkable && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}
-                    // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
-                    resourceId={selectedRows[0]?._source['@id']}
-                    typeSlug={MODEL_DATA_TYPE_CONFIG[selectedModelType].name}
+                    entityId={selectedRows[0].id}
+                    resourceId={ensureArray({ input: selectedRows[0] }).at(0)?.legacy_id}
+                    type={entity.type}
                     customButton={customBookmarkButton}
                   />
                 )}

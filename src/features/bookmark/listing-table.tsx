@@ -33,16 +33,15 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
   const dataScope = ExploreDataScope.BookmarkedResources;
 
-  const dataSource = useDataAtom<T>(
-    {
-      dataType,
-      dataScope,
-      targetIds,
-      shouldUseIds: true,
-      virtualLabInfo: { virtualLabId, projectId },
-    },
-    dataKey
-  );
+  const dataSource = useDataAtom<T>({
+    dataType,
+    dataScope,
+    targetIds,
+    shouldUseIds: true,
+    workspace: { virtualLabId, projectId },
+    brainRegionId: undefined,
+    key: dataKey,
+  });
 
   const onCellClick = (_: string, record: T) => {
     navigate(
@@ -66,6 +65,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
           dataScope={ExploreDataScope.BookmarkedResources}
           virtualLabInfo={{ virtualLabId, projectId }}
           dataKey={dataKey}
+          useBrainRegion={false}
         >
           {({ activeColumns, displayControlPanel, setDisplayControlPanel, filters }) => (
             <>
@@ -79,6 +79,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
                 dataKey={dataKey}
               />
               <ExploreSectionTable<T>
+                useBrainRegion={false}
                 dataKey={dataKey}
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{

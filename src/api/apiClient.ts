@@ -209,7 +209,7 @@ class ApiClient {
     method: string,
     endpoint: string,
     options: RequestOptions = {},
-    config: RequestConfiguration & { cache?: CacheConfiguration } = {},
+    config: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean } = {},
     onAbort?: () => void
   ): Promise<T> {
     let attempt = 0;
@@ -230,7 +230,9 @@ class ApiClient {
     // determine if caching should be used for this request
     const requestCacheConfig = config.cache ?? this._cacheConfig;
     const useCache =
-      method.toLowerCase() === 'get' && this.shouldUseCache(urlString, requestCacheConfig);
+      method.toLowerCase() === 'get' &&
+      this.shouldUseCache(urlString, requestCacheConfig) &&
+      !config.asRawResponse;
 
     // get from cache first for "get" requests
     if (useCache && requestCacheConfig) {
@@ -242,7 +244,9 @@ class ApiClient {
       if (valid && cachedResponse) {
         console.debug(`[cached] ${urlString}`);
         const contentType = cachedResponse.headers.get('Content-Type') || '';
-        if (contentType.includes('application/json')) {
+        if (config.asRawResponse) {
+          return cachedResponse as unknown as T;
+        } else if (contentType.includes('application/json')) {
           return cachedResponse.json();
         } else if (contentType.includes('text')) {
           return (await cachedResponse.text()) as unknown as T;
@@ -284,6 +288,7 @@ class ApiClient {
       }
 
       let response = await fetch(request);
+
       for (const interceptor of this.responseInterceptors) {
         response = await interceptor(response);
       }
@@ -301,7 +306,9 @@ class ApiClient {
 
       const contentType = response.headers.get('Content-Type') || '';
       let responseData: T;
-      if (contentType.includes('application/json')) {
+      if (config.asRawResponse) {
+        responseData = response as unknown as T;
+      } else if (contentType.includes('application/json')) {
         responseData = await response.json();
       } else if (contentType.includes('text')) {
         responseData = (await response.text()) as unknown as T;
@@ -314,9 +321,11 @@ class ApiClient {
       if (!response.ok) {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
+
           await new Promise((resolve) => setTimeout(resolve, delay));
           return runRequest();
         }
+
         throw Error(`Request ${request.url} failed `, {
           cause: {
             status: response.status,
@@ -331,7 +340,7 @@ class ApiClient {
     };
 
     try {
-      return await runRequest();
+      return runRequest();
     } catch (error: any) {
       if (error.name === 'AbortError') {
         onAbort?.();
@@ -394,7 +403,7 @@ class ApiClient {
   get<T>(
     endpoint: string,
     options?: RequestOptions,
-    config?: RequestConfiguration & { cache?: CacheConfiguration }
+    config?: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean }
   ) {
     return this._request<T>('get', endpoint, options, config);
   }

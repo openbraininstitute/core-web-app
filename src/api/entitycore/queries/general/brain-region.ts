@@ -4,7 +4,7 @@ import {
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
-
+import { env } from '@/env';
 /**
  * Retrieves the brain region hierarchy from the Entity Core API.
  *
@@ -42,4 +42,26 @@ export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
 export async function getTemporaryBrainRegionById({ id }: { id: string }) {
   const api = await entityCoreApi();
   return await api.get<IBrainRegionHierarchy>(`/brain-region/${id}`);
+}
+
+/**
+ * Retrieves the brain region hierarchy from the entity core API.
+ *
+ * @param params - An object containing the name of the brain region hierarchy to fetch.
+ * @param params.name - The name of the brain region hierarchy. Defaults to 'aibs'.
+ * @returns A promise that resolves to the brain region hierarchy data.
+ */
+export async function getBrainRegionHierarchy({
+  id = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+}: {
+  id?: string;
+}) {
+  const api = await entityCoreApi();
+  return await api.get<IBrainRegionHierarchy>(
+    `/brain-region-hierarchy/${id}/hierarchy`,
+    {},
+    {
+      cache: { cacheName: 'brain-region-hierarchy', enabled: true, ttlInSeconds: 86_400 },
+    }
+  );
 }

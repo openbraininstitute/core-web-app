@@ -8,11 +8,12 @@ import FilterControls from '@/components/explore-section/ExploreSectionListingVi
 import ExploreSectionTable, {
   OnCellClick,
 } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import NumericResultsInfo from '@/features/listing-filter-panel/numeric-results-info';
+import ResultsCount from '@/features/listing-filter-panel/numeric-results-info';
 import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
 import { sortStateAtom, dataAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -22,7 +23,26 @@ import { classNames } from '@/util/utils';
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import type { WorkspaceContext } from '@/types/common';
 
+export interface Props<T extends EntityCoreIdentifiable> {
+  dataKey: string;
+  dataType: DataType;
+  dataScope: ExploreDataScope;
+  onCellClick?: OnCellClick<T>;
+  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
+  virtualLabInfo?: WorkspaceContext;
+  containerClass?: string;
+  tableClass?: string;
+  onRowsSelected?: (rows: Array<T>) => void;
+  selectionType?: RowSelectionType;
+  tableScrollable?: boolean;
+  controlsVisible?: boolean;
+  style?: Record<'background', string>;
+  showLoadingState?: boolean;
+  useBrainRegion?: boolean;
+}
+
 export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
+  dataKey,
   dataType,
   dataScope,
   renderButton,
@@ -35,45 +55,31 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   style = { background: 'bg-[#d1d1d1]' },
   containerClass = 'h-full',
   tableClass = 'h-full overflow-y-hidden',
-  dataKey,
   showLoadingState = true,
-}: {
-  containerClass?: string;
-  tableClass?: string;
-  dataType: DataType;
-  dataScope: ExploreDataScope;
-  renderButton?: (props: RenderButtonProps<T>) => ReactNode;
-  onRowsSelected?: (rows: Array<T>) => void;
-  onCellClick?: OnCellClick<T>;
-  selectionType?: RowSelectionType;
-  virtualLabInfo?: WorkspaceContext;
-  tableScrollable?: boolean;
-  controlsVisible?: boolean;
-  style?: Record<'background', string>;
-  dataKey: string;
-  showLoadingState?: boolean;
-}) {
+  useBrainRegion = true,
+}: Props<T>) {
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
 
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
+  const { node } = useBrainRegionHierarchy({ dataKey });
 
   const result = useLoadableValue(
     dataAtom({
       dataType,
       dataScope,
-      virtualLabInfo,
+      workspace: virtualLabInfo,
       key: dataKey,
+      brainRegionId: useBrainRegion ? node.id : undefined,
     })
   );
 
-  const dataSource = useDataAtom<T>(
-    {
-      dataType,
-      dataScope,
-      virtualLabInfo,
-    },
-    dataKey
-  );
+  const dataSource = useDataAtom<T>({
+    dataType,
+    dataScope,
+    workspace: virtualLabInfo,
+    brainRegionId: useBrainRegion ? node.id : undefined,
+    key: dataKey,
+  });
 
   return (
     <div
@@ -88,6 +94,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
         )}
       >
         <WithListingFilterPanel
+          useBrainRegion={useBrainRegion}
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
@@ -105,11 +112,12 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
               >
-                <NumericResultsInfo
+                <ResultsCount
                   dataType={dataType}
                   dataScope={dataScope}
                   virtualLabInfo={virtualLabInfo}
                   dataKey={dataKey}
+                  useBrainRegion={useBrainRegion}
                 />
               </FilterControls>
               <ExploreSectionTable<T>
@@ -124,6 +132,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 controlsVisible={controlsVisible}
                 onRowsSelected={onRowsSelected}
                 dataKey={dataKey}
+                useBrainRegion={useBrainRegion}
               />
             </>
           )}

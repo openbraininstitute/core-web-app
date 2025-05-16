@@ -187,47 +187,42 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.PreSynapticBrainRegion]: {
     title: 'Brain Region [From]',
     render: (r) => {
-      return renderEmptyOrValue(
-        (r as IExperimentalSynapsesPerConnection).synaptic_pathway.pre_region.name
-      );
+      return renderEmptyOrValue((r as IExperimentalSynapsesPerConnection).pre_region.name);
     },
     vocabulary: {
       plural: 'Brain Region [From]',
       singular: 'Brain Region [From]',
     },
     filter: CoreFieldFilterTypeEnum.CheckList,
-    constraint: 'synaptic_pathway__pre_region',
+    constraint: 'pre_region__name__in',
     isFilterable: true,
     isDisplayable: true,
   },
   [EntityCoreFields.PostSynapticBrainRegion]: {
     title: 'Brain Region [To]',
     render: (r) => {
-      return renderEmptyOrValue(
-        (r as IExperimentalSynapsesPerConnection).synaptic_pathway.post_region.name
-      );
+      return renderEmptyOrValue((r as IExperimentalSynapsesPerConnection).post_region.name);
     },
     vocabulary: {
       plural: 'Brain Region [To]',
       singular: 'Brain Region [To]',
     },
     filter: CoreFieldFilterTypeEnum.CheckList,
-    constraint: 'synaptic_pathway__post_region',
+    constraint: 'post_region__name_in',
     isFilterable: true,
     isDisplayable: true,
   },
   [EntityCoreFields.PreSynapticCellType]: {
     title: 'Cell Type [From]',
     render: (r) => {
-      return renderEmptyOrValue(
-        (r as IExperimentalSynapsesPerConnection).synaptic_pathway.pre_mtype.pref_label
-      );
+      return renderEmptyOrValue((r as IExperimentalSynapsesPerConnection).pre_mtype.pref_label);
     },
     filter: CoreFieldFilterTypeEnum.CheckList,
     vocabulary: {
       plural: 'Cell Type [From]',
       singular: 'Cell Type [From]',
     },
+    constraint: 'pre_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
   },
@@ -235,14 +230,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Cell Type [To]',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
-      return renderEmptyOrValue(
-        (r as IExperimentalSynapsesPerConnection).synaptic_pathway.post_mtype.pref_label
-      );
+      return renderEmptyOrValue((r as IExperimentalSynapsesPerConnection).post_mtype.pref_label);
     },
     vocabulary: {
       plural: 'Cell Type [To]',
       singular: 'Cell Type [To]',
     },
+    constraint: 'post_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
   },

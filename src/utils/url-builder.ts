@@ -1,11 +1,10 @@
-import kebabCase from 'lodash/kebabCase';
-
 import { getEntityByCoreType, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
-import { toPascalCase } from '@/utils/string';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 const baseUri = '/app/virtual-lab';
 
@@ -67,16 +66,16 @@ export function resolveExperimentUrl({
 export function resolveLibraryUrl({
   ctx,
   category,
-  dataType,
+  slug,
 }: {
   ctx: WorkspaceContext;
   category?: string; // TODO: build the correct type
-  dataType?: DataType;
+  slug?: EntitySlugValue;
 }) {
   const searchParams = new URLSearchParams();
   let querySegment = '';
   if (category) searchParams.set('c', category);
-  if (dataType) searchParams.set('t', kebabCase(toPascalCase(dataType)));
+  if (slug) searchParams.set('t', slug);
   if (Boolean(searchParams.size)) querySegment = `?${searchParams.toString()}`;
 
   return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/library${querySegment}`;

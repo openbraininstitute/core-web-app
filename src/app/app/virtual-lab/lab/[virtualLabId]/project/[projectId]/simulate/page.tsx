@@ -97,6 +97,12 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     projectId + 'simulate' + dataType
   );
 
+  const entity = getEntityByLegacyType({
+    // @ts-expect-error
+    // TODO: fix it when we have simulations
+    legacyType: selectedSimType ?? DataType.CircuitMEModel,
+  });
+  const dataKey = resolveDataKey({ section: 'experiment', projectId, entity });
   return (
     <>
       <div className="flex w-full grow flex-col">
@@ -121,7 +127,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 style={{ background: 'bg-white' }}
                 containerClass="flex flex-col grow"
                 tableClass={classNames('overflow-y-auto grow', Styles.table)}
-                dataKey={projectId + 'simulate' + dataType}
+                dataKey={dataKey}
                 showLoadingState={false}
               />
               {loadMoreDiv}
@@ -135,7 +141,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 >
                   View
                 </Btn>
-                {isSimulation(SIMULATION_DATA_TYPE_CONFIG[dataType].name) && (
+                {entity && entity.isBookmarkable && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}

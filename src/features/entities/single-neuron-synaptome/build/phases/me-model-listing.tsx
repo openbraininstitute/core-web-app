@@ -2,21 +2,31 @@
 
 import { WarningOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import { ReactElement } from 'react';
 import { useState } from 'react';
 import { Form } from 'antd';
 import { z } from 'zod';
 
+import dynamic from 'next/dynamic';
+
 import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/single-neuron-synaptome/build/create.state-session';
 import useRowSelection from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 
+import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
 import type { WorkspaceContext } from '@/types/common';
 import type { IMEModel } from '@/api/entitycore/types';
+
+const ExploreSectionListingView = dynamic(
+  () => import('@/components/explore-section/ExploreSectionListingView'),
+  {
+    ssr: false,
+  }
+) as (props: ExploreSectionListingViewProps<IMEModel>) => ReactElement | null;
 
 type Props = WorkspaceContext & {
   stateId: string;
@@ -55,7 +65,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
     }
   };
 
-  const onNavigateToMeModel = (basePath: string, record: IMEModel): void => {
+  const onNavigateToMeModel = (_: string, record: IMEModel): void => {
     setSessionValue({
       name: form.getFieldValue('name'),
       description: form.getFieldValue('description'),
@@ -104,11 +114,12 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
             setSessionValue({
               name: form.getFieldValue('name'),
               description: form.getFieldValue('description'),
-              selectedRows: rows,
+              selectedRows: rows as Array<IMEModel>,
             });
           }}
           onCellClick={onNavigateToMeModel}
           dataKey={stateId}
+          useBrainRegion={false}
         />
       </div>
       <button

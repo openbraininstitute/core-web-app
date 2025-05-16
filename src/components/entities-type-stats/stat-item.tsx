@@ -1,13 +1,19 @@
-import { WarningOutlined } from '@ant-design/icons';
+import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import Link from 'next/link';
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
+import { useQueryState } from 'nuqs';
+import {
+  brainRegionHierarchyAtom,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+} from '@/features/brain-region-hierarchy/context';
+import { unwrap } from 'jotai/utils';
 
 // TODO: to delete when confirm the LiteratureForExperimentType is not needed
 export default function StatItem({
@@ -22,11 +28,15 @@ export default function StatItem({
   subtitle: ReactNode;
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
+  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
 
   const onClick = async () => {
+    const brainRegionName = brainRegionHierarchy?.options.find(
+      (o) => o.value === brainRegionId
+    )?.label;
     if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+      await userJourneyTracker.handleBrainRegionClick(brainRegionName!);
     }
     const artifact = ensureString(title, 'Morphology');
     setCurrentExplorerArtifact(artifact);
@@ -73,19 +83,25 @@ export function EntityTypeCount({
   records,
   type,
   isError,
+  isLoading = false,
 }: {
   href: string;
   title: string;
   records: string;
   type: string;
   isError: boolean;
+  isLoading?: boolean;
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+  const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
+  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
 
   const onClick = async () => {
+    const brainRegionName = brainRegionHierarchy?.options.find(
+      (o) => o.value === brainRegionId
+    )?.label;
     if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
+      await userJourneyTracker.handleBrainRegionClick(brainRegionName!);
     }
     const artifact = ensureString(title, 'Morphology');
     setCurrentExplorerArtifact(artifact);
@@ -100,6 +116,7 @@ export function EntityTypeCount({
       data-testid={`dataset-${type}`}
     >
       <span className="text-base font-bold">{title}</span>
+      {isLoading && !isError && <LoadingOutlined className="ml-auto" />}
       {isError ? (
         <WarningOutlined className="text-xl" />
       ) : (

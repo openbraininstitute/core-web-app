@@ -6,7 +6,7 @@ import { mockEmptyESResponse, mockMorphologyResponse } from '../__server__/handl
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import { DataType } from '@/constants/explore-section/list-views';
 import sessionAtom from '@/state/session';
-import NumericResultsInfo from '@/features/listing-filter-panel/numeric-results-info';
+import ResultsCount from '@/features/listing-filter-panel/numeric-results-info';
 import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import { ExploreDataScope } from '@/types/explore-section/application';
 
@@ -180,7 +180,7 @@ describe('Header panel unit tests', () => {
 
     render(
       <TestProvider initialValues={[[sessionAtom, { accessToken: '123' }]]}>
-        <NumericResultsInfo
+        <ResultsCount
           dataType={DataType.ExperimentalNeuronMorphology}
           dataScope={ExploreDataScope.NoScope}
           dataKey="test"

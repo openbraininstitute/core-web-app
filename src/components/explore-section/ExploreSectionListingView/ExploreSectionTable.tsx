@@ -217,6 +217,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
   controlsVisible = true,
   autohideControls = false,
   dataKey,
+  useBrainRegion = true,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -226,6 +227,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
     onRowsSelected?: (rows: Array<T>) => void;
     autohideControls?: boolean;
     dataKey: string;
+    useBrainRegion?: boolean;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -265,9 +267,15 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
           selectedRows={selectedRows}
           clearSelectedRows={clearSelectedRows}
           visible={controlsVisible}
+          dataType={dataContext.dataType}
         >
           {displayLoadMoreBtn && (
-            <LoadMoreButton hide={toggleDisplayMore} dataKey={dataKey} dataContext={dataContext} />
+            <LoadMoreButton
+              hide={toggleDisplayMore}
+              dataKey={dataKey}
+              dataContext={dataContext}
+              useBrainRegion={useBrainRegion}
+            />
           )}
         </TableControls>
       )}

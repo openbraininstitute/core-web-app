@@ -1,14 +1,24 @@
+import { ReactElement, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
+import { resolveDataKey } from '@/utils/key-builder';
 import { detailUrlBuilder } from '@/util/common';
 
+import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
+
+const ExploreSectionListingView = dynamic(
+  () => import('@/components/explore-section/ExploreSectionListingView'),
+  {
+    ssr: false,
+  }
+) as (props: ExploreSectionListingViewProps<ISingleNeuronSynaptome>) => ReactElement | null;
 
 export default function ExploreSynaptomeModelTable({
   dataType,
@@ -28,10 +38,14 @@ export default function ExploreSynaptomeModelTable({
     navigate(exploreUrl);
   };
 
-  const dataKey = `${virtualLabInfo?.projectId ?? ''}/explore/${dataType}`;
-
+  const entity = getEntityByLegacyType({ legacyType: dataType });
+  const dataKey = resolveDataKey({
+    section: 'explore',
+    projectId: virtualLabInfo?.projectId,
+    entity,
+  });
   return (
-    <ExploreSectionListingView<ISingleNeuronSynaptome>
+    <ExploreSectionListingView
       {...{
         dataType,
         dataScope,

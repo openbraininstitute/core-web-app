@@ -1,12 +1,5 @@
-import { generateVlProjectUrl } from './virtual-lab/urls';
-import { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
-import {
-  BASE_EXPERIMENTAL_EXPLORE_PATH,
-  BASE_MODEL_EXPLORE_PATH,
-} from '@/constants/explore-section/paths';
+import { BASE_EXPERIMENTAL_EXPLORE_PATH } from '@/constants/explore-section/paths';
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
-import { BookmarksSupportedTypes } from '@/features/bookmark/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export const switchStateType = {
@@ -50,20 +43,6 @@ export const isValidBase64 = (str: string): boolean => {
 
 export const detailUrlBuilder = <T extends EntityCoreIdentifiable>(basePath: string, resource: T) =>
   `${basePath}/${resource.id}`;
-
-export const detailUrlWithinLab = (
-  labId: string,
-  labProjectId: string,
-  resourceProjectLabel: string,
-  resourceId: string,
-  bookmarkTab: BookmarkTabsName,
-  resourceType: BookmarksSupportedTypes
-) => {
-  if (bookmarkTab === BookmarkTabsName.SIMULATIONS) {
-    return `${generateVlProjectUrl(labId, labProjectId)}/explore/simulate/${resourceType}/view/${to64(`${resourceProjectLabel}!/!${resourceId}`)}`;
-  }
-  return `${generateVlProjectUrl(labId, labProjectId)}${bookmarkTab === BookmarkTabsName.EXPERIMENTS ? BASE_EXPERIMENTAL_EXPLORE_PATH : BASE_MODEL_EXPLORE_PATH}${resourceType}/${to64(`${resourceProjectLabel}!/!${resourceId}`)}`;
-};
 
 export const detailUrlOutsideLab = (
   projectLabel: string,

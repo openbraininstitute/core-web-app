@@ -13,6 +13,7 @@ import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { SessionOrNull } from '@/hooks/session';
 import { AtomProvider } from '@/state/state';
+import 'jotai-devtools/styles.css';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -28,7 +29,7 @@ export default function Providers({ children, session }: ProvidersProps) {
             <NuqsAdapter>
               <JotaiProvider>
                 {process.env.NEXT_PUBLIC_JOTAI_DEVTOOLS_ENABLED && (
-                  <DevTools {...{ isInitialOpen: false }} />
+                  <DevTools {...{ isInitialOpen: false, position: 'bottom-right' }} />
                 )}
                 <ThemeProvider>
                   <SessionProvider session={session} refetchInterval={2 * 60}>

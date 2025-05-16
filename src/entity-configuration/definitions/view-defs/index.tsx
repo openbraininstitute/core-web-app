@@ -1,6 +1,7 @@
-import find from 'lodash/find';
-import get from 'lodash/get';
 import findKey from 'lodash/findKey';
+import find from 'lodash/find';
+import pick from 'lodash/pick';
+import get from 'lodash/get';
 
 import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
 import { ViewsDefinition as ModelViewDefinition } from '@/entity-configuration/definitions/view-defs/model';
@@ -23,6 +24,10 @@ export const ViewsDefinitionRegistry = {
 
 export function getViewDefinitionByLegacyType(legacyType: DataType) {
   return get(ViewsDefinitionRegistry, legacyType, null);
+}
+
+export function getViewDefinitionsByLegacyType(types: Array<DataType>) {
+  return pick(ViewsDefinitionRegistry, types);
 }
 
 export function getViewDefinitionByName(name: TExperimentTypeNames) {

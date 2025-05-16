@@ -1,3 +1,4 @@
+// import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -29,4 +30,6 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   asset: {
     extension: 'application/json',
   },
+  // viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalBoutonDensity],
+  isBookmarkable: true,
 } as const;

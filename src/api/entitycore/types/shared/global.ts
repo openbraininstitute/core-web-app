@@ -4,12 +4,6 @@ import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 
-// TODO: should be in global shared type file
-export type Nullish = null | undefined;
-export type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
 export type EntityCoreDataType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['type'];
 
