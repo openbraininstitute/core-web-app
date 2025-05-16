@@ -116,7 +116,9 @@ export function EntityTypeCount({
       data-testid={`dataset-${type}`}
     >
       <span className="text-base font-bold">{title}</span>
-      {isLoading && !isError && <LoadingOutlined className="ml-auto" />}
+      {((isLoading && !isError) || (isLoading && records)) && (
+        <LoadingOutlined className="ml-auto" />
+      )}
       {isError ? (
         <WarningOutlined className="text-xl" />
       ) : (

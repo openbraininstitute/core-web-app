@@ -3,9 +3,15 @@ import find from 'lodash/find';
 
 import { EntityCoreConfiguration } from '.';
 
-import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
+import type {
+  EntityCoreTypeConfig,
+  EntityCoreTypeGroup,
+} from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityTypeValue } from '@/api/entitycore/types';
+import set from 'lodash/set';
+import get from 'lodash/get';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type EntityCoreLegacyType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['legacyType'];
@@ -22,4 +28,25 @@ export const getEntityBySlug = ({ slug }: { slug: EntitySlugValue }) =>
 
 export const getEntitiesByGroup = ({ group }: { group: EntityCoreTypeGroup }) => {
   return filter(EntityCoreConfiguration, { group });
+};
+
+export const applyEntityExpansions = async <
+  T extends EntityCoreIdentifiable,
+  K extends Record<string, any>,
+>(
+  entity: EntityCoreTypeConfig<T>,
+  source: T
+): Promise<K> => {
+  const data = {} as K;
+  if (entity.api.expand) {
+    const promises = Object.entries(entity.api.expand).map(([k, fn]) => {
+      return fn(source).then((result) => ({ key: k, result }));
+    });
+
+    const results = await Promise.all(promises);
+    results.forEach(({ key, result }) => {
+      set(data, key, result);
+    });
+  }
+  return data;
 };

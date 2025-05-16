@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { LoadingOutlined } from '@ant-design/icons';
+import { useParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 
@@ -12,12 +13,10 @@ import { selectedMEModelIdAtom } from '@/state/virtual-lab/build/me-model';
 import { SingleNeuronSimulation } from '@/types/nexus';
 import { getSession } from '@/authFetch';
 
-type LocationParams = {
-  projectId: string;
-  virtualLabId: string;
-};
+import type { WorkspaceContext } from '@/types/common';
 
-export default function Simulation({ params }: { params: LocationParams }) {
+export default function Simulation() {
+  const params = useParams<WorkspaceContext>();
   const selectedMEModelId = useAtomValue(selectedMEModelIdAtom);
   const [simulations, setSimulations] = useState<SingleNeuronSimulation[]>([]);
   const [loading, setLoading] = useState(false);

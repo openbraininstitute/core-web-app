@@ -1,9 +1,10 @@
-import type { EntityTypeValue } from '@/api/entitycore/types';
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { DataType } from '@/constants/explore-section/list-views';
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { DataType } from '@/constants/explore-section/list-views';
+import type { EntityCoreObjectTypes, EntityTypeValue } from '@/api/entitycore/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
@@ -19,9 +20,10 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T>>;
-      one?: (query: any) => Promise<T>;
+      one?: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (query: any) => Promise<T>;
     };
+    expand?: Record<string, (source: T, ctx?: WorkspaceContext) => Promise<any>>;
   };
   explore: {
     basePrefix?: string;
