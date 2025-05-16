@@ -4,6 +4,7 @@ import { use } from 'react';
 import { ArrowRightOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { usePathname } from 'next/navigation';
+import { saveAs } from 'file-saver';
 
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 import ModelDetails from '@/components/simulate/SimulationDetails/MEModelDetails';
@@ -20,9 +21,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import Link from '@/components/Link';
 import Overview from '@/features/details-view/overview';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
-import { saveAs } from 'file-saver';
-
-export const dynamic = 'force-dynamic';
+import ExperimentSetup from '@/components/simulate/SimulationDetails/ExperimentSetup';
 
 type Props = {
   params: Promise<{
@@ -68,6 +67,9 @@ export default function SimulationDetailPage(props: Props) {
   if (!fields)
     throw new Error(`Cannot find fields definition for ${DataType.SingleNeuronSimulation}`);
 
+
+  console.log(simulationConfig)
+
   return (
     <div className="text-primary-8 grid grid-cols-[min-content_auto] bg-white">
       <Nav
@@ -106,6 +108,11 @@ export default function SimulationDetailPage(props: Props) {
             type="single-neuron-simulation"
             virtualLabId={params.virtualLabId}
             projectId={params.projectId}
+          />
+          <ExperimentSetup
+            experimentSetup={simulationConfig}
+            type="single-neuron-simulation"
+            meModel={null}
           />
         </div>
       </div>

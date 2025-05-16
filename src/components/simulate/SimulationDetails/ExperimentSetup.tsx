@@ -45,8 +45,8 @@ export default function ExperimentSetupTab({ experimentSetup, type, meModel }: P
               title={title}
               key={key}
               className={classNames(
-                'w-1/3 flex-[1_1_33%] border py-3 text-center text-xl font-semibold transition-all duration-200 ease-out',
-                activeTab === key ? 'bg-primary-9 text-white' : 'text-primary-9 bg-white'
+                'w-1/3 flex-[1_1_33%] border border-gray-300 py-3 text-center text-xl font-semibold transition-all duration-200 ease-out',
+                activeTab === key ? 'bg-primary-9 text-white border-primary-9' : 'text-primary-9 bg-white'
               )}
             >
               <button
