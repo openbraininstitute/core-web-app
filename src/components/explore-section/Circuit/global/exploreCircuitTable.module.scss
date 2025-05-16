@@ -1,10 +1,57 @@
 .circuitTable {
+  /* Row and cell styles */
   & .ant-table-row {
     display: table-row !important;
     min-height: 40px !important;
+    background: white;
   }
+
+  /* Header styles */
+  & .ant-table-thead {
+    background: white !important;
+  }
+
+  & .ant-table-thead > tr > th {
+    background: white !important;
+    color: #8c8c8c !important;
+    font-size: 14px !important;
+    font-weight: normal !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0 !important;
+    border-bottom: 0 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+  }
+
+  & .ant-table-thead > tr > th:hover {
+    background: #f5f5f5 !important;
+  }
+
+  /* Cell styles */
   & .ant-table-cell {
-    padding: 8px !important; /* Ensure padding doesn’t collapse */
+    padding: 8px !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    background: transparent !important;
+  }
+
+  /* Table body */
+
+  & .ant-table-tbody {
+    background: white;
+
+    & > tr:last-child > td {
+      border-bottom: 0;
+    }
+  }
+
+  /* Expand icon column */
+  & .ant-table-expand-icon-col {
+    width: 0 !important;
+    display: none !important;
   }
 }
 
@@ -16,96 +63,6 @@
   opacity: 1;
 }
 
-.circuitTable th {
-  width: auto !important;
-}
-
-.circuitTable ant-table-cell:first-child {
-  display: hidden;
-}
-
-.circuitTable ant-table-tbody {
-  background: #fafafa;
-
-  & > tr:last-child > td {
-    border-bottom: 0;
-  }
-}
-
-.circuitTable ant-table-row {
-  background: #fafafa;
-}
-
-.circuitTable ant-table-thead_th {
-  font-size: 14px;
-  font-weight: normal;
-  color: #8c8c8c;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.ant-table-thead > tr > th {
-  border-bottom: 0;
-}
-
-.ant-table-expand-icon-col {
-  width: 0 !important;
-  display: hidden !important;
-}
-
-// RESIZING
-
-.resize-handle {
-  position: absolute;
-  right: -5px;
-  top: 0;
-  height: 12px;
-  width: 10px;
-  cursor: col-resize;
-  z-index: 1;
-  background: rgba(0, 0, 0, 0.4) !important;
-}
-
-.resize-handle:hover {
-  background: rgba(0, 0, 0, 0.6);
-}
-.react-resizable {
-  position: relative;
-  background-clip: padding-box;
-}
-
-.react-resizable-handle {
-  position: absolute;
-  width: 10px;
-  height: 100%;
-  bottom: 0;
-  right: -5px;
-  cursor: col-resize;
-  z-index: 1;
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-.react-resizable-handle:hover {
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-.subcircuitButtonRow {
-  display: table-row !important;
-  min-height: 40px !important;
-  background-color: yellow !important;
-}
-
-.expandButton {
-  display: block !important;
-  min-height: 32px !important;
-  width: 100%;
-  text-align: left;
-  color: #1890ff !important; /* Ant Design link color */
-  text-decoration: none !important;
-  padding: 8px 16px !important;
-  font-size: 14px !important;
-
-  &:hover {
-    color: #40a9ff !important;
-  }
+.boldName {
+  font-weight: bold;
 }
