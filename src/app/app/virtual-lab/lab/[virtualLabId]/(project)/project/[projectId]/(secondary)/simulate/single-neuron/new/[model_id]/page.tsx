@@ -5,17 +5,14 @@ import { useResetAtom } from 'jotai/utils';
 
 import SingleNeuronSimulationGenericContainer from '@/components/simulate/single-neuron/containers';
 import { resetSimulationAtom } from '@/state/simulate/single-neuron-setter';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-type Props = {
-  params: Promise<{
-    projectId: string;
-    virtualLabId: string;
-  }>;
-};
+export default function SingleNeuronSimulation(
+  props: ServerSideComponentProp<WorkspaceContext, {}>
+) {
+  const params = use(props.params);
 
-export default function SingleNeuronSimulation(props: Props) {
-  const { params } = props;
-  const { projectId, virtualLabId } = use(params);
+  const { projectId, virtualLabId } = params;
 
   const resetSimulation = useResetAtom(resetSimulationAtom);
 

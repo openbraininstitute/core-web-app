@@ -67,9 +67,6 @@ export default function SimulationDetailPage(props: Props) {
   if (!fields)
     throw new Error(`Cannot find fields definition for ${DataType.SingleNeuronSimulation}`);
 
-
-  console.log(simulationConfig)
-
   return (
     <div className="text-primary-8 grid grid-cols-[min-content_auto] bg-white">
       <Nav
