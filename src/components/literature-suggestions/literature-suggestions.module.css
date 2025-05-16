@@ -26,12 +26,13 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 1em;
+  border-left: 1px solid var(--color-neutral-4);
 }
 
 .literatureSuggestions[data-collapsed='true'] {
   padding: 0;
-  pading-top: 20px;
-  width: 48px;
+  padding-top: 20px;
+  width: 40px;
 }
 
 .literatureSuggestions > button.header {
@@ -52,8 +53,12 @@
 }
 
 .literatureSuggestions > button.header > h1 {
-  font-size: inherit;
+  position: relative;
+  left: -2px;
+  font-size: 18px;
   font-weight: bold;
+  transform: rotate(180deg);
+  transform-origin: center;
 }
 
 .literatureSuggestions[data-collapsed='true'] > button.header > h1 {

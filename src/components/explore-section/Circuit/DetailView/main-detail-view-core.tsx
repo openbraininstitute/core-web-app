@@ -4,13 +4,10 @@ import { useSetAtom } from 'jotai';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { DetailsPageSideBackLink } from '../../Sidebar';
 import HeaderDetailView from './header-detail-view';
 import SectionMainContainer from './sections/section-main-container';
 import Visualiser from './visualisation/Visualiser';
-
-import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
-import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
-import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
 
 import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
@@ -26,7 +23,7 @@ function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="text-primary-9">
+    <div className="py-10 pl-20 pr-10 text-primary-9">
       <HeaderDetailView content={content} />
       <Visualiser content={content} />
       <SectionMainContainer
@@ -131,15 +128,14 @@ export default function CircuitDetailPage() {
 
   return (
     <div className="relative overflow-y-scroll bg-white">
-      <div className="p-10">
-        {circuitData && (
-          <MainDetailViewCore
-            content={circuitData}
-            parentCircuit={parentCircuitData}
-            derivedCircuits={derivedCircuitsData}
-          />
-        )}
-      </div>
+      <DetailsPageSideBackLink />
+      {circuitData && (
+        <MainDetailViewCore
+          content={circuitData}
+          parentCircuit={parentCircuitData}
+          derivedCircuits={derivedCircuitsData}
+        />
+      )}
     </div>
   );
 }
