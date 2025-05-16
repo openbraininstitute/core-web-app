@@ -7,10 +7,7 @@ import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { DataType } from '@/constants/explore-section/list-views';
 
 import type { ModelEntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { WorkspaceContext } from '@/types/common';
-
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { ModelEntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { WorkspaceContext, ServerSideComponentProp } from '@/types/common';
 
 const SingleNeuronSimulationView = dynamic(
   () => import('@/page-wrappers/explore/single-neuron-simulation')

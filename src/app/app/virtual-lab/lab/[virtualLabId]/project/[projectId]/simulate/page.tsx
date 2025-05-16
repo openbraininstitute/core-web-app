@@ -6,11 +6,7 @@ import { HTMLProps, useRef, useState, use } from 'react';
 
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import {
-  SimulationScopeToDataType,
-  SimulationScopeToModelType,
-  SimulationType,
-} from '@/types/virtual-lab/lab';
+import { SimulationScopeToDataType, SimulationScopeToModelType } from '@/types/virtual-lab/lab';
 
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';

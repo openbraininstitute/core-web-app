@@ -11,7 +11,7 @@ import { createSingleNeuronSimulationAtom } from '@/state/simulate/single-neuron
 import GenericButton from '@/components/Global/GenericButton';
 import useNotification from '@/hooks/notifications';
 
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { messages } from '@/i18n/en/synaptome';
 import { queryAtom } from '@/state/explore-section/list-view-atoms';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -59,13 +59,6 @@ export default function SaveSimulationModal({
   const createSingleNeuronSimulation = useSetAtom(createSingleNeuronSimulationAtom);
   const { error: errorNotify, success: successNotify } = useNotification();
 
-  const generateSimulationDetailUrl = (simulationId: string) => {
-    const vlProjectUrl = generateVlProjectUrl(vLabId, projectId);
-    const baseBuildUrl = `${vlProjectUrl}/explore/interactive/model/${simulationType}`;
-
-    return `${baseBuildUrl}/${simulationId}`;
-  };
-
   const saveSimulation: FormProps<SimulationForm>['onFinish'] = async ({ name, description }) => {
     try {
       setLoading(true);
@@ -79,7 +72,13 @@ export default function SaveSimulationModal({
       );
       successNotify(messages.CreationSimulationSucceed, 7, 'topRight');
       refreshSimulations();
-      navigate(generateSimulationDetailUrl(savedSimulation!.id));
+      navigate(
+        resolveExploreDetailsPageUrl({
+          ctx: { virtualLabId: vLabId, projectId },
+          entityId: savedSimulation!.id,
+          dataType: DataType.SingleNeuronSimulation,
+        })
+      );
     } catch (error) {
       errorNotify('An error encountered when saving simulation', 7, 'topRight');
     } finally {
