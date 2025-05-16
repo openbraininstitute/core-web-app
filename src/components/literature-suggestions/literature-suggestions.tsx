@@ -3,13 +3,13 @@
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React from 'react';
 
-import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
-import { classNames } from '@/util/utils';
 import ErrorPanel from './error';
 import MessageItem from './message-item';
 import Prompt from './prompt';
 import { Spinner } from './spinner';
 import SuggestedQuestions from './suggested-questions';
+import { classNames } from '@/util/utils';
+import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
 import styles from './literature-suggestions.module.css';
 
