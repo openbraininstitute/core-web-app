@@ -3,7 +3,7 @@ import isNil from 'lodash/isNil';
 import { db, ClickTuple, ClickType } from '@/components/explore-section/Literature/user-journey/db';
 import GenericEvent from '@/util/generic-event';
 
-const DEFAULT_COUNT = 10;
+const DEFAULT_COUNT = 3;
 
 function sortTuples(tuples: ClickTuple[]) {
   return tuples.sort((a, b) => {

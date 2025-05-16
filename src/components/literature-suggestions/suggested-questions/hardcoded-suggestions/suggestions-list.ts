@@ -18,7 +18,7 @@ export const SuggestionsListPerRegion: Record<string, string[]> = {
   ],
   'Neuron density': [
     'Are there publications about determining the neuron density in {brain_region} in {rodents/humans}? ',
-    'Are there publications determining the quantitative distribution of excitatory versus inhibitory neurons {brain region} of the {rodent/human} brain? ',
+    'Are there publications determining the quantitative distribution of excitatory versus inhibitory neurons {brain_region} of the {rodent/human} brain? ',
     'Are there publications exploring how the density of neurons varies across different layers of the {rodent/human} neocortex? ',
     'Are there publications reporting the relationship between neuron density and network connectivity in {rodent/human} models? ',
     'Are there publications determining the quantitative distribution of excitatory versus inhibitory neurons in various regions of the rodent brain? ',
