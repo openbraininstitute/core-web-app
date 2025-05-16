@@ -160,17 +160,7 @@ const columns = (
       ),
     },
     {
-      title: 'Contributors',
-      key: 'contributors',
-      width: 150,
-      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">
-          {record.metadata.contributors === 'None' ? '–' : record.metadata.contributors}
-        </div>
-      ),
-    },
-    {
-      title: 'Published in',
+      title: 'Published In',
       key: 'publishedIn',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
