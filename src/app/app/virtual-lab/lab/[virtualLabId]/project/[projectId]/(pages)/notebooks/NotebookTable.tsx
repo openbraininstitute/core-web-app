@@ -4,7 +4,13 @@ import { ConfigProvider, DatePicker, Input, Select } from 'antd';
 
 import { useMemo, useState } from 'react';
 
-import { DeleteOutlined, LoadingOutlined, PlusOutlined, UndoOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  LoadingOutlined,
+  PlusOutlined,
+  UndoOutlined,
+  PlayCircleOutlined,
+} from '@ant-design/icons';
 import Table from 'antd/es/table';
 import { Popover } from 'antd/lib';
 import { compareAsc, format } from 'date-fns';
@@ -36,6 +42,7 @@ function NotebookTable({
   vlabId,
   projectId,
   serverError,
+  enableRunNotebook = false,
 }: {
   vlabId: string;
   projectId: string;
@@ -43,6 +50,7 @@ function NotebookTable({
   failed?: string[];
   onDelete?: (id: string) => void;
   serverError?: string;
+  enableRunNotebook?: boolean;
 }) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
@@ -95,6 +103,10 @@ function NotebookTable({
       return false;
     });
   }, [notebooks, search]);
+
+  const runNotebook = async (notebook: Notebook) => {
+    notification.info(`Request received to run notebook: ${notebook.name}`);
+  };
 
   const handleDownloadClick = async (notebook: Notebook) => {
     setLoadingZip(true);
@@ -172,6 +184,19 @@ function NotebookTable({
                     onClick={() => onDelete(notebook.id)}
                   >
                     Delete
+                  </button>
+                </div>
+              )}
+              {enableRunNotebook && (
+                <div className="flex gap-4">
+                  <PlayCircleOutlined style={{ fontSize: '12px' }} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      runNotebook(notebook);
+                    }}
+                  >
+                    Run
                   </button>
                 </div>
               )}
