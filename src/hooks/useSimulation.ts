@@ -10,7 +10,7 @@ import useNotification from '@/hooks/notifications';
 
 import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import { getMEModel, getSingleNeuronSimulation } from '@/api/entitycore/queries';
-import { downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
 
 export function useSimulation({
@@ -47,19 +47,13 @@ export function useSimulation({
         const meModelData = await getMEModel({ id: simulationData.me_model.id, context });
         setMeModel(meModelData);
 
-        const assets = await getAssets({
-          entityType: SingleNeuronSimulation.type,
-          ctx: { virtualLabId, projectId },
-          entityId: simulationData.id,
-        });
+        if (!simulationData.assets.length) throw new Error('Simulation config not found');
 
-        if (!assets || assets.data.length === 0) throw new Error();
-
-        const file = await downloadAsset({
+        const file = await downloadAsset<Buffer>({
           ctx: { virtualLabId, projectId },
           entityType: SingleNeuronSimulation.type,
           entityId: simulationData.id,
-          id: assets.data[0].id,
+          id: simulationData.assets[0].id,
         });
 
         const json = JSON.parse(new TextDecoder('utf-8').decode(file));

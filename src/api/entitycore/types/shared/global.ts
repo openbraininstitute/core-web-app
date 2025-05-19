@@ -30,7 +30,7 @@ export type EntityCoreBaseType = {
 };
 
 export interface EntityCoreBaseAsset {
-  assets: Array<IAsset> | null;
+  assets: Array<IAsset>;
 }
 
 export interface EntityCoreResource
