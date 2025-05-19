@@ -1,4 +1,4 @@
-import { entityCoreApi, getEntityCoreContext , getAssetElement } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext, getAssetElement } from '@/api/entitycore/utils';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
