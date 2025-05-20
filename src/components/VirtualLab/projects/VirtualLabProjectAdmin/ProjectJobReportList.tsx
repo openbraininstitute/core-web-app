@@ -71,6 +71,7 @@ const activityLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.MlRetrieval]: 'ML',
   [ServiceSubtype.MlLlm]: 'ML',
   [ServiceSubtype.MlRag]: 'ML',
+  [ServiceSubtype.Notebook]: 'Notebook',
 };
 
 function activityRenderFn(subtype: ServiceSubtype) {
@@ -87,6 +88,7 @@ const scaleLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.MlRetrieval]: 'ML',
   [ServiceSubtype.MlLlm]: 'AI Assistant',
   [ServiceSubtype.MlRag]: 'ML',
+  [ServiceSubtype.Notebook]: 'Notebook',
 };
 
 function scaleRenderFn(subtype: ServiceSubtype) {
