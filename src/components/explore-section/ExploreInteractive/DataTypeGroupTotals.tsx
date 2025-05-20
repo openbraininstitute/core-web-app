@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
@@ -90,7 +88,7 @@ export default function DataTypeGroupTotals({
         );
       })}
 
-      {dataTypeGroup === DataTypeGroup.ModelData && circuitCount !== null && (
+      {dataTypeGroup === DataTypeGroup.ModelData && (
         <StatItem
           href={`${pathName}/model/circuit`}
           key="Circuit"

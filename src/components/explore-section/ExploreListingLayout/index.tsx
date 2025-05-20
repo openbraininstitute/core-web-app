@@ -5,7 +5,7 @@ import { Menu } from 'antd';
 import { useAtomValue } from 'jotai';
 import find from 'lodash/find';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { CSSProperties, ReactNode, useEffect, useState } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { StatError } from '../ExploreInteractive/StatItem';
 
@@ -64,9 +64,6 @@ export default function ExploreListingLayout({
 
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-
-  const [circuitCount, setCircuitCount] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const splittedPathname = pathname.split('/');
   const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
@@ -155,7 +152,7 @@ export default function ExploreListingLayout({
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
   return (
-    <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
+    <div className="bg-primary-9 flex h-screen w-full overflow-x-auto" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
@@ -170,7 +167,7 @@ export default function ExploreListingLayout({
             items={items}
           />
 
-          <div className="grow bg-primary-9 text-white">{children}</div>
+          <div className="bg-primary-9 grow text-white">{children}</div>
         </div>
       </ErrorBoundary>
     </div>
