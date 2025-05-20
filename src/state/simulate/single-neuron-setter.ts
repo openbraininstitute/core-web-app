@@ -143,6 +143,7 @@ export const createSingleNeuronSimulationAtom = atom(
           stimulus: convertObjectKeysToSnakeCase(stimulusResults),
           config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
         },
+        label: 'single_cell_simulation',
       });
 
       return simulation;

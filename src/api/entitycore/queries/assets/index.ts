@@ -114,6 +114,7 @@ export async function createJsonAsset({
   path,
   payload,
   meta,
+  label,
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityCoreDataType;
@@ -121,6 +122,7 @@ export async function createJsonAsset({
   path: string;
   payload: Record<string, any>;
   meta?: Record<string, any>;
+  label?: string;
 }): Promise<IAsset> {
   const stringified = JSON.stringify(payload);
   const jsonBlob = new Blob([stringified], { type: 'application/json' });
@@ -129,6 +131,7 @@ export async function createJsonAsset({
 
   if (jsonFile) formData.append('file', jsonFile);
   if (meta) formData.append('meta', JSON.stringify(meta));
+  if (label) formData.append('label', label);
 
   const api = await authApiClient(entityCoreUrl);
   return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {

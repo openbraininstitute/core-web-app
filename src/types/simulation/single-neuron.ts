@@ -46,8 +46,8 @@ export type SimulationExperimentalSetup = {
   celsius: number;
   vinit: number;
   hypamp: number;
-  max_time: number;
-  time_step: number;
+  maxTime: number;
+  timeStep: number;
   seed: number;
 };
 
@@ -89,9 +89,9 @@ export type StimulusConfig = {
 };
 
 export interface SingleNeuronModelSimulationConfig {
-  record_from: RecordLocation[];
+  recordFrom: RecordLocation[];
   conditions: SimulationExperimentalSetup;
-  current_injection: CurrentInjectionSimulationConfig;
+  currentInjection: CurrentInjectionSimulationConfig;
   synaptome?: Array<SynapseConfig>;
 }
 

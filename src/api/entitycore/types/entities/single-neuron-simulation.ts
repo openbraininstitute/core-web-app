@@ -56,7 +56,7 @@ export const CreateSingleNeuronSimulationSchema = z.object({
   seed: z.number().int(),
   injectionLocation: z.array(z.string()),
   recordingLocation: z.array(z.string()),
-  brain_region_id: z.number().int(),
+  brain_region_id: z.string().uuid(),
   me_model_id: z.string().uuid(),
 });
 
