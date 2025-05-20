@@ -9,6 +9,7 @@ import { CSSProperties, ReactNode, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { StatError } from '../ExploreInteractive/StatItem';
 
+import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
@@ -127,39 +128,19 @@ export default function ExploreListingLayout({
     };
   });
 
-  useEffect(() => {
-    async function fetchCircuitCount() {
-      try {
-        const response = await fetch('/api/explore-circuits/count');
-        if (!response.ok) {
-          throw new Error('Failed to fetch circuit count');
-        }
-
-        const data = await response.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        setCircuitCount(data.count);
-      } catch (err) {
-        setError('Failed to load circuit count');
-        setCircuitCount(0);
-      }
-    }
-    fetchCircuitCount();
-  }, []);
+  const { filteredCircuits, loading, error } = useFilteredCircuits();
 
   if (error) {
     return <StatError text={error} />;
   }
 
-  if (showCircuitMenu) {
+  if (showCircuitMenu && !loading) {
     const circuitActive = activePath === 'circuit';
 
     items.push({
       key: 'circuit',
       title: 'Circuit',
-      label: `Circuit (${circuitCount})`,
+      label: `Circuit (${filteredCircuits.count})`,
       className: 'text-center font-semibold',
       style: {
         backgroundColor: circuitActive ? 'white' : '#002766',

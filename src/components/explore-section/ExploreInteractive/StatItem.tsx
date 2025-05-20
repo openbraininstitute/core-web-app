@@ -23,10 +23,13 @@ export default function StatItem({
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const onClick = async () => {
-    if (!(await userJourneyTracker.getCurrentTuple())) {
+    const current = await userJourneyTracker.getCurrentTuple();
+
+    if (!current) {
       await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
     }
     const artifact = ensureString(title, 'Morphology');
+
     setCurrentExplorerArtifact(artifact);
     await userJourneyTracker.handleClick('artifact', artifact);
   };

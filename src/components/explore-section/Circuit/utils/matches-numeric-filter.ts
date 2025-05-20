@@ -4,7 +4,7 @@ const matchesNumericFilter = (
   circuit: CircuitSchemaProps,
   filter: NumericFilterOptions | null
 ): boolean => {
-  if (!filter || filter.property !== 'neurons') return true;
+  if (!filter || filter.property !== 'numberOfNeurons') return true;
 
   const value = circuit.numberOfNeurons;
   if (filter.type === 'greaterThan' && filter.min !== undefined) {

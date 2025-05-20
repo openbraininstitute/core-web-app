@@ -90,15 +90,17 @@ function Profile({ data }: ProfileProps) {
                 )}
                 popupClassName="rounded-none shadow-md"
                 onSearch={(va) => {
-                  const countriesObject = countries.filter((o) =>
-                    o.name.toLowerCase().includes(va.toLowerCase())
-                  );
+                  const countriesObject = countries
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .filter((o) => o.name.toLowerCase().includes(va.toLowerCase()));
                   return countriesObject.map((o) => ({ label: o.name, value: o.name }));
                 }}
-                options={countries.map((o) => ({
-                  label: o.name,
-                  value: o.name,
-                }))}
+                options={countries
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((o) => ({
+                    label: o.name,
+                    value: o.name,
+                  }))}
               />
             </Form.Item>
 

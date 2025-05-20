@@ -3,11 +3,11 @@
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React from 'react';
 
-import SuggestedQuestions from './suggested-questions';
+import ErrorPanel from './error';
 import MessageItem from './message-item';
 import Prompt from './prompt';
-import ErrorPanel from './error';
 import { Spinner } from './spinner';
+import SuggestedQuestions from './suggested-questions';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
@@ -20,7 +20,7 @@ export interface LiteratureSuggestionsProps {
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
   const [collapsedPanel, setCollapsedPanel] = React.useState(false);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
-  const [threadId, recreateThreadId, threadError] = useServiceAiAgentThread();
+  const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
   const { messages, clear, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
 
@@ -48,19 +48,20 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
 
   return (
     <div
-      className={classNames(
-        className,
-        styles.literatureSuggestions,
-        collapsedPanel && styles.collapsed
-      )}
+      className={classNames(className, styles.literatureSuggestions)}
+      data-collapsed={collapsedPanel}
     >
       <button
         className={styles.header}
         type="button"
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
-        <h1 title={status}>AI literature search</h1>
-        {collapsedPanel ? <PlusOutlined /> : <MinusOutlined />}
+        <h1 title={status}>AI Assistant</h1>
+        {collapsedPanel ? (
+          <PlusOutlined className="h-[1em] w-[1em]" />
+        ) : (
+          <MinusOutlined className="w-[1em]" />
+        )}
       </button>
       {!collapsedPanel && (
         <>
@@ -99,6 +100,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               <footer>
                 {status === 'ready' && (
                   <SuggestedQuestions
+                    threadId={threadId}
                     messagesLength={messages.length}
                     onClick={(selectedPrompt) => {
                       setPrompt(selectedPrompt);
@@ -122,7 +124,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               </footer>
             </>
           ) : (
-            status !== 'error' && !threadError && <Spinner />
+            status !== 'error' && <Spinner />
           )}
         </>
       )}

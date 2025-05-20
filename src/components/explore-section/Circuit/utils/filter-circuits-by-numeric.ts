@@ -18,13 +18,13 @@ const filterCircuitsByNumeric = (
       let value: number;
 
       switch (property) {
-        case 'neurons':
+        case 'numberOfNeurons':
           value = circuit.numberOfNeurons;
           break;
-        case 'connections':
+        case 'numberOfConnections':
           value = circuit.numberOfConnections;
           break;
-        case 'synapses':
+        case 'numberOfSynapses':
           value = circuit.numberOfSynapses;
           break;
         default:
