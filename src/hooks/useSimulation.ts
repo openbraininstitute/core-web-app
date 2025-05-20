@@ -58,7 +58,7 @@ export function useSimulation({
           ctx: { virtualLabId, projectId },
           entityType: SingleNeuronSimulation.type,
           entityId: simulationData.id,
-          id: simulationData.assets[0].id,
+          id: asset.id,
         });
 
         const json = JSON.parse(new TextDecoder('utf-8').decode(file));
