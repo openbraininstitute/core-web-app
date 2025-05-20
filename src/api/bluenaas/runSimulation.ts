@@ -27,9 +27,6 @@ export const runGenericSingleNeuronSimulation = async ({
     duration: number;
   };
 }) => {
-
-  console.log(config)
-
   const res = await fetch(
     `${blueNaasUrl}/entitycore/simulation/single-neuron/${vlabId}/${projectId}/run?model_id=${modelId}&realtime=True`,
     {
@@ -45,6 +42,5 @@ export const runGenericSingleNeuronSimulation = async ({
     }
   );
 
-  console.log(await res.json());
   return res;
 };
