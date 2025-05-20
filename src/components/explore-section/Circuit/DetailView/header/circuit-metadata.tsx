@@ -16,7 +16,7 @@ export default function CircuitMetadata({ content }: { content: CircuitSchemaPro
       </div>
       <div>
         <ParameterBox
-          name="Contributing institution"
+          name="Contributing institutions"
           value={content.metadata.contributingInstitution || '–'}
           hasViewMore
         />
