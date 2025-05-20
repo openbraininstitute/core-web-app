@@ -1,20 +1,23 @@
 import { Divider } from 'antd';
 import startCase from 'lodash/startCase';
-import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
+
 import { measurementAnnotationsAtomFamily } from '@/state/explore-section/generalization';
-import { DataType } from '@/constants/explore-section/list-views';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { useUnwrappedValue } from '@/hooks/hooks';
+import { IReconstructionMorphology } from '@/api/entitycore/types';
+import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
 
-export default function Morphometrics({
-  dataType,
-  entityId,
-}: {
-  dataType: DataType;
-  entityId: string;
-}) {
-  const metrics = useUnwrappedValue(measurementAnnotationsAtomFamily(entityId));
-  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(dataType, metrics, true);
+export default function Morphometrics({ morphology }: { morphology: IReconstructionMorphology }) {
+  const measurementKinds = useUnwrappedValue(measurementAnnotationsAtomFamily(morphology.id));
+
+  const expandedMorphology = {
+    ...morphology,
+    measurement_annotation: {
+      measurement_kinds: measurementKinds,
+    },
+  } as IReconstructionMorphologyExpanded;
+
+  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(expandedMorphology, true);
 
   return (
     <div className="flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2">
@@ -24,11 +27,7 @@ export default function Morphometrics({
         {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
           <div key={group}>
             <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
-            {fields.map((field) =>
-              Object.keys(MorphoMetricCompartment).includes(group)
-                ? renderMetric(MorphoMetricCompartment.NeuronMorphology, field)
-                : null
-            )}
+            {fields.map((field) => renderMetric(field))}
           </div>
         ))}
       </div>

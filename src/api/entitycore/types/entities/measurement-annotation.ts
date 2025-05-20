@@ -5,7 +5,7 @@ import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 export type MeasurementItem = {
   name: string;
   unit: string;
-  value: number | string;
+  value: number;
 };
 
 export type MeasurementKind = {

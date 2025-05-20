@@ -37,10 +37,7 @@ export default function MorphologyDetailView({ detail }: { detail: IReconstructi
   return (
     <>
       {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
-        <Morphometrics
-          legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
-          dataType={DataType.ExperimentalNeuronMorphology}
-        />
+        <Morphometrics morphology={detail} />
       )}
       <ErrorBoundary
         FallbackComponent={withErrorConfig({

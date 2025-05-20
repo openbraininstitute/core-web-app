@@ -5,7 +5,7 @@ import {
   selectorFnLayer,
   selectorFnLayerThickness,
   selectorFnMeanStd,
-  selectorFnMorphologyFeature,
+  renderMorphologyMeasurement,
   selectorFnSpecies,
   selectorFnStatistic,
   selectorFnSynaptic,
@@ -25,7 +25,7 @@ import {
   ExploreFieldsConfigProps,
   FieldType,
 } from '@/constants/explore-section/fields-config/types';
-import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
+import { StructuralDomain } from '@/types/explore-section/es-experiment';
 import {
   ExperimentalBoutonDensity,
   ExperimentalLayerThickness,
@@ -43,6 +43,7 @@ import { getEtypeFromEModel, getMtypeFromMModel } from '@/util/modelMEtypes';
 import { EModel, NeuronMorphology } from '@/types/e-model';
 import { ensureArray } from '@/util/nexus';
 import { renderEmptyOrValue, renderArray } from './renderer';
+import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
 
 export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExperiment> = {
   [Field.License]: {
@@ -545,8 +546,10 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       singular: 'Cell Type [To]',
     },
   },
+
+  // Morphometric fields
   [Field.AxonTotalLength]: {
-    group: MorphoMetricCompartment.Axon,
+    group: StructuralDomain.Axon,
     title: 'Total Length',
     description: 'Total length of the axon',
     filter: null,
@@ -554,19 +557,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Total Length',
       singular: 'Total Length',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.Axon,
-          'Total Length',
-          'raw',
-          true
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'total_length', 'raw', true),
   },
   [Field.AxonStrahlerNumber]: {
-    group: MorphoMetricCompartment.Axon,
+    group: StructuralDomain.Axon,
     title: 'Strahler number',
     description: 'Strahler number',
     filter: null,
@@ -574,18 +569,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Strahler number',
       singular: 'Strahler number',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.Axon,
-          'Section Strahler Orders',
-          'maximum'
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'section_strahler_orders', 'maximum'),
   },
   [Field.AxonArborAsymmetryIndex]: {
-    group: MorphoMetricCompartment.Axon,
+    group: StructuralDomain.Axon,
     title: 'Arbor Asymmetry Index',
     description: 'Arbor asymmetry index (if calculated)',
     filter: null,
@@ -593,18 +581,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Arbor Asymmetry Index',
       singular: 'Arbor Asymmetry Index',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.Axon,
-          'Partition Asymmetry',
-          'mean'
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'partition_asymmetry', 'mean'),
   },
   [Field.BasalDendriticTotalLength]: {
-    group: MorphoMetricCompartment.BasalDendrite,
+    group: StructuralDomain.BasalDendrite,
     title: 'Total Length',
     description: 'Total length of the basal dendrites',
     filter: null,
@@ -612,19 +593,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Total Length',
       singular: 'Total Length',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.BasalDendrite,
-          'Total Length',
-          'raw',
-          true
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.BasalDendrite, 'total_length', 'raw', true),
   },
   [Field.BasalDendriteStrahlerNumber]: {
-    group: MorphoMetricCompartment.BasalDendrite,
+    group: StructuralDomain.BasalDendrite,
     title: 'Strahler number',
     description: 'Strahler number',
     filter: null,
@@ -632,18 +605,16 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Strahler number',
       singular: 'Strahler number',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.BasalDendrite,
-          'Section Strahler Orders',
-          'maximum'
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.BasalDendrite,
+        'section_strahler_orders',
+        'maximum'
+      ),
   },
   [Field.BasalArborAsymmetryIndex]: {
-    group: MorphoMetricCompartment.BasalDendrite,
+    group: StructuralDomain.BasalDendrite,
     title: 'Arbor Asymmetry Index',
     description: 'Basal Arbor asymmetry index (if calculated)',
     filter: null,
@@ -651,18 +622,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Arbor Asymmetry Index',
       singular: 'Arbor Asymmetry Index',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.BasalDendrite,
-          'Partition Asymmetry',
-          'mean'
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.BasalDendrite, 'partition_asymmetry', 'mean'),
   },
   [Field.ApicalDendriticTotalLength]: {
-    group: MorphoMetricCompartment.ApicalDendrite,
+    group: StructuralDomain.ApicalDendrite,
     title: 'Total Length',
     description: 'Total length of the apical dendrites',
     filter: null,
@@ -670,19 +634,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Total Length',
       singular: 'Total Length',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.ApicalDendrite,
-          'Total Length',
-          'raw',
-          true
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.ApicalDendrite, 'Total Length', 'raw', true),
   },
   [Field.ApicalDendtriteStrahlerNumber]: {
-    group: MorphoMetricCompartment.ApicalDendrite,
+    group: StructuralDomain.ApicalDendrite,
     title: 'Strahler number',
     description: 'Apical Dendrite Strahler number',
     filter: null,
@@ -690,18 +646,16 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Strahler number',
       singular: 'Strahler number',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.ApicalDendrite,
-          'Section Strahler Orders',
-          'maximum'
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.ApicalDendrite,
+        'section_strahler_orders',
+        'maximum'
+      ),
   },
   [Field.ApicalArborAsymmetryIndex]: {
-    group: MorphoMetricCompartment.ApicalDendrite,
+    group: StructuralDomain.ApicalDendrite,
     title: 'Arbor Asymmetry Index',
     description: 'Apical Arbor asymmetry index (if calculated)',
     filter: null,
@@ -709,18 +663,16 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Arbor Asymmetry Index',
       singular: 'Arbor Asymmetry Index',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.ApicalDendrite,
-          'Partition Asymmetry',
-          'mean'
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.ApicalDendrite,
+        'partition_asymmetry',
+        'mean'
+      ),
   },
   [Field.NeuronMorphologyWidth]: {
-    group: MorphoMetricCompartment.NeuronMorphology,
+    group: StructuralDomain.NeuronMorphology,
     title: 'Total Width',
     description: 'Neuron morphology total width',
     filter: null,
@@ -728,19 +680,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Total Width',
       singular: 'Total Width',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.NeuronMorphology,
-          'Total Width',
-          'raw',
-          true
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.NeuronMorphology, 'total_width', 'raw', true),
   },
   [Field.NeuronMorphologyHeight]: {
-    group: MorphoMetricCompartment.NeuronMorphology,
+    group: StructuralDomain.NeuronMorphology,
     title: 'Total Height',
     description: 'Neuron morphology total height',
     filter: null,
@@ -748,19 +692,17 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Total Height',
       singular: 'Total Height',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.NeuronMorphology,
-          'Total Height',
-          'raw',
-          true
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.NeuronMorphology,
+        'total_height',
+        'raw',
+        true
+      ),
   },
   [Field.NeuronMorphologyDepth]: {
-    group: MorphoMetricCompartment.NeuronMorphology,
+    group: StructuralDomain.NeuronMorphology,
     title: 'Total Depth',
     description: 'Neuron morphology total depth',
     filter: null,
@@ -768,19 +710,11 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Total Depth',
       singular: 'Total Depth',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.NeuronMorphology,
-          'Total Depth',
-          'raw',
-          true
-        ),
-    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.NeuronMorphology, 'total_depth', 'raw', true),
   },
   [Field.SomaDiameter]: {
-    group: MorphoMetricCompartment.Soma,
+    group: StructuralDomain.Soma,
     title: 'Diameter',
     description: 'Diameter of the soma',
     filter: null,
@@ -788,10 +722,7 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
       plural: 'Diameter',
       singular: 'Diameter',
     },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(r._source, 'Soma', 'Soma Radius', 'raw', true),
-    },
+    render: (r) => renderMorphologyMeasurement(r, 'Soma', 'soma_radius', 'raw', true),
   },
 };
 

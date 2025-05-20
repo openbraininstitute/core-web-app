@@ -1,7 +1,7 @@
 import { Divider } from 'antd';
 import startCase from 'lodash/startCase';
 
-import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
+import { StructuralDomain } from '@/types/explore-section/es-experiment';
 import { measurementAnnotationsAtomFamily } from '@/state/explore-section/generalization';
 import { DetailType } from '@/constants/explore-section/fields-config/types';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -29,16 +29,16 @@ export default function Morphometrics({
               <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
               {fields.map((field) => {
                 switch (group) {
-                  case MorphoMetricCompartment.NeuronMorphology:
-                    return renderMetric(MorphoMetricCompartment.NeuronMorphology, field);
-                  case MorphoMetricCompartment.ApicalDendrite:
-                    return renderMetric(MorphoMetricCompartment.ApicalDendrite, field);
-                  case MorphoMetricCompartment.BasalDendrite:
-                    return renderMetric(MorphoMetricCompartment.BasalDendrite, field);
-                  case MorphoMetricCompartment.Axon:
-                    return renderMetric(MorphoMetricCompartment.Axon, field);
-                  case MorphoMetricCompartment.Soma:
-                    return renderMetric(MorphoMetricCompartment.Soma, field);
+                  case StructuralDomain.NeuronMorphology:
+                    return renderMetric(StructuralDomain.NeuronMorphology, field);
+                  case StructuralDomain.ApicalDendrite:
+                    return renderMetric(StructuralDomain.ApicalDendrite, field);
+                  case StructuralDomain.BasalDendrite:
+                    return renderMetric(StructuralDomain.BasalDendrite, field);
+                  case StructuralDomain.Axon:
+                    return renderMetric(StructuralDomain.Axon, field);
+                  case StructuralDomain.Soma:
+                    return renderMetric(StructuralDomain.Soma, field);
                   default:
                     return null;
                 }

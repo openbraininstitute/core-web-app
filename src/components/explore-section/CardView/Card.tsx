@@ -6,7 +6,7 @@ import CardVisualization from '@/components/explore-section/CardView/CardVisuali
 import {
   ExperimentalTrace,
   ReconstructedNeuronMorphology,
-  MorphoMetricCompartment,
+  StructuralDomain,
 } from '@/types/explore-section/es-experiment';
 import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -77,16 +77,16 @@ export default function Card({ resource, dataType, activeKeys, metrics, score }:
                           )}
                         </div>
                       );
-                    case MorphoMetricCompartment.NeuronMorphology:
-                      return renderMetric(MorphoMetricCompartment.NeuronMorphology, field);
-                    case MorphoMetricCompartment.ApicalDendrite:
-                      return renderMetric(MorphoMetricCompartment.ApicalDendrite, field);
-                    case MorphoMetricCompartment.BasalDendrite:
-                      return renderMetric(MorphoMetricCompartment.BasalDendrite, field);
-                    case MorphoMetricCompartment.Axon:
-                      return renderMetric(MorphoMetricCompartment.Axon, field);
-                    case MorphoMetricCompartment.Soma:
-                      return renderMetric(MorphoMetricCompartment.Soma, field);
+                    case StructuralDomain.NeuronMorphology:
+                      return renderMetric(StructuralDomain.NeuronMorphology, field);
+                    case StructuralDomain.ApicalDendrite:
+                      return renderMetric(StructuralDomain.ApicalDendrite, field);
+                    case StructuralDomain.BasalDendrite:
+                      return renderMetric(StructuralDomain.BasalDendrite, field);
+                    case StructuralDomain.Axon:
+                      return renderMetric(StructuralDomain.Axon, field);
+                    case StructuralDomain.Soma:
+                      return renderMetric(StructuralDomain.Soma, field);
                     default:
                       return null;
                   }

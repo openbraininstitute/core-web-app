@@ -19,6 +19,12 @@ import {
 import { DisplayMessages } from '@/constants/display-messages';
 import { formatEsContributors } from '@/components/explore-section/Contributors';
 import { Contributor } from '@/types/explore-section/es-properties';
+import {
+  IReconstructionMorphology,
+  IReconstructionMorphologyExpanded,
+  ReconstructionMorphologyExpand,
+} from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { ReactNode } from 'react';
 
 type Record = { _source: Experiment };
 type ContributorEsProperty = Unionize<Contributor>;
@@ -167,31 +173,43 @@ export const selectorFnSynaptic = (
 };
 
 /**
- * Selects and formats a statistic from the series array
- * @param { ReconstructedNeuronMorphology } source
- * @param {string} compartment - The compartment to serialize.
+ * Renders a specific morphology measurement
+ *
+ * @param {IReconstructionMorphologyExpanded} morphology
+ * @param {string} structuralDomain - The compartment to serialize.
  * @param {string} label - The label to serialize.
- * @param {string} statistic - The statistic of to serialize.
+ * @param {string} measurementType - The statistic to serialize.
+ * @param {boolean} showUnits - Whether to show the units.
+ *
+ * @returns {string} - The rendered text value.
  */
-export const selectorFnMorphologyFeature = (
-  source: ReconstructedNeuronMorphology,
-  compartment: string,
+export const renderMorphologyMeasurement = (
+  morphology: IReconstructionMorphologyExpanded | IReconstructionMorphology,
+  structuralDomain: string,
   label: string,
-  statistic: string,
+  measurementType: string,
   showUnits?: boolean
-) => {
-  if (!source || !source.featureSeries) return DisplayMessages.NO_DATA_STRING;
+): ReactNode => {
+  if (!morphology || !('measurement_annotation' in morphology))
+    return DisplayMessages.NO_DATA_STRING;
 
-  const feature = source.featureSeries.find((s) => isMatch(s, { compartment, label, statistic }));
+  const measurementKinds = morphology.measurement_annotation.measurement_kinds;
 
-  if (feature && isNumber(feature?.value) && feature?.value !== 0) {
-    let { value } = feature;
-    const unit = showUnits ? ` ${feature.unit}` : '';
+  const measurementKind = measurementKinds?.find(
+    (mk) =>
+      // mk.structural_domain === structuralDomain &&
+      mk.pref_label === label
+  );
 
-    if (label === 'Soma Radius') value = 2 * feature.value;
+  const measurement = measurementKind?.measurement_items.find((mi) => mi.name === measurementType);
 
-    return `${formatNumber(value)}${unit}`;
-  }
+  if (!measurement) return DisplayMessages.NO_DATA_STRING;
 
-  return DisplayMessages.NO_DATA_STRING;
+  const { unit, value } = measurement;
+  const unitSuffix = showUnits ? `${unit}` : '';
+
+  // TODO: Correct the data if this is still needed.
+  // if (label === 'soma_radius') value = 2 * measurement.value;
+
+  return `${formatNumber(value)}${unitSuffix}`;
 };

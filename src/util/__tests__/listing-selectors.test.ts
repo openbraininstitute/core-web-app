@@ -10,7 +10,7 @@ import {
   selectorFnSpecies,
   selectorFnStatistic,
   selectorFnSynaptic,
-  selectorFnMorphologyFeature,
+  renderMorphologyMeasurement,
 } from '@/util/explore-section/listing-selectors';
 import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
 import { formatNumber } from '@/util/common';
@@ -632,7 +632,7 @@ describe('Selectors', () => {
     };
 
     it('returns formatted statistic value if present', () => {
-      const result = selectorFnMorphologyFeature(
+      const result = renderMorphologyMeasurement(
         // @ts-ignore
         mockSource,
         'NeuronMorphology',
@@ -644,7 +644,7 @@ describe('Selectors', () => {
     });
 
     it('returns formatted statistic value without unit if showUnits is false', () => {
-      const result = selectorFnMorphologyFeature(
+      const result = renderMorphologyMeasurement(
         // @ts-ignore
         mockSource,
         'NeuronMorphology',
@@ -656,7 +656,7 @@ describe('Selectors', () => {
     });
 
     it('returns double the value for Soma Radius', () => {
-      const result = selectorFnMorphologyFeature(
+      const result = renderMorphologyMeasurement(
         // @ts-ignore
         mockSource,
         'Soma',
@@ -669,12 +669,12 @@ describe('Selectors', () => {
 
     it('returns NO_DATA_STRING if statistic is not found', () => {
       // @ts-ignore
-      const result = selectorFnMorphologyFeature(mockSource, 'compartment', 'nonexistent', 'mean');
+      const result = renderMorphologyMeasurement(mockSource, 'compartment', 'nonexistent', 'mean');
       expect(result).toBe(DisplayMessages.NO_DATA_STRING);
     });
 
     it('returns NO_DATA_STRING for 0 value', () => {
-      const result = selectorFnMorphologyFeature(
+      const result = renderMorphologyMeasurement(
         // @ts-ignore
         mockSource,
         'ApicalDendrite',
@@ -686,7 +686,7 @@ describe('Selectors', () => {
     });
 
     it('returns NO DATA STRING when value is not a number', () => {
-      const result = selectorFnMorphologyFeature(
+      const result = renderMorphologyMeasurement(
         // @ts-ignore
         mockSource,
         'ApicalDendrite',
