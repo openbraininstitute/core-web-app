@@ -196,9 +196,7 @@ export const renderMorphologyMeasurement = (
   const measurementKinds = morphology.measurement_annotation.measurement_kinds;
 
   const measurementKind = measurementKinds?.find(
-    (mk) =>
-      // mk.structural_domain === structuralDomain &&
-      mk.pref_label === label
+    (mk) => mk.structural_domain === structuralDomain && mk.pref_label === label
   );
 
   const measurement = measurementKind?.measurement_items.find((mi) => mi.name === measurementType);
