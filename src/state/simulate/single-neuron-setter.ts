@@ -220,9 +220,9 @@ export const launchSimulationAtom = atom<
         modelId,
         token: session.accessToken,
         config: {
-          recordFrom: recordFromUniq,
+          record_from: recordFromUniq,
           conditions: conditionsConfig,
-          currentInjection:
+          current_injection:
             currentInjectionConfig.length > 0 ? currentInjectionConfig[0] : undefined,
           synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
           type: simulationType,

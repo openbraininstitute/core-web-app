@@ -44,7 +44,7 @@ export default function SimulationButton({ modelId, vLabId, projectId, simulatio
   });
 
   const runSimulation = () => {
-    const protocol = currentInjectionConfig.at(0)?.stimulus.stimulusProtocol;
+    const protocol = currentInjectionConfig.at(0)?.stimulus.stimulus_protocol;
     let currentInjectionDuration = 0;
     if (protocol) {
       currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stop_time;

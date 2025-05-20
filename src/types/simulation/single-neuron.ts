@@ -83,8 +83,8 @@ export type SynapseModelSimConfig = SimulationConfiguration & {
 };
 
 export type StimulusConfig = {
-  stimulusType: StimulusType;
-  stimulusProtocol: StimulusModule | null;
+  stimulus_type: StimulusType;
+  stimulus_protocol: StimulusModule | null;
   amplitudes: number[] | number;
 };
 
