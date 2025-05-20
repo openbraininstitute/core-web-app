@@ -12,6 +12,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { notification } from '@/api/notifications';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
 
 const subtitleStyle = 'font-thin text-neutral-4';
 
@@ -35,7 +36,9 @@ export default function SimulationDetail<T extends GenericSimulation>({
   const [loadingConfig, setLoadingConfig] = useState(false);
 
   useEffect(() => {
-    const asset = simulation.assets.find((a) => a.label === AssetLabel.single_cell_simulation);
+    const asset = simulation.assets.find(
+      (a) => a.label === SingleNeuronSimulation.asset.configfile
+    );
 
     if (!asset) {
       notification.error('Cannot find simulation config');
