@@ -83,13 +83,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
         <div className="flex w-full flex-col gap-2">
           <div className="text-primary-8 text-lg font-bold">Injection location</div>
           <div className="mt-2 flex max-w-max items-center justify-center border border-gray-100 px-5 py-1 font-bold">
-            {simConfig.config.currentInjection.injectTo}
+            {simConfig.config.current_injection.inject_to}
           </div>
         </div>
         <div className="flex w-full flex-col gap-2">
           <div className="text-primary-8 text-lg font-bold">Recording locations</div>
           <div className="mt-2 flex items-center gap-4">
-            {simConfig.config.recordFrom.map((r, ind) => (
+            {simConfig.config.record_from.map((r, ind) => (
               <div key={`${r.section}_${r.offset}`} className="flex flex-col gap-1">
                 <div className="text-gray-400 uppercase">Recording {ind + 1}</div>
                 <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100 px-5 py-1">

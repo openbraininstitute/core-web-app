@@ -47,7 +47,7 @@ export default function SimulationButton({ modelId, vLabId, projectId, simulatio
     const protocol = currentInjectionConfig.at(0)?.stimulus.stimulusProtocol;
     let currentInjectionDuration = 0;
     if (protocol) {
-      currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stopTime;
+      currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stop_time;
     }
 
     launchSimulation(
@@ -55,7 +55,7 @@ export default function SimulationButton({ modelId, vLabId, projectId, simulatio
       projectId,
       modelId,
       simulationType,
-      experimentalSetupConfig.maxTime ?? currentInjectionDuration
+      experimentalSetupConfig.max_time ?? currentInjectionDuration
     );
   };
 

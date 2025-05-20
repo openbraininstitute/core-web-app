@@ -38,7 +38,7 @@ export type SynaptomeConfig = SynapseConfig[];
 export interface CurrentInjectionSimulationConfig {
   id: number;
   configId: string;
-  injectTo: string;
+  inject_to: string;
   stimulus: StimulusConfig;
 }
 
@@ -46,8 +46,8 @@ export type SimulationExperimentalSetup = {
   celsius: number;
   vinit: number;
   hypamp: number;
-  maxTime: number;
-  timeStep: number;
+  max_time: number;
+  time_step: number;
   seed: number;
 };
 
@@ -57,8 +57,8 @@ export type RecordLocation = {
 };
 
 export interface SimulationConfiguration {
-  recordFrom: RecordLocation[];
-  currentInjection: CurrentInjectionSimulationConfig[];
+  record_from: RecordLocation[];
+  current_injection: CurrentInjectionSimulationConfig[];
   conditions: SimulationExperimentalSetup;
   synapses?: SynaptomeConfig;
 }
@@ -74,7 +74,7 @@ export type SynapseConfig = {
 };
 
 export type SingleModelSimConfig = SimulationConfiguration & {
-  directStimulation: CurrentInjectionSimulationConfig[];
+  direct_stimulation: CurrentInjectionSimulationConfig[];
   synapses: null;
 };
 
@@ -89,9 +89,9 @@ export type StimulusConfig = {
 };
 
 export interface SingleNeuronModelSimulationConfig {
-  recordFrom: RecordLocation[];
+  record_from: RecordLocation[];
   conditions: SimulationExperimentalSetup;
-  currentInjection: CurrentInjectionSimulationConfig;
+  current_injection: CurrentInjectionSimulationConfig;
   synaptome?: Array<SynapseConfig>;
 }
 
@@ -146,7 +146,7 @@ export type ProtocolDetails = {
     time: {
       delay: number;
       duration: number;
-      stopTime: number;
+      stop_time: number;
     };
 
     current: {

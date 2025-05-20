@@ -84,9 +84,9 @@ export const createSingleNeuronSimulationAtom = atom(
     );
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
-      recordFrom: recordFromUniq,
+      record_from: recordFromUniq,
       conditions: experimentalSetupConfig,
-      currentInjection: currentInjectionConfig[0],
+      current_injection: currentInjectionConfig[0],
       synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
     };
 
@@ -112,8 +112,8 @@ export const createSingleNeuronSimulationAtom = atom(
           description,
           status: SingleNeuronSimulationStatus.success,
           seed: experimentalSetupConfig.seed,
-          injectionLocation: [singleNeuronSimulationConfig.currentInjection.injectTo],
-          recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
+          injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
+          recording_location: singleNeuronSimulationConfig.record_from.map(
             (r) => `${r.section}_${r.offset}`
           ),
           brain_region_id: meModel.brain_region.id,

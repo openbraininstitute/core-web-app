@@ -9,6 +9,7 @@ import {
   getSingleNeuronSimulations,
   createSingleNeuronSimulation,
 } from '@/api/entitycore/queries';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
   group: 'models',
@@ -34,6 +35,6 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
   },
   asset: {
     extension: 'application/json',
-    configfile: 'single_neuron_simulation_config',
+    configfile: AssetLabel.single_cell_simulation,
   },
 } as const;
