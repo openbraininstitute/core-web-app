@@ -3,20 +3,10 @@ import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import get from 'lodash/get';
-
-import { Asset } from 'next/font/google';
-import { vi } from 'vitest';
 import SimulationPlotAsImage from './simulation-plot-as-image';
 import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
-import { fetchJsonFileByUrl } from '@/api/nexus';
-import {
-  SimulationPayload,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/simulation/single-neuron';
-import { ensureArray } from '@/util/nexus';
-import { SIMULATION_CONFIG_FILE_NAME_BASE } from '@/state/simulate/single-neuron-setter';
-import { getSession } from '@/authFetch';
-import { classNames, createPascalToUnderscoreProxy } from '@/util/utils';
+import { SimulationPayload } from '@/types/simulation/single-neuron';
+import { classNames } from '@/util/utils';
 import { ISingleNeuronSimulation } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { notification } from '@/api/notifications';
