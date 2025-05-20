@@ -5,7 +5,7 @@ import authApiClient from '@/api/apiClient';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
-import type { EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
+import type { AssetLabel, EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -122,7 +122,7 @@ export async function createJsonAsset({
   path: string;
   payload: Record<string, any>;
   meta?: Record<string, any>;
-  label?: string;
+  label?: AssetLabel;
 }): Promise<IAsset> {
   const stringified = JSON.stringify(payload);
   const jsonBlob = new Blob([stringified], { type: 'application/json' });

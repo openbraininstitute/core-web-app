@@ -40,6 +40,7 @@ import { IMEModel } from '@/api/entitycore/types';
 import { notification } from '@/api/notifications';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
 export const STIMULUS_PLOT_NAME = 'stimulus-plot';
@@ -143,7 +144,7 @@ export const createSingleNeuronSimulationAtom = atom(
           stimulus: convertObjectKeysToSnakeCase(stimulusResults),
           config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
         },
-        label: 'single_cell_simulation',
+        label: AssetLabel.single_cell_simulation,
       });
 
       return simulation;

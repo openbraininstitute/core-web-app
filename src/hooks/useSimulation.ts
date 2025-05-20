@@ -12,6 +12,7 @@ import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import { getMEModel, getSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 export function useSimulation({
   id,
@@ -47,7 +48,11 @@ export function useSimulation({
         const meModelData = await getMEModel({ id: simulationData.me_model.id, context });
         setMeModel(meModelData);
 
-        if (!simulationData.assets.length) throw new Error('Simulation config not found');
+        const asset = simulationData.assets.find(
+          (a) => a.label === AssetLabel.single_cell_simulation
+        );
+
+        if (!asset) throw new Error('Simulation config not found');
 
         const file = await downloadAsset<Buffer>({
           ctx: { virtualLabId, projectId },
