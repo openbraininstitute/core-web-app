@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { getSession } from '@/authFetch';
 
-import { SimulationPayload } from '@/types/simulation/single-neuron';
+import { SimulationPayload, SimulationPayloadSchema } from '@/types/simulation/single-neuron';
 
 import { SingleNeuronSynaptomeResource } from '@/types/synaptome';
 
@@ -62,6 +62,7 @@ export function useSimulation({
         });
 
         const json = JSON.parse(new TextDecoder('utf-8').decode(file));
+
         setSimulationConfig(json);
       } catch (error) {
         notifyError('Error while loading the resource details', undefined, 'topRight');

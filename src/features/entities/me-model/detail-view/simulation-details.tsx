@@ -85,8 +85,6 @@ export default function SimulationDetail<T extends GenericSimulation>({
 
   if (!simConfig) return null;
 
-  console.log(simConfig);
-
   return (
     <div className="flex items-start gap-8 border p-8">
       <div className="text-primary-8 flex flex-[0_1_60%] flex-col gap-10">
