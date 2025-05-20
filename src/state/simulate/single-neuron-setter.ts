@@ -32,7 +32,6 @@ import { SimulationType } from '@/types/simulation/common';
 import { isJSON } from '@/util/utils';
 import { getSession } from '@/authFetch';
 import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/runSimulation';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import updateArray from '@/util/updateArray';
 import { getMEModel, createSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/entities/single-neuron-simulation';
@@ -138,11 +137,11 @@ export const createSingleNeuronSimulationAtom = atom(
           simulation: Object.keys(simulationResult).reduce((prev, curr) => {
             return {
               ...prev,
-              [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
+              [curr]: simulationResult[curr],
             };
           }, {}),
-          stimulus: convertObjectKeysToSnakeCase(stimulusResults),
-          config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
+          stimulus: stimulusResults,
+          config: singleNeuronSimulationConfig,
         },
         label: AssetLabel.single_cell_simulation,
       });
