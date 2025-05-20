@@ -1,5 +1,5 @@
 import z from 'zod';
-import { INestedMEModel, IMEModelFilter } from './me-model';
+import { INestedMEModel } from './me-model';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
 import type {
@@ -27,8 +27,8 @@ export interface ISingleNeuronSimulationBase {
   description: string;
   seed: number;
   status: SingleNeuronSimulationStatus;
-  injectionLocation: string[];
-  recordingLocation: string[];
+  injection_location: string[];
+  recording_location: string[];
 }
 
 export interface ISingleNeuronSimulation
@@ -42,21 +42,22 @@ export interface ISingleNeuronSimulation
 }
 
 export interface ISingleNeuronSimulationFilter
-  extends ContributionFilter,
-    MtypeFilter,
-    EtypeFilter,
-    BrainRegionFilter,
-    SharedFilter,
-    IMEModelFilter {}
+  extends Partial<ContributionFilter>,
+    Partial<MtypeFilter>,
+    Partial<EtypeFilter>,
+    Partial<BrainRegionFilter>,
+    Partial<SharedFilter> {
+  me_model__id?: string;
+}
 
 export const CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
   status: z.nativeEnum(SingleNeuronSimulationStatus),
   seed: z.number().int(),
-  injectionLocation: z.array(z.string()),
-  recordingLocation: z.array(z.string()),
-  brain_region_id: z.number().int(),
+  injection_location: z.array(z.string()),
+  recording_location: z.array(z.string()),
+  brain_region_id: z.string().uuid(),
   me_model_id: z.string().uuid(),
 });
 

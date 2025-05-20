@@ -64,8 +64,8 @@ export default function SingleNeuronSimulationGenericContainer({
 
   const initialValues: SimulationConfiguration = useMemo(
     () => ({
-      recordFrom: recordFromConfig,
-      currentInjection: currentInjectionConfig,
+      record_from: recordFromConfig,
+      current_injection: currentInjectionConfig,
       conditions: conditionsConfig,
       ...(type === 'synaptome-simulation' ? { synapses: synaptomeConfig ?? undefined } : {}),
     }),

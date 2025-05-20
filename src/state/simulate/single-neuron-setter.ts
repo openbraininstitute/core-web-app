@@ -32,7 +32,6 @@ import { SimulationType } from '@/types/simulation/common';
 import { isJSON } from '@/util/utils';
 import { getSession } from '@/authFetch';
 import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/runSimulation';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import updateArray from '@/util/updateArray';
 import { getMEModel, createSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/entities/single-neuron-simulation';
@@ -40,6 +39,7 @@ import { IMEModel } from '@/api/entitycore/types';
 import { notification } from '@/api/notifications';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
 export const STIMULUS_PLOT_NAME = 'stimulus-plot';
@@ -84,9 +84,9 @@ export const createSingleNeuronSimulationAtom = atom(
     );
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
-      recordFrom: recordFromUniq,
+      record_from: recordFromUniq,
       conditions: experimentalSetupConfig,
-      currentInjection: currentInjectionConfig[0],
+      current_injection: currentInjectionConfig[0],
       synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
     };
 
@@ -112,8 +112,8 @@ export const createSingleNeuronSimulationAtom = atom(
           description,
           status: SingleNeuronSimulationStatus.success,
           seed: experimentalSetupConfig.seed,
-          injectionLocation: [singleNeuronSimulationConfig.currentInjection.injectTo],
-          recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
+          injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
+          recording_location: singleNeuronSimulationConfig.record_from.map(
             (r) => `${r.section}_${r.offset}`
           ),
           brain_region_id: meModel.brain_region.id,
@@ -137,12 +137,13 @@ export const createSingleNeuronSimulationAtom = atom(
           simulation: Object.keys(simulationResult).reduce((prev, curr) => {
             return {
               ...prev,
-              [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
+              [curr]: simulationResult[curr],
             };
           }, {}),
-          stimulus: convertObjectKeysToSnakeCase(stimulusResults),
-          config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
+          stimulus: stimulusResults,
+          config: singleNeuronSimulationConfig,
         },
+        label: AssetLabel.single_cell_simulation,
       });
 
       return simulation;
@@ -219,9 +220,9 @@ export const launchSimulationAtom = atom<
         modelId,
         token: session.accessToken,
         config: {
-          recordFrom: recordFromUniq,
+          record_from: recordFromUniq,
           conditions: conditionsConfig,
-          currentInjection:
+          current_injection:
             currentInjectionConfig.length > 0 ? currentInjectionConfig[0] : undefined,
           synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
           type: simulationType,

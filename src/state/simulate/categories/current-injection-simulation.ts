@@ -39,8 +39,8 @@ export default function useCurrentInjectionSimulationConfig() {
       ...stimConfig,
       stimulus: {
         ...stimConfig.stimulus,
-        stimulusType: newValue,
-        stimulusProtocol: protocolsForMode?.[0]?.name || null,
+        stimulus_type: newValue,
+        stimulus_protocol: protocolsForMode?.[0]?.name || null,
       },
     };
 
@@ -63,7 +63,7 @@ export default function useCurrentInjectionSimulationConfig() {
       ...stimConfig,
       stimulus: {
         ...stimConfig.stimulus,
-        stimulusProtocol: protocolInfo,
+        stimulus_protocol: protocolInfo,
       },
     };
 
