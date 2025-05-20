@@ -4,6 +4,8 @@ import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import get from 'lodash/get';
 
+import { Asset } from 'next/font/google';
+import { vi } from 'vitest';
 import SimulationPlotAsImage from './simulation-plot-as-image';
 import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
 import { fetchJsonFileByUrl } from '@/api/nexus';
@@ -16,12 +18,10 @@ import { SIMULATION_CONFIG_FILE_NAME_BASE } from '@/state/simulate/single-neuron
 import { getSession } from '@/authFetch';
 import { classNames, createPascalToUnderscoreProxy } from '@/util/utils';
 import { ISingleNeuronSimulation } from '@/api/entitycore/types/entities/single-neuron-simulation';
-import { Asset } from 'next/font/google';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { notification } from '@/api/notifications';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
-import { vi } from 'vitest';
 
 const subtitleStyle = 'font-thin text-neutral-4';
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { getSession } from '@/authFetch';
 
-import { SimulationPayload, SimulationPayloadSchema } from '@/types/simulation/single-neuron';
+import { SimulationPayload } from '@/types/simulation/single-neuron';
 
 import { SingleNeuronSynaptomeResource } from '@/types/synaptome';
 
