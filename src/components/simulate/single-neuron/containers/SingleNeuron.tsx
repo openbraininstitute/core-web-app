@@ -1,14 +1,8 @@
-import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
-
 import { usePathname } from 'next/navigation';
 import SimulationButton from '../molecules/SimulationButton';
 import { SimulationConfiguration } from '../processSteps';
-import { useModel } from '@/hooks/useModel';
-import { ModelResource } from '@/types/simulation/single-neuron';
-import { SimulationType } from '@/types/simulation/common';
 
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
+import { SimulationType } from '@/types/simulation/common';
 
 type Props = {
   projectId: string;
