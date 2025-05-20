@@ -1,6 +1,6 @@
 import { CircuitSchemaProps } from '../../type';
-import CircuitMetadata from './CircuitMetadata';
-import CircuitParameters from './CircuitParameters';
+import CircuitMetadata from './circuit-metadata';
+import CircuitParameters from './circuit-parameter';
 
 export default function CircuitData({ content }: { content: CircuitSchemaProps }) {
   return (

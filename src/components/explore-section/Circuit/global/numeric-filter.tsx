@@ -57,14 +57,13 @@ export default function NumericFilters({
         max: localMax,
       };
       onFilterChange(newFilter);
-      // Sync parent state with applied values
       onMinChange(localMin);
       onMaxChange(localMax);
     }
   };
 
   return (
-    <div className="mb-4">
+    <div className="flex flex-row items-center">
       {filter && (
         <button
           className="mr-8 text-sm text-gray-500 hover:text-gray-700"
@@ -82,9 +81,9 @@ export default function NumericFilters({
         value={localProperty}
         onChange={handlePropertyChange}
       >
-        <Option value="neurons"># of Neurons</Option>
-        <Option value="connections"># of Connections</Option>
-        <Option value="synapses"># of Synapses</Option>
+        <Option value="numberOfNeurons"># of Neurons</Option>
+        <Option value="numberOfConnections"># of Connections</Option>
+        <Option value="numberOfSynapses"># of Synapses</Option>
       </Select>
       <Select
         className="mr-2 w-[150px]"

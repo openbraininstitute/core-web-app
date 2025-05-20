@@ -85,7 +85,7 @@ const scaleLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Storage]: 'Storage',
   // TODO: check if the following subtypes are still relevant and find better labels for them
   [ServiceSubtype.MlRetrieval]: 'ML',
-  [ServiceSubtype.MlLlm]: 'AI assistance',
+  [ServiceSubtype.MlLlm]: 'AI Assistant',
   [ServiceSubtype.MlRag]: 'ML',
 };
 

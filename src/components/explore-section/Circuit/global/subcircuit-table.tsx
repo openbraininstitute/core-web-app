@@ -1,50 +1,48 @@
+'use client';
+
 import { Table } from 'antd';
-import { ColumnsType, TableRowSelection } from 'antd/es/table/interface';
+import { ColumnsType } from 'antd/es/table/interface';
 import { Key } from 'react';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-import { CircuitSchemaProps } from '../type';
+import { CircuitSchemaProps, NumericFilterOptions } from '../type';
 
-import DownloadCircuitButton from './DownloadCircuitButton';
-import ResizableTitle from './ResizableTitle';
+import { circuitMatchFilter } from '../utils/circuits-match-filter';
 
 import styles from './exploreCircuitTable.module.scss';
 
 export type SubcircuitsTableProps = {
   circuit: CircuitSchemaProps;
-  mergedColumns: ColumnsType<CircuitSchemaProps>;
-  rowSelection: TableRowSelection<CircuitSchemaProps>;
+  columns: ColumnsType<CircuitSchemaProps>;
   expandedRowKeys: Key[];
-  downloadable: boolean;
   onExpand?: (expanded: boolean, row: CircuitSchemaProps) => void;
-  selectedRows: CircuitSchemaProps[];
-  selectedRowKeys: string[];
+  numericFilter: NumericFilterOptions | null;
+  minValue: number | undefined;
+  maxValue: number | undefined;
+  searchQuery: string;
 };
 
 export default function SubcircuitTable({
   circuit,
-  mergedColumns,
-  rowSelection,
+  columns,
   expandedRowKeys,
-  downloadable = true,
   onExpand,
-  selectedRows,
-  selectedRowKeys,
+  numericFilter,
+  minValue,
+  maxValue,
+  searchQuery,
 }: SubcircuitsTableProps) {
   const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
     <SubcircuitTable
       circuit={subCircuit}
-      mergedColumns={mergedColumns}
-      rowSelection={rowSelection}
+      columns={columns}
       expandedRowKeys={expandedRowKeys}
       onExpand={onExpand}
-      downloadable={downloadable}
-      selectedRows={selectedRows}
-      selectedRowKeys={selectedRowKeys}
+      numericFilter={numericFilter}
+      minValue={minValue}
+      maxValue={maxValue}
+      searchQuery={searchQuery}
     />
   );
-
-  const lastRow = selectedRows?.at(-1);
-  const fileUrl = lastRow?.files?.[0]?.url;
 
   return (
     <div className="relative flex flex-col">
@@ -56,21 +54,9 @@ export default function SubcircuitTable({
       </div>
       <Table
         className={styles.circuitTable}
-        style={
-          {
-            '--ant-table-expand-icon-col-width': '0px',
-          } as React.CSSProperties
-        }
-        data-row-selection={downloadable && downloadable.toString()}
-        components={{
-          header: {
-            cell: ResizableTitle,
-          },
-        }}
         dataSource={circuit.subcircuits || []}
-        columns={mergedColumns}
+        columns={columns}
         pagination={false}
-        rowSelection={downloadable ? rowSelection : undefined}
         expandable={{
           expandedRowRender: renderSubcircuits,
           expandedRowKeys,
@@ -78,10 +64,12 @@ export default function SubcircuitTable({
           expandIcon: () => null,
           rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
         }}
+        rowClassName={(record) =>
+          circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery)
+            ? styles.matchingRow
+            : styles.nonMatchingRow
+        }
       />
-      {fileUrl && (
-        <DownloadCircuitButton fileUrl={fileUrl} selectedRowKeys={selectedRowKeys || []} />
-      )}
     </div>
   );
 }

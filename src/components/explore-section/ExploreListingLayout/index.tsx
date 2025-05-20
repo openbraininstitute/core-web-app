@@ -5,10 +5,11 @@ import { Menu } from 'antd';
 import { useAtomValue } from 'jotai';
 import find from 'lodash/find';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { CSSProperties, ReactNode, useEffect, useState } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { StatError } from '../ExploreInteractive/StatItem';
 
+import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
@@ -63,9 +64,6 @@ export default function ExploreListingLayout({
 
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-
-  const [circuitCount, setCircuitCount] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const splittedPathname = pathname.split('/');
   const interactivePageHref = splittedPathname.slice(0, splittedPathname.length - 2).join('/');
@@ -127,39 +125,19 @@ export default function ExploreListingLayout({
     };
   });
 
-  useEffect(() => {
-    async function fetchCircuitCount() {
-      try {
-        const response = await fetch('/api/explore-circuits/count');
-        if (!response.ok) {
-          throw new Error('Failed to fetch circuit count');
-        }
-
-        const data = await response.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        setCircuitCount(data.count);
-      } catch (err) {
-        setError('Failed to load circuit count');
-        setCircuitCount(0);
-      }
-    }
-    fetchCircuitCount();
-  }, []);
+  const { filteredCircuits, loading, error } = useFilteredCircuits();
 
   if (error) {
     return <StatError text={error} />;
   }
 
-  if (showCircuitMenu) {
+  if (showCircuitMenu && !loading) {
     const circuitActive = activePath === 'circuit';
 
     items.push({
       key: 'circuit',
       title: 'Circuit',
-      label: `Circuit (${circuitCount})`,
+      label: `Circuit (${filteredCircuits.count})`,
       className: 'text-center font-semibold',
       style: {
         backgroundColor: circuitActive ? 'white' : '#002766',
@@ -174,7 +152,7 @@ export default function ExploreListingLayout({
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
 
   return (
-    <div className="flex h-screen w-full overflow-x-auto bg-primary-9" id="interactive-data-layout">
+    <div className="bg-primary-9 flex h-screen w-full overflow-x-auto" id="interactive-data-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
 
@@ -189,7 +167,7 @@ export default function ExploreListingLayout({
             items={items}
           />
 
-          <div className="grow bg-primary-9 text-white">{children}</div>
+          <div className="bg-primary-9 grow text-white">{children}</div>
         </div>
       </ErrorBoundary>
     </div>

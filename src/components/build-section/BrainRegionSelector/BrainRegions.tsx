@@ -26,7 +26,6 @@ import { NavValue } from '@/state/brain-regions/types';
 import { BrainRegion } from '@/types/ontologies';
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { atlasVisualizationAtom } from '@/state/atlas/atlas';
-import { sectionAtom } from '@/state/application';
 import { useExpandRegionTree, useSetBrainRegionToQuery } from '@/hooks/brain-region-panel';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 
@@ -66,11 +65,6 @@ function NavTitle({
   viewId,
   scope = 'explore',
 }: TitleComponentProps) {
-  const section = useAtomValue(sectionAtom);
-  if (!section) {
-    throw new Error('Section is not set');
-  }
-
   const brainRegionViews = useAtomValue(brainRegionOntologyViewsAtom);
   const selectedBrainRegion = useAtomValue(selectedBrainRegionFamily(scope));
   const brainRegions = useAtomValue(brainRegionsAtom);

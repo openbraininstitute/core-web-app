@@ -39,8 +39,9 @@ export type CircuitSchemaProps = {
   numberOfSynapses: number;
   metadata: {
     contributorSimple?: string;
-    contributor?: string | null;
+    contributors?: string;
     contributingInstitution?: string;
+    publishedIn?: string;
     registrationDate?: string;
     revision: number | null;
     createdBy: string | null;
@@ -49,13 +50,9 @@ export type CircuitSchemaProps = {
       name: string;
       url: string;
     } | null;
+    contact: string | null;
   };
-  files: {
-    kind: string;
-    url: string;
-    key: string;
-    isAvailable: boolean;
-  }[];
+  files: DownloadItemProps[];
   subcircuits: CircuitSchemaProps[];
 
   overview: {
@@ -107,7 +104,7 @@ export type InteractiveImageProps = {
   height: number;
 };
 
-export type NumericFilterProperty = 'neurons' | 'connections' | 'synapses';
+export type NumericFilterProperty = 'numberOfNeurons' | 'numberOfConnections' | 'numberOfSynapses';
 export type NumericFilterType = 'greaterThan' | 'lessThan' | 'between';
 
 export type FilterOptionsProps = {
@@ -121,3 +118,27 @@ export type NumericFilterOptions = {
   min?: number;
   max?: number;
 };
+
+export type DownloadItemProps = {
+  fileType: string;
+  children?: SingleSelectedDownloadableItemProps[];
+};
+
+export type SingleSelectedDownloadableItemProps = {
+  fileType: string;
+  extension: string;
+  name: string;
+  url: string;
+  description: string;
+  size: number;
+};
+
+export type FileTypeHeaderProps = {
+  name: string;
+  description: React.ReactNode;
+  extension: string;
+};
+
+export interface FilteredCircuit extends CircuitSchemaProps {
+  isNonMatchingParent?: boolean;
+}
