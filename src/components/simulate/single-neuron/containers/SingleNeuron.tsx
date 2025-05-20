@@ -1,13 +1,8 @@
-import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
-
+import { usePathname } from 'next/navigation';
 import SimulationButton from '../molecules/SimulationButton';
 import { SimulationConfiguration } from '../processSteps';
-import { useModel } from '@/hooks/useModel';
-import { ModelResource } from '@/types/simulation/single-neuron';
-import { SimulationType } from '@/types/simulation/common';
 
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
+import { SimulationType } from '@/types/simulation/common';
 
 type Props = {
   projectId: string;
@@ -17,28 +12,19 @@ type Props = {
 const SIMULATION_TYPE: SimulationType = 'single-neuron-simulation';
 
 function SingleNeuron({ projectId, virtualLabId }: Props) {
-  const { id: modelId } = useResourceInfoFromPath();
-  const { resource, loading } = useModel<ModelResource>({
-    modelId,
-    org: virtualLabId,
-    project: projectId,
-  });
-
-  if (loading || !resource) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-        <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading Configuration ...</h2>
-      </div>
-    );
-  }
+  const modelId = usePathname().split('/').pop() as string;
 
   return (
     <>
-      <SimulationConfiguration meModelUrl={resource._self} type={SIMULATION_TYPE} />
+      <SimulationConfiguration
+        modelId={modelId}
+        type={SIMULATION_TYPE}
+        projectId={projectId}
+        virtualLabId={virtualLabId}
+      />
       <div className="fixed right-4 bottom-4 z-20 mt-auto">
         <SimulationButton
-          modelSelfUrl={resource._self}
+          modelId={modelId}
           vLabId={virtualLabId}
           projectId={projectId}
           simulationType={SIMULATION_TYPE}

@@ -5,6 +5,7 @@ import {
   Dispatch,
   ReactNode,
   SetStateAction,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -18,6 +19,7 @@ import orderBy from 'lodash/orderBy';
 import map from 'lodash/map';
 import get from 'lodash/get';
 
+import { defaultList } from './checklist/default-checklist';
 import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 import ClearFilters from '@/features/listing-filter-panel/clear-filters';
 import DateRange from '@/features/listing-filter-panel/date-range';
@@ -37,7 +39,6 @@ import { ExploreDataScope, FilterValues } from '@/types/explore-section/applicat
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { Facets } from '@/api/entitycore/types/shared/response';
-import { defaultList } from './checklist/default-checklist';
 import { fieldTitleSentenceCase } from '@/util/utils';
 import {
   CoreFieldFilterTypeEnum,
@@ -181,7 +182,7 @@ export default function ListingFilterPanel({
   resourceId,
   virtualLabInfo,
 }: Props) {
-  const { node } = useBrainRegionHierarchy({ dataKey: dataKey });
+  const { node } = useBrainRegionHierarchy({ dataKey });
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(
     filtersAtom({ dataType, dataScope, resourceId, key: dataKey, brainRegionId: node.id })
@@ -205,19 +206,24 @@ export default function ListingFilterPanel({
   );
   const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
 
-  const onToggleActive = (key: string) => {
-    if (!activeColumns) return;
-    const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
+  console.log('ᦨ #  listing-filter-panel.tsx:197 #  activeColumns:', activeColumns);
 
-    if (existingIndex === -1) {
-      setActiveColumns([...activeColumns, key]);
-    } else {
-      setActiveColumns([
-        ...activeColumns.slice(0, existingIndex),
-        ...activeColumns.slice(existingIndex + 1),
-      ]);
-    }
-  };
+  const onToggleActive = useCallback(
+    (key: string) => {
+      if (!activeColumns) return;
+      const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
+
+      if (existingIndex === -1) {
+        setActiveColumns([...activeColumns, key]);
+      } else {
+        setActiveColumns([
+          ...activeColumns.slice(0, existingIndex),
+          ...activeColumns.slice(existingIndex + 1),
+        ]);
+      }
+    },
+    [activeColumns, setActiveColumns]
+  );
 
   useEffect(() => {
     const values: FilterValues = {};

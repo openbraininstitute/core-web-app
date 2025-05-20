@@ -33,7 +33,7 @@ export default function SimulationConfigurationTab({ simulation, type }: Props) 
       label: <h4 className="text-primary-8 text-xl font-bold">Stimulation Protocol</h4>,
       children: (
         <StimulationDetails
-          currentInjection={simulation.config.currentInjection}
+          currentInjection={simulation.config.current_injection}
           stimulusData={simulation.stimulus}
         />
       ),
@@ -41,7 +41,7 @@ export default function SimulationConfigurationTab({ simulation, type }: Props) 
     {
       key: 'recording-locations',
       label: <h4 className="text-primary-8 text-xl font-bold">Recordings</h4>,
-      children: <RecordingLocations recordingLocations={simulation.config.recordFrom} />,
+      children: <RecordingLocations recordingLocations={simulation.config.record_from} />,
     },
   ];
 

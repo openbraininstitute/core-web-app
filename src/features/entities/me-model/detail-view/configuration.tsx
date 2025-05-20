@@ -19,14 +19,14 @@ export default function Configuration({ model: { morphology, emodel } }: { model
       <ErrorBoundary fallback={<CardError />}>
         <MorphologyOverviewCard
           key="morphology-overview-card"
-          mode={!!morphologyId ? 'select' : 'summary'}
+          mode={morphologyId ? 'select' : 'summary'}
           data={morphology}
         />
       </ErrorBoundary>
       <ErrorBoundary fallback={<CardError />}>
         <EModelOverviewCard
           key="e-model-overview-card"
-          mode={!!emodelId ? 'select' : 'summary'}
+          mode={emodelId ? 'select' : 'summary'}
           data={emodel}
         />
       </ErrorBoundary>

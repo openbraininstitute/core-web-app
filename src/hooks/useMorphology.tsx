@@ -8,11 +8,15 @@ import getMorphology from '@/api/bluenaas/getMorphology';
 import { isBluenaasError } from '@/types/simulation/single-neuron';
 
 export default function useMorphology({
-  modelSelfUrl,
+  modelId,
   callback,
+  projectId,
+  virtualLabId,
 }: {
-  modelSelfUrl: string;
+  modelId: string;
   callback: (morphology: Morphology) => void;
+  projectId: string;
+  virtualLabId: string;
 }) {
   const mountedRef = useRef(false);
   const [loading, setLoading] = useState(false);
@@ -24,7 +28,12 @@ export default function useMorphology({
       throw new Error('No session found');
     }
 
-    const response = await getMorphology({ modelId: modelSelfUrl, token: session.accessToken });
+    const response = await getMorphology({
+      modelId,
+      token: session.accessToken,
+      virtualLabId,
+      projectId,
+    });
     const reader = response.body?.getReader();
     let data: string = '';
     let value: Uint8Array | undefined;
@@ -49,7 +58,7 @@ export default function useMorphology({
       return null;
     }
     throw new Error('Neuron morphology could not be constructed');
-  }, [modelSelfUrl]);
+  }, [modelId]);
 
   useEffect(() => {
     mountedRef.current = true;

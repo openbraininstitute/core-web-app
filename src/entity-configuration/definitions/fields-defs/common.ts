@@ -6,8 +6,10 @@ import {
   renderPreview,
   renderTimestamp,
 } from '@/entity-configuration/definitions/renderer';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { hasAssets } from '@/api/entitycore/guards';
 

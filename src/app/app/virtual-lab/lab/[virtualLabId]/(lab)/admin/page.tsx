@@ -1,4 +1,5 @@
 'use client';
+
 import { use } from 'react';
 
 import VirtualLabSettingsComponent from '@/components/VirtualLab/VirtualLabSettingsComponent';

@@ -17,7 +17,7 @@ const BrainRegionsHierarchy = dynamic(() => import('@/features/brain-region-hier
   ssr: false,
 });
 export default function BuildMEModelLayout({ params, children }: GenericLayoutProps) {
-  //const setSection = useSetAtom(sectionAtom);
+  // const setSection = useSetAtom(sectionAtom);
   const { projectId } = use(params);
 
   // useEffect(() => setSection('build'), [setSection]);

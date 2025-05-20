@@ -15,12 +15,20 @@ import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { StimulusModule } from '@/types/simulation/single-neuron';
 
 type Props = {
-  modelSelfUrl: string;
+  modelId: string;
   amplitudes: number[];
   protocol: StimulusModule;
+  projectId: string;
+  virtualLabId: string;
 };
 
-export default function StimuliPreviewPlot({ modelSelfUrl, amplitudes, protocol }: Props) {
+export default function StimuliPreviewPlot({
+  modelId,
+  amplitudes,
+  protocol,
+  projectId,
+  virtualLabId,
+}: Props) {
   const [stimuliPreviewPlotData, setStimuliPreviewPlotData] = useAtom(stimulusPreviewPlotDataAtom);
   const [loading, setLoading] = useState(false);
   const previousFetchController = useRef<AbortController>(undefined);
@@ -51,12 +59,14 @@ export default function StimuliPreviewPlot({ modelSelfUrl, amplitudes, protocol 
       }
 
       const rawPlotData = await getDirectCurrentGraph(
-        modelSelfUrl,
+        modelId,
         session.accessToken,
         {
           amplitudes,
           stimulusProtocol: protocol,
         },
+        projectId,
+        virtualLabId,
         controller.signal
       );
 
@@ -83,7 +93,15 @@ export default function StimuliPreviewPlot({ modelSelfUrl, amplitudes, protocol 
         setLoading(false);
       }
     }
-  }, [amplitudes, protocol, modelSelfUrl, notifyError, setStimuliPreviewPlotData]);
+  }, [
+    amplitudes,
+    protocol,
+    modelId,
+    notifyError,
+    setStimuliPreviewPlotData,
+    projectId,
+    virtualLabId,
+  ]);
 
   useEffect(() => {
     updateStimuliPreview();

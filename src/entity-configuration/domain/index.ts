@@ -6,7 +6,12 @@ import {
   NeuronDensity,
 } from '@/entity-configuration/domain/experimental';
 
-import { Emodel, MEmodel, SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import {
+  Emodel,
+  MEmodel,
+  SingleNeuronSynaptome,
+  SingleNeuronSimulation,
+} from '@/entity-configuration/domain/model';
 
 // NOTE: order is important (it's used in stats panel in explore)
 export const EntityCoreExperimentalConfiguration = {
@@ -27,4 +32,5 @@ export const EntityCoreModelConfiguration = {
 export const EntityCoreConfiguration = {
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
+  SingleNeuronSimulation,
 } as const;

@@ -1,6 +1,8 @@
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 
+import set from 'lodash/set';
+import get from 'lodash/get';
 import { EntityCoreConfiguration } from '.';
 
 import type {
@@ -9,8 +11,6 @@ import type {
 } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityTypeValue } from '@/api/entitycore/types';
-import set from 'lodash/set';
-import get from 'lodash/get';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type EntityCoreLegacyType =

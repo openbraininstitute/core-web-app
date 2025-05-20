@@ -42,6 +42,11 @@ export type StainFilter = {
   strain__order_by: string | null;
 };
 
+export type IdFilter = Partial<{
+  id: string;
+  id__in: string[];
+}>;
+
 export type SharedFilter = {
   name__ilike: string | null;
   order_by: string;

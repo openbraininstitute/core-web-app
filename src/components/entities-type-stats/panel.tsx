@@ -60,8 +60,8 @@ export function EntityTypeStats(props: StatsPanelProps) {
       <>
         {Object.entries(EntityCoreExperimentalConfiguration).map(([key, value]) => {
           const href = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
-          let records = '',
-            isError = false;
+          let records = '';
+          let isError = false;
 
           if (!isLoading) {
             const _result = get(data?.experimental, `${value.legacyType}`, '');
@@ -88,8 +88,8 @@ export function EntityTypeStats(props: StatsPanelProps) {
       <>
         {Object.entries(EntityCoreModelConfiguration).map(([key, value]) => {
           const href = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
-          let records = '',
-            isError = false;
+          let records = '';
+          let isError = false;
           if (!isLoading) {
             const _result = get(data?.model, `${value.legacyType}`, '');
             records =
@@ -110,7 +110,7 @@ export function EntityTypeStats(props: StatsPanelProps) {
         })}
         <EntityTypeCount
           isError={false}
-          key={`count-circuit`}
+          key="count-circuit"
           href={`${pathName}/model/circuit`}
           type="Circuit"
           records={`${circuitsFlat.length} records`}

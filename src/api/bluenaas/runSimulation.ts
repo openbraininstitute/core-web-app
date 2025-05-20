@@ -6,39 +6,41 @@ import {
   SimulationExperimentalSetup,
   SynaptomeConfig,
 } from '@/types/simulation/single-neuron';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 export const runGenericSingleNeuronSimulation = async ({
   vlabId,
   projectId,
-  modelUrl,
+  modelId,
   token,
   config,
 }: {
   vlabId: string;
   projectId: string;
-  modelUrl: string;
+  modelId: string;
   token: string;
   config: {
-    recordFrom: Array<RecordLocation>;
+    record_from: Array<RecordLocation>;
     conditions: SimulationExperimentalSetup;
-    currentInjection?: CurrentInjectionSimulationConfig;
+    current_injection?: CurrentInjectionSimulationConfig;
     synaptome?: SynaptomeConfig;
     type: SimulationType;
     duration: number;
   };
 }) => {
-  const formattedConfig = convertObjectKeysToSnakeCase(config);
-  return await fetch(
-    `${blueNaasUrl}/simulation/single-neuron/${vlabId}/${projectId}/run?model_id=${encodeURIComponent(modelUrl)}&realtime=True`,
+  const res = await fetch(
+    `${blueNaasUrl}/entitycore/simulation/single-neuron/${vlabId}/${projectId}/run?model_id=${modelId}&realtime=True`,
     {
       method: 'post',
       headers: {
         accept: 'application/octet-stream',
         authorization: `bearer ${token}`,
         'Content-Type': 'application/json',
+        'virtual-lab-id': vlabId,
+        'project-id': projectId,
       },
-      body: JSON.stringify(formattedConfig),
+      body: JSON.stringify(config),
     }
   );
+
+  return res;
 };

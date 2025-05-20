@@ -117,7 +117,7 @@ export default function Tree<TNode extends TTreeNode>({
         dataKey={dataKey}
         node={data}
         level={0}
-        isLast={true}
+        isLast
         renderNode={renderNode as any}
         expandedIds={expandedIds}
         selectedNode={selectedNode as unknown as TNode}

@@ -3,68 +3,69 @@ import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import get from 'lodash/get';
-
 import SimulationPlotAsImage from './simulation-plot-as-image';
 import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
-import { fetchJsonFileByUrl } from '@/api/nexus';
-import { SingleNeuronSimulation, SynaptomeSimulation } from '@/types/nexus';
-import {
-  SimulationPayload,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/simulation/single-neuron';
-import { ensureArray } from '@/util/nexus';
-import { SIMULATION_CONFIG_FILE_NAME_BASE } from '@/state/simulate/single-neuron-setter';
-import { getSession } from '@/authFetch';
-import { classNames, createPascalToUnderscoreProxy } from '@/util/utils';
+import { SimulationPayload } from '@/types/simulation/single-neuron';
+import { classNames } from '@/util/utils';
+import { ISingleNeuronSimulation } from '@/api/entitycore/types/entities/single-neuron-simulation';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { notification } from '@/api/notifications';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { EntityTypeEnum } from '@/api/entitycore/types';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
 
 const subtitleStyle = 'font-thin text-neutral-4';
-type GenericSimulation = SingleNeuronSimulation | SynaptomeSimulation;
+
+type GenericSimulation = ISingleNeuronSimulation; // TODO ADD SYNAPTOME SIMULATION
 
 type Props<T> = {
   index: number;
   simulation: T;
-  children?: ({ config }: { config: SingleNeuronModelSimulationConfig }) => React.ReactNode;
+  virtualLabId: string;
+  projectId: string;
 };
 
 export default function SimulationDetail<T extends GenericSimulation>({
   index,
   simulation,
-  children,
+  virtualLabId,
+  projectId,
 }: Props<T>) {
-  const [distributionJson, setDistributionJson] = useState<SimulationPayload | null>(null);
+  const [simConfig, setSimConfig] = useState<SimulationPayload | null>(null);
   const [simulationPlot, setSimulationPlot] = useState<SegmentedValue | undefined>(undefined);
   const [loadingConfig, setLoadingConfig] = useState(false);
 
   useEffect(() => {
-    const configuration = ensureArray(simulation.distribution).find((o) =>
-      o.name.startsWith(SIMULATION_CONFIG_FILE_NAME_BASE)
+    const asset = simulation.assets.find(
+      (a) => a.label === SingleNeuronSimulation.asset.configfile
     );
-    if (!simulation || !configuration) return;
+
+    if (!asset) {
+      notification.error('Cannot find simulation config');
+      return;
+    }
 
     const fetchPayload = async () => {
       setLoadingConfig(true);
       try {
-        const session = await getSession();
-        if (!session) {
-          throw new Error('No session was found');
-        }
-        const jsonFile = await fetchJsonFileByUrl<SimulationPayload>(
-          configuration.contentUrl,
-          session
-        );
-        if (!jsonFile) return;
+        const configRes = await downloadAsset<Buffer>({
+          ctx: { virtualLabId, projectId },
+          entityType: EntityTypeEnum.SingleNeuronSimulation,
+          entityId: simulation.id,
+          id: asset.id,
+        });
 
-        setDistributionJson(createPascalToUnderscoreProxy(jsonFile));
-        setSimulationPlot(Object.keys(jsonFile.simulation).at(0));
-      } catch (error) {
-        //
+        const configJson = JSON.parse(new TextDecoder('utf-8').decode(configRes));
+
+        setSimConfig(configJson);
+        setSimulationPlot(Object.keys(configJson.simulation)[0]);
       } finally {
         setLoadingConfig(false);
       }
     };
 
     fetchPayload();
-  }, [simulation]);
+  }, [simulation, projectId, virtualLabId]);
 
   if (loadingConfig) {
     return (
@@ -75,23 +76,23 @@ export default function SimulationDetail<T extends GenericSimulation>({
     );
   }
 
-  if (!distributionJson) return null;
+  if (!simConfig) return null;
 
   return (
     <div className="flex items-start gap-8 border p-8">
       <div className="text-primary-8 flex flex-[0_1_60%] flex-col gap-10">
         <NameDescription name={simulation.name} description={simulation.description} />
-        <Params payload={distributionJson} />
+        <Params payload={simConfig} />
         <div className="flex w-full flex-col gap-2">
           <div className="text-primary-8 text-lg font-bold">Injection location</div>
           <div className="mt-2 flex max-w-max items-center justify-center border border-gray-100 px-5 py-1 font-bold">
-            {distributionJson.config.currentInjection.injectTo}
+            {simConfig.config.current_injection.inject_to}
           </div>
         </div>
         <div className="flex w-full flex-col gap-2">
           <div className="text-primary-8 text-lg font-bold">Recording locations</div>
           <div className="mt-2 flex items-center gap-4">
-            {distributionJson.config.recordFrom.map((r, ind) => (
+            {simConfig.config.record_from.map((r, ind) => (
               <div key={`${r.section}_${r.offset}`} className="flex flex-col gap-1">
                 <div className="text-gray-400 uppercase">Recording {ind + 1}</div>
                 <div className="flex max-w-max items-center justify-start gap-3 border border-gray-100 px-5 py-1">
@@ -112,18 +113,17 @@ export default function SimulationDetail<T extends GenericSimulation>({
             ))}
           </div>
         </div>
-        {children?.({ config: distributionJson.config })}
       </div>
 
       <div className="flex w-full flex-[1_1_40%] flex-col items-end justify-center gap-5">
-        {distributionJson.stimulus && (
+        {simConfig.stimulus && (
           <div className="flex w-full flex-col">
             <div className="text-primary-8 mb-4 text-2xl font-bold">Stimulus</div>
-            <SimulationPlotAsImage yTitle="Current [nA]" plotData={distributionJson.stimulus} />
+            <SimulationPlotAsImage yTitle="Current [nA]" plotData={simConfig.stimulus} />
           </div>
         )}
 
-        {distributionJson.simulation && (
+        {simConfig.simulation && (
           <div className="flex w-full flex-col">
             <div className="text-primary-8 mb-4 text-2xl font-bold">Recording</div>
             <ConfigProvider theme={{ hashed: false }}>
@@ -137,14 +137,14 @@ export default function SimulationDetail<T extends GenericSimulation>({
                 )}
                 onChange={(value) => setSimulationPlot(value)}
                 value={simulationPlot}
-                options={Object.entries(distributionJson.simulation).map(([key]) => ({
+                options={Object.entries(simConfig.simulation).map(([key]) => ({
                   label: key,
                   value: key,
                 }))}
               />
             </ConfigProvider>
             {simulationPlot && (
-              <SimulationPlotAsImage plotData={get(distributionJson.simulation, simulationPlot)} />
+              <SimulationPlotAsImage plotData={get(simConfig.simulation, simulationPlot)} />
             )}
           </div>
         )}

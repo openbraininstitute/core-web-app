@@ -1,3 +1,4 @@
+import { renderEmptyOrValue, renderArray } from './renderer';
 import License from '@/components/explore-section/License';
 import {
   selectorFnBasic,
@@ -42,7 +43,6 @@ import { DisplayMessages } from '@/constants/display-messages';
 import { getEtypeFromEModel, getMtypeFromMModel } from '@/util/modelMEtypes';
 import { EModel, NeuronMorphology } from '@/types/e-model';
 import { ensureArray } from '@/util/nexus';
-import { renderEmptyOrValue, renderArray } from './renderer';
 
 export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExperiment> = {
   [Field.License]: {

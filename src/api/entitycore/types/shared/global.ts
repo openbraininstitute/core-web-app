@@ -30,7 +30,7 @@ export type EntityCoreBaseType = {
 };
 
 export interface EntityCoreBaseAsset {
-  assets: Array<IAsset> | null;
+  assets: Array<IAsset>;
 }
 
 export interface EntityCoreResource
@@ -142,6 +142,10 @@ enum AssetStatus {
   DELETED = 'deleted',
 }
 
+export enum AssetLabel {
+  single_cell_simulation = 'single_cell_simulation_data',
+}
+
 type AssetBase = {
   path: string;
   full_path: string;
@@ -150,6 +154,7 @@ type AssetBase = {
   content_type: string;
   size: number;
   sha256_digest?: string | null;
+  label: AssetLabel;
 };
 
 export interface IAsset extends AssetBase, AssetLegacyMeta {

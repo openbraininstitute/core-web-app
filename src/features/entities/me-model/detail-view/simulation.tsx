@@ -2,44 +2,36 @@ import React, { useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 
 import SimulationDetail from './simulation-details';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { queryES } from '@/api/nexus';
-import { getSimulationsPerModelQuery } from '@/queries/es';
-import { selectedMEModelIdAtom } from '@/state/virtual-lab/build/me-model';
-import { SingleNeuronSimulation } from '@/types/nexus';
-import { getSession } from '@/authFetch';
 
 import type { WorkspaceContext } from '@/types/common';
+import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
+import { ISingleNeuronSimulation } from '@/api/entitycore/types';
 
 export default function Simulation() {
-  const params = useParams<WorkspaceContext>();
-  const selectedMEModelId = useAtomValue(selectedMEModelIdAtom);
-  const [simulations, setSimulations] = useState<SingleNeuronSimulation[]>([]);
+  const params = useParams<WorkspaceContext & { id: string }>();
+  const [simulations, setSimulations] = useState<ISingleNeuronSimulation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const { virtualLabId, projectId, id } = params;
 
   useEffect(() => {
-    if (!selectedMEModelId) return;
-
     const fetchSims = async () => {
       setLoading(true);
       setError(false);
       try {
-        const session = await getSession();
-        if (!session) return;
-        const simulationsPerMEModelQuery = getSimulationsPerModelQuery({
-          modelId: selectedMEModelId,
-          type: 'SingleNeuronSimulation',
+        const sims = await getSingleNeuronSimulations({
+          context: { virtualLabId, projectId },
+          withFacets: false,
+          filters: {
+            me_model__id: id,
+          },
         });
-        const sims = await queryES<SingleNeuronSimulation>(simulationsPerMEModelQuery, session, {
-          org: params.virtualLabId,
-          project: params.projectId,
-        });
-        setSimulations(sims);
+
+        setSimulations(sims.data);
       } catch (err) {
         setError(true);
       } finally {
@@ -48,7 +40,7 @@ export default function Simulation() {
     };
 
     fetchSims();
-  }, [params.projectId, params.virtualLabId, selectedMEModelId]);
+  }, [projectId, virtualLabId, id]);
 
   if (loading) {
     return (
@@ -94,9 +86,14 @@ export default function Simulation() {
             showButtons: false,
             customError: 'Error while loading simulation ',
           })}
-          key={sim['@id']}
+          key={sim.id}
         >
-          <SimulationDetail<SingleNeuronSimulation> simulation={sim} index={indx} />
+          <SimulationDetail
+            simulation={sim}
+            index={indx}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
         </ErrorBoundary>
       ))}
     </div>

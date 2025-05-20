@@ -54,7 +54,7 @@ export default function PreviewThumbnail({
         setState((prev) => ({
           ...prev,
           loading: false,
-          error: error,
+          error,
           thumbnail: null,
         }));
       }

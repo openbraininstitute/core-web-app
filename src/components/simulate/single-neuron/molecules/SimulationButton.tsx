@@ -22,18 +22,13 @@ import { PROTOCOL_DETAILS } from '@/constants/simulate/single-neuron';
 import useNotification from '@/hooks/notifications';
 
 type Props = {
-  modelSelfUrl: string;
+  modelId: string;
   vLabId: string;
   projectId: string;
   simulationType: SimulationType;
 };
 
-export default function SimulationButton({
-  modelSelfUrl,
-  vLabId,
-  projectId,
-  simulationType,
-}: Props) {
+export default function SimulationButton({ modelId, vLabId, projectId, simulationType }: Props) {
   const form = Form.useFormInstance();
   const simulationStatus = useAtomValue(simulationStatusAtom);
   const simulationResults = useAtomValue(genericSingleNeuronSimulationPlotDataAtom);
@@ -49,24 +44,24 @@ export default function SimulationButton({
   });
 
   const runSimulation = () => {
-    const protocol = currentInjectionConfig.at(0)?.stimulus.stimulusProtocol;
+    const protocol = currentInjectionConfig.at(0)?.stimulus.stimulus_protocol;
     let currentInjectionDuration = 0;
     if (protocol) {
-      currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stopTime;
+      currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stop_time;
     }
 
     launchSimulation(
       vLabId,
       projectId,
-      modelSelfUrl,
+      modelId,
       simulationType,
-      experimentalSetupConfig.maxTime ?? currentInjectionDuration
+      experimentalSetupConfig.max_time ?? currentInjectionDuration
     );
   };
 
   const [saveSimulation, saveModalContext] = onCompleteSimulation({
     id: 'save-simulation',
-    modelSelfUrl,
+    modelId,
     vLabId,
     projectId,
     simulationType,

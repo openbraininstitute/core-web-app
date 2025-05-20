@@ -32,10 +32,10 @@ import {
   selectedTabFamily,
 } from '@/components/VirtualLab/ScopeSelector/state';
 import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.css';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import { ensureArray } from '@/utils/array';
+import Styles from '@/styles/vlabs.module.css';
 
 type Params = {
   params: Promise<{

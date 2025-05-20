@@ -4,19 +4,14 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
 import { HTMLProps, useRef, useState, use } from 'react';
 
-import {
-  SimulationScopeToDataType,
-  SimulationScopeToModelType,
-  SimulationType,
-} from '@/types/virtual-lab/lab';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+
+import { SimulationScopeToDataType, SimulationScopeToModelType } from '@/types/virtual-lab/lab';
 
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { to64, detailUrlBuilder } from '@/util/common';
-import { ExploreESHit, ExploreResource } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
+import { detailUrlBuilder } from '@/util/common';
 import BookmarkButton from '@/features/bookmark/control';
-import { SIMULATION_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/simulation-data-types';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { DataType } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -34,21 +29,12 @@ import {
   SectionTabs,
 } from '@/components/VirtualLab/ScopeSelector';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.css';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
-import { ensureArray } from '@/utils/array';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { resolveDataKey } from '@/utils/key-builder';
-
-const SimTypeURLParams: Record<string, { view: string; model: string }> = {
-  [SimulationType.SingleNeuron]: {
-    view: 'single-neuron-simulation',
-    model: 'explore/interactive/model/me-model',
-  },
-  [SimulationType.Synaptome]: {
-    view: 'synaptome-simulation',
-    model: 'explore/interactive/model/synaptome',
-  },
-};
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/model/single-neuron-simulation';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import Styles from '@/styles/vlabs.module.css';
 
 export default function VirtualLabProjectSimulatePage(props: {
   params: Promise<{ virtualLabId: string; projectId: string }>;
@@ -78,14 +64,16 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
   const atomKey = 'simulate' + selectedTab + projectId;
 
   const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
-  const dataType = SimulationScopeToDataType[selectedSimType];
-  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + dataType));
 
-  const generateDetailUrl = (selectedRow: ExploreESHit<ExploreResource>) => {
-    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const baseBuildUrl = `${vlProjectUrl}/explore/simulate/${SimTypeURLParams[selectedSimType].view}/view`;
-    return `${baseBuildUrl}/${to64(`${virtualLabId}/${projectId}!/!${selectedRow._id}`)}`;
-  };
+  const dataType = SimulationScopeToDataType[selectedSimType];
+
+  const dataKey = resolveDataKey({
+    projectId,
+    section: 'experiment',
+    entity: SingleNeuronSimulation,
+  });
+
+  const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
 
   const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
 
@@ -101,7 +89,7 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
     // TODO: fix it when we have simulations
     legacyType: selectedSimType ?? DataType.CircuitMEModel,
   });
-  const dataKey = resolveDataKey({ section: 'experiment', projectId, entity });
+
   return (
     <>
       <div className="flex w-full grow flex-col">
@@ -136,7 +124,18 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                 <Btn
                   type="button"
                   className="bg-primary-9 hover:bg-primary-7! h-12 text-white"
-                  onClick={() => router.push(generateDetailUrl(selectedRows[0]))}
+                  onClick={() =>
+                    router.push(
+                      resolveExploreDetailsPageUrl({
+                        ctx: {
+                          virtualLabId,
+                          projectId,
+                        },
+                        entityId: selectedRows[0].id,
+                        dataType,
+                      })
+                    )
+                  }
                 >
                   View
                 </Btn>
@@ -144,9 +143,14 @@ function BrowseSimsTab({ projectId, virtualLabId }: { projectId: string; virtual
                   <BookmarkButton
                     virtualLabId={virtualLabId}
                     projectId={projectId}
-                    entityId={selectedRows[0].id}
-                    resourceId={ensureArray({ input: selectedRows[0] }).at(0)?.legacy_id}
-                    type={entity.type}
+                    entityId={entity.id} // TODO: fix it when whe have simulation data
+                    // `selectedRows` will be an array with only one element because `selectionType` is a radio button not a checkbox.
+                    resourceId={selectedRows[0].id}
+                    type={
+                      dataType === DataType.SingleNeuronSimulation
+                        ? 'single_neuron_simulation'
+                        : 'single_neuron_synaptome_simulation'
+                    }
                     customButton={customBookmarkButton}
                   />
                 )}
@@ -167,20 +171,15 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   const selectedSimulationScope = useAtomValue(selectedSimTypeFamily(atomKey));
   const modelType = SimulationScopeToModelType[selectedSimulationScope] ?? DataType.CircuitMEModel;
 
-  const onModelSelected = (model: ExploreESHit<ExploreSectionResource>) => {
+  const onModelSelected = (model: EntityCoreIdentifiable) => {
     const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
     const baseBuildUrl = `${vlProjectUrl}/simulate/${selectedSimulationScope}/new`;
     router.push(`${detailUrlBuilder(baseBuildUrl, model)}`);
   };
 
-  const navigateToDetailPage = (record: ExploreESHit<ExploreSectionResource>) => {
-    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
-    const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLParams[selectedSimulationScope].model}`;
-    router.push(`${baseExploreUrl}/${pathId}`);
-  };
+  const dataKey = resolveDataKey({ projectId, section: 'experiment', entity: MEmodel });
 
-  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'simulate' + modelType));
+  const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
 
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -196,7 +195,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
   useIntersectionObserver({
     observedRef: tableRef,
     onIntersect: setButtonsVisible,
-    rootMargin: '-300px',
+    rootMargin: '0px',
   });
 
   return (
@@ -219,7 +218,7 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
           virtualLabInfo={{ virtualLabId, projectId }}
           selectionType="radio"
           renderButton={() => null}
-          dataKey={projectId + 'simulate' + modelType}
+          dataKey={dataKey}
           showLoadingState={false}
         />
         {buttonsVisible && selectedRows.length > 0 && (
@@ -227,7 +226,15 @@ function NewSim({ projectId, virtualLabId }: { projectId: string; virtualLabId: 
             <Btn
               type="button"
               className="bg-primary-9 hover:bg-primary-7! h-12 text-white"
-              onClick={() => navigateToDetailPage(selectedRows[0])}
+              onClick={() =>
+                router.push(
+                  resolveExploreDetailsPageUrl({
+                    ctx: { virtualLabId, projectId },
+                    entityId: selectedRows[0]!.id,
+                    dataType: DataType.CircuitMEModel,
+                  })
+                )
+              }
             >
               View
             </Btn>

@@ -1,3 +1,4 @@
+import type { ISingleNeuronSimulation } from './entities/single-neuron-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type {
   IReconstructionMorphology,
@@ -22,6 +23,7 @@ export {
   ISingleNeuronSynaptome,
   IMEModel,
   IEModel,
+  ISingleNeuronSimulation,
 };
 
 export type EntityCoreDensityObjectTypes =
@@ -37,4 +39,5 @@ export type EntityCoreObjectTypes =
   | IElectricalCellRecording
   | ISingleNeuronSynaptome
   | IMEModel
-  | IEModel;
+  | IEModel
+  | ISingleNeuronSimulation;

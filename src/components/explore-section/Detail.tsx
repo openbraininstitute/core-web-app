@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from 'react';
 import Error from 'next/error';
 import { useSetAtom } from 'jotai';
 
+import { Loadable } from 'jotai/vanilla/utils/loadable';
 import DetailHeader from '@/features/details-view/overview';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
@@ -10,7 +11,6 @@ import usePathname from '@/hooks/pathname';
 import { DetailsPageSideBackLink } from '@/components/explore-section/Sidebar';
 import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
 import { detailFamily } from '@/state/explore-section/detail-view-atoms';
-import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { DeltaResource } from '@/types/explore-section/resources';
 import { useLoadableValue } from '@/hooks/hooks';
 import { COMMON_FIELDS } from '@/constants/explore-section/detail-views-fields';

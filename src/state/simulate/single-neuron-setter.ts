@@ -21,17 +21,8 @@ import { simulationExperimentalSetupAtom } from './categories/simulation-conditi
 import { currentInjectionSimulationConfigAtom } from './categories/current-injection-simulation';
 import { synaptomeSimulationConfigAtom } from './categories/synaptome-simulation-config';
 import { recordingSourceForSimulationAtom } from './categories/recording-source-for-simulation';
-import {
-  EntityCreation,
-  SingleNeuronSimulation,
-  SingleNeuronSimulationResource,
-  SynaptomeSimulation,
-} from '@/types/nexus';
-import { createJsonFileOnVlabProject, createResource, fetchResourceById } from '@/api/nexus';
-import { composeUrl, createDistribution, getIdFromSelfUrl } from '@/util/nexus';
 import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import { EModel } from '@/types/e-model';
-import { MEModel } from '@/types/me-model';
+
 import {
   SingleNeuronModelSimulationConfig,
   isBluenaasError,
@@ -40,10 +31,15 @@ import {
 import { SimulationType } from '@/types/simulation/common';
 import { isJSON } from '@/util/utils';
 import { getSession } from '@/authFetch';
-import { nexus } from '@/config';
 import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/runSimulation';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import updateArray from '@/util/updateArray';
+import { getMEModel, createSingleNeuronSimulation } from '@/api/entitycore/queries';
+import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/entities/single-neuron-simulation';
+import { IMEModel } from '@/api/entitycore/types';
+import { notification } from '@/api/notifications';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/model';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
 export const STIMULUS_PLOT_NAME = 'stimulus-plot';
@@ -55,129 +51,108 @@ const LOW_FUNDS_ERROR_MSG =
   'The project does not have enough credits to run the simulation, please add credits and try again';
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
-export const createSingleNeuronSimulationAtom = atom<
+export const createSingleNeuronSimulationAtom = atom(
   null,
-  [string, string, string, string, string, SimulationType],
-  Promise<SingleNeuronSimulationResource | null>
->(null, async (get, set, name, description, modelSelfUrl, vLabId, projectId, simulationType) => {
-  const session = await getSession();
-  if (!session) {
-    throw new Error('No valid session found');
+  async (
+    get,
+    set,
+    name: string,
+    description: string,
+    modelId: string,
+    vLabId: string,
+    projectId: string,
+    simulationType: SimulationType
+  ) => {
+    const session = await getSession();
+    if (!session) {
+      throw new Error('No valid session found');
+    }
+
+    const recordFromConfig = get(recordingSourceForSimulationAtom);
+    const experimentalSetupConfig = get(simulationExperimentalSetupAtom);
+    const currentInjectionConfig = get(currentInjectionSimulationConfigAtom);
+    const synaptomeConfig = get(synaptomeSimulationConfigAtom);
+    const simulationResult = get(genericSingleNeuronSimulationPlotDataAtom);
+    const stimulusResults = get(stimulusPreviewPlotDataAtom);
+
+    if (!simulationResult || !modelId) return null;
+
+    const recordFromUniq = uniqBy(recordFromConfig, (item) =>
+      values(pick(item, ['section', 'offset']))
+        .map(String)
+        .join()
+    );
+
+    const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
+      record_from: recordFromUniq,
+      conditions: experimentalSetupConfig,
+      current_injection: currentInjectionConfig[0],
+      synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
+    };
+
+    let meModel: IMEModel | null = null;
+
+    try {
+      meModel = await getMEModel({
+        id: modelId,
+        context: {
+          virtualLabId: vLabId,
+          projectId,
+        },
+      });
+    } catch (error) {
+      notification.error('Error fetching model');
+      return null;
+    }
+
+    try {
+      const simulation = await createSingleNeuronSimulation({
+        body: {
+          name,
+          description,
+          status: SingleNeuronSimulationStatus.success,
+          seed: experimentalSetupConfig.seed,
+          injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
+          recording_location: singleNeuronSimulationConfig.record_from.map(
+            (r) => `${r.section}_${r.offset}`
+          ),
+          brain_region_id: meModel.brain_region.id,
+          me_model_id: meModel.id,
+        },
+        context: {
+          virtualLabId: vLabId,
+          projectId,
+        },
+      });
+
+      createJsonAsset({
+        ctx: {
+          virtualLabId: vLabId,
+          projectId,
+        },
+        entityType: SingleNeuronSimulation.type,
+        entityId: simulation.id,
+        path: `single-neuron-simulation-${simulation.id}`,
+        payload: {
+          simulation: Object.keys(simulationResult).reduce((prev, curr) => {
+            return {
+              ...prev,
+              [curr]: simulationResult[curr],
+            };
+          }, {}),
+          stimulus: stimulusResults,
+          config: singleNeuronSimulationConfig,
+        },
+        label: AssetLabel.single_cell_simulation,
+      });
+
+      return simulation;
+    } catch (error) {
+      notification.error('Error creating simulation');
+      return null;
+    }
   }
-
-  const recordFromConfig = get(recordingSourceForSimulationAtom);
-  const experimentalSetupConfig = get(simulationExperimentalSetupAtom);
-  const currentInjectionConfig = get(currentInjectionSimulationConfigAtom);
-  const synaptomeConfig = get(synaptomeSimulationConfigAtom);
-  const simulationResult = get(genericSingleNeuronSimulationPlotDataAtom);
-  const stimulusResults = get(stimulusPreviewPlotDataAtom);
-
-  const singleNeuronId = getIdFromSelfUrl(modelSelfUrl);
-
-  if (!simulationResult || !singleNeuronId) return null;
-
-  const recordFromUniq = uniqBy(recordFromConfig, (item) =>
-    values(pick(item, ['section', 'offset']))
-      .map(String)
-      .join()
-  );
-
-  const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
-    recordFrom: recordFromUniq,
-    conditions: experimentalSetupConfig,
-    currentInjection: currentInjectionConfig[0],
-    synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
-  };
-
-  const resource = await fetchResourceById<EModel | MEModel>(
-    singleNeuronId,
-    session,
-    singleNeuronId.startsWith(nexus.defaultIdBaseUrl) ? {} : { org: vLabId, project: projectId }
-  );
-
-  if (
-    !resource ||
-    resource['@context'] === 'https://bluebrain.github.io/nexus/contexts/error.json'
-  ) {
-    throw new Error('Model not found');
-  }
-
-  const simulationConfigFile = await createJsonFileOnVlabProject(
-    {
-      simulation: Object.keys(simulationResult).reduce((prev, curr) => {
-        return {
-          ...prev,
-          [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
-        };
-      }, {}),
-      stimulus: convertObjectKeysToSnakeCase(stimulusResults),
-      config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
-    },
-    simulationType === 'single-neuron-simulation'
-      ? `${SIMULATION_CONFIG_FILE_NAME_BASE}-single-neuron.json`
-      : `${SIMULATION_CONFIG_FILE_NAME_BASE}-synaptome.json`,
-    session,
-    vLabId,
-    projectId
-  );
-
-  let entity: EntityCreation<SingleNeuronSimulation> | EntityCreation<SynaptomeSimulation> | null =
-    null;
-
-  const commonProperties = {
-    name,
-    description,
-    '@context': 'https://bbp.neuroshapes.org',
-    distribution: [
-      createDistribution(
-        simulationConfigFile,
-        composeUrl('file', simulationConfigFile['@id'], {
-          rev: simulationConfigFile._rev,
-          org: vLabId,
-          project: projectId,
-        })
-      ),
-    ],
-    injectionLocation: singleNeuronSimulationConfig.currentInjection.injectTo,
-    recordingLocation: singleNeuronSimulationConfig.recordFrom.map(
-      (r) => `${r.section}_${r.offset}`
-    ),
-    brainLocation: resource.brainLocation,
-    isDraft: false,
-    status: 'success',
-  };
-
-  if (simulationType === 'single-neuron-simulation') {
-    entity = {
-      ...commonProperties,
-      '@type': ['Entity', 'SingleNeuronSimulation'],
-      used: {
-        '@type': 'MEModel',
-        '@id': singleNeuronId,
-      },
-    } as EntityCreation<SingleNeuronSimulation>;
-  } else if (simulationType === 'synaptome-simulation') {
-    entity = {
-      ...commonProperties,
-      '@type': ['Entity', 'SynaptomeSimulation'],
-      used: {
-        '@id': resource['@id'],
-        '@type': resource['@type'],
-      },
-    } as EntityCreation<SynaptomeSimulation>;
-  }
-
-  const resourceUrl = composeUrl('resource', '', {
-    sync: true,
-    schema: null,
-    project: projectId,
-    org: vLabId,
-  });
-  if (entity) {
-    return createResource<SingleNeuronSimulationResource>(entity, session, resourceUrl);
-  }
-  return null;
-});
+);
 
 export const launchSimulationAtom = atom<
   null,
@@ -190,7 +165,7 @@ export const launchSimulationAtom = atom<
     set,
     vlabId: string,
     projectId: string,
-    modelSelfUrl: string,
+    modelId: string,
     simulationType: SimulationType,
     duration: number
   ) => {
@@ -242,12 +217,12 @@ export const launchSimulationAtom = atom<
       const response = await runGenericSingleNeuronSimulation({
         vlabId,
         projectId,
-        modelUrl: modelSelfUrl,
+        modelId,
         token: session.accessToken,
         config: {
-          recordFrom: recordFromUniq,
+          record_from: recordFromUniq,
           conditions: conditionsConfig,
-          currentInjection:
+          current_injection:
             currentInjectionConfig.length > 0 ? currentInjectionConfig[0] : undefined,
           synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
           type: simulationType,
@@ -317,7 +292,7 @@ export const launchSimulationAtom = atom<
       captureException(error, {
         tags: { section: 'simulation', type: 'simulationType' },
         extra: {
-          modelSelfUrl,
+          modelId,
           config: {
             recordFrom: recordFromUniq,
             conditions: conditionsConfig,

@@ -5,3 +5,4 @@ export * from '@/api/entitycore/queries/experimental/neuron-density';
 export * from '@/api/entitycore/queries/experimental/bouton-density';
 export * from '@/api/entitycore/queries/model/me-model';
 export * from '@/api/entitycore/queries/model/e-model';
+export * from '@/api/entitycore/queries/single-neuron-simulation';
