@@ -22,6 +22,7 @@ import type {
   SharedFilter,
   MtypeFilter,
   EtypeFilter,
+  IdFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export enum ValidationStatus {
@@ -62,6 +63,7 @@ export interface INestedMEModel extends IMEModelBase, Timestamps {
 
 export interface IMEModelFilter
   extends ContributionFilter,
+    IdFilter,
     MtypeFilter,
     EtypeFilter,
     SpeciesFilter,

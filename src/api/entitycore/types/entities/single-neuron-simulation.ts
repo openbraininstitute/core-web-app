@@ -46,9 +46,8 @@ export interface ISingleNeuronSimulationFilter
     Partial<MtypeFilter>,
     Partial<EtypeFilter>,
     Partial<BrainRegionFilter>,
-    Partial<SharedFilter>,
-    Partial<IMEModelFilter> {
-  me_model_id?: string;
+    Partial<SharedFilter> {
+  me_model__id?: string;
 }
 
 export const CreateSingleNeuronSimulationSchema = z.object({

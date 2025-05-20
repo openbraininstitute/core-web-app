@@ -7,8 +7,6 @@ import { Spin } from 'antd';
 import SimulationDetail from './simulation-details';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 
-import { SingleNeuronSimulation } from '@/types/nexus';
-
 import type { WorkspaceContext } from '@/types/common';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
 import { ISingleNeuronSimulation } from '@/api/entitycore/types';
@@ -29,7 +27,7 @@ export default function Simulation() {
           context: { virtualLabId, projectId },
           withFacets: false,
           filters: {
-            me_model_id: id,
+            me_model__id: id,
           },
         });
 
