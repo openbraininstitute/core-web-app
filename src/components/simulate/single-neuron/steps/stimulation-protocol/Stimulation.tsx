@@ -39,7 +39,7 @@ export default function Stimulation({ modelId, projectId, virtualLabId }: Props)
         },
       }}
     >
-      <Form.List name="currentInjection">
+      <Form.List name="current_injection">
         {(fields) => (
           <div className="flex flex-col gap-2">
             {fields.map((field) => (
