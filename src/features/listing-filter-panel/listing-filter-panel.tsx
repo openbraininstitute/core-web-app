@@ -14,6 +14,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useAtom, useSetAtom } from 'jotai';
 import { Input } from 'antd';
+import isNil from 'lodash/isNil';
 import map from 'lodash/map';
 
 import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
@@ -57,6 +58,7 @@ export type Props = {
   showDisplayTrigger?: boolean;
   resourceId?: string;
   virtualLabInfo?: WorkspaceContext;
+  useBrainRegion?: boolean;
 };
 
 function createFilterItemComponent(
@@ -177,11 +179,18 @@ export default function ListingFilterPanel({
   showDisplayTrigger = true,
   resourceId,
   virtualLabInfo,
+  useBrainRegion,
 }: Props) {
   const { node } = useBrainRegionHierarchy({ dataKey });
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(
-    filtersAtom({ dataType, dataScope, resourceId, key: dataKey, brainRegionId: node.id })
+    filtersAtom({
+      dataType,
+      dataScope,
+      resourceId,
+      key: dataKey,
+      brainRegionId: useBrainRegion ? node.id : undefined,
+    })
   );
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
   const setPrevData = useSetAtom(
@@ -190,19 +199,28 @@ export default function ListingFilterPanel({
       dataType,
       dataScope,
       key: dataKey,
-      brainRegionId: node.id,
+      brainRegionId: useBrainRegion ? node.id : undefined,
     })
   );
-  const setPageNumber = useSetAtom(pageNumberAtom(`${dataKey}/${node.id}`));
+
+  const setPageNumber = useSetAtom(
+    pageNumberAtom(`${dataKey}${useBrainRegion ? `/${node.id}` : ''}`)
+  );
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
-      () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey })),
+      () =>
+        unwrap(
+          activeColumnsAtom({
+            dataType,
+            dataScope,
+            key: useBrainRegion ? `${dataKey}/${node.id}` : dataKey,
+            brainRegionId: useBrainRegion ? node.id : undefined,
+          })
+        ),
       [dataType, dataScope, dataKey]
     )
   );
   const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
-
-  console.log('ᦨ #  listing-filter-panel.tsx:197 #  activeColumns:', activeColumns);
 
   const onToggleActive = useCallback(
     (key: string) => {
@@ -234,6 +252,7 @@ export default function ListingFilterPanel({
   const submitValues = () => {
     setPageNumber(PAGE_NUMBER);
     setPrevData([]);
+
     setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 
@@ -247,6 +266,7 @@ export default function ListingFilterPanel({
   const filterItems = useMemo(
     () =>
       filters
+        .filter((o) => o.field !== 'id')
         ?.map((filter) => {
           const item = getFieldDefinition(filter.field);
           return {
@@ -262,7 +282,7 @@ export default function ListingFilterPanel({
               : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
           };
         })
-        .filter((item) => showDisplayTrigger || item.content !== undefined), // If showDisplayTrigger is false and content is undefined that filter is not needed.
+        .filter((item) => showDisplayTrigger || !isNil(item.content)), // If showDisplayTrigger is false and content is undefined that filter is not needed.
     [
       filters,
       facets,

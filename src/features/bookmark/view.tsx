@@ -1,20 +1,23 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
+import { parseAsString, useQueryStates } from 'nuqs';
 import { ErrorBoundary } from 'react-error-boundary';
+import { usePathname } from 'next/navigation';
+import { useSetAtom } from 'jotai';
 import { match } from 'ts-pattern';
-import { Fragment } from 'react';
+import { useEffect } from 'react';
 import compact from 'lodash/compact';
-import find from 'lodash/find';
 import get from 'lodash/get';
 
 import ListingTable from '@/features/bookmark/listing-table';
 import EmptyData from '@/components/message-banners/info';
 import ErrorData from '@/components/message-banners/error';
 
+import { entityTargetIdentifiersAtom } from '@/state/explore-section/list-view-atoms';
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
 import { EntityTypeTabs, GroupTabs } from '@/features/bookmark/tabs';
-import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import { resolveDataKey } from '@/utils/key-builder';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
@@ -22,7 +25,6 @@ import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
-import { resolveDataKey } from '@/utils/key-builder';
 
 const Categories: Array<{ key: EntityCoreTypeGroup; label: string }> = [
   {
@@ -61,9 +63,26 @@ export default function BookmarksView({
   projectId,
 }: Props) {
   const pathname = usePathname();
-  const queryState = useSearchParams();
-  const category = queryState.get('c')! ?? (activeCategory as EntitySlugValue);
-  const slug = queryState.get('t')! ?? activeSlug;
+  const [{ category, slug }, updateQuery] = useQueryStates(
+    {
+      category: parseAsString
+        .withDefault(activeCategory as EntitySlugValue)
+        .withOptions({ clearOnDefault: false }),
+      slug: parseAsString.withDefault(activeSlug).withOptions({ clearOnDefault: false }),
+    },
+    {
+      urlKeys: {
+        category: 'c',
+        slug: 't',
+      },
+      shallow: false,
+      clearOnDefault: false,
+    }
+  );
+
+  const dataKey = resolveDataKey({ section: 'bookmark', projectId, suffix: `${category}/${slug}` });
+
+  const updateTargetIds = useSetAtom(entityTargetIdentifiersAtom(dataKey));
   let data = [];
 
   const entity = getEntityBySlug({ slug: slug as EntitySlugValue });
@@ -72,14 +91,27 @@ export default function BookmarksView({
   }
 
   const ids = compact<string>(data?.map((o: LibraryBookmark) => o.entity_id));
-  const dataKey = resolveDataKey({ section: 'bookmark', projectId, suffix: `${category}/${slug}` });
+
+  useEffect(() => {
+    updateTargetIds(ids);
+    if (!ids.length) {
+      updateQuery({ category, slug: tabs.at(0)?.key ?? null });
+    }
+    () => updateTargetIds([]);
+  }, [ids, category, tabs]);
 
   const tableList = match(tabs)
     .when(
       (value) => !!value.length,
       () => (
-        <Fragment key="bookmark-list">
-          <EntityTypeTabs items={tabs} activeSlug={slug} basePath={pathname} category={category} />
+        <>
+          <EntityTypeTabs
+            key={`${category}/${slug}`}
+            items={tabs}
+            activeSlug={slug}
+            basePath={pathname}
+            category={category}
+          />
           <div className="text-primary-8 h-[calc(100%-50px)] bg-white">
             <div className="border-primary-6 h-full border border-t-0 p-5">
               <ErrorBoundary
@@ -93,17 +125,16 @@ export default function BookmarksView({
                 }
               >
                 <ListingTable<EntityCoreIdentifiable>
-                  key={`${activeCategory}/${activeSlug}`}
+                  key={dataKey}
                   virtualLabId={virtualLabId}
                   projectId={projectId}
                   dataType={entity?.legacyType as DataType}
-                  targetIds={ids}
                   dataKey={dataKey}
                 />
               </ErrorBoundary>
             </div>
           </div>
-        </Fragment>
+        </>
       )
     )
     .otherwise(() => (

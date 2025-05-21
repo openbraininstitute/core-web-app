@@ -24,12 +24,12 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     summaryViewFields: [
       { field: EntityCoreFields.Description, className: 'col-span-3' },
-      { field: EntityCoreFields.CreatedBy, className: 'col-span-1' },
-      { field: EntityCoreFields.CreationDate, className: 'col-span-1' },
+      { field: EntityCoreFields.CreatedBy },
+      { field: EntityCoreFields.CreationDate },
     ],
   },
   [DataType.SingleNeuronSynaptomeSimulation]: {
-    title: 'Simulation',
+    title: 'Synaptome simulations',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.SingleNeuronSynaptomeSimulation,
     curated: false,
@@ -45,8 +45,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     summaryViewFields: [
       { field: EntityCoreFields.Description, className: 'col-span-3' },
-      { field: EntityCoreFields.CreatedBy, className: 'col-span-1' },
-      { field: EntityCoreFields.CreationDate, className: 'col-span-1' },
+      { field: EntityCoreFields.CreatedBy },
+      { field: EntityCoreFields.CreationDate },
     ],
   },
 };

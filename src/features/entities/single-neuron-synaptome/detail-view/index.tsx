@@ -4,9 +4,9 @@ import { Suspense } from 'react';
 import isNil from 'lodash/isNil';
 import Link from 'next/link';
 
-import Results from './elements/simulation-results';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import Configuration from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
+import Results from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Tabs, { useTabs } from '@/components/detail-view-tabs';
 import Summary from '@/features/details-view/summary';

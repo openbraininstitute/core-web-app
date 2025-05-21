@@ -69,6 +69,7 @@ function BrowseSimsTab() {
   });
 
   const selectedRows = useAtomValue<Array<ISingleNeuronSimulationBase>>(selectedRowsAtom(dataKey));
+
   const loadMoreDiv = useInfiniteScroll(virtualLabId, projectId, dataType!, dataKey);
   const onMenuExpand = (value: boolean) => setExpanded(value);
 
@@ -112,7 +113,7 @@ function BrowseSimsTab() {
               >
                 View
               </Link>
-              {entity && entity.isBookmarkable && (
+              {entity && virtualLabId && projectId && entity.isBookmarkable && (
                 <BookmarkButton
                   virtualLabId={virtualLabId}
                   projectId={projectId}
@@ -206,9 +207,20 @@ function NewSim() {
   );
 }
 
-function customBookmarkButton({ onClick, children }: HTMLProps<HTMLButtonElement>) {
+function customBookmarkButton({
+  loading,
+  onClick,
+  children,
+}: HTMLProps<HTMLButtonElement> & {
+  loading?: boolean;
+}) {
   return (
-    <Btn className="bg-secondary-2 h-12 px-8" onClick={onClick}>
+    <Btn
+      loading={loading}
+      disabled={loading}
+      className="bg-secondary-2 h-12 px-8"
+      onClick={onClick}
+    >
       {children}
     </Btn>
   );

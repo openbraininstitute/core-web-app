@@ -4,18 +4,17 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
 
-import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import { WorkspaceContext } from '@/types/common';
-import { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import { getSingleNeuronSynaptomeSimulations } from '@/api/entitycore/queries';
-import { tryCatch } from '@/api/utils';
-import { EntityTypeEnum, ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 
-function Error({ error }: { error: unknown }) {
-  return <SimpleErrorComponent error={error as Error} />;
-}
+import { getSingleNeuronSynaptomeSimulations } from '@/api/entitycore/queries';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { EntityTypeEnum } from '@/api/entitycore/types';
+import { tryCatch } from '@/api/utils';
+
+import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   type: EntitySlugValue;
@@ -84,7 +83,14 @@ export default function Results({ modelId }: Props) {
   return (
     <div className="flex w-full flex-col gap-2">
       {simulations.map((sim, indx) => (
-        <ErrorBoundary fallback={Error} key={sim.id}>
+        <ErrorBoundary
+          fallback={withErrorConfig({
+            cls: { container: 'bg-white' },
+            showButtons: false,
+            customError: 'Error while loading simulation ',
+          })({ error: error ? new Error('Failed to load simulation') : undefined })}
+          key={sim.id}
+        >
           <SimulationDetail<ISingleNeuronSynaptomeSimulation>
             type={EntityTypeEnum.SingleNeuronSynaptomeSimulation}
             simulation={sim}

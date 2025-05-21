@@ -96,6 +96,14 @@ export default function SimulationDetail<T extends GenericSimulation>({
   }
 
   if (!configAsset) return null;
+  if (error) {
+    return (
+      <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
+        <Spin indicator={<InfoCircleOutlined />} size="large" />
+        <h2 className="text-primary-9 font-light">Loading simulation data failed.</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="border-neutral-2 flex items-start gap-8 border p-8">

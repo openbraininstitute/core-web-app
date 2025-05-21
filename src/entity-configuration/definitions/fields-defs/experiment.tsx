@@ -102,5 +102,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Synaptome name',
     },
     style: { width: 80 },
+    isDisplayable: true,
   },
 };

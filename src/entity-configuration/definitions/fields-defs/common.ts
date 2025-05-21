@@ -119,8 +119,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Descriptions',
       singular: 'Description',
     },
-    isFilterable: false,
-    isDisplayable: false,
+    constraint: 'search',
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.Contributions]: {
     title: 'Contributors',
@@ -168,6 +169,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Users',
       singular: 'User',
     },
+    isDisplayable: true,
+    isFilterable: true,
   },
   [EntityCoreFields.UpdatedBy]: {
     title: 'Updated by',
@@ -180,5 +183,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Users',
       singular: 'User',
     },
+    isDisplayable: true,
   },
 };

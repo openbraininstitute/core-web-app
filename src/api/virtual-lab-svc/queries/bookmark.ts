@@ -10,7 +10,6 @@ import type {
 } from '@/api/virtual-lab-svc/queries/types';
 
 const baseUri = '/virtual-labs';
-
 /**
  * Bookmarks an entity to a specific project library within a virtual lab.
  *

@@ -63,7 +63,7 @@ export default function SimulationDetailPage({ payload }: Props) {
             fields={fields}
             detail={payload.source}
             commonFields={[]}
-            fieldsClassName="grid w-full auto-rows-min grid-cols-2 gap-x-8 gap-y-6"
+            fieldsClassName="grid w-full auto-rows-min grid-cols-3 gap-x-8 gap-y-6"
             onDownload={() => {
               const jsonString = JSON.stringify(payload.config);
               const blob = new Blob([jsonString], { type: 'application/json' });

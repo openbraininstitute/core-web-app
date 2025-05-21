@@ -11,6 +11,7 @@ export const SIMULATIONS_DATATYPES = [
 
 export enum SimulationTypeNames {
   SINGLE_NEURON_SIMULATION = 'single-neuron-simulation',
+  SYNAPTOME_SIMULATION = 'synaptome-simulation',
 }
 
 export type TModelTypeNames = `${SimulationTypeNames}`;
