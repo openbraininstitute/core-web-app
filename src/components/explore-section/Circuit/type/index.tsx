@@ -142,3 +142,9 @@ export type FileTypeHeaderProps = {
 export interface FilteredCircuit extends CircuitSchemaProps {
   isNonMatchingParent?: boolean;
 }
+
+export type CollaboratingInstitution = {
+  name: string;
+  url: string;
+  location: string;
+};

@@ -268,7 +268,7 @@ export default function CircuitTable({
         <>
           <div
             className={classNames(
-              'out-expo fixed bottom-3 z-[999999] h-screen w-[44vw] overflow-y-scroll bg-primary-9 p-8 transition-right duration-500',
+              'out-expo fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll bg-primary-9 p-8 transition-right duration-500',
               downloadModalOpen ? 'right-0' : '-right-full'
             )}
           >
@@ -281,7 +281,7 @@ export default function CircuitTable({
           </div>
           <div
             className={classNames(
-              'fixed left-0 top-0 z-[999998] h-screen w-screen bg-black transition-opacity duration-500 ease-out-back',
+              'fixed left-0 top-0 z-80 h-screen w-screen bg-black transition-opacity duration-500 ease-out-back',
               downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
             )}
           />
