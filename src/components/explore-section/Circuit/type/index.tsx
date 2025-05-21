@@ -154,3 +154,9 @@ export type ContributorsProps = {
   name: string;
   lastName: string;
 };
+
+export type CollaboratingInstitution = {
+  name: string;
+  url: string;
+  location: string;
+};
