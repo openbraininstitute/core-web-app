@@ -5,24 +5,20 @@ import { Spin } from 'antd';
 import { usePathname } from 'next/navigation';
 import { saveAs } from 'file-saver';
 
-import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 import ModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
-
-import { useSimulation } from '@/hooks/useSimulation';
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import { DeltaResource } from '@/types/explore-section/resources';
-import { SingleNeuronSimulation, SynaptomeSimulation } from '@/types/nexus';
-import { MEModelResource } from '@/types/me-model';
-import { EModel, NeuronMorphology } from '@/types/e-model';
-
-import { DataType } from '@/constants/explore-section/list-views';
-import Link from '@/components/Link';
-import Overview from '@/features/details-view/overview';
-import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import ExperimentSetup from '@/components/simulate/SimulationDetails/ExperimentSetup';
-import { SimulationType } from '@/types/simulation/common';
+import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
+import Overview from '@/features/details-view/overview';
+import Link from '@/components/Link';
+
+import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+import { DataType } from '@/constants/explore-section/list-views';
+import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
+import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
+import { useSimulation } from '@/hooks/useSimulation';
+
 import type { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
+import type { SimulationType } from '@/types/simulation/common';
 
 type Props = {
   payload: {
@@ -37,13 +33,6 @@ type Props = {
   };
   simulationType: SimulationType;
 };
-
-export type SimulationWithLinkedData = DeltaResource &
-  (SynaptomeSimulation | SingleNeuronSimulation) & {
-    linkedMeModel?: MEModelResource;
-    linkedMModel?: NeuronMorphology;
-    linkedEModel?: EModel;
-  };
 
 export default function SimulationDetailPage({ params, simulationType, payload }: Props) {
   const id = usePathname().split('/').pop() as string;

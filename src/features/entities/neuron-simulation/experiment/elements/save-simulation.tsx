@@ -1,8 +1,8 @@
 import { App, Button, Form, FormProps, Input } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
 import { useSetAtom } from 'jotai';
-import { useState, useTransition } from 'react';
 import isNil from 'lodash/isNil';
 
 import GenericButton from '@/components/Global/GenericButton';

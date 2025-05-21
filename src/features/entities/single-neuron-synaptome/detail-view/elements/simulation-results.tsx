@@ -1,24 +1,15 @@
-import { useEffect, useState } from 'react';
-import { ErrorBoundary } from '@sentry/nextjs';
 import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
-
+import { ErrorBoundary } from '@sentry/nextjs';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { isNil } from 'lodash';
-import { getSimulationsPerModelQuery } from '@/queries/es';
-import { SynaptomeSimulation } from '@/types/nexus';
-import { getSession } from '@/authFetch';
-import { queryES } from '@/api/nexus';
+import { Spin } from 'antd';
 
 import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { WorkspaceContext } from '@/types/common';
 import { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import {
-  getSingleNeuronSimulations,
-  getSingleNeuronSynaptomeSimulations,
-} from '@/api/entitycore/queries';
+import { getSingleNeuronSynaptomeSimulations } from '@/api/entitycore/queries';
 import { tryCatch } from '@/api/utils';
 import { EntityTypeEnum, ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
 

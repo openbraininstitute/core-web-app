@@ -28,6 +28,7 @@ import { ensureArray } from '@/utils/array';
 
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
+
 import Styles from '@/styles/vlabs.module.css';
 
 export default function Page() {

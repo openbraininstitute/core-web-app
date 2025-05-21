@@ -112,7 +112,7 @@ export default function Recording() {
 
   return (
     <div className="flex w-full flex-col items-start">
-      <Form.List name="recordFrom">
+      <Form.List name="record_from">
         {(fields) =>
           fields.map((f, index) => (
             <RecordItem

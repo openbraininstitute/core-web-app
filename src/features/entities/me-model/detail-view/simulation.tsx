@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
 
 import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
@@ -13,10 +13,6 @@ import { tryCatch } from '@/api/utils';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-
-function Error({ error }: { error: unknown }) {
-  return <SimpleErrorComponent error={error as Error} />;
-}
 
 type Props = {
   type: EntitySlugValue;
@@ -85,7 +81,16 @@ export default function Results({ modelId }: Props) {
   return (
     <div className="flex w-full flex-col gap-2">
       {simulations.map((sim, indx) => (
-        <ErrorBoundary fallback={Error} key={sim.id}>
+        <ErrorBoundary
+          fallback={({ error }) =>
+            withErrorConfig({
+              cls: { container: 'bg-white' },
+              showButtons: false,
+              customError: 'Error while loading simulation ',
+            })({ error: error as (Error & { cause?: unknown }) | undefined })
+          }
+          key={sim.id}
+        >
           <SimulationDetail<ISingleNeuronSimulation>
             index={indx}
             type={EntityTypeEnum.SingleNeuronSimulation}

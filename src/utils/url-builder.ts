@@ -1,3 +1,4 @@
+import { head } from 'lodash';
 import { getEntityByCoreType, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 

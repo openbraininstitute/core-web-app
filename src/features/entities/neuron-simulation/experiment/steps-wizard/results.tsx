@@ -20,6 +20,7 @@ export default function Results() {
   const [recordingPlotData, setRecordingPlotData] = useAtom(
     genericSingleNeuronSimulationPlotDataAtom
   );
+
   const simulationStatus = useAtomValue(simulationStatusAtom);
 
   useEffect(() => {

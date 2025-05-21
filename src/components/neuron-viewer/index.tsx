@@ -64,7 +64,7 @@ export default function NeuronViewer({
       const sectionNames = Object.keys(morphology);
       setSecNames(sectionNames);
 
-      if (!sectionNames.includes(DEFAULT_CURRENT_INJECTION_CONFIG.injectTo)) {
+      if (!sectionNames.includes(DEFAULT_CURRENT_INJECTION_CONFIG.inject_to)) {
         throw new Error('No soma section present');
       }
     },
@@ -128,7 +128,7 @@ export default function NeuronViewer({
   if (useLabels) {
     rendererRef.current?.labels.update([
       {
-        section: injectionLocations[stimulationId].injectTo,
+        section: injectionLocations[stimulationId].inject_to,
         offset: 0.5,
       },
       ...recordLocations,

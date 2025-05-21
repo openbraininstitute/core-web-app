@@ -1,9 +1,9 @@
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
-import type { EntityCoreObjectTypes, EntityTypeValue } from '@/api/entitycore/types';
+import type { EntityTypeValue } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
@@ -31,7 +31,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   };
   asset: {
     extension?: string;
-    configfile?: string;
+    configfile?: AssetLabel;
   };
   viewDefinition?: ViewDefinitionConfig | null;
   isBookmarkable: boolean;

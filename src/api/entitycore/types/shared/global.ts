@@ -142,6 +142,10 @@ enum AssetStatus {
   DELETED = 'deleted',
 }
 
+export enum AssetLabel {
+  single_cell_simulation = 'single_cell_simulation_data',
+}
+
 type AssetBase = {
   path: string;
   label: string;
@@ -151,6 +155,7 @@ type AssetBase = {
   content_type: string;
   size: number;
   sha256_digest?: string | null;
+  label: AssetLabel;
 };
 
 export interface IAsset extends AssetBase, AssetLegacyMeta {

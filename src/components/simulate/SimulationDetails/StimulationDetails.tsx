@@ -36,7 +36,7 @@ function Field({
 }
 
 export default function StimulationDetails({ currentInjection, stimulusData }: Props) {
-  const protocol = currentInjection.stimulus.stimulusProtocol ?? DEFAULT_PROTOCOL;
+  const protocol = currentInjection.stimulus.stimulus_protocol ?? DEFAULT_PROTOCOL;
   return (
     <div className="flex flex-wrap">
       <div className="w-[500px] border border-neutral-200 p-4">
@@ -51,10 +51,10 @@ export default function StimulationDetails({ currentInjection, stimulusData }: P
               className="mr-4 inline-block h-[11px] w-[11px] border"
               style={{ backgroundColor: SIMULATION_COLORS[0] }}
             />
-            <span className="mr-2 font-bold">{currentInjection.injectTo}</span>
+            <span className="mr-2 font-bold">{currentInjection.inject_to}</span>
           </div>
 
-          <Field label="Stimulation Mode" value={currentInjection.stimulus.stimulusType} />
+          <Field label="Stimulation Mode" value={currentInjection.stimulus.stimulus_type} />
           <Field label="Protocol" value={PROTOCOL_DETAILS[protocol].label} />
           <div className="ml-4 flex">
             <Field
@@ -69,7 +69,7 @@ export default function StimulationDetails({ currentInjection, stimulusData }: P
             />
             <Field
               label="Stop Time"
-              value={`${PROTOCOL_DETAILS[protocol].defaults.time.stopTime}`}
+              value={`${PROTOCOL_DETAILS[protocol].defaults.time.stop_time}`}
               unit="ms"
             />
           </div>

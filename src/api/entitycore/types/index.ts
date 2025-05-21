@@ -47,4 +47,5 @@ export type EntityCoreObjectTypes =
   | ISingleNeuronSimulation
   | ISingleNeuronSynaptome
   | IMEModel
-  | IEModel;
+  | IEModel
+  | ISingleNeuronSimulation;

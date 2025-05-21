@@ -23,7 +23,7 @@ export default function useMorphology({
   const readMorphology = useCallback(async (): Promise<Morphology | null> => {
     const response = await getMorphology({
       ctx: { virtualLabId, projectId },
-      model_id: modelId,
+      meModelId: modelId,
     });
 
     const reader = response.body?.getReader();

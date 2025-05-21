@@ -41,7 +41,7 @@ export default function Stimulation({ modelId, projectId, virtualLabId }: Props)
         },
       }}
     >
-      <Form.List name="currentInjection">
+      <Form.List name="current_injection">
         {(fields) => (
           <div className="flex flex-col gap-2">
             {fields.map((field) => (
@@ -80,8 +80,8 @@ export default function Stimulation({ modelId, projectId, virtualLabId }: Props)
                         <StimulationProtocol stimulationId={field.name} />
                         <Parameters
                           protocol={
-                            state[field.name].stimulus.stimulusProtocol ??
-                            DEFAULT_STIMULUS_CONFIG.stimulusProtocol!
+                            state[field.name].stimulus.stimulus_protocol ??
+                            DEFAULT_STIMULUS_CONFIG.stimulus_protocol!
                           }
                         />
                         <AmperageRange
@@ -89,8 +89,8 @@ export default function Stimulation({ modelId, projectId, virtualLabId }: Props)
                           amplitudes={state[field.name].stimulus.amplitudes}
                           modelId={modelId}
                           protocol={
-                            state[field.name].stimulus.stimulusProtocol ??
-                            DEFAULT_STIMULUS_CONFIG.stimulusProtocol!
+                            state[field.name].stimulus.stimulus_protocol ??
+                            DEFAULT_STIMULUS_CONFIG.stimulus_protocol!
                           }
                           projectId={projectId}
                           virtualLabId={virtualLabId}
@@ -122,11 +122,11 @@ function StimulusLocation({ stimulationId }: FormItemProps) {
     >
       <Select
         placeholder="Select stimulus location"
-        value={state[stimulationId].injectTo}
+        value={state[stimulationId].inject_to}
         onChange={(newValue) =>
           setProperty({
             id: stimulationId,
-            key: 'injectTo',
+            key: 'inject_to',
             newValue,
           })
         }
@@ -186,7 +186,7 @@ function StimulationProtocol({ stimulationId }: FormItemProps) {
             {
               get(
                 PROTOCOL_DETAILS,
-                currentInjectionConfig[stimulationId].stimulus.stimulusProtocol!,
+                currentInjectionConfig[stimulationId].stimulus.stimulus_protocol!,
                 null
               )?.label
             }
@@ -275,7 +275,7 @@ function Parameters({ protocol }: { protocol: StimulusModule }) {
           <span className="text-gray-400 uppercase">Stop Time</span>
           <div className="text-gray-400">
             <div className="text-primary-8 inline-block min-w-[80px] border border-gray-200 py-2 pr-2 text-right font-bold">
-              {protocolDescription.defaults.time.stopTime}
+              {protocolDescription.defaults.time.stop_time}
             </div>{' '}
             [ms]
           </div>

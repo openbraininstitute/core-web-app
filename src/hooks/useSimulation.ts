@@ -47,16 +47,21 @@ export function useSimulation({
         const meModelData = await getMEModel({ id: simulationData.me_model.id, context });
         setMeModel(meModelData);
 
-        if (!simulationData.assets.length) throw new Error('Simulation config not found');
+        const asset = simulationData.assets.find(
+          (a) => a.label === SingleNeuronSimulation.asset.configfile
+        );
+
+        if (!asset) throw new Error('Simulation config not found');
 
         const file = await downloadAsset<Buffer>({
           ctx: { virtualLabId, projectId },
           entityType: SingleNeuronSimulation.type,
           entityId: simulationData.id,
-          id: simulationData.assets[0].id,
+          id: asset.id,
         });
 
         const json = JSON.parse(new TextDecoder('utf-8').decode(file));
+
         setSimulationConfig(json);
       } catch (error) {
         notifyError('Error while loading the resource details', undefined, 'topRight');

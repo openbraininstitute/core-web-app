@@ -5,7 +5,7 @@ import authApiClient from '@/api/apiClient';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
-import type { EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
+import type { AssetLabel, EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -123,6 +123,7 @@ export async function createJsonAsset({
   payload: Record<string, any>;
   label: string | null | undefined;
   meta?: Record<string, any>;
+  label?: AssetLabel;
 }): Promise<IAsset> {
   const stringified = JSON.stringify(payload);
   const jsonBlob = new Blob([stringified], { type: 'application/json' });
@@ -132,6 +133,7 @@ export async function createJsonAsset({
   if (jsonFile) formData.append('file', jsonFile);
   if (label) formData.append('label', label);
   if (meta) formData.append('meta', JSON.stringify(meta));
+  if (label) formData.append('label', label);
 
   const api = await authApiClient(entityCoreUrl);
   return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {

@@ -5,16 +5,16 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Params = {
   ctx: WorkspaceContext;
-  model_id: string;
+  meModelId: string;
   signal?: AbortSignal;
 };
 
-export default async function getMorphology({ ctx, model_id, signal }: Params) {
+export default async function getMorphology({ ctx, meModelId, signal }: Params) {
   const api = await bluenaasApi();
   return await api.get<Response>(
     '/entitycore/morphology',
     {
-      queryParams: { model_id },
+      queryParams: { model_id: meModelId },
       headers: {
         ...getEntityCoreContext(ctx).headers,
         accept: 'application/x-ndjson',

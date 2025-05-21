@@ -48,9 +48,6 @@ export default function SimulationDetail<T extends GenericSimulation>({
   const [loadingConfig, setLoadingConfig] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  console.log('–– – simulation-details.tsx:50 – loadingConfig:', loadingConfig);
-  console.log('–– – simulation-details.tsx:50 – error:', error);
-
   useEffect(() => {
     async function getConfigurationAsset() {
       setLoadingConfig(true);
