@@ -2,6 +2,7 @@ import { getSingleNeuronSynaptomeSimulationIOResult } from '@/api/entitycore/que
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { DataType } from '@/constants/explore-section/list-views';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import {
@@ -71,7 +72,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
     },
     asset: {
       extension: 'application/json',
-      configfile: 'single_neuron_synaptome_simulation_io_result',
+      configfile: AssetLabel.single_neuron_synaptome_simulation_io_result,
     },
     isBookmarkable: true,
   } as const;

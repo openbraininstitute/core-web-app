@@ -114,7 +114,7 @@ function StimulusLocation({ stimulationId }: FormItemProps) {
   const state = useAtomValue(currentInjectionSimulationConfigAtom);
   return (
     <Form.Item
-      name={[stimulationId, 'injectTo']}
+      name={[stimulationId, 'inject_to']}
       label={<span className="ml-2 text-gray-400 uppercase">Location</span>}
       rules={[{ required: true }]}
       labelAlign="left"
@@ -152,7 +152,7 @@ function StimulationMode({ stimulationId }: FormItemProps) {
   const { setMode } = useCurrentInjectionSimulationConfig();
   return (
     <Form.Item
-      name={[stimulationId, 'stimulus', 'stimulusType']}
+      name={[stimulationId, 'stimulus', 'stimulus_type']}
       label={<span className="ml-2 text-gray-400 uppercase">Stimulation Mode</span>}
       rules={[{ required: true }]}
       labelAlign="left"
@@ -193,7 +193,7 @@ function StimulationProtocol({ stimulationId }: FormItemProps) {
           </span>
         </div>
         <Form.Item
-          name={[stimulationId, 'stimulus', 'stimulusProtocol']}
+          name={[stimulationId, 'stimulus', 'stimulus_protocol']}
           label={null}
           rules={[{ required: true }]}
           labelAlign="left"

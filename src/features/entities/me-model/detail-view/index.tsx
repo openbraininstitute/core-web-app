@@ -13,15 +13,16 @@ import Tabs, { useTabs } from '@/components/detail-view-tabs';
 import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 
-import { CommonSummaryViewFields } from '@/entity-configuration/definitions/view-defs';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { initializeSummaryAtom } from '@/state/virtual-lab/build/me-model-setter';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
-
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import { WorkspaceContext } from '@/types/common';
-import { EntityTypeEnum } from '@/api/entitycore/types';
 import { resolveExperimentUrl } from '@/utils/url-builder';
+import { EntityTypeEnum } from '@/api/entitycore/types';
+
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { WorkspaceContext } from '@/types/common';
 
 type Params = WorkspaceContext & {
   id: string;
@@ -41,6 +42,12 @@ const TabsConfig: Array<{ key: TabsKeys; title: string }> = [
   { key: 'analysis', title: 'Analysis' },
   { key: 'simulation', title: 'Simulation' },
 ];
+
+export const CommonSummaryViewFields = [
+  { field: EntityCoreFields.Description, className: 'col-span-3' },
+  { field: EntityCoreFields.CreatedBy },
+  { field: EntityCoreFields.CreationDate },
+] as TypeSummaryProps[];
 
 export default function SummaryView({ showViewMode = false, payload: { source } }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();

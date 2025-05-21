@@ -14,12 +14,8 @@ import { CloseOutlined } from '@ant-design/icons';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useAtom, useSetAtom } from 'jotai';
 import { Input } from 'antd';
-
-import orderBy from 'lodash/orderBy';
 import map from 'lodash/map';
-import get from 'lodash/get';
 
-import { defaultList } from './checklist/default-checklist';
 import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 import ClearFilters from '@/features/listing-filter-panel/clear-filters';
 import DateRange from '@/features/listing-filter-panel/date-range';
@@ -34,8 +30,9 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
 import { getFieldDefinition, getFieldsDefinition } from '@/entity-configuration/definitions';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { Facets } from '@/api/entitycore/types/shared/response';
@@ -44,7 +41,6 @@ import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-import { getSectionFromDataKey } from '@/utils/key-builder';
 
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 import type { WorkspaceContext } from '@/types/common';

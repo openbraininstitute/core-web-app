@@ -30,11 +30,11 @@ import type { Prettify } from '@/utils/type';
 
 export interface ISingleNeuronSynaptomeSimulation
   extends ISingleNeuronSimulationBase,
-    IBrainRegionHierarchy,
     EntityAuthorization,
     Timestamps,
     EntityCoreType,
     EntityCoreBaseAsset {
+  brain_region: IBrainRegionHierarchy;
   synaptome: Prettify<SingleNeuronSynaptomeBase & EntityCoreIdentifiable & Timestamps>;
 }
 

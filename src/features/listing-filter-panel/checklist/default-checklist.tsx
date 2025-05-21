@@ -28,7 +28,7 @@ export const defaultList = ({
   <>
     {options && options.length > defaultRenderLength && search()}
     <ul className="flex flex-col space-y-3 divide-y divide-white/20">
-      {options?.slice(0, renderLength)?.map(({ checked, value, id, label, type, count }) => (
+      {options?.slice(0, renderLength)?.map(({ checked, id, label, type, count }) => (
         <CheckListOption
           key={id}
           id={id}

@@ -121,7 +121,6 @@ export async function createJsonAsset({
   entityId: string;
   path: string;
   payload: Record<string, any>;
-  label: string | null | undefined;
   meta?: Record<string, any>;
   label?: AssetLabel;
 }): Promise<IAsset> {

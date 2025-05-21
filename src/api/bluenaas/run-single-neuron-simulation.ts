@@ -48,15 +48,4 @@ export const runGenericSingleNeuronSimulation = async ({
     },
     { asRawResponse: true }
   );
-  // return await fetch({
-  //   method: 'post',
-  //   headers: {
-  //     accept: 'application/octet-stream',
-  //     authorization: `bearer ${token}`,
-  //     'Content-Type': 'application/json',
-  //     'virtual-lab-id': vlabId,
-  //     'project-id': projectId,
-  //   },
-  //   body: JSON.stringify(formattedConfig),
-  // });
 };

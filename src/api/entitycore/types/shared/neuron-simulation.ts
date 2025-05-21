@@ -11,8 +11,8 @@ export interface ISingleNeuronSimulationBase extends EntityCoreIdentifiable {
   description: string;
   seed: number;
   status: SingleNeuronSimulationStatus;
-  injectionLocation: string[];
-  recordingLocation: string[];
+  injection_location: Array<string>;
+  recording_location: Array<string>;
 }
 
 export type SimulationStatusFilter = {

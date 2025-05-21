@@ -1,5 +1,7 @@
 import z from 'zod';
-import { INestedMEModel } from '@/api/entitycore/types/entities/me-model';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { INestedMEModel } from '@/api/entitycore/types/entities/me-model';
 
 import {
   SingleNeuronSimulationStatus,
@@ -27,6 +29,7 @@ export interface ISingleNeuronSimulation
     Timestamps,
     EntityAuthorization,
     EntityCoreType {
+  brain_region: IBrainRegionHierarchy;
   me_model: INestedMEModel;
 }
 

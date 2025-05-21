@@ -95,7 +95,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
   [EntityCoreFields.MEModelValidationStatus]: {
-    className: 'text-center',
+    className: 'text-left',
     title: 'Validated',
     filter: null,
     render: (r) => {
@@ -112,7 +112,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
   [EntityCoreFields.SynaptomeUsedMEModelName]: {
-    className: 'text-center',
+    className: 'text-left',
     title: 'ME-model',
     filter: null,
     isFilterable: false,

@@ -1,4 +1,3 @@
-import { head } from 'lodash';
 import { getEntityByCoreType, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 
@@ -34,7 +33,7 @@ export function resolveExploreDetailsPageUrl({
     if (usedSlug) {
       return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}`;
     }
-    return (baseUrl = `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`);
+    return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`;
   }
   if (!dataType && !entityId) {
     baseUrl = `${baseUri}/explore/interactive`;

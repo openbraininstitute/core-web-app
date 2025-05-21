@@ -184,7 +184,7 @@ export default function SynaptomeConfigurationForm({
             entityId: data?.id,
             entityType: SingleNeuronSynaptome.type,
             path: `${SingleNeuronSynaptome.asset.configfile}_${data?.id}`,
-            label: SingleNeuronSynaptome.asset.configfile ?? null,
+            label: SingleNeuronSynaptome.asset.configfile,
             payload: { synapses: values.synapses },
           })
         );

@@ -36,21 +36,21 @@ type ErrorField = {
 };
 
 function checkStepError(errorFields: Array<ErrorField>): Array<SimulationStepTitle> {
-  const conditions = ['celsius', 'vinit', 'hypamp'];
-  const recoding = ['recordFrom'];
-  const stimulation = ['injectTo', 'stimulusType', 'stimulusProtocol', 'paramValues'];
-  const synapticInputs = ['id', 'delay', 'duration', 'frequency', 'weightScalar'];
+  const conditions = ['celsius', 'vinit', 'hypamp', 'seed', 'time_step', 'max_time'];
+  const recoding = ['record_from'];
+  const stimulation = ['inject_to', 'stimulus_type', 'stimulus_protocol', 'param_values'];
+  const synapticInputs = ['id', 'delay', 'duration', 'frequency', 'weight_scalar'];
   const stepsHasErrors: Array<SimulationStepTitle> = [];
   errorFields.forEach((elt) => {
     const hasErrors = elt.errors.length > 0;
     const experimentalSetupErrors = elt.name.some((v) => conditions.includes(v));
     const recordingErrors = elt.name.some((v) => recoding.includes(v));
-    const stimulationProtocolErros = elt.name.some((v) => stimulation.includes(v));
-    const synapticInputsErros = elt.name.some((v) => synapticInputs.includes(v));
+    const stimulationProtocolErrors = elt.name.some((v) => stimulation.includes(v));
+    const synapticInputsErrors = elt.name.some((v) => synapticInputs.includes(v));
     if (hasErrors) {
       if (experimentalSetupErrors) stepsHasErrors.push('Experimental setup');
-      if (synapticInputsErros) stepsHasErrors.push('Synaptic inputs');
-      if (stimulationProtocolErros) stepsHasErrors.push('Stimulation protocol');
+      if (synapticInputsErrors) stepsHasErrors.push('Synaptic inputs');
+      if (stimulationProtocolErrors) stepsHasErrors.push('Stimulation protocol');
       if (recordingErrors) stepsHasErrors.push('Recording');
     }
   });

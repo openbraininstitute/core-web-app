@@ -20,8 +20,8 @@ export const CommonSummaryViewFields = [
 
 export const ViewsDefinitionRegistry = {
   ...ExperimentalViewDefinition,
-  ...ExperimentViewDefinition,
   ...ModelViewDefinition,
+  ...ExperimentViewDefinition,
 } as const;
 
 export function getViewDefinitionByLegacyType(legacyType: DataType) {

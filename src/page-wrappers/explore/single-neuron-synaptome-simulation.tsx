@@ -58,7 +58,7 @@ export default function SimulationDetailPage({ payload }: Props) {
           <ArrowRightOutlined className="mt-1.5 mb-4 rotate-180" />
           <div style={{ writingMode: 'vertical-rl', rotate: '180deg' }}>Back to list</div>
         </Link>
-        <div className="flex h-full w-full flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12">
+        <div className="secondary-scrollbar flex h-full w-full flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12">
           <Overview
             fields={fields}
             detail={payload.source}

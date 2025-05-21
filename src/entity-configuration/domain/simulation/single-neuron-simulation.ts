@@ -1,5 +1,6 @@
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
   getSingleNeuronSimulationIOResult,
@@ -56,6 +57,6 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
   },
   asset: {
     extension: 'application/json',
-    configfile: 'single_cell_simulation_data',
+    configfile: AssetLabel.single_cell_simulation,
   },
 } as const;

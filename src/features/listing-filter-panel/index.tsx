@@ -51,7 +51,7 @@ export default function WithListingFilterPanel({
             brainRegionId: useBrainRegion ? node.id : undefined,
           })
         ),
-      [dataType, dataScope, dataKey]
+      [dataType, dataScope, dataKey, node.id]
     )
   );
 
@@ -71,7 +71,7 @@ export default function WithListingFilterPanel({
   const [filters, setFilters] = useAtom(
     useMemo(
       () => unwrap(filtersAtom({ dataType, dataScope, key: dataKey, brainRegionId: node.id })),
-      [dataType, dataScope, dataKey]
+      [dataType, dataScope, dataKey, node.id]
     )
   );
 

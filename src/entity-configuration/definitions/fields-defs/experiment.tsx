@@ -1,4 +1,4 @@
-import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -7,6 +7,8 @@ import {
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type {
   EntityCoreObjectTypes,
+  EntityCoreSimulationObjectTypes,
+  ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 
@@ -29,7 +31,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Injection location',
     filter: null,
     render: (r) =>
-      renderEmptyOrValue('injectionLocation' in r ? r.injectionLocation.join(', ') : undefined),
+      renderEmptyOrValue(renderArray((r as EntityCoreSimulationObjectTypes).injection_location)),
     vocabulary: {
       plural: 'Injection locations',
       singular: 'Injection location',
@@ -43,7 +45,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Recording location',
     filter: null,
     render: (r) =>
-      renderEmptyOrValue('recordingLocation' in r ? r.recordingLocation.join(', ') : undefined),
+      renderEmptyOrValue(renderArray((r as EntityCoreSimulationObjectTypes).recording_location)),
     vocabulary: {
       plural: 'Recording locations',
       singular: 'Recording location',
@@ -91,7 +93,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isFilterable: false,
   },
-  [EntityCoreFields.SimulationSynaptomeModel]: {
+  [EntityCoreFields.SynaptomeModelName]: {
     title: 'Synaptome name',
     filter: null,
     render: (r) => renderEmptyOrValue((r as ISingleNeuronSynaptomeSimulation).synaptome.name),
