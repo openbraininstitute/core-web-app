@@ -38,10 +38,6 @@ export default async function Page(props: Props) {
   const { data: result, error } = await tryCatch(
     getAllBookmarksByCategory({ virtualLabId, projectId }, {})
   );
-  const { list } = groupBookmarksByCategory(result?.data);
-
-  const { activeCategory, tabs, availableTypeKeysPerCategory } = getAvailableTabs(category, list);
-  const activeSlug = tabs.at(0)?.key!;
 
   if (error) {
     return (
@@ -51,6 +47,11 @@ export default async function Page(props: Props) {
       />
     );
   }
+
+  const { list } = groupBookmarksByCategory(result?.data);
+
+  const { activeCategory, tabs, availableTypeKeysPerCategory } = getAvailableTabs(category, list);
+  const activeSlug = tabs.at(0)?.key!;
 
   return (
     <BookmarksView
