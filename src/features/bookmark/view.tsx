@@ -63,7 +63,7 @@ export default function BookmarksView({
   projectId,
 }: Props) {
   const pathname = usePathname();
-  const [{ category, slug }, updateQuery] = useQueryStates(
+  const [{ category, slug }] = useQueryStates(
     {
       category: parseAsString
         .withDefault(activeCategory as EntitySlugValue)
@@ -93,12 +93,15 @@ export default function BookmarksView({
   const ids = compact<string>(data?.map((o: LibraryBookmark) => o.entity_id));
 
   useEffect(() => {
-    updateTargetIds(ids);
-    if (!ids.length) {
-      updateQuery({ category, slug: tabs.at(0)?.key ?? null });
+    // if (!ids.length && slug !== tabs.at(0)?.key) {
+    //   updateQuery({ category, slug: tabs.at(0)?.key ?? null });
+    // } else {
+    // }
+    if (!!ids.length) {
+      updateTargetIds(ids);
     }
     () => updateTargetIds([]);
-  }, [ids, category, tabs]);
+  }, [ids]);
 
   const tableList = match(tabs)
     .when(
