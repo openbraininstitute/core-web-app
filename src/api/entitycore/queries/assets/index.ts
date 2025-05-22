@@ -130,6 +130,7 @@ export async function createJsonAsset({
   const formData = new FormData();
 
   if (jsonFile) formData.append('file', jsonFile);
+  if (label) formData.append('label', label);
   if (meta) formData.append('meta', JSON.stringify(meta));
   if (label) formData.append('label', label);
 

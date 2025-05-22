@@ -22,6 +22,7 @@ export const VerticalIndentationLine = memo(
     />
   )
 );
+VerticalIndentationLine.displayName = 'VerticalIndentationLine';
 
 export const HorizontalIndentationLine = memo(
   ({
@@ -45,3 +46,5 @@ export const HorizontalIndentationLine = memo(
     />
   )
 );
+
+HorizontalIndentationLine.displayName = 'HorizontalIndentationLine';

@@ -23,7 +23,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
       one?: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (query: any) => Promise<T>;
     };
-    expand?: Record<string, (source: T, ctx?: WorkspaceContext) => Promise<any>>;
+    expand?: Record<string, (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>>;
   };
   explore: {
     basePrefix?: string;

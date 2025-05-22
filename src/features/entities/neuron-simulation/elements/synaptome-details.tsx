@@ -1,0 +1,75 @@
+import Link from 'next/link';
+
+import PreviewThumbnail from '@/features/thumbnail/preview';
+
+import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { Field } from '@/features/entities/neuron-simulation/elements/field';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { DataType } from '@/constants/explore-section/list-views';
+
+import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
+
+type Props = {
+  virtualLabId: string;
+  projectId: string;
+  meModel: IMEModel;
+  synaptome: ISingleNeuronSynaptome;
+};
+
+export default function ModelDetails({ virtualLabId, projectId, meModel, synaptome }: Props) {
+  return (
+    <div>
+      <h1 className="text-primary-8 mb-3 text-3xl font-bold">Model</h1>
+      <div className="relative flex max-h-fit items-start gap-4 rounded-sm border border-neutral-200 px-8 py-6">
+        <Link
+          href={resolveExploreDetailsPageUrl({
+            ctx: { virtualLabId, projectId },
+            dataType: DataType.SingleNeuronSynaptome,
+            entityId: synaptome.id,
+          })}
+          className="text-primary-8 hover:text-primary-7 absolute top-6 right-8 flex items-center justify-center font-bold"
+        >
+          View details
+        </Link>
+        <div className="flex flex-col">
+          <span className="text-neutral-4 mb-2 text-base uppercase">Synaptome</span>
+          <div className="flex items-start gap-2">
+            <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+              <PreviewThumbnail resource={meModel.morphology} size={{ height: 300, width: 400 }} />
+            </div>
+
+            <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+              <PreviewThumbnail resource={meModel.emodel} size={{ height: 300, width: 400 }} />
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 flex flex-col gap-3">
+          <div className="pl-12">
+            <Field
+              label="Name"
+              value={synaptome.name}
+              className="text-primary-8 my-1 text-3xl font-bold"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pl-12">
+            <Field label="ME-Model" value={meModel.name} />
+            {meModel.mtypes && meModel.mtypes.length > 0 && (
+              <Field
+                label="M-Types"
+                value={renderEmptyOrValue(renderArray(meModel.mtypes.map((m) => m.pref_label)))}
+              />
+            )}
+            <Field label="Brain Region" value={meModel.brain_region.name} />
+            {meModel.etypes && meModel.etypes.length > 0 && (
+              <Field
+                label="E-Types"
+                value={renderEmptyOrValue(renderArray(meModel.etypes.map((m) => m.pref_label)))}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

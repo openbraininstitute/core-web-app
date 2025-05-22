@@ -1,8 +1,12 @@
 import { StepsProps } from 'antd/lib/steps';
 
 import { DataType } from '@/constants/explore-section/list-views';
+import { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
-export type SimulationType = 'single-neuron-simulation' | 'synaptome-simulation';
+export type SimulationType = Extract<
+  EntitySlugValue,
+  'single-neuron-simulation' | 'synaptome-simulation'
+>;
 
 export type SimulationStepTitle =
   | 'Experimental setup'
@@ -16,7 +20,7 @@ export type SimulationStep = {
   status?: StepsProps['status'];
 };
 
-export type SimulationStepsTraker = {
+export type SimulationStepsTracker = {
   steps: Array<SimulationStep>;
   current: SimulationStep;
 };

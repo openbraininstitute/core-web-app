@@ -9,7 +9,7 @@ export const resolveDataKey = ({
   section,
   suffix,
 }: {
-  section: 'explore' | 'build' | 'experiment' | 'bookmark';
+  section: 'explore' | 'build' | 'simulate' | 'bookmark';
   projectId?: string | undefined;
   entity?: SerializedEntityCoreTypeConfig<any> | EntityCoreTypeConfig<any> | undefined;
   suffix?: string;

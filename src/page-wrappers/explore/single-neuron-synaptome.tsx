@@ -42,14 +42,16 @@ async function loadExpandedSingleNeuronSynaptome({ id, virtualLabId, projectId }
   let error1 = null;
   if (entity.api.expand) {
     ({ data, error: error1 } = await tryCatch(
-      applyEntityExpansions<ISingleNeuronSynaptome, ExpandType>(entity, source)
+      applyEntityExpansions<ISingleNeuronSynaptome, ExpandType>(entity, source, {
+        virtualLabId,
+        projectId,
+      })
     ));
   }
 
   if (error1 || isNil(data)) {
     throw new Error('Failed to load single neuron synaptome relative data');
   }
-
   return {
     source,
     ...data,

@@ -62,17 +62,7 @@ export function CheckListOption({
 }
 
 export const CheckListDescription = memo(
-  ({
-    id,
-    filterField,
-    label,
-    type,
-  }: {
-    id: string;
-    filterField: string;
-    label: string;
-    type?: string | null;
-  }) => {
+  ({ id }: { id: string; filterField: string; label: string; type?: string | null }) => {
     const [definition, setDefinition] = useState<string | null>(null);
 
     useEffect(() => {

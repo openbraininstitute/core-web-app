@@ -10,10 +10,9 @@ import {
   NeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
-import { virtualLabApi } from '@/config';
 
 type Props = {
-  modelId: string;
+  meModelId: string;
   zoomPlacement?: 'left' | 'right';
   useZoomer?: boolean;
   useCursor?: boolean;
@@ -24,7 +23,7 @@ type Props = {
   projectId: string;
 };
 export default function NeuronViewerContainer({
-  modelId,
+  meModelId,
   zoomPlacement = 'right',
   useZoomer = false,
   useCursor = false,
@@ -34,7 +33,7 @@ export default function NeuronViewerContainer({
   virtualLabId,
   projectId,
 }: Props) {
-  const [disbaleHovering, setDisableHovering] = useState(() => !useActions);
+  const [disableHovering, setDisableHovering] = useState(() => !useActions);
   const [neuronViewerClickData, setNeuronViewerOnClickData] =
     useState<NeuronViewerClickData | null>(null);
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
@@ -45,7 +44,7 @@ export default function NeuronViewerContainer({
       <NeuronViewer
         projectId={projectId}
         virtualLabId={virtualLabId}
-        modelId={modelId}
+        meModelId={meModelId}
         actions={{
           onClick: (data) => {
             setNeuronViewerOnClickData(data);
@@ -85,7 +84,7 @@ export default function NeuronViewerContainer({
                   }}
                 />
               )}
-              {enableCursor && neuronViewerHoverData && !disbaleHovering && (
+              {enableCursor && neuronViewerHoverData && !disableHovering && (
                 <CursorPopover
                   show={!!neuronViewerHoverData}
                   x={neuronViewerHoverData.position.x}

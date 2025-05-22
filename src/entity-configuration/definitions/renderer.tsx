@@ -45,6 +45,10 @@ export const renderEmptyOrValue = (value: any) => {
   return isNil(value) || isEmpty(value) ? EmptyValue : value;
 };
 
+export const renderAsString = (value: any) => {
+  return String(value);
+};
+
 export const renderArray = (array: string[]) => {
   return array.map((item) => <div key={item}>{item}</div>);
 };

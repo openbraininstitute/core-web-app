@@ -11,7 +11,6 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { Button, Spin, App } from 'antd';
 import { loadable } from 'jotai/utils';
 
-import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
 import get from 'lodash/get';
 
@@ -21,7 +20,6 @@ import {
 } from '@/features/bookmark/actions';
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
-import { dataAtom } from '@/state/explore-section/list-view-atoms';
 import { resolveLibraryUrl } from '@/utils/url-builder';
 import { serverMessages } from '@/i18n/en/bookmark';
 import { classNames } from '@/util/utils';
@@ -36,7 +34,7 @@ type Props = {
   entityId: string;
   resourceId?: string;
   type: EntityTypeValue;
-  customButton?: (props: HTMLProps<HTMLButtonElement>) => ReactNode;
+  customButton?: (props: HTMLProps<HTMLButtonElement> & { loading?: boolean }) => ReactNode;
 };
 
 export default function BookmarkButton({
@@ -176,12 +174,6 @@ export default function BookmarkButton({
     if (error) {
       notifyError('add', error);
     } else {
-      setTimeout(() =>
-        dataAtom.remove({
-          key: `${projectId}/${category}/${kebabCase(dataType)}/bookmarks`,
-          dataType: dataType!,
-        })
-      );
       refreshBookmarks();
       notifySuccess('add');
     }
@@ -230,7 +222,7 @@ export default function BookmarkButton({
       bookmarks.state === 'hasData' &&
       bookmarks.data.data?.[dataType]?.some((b) => b.entity_id === entityId)
     );
-  }, [bookmarks, resourceId, category]);
+  }, [bookmarks, category, entityId]);
 
   if (bookmarks.state === 'loading') {
     return (
@@ -250,7 +242,7 @@ export default function BookmarkButton({
   }
 
   const addButton = customButton ? (
-    customButton({ onClick: saveToLibrary, children: 'Add to Library' })
+    customButton({ onClick: saveToLibrary, children: 'Add to Library', loading: loadingAction })
   ) : (
     <Button
       type="text"
@@ -269,7 +261,7 @@ export default function BookmarkButton({
   ) : (
     <Button
       type="text"
-      className="mr-3 flex h-[36px] items-center gap-2 px-1 text-gray-500 hover:bg-transparent!"
+      className="hover:text-primary-6! mr-3 flex h-[36px] items-center gap-2 px-1 text-gray-500 hover:bg-transparent!"
       loading={loadingAction}
       disabled={loadingAction}
       onClick={removeFromLibrary}

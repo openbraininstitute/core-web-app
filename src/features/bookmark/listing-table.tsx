@@ -2,8 +2,8 @@ import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 
 import ExploreSectionTable from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
-import WithControlPanel from '@/features/listing-filter-panel';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
+import WithControlPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import Footer from '@/features/bookmark/footer';
 
@@ -17,7 +17,6 @@ import type { WorkspaceContext } from '@/types/common';
 
 interface Props extends WorkspaceContext {
   dataType: DataType;
-  targetIds: Array<string>;
   dataKey: string;
 }
 
@@ -25,7 +24,6 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   virtualLabId,
   projectId,
   dataType,
-  targetIds,
   dataKey,
 }: Props) {
   const { push: navigate } = useRouter();
@@ -33,10 +31,9 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
   const dataScope = ExploreDataScope.BookmarkedResources;
 
-  const dataSource = useDataAtom<T>({
+  const { result: dataSource, isLoading } = useDataAtom<T>({
     dataType,
     dataScope,
-    targetIds,
     shouldUseIds: true,
     workspace: { virtualLabId, projectId },
     brainRegionId: undefined,
@@ -79,6 +76,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
                 dataKey={dataKey}
               />
               <ExploreSectionTable<T>
+                loading={isLoading}
                 useBrainRegion={false}
                 dataKey={dataKey}
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}

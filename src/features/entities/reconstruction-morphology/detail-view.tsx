@@ -12,7 +12,6 @@ import createMorphologyDataAtom from '@/state/morpho-viewer';
 import GeneralizationControls from '@/components/explore-section/WithGeneralization/GeneralizationControls';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import Morphometrics from '@/components/explore-section/Morphometrics';
-import Summary from '@/features/details-view/summary';
 
 import WithGeneralization, {
   notFound,
@@ -21,7 +20,6 @@ import WithGeneralization, {
 import { DataType } from '@/constants/explore-section/list-views';
 import { MorphoViewer } from '@/components/MorphoViewer';
 import { ensureArray } from '@/utils/array';
-import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 

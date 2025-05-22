@@ -3,16 +3,7 @@ import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/type
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type {
-  TypeSummaryProps,
-  ViewDefinitionConfig,
-} from '@/entity-configuration/definitions/view-defs/types';
-
-export const CommonSummaryViewFields = [
-  { field: EntityCoreFields.Description, className: 'col-span-3' },
-  { field: EntityCoreFields.Contributions },
-  { field: EntityCoreFields.CreationDate },
-] as TypeSummaryProps[];
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.CircuitEModel]: {
@@ -56,7 +47,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     curated: false,
     summaryViewFields: [
       { field: EntityCoreFields.BrainRegion, className: 'col-span-2' },
-      { field: EntityCoreFields.MEModelValidationStatus, className: 'col-span-2' },
+      { field: EntityCoreFields.MEModelValidationStatus, className: 'col-span-2 text-left' },
       { field: EntityCoreFields.MType, className: 'col-span-4' },
       { field: EntityCoreFields.EType, className: 'col-span-4' },
     ],
@@ -79,31 +70,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     summaryViewFields: [
       { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
       { field: EntityCoreFields.License, className: 'col-span-1' },
-    ],
-  },
-  [DataType.SingleNeuronSimulation]: {
-    title: 'Simulation',
-    group: DataTypeGroup.ModelData,
-    name: EntitySlug.SingleNeuronSimulation,
-    curated: false,
-    columns: [
-      EntityCoreFields.Name,
-      EntityCoreFields.CreationDate,
-      EntityCoreFields.SynaptomeUsedMEModelName,
-      EntityCoreFields.CreatedBy,
-      EntityCoreFields.BrainRegion,
-      EntityCoreFields.SimulationSeed,
-      EntityCoreFields.InjectionLocation,
-      EntityCoreFields.RecordingLocation,
-      EntityCoreFields.SimulationStatus,
-      EntityCoreFields.SimulationResponse,
-      EntityCoreFields.SimulationStimulus,
-    ],
-    summaryViewFields: [
-      { field: EntityCoreFields.Name, className: 'col-span-1' },
-      { field: EntityCoreFields.CreationDate, className: 'col-span-1' },
-      { field: EntityCoreFields.CreatedBy, className: 'col-span-1' },
-      { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
     ],
   },
 };

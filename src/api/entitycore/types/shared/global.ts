@@ -144,6 +144,8 @@ enum AssetStatus {
 
 export enum AssetLabel {
   single_cell_simulation = 'single_cell_simulation_data',
+  single_neuron_synaptome_config = 'single_neuron_synaptome_config',
+  single_neuron_synaptome_simulation_io_result = 'single_neuron_synaptome_simulation_io_result',
 }
 
 type AssetBase = {

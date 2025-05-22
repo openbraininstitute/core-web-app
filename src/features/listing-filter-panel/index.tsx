@@ -47,11 +47,11 @@ export default function WithListingFilterPanel({
           activeColumnsAtom({
             dataType,
             dataScope,
-            key: `${dataKey}/${node.id}`,
+            key: useBrainRegion ? `${dataKey}/${node.id}` : dataKey,
             brainRegionId: useBrainRegion ? node.id : undefined,
           })
         ),
-      [dataType, dataScope, dataKey]
+      [dataType, dataScope, dataKey, node.id]
     )
   );
 
@@ -70,8 +70,16 @@ export default function WithListingFilterPanel({
 
   const [filters, setFilters] = useAtom(
     useMemo(
-      () => unwrap(filtersAtom({ dataType, dataScope, key: dataKey, brainRegionId: node.id })),
-      [dataType, dataScope, dataKey]
+      () =>
+        unwrap(
+          filtersAtom({
+            dataType,
+            dataScope,
+            key: useBrainRegion ? `${dataKey}/${node.id}` : dataKey,
+            brainRegionId: useBrainRegion ? node.id : undefined,
+          })
+        ),
+      [dataType, dataScope, dataKey, node.id]
     )
   );
 
@@ -96,6 +104,7 @@ export default function WithListingFilterPanel({
           dataKey={dataKey}
           facets={facets}
           virtualLabInfo={virtualLabInfo}
+          useBrainRegion={useBrainRegion}
         />
       )}
     </>

@@ -51,6 +51,7 @@ export enum EntityCoreFields {
   MEModelTracePreview = 'meModelTracePreview',
   MEModelValidationStatus = 'validation_status',
   SynaptomeUsedMEModelName = 'me_model',
+  SynaptomeModelName = 'synaptome',
   CreatedBy = 'createdBy',
   UpdatedBy = 'updatedBy',
   SimulationSeed = 'simulation_seed',
@@ -59,6 +60,7 @@ export enum EntityCoreFields {
   SimulationStatus = 'simulation_status',
   SimulationResponse = 'simulation_response',
   SimulationStimulus = 'simulation_stimulus',
+  SimulationModel = 'me_model',
 }
 
 export type EntityCoreFieldsUnion = keyof typeof EntityCoreFields;
