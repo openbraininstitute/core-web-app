@@ -1,24 +1,28 @@
+import groupBy from 'lodash/groupBy';
 import omit from 'lodash/omit';
 
-import { getGroupedCardFields } from '@/util/explore-section/cardViewUtils';
-import { DataType } from '@/constants/explore-section/list-views';
-import { DetailProps } from '@/types/explore-section/application';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
-import { DisplayMessages } from '@/constants/display-messages';
 import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { DisplayMessages } from '@/constants/display-messages';
+import { DataType } from '@/constants/explore-section/list-views';
+import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+import { DetailProps } from '@/types/explore-section/application';
+import FieldsDefinitionRegistry from '@/entity-configuration/definitions';
 
 export const useMorphometrics = (
   morphology: IReconstructionMorphologyExpanded,
   showLabel: boolean = false
 ) => {
-  const groupedCardFields = getGroupedCardFields(DataType.ExperimentalNeuronMorphology);
+  const groupedCardFields = groupBy(
+    getViewDefinitionByLegacyType(DataType.ExperimentalNeuronMorphology)!.cardViewFields,
+    (item) => FieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
+  );
 
   const filteredGroupedCardFields = omit(groupedCardFields, 'Metadata');
 
   const renderMetric = (field: DetailProps) => {
     if (!morphology) return null;
 
-    const fieldObj = EXPLORE_FIELDS_CONFIG[field.field];
+    const fieldObj = FieldsDefinitionRegistry[field.field];
 
     return (
       <div className="text-primary-8 mr-10" key={field.field}>
