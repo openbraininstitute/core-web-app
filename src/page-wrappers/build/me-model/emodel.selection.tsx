@@ -13,6 +13,7 @@ import { Btn } from '@/components/buttons/base/legacy-btn';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { WorkspaceContext } from '@/types/common';
+import { resolveDataKey } from '@/utils/key-builder';
 
 type Props = {
   params: WorkspaceContext;
@@ -60,11 +61,16 @@ export default function EmodelSelection({ params, searchParams }: Props) {
       entityId: record.id,
     });
   };
+  const dataKey = resolveDataKey({
+    projectId: params.projectId,
+    section: 'build',
+    suffix: useId(),
+  });
 
   return (
     <div className="h-full px-10" id="explore-table-container-for-observable">
       <ExploreSectionListingView<IEModel>
-        dataKey={useId()}
+        dataKey={dataKey}
         dataType={DataType.CircuitEModel}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}

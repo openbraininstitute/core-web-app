@@ -1,11 +1,16 @@
-import { useAtom } from 'jotai';
 import { atomWithReset } from 'jotai/utils';
+import { useAtom } from 'jotai';
 import sample from 'lodash/sample';
 
-import { getDefaultSynapseConfig, SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
-import { SynapseConfig, UpdateSynapseSimulationProperty } from '@/types/simulation/single-neuron';
-import { SingleSynaptomeConfig } from '@/types/synaptome';
 import updateArray from '@/util/updateArray';
+
+import { getDefaultSynapseConfig, SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type {
+  SynapseConfig,
+  UpdateSynapseSimulationProperty,
+} from '@/types/simulation/single-neuron';
 
 export const synaptomeSimulationConfigAtom = atomWithReset<Array<SynapseConfig>>([]);
 synaptomeSimulationConfigAtom.debugLabel = 'synaptomeSimulationConfigAtom';
@@ -14,14 +19,14 @@ export default function useSynaptomeSimulationConfig() {
   const [state, update] = useAtom(synaptomeSimulationConfigAtom);
 
   function findConfig(index: number) {
-    const synapseConfig = state.find((config: SynapseConfig, indx) => indx === index);
+    const synapseConfig = state.find((_: SynapseConfig, indx) => indx === index);
     if (!synapseConfig) {
       throw new Error(`No Synapse Config for id ${index} exists`);
     }
     return synapseConfig;
   }
 
-  function reset(config: Array<SingleSynaptomeConfig>) {
+  function reset(config: Array<TSingleNeuronSynaptomeConfiguration>) {
     const defaultSynapseConfig = getDefaultSynapseConfig(config);
     if (defaultSynapseConfig) {
       update([
@@ -32,7 +37,7 @@ export default function useSynaptomeSimulationConfig() {
     }
   }
 
-  function newConfig(config: Array<SingleSynaptomeConfig>) {
+  function newConfig(config: Array<TSingleNeuronSynaptomeConfiguration>) {
     const defaultSynapseConfig = getDefaultSynapseConfig(config);
     if (defaultSynapseConfig) {
       update([

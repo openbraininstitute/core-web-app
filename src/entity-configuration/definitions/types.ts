@@ -95,7 +95,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   };
   unit?: ReactNode;
   group?: MorphoMetricCompartment;
-  render?: (resource: T) => ReactNode;
+  render?: (entity: T) => ReactNode;
   vocabulary: {
     plural: string;
     singular: string;

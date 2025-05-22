@@ -12,11 +12,10 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { hasAssets } from '@/api/entitycore/guards';
 
-import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -47,7 +46,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Response',
     filter: null,
     // use image field in nexus
-    render: (r) => <span className="text-red-500">Entitycore Needed</span>,
+    render: () => <span className="text-red-500">Entitycore Needed</span>,
     vocabulary: {
       plural: 'responses',
       singular: 'response',
@@ -66,7 +65,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Morphology',
     filter: null,
     render: (r) => {
-      const morphology = (r as IMEModel).morphology;
+      const { morphology } = r as IMEModel;
       if (hasAssets(morphology)) return renderPreview(morphology, { width: 184, height: 116 });
       return EmptyPreview;
     },
@@ -83,7 +82,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Trace',
     filter: null,
     render: (r) => {
-      const emodel = (r as IMEModel).emodel;
+      const { emodel } = r as IMEModel;
       if (hasAssets(emodel)) return renderImage(emodel, { width: 184, height: 116 });
       return EmptyPreview;
     },
@@ -96,7 +95,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
   [EntityCoreFields.MEModelValidationStatus]: {
-    className: 'text-center',
+    className: 'text-left',
     title: 'Validated',
     filter: null,
     render: (r) => {
@@ -113,10 +112,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
   [EntityCoreFields.SynaptomeUsedMEModelName]: {
-    className: 'text-center',
+    className: 'text-left',
     title: 'ME-model',
     filter: null,
-    render: (r) => renderEmptyOrValue((r as ISingleNeuronSynaptome).me_model.name),
+    isFilterable: false,
+    isDisplayable: false,
+    render: (r) => 'me_model' in r && r.me_model.name,
     vocabulary: {
       plural: 'ME-models',
       singular: 'ME-model',

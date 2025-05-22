@@ -10,7 +10,7 @@ import Item from '@/components/VirtualLab/item/project-item';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { Project } from '@/api/virtual-lab-svc/queries/types';
 import useUserPermissions from '@/hooks/useUserPermission';
-import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
+import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 
 interface ProjectListContentProps {
   projects: Array<Project>;

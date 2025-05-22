@@ -1,4 +1,5 @@
 'use client';
+
 import { use } from 'react';
 
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';

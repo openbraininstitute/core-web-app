@@ -11,6 +11,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import GeneralizationControls from '@/components/explore-section/WithGeneralization/GeneralizationControls';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import createMorphologyDataAtom from '@/state/morpho-viewer';
+import Morphometrics from '@/components/explore-section/Morphometrics';
 
 import { MorphoViewer } from '@/components/MorphoViewer';
 import { DataType } from '@/constants/explore-section/list-views';

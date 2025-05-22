@@ -1,32 +1,38 @@
 'use client';
 
 import { Suspense } from 'react';
+import isNil from 'lodash/isNil';
 import Link from 'next/link';
 
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
-import Results from '@/features/entities/single-neuron-synaptome/detail-view/elements/simulation-results';
-import Summary from '@/features/details-view/summary';
-import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-
 import Configuration from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
-import { DataType } from '@/constants/explore-section/list-views';
-import { CommonSummaryViewFields } from '@/entity-configuration/definitions/view-defs';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import Results from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
+import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Tabs, { useTabs } from '@/components/detail-view-tabs';
-import { resolveExperimentUrl } from '@/utils/url-builder';
+import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { DataType } from '@/constants/explore-section/list-views';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { resolveExperimentUrl } from '@/utils/url-builder';
+
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
+import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   params: WorkspaceContext & { id: string };
-  memodel: IMEModel;
-  config: {
-    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
-  } | null;
   showViewMode?: boolean;
+  payload: {
+    source: ISingleNeuronSynaptome;
+    memodel: IMEModel;
+    config: {
+      synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+    } | null;
+  };
 };
 
 type TabKeys = 'configuration' | 'simulation';
@@ -35,12 +41,22 @@ const TabsConfig: Array<{ key: TabKeys; title: string }> = [
   { key: 'simulation', title: 'Simulation' },
 ];
 
-export default function Page({ params: { virtualLabId, projectId, id }, memodel, config }: Props) {
+export const CommonSummaryViewFields = [
+  { field: EntityCoreFields.Description, className: 'col-span-3' },
+  { field: EntityCoreFields.CreatedBy },
+  { field: EntityCoreFields.CreationDate },
+] as TypeSummaryProps[];
+
+export default function Page({
+  params: { virtualLabId, projectId, id },
+  payload: { config, memodel, source },
+}: Props) {
   const { activeTab } = useTabs({ tabsConfig: TabsConfig });
   return (
     <div className="secondary-scrollbar h-screen w-full overflow-y-auto">
       <Suspense fallback={<CentralLoadingSpinner />}>
         <Summary
+          payload={source}
           showViewMode
           dataType={DataType.SingleNeuronSynaptome}
           commonFields={CommonSummaryViewFields}
@@ -60,7 +76,7 @@ export default function Page({ params: { virtualLabId, projectId, id }, memodel,
             )
           }
         >
-          {(data) => {
+          {() => {
             return (
               <div>
                 <Tabs tabsConfig={TabsConfig} />
@@ -74,14 +90,19 @@ export default function Page({ params: { virtualLabId, projectId, id }, memodel,
                           memodel,
                         }}
                       />
-                      <div className="mt-10">
-                        <SynapseGroupList config={config} />
-                      </div>
+                      {!isNil(config) && (
+                        <div className="mt-10">
+                          <SynapseGroupList config={config} />
+                        </div>
+                      )}
                     </div>
                   </If>
-                  {/* <If id="simulation" condition={activeTab === 'simulation'}>
-                    <Results params={{ virtualLabId, projectId }} modelId={info.id} />
-                  </If> */}
+                  <If id="simulation" condition={activeTab === 'simulation'}>
+                    <Results
+                      type={EntitySlug.SingleNeuronSynaptomeSimulation}
+                      modelId={source.id}
+                    />
+                  </If>
                 </div>
               </div>
             );

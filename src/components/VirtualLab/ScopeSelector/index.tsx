@@ -1,27 +1,211 @@
+'use client';
+
+import { parseAsString, Parser, useQueryStates } from 'nuqs';
+import { DownOutlined } from '@ant-design/icons';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
 import Image from 'next/image';
-import { DownOutlined, UpOutlined } from '@ant-design/icons';
-import { scopeSelectorExpandedAtom, selectedSimTypeFamily, selectedTabFamily } from './state';
-import { classNames } from '@/util/utils';
-import { SimulationType } from '@/types/virtual-lab/lab';
-import { basePath } from '@/config';
-import Styles from './styles.module.css';
+import map from 'lodash/map';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export function SectionTabs({
-  projectId,
-  section,
-}: {
-  projectId: string;
-  section: 'build' | 'simulate';
-}) {
-  const [selectedTab, setSelectedTab] = useAtom(selectedTabFamily(section + projectId));
+import { useState, useEffect, useRef, MouseEventHandler } from 'react';
+import { Button } from 'antd';
+import { scopeSelectorExpandedAtom } from './state';
+import { classNames } from '@/util/utils';
+import { basePath } from '@/config';
+import {
+  TEntityCoreConfigurationItem,
+  EntityCoreConfiguration,
+} from '@/entity-configuration/domain';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
+
+export enum ModelTileType {
+  IonChannel = 'ion-channel',
+  PairedNeuron = 'paired-neuron',
+  BrainRegions = 'brain-regions',
+  SingleNeuron = 'single-neuron',
+  Microcircuit = 'microcircuit',
+  BrainSystems = 'brain-systems',
+  Synaptome = 'synaptome',
+  NeuroGliaVasculature = 'neuro-glia-vasculature',
+  WholeBrain = 'whole-brain',
+}
+type SectionTypeValue = `${ModelTileType}`;
+
+export const useTileScopeQuery = () => {
+  const pathname = usePathname();
+  const segments = pathname.split('/');
+  const sectionName = segments.pop() || segments.pop(); // Handles potential trailing slash
+  const section = sectionName as 'build' | 'simulate';
+  const [{ selectedTab, type }, updateScopeConfig] = useQueryStates(
+    {
+      selectedTab: parseAsString
+        .withDefault('new')
+        .withOptions({ clearOnDefault: false }) as Parser<'new' | 'browse'>,
+      type: parseAsString
+        .withDefault(ModelTileType.SingleNeuron)
+        .withOptions({ clearOnDefault: false }) as Parser<SectionTypeValue>,
+    },
+    {
+      urlKeys: {
+        selectedTab: 's',
+        type: 't',
+      },
+      shallow: false,
+      clearOnDefault: false,
+    }
+  );
+
+  return {
+    type,
+    section,
+    updateScopeConfig,
+    selectedTab: selectedTab ?? undefined,
+  };
+};
+
+/**
+ * Capitalize `words` and add a space between them.
+ * In the meantime, every time we find "simulation", we replace it with "experiment".
+ */
+function makeTitle(...words: string[]): string {
+  return words.map((word) => capitalize(word.replace('simulation', 'experiment'))).join(' ');
+}
+
+function imageUrl(img: string) {
+  return `${basePath}/images/scales/` + img + '.jpg';
+}
+const header = (label: string) => <div className="font-semibold text-gray-400">{label}</div>;
+
+type TTileConfig = {
+  id: string;
+  title: string;
+  type: ModelTileType;
+  description: string;
+  img: string;
+  disabled: boolean;
+  entities?: {
+    build: TEntityCoreConfigurationItem;
+    simulate: TEntityCoreConfigurationItem;
+  };
+  url: {
+    build: string;
+    explore: string;
+  } | null;
+};
+
+export const ModelTilesConfig: Array<TTileConfig> = [
+  {
+    id: 'ion-channel',
+    title: 'Ion Channel',
+    type: ModelTileType.IonChannel,
+    description: 'Coming soon.',
+    img: imageUrl('ionChannel'),
+    disabled: true,
+    url: null,
+  },
+  {
+    id: 'paired-neuron',
+    title: 'Paired Neuron',
+    type: ModelTileType.PairedNeuron,
+    description:
+      'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
+    img: imageUrl('pairedNeuron'),
+    disabled: true,
+    url: null,
+  },
+  {
+    id: 'brain-regions',
+    title: 'Brain Regions',
+    type: ModelTileType.BrainRegions,
+    description: 'Coming soon.',
+    img: imageUrl('brainRegion'),
+    disabled: true,
+    url: null,
+  },
+  {
+    id: 'single-neuron',
+    title: 'Single Neuron',
+    type: ModelTileType.SingleNeuron,
+    description:
+      'Load Hodgkin-Huxley single cell models, perform current clamp experiments with different levels of input current, and observe the resulting changes in membrane potential.',
+    img: imageUrl('singleNeuron'),
+    disabled: false,
+    url: {
+      build: 'build/me-model/new',
+      explore: 'explore/interactive/model/me-model',
+    },
+    entities: {
+      build: EntityCoreConfiguration.MEmodel,
+      simulate: EntityCoreConfiguration.SingleNeuronSimulation,
+    },
+  },
+  {
+    id: 'microcircuit',
+    title: 'Microcircuit',
+    type: ModelTileType.Microcircuit,
+    description: 'Coming soon.',
+    img: imageUrl('microcircuit'),
+    disabled: true,
+    url: null,
+  },
+  {
+    id: 'brain-systems',
+    title: 'Brain Systems',
+    type: ModelTileType.BrainSystems,
+    description: 'Coming soon.',
+    img: imageUrl('brainSystem'),
+    disabled: true,
+    url: null,
+  },
+  {
+    id: 'synaptome',
+    title: 'Synaptome',
+    type: ModelTileType.Synaptome,
+    description:
+      'Introduce spikes into the synapses of Hodgkin-Huxley cell models and carry out a virtual experiment by setting up a stimulation and reporting protocol.',
+    img: imageUrl('synaptome'),
+    disabled: false,
+    url: {
+      build: 'build/synaptome/new',
+      explore: 'explore/interactive/model/synaptome',
+    },
+    entities: {
+      build: EntityCoreConfiguration.SingleNeuronSynaptome,
+      simulate: EntityCoreConfiguration.SingleNeuronSynaptomeSimulation,
+    },
+  },
+  {
+    id: 'neuro-glia-vasculature',
+    title: 'Neuro Glia Vasculature',
+    type: ModelTileType.NeuroGliaVasculature,
+    description: 'Coming soon.',
+    img: imageUrl('ngv'),
+    disabled: true,
+    url: null,
+  },
+  {
+    id: 'whole-brain',
+    title: 'Whole Brain',
+    type: ModelTileType.WholeBrain,
+    description: 'Coming soon.',
+    img: imageUrl('wholeBrain'),
+    disabled: true,
+    url: null,
+  },
+];
+
+export function SectionTabs() {
+  const { selectedTab, section, type, updateScopeConfig } = useTileScopeQuery();
   const label = section === 'build' ? 'model' : 'simulation';
 
   const tabJSX = (tab: typeof selectedTab) => {
     const isSelected = selectedTab === tab;
     return (
       <label
+        key={`tab-${section}/${tab}`}
         className={classNames(
           'hover:bg-primary-8 flex grow cursor-pointer items-center justify-center text-xl font-bold transition-all hover:text-white',
           isSelected && 'text-primary-9 bg-white'
@@ -33,52 +217,43 @@ export function SectionTabs({
           checked={isSelected}
           className="sr-only"
           id={`scope-filter-${tab}`}
-          onChange={() => setSelectedTab(tab)}
+          onChange={() => {
+            updateScopeConfig({ selectedTab: tab!, type });
+          }}
           type="radio"
         />
-        {makeTitle(tab, label) + (tab === 'browse' ? 's' : '')}
+        {makeTitle(tab!, label) + (tab === 'browse' ? 's' : '')}
       </label>
     );
   };
 
   return (
-    <div className="divide-primary-3 border-primary-3 -mt-[67px] inline-flex min-h-[50px] w-[55%] divide-x border">
+    <div className="divide-primary-3 border-primary-3 inline-flex min-h-[50px] w-[55%] divide-x border">
       {tabJSX('new')}
       {tabJSX('browse')}
     </div>
   );
 }
 
-/**
- * Capitalize `words` and add a space between them.
- * In the meantime, eerytime we find "simulation", we replace it with "experiment".
- */
-function makeTitle(...words: string[]): string {
-  return words.map((word) => capitalize(word.replace('simulation', 'experiment'))).join(' ');
-}
-
-export function ScopeSelector({
-  atomKey,
-  section,
-  handleBuildClick,
-}: {
-  handleBuildClick?: () => void;
-  section: 'build' | 'simulate';
-  atomKey: string;
-}) {
-  const [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(atomKey));
-
-  const tileJSX = (type: SimulationType, description: string, imgSrc: string, disabled = false) => {
-    const title = capitalize(type.replace('-', ' '));
-    const highlight = type === selectedSimType;
-
+export function ScopeSelector() {
+  const { push: navigate } = useRouter();
+  const { selectedTab, section, type: modelType, updateScopeConfig } = useTileScopeQuery();
+  const tileJSX = ({ id, title, type, description, disabled, img, url }: TTileConfig) => {
+    const highlight = type === modelType;
     const showImage = section !== 'build' || (section === 'build' && !highlight);
-
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
 
+    const onClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (url?.build) navigate(url.build);
+    };
+
     return (
       <div
+        id={id}
+        key={`tile-${section}/${selectedTab}/${type}`}
         aria-hidden
         className={classNames(
           'border-primary-4 box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded-sm border p-6',
@@ -86,7 +261,7 @@ export function ScopeSelector({
           !disabled && 'cursor-pointer'
         )}
         onClick={() => {
-          if (!disabled) setSelectedSimType(type);
+          if (!disabled) updateScopeConfig({ selectedTab, type });
         }}
       >
         <div className="text-left">
@@ -94,28 +269,30 @@ export function ScopeSelector({
           <div className={classNames('text-sm', descStyle)}>{description}</div>
         </div>
 
-        {showImage && (
+        {showImage ? (
           <Image
-            src={imgSrc}
+            src={img}
             width={100}
             height={100}
             alt={title}
-            className={classNames(Styles.imageCircle, 'self-center')}
+            style={{ clipPath: 'circle()', shapeOutside: 'circle()' }}
+            className="self-center"
           />
-        )}
-
-        {!showImage && (
-          <button
-            type="button"
-            className="bg-primary-9 h-[55px] min-w-[100px] self-center text-xl font-bold text-white"
-            onClick={handleBuildClick}
+        ) : url?.build ? (
+          <Button
+            onClick={onClick}
+            className={classNames(
+              'bg-primary-9 h-[55px] min-w-[100px] self-center text-xl font-bold text-white',
+              'flex items-center justify-center rounded-none hover:text-white'
+            )}
           >
             Build
-          </button>
-        )}
+          </Button>
+        ) : null}
       </div>
     );
   };
+
   return (
     <div>
       <div className="text-primary-4 mt-12 text-[40px] font-bold">
@@ -127,90 +304,94 @@ export function ScopeSelector({
         <div className="text-primary-4 text-4xl">CELLULAR</div>
         <div className="text-primary-4 text-4xl">CIRCUIT</div>
         <div className="text-primary-4 text-4xl">SYSTEM</div>
-        {tileJSX(SimulationType.IonChannel, 'Coming soon.', imageUrl('ionChannel'), true)}
-        {tileJSX(
-          SimulationType.PairedNeuron,
-          'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
-          imageUrl('pairedNeuron'),
-          true
-        )}
-        {tileJSX(SimulationType.BrainRegions, 'Coming soon.', imageUrl('brainRegion'), true)}
-        {tileJSX(
-          SimulationType.SingleNeuron,
-          'Load Hodgkin-Huxley single cell models, perform current clamp experiments with different levels of input current, and observe the resulting changes in membrane potential.',
-          imageUrl('singleNeuron')
-        )}
-        {tileJSX(SimulationType.Microcircuit, 'Coming soon.', imageUrl('microcircuit'), true)}
-        {tileJSX(SimulationType.BrainSystems, 'Coming soon.', imageUrl('brainSystem'), true)}
-        {tileJSX(
-          SimulationType.Synaptome,
-          'Introduce spikes into the synapses of Hodgkin-Huxley cell models and carry out a virtual experiment by setting up a stimulation and reporting protocol.',
-          imageUrl('synaptome')
-        )}
-        {tileJSX(SimulationType.NeuroGliaVasculature, 'Coming soon.', imageUrl('ngv'), true)}
-        {tileJSX(SimulationType.WholeBrain, 'Coming soon.', imageUrl('wholeBrain'), true)}
+        {map(ModelTilesConfig, tileJSX)}
       </div>
     </div>
   );
 }
 
-export function ScopeSelectorSmall({ atomKey }: { atomKey: string }) {
-  const [expanded, setExpanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
-  let [selectedSimType, setSelectedSimType] = useAtom(selectedSimTypeFamily(atomKey)); // eslint-disable-line prefer-const
-  selectedSimType = selectedSimType ?? SimulationType.SingleNeuron;
+export function ScopeSelectorSmall({
+  expanded,
+  onMenuExpand,
+}: {
+  expanded: boolean;
+  onMenuExpand: (value: boolean) => void;
+}) {
+  const { section, selectedTab, type, updateScopeConfig } = useTileScopeQuery();
+  const ref = useRef<HTMLDivElement>(null);
 
-  const header = (label: string) => <div className="font-semibold text-gray-400">{label}</div>;
+  const tile = (config: TTileConfig) => {
+    return (
+      <button
+        disabled={type === config.type || config.disabled}
+        type="button"
+        key={`menu-${section}/${selectedTab}/${config.id}`}
+        onClick={() => {
+          onMenuExpand(false);
+          updateScopeConfig({ selectedTab, type: config.type });
+        }}
+        className={classNames(
+          'hover:bg-neutral-1/40 flex h-[40px] items-center border pl-5 font-semibold',
+          config.type === type
+            ? 'bg-primary-8 border-none text-white'
+            : 'text-primary-9 border-gray-300'
+        )}
+      >
+        {capitalize(config.title)}
+      </button>
+    );
+  };
 
-  const tile = (type: SimulationType) => (
-    <button
-      disabled={selectedSimType === type}
-      type="button"
-      key={type}
-      onClick={() => {
-        setExpanded(false);
-        setSelectedSimType(type);
-      }}
-      className={classNames(
-        'flex h-[40px] items-center border pl-5 font-semibold',
-        selectedSimType === type
-          ? 'bg-primary-8 border-none text-white'
-          : 'text-primary-9 border-gray-300'
-      )}
-    >
-      {capitalize(type.replace('-', ' '))}
-    </button>
+  useOnClickOutside(
+    ref,
+    () => onMenuExpand(false),
+    ['mousedown', 'touchstart'],
+    (event) => {
+      return event.target.closest('#expand-button');
+    }
   );
 
-  const iconClass = 'relative top-[9px] float-right text-base text-primary-9';
-
   return (
-    <>
+    <div className="relative">
       <button
+        id="expand-button"
         type="button"
         className="w-1/2 bg-white px-10 py-4 text-left text-2xl"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => onMenuExpand(!expanded)}
       >
         <span className={classNames('text-gray-400', expanded && 'opacity-40')}>Scale</span>
         <span className={classNames('text-primary-9 ml-3 font-bold', expanded && 'opacity-40')}>
-          {capitalize(selectedSimType.replace('-', ' '))}
+          {capitalize(ModelTilesConfig.find((o) => o.type === type)?.title)}
         </span>
-
-        {!expanded && <DownOutlined className={iconClass} />}
-        {expanded && <UpOutlined className={iconClass} />}
+        <DownOutlined
+          className={classNames(
+            'text-primary-9 relative top-[9px] float-right text-base transition-transform duration-300 ease-in-out',
+            expanded && '-rotate-180'
+          )}
+        />
       </button>
 
-      {expanded && (
-        <div className="grid grid-cols-3 gap-5 bg-white px-8 py-6">
-          {header('CELLULAR')}
-          {header('CIRCUIT')}
-          {header('SYSTEM')}
-          {Object.values(SimulationType).map((v) => tile(v))}
-        </div>
-      )}
-    </>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            ref={ref}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={{
+              hidden: { opacity: 0, y: -10 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeInOut' } },
+              exit: { opacity: 0, y: -10, transition: { duration: 0.15, ease: 'easeIn' } },
+            }}
+            className="absolute left-0 z-10 grid w-full grid-cols-3 gap-5 bg-white px-8 py-6 shadow-lg"
+          >
+            {header('CELLULAR')}
+            {header('CIRCUIT')}
+            {header('SYSTEM')}
+            {map(ModelTilesConfig, tile)}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
-}
-
-function imageUrl(img: string) {
-  return `${basePath}/images/scales/` + img + '.jpg';
 }

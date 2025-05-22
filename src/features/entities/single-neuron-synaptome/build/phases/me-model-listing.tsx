@@ -2,21 +2,30 @@
 
 import { WarningOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { Form } from 'antd';
 import { z } from 'zod';
 
+import dynamic from 'next/dynamic';
+
 import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/single-neuron-synaptome/build/create.state-session';
 import useRowSelection from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 
+import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
 import type { WorkspaceContext } from '@/types/common';
 import type { IMEModel } from '@/api/entitycore/types';
+
+const ExploreSectionListingView = dynamic(
+  () => import('@/components/explore-section/ExploreSectionListingView'),
+  {
+    ssr: false,
+  }
+) as (props: ExploreSectionListingViewProps<IMEModel>) => ReactElement | null;
 
 type Props = WorkspaceContext & {
   stateId: string;
@@ -44,18 +53,18 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
 
   const gotoSynaptomeConfiguration = async () => {
     setEmptyMEmodelError(false);
-    await validateFields(['modelUrl']);
+    await validateFields(['model_id']);
     const { success } = await memodelSchema.safeParseAsync(selectedRows);
     if (success) {
       const value = selectedRows[0].id;
-      setFieldValue('modelUrl', value);
+      setFieldValue('model_id', value);
       updateQueryConfig({ phase: 'placement', memodelId: value, stateId });
     } else {
       setEmptyMEmodelError(true);
     }
   };
 
-  const onNavigateToMeModel = (basePath: string, record: IMEModel): void => {
+  const onNavigateToMeModel = (_: string, record: IMEModel): void => {
     setSessionValue({
       name: form.getFieldValue('name'),
       description: form.getFieldValue('description'),
@@ -77,8 +86,8 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
         phase !== 'me-model' && 'hidden'
       )}
     >
-      <Form.Item name="modelUrl" hidden>
-        <input name="modelUrl" aria-hidden hidden />
+      <Form.Item name="model_id" hidden>
+        <input name="model_id" aria-hidden hidden />
       </Form.Item>
       <div className="mb-4">
         <h1 className="text-primary-8 text-xl font-bold">
@@ -104,11 +113,12 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
             setSessionValue({
               name: form.getFieldValue('name'),
               description: form.getFieldValue('description'),
-              selectedRows: rows,
+              selectedRows: rows as Array<IMEModel>,
             });
           }}
           onCellClick={onNavigateToMeModel}
           dataKey={stateId}
+          useBrainRegion={false}
         />
       </div>
       <button

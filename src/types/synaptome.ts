@@ -4,9 +4,8 @@ import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types
 
 export const NEXUS_SYNAPTOME_TYPE = 'SingleNeuronSynaptome';
 
-export type SynaptomeConfigDistribution = {
+export type SynapsesConfiguration = {
   synapses: Array<TSingleNeuronSynaptomeConfiguration>;
-  meModelSelf: string;
 };
 
 type ExclusionRule = {

@@ -6,8 +6,10 @@ import {
   renderPreview,
   renderTimestamp,
 } from '@/entity-configuration/definitions/renderer';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { hasAssets } from '@/api/entitycore/guards';
 
@@ -117,8 +119,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Descriptions',
       singular: 'Description',
     },
-    isFilterable: false,
-    isDisplayable: false,
+    constraint: 'search',
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.Contributions]: {
     title: 'Contributors',
@@ -166,6 +169,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Users',
       singular: 'User',
     },
+    isDisplayable: true,
+    isFilterable: true,
   },
   [EntityCoreFields.UpdatedBy]: {
     title: 'Updated by',
@@ -178,5 +183,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Users',
       singular: 'User',
     },
+    isDisplayable: true,
   },
 };

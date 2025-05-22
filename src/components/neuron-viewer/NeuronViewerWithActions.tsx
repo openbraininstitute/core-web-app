@@ -12,24 +12,28 @@ import {
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
 type Props = {
-  modelUrl: string;
+  meModelId: string;
   zoomPlacement?: 'left' | 'right';
   useZoomer?: boolean;
   useCursor?: boolean;
   useEvents?: boolean;
   useActions?: boolean;
   useLabels?: boolean;
+  virtualLabId: string;
+  projectId: string;
 };
 export default function NeuronViewerContainer({
-  modelUrl,
+  meModelId,
   zoomPlacement = 'right',
   useZoomer = false,
   useCursor = false,
   useEvents = false,
   useActions = false,
   useLabels = false,
+  virtualLabId,
+  projectId,
 }: Props) {
-  const [disbaleHovering, setDisableHovering] = useState(() => !useActions);
+  const [disableHovering, setDisableHovering] = useState(() => !useActions);
   const [neuronViewerClickData, setNeuronViewerOnClickData] =
     useState<NeuronViewerClickData | null>(null);
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
@@ -38,7 +42,9 @@ export default function NeuronViewerContainer({
   return (
     <DefaultLoadingSuspense>
       <NeuronViewer
-        modelSelfUrl={modelUrl}
+        projectId={projectId}
+        virtualLabId={virtualLabId}
+        meModelId={meModelId}
         actions={{
           onClick: (data) => {
             setNeuronViewerOnClickData(data);
@@ -78,7 +84,7 @@ export default function NeuronViewerContainer({
                   }}
                 />
               )}
-              {enableCursor && neuronViewerHoverData && !disbaleHovering && (
+              {enableCursor && neuronViewerHoverData && !disableHovering && (
                 <CursorPopover
                   show={!!neuronViewerHoverData}
                   x={neuronViewerHoverData.position.x}

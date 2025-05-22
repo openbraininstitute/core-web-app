@@ -1,9 +1,10 @@
-import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSetAtom } from 'jotai/react';
+import { ReactNode, ReactElement } from 'react';
+import dynamic from 'next/dynamic';
 
-import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 import { DEFAULT_E_MODEL_STORAGE_KEY } from '@/constants/cell-model-assignment/e-model';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
@@ -16,9 +17,18 @@ import {
   eModelUIConfigAtom,
   selectedEModelAtom,
 } from '@/state/brain-model-config/cell-model-assignment/e-model';
+import { resolveDataKey } from '@/utils/key-builder';
 
+import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+
+const ExploreSectionListingView = dynamic(
+  () => import('@/components/explore-section/ExploreSectionListingView'),
+  {
+    ssr: false,
+  }
+) as (props: ExploreSectionListingViewProps<IEModel>) => ReactElement | null;
 
 function buildEModelEntry(source: IEModel): EModelMenuItem {
   return {
@@ -31,7 +41,7 @@ function buildEModelEntry(source: IEModel): EModelMenuItem {
   } as EModelMenuItem;
 }
 
-export default function ExploreEModelTable({
+export default function ListingView({
   dataType,
   dataScope,
   renderButton,
@@ -42,8 +52,6 @@ export default function ExploreEModelTable({
   virtualLabInfo?: VirtualLabInfo;
   renderButton?: (props: RenderButtonProps<IEModel>) => ReactNode;
 }) {
-  const dataKey = `${virtualLabInfo?.projectId ?? ''}/explore/${dataType}`;
-
   const { push: navigate } = useRouter();
   const setSelectedEModel = useSetAtom(selectedEModelAtom);
   const setEModelUIConfig = useSetAtom(eModelUIConfigAtom);
@@ -64,9 +72,14 @@ export default function ExploreEModelTable({
     });
     navigate(exploreUrl);
   };
-
+  const entity = getEntityByLegacyType({ legacyType: dataType });
+  const dataKey = resolveDataKey({
+    section: 'explore',
+    projectId: virtualLabInfo?.projectId,
+    entity,
+  });
   return (
-    <ExploreSectionListingView<IEModel>
+    <ExploreSectionListingView
       {...{
         dataKey,
         dataType,

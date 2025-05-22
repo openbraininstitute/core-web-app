@@ -1,20 +1,20 @@
 import { useState } from 'react';
 
-import SimulationConfigurationTab from './SimultationConfigurationTab';
+import SimulationConfigurationTab from './SimulationConfigurationTab';
 import AnalysisTab from './AnalysisTab';
 import ResultsTab from './RecordingTab';
 
 import { SimulationPayload } from '@/types/simulation/single-neuron';
 import { classNames } from '@/util/utils';
 import { NexusMEModel } from '@/types/me-model';
+import { IMEModel } from '@/api/entitycore/types';
 
-type TabKeys = 'simulation-configuration' | 'results' | 'analysis';
-
+type TabKeys = 'configuration' | 'results' | 'analysis';
 type Tab = { key: TabKeys; title: string };
 
 const TABS: Tab[] = [
   {
-    key: 'simulation-configuration',
+    key: 'configuration',
     title: 'Simulation configuration',
   },
   {
@@ -30,11 +30,11 @@ const TABS: Tab[] = [
 type Props = {
   experimentSetup: SimulationPayload;
   type: 'single-neuron-simulation' | 'synaptome-simulation';
-  meModel: NexusMEModel | null;
+  meModel: IMEModel | null;
 };
 
 export default function ExperimentSetupTab({ experimentSetup, type, meModel }: Props) {
-  const [activeTab, setActiveTab] = useState<TabKeys>('simulation-configuration');
+  const [activeTab, setActiveTab] = useState<TabKeys>('configuration');
   return (
     <div className="flex flex-1 flex-col">
       <h1 className="text-primary-8 mt-6 mb-3 text-3xl font-bold">Experiment Setup</h1>
@@ -45,8 +45,10 @@ export default function ExperimentSetupTab({ experimentSetup, type, meModel }: P
               title={title}
               key={key}
               className={classNames(
-                'w-1/3 flex-[1_1_33%] border py-3 text-center text-xl font-semibold transition-all duration-200 ease-out',
-                activeTab === key ? 'bg-primary-9 text-white' : 'text-primary-9 bg-white'
+                'w-1/3 flex-[1_1_33%] border border-gray-300 py-3 text-center text-xl font-semibold transition-all duration-200 ease-out',
+                activeTab === key
+                  ? 'bg-primary-9 border-primary-9 text-white'
+                  : 'text-primary-9 bg-white'
               )}
             >
               <button
@@ -61,7 +63,7 @@ export default function ExperimentSetupTab({ experimentSetup, type, meModel }: P
           )
         )}
       </ul>
-      {activeTab === 'simulation-configuration' && (
+      {activeTab === 'configuration' && (
         <SimulationConfigurationTab type={type} simulation={experimentSetup} />
       )}
 

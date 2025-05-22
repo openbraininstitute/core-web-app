@@ -1,3 +1,4 @@
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   BrainRegionFilter,
   ContributionFilter,
@@ -11,7 +12,6 @@ import type {
   EntityCoreBaseAsset,
   EntityAuthorization,
   IBrainLocation,
-  IBrainRegion,
   Timestamps,
   ILicense,
   EntityCoreType,
@@ -47,5 +47,5 @@ export interface IElectricalCellRecording
     EntityAuthorization,
     EntityCoreType {
   license?: ILicense | null;
-  brain_region: IBrainRegion;
+  brain_region: BrainRegionHierarchyBase;
 }

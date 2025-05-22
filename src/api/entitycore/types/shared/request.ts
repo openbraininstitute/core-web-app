@@ -11,6 +11,9 @@ export type BrainLocationFilter = {
 
 export type BrainRegionFilter = {
   brain_region_id: number | null;
+  within_brain_region_hierachy_id: string | null;
+  within_brain_region_brain_region_id: string | null;
+  within_brain_region_ascendants: boolean;
 };
 
 export type ContributionFilter = {
@@ -38,6 +41,11 @@ export type StainFilter = {
   strain__name__in: string | null;
   strain__order_by: string | null;
 };
+
+export type IdFilter = Partial<{
+  id: string;
+  id__in: string[];
+}>;
 
 export type SharedFilter = {
   name__ilike: string | null;
@@ -86,3 +94,5 @@ export interface IMorphologyFilter {
   exemplar_morphology__species_id__in?: string | null;
   exemplar_morphology__order_by?: string | null;
 }
+
+export interface CreatorFilter {}

@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 
-import PlotRenderer from '../single-neuron/visualization/PlotRenderer';
+import PlotRenderer from '@/features/entities/neuron-simulation/experiment/visualization/plot-renderer';
 
 import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';

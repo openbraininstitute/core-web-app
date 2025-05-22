@@ -1,66 +1,71 @@
-import { atom, useAtom, useAtomValue } from 'jotai';
-import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
-import uniq from 'lodash/uniq';
+import { atomFamily, atomWithDefault, atomWithRefresh, loadable } from 'jotai/utils';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import isEmpty from 'lodash/isEmpty';
+import uniq from 'lodash/uniq';
 import pick from 'lodash/pick';
 import _get from 'lodash/get';
 
 import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  EntityCoreFields,
+  CoreFieldFilterTypeEnum,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
 import fetchDataQuery from '@/queries/explore-section/data';
 import {
   DataQuery,
   fetchDimensionAggs,
-  fetchEsResourcesByType,
-  fetchLinkedModel,
   fetchTotalByExperimentAndRegions,
 } from '@/api/explore-section/resources';
 import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import { Filter } from '@/features/listing-filter-panel/types';
 import {
-  selectedBrainRegionAtom,
   selectedBrainRegionWithDescendantsAndAncestorsAtom,
   selectedBrainRegionWithDescendantsAndAncestorsFamily,
-  setSelectedBrainRegionAtomGetter,
 } from '@/state/brain-regions';
-import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { DATA_TYPES_TO_CONFIGS } from '@/constants/explore-section/data-types';
 import {
   transformFiltersToQuery,
   transformQueryParamsArrayToString,
 } from '@/api/entitycore/transformers';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
-import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { WorkspaceContext } from '@/types/common';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import {
   getViewDefinitionByLegacyType,
   ViewsDefinitionRegistry,
 } from '@/entity-configuration/definitions/view-defs';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
-import { CoreFilter } from '@/entity-configuration/definitions/types';
+import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import filter from 'lodash/filter';
-import { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { CoreFilter } from '@/entity-configuration/definitions/types';
+import { compactRecord } from '@/utils/dictionary';
 
-type DataAtomFamilyScopeType = {
+import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { WorkspaceContext } from '@/types/common';
+
+type DataAtomBinding = {
   key: string;
   resourceId?: string;
   shouldUseIds?: boolean;
-  targetIds?: Array<string>;
-  dataType: DataType;
+  dataType: EntityCoreLegacyType;
   dataScope?: ExploreDataScope;
-  virtualLabInfo?: WorkspaceContext;
+  workspace?: WorkspaceContext;
+  brainRegionId?: string | null;
 };
 
-const isListAtomEqual = (a: DataAtomFamilyScopeType, b: DataAtomFamilyScopeType): boolean =>
-  a.key === b.key;
+const isListAtomEqual = (a: DataAtomBinding, b: DataAtomBinding): boolean => {
+  return (
+    ('brainRegionId' in a ? `${a.key}/${a.brainRegionId}` : a.key) ===
+    ('brainRegionId' in b ? `${b.key}/${b.brainRegionId}` : b.key)
+  );
+};
 
-export const pageNumberAtom = atomFamily((_key: string) => atom<number>(PAGE_NUMBER));
+export const pageNumberAtom = atomFamily((_key: string) => {
+  const childAtom = atom<number>(PAGE_NUMBER);
+  childAtom.debugLabel = `page-number/${_key}`;
+  return childAtom;
+});
 
 export const selectedRowsAtom = atomFamily(
   (_key: string) => atom<Array<any>>([]) // FIXME: get the right type
@@ -68,7 +73,7 @@ export const selectedRowsAtom = atomFamily(
 
 export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
-export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
+export const sortStateAtom = atomFamily((scope: DataAtomBinding) => {
   const initialState: SortState = { field: EntityCoreFields.CreationDate, order: 'desc' };
 
   const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
@@ -79,23 +84,23 @@ export const sortStateAtom = atomFamily((scope: DataAtomFamilyScopeType) => {
 }, isListAtomEqual);
 
 export const activeColumnsAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
+  (scope: DataAtomBinding) =>
     atomWithDefault<Promise<string[]> | string[]>(async (get) => {
       const dimensionColumns = await get(dimensionColumnsAtom(scope));
       const { columns } = { ...ViewsDefinitionRegistry[scope.dataType] };
 
-      return ['index', ...(dimensionColumns || []), ...columns];
+      return ['index', ...(dimensionColumns || []), ...(columns || [])];
     }),
   isListAtomEqual
 );
 
-export const dimensionColumnsAtom = atomFamily((scope: DataAtomFamilyScopeType) =>
+export const dimensionColumnsAtom = atomFamily((scope: DataAtomBinding) =>
   atom<Promise<string[] | null>>(async () => {
     // if the type is not simulation campaign, we dont fetch dimension columns
     if (scope.dataType !== DataType.SimulationCampaigns) {
       return null;
     }
-    const dimensionsResponse = await fetchDimensionAggs(scope.virtualLabInfo);
+    const dimensionsResponse = await fetchDimensionAggs(scope.workspace);
     const dimensions: string[] = [];
     dimensionsResponse.hits.forEach((response: any) => {
       if (response._source.parameter?.coords) {
@@ -108,7 +113,7 @@ export const dimensionColumnsAtom = atomFamily((scope: DataAtomFamilyScopeType) 
 );
 
 export const filtersAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
+  (scope: DataAtomBinding) =>
     atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
       const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
       const fields = columns ? getFieldsDefinition(columns) : [];
@@ -136,7 +141,7 @@ export const filtersAtom = atomFamily(
 );
 
 export const totalByExperimentAndRegionsAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
+  (scope: DataAtomBinding) =>
     atom<Promise<number | undefined | null>>(async (get) => {
       const sortState = get(sortStateAtom(scope));
       let descendantAndAncestorIds: string[] = [];
@@ -147,7 +152,7 @@ export const totalByExperimentAndRegionsAtom = atomFamily(
 
       const query = fetchDataQuery(1, [], scope.dataType, sortState, '', descendantAndAncestorIds);
       const result =
-        query && (await fetchTotalByExperimentAndRegions(query, undefined, scope.virtualLabInfo));
+        query && (await fetchTotalByExperimentAndRegions(query, undefined, scope.workspace));
 
       return result;
     }),
@@ -155,19 +160,16 @@ export const totalByExperimentAndRegionsAtom = atomFamily(
 );
 
 export const queryAtom = atomFamily(
-  (scope: DataAtomFamilyScopeType) =>
+  (scope: DataAtomBinding) =>
     atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
       const searchString = get(searchStringAtom(scope.key));
       const pageNumber = get(pageNumberAtom(scope.key));
       const sortState = get(sortStateAtom(scope));
       const bookmarkResourceIds = (
-        scope.dataScope === ExploreDataScope.BookmarkedResources && scope.virtualLabInfo
-          ? (
-              (await get(bookmarksForProjectAtomFamily(scope.virtualLabInfo))) as Record<
-                string,
-                any
-              >
-            )[scope.dataType] || []
+        scope.dataScope === ExploreDataScope.BookmarkedResources && scope.workspace
+          ? ((await get(bookmarksForProjectAtomFamily(scope.workspace))) as Record<string, any>)[
+              scope.dataType
+            ] || []
           : []
       ).map((b: { resourceId: string }) => b.resourceId);
 
@@ -201,26 +203,45 @@ export const queryAtom = atomFamily(
   isListAtomEqual
 );
 
-export const previousDataAtom = atomFamily(
-  <T>(_scope: DataAtomFamilyScopeType) => atom<Array<T>>([]),
-  isListAtomEqual
-);
+export const previousDataAtom = atomFamily(<T>(ctx: DataAtomBinding) => {
+  const childAtom = atom<T[]>([]);
+  childAtom.debugLabel = `previous-data-atom/${ctx.key}${ctx.brainRegionId ? `/${ctx.brainRegionId}` : ''}`;
+  return childAtom;
+}, isListAtomEqual);
 
-export const dataAtom = atomFamily(
-  <T extends EntityCoreObjectTypes>(scope: DataAtomFamilyScopeType) =>
-    atom<Promise<EntityCoreResponse<T>>>(async (get): Promise<EntityCoreResponse<T>> => {
-      const searchString = get(searchStringAtom(scope.key));
-      const pageNumber = get(pageNumberAtom(scope.key));
-      const filters = await get(filtersAtom(scope));
+export const entityTargetIdentifiersAtom = atomFamily((key: string) => {
+  const childAtom = atom<Array<string>>([]);
+  childAtom.debugLabel = `entity-target-identifiers/${key}`;
+  return childAtom;
+});
+
+export const refreshDataAtomFamily = atomFamily((key: string) => atom<symbol>(Symbol()));
+export function useRefreshDataAtom(key: string): () => void {
+  const setRefresh = useSetAtom(refreshDataAtomFamily(key));
+
+  return () => {
+    setRefresh(Symbol());
+  };
+}
+
+export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAtomBinding) => {
+  const refreshDataAtom = refreshDataAtomFamily(ctx.key);
+  const childAtom = atom<Promise<EntityCoreResponse<T>>>(
+    async (get): Promise<EntityCoreResponse<T>> => {
+      get(refreshDataAtom);
+      const searchString = get(searchStringAtom(ctx.key));
+      const pageNumber = get(pageNumberAtom(`${ctx.key}/${ctx.brainRegionId}`));
+      const filters = await get(filtersAtom(ctx));
 
       // TODO: better handling when we have IDs filter
-      if (scope.shouldUseIds) {
-        if (scope.targetIds && Boolean(scope.targetIds?.length)) {
+      if (ctx.shouldUseIds) {
+        const IDs = get(entityTargetIdentifiersAtom(ctx.key));
+        if (Boolean(IDs.length)) {
           filters.push({
             constraint: 'id__in',
             field: EntityCoreFields.ID,
             type: CoreFieldFilterTypeEnum.CheckList,
-            value: scope.targetIds,
+            value: IDs,
           });
         } else {
           return {
@@ -234,20 +255,20 @@ export const dataAtom = atomFamily(
         }
       }
 
-      const sortState = get(sortStateAtom(scope));
-      const queryParams = transformQueryParamsArrayToString(
-        transformFiltersToQuery(filters as any)
-      );
+      const sortState = get(sortStateAtom(ctx));
 
-      const queryParameters = {
+      const queryParameters = compactRecord({
         page_size: PAGE_SIZE,
         page: pageNumber,
         search: isEmpty(searchString) ? null : searchString,
         order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
-        ...queryParams,
-      };
-      // TODO: migrate from legacy type to entitycore type when everything is migrated
-      const entity = getEntityByLegacyType({ legacyType: scope.dataType as EntityCoreLegacyType });
+        within_brain_region_hierachy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+        within_brain_region_brain_region_id: ctx.brainRegionId,
+        within_brain_region_ascendants: false,
+        ...transformQueryParamsArrayToString(transformFiltersToQuery(filters as any)),
+      });
+
+      const entity = getEntityByLegacyType({ legacyType: ctx.dataType as EntityCoreLegacyType });
       if (entity && entity.api.query.list) {
         const response = await entity.api.query.list({
           withFacets: entity.api.config.allowedFacets,
@@ -255,12 +276,8 @@ export const dataAtom = atomFamily(
             ...(entity.api.config.allowedParams === 'all'
               ? queryParameters
               : pick(queryParameters, entity.api.config.allowedParams ?? [])),
-            // TODO: extend the brain region (in EntityCore) filter to support the children of the selected one
-            // brain_region_id: selectedBrainRegion?.id
-            //   ? Number(selectedBrainRegion?.id.split('/').pop())
-            //   : undefined,
           },
-          context: scope.virtualLabInfo,
+          context: ctx.workspace,
         });
 
         return response as EntityCoreResponse<T>;
@@ -274,27 +291,16 @@ export const dataAtom = atomFamily(
           page_size: PAGE_SIZE,
         },
       } as EntityCoreResponse<T>;
-    }),
-  isListAtomEqual
-);
-
-export function useDataAtom<T>(
-  dataContext: {
-    virtualLabInfo?: WorkspaceContext;
-    dataScope: ExploreDataScope;
-    dataType: DataType;
-    shouldUseIds?: boolean;
-    targetIds?: Array<string>;
-  },
-  key: string
-): Array<T> {
-  const prevData = useAtomValue(previousDataAtom({ ...dataContext, key }));
-  const data = useUnwrappedValue(
-    dataAtom({
-      ...dataContext,
-      key,
-    })
+    }
   );
+  childAtom.debugLabel = `data-atom/${ctx.key}${ctx.brainRegionId ? `/${ctx.brainRegionId}` : ''}`;
+  return childAtom;
+}, isListAtomEqual);
 
-  return [...prevData, ...(data?.data ?? [])] as Array<T>;
+export function useDataAtom<T>(ctx: DataAtomBinding) {
+  const prevData = useAtomValue(previousDataAtom(ctx));
+  const data = useUnwrappedValue(dataAtom(ctx));
+  const isLoading = useAtomValue(loadable(dataAtom(ctx))).state === 'loading';
+
+  return { result: [...prevData, ...(data?.data ?? [])] as Array<T>, isLoading };
 }

@@ -185,7 +185,7 @@ class ApiClient {
       const cachedResponseToStore = new Response(await responseToCache.blob(), {
         status: responseToCache.status,
         statusText: responseToCache.statusText,
-        headers: headers,
+        headers,
       });
 
       await cache.put(url, cachedResponseToStore);
@@ -246,15 +246,17 @@ class ApiClient {
         const contentType = cachedResponse.headers.get('Content-Type') || '';
         if (config.asRawResponse) {
           return cachedResponse as unknown as T;
-        } else if (contentType.includes('application/json')) {
-          return cachedResponse.json();
-        } else if (contentType.includes('text')) {
-          return (await cachedResponse.text()) as unknown as T;
-        } else if (contentType.includes('application/octet-stream')) {
-          return (await cachedResponse.blob()) as unknown as T;
-        } else {
-          return (await cachedResponse.arrayBuffer()) as unknown as T;
         }
+        if (contentType.includes('application/json')) {
+          return cachedResponse.json();
+        }
+        if (contentType.includes('text')) {
+          return (await cachedResponse.text()) as unknown as T;
+        }
+        if (contentType.includes('application/octet-stream')) {
+          return (await cachedResponse.blob()) as unknown as T;
+        }
+        return (await cachedResponse.arrayBuffer()) as unknown as T;
       }
 
       // if cache is invalid or expired, continue with the request
@@ -288,6 +290,7 @@ class ApiClient {
       }
 
       let response = await fetch(request);
+
       for (const interceptor of this.responseInterceptors) {
         response = await interceptor(response);
       }
@@ -320,6 +323,7 @@ class ApiClient {
       if (!response.ok) {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
+
           await new Promise((resolve) => setTimeout(resolve, delay));
           return runRequest();
         }
@@ -409,7 +413,7 @@ class ApiClient {
   post<T>(
     endpoint: string,
     options?: RequestOptions,
-    config?: RequestConfiguration & { cache?: CacheConfiguration }
+    config?: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean }
   ) {
     return this._request<T>('post', endpoint, options, config);
   }

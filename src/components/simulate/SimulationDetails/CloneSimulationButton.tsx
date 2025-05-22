@@ -36,8 +36,8 @@ export default function CloneSimulationButton({
   const setConditionsConfig = useSetAtom(simulationExperimentalSetupAtom);
 
   const onCloneSimulation = () => {
-    setRecordFromConfig(simulationConfig.config.recordFrom);
-    setCurrentInjectionConfig([simulationConfig.config.currentInjection]);
+    setRecordFromConfig(simulationConfig.config.record_from);
+    setCurrentInjectionConfig([simulationConfig.config.current_injection]);
     setSynaptomeConfig([...simulationConfig.config.synaptome!]);
     setConditionsConfig(simulationConfig.config.conditions);
 

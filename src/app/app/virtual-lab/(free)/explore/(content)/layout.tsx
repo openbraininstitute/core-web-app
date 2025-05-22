@@ -1,5 +1,3 @@
-'use client';
-
 import { ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -10,7 +8,7 @@ type GenericLayoutProps = {
   children: ReactNode;
 };
 
-export default function GenericLayout({ children }: GenericLayoutProps) {
+export default async function GenericLayout({ children }: GenericLayoutProps) {
   return (
     <div className="h-screen overflow-hidden" id="simulation-campaigns-layout">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>

@@ -1,0 +1,62 @@
+import { DataType } from '@/constants/explore-section/list-views';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+import {
+  getSingleNeuronSimulationIOResult,
+  createSingleNeuronSimulation,
+  getSingleNeuronSimulation,
+  getSingleNeuronSimulations,
+  getMEModel,
+} from '@/api/entitycore/queries';
+
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
+import type { WorkspaceContext } from '@/types/common';
+
+export const singleNeuronSimulationApiQueryExpand = {
+  memodel: (source: ISingleNeuronSimulation, context: WorkspaceContext | undefined) =>
+    getMEModel({ id: source.me_model.id, context }),
+  config: (source: ISingleNeuronSimulation, context: WorkspaceContext | undefined) =>
+    getSingleNeuronSimulationIOResult(source, context),
+};
+
+export async function resolveSingleNeuronSimulation(
+  id: string,
+  context: WorkspaceContext | undefined
+) {
+  const source = await getSingleNeuronSimulation({ id, context });
+  const memodel = await singleNeuronSimulationApiQueryExpand.memodel(source, context);
+  const config = await singleNeuronSimulationApiQueryExpand.config(source, context);
+
+  return { source, memodel, config };
+}
+
+export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
+  group: 'simulations',
+  title: 'Single Neuron Simulation',
+  legacyType: DataType.SingleNeuronSimulation,
+  type: EntityTypeEnum.SingleNeuronSimulation,
+  slug: EntitySlug.SingleNeuronSimulation,
+  isBookmarkable: true,
+  api: {
+    config: {
+      allowedFacets: true,
+      allowedParams: 'all',
+    },
+    query: {
+      list: getSingleNeuronSimulations,
+      one: getSingleNeuronSimulation,
+      create: createSingleNeuronSimulation,
+    },
+    expand: singleNeuronSimulationApiQueryExpand,
+  },
+  explore: {
+    basePrefix: 'simulate',
+    routePrefix: 'simulate',
+  },
+  asset: {
+    extension: 'application/json',
+    configfile: AssetLabel.single_cell_simulation,
+  },
+} as const;

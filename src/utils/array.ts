@@ -40,9 +40,8 @@ export function ensureArray<TElement>({
       throw new Error('Resulting array must not be empty when throwIfEmpty is true.');
     }
     return !arrayIsEmpty;
-  } else {
-    return resultArray;
   }
+  return resultArray;
 }
 
 export const isArrayEmpty = (array: Array<any> | null | undefined) => {

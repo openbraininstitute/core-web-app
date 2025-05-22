@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import omit from 'lodash/omit';
+import type { Metadata } from 'next';
 
 import ListingView from '@/features/views/listing';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
@@ -7,14 +8,23 @@ import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { ExperimentalEntitySlugValue } from '@/entity-configuration/domain/slug';
 
-export default async function Page(
-  props: ServerSideComponentProp<
-    WorkspaceContext & {
-      type: ExperimentalEntitySlugValue;
-    },
-    null
-  >
-) {
+type Props = ServerSideComponentProp<
+  WorkspaceContext & {
+    type: ExperimentalEntitySlugValue;
+  },
+  null
+>;
+
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
+  const entity = getEntityBySlug({ slug: params.type });
+
+  return {
+    title: entity?.title ?? 'Entities listing',
+  };
+}
+
+export default async function Page(props: Props) {
   const params = await props.params;
   const entity = getEntityBySlug({ slug: params.type });
 

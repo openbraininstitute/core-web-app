@@ -1,0 +1,40 @@
+import kebabCase from 'lodash/kebabCase';
+import { EntityTypeValue } from '@/api/entitycore/types';
+
+type CreateTicketResponse = {
+  ticketId: string;
+};
+
+export default async function createDownloadTicket({
+  entityType,
+  virtualLabId,
+  projectId,
+  entityIds,
+}: {
+  entityType: EntityTypeValue;
+  virtualLabId?: string;
+  projectId?: string;
+  entityIds: string[];
+}): Promise<CreateTicketResponse> {
+  const url = `${window.location.origin}/api/entity-download/${kebabCase(entityType)}/ticket`;
+
+  const downloadTicketRequest = {
+    virtualLabId,
+    projectId,
+    entityIds,
+  };
+
+  const response = await fetch(url, {
+    method: 'post',
+    headers: {
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(downloadTicketRequest),
+  });
+
+  if (response.ok) {
+    return await response.json();
+  }
+  throw new Error('Error creating download ticket');
+}

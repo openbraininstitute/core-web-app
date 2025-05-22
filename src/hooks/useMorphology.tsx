@@ -1,30 +1,31 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import isNil from 'lodash/isNil';
 
+import getMorphology from '@/api/bluenaas/get-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
-import { getSession } from '@/authFetch';
-import { isJSON } from '@/util/utils';
-import getMorphology from '@/api/bluenaas/getMorphology';
 import { isBluenaasError } from '@/types/simulation/single-neuron';
+import { isJSON } from '@/util/utils';
 
 export default function useMorphology({
-  modelSelfUrl,
+  modelId,
   callback,
+  projectId,
+  virtualLabId,
 }: {
-  modelSelfUrl: string;
+  modelId: string;
   callback: (morphology: Morphology) => void;
+  projectId: string;
+  virtualLabId: string;
 }) {
   const mountedRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const readMorphology = useCallback(async (): Promise<Morphology | null> => {
-    const session = await getSession();
-    if (isNil(session)) {
-      throw new Error('No session found');
-    }
+    const response = await getMorphology({
+      ctx: { virtualLabId, projectId },
+      meModelId: modelId,
+    });
 
-    const response = await getMorphology({ modelId: modelSelfUrl, token: session.accessToken });
     const reader = response.body?.getReader();
     let data: string = '';
     let value: Uint8Array | undefined;
@@ -39,7 +40,7 @@ export default function useMorphology({
         if (isJSON(data)) {
           const parsedJson = JSON.parse(data);
           if (isBluenaasError(parsedJson)) {
-            throw new Error(parsedJson.details ?? 'Morpholoy generation failed.', {
+            throw new Error(parsedJson.details ?? 'Morphology generation failed.', {
               cause: 'BluenaasError',
             });
           }
@@ -49,7 +50,7 @@ export default function useMorphology({
       return null;
     }
     throw new Error('Neuron morphology could not be constructed');
-  }, [modelSelfUrl]);
+  }, [modelId]);
 
   useEffect(() => {
     mountedRef.current = true;

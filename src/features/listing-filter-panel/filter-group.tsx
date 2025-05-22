@@ -5,9 +5,8 @@ import { ReactElement } from 'react';
 import { ChevronIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
-import styles from '@/features/listing-filter-panel/filters.module.css';
-
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import styles from '@/features/listing-filter-panel/filters.module.css';
 
 type ContentProps = {
   filters: Array<CoreFilter>;

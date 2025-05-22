@@ -51,6 +51,10 @@ export const renderEmptyOrValue = (value: any) => {
   return isNil(value) || isEmpty(value) ? EmptyValue : value;
 };
 
+export const renderAsString = (value: any) => {
+  return String(value);
+};
+
 export const renderArray = (array: string[]) => {
   return array.map((item) => <div key={item}>{item}</div>);
 };
@@ -103,7 +107,7 @@ export function renderMeanStd({
   //     µm<sup>-1</sup>
   //   </span>
   // );
-  let field = std
+  const field = std
     ? `${renderFloatNumber(mean?.value)} ± ${renderFloatNumber(std?.value)}`
     : `${renderFloatNumber(mean?.value)}`;
   return <>{field}</>;

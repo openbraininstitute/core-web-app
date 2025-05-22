@@ -7,6 +7,7 @@ import { unwrap } from 'jotai/utils';
 import ListingFilterPanel from '@/features/listing-filter-panel/listing-filter-panel';
 
 import { activeColumnsAtom, dataAtom, filtersAtom } from '@/state/explore-section/list-view-atoms';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { useUnwrappedValue } from '@/hooks/hooks';
@@ -22,6 +23,7 @@ export default function WithListingFilterPanel({
   dataScope,
   dataKey,
   className,
+  useBrainRegion,
 }: {
   children: (props: {
     activeColumns?: string[];
@@ -34,23 +36,50 @@ export default function WithListingFilterPanel({
   virtualLabInfo?: WorkspaceContext;
   className?: string;
   dataKey: string;
+  useBrainRegion?: boolean;
 }) {
+  const { node } = useBrainRegionHierarchy({ dataKey });
+
   const activeColumns = useAtomValue(
     useMemo(
-      () => unwrap(activeColumnsAtom({ dataType, dataScope, key: dataKey })),
-      [dataType, dataScope, dataKey]
+      () =>
+        unwrap(
+          activeColumnsAtom({
+            dataType,
+            dataScope,
+            key: useBrainRegion ? `${dataKey}/${node.id}` : dataKey,
+            brainRegionId: useBrainRegion ? node.id : undefined,
+          })
+        ),
+      [dataType, dataScope, dataKey, node.id]
     )
   );
 
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
 
-  const data = useUnwrappedValue(dataAtom({ dataType, dataScope, virtualLabInfo, key: dataKey }));
+  const data = useUnwrappedValue(
+    dataAtom({
+      dataType,
+      dataScope,
+      workspace: virtualLabInfo,
+      key: dataKey,
+      brainRegionId: useBrainRegion ? node.id : undefined,
+    })
+  );
   const facets = data?.facets;
 
   const [filters, setFilters] = useAtom(
     useMemo(
-      () => unwrap(filtersAtom({ dataType, dataScope, key: dataKey })),
-      [dataType, dataScope, dataKey]
+      () =>
+        unwrap(
+          filtersAtom({
+            dataType,
+            dataScope,
+            key: useBrainRegion ? `${dataKey}/${node.id}` : dataKey,
+            brainRegionId: useBrainRegion ? node.id : undefined,
+          })
+        ),
+      [dataType, dataScope, dataKey, node.id]
     )
   );
 
@@ -75,6 +104,7 @@ export default function WithListingFilterPanel({
           dataKey={dataKey}
           facets={facets}
           virtualLabInfo={virtualLabInfo}
+          useBrainRegion={useBrainRegion}
         />
       )}
     </>

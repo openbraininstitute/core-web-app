@@ -1,12 +1,18 @@
-import { CSSProperties, ReactNode, use } from 'react';
-import { WarningOutlined } from '@ant-design/icons';
+'use client';
+
+import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
+import { CSSProperties, ReactNode } from 'react';
+import { useParams } from 'next/navigation';
 import { Menu, MenuProps } from 'antd';
+import { useAtomValue } from 'jotai';
 import get from 'lodash/get';
 
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { DataType } from '@/constants/explore-section/list-views';
+import { resolveDataKey } from '@/utils/key-builder';
 
-import type { BulkEntityCoreCountResult } from '@/services/entitycore/entities-types-count';
-import type { Result } from '@/api/utils';
+import type { WorkspaceContext } from '@/types/common';
 
 export type NavigationMenuItem = {
   key: string;
@@ -19,18 +25,18 @@ export type NavigationMenuItem = {
 
 type Props = {
   activePath: string;
-  entityCounterPromise: Promise<Result<BulkEntityCoreCountResult, Error>>;
   items: Array<NavigationMenuItem>;
   onClick: MenuProps['onClick'];
 };
 
-export default function NavigationMenu({
-  activePath,
-  items,
-  onClick,
-  entityCounterPromise,
-}: Props) {
-  const { data, error } = use(entityCounterPromise);
+export default function NavigationMenu({ activePath, items, onClick }: Props) {
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const { node } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: 'explore', projectId }),
+  });
+  const { data, error } = useAtomValue(
+    EntitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id })
+  );
   const allData = data ? { ...data.experimental, ...data.model } : {};
 
   const updatedItems = items.map(({ entitytype, label, ...rest }) => {

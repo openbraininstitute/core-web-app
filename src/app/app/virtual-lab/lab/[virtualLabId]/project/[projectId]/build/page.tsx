@@ -1,133 +1,80 @@
 'use client';
 
-import { HTMLProps, use } from 'react';
-
-import { useAtom, useAtomValue } from 'jotai';
-import { useRouter } from 'next/navigation';
-
-import { DataType } from '@/constants/explore-section/list-views';
-import { Btn } from '@/components/buttons/base/legacy-btn';
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { to64 } from '@/util/common';
-import { MODEL_DATA_TYPE_CONFIG } from '@/constants/explore-section/data-types/model-data-types';
-import { ExploreDataScope } from '@/types/explore-section/application';
-import { SimulationScopeToModelType, SimulationType } from '@/types/virtual-lab/lab';
-import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
+import { HTMLProps, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useAtomValue } from 'jotai';
+import { match } from 'ts-pattern';
+import Link from 'next/link';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
 import BookmarkButton from '@/features/bookmark/control';
 
-import VirtualLabTopMenu from '@/components/VirtualLab/VirtualLabTopMenu';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
-import { ExploreESHit } from '@/types/explore-section/es';
+import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
+import { ExploreDataScope } from '@/types/explore-section/application';
+import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { Btn } from '@/components/buttons/base/legacy-btn';
 import { classNames } from '@/util/utils';
 import {
+  ModelTilesConfig,
   ScopeSelector,
   ScopeSelectorSmall,
   SectionTabs,
+  useTileScopeQuery,
 } from '@/components/VirtualLab/ScopeSelector';
-import {
-  scopeSelectorExpandedAtom,
-  selectedSimTypeFamily,
-  selectedTabFamily,
-} from '@/components/VirtualLab/ScopeSelector/state';
-import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
-import Styles from '@/styles/vlabs.module.css';
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
-import { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { resolveDataKey } from '@/utils/key-builder';
 import { ensureArray } from '@/utils/array';
 
-type Params = {
-  params: Promise<{
-    projectId: string;
-    virtualLabId: string;
-  }>;
-};
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 
-type SimURLs = {
-  newUrl: string;
-  viewUrl: string;
-};
+import Styles from '@/styles/vlabs.module.css';
 
-const SimTypeURLs: { [key: string]: SimURLs } = {
-  [SimulationType.SingleNeuron]: {
-    newUrl: 'build/me-model/new',
-    viewUrl: 'explore/interactive/model/me-model',
-  },
-  [SimulationType.Synaptome]: {
-    newUrl: 'build/synaptome/new',
-    viewUrl: 'explore/interactive/model/synaptome',
-  },
-};
+export default function Page() {
+  const { section, selectedTab } = useTileScopeQuery();
 
-export default function VirtualLabProjectBuildPage(props: Params) {
-  const params = use(props.params);
-  const router = useRouter();
-  const [selectedTab] = useAtom(selectedTabFamily('build' + params.projectId));
-  const atomKey = 'build' + selectedTab + params.projectId;
-  const [selectedSimType] = useAtom(selectedSimTypeFamily(atomKey));
-
-  const URLs = selectedSimType && SimTypeURLs[selectedSimType];
-
-  const renderContent = () => {
-    if (selectedTab === 'new')
-      return (
-        <ScopeSelector
-          atomKey={atomKey}
-          section="build"
-          handleBuildClick={() => {
-            if (!URLs) return;
-            router.push(URLs.newUrl);
-          }}
-        />
-      );
-
-    return <BrowseModelsTab projectId={params.projectId} virtualLabId={params.virtualLabId} />;
-  };
+  const content = match({ section, selectedTab })
+    .with({ section: 'build', selectedTab: 'new' }, () => <ScopeSelector />)
+    .with({ section: 'build', selectedTab: 'browse' }, () => <BrowseModelsTab />)
+    .otherwise(() => null);
 
   return (
     <div className="flex min-h-screen w-full flex-col gap-5 pt-8 pr-5">
-      <VirtualLabTopMenu />
-      <SectionTabs projectId={params.projectId} section="build" />
-      {renderContent()}
+      <SectionTabs />
+      {content}
     </div>
   );
 }
 
-function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtualLabId: string }) {
-  const router = useRouter();
-  const [selectedTab] = useAtom(selectedTabFamily('build' + projectId));
-  const atomKey = 'build' + selectedTab + projectId;
-  const selectedSimType = useAtomValue(selectedSimTypeFamily(atomKey));
+function BrowseModelsTab() {
+  const { type } = useTileScopeQuery();
 
-  const selectedModelType = SimulationScopeToModelType[selectedSimType] ?? DataType.CircuitMEModel;
-
-  const selectedRows = useAtomValue(selectedRowsAtom(projectId + 'build' + selectedModelType));
-
-  const [expanded] = useAtom(scopeSelectorExpandedAtom(atomKey));
-
-  const navigateToDetailPage = (record: ExploreESHit<ExploreSectionResource>) => {
-    const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-    const pathId = `${to64(`${record._source.project.label}!/!${record._id}`)}`;
-    const baseExploreUrl = `${vlProjectUrl}/${SimTypeURLs[selectedSimType].viewUrl}`;
-    router.push(`${baseExploreUrl}/${pathId}`);
-  };
-
-  const loadMoreDiv = useInfiniteScroll(
-    virtualLabId,
-    projectId,
-    selectedModelType ?? DataType.CircuitMEModel,
-    projectId + 'build' + selectedModelType
-  );
+  const [expanded, setExpanded] = useState(false);
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const model = ModelTilesConfig.find((o) => o.id === type);
+  const dataType = model?.entities?.build.legacyType;
 
   const entity = getEntityByLegacyType({
-    legacyType: selectedModelType ?? DataType.CircuitMEModel,
+    legacyType: dataType!,
   });
+
+  const dataKey = resolveDataKey({
+    projectId,
+    section: 'build',
+    entity,
+  });
+
+  const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
+
+  const loadMoreDiv = useInfiniteScroll(virtualLabId, projectId, dataType!, dataKey);
+  const onMenuExpand = (value: boolean) => setExpanded(value);
+
   return (
     <>
       <div className="flex grow flex-col">
-        <ScopeSelectorSmall atomKey={atomKey} />
-        {selectedModelType ? (
+        <ScopeSelectorSmall expanded={expanded} onMenuExpand={onMenuExpand} />
+        {dataType ? (
           <div
             id="explore-table-container-for-observable"
             className={classNames(
@@ -138,28 +85,30 @@ function BrowseModelsTab({ projectId, virtualLabId }: { projectId: string; virtu
             <ExploreSectionListingView<EntityCoreIdentifiableNamed>
               tableScrollable={false}
               controlsVisible={false}
-              dataType={selectedModelType ?? DataType.CircuitMEModel}
+              dataType={dataType}
               dataScope={ExploreDataScope.NoScope}
               virtualLabInfo={{ virtualLabId, projectId }}
               selectionType="radio"
               style={{ background: 'bg-white' }}
               containerClass="grow bg-primary-9 flex flex-col"
               tableClass={classNames('grow', Styles.table)}
-              dataKey={projectId + 'build' + selectedModelType || DataType.CircuitMEModel}
+              dataKey={dataKey}
+              useBrainRegion={false}
               showLoadingState={false}
             />
-
             {loadMoreDiv}
-
             {selectedRows.length > 0 && (
               <div className="fixed right-[45px] bottom-12 flex items-center justify-end gap-2">
-                <Btn
-                  type="button"
-                  className="bg-primary-9 h-12 px-8 text-white"
-                  onClick={() => navigateToDetailPage(selectedRows[0])}
+                <Link
+                  className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
+                  href={resolveExploreDetailsPageUrl({
+                    ctx: { virtualLabId, projectId },
+                    dataType,
+                    entityId: selectedRows[0].id,
+                  })}
                 >
                   View
-                </Btn>
+                </Link>
                 {entity && entity.isBookmarkable && (
                   <BookmarkButton
                     virtualLabId={virtualLabId}

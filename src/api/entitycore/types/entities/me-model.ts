@@ -1,18 +1,18 @@
 import z from 'zod';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,
-  IBrainRegion,
   IContributor,
   Timestamps,
   ISpecies,
   IStrain,
   IEType,
   IMType,
+  EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -23,6 +23,7 @@ import type {
   SharedFilter,
   MtypeFilter,
   EtypeFilter,
+  IdFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export enum ValidationStatus {
@@ -43,20 +44,33 @@ export interface IMEModel
   extends EntityCoreIdentifiable,
     IMEModelBase,
     Timestamps,
-    EntityAuthorization {
+    EntityAuthorization,
+    EntityCoreType {
   species: ISpecies;
   strain?: IStrain | null;
-  brain_region: IBrainRegion;
+  brain_region: BrainRegionHierarchyBase;
   contributions?: Array<IContributor> | null;
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
   morphology: IReconstructionMorphology;
   emodel: IEModel;
-  type: EntityTypeEnum.Memodel;
+}
+
+export interface INestedMEModel extends IMEModelBase, Timestamps {
+  id: string;
+  mtypes: Array<IMType>;
+  etypes: Array<IEType>;
+}
+
+export interface INestedMEModel extends IMEModelBase, Timestamps {
+  id: string;
+  mtypes: Array<IMType>;
+  etypes: Array<IEType>;
 }
 
 export interface IMEModelFilter
   extends ContributionFilter,
+    IdFilter,
     MtypeFilter,
     EtypeFilter,
     SpeciesFilter,
@@ -73,7 +87,7 @@ export const CreateMEModelSchema = z.object({
   name: z.string(),
   description: z.string(),
   validation_status: z.nativeEnum(ValidationStatus),
-  brain_region_id: z.number(),
+  brain_region_id: z.string().uuid(),
   morphology_id: z.string().uuid(),
   emodel_id: z.string().uuid(),
   species_id: z.string().uuid(),

@@ -1,22 +1,27 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, use, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSetAtom } from 'jotai';
-
+import dynamic from 'next/dynamic';
 import ErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
-import BrainRegionsTree from '@/features/brain-region-tree';
-import { sectionAtom } from '@/state/application';
 
-type GenericLayoutProps = {
+import { resolveDataKey } from '@/utils/key-builder';
+import { sectionAtom } from '@/state/application';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
+type GenericLayoutProps = ServerSideComponentProp<WorkspaceContext, null> & {
   children: ReactNode;
 };
+const BrainRegionsHierarchy = dynamic(() => import('@/features/brain-region-hierarchy'), {
+  ssr: false,
+});
+export default function BuildMEModelLayout({ params, children }: GenericLayoutProps) {
+  // const setSection = useSetAtom(sectionAtom);
+  const { projectId } = use(params);
 
-export default function BuildMEModelLayout({ children }: GenericLayoutProps) {
-  const setSection = useSetAtom(sectionAtom);
-
-  useEffect(() => setSection('build'), [setSection]);
-
+  // useEffect(() => setSection('build'), [setSection]);
+  const dataKey = resolveDataKey({ projectId, section: 'build' });
   return (
     <div className="grid grid-cols-[min-content_auto] bg-white">
       <ErrorBoundary
@@ -24,7 +29,7 @@ export default function BuildMEModelLayout({ children }: GenericLayoutProps) {
           showButtons: false,
         })}
       >
-        <BrainRegionsTree scope="build" />
+        <BrainRegionsHierarchy dataKey={dataKey} />
       </ErrorBoundary>
 
       <div className="flex flex-col">

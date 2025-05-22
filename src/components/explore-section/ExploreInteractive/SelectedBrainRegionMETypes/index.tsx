@@ -12,6 +12,7 @@ import { NoCompositionAvailable } from '@/components/common/METypeHierarchy/NoCo
 export default function SelectedBrainRegionMETypes() {
   const brainRegion = useAtomValue(selectedBrainRegionAtom);
   const composition = useAtomValue(useMemo(() => loadable(analysedCompositionAtom), []));
+
   const meTypesMetadata = useAtomValue(useMemo(() => unwrap(cellTypesByIdAtom), []));
 
   if (!brainRegion) {

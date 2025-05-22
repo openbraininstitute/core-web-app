@@ -1,17 +1,27 @@
+import isNil from 'lodash/isNil';
+
 import Detail from '@/features/entities/single-neuron-synaptome/detail-view';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { SingleNeuronSynaptome as entity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { applyEntityExpansions } from '@/entity-configuration/domain/helpers';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { getMEModel } from '@/api/entitycore/queries';
-import { arrayBufferToJson } from '@/utils/buffer';
 import { tryCatch } from '@/api/utils';
 
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type {
+  ISingleNeuronSynaptome,
+  TSingleNeuronSynaptomeConfiguration,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
+import type { IMEModel } from '@/api/entitycore/types';
+import type { Prettify } from '@/utils/type';
+
+type ExpandType = Prettify<{
+  memodel: IMEModel;
+  config: {
+    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+  } | null;
+}>;
 
 type Props = {
   params: WorkspaceContext & {
@@ -19,72 +29,44 @@ type Props = {
   };
 };
 
-// TODO: this is preparation for entitycore to expand memodel within synaptome
-async function fetchSingleNeuronSynaptome({ id, virtualLabId, projectId }: Props['params']) {
-  let config: {
-    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
-  } | null = null;
-  const { data, error } = await tryCatch(
+async function loadExpandedSingleNeuronSynaptome({ id, virtualLabId, projectId }: Props['params']) {
+  const { data: source, error } = await tryCatch(
     getSingleNeuronSynaptome({ id, context: { virtualLabId, projectId } })
   );
 
   if (error) {
-    throw new Error('Single neuron synaptome could not be found');
+    throw new Error('Failed to load single neuron synaptome entity details');
   }
 
-  const { data: memodel, error: err1 } = await tryCatch(
-    getMEModel({
-      id: data.me_model.id,
-      context: { virtualLabId, projectId },
-    })
-  );
-
-  if (err1) {
-    throw new Error('Single neuron model could not be found');
+  let data = {} as ExpandType | null;
+  let error1 = null;
+  if (entity.api.expand) {
+    ({ data, error: error1 } = await tryCatch(
+      applyEntityExpansions<ISingleNeuronSynaptome, ExpandType>(entity, source, {
+        virtualLabId,
+        projectId,
+      })
+    ));
   }
 
-  const configAsset = getAssetElement({
-    assets: data.assets,
-    path: `${SingleNeuronSynaptome.asset.configfile}_${data.id}.json`,
-    type: SingleNeuronSynaptome.asset.extension!,
-  });
-
-  if (!configAsset) {
-    throw new Error('No Single Neuron Synaptome configuration found');
+  if (error1 || isNil(data)) {
+    throw new Error('Failed to load single neuron synaptome relative data');
   }
-
-  const { data: asset, error: err2 } = await tryCatch(
-    downloadAsset({
-      ctx: { virtualLabId, projectId },
-      entityId: data.id,
-      entityType: EntityTypeEnum.SingleNeuronSynaptome,
-      id: configAsset.id,
-    })
-  );
-
-  if (err2) {
-    throw new Error('Could not read the single neuron configuration file');
-  }
-  config = arrayBufferToJson(asset);
-
   return {
-    entity: data,
-    memodel,
-    config: config,
+    source,
+    ...data,
   };
 }
 
 export default async function Page({ params }: Props) {
   const { id, virtualLabId, projectId } = params;
   const { data, error } = await tryCatch(
-    fetchSingleNeuronSynaptome({ virtualLabId, projectId, id })
+    loadExpandedSingleNeuronSynaptome({ virtualLabId, projectId, id })
   );
 
   if (error) {
     return <ErrorComponent error={error} />;
   }
 
-  return (
-    <Detail params={{ virtualLabId, projectId, id }} memodel={data.memodel} config={data.config} />
-  );
+  return <Detail params={{ virtualLabId, projectId, id }} payload={data} />;
 }

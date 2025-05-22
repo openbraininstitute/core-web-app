@@ -37,8 +37,8 @@ export type StimulusDropdownInfo = {
 export type SynaptomeConfig = SynapseConfig[];
 export interface CurrentInjectionSimulationConfig {
   id: number;
-  configId: string;
-  injectTo: string;
+  config_id: string;
+  inject_to: string;
   stimulus: StimulusConfig;
 }
 
@@ -46,8 +46,8 @@ export type SimulationExperimentalSetup = {
   celsius: number;
   vinit: number;
   hypamp: number;
-  maxTime: number;
-  timeStep: number;
+  max_time: number;
+  time_step: number;
   seed: number;
 };
 
@@ -57,24 +57,24 @@ export type RecordLocation = {
 };
 
 export interface SimulationConfiguration {
-  recordFrom: RecordLocation[];
-  currentInjection: CurrentInjectionSimulationConfig[];
+  record_from: RecordLocation[];
+  current_injection: CurrentInjectionSimulationConfig[];
   conditions: SimulationExperimentalSetup;
   synapses?: SynaptomeConfig;
 }
 
 export type SynapseConfig = {
   id: string;
-  configId: string;
+  config_id: string;
   delay: number;
   duration: number;
   frequency: number | number[];
-  weightScalar: number;
+  weight_scalar: number;
   color: string;
 };
 
 export type SingleModelSimConfig = SimulationConfiguration & {
-  directStimulation: CurrentInjectionSimulationConfig[];
+  direct_stimulation: CurrentInjectionSimulationConfig[];
   synapses: null;
 };
 
@@ -83,15 +83,15 @@ export type SynapseModelSimConfig = SimulationConfiguration & {
 };
 
 export type StimulusConfig = {
-  stimulusType: StimulusType;
-  stimulusProtocol: StimulusModule | null;
+  stimulus_type: StimulusType;
+  stimulus_protocol: StimulusModule | null;
   amplitudes: number[] | number;
 };
 
 export interface SingleNeuronModelSimulationConfig {
-  recordFrom: RecordLocation[];
+  record_from: RecordLocation[];
   conditions: SimulationExperimentalSetup;
-  currentInjection: CurrentInjectionSimulationConfig;
+  current_injection: CurrentInjectionSimulationConfig;
   synaptome?: Array<SynapseConfig>;
 }
 
@@ -146,7 +146,7 @@ export type ProtocolDetails = {
     time: {
       delay: number;
       duration: number;
-      stopTime: number;
+      stop_time: number;
     };
 
     current: {

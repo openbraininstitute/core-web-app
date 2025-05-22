@@ -4,12 +4,6 @@ import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 
-// TODO: should be in global shared type file
-export type Nullish = null | undefined;
-export type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
 export type EntityCoreDataType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['type'];
 
@@ -36,7 +30,7 @@ export type EntityCoreBaseType = {
 };
 
 export interface EntityCoreBaseAsset {
-  assets: Array<IAsset> | null;
+  assets: Array<IAsset>;
 }
 
 export interface EntityCoreResource
@@ -138,6 +132,12 @@ enum AssetStatus {
   DELETED = 'deleted',
 }
 
+export enum AssetLabel {
+  single_cell_simulation = 'single_cell_simulation_data',
+  single_neuron_synaptome_config = 'single_neuron_synaptome_config',
+  single_neuron_synaptome_simulation_io_result = 'single_neuron_synaptome_simulation_io_result',
+}
+
 type AssetBase = {
   path: string;
   full_path: string;
@@ -146,6 +146,7 @@ type AssetBase = {
   content_type: string;
   size: number;
   sha256_digest?: string | null;
+  label: AssetLabel;
 };
 
 export interface IAsset extends AssetBase, AssetLegacyMeta {

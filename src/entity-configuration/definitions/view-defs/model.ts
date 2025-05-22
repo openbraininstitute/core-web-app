@@ -3,16 +3,7 @@ import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/type
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type {
-  TypeSummaryProps,
-  ViewDefinitionConfig,
-} from '@/entity-configuration/definitions/view-defs/types';
-
-export const CommonSummaryViewFields = [
-  { field: EntityCoreFields.Description, className: 'col-span-3' },
-  { field: EntityCoreFields.Contributions },
-  { field: EntityCoreFields.CreationDate },
-] as TypeSummaryProps[];
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [DataType.CircuitEModel]: {
@@ -56,7 +47,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     curated: false,
     summaryViewFields: [
       { field: EntityCoreFields.BrainRegion, className: 'col-span-2' },
-      { field: EntityCoreFields.MEModelValidationStatus, className: 'col-span-2' },
+      { field: EntityCoreFields.MEModelValidationStatus, className: 'col-span-2 text-left' },
       { field: EntityCoreFields.MType, className: 'col-span-4' },
       { field: EntityCoreFields.EType, className: 'col-span-4' },
     ],

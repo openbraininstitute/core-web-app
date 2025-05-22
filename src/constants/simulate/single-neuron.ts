@@ -2,19 +2,20 @@ import range from 'lodash/range';
 import round from 'lodash/round';
 
 import {
+  CurrentInjectionSimulationConfig,
+  SimulationExperimentalSetup,
+  SimulationConfiguration,
   StimulusDropdownInfo,
   StimulusTypeOption,
-  SimulationConfiguration,
-  StimulusConfig,
-  CurrentInjectionSimulationConfig,
-  SynapseConfig,
-  RecordLocation,
-  SimulationExperimentalSetup,
-  StimulusModule,
   ProtocolDetails,
+  RecordLocation,
+  StimulusConfig,
+  StimulusModule,
+  SynapseConfig,
 } from '@/types/simulation/single-neuron';
-import { SingleSynaptomeConfig } from '@/types/synaptome';
-import { SynapseType } from '@/components/neuron-viewer/hooks/events';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { SynapseType } from '@/components/neuron-viewer/hooks/events';
 
 export const stimulusTypeParams: StimulusDropdownInfo & {
   options: StimulusTypeOption[];
@@ -41,7 +42,7 @@ export const PROTOCOL_DETAILS: Record<StimulusModule, ProtocolDetails> = {
       time: {
         delay: 250,
         duration: 1350,
-        stopTime: 1850,
+        stop_time: 1850,
       },
 
       current: {
@@ -64,7 +65,7 @@ export const PROTOCOL_DETAILS: Record<StimulusModule, ProtocolDetails> = {
       time: {
         delay: 250,
         duration: 50,
-        stopTime: 550,
+        stop_time: 550,
       },
 
       current: {
@@ -87,7 +88,7 @@ export const PROTOCOL_DETAILS: Record<StimulusModule, ProtocolDetails> = {
       time: {
         delay: 250,
         duration: 3000,
-        stopTime: 3500,
+        stop_time: 3500,
       },
 
       current: {
@@ -108,7 +109,7 @@ export const PROTOCOL_DETAILS: Record<StimulusModule, ProtocolDetails> = {
       time: {
         delay: 250,
         duration: 3600,
-        stopTime: 4100,
+        stop_time: 4100,
       },
 
       current: {
@@ -132,30 +133,30 @@ export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup 
   celsius: 34,
   vinit: -73,
   hypamp: 0,
-  maxTime: 2000,
-  timeStep: 0.05,
+  max_time: 2000,
+  time_step: 0.05,
   seed: 100,
 };
 
 export const DEFAULT_PROTOCOL = 'idrest';
 
-export const DEFAULT_STIM_CONFIG: StimulusConfig = {
-  stimulusType: 'current_clamp',
-  stimulusProtocol: DEFAULT_PROTOCOL,
+export const DEFAULT_STIMULUS_CONFIG: StimulusConfig = {
+  stimulus_type: 'current_clamp',
+  stimulus_protocol: DEFAULT_PROTOCOL,
   amplitudes: [40, 80, 120],
 };
 
 export const DEFAULT_CURRENT_INJECTION_CONFIG: CurrentInjectionSimulationConfig = {
   id: 0,
-  configId: crypto.randomUUID(),
-  injectTo: DEFAULT_SECTION,
-  stimulus: DEFAULT_STIM_CONFIG,
+  config_id: crypto.randomUUID(),
+  inject_to: DEFAULT_SECTION,
+  stimulus: DEFAULT_STIMULUS_CONFIG,
 };
 
 export const DEFAULT_SIM_CONFIG: SimulationConfiguration = {
   conditions: DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
-  recordFrom: [{ ...DEFAULT_RECORDING_LOCATION }],
-  currentInjection: [DEFAULT_CURRENT_INJECTION_CONFIG],
+  record_from: [{ ...DEFAULT_RECORDING_LOCATION }],
+  current_injection: [DEFAULT_CURRENT_INJECTION_CONFIG],
   synapses: undefined,
 };
 
@@ -165,17 +166,17 @@ export const SYNAPSE_CODE_TO_TYPE: Record<number, SynapseType> = {
 };
 
 export const getDefaultSynapseConfig = (
-  synapsePlacementConfig?: SingleSynaptomeConfig[]
+  synapsePlacementConfig?: Array<TSingleNeuronSynaptomeConfiguration>
 ): SynapseConfig | null => {
   if (synapsePlacementConfig) {
     return {
       id: synapsePlacementConfig[0].id,
-      configId: crypto.randomUUID(),
+      config_id: crypto.randomUUID(),
       color: synapsePlacementConfig[0].color,
       delay: 100,
       duration: 2000,
       frequency: 20,
-      weightScalar: 1,
+      weight_scalar: 1,
     };
   }
   return null;

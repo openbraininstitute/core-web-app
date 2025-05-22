@@ -15,7 +15,9 @@ import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categorie
 import useNotification from '@/hooks/notifications';
 
 type Props = {
-  modelSelfUrl: string;
+  virtualLabId: string;
+  projectId: string;
+  meModelId: string;
   useEvents?: boolean;
   useActions?: boolean;
   useZoomer?: boolean;
@@ -41,13 +43,15 @@ type Props = {
 
 export default function NeuronViewer({
   children,
-  modelSelfUrl,
+  meModelId,
   useEvents,
   useActions,
   useZoomer,
   useCursor,
   useLabels,
   actions,
+  virtualLabId,
+  projectId,
 }: Props) {
   const labelsCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,7 +64,7 @@ export default function NeuronViewer({
       const sectionNames = Object.keys(morphology);
       setSecNames(sectionNames);
 
-      if (!sectionNames.includes(DEFAULT_CURRENT_INJECTION_CONFIG.injectTo)) {
+      if (!sectionNames.includes(DEFAULT_CURRENT_INJECTION_CONFIG.inject_to)) {
         throw new Error('No soma section present');
       }
     },
@@ -87,8 +91,10 @@ export default function NeuronViewer({
   }, []);
 
   const { loading, error } = useMorphology({
-    modelSelfUrl,
+    modelId: meModelId,
     callback: runRenderer,
+    projectId,
+    virtualLabId,
   });
 
   if (error) {
@@ -122,7 +128,7 @@ export default function NeuronViewer({
   if (useLabels) {
     rendererRef.current?.labels.update([
       {
-        section: injectionLocations[stimulationId].injectTo,
+        section: injectionLocations[stimulationId].inject_to,
         offset: 0.5,
       },
       ...recordLocations,
