@@ -12,7 +12,7 @@ function buildAssetUrl(
   resource: EntityCoreResource,
   options?: {
     dpi?: number;
-    target?: EntityTypeEnum.SingleNeuronSimulation | EntityTypeEnum.SynaptomeSimulation;
+    target?: 'simulation' | 'stimulus';
   }
 ) {
   let queryParams = '';
@@ -22,7 +22,7 @@ function buildAssetUrl(
     dpi: options?.dpi,
     entity_id: resource.id,
     asset_id: asset?.id,
-    target: options && kebabCase(options.target),
+    target: options?.target,
   });
   queryParams = queryParams ? `?${queryParams}` : '';
   const type = kebabCase(resource.type);
@@ -32,18 +32,26 @@ function buildAssetUrl(
 
 export async function getPreviewBlob(
   resource: EntityCoreResource,
-  accept: string = 'image/png',
-  target?: EntityTypeEnum.SingleNeuronSimulation | EntityTypeEnum.SynaptomeSimulation
+  virtualLabId?: string,
+  projectId?: string,
+  target?: 'simulation' | 'stimulus',
+
+  accept: string = 'image/png'
 ) {
   const url = buildAssetUrl(resource, { dpi: 400, target });
   const session = await getSession();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${session?.accessToken}`,
+    Accept: accept,
+  };
+
+  if (virtualLabId) headers['virtual-lab-id'] = virtualLabId;
+  if (projectId) headers['project-id'] = projectId;
+
   const response = await fetch(url, {
     method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-      Accept: accept,
-    },
+    headers,
   });
   if (!response.ok) {
     throw new Error('Error generating thumbnail', { cause: await response.json() });

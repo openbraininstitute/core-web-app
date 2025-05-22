@@ -183,11 +183,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Stimulus',
     filter: null,
     render: (r) => {
-      if (!hasAssets(r) || r.type !== EntityTypeEnum.SingleNeuronSimulation) return EmptyPreview;
+      if (
+        !hasAssets(r) ||
+        (r.type !== 'single_neuron_synaptome_simulation' && r.type !== 'single_neuron_simulation')
+      )
+        return EmptyPreview;
 
-      r.type
-
-      return <PreviewThumbnail resource={r} target={r.type} />;
+      return <PreviewThumbnail resource={r} target="stimulus" />;
     },
     vocabulary: {
       plural: 'Stimuli',
@@ -201,7 +203,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-center',
     title: 'Response',
     filter: null,
-    render: (r) => <span className="text-error">Thumbnail generation needed</span>,
+    render: (r) => {
+      if (
+        !hasAssets(r) ||
+        (r.type !== 'single_neuron_synaptome_simulation' && r.type !== 'single_neuron_simulation')
+      )
+        return EmptyPreview;
+
+      return <PreviewThumbnail resource={r} target="simulation" />;
+    },
     vocabulary: {
       plural: 'Responses',
       singular: 'Response',

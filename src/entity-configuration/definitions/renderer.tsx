@@ -64,7 +64,7 @@ export const renderTimestamp = (timestamp: string) => {
 
 export function renderPreview<T extends EntityCoreResource>(
   resource: T,
-  size?: { height: number; width: number } | string
+  size?: { height: number; width: number }
 ) {
   return <PreviewThumbnail resource={resource} size={size} />;
 }

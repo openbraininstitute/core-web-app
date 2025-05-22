@@ -11,7 +11,7 @@ import { getPreviewBlob } from '@/api/thumbnail-svc';
 import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { useParams } from 'next/navigation';
 
 interface T extends EntityCoreResource {}
 
@@ -26,8 +26,8 @@ export default function PreviewThumbnail({
   resource: T;
   className?: string;
   dpi?: number;
-  size?: { height: number; width: number } | string;
-  target?: EntityTypeEnum.SingleNeuronSimulation | EntityTypeEnum.SynaptomeSimulation;
+  size?: { height: number; width: number };
+  target?: 'simulation' | 'stimulus';
   alt?: string;
 }) {
   const { ref, inView } = useInView({ threshold: 0.2 });
@@ -41,10 +41,20 @@ export default function PreviewThumbnail({
     error: null,
   });
 
+  const params = useParams();
+  const { virtualLabId, projectId } = params;
+
   useEffect(() => {
     async function buildPreview() {
       setState((prev) => ({ ...prev, loading: true }));
-      const { data, error } = await tryCatch<Blob>(getPreviewBlob(resource, undefined, target));
+      const { data, error } = await tryCatch<Blob>(
+        getPreviewBlob(
+          resource,
+          virtualLabId as string | undefined,
+          projectId as string | undefined,
+          target
+        )
+      );
       if (data && data.type === 'image/png') {
         setState((prev) => ({
           ...prev,
@@ -67,7 +77,7 @@ export default function PreviewThumbnail({
         URL.revokeObjectURL(state.thumbnail);
       }
     };
-  }, [dpi, target, inView, resource, state.thumbnail]);
+  }, [dpi, target, inView, resource, state.thumbnail, virtualLabId, projectId]);
 
   const component = match(state)
     .with({ loading: true }, () => (
@@ -84,8 +94,8 @@ export default function PreviewThumbnail({
         alt={`${'name' in resource ? resource.name : alt}`}
         src={thumbnail}
         className={className}
-        height={typeof size !== 'string' ? size?.height : undefined}
-        width={typeof size !== 'string' ? size?.width : undefined}
+        height={size?.height ?? 300}
+        width={size?.width ?? 400}
       />
     ))
     .with({ error: P.nonNullable }, () => (
