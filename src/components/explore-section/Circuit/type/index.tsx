@@ -39,7 +39,8 @@ export type CircuitSchemaProps = {
   numberOfSynapses: number;
   metadata: {
     contributorSimple?: string;
-    contributors?: string;
+    contributors?: ContributorsProps[];
+    organizations: string[];
     contributingInstitution?: string;
     publishedIn?: string;
     registrationDate?: string;
@@ -142,3 +143,8 @@ export type FileTypeHeaderProps = {
 export interface FilteredCircuit extends CircuitSchemaProps {
   isNonMatchingParent?: boolean;
 }
+
+export type ContributorsProps = {
+  name: string;
+  lastName: string;
+};
