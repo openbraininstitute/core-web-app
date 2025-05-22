@@ -8,8 +8,16 @@ export type MeasurementItem = {
   value: number;
 };
 
+export enum StructuralDomain {
+  Axon = 'axon',
+  Soma = 'soma',
+  ApicalDendrite = 'apical_dendrite',
+  BasalDendrite = 'basal_dendrite',
+  NeuronMorphology = 'neuron_morphology',
+}
+
 export type MeasurementKind = {
-  structural_domain: string;
+  structural_domain: StructuralDomain;
   pref_label: string;
   measurement_items: MeasurementItem[];
 };

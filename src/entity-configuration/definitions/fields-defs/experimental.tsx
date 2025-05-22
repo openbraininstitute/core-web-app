@@ -7,6 +7,7 @@ import getMeasurements, {
   renderEmptyOrValue,
   renderLicense,
   renderMeanStd,
+  renderMorphologyMeasurement,
 } from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
@@ -20,6 +21,7 @@ import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/
 import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.License]: {
@@ -270,5 +272,181 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: false,
     isFilterable: false,
     isDisplayable: false,
+  },
+  [EntityCoreFields.AxonTotalLength]: {
+    group: StructuralDomain.Axon,
+    title: 'Total Length',
+    description: 'Total length of the axon',
+    filter: null,
+    vocabulary: {
+      plural: 'Total Length',
+      singular: 'Total Length',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'total_length', 'raw', true),
+  },
+  [EntityCoreFields.AxonStrahlerNumber]: {
+    group: StructuralDomain.Axon,
+    title: 'Strahler number',
+    description: 'Strahler number',
+    filter: null,
+    vocabulary: {
+      plural: 'Strahler number',
+      singular: 'Strahler number',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'section_strahler_orders', 'maximum'),
+  },
+  [EntityCoreFields.AxonArborAsymmetryIndex]: {
+    group: StructuralDomain.Axon,
+    title: 'Arbor Asymmetry Index',
+    description: 'Arbor asymmetry index (if calculated)',
+    filter: null,
+    vocabulary: {
+      plural: 'Arbor Asymmetry Index',
+      singular: 'Arbor Asymmetry Index',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'partition_asymmetry', 'mean'),
+  },
+  [EntityCoreFields.BasalDendriticTotalLength]: {
+    group: StructuralDomain.BasalDendrite,
+    title: 'Total Length',
+    description: 'Total length of the basal dendrites',
+    filter: null,
+    vocabulary: {
+      plural: 'Total Length',
+      singular: 'Total Length',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.BasalDendrite, 'total_length', 'raw', true),
+  },
+  [EntityCoreFields.BasalDendriteStrahlerNumber]: {
+    group: StructuralDomain.BasalDendrite,
+    title: 'Strahler number',
+    description: 'Strahler number',
+    filter: null,
+    vocabulary: {
+      plural: 'Strahler number',
+      singular: 'Strahler number',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.BasalDendrite,
+        'section_strahler_orders',
+        'maximum'
+      ),
+  },
+  [EntityCoreFields.BasalArborAsymmetryIndex]: {
+    group: StructuralDomain.BasalDendrite,
+    title: 'Arbor Asymmetry Index',
+    description: 'Basal Arbor asymmetry index (if calculated)',
+    filter: null,
+    vocabulary: {
+      plural: 'Arbor Asymmetry Index',
+      singular: 'Arbor Asymmetry Index',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.BasalDendrite, 'partition_asymmetry', 'mean'),
+  },
+  [EntityCoreFields.ApicalDendriticTotalLength]: {
+    group: StructuralDomain.ApicalDendrite,
+    title: 'Total Length',
+    description: 'Total length of the apical dendrites',
+    filter: null,
+    vocabulary: {
+      plural: 'Total Length',
+      singular: 'Total Length',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.ApicalDendrite, 'Total Length', 'raw', true),
+  },
+  [EntityCoreFields.ApicalDendtriteStrahlerNumber]: {
+    group: StructuralDomain.ApicalDendrite,
+    title: 'Strahler number',
+    description: 'Apical Dendrite Strahler number',
+    filter: null,
+    vocabulary: {
+      plural: 'Strahler number',
+      singular: 'Strahler number',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.ApicalDendrite,
+        'section_strahler_orders',
+        'maximum'
+      ),
+  },
+  [EntityCoreFields.ApicalArborAsymmetryIndex]: {
+    group: StructuralDomain.ApicalDendrite,
+    title: 'Arbor Asymmetry Index',
+    description: 'Apical Arbor asymmetry index (if calculated)',
+    filter: null,
+    vocabulary: {
+      plural: 'Arbor Asymmetry Index',
+      singular: 'Arbor Asymmetry Index',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.ApicalDendrite,
+        'partition_asymmetry',
+        'mean'
+      ),
+  },
+  [EntityCoreFields.NeuronMorphologyWidth]: {
+    group: StructuralDomain.NeuronMorphology,
+    title: 'Total Width',
+    description: 'Neuron morphology total width',
+    filter: null,
+    vocabulary: {
+      plural: 'Total Width',
+      singular: 'Total Width',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.NeuronMorphology, 'total_width', 'raw', true),
+  },
+  [EntityCoreFields.NeuronMorphologyHeight]: {
+    group: StructuralDomain.NeuronMorphology,
+    title: 'Total Height',
+    description: 'Neuron morphology total height',
+    filter: null,
+    vocabulary: {
+      plural: 'Total Height',
+      singular: 'Total Height',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r,
+        StructuralDomain.NeuronMorphology,
+        'total_height',
+        'raw',
+        true
+      ),
+  },
+  [EntityCoreFields.NeuronMorphologyDepth]: {
+    group: StructuralDomain.NeuronMorphology,
+    title: 'Total Depth',
+    description: 'Neuron morphology total depth',
+    filter: null,
+    vocabulary: {
+      plural: 'Total Depth',
+      singular: 'Total Depth',
+    },
+    render: (r) =>
+      renderMorphologyMeasurement(r, StructuralDomain.NeuronMorphology, 'total_depth', 'raw', true),
+  },
+  [EntityCoreFields.SomaDiameter]: {
+    group: StructuralDomain.Soma,
+    title: 'Diameter',
+    description: 'Diameter of the soma',
+    filter: null,
+    vocabulary: {
+      plural: 'Diameter',
+      singular: 'Diameter',
+    },
+    render: (r) => renderMorphologyMeasurement(r, 'Soma', 'soma_radius', 'raw', true),
   },
 };

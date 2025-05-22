@@ -7,6 +7,7 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 
 export interface GteLteValue {
   gte: Date | number | null;
@@ -65,14 +66,6 @@ export enum CoreFieldType {
   CellType,
 }
 
-export enum MorphoMetricCompartment {
-  Axon = 'Axon',
-  Soma = 'Soma',
-  ApicalDendrite = 'ApicalDendrite',
-  BasalDendrite = 'BasalDendrite',
-  NeuronMorphology = 'NeuronMorphology',
-}
-
 type TableCellAlign = 'left' | 'right' | 'center';
 type Style = {
   align?: TableCellAlign;
@@ -94,7 +87,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
     value: string;
   };
   unit?: ReactNode;
-  group?: MorphoMetricCompartment;
+  group?: StructuralDomain;
   render?: (entity: T) => ReactNode;
   vocabulary: {
     plural: string;
