@@ -74,16 +74,17 @@ export type ReconstructedNeuronMorphology = ExperimentProps & {
   mType?: MType;
 };
 
-export enum MorphoMetricCompartment {
-  Axon = 'Axon',
-  Soma = 'Soma',
-  ApicalDendrite = 'ApicalDendrite',
-  BasalDendrite = 'BasalDendrite',
-  NeuronMorphology = 'NeuronMorphology',
+// TODO: this doesn't belong to ES types anymore, move it to a new file
+export enum StructuralDomain {
+  Axon = 'axon',
+  Soma = 'soma',
+  ApicalDendrite = 'apical_dendrite',
+  BasalDendrite = 'basal_dendrite',
+  NeuronMorphology = 'neuron_morphology',
 }
 
 type MorphologyFeature = {
-  compartment: MorphoMetricCompartment;
+  compartment: StructuralDomain;
   label: string;
   statistic: string;
   unit: string;
@@ -92,7 +93,7 @@ type MorphologyFeature = {
 
 export type NeuronMorphologyFeatureAnnotation = ExperimentProps & {
   neuronMorphology: IdWithName;
-  compartment: MorphoMetricCompartment;
+  compartment: StructuralDomain;
 };
 
 export type Experiment =

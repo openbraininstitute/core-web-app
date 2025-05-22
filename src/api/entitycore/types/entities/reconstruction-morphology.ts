@@ -17,7 +17,6 @@ import type {
   EntityAuthorization,
   IBrainLocation,
   IContributor,
-  Measurement,
   Timestamps,
   ILicense,
   ISpecies,
@@ -25,6 +24,7 @@ import type {
   IMType,
   EntityCoreType,
 } from '@/api/entitycore/types/shared/global';
+import { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
 
 export type ReconstructionMorphologyExpandFields =
   | 'brain_location'
@@ -45,11 +45,6 @@ export type ReconstructionMorphologyFilter = Partial<
     StainFilter &
     SharedFilter
 >;
-
-export type MorphologyFeatureAnnotation = {
-  reconstruction_morphology_id: number;
-  measurements: Array<Measurement>;
-};
 
 export interface IReconstructionMorphologyBase extends EntityCoreIdentifiable {
   name: string;
@@ -72,7 +67,7 @@ export interface IReconstructionMorphology
 }
 
 export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {
-  morphology_feature_annotation: MorphologyFeatureAnnotation;
+  measurement_annotation: MeasurementAnnotation;
 }
 
-export type ExpandReconstructionMorphologyParm = 'morphology_feature_annotation';
+export type ExpandReconstructionMorphologyParm = 'measurement_annotation';

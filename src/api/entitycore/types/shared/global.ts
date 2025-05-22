@@ -90,16 +90,6 @@ export type MeasurementBase = {
   value: number;
 };
 
-export type MorphologyMeasurementSerie = {
-  name: string;
-  value: number;
-};
-
-export type Measurement = {
-  measurement_of: string;
-  measurement_serie: MorphologyMeasurementSerie[];
-};
-
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;

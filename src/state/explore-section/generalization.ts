@@ -24,6 +24,11 @@ import { fetchDataQueryUsingIds, fetchMorphoMetricsUsingIds } from '@/queries/ex
 import { fetchEsResourcesByType } from '@/api/explore-section/resources';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { isNeuronMorphologyFeatureAnnotation } from '@/util/explore-section/typeUnionTargetting';
+import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
+import {
+  MeasurementAnnotation,
+  MeasurementKind,
+} from '@/api/entitycore/types/entities/measurement-annotation';
 
 export const inferredResourcesAtom = atomFamily(() => atom(new Array<InferredResource>()));
 export const expandedRowKeysAtom = atomFamily(() => atom<readonly Key[]>([]));
@@ -258,14 +263,12 @@ export const resourceBasedResponseMorphoMetricsAtom = atomFamily<
   isEqual
 );
 
-export const sourceMorphoMetricsAtom = atomFamily(
-  (resourceId: string) =>
-    atom<Promise<FlattenedExploreESResponse<ExploreSectionResource>['hits'] | null>>(async () => {
-      const query = fetchMorphoMetricsUsingIds(5, PAGE_NUMBER, [resourceId]);
+export const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
+  atom<Promise<MeasurementKind[]>>(async () => {
+    const measurementAnnotationsRes = await getMeasurementAnnotations({
+      filters: { entity_id: entityId },
+    });
 
-      const esResponse = query && (await fetchEsResourcesByType(query));
-
-      return esResponse.hits || null;
-    }),
-  isEqual
+    return measurementAnnotationsRes.data.flatMap((annotation) => annotation.measurement_kinds);
+  })
 );

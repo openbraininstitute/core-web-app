@@ -1,41 +1,35 @@
+import groupBy from 'lodash/groupBy';
 import omit from 'lodash/omit';
-import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
-import { getGroupedCardFields } from '@/util/explore-section/cardViewUtils';
-import { DataType } from '@/constants/explore-section/list-views';
-import { DetailProps } from '@/types/explore-section/application';
-import { isNeuronMorphologyFeatureAnnotation } from '@/util/explore-section/typeUnionTargetting';
-import EXPLORE_FIELDS_CONFIG from '@/constants/explore-section/fields-config';
-import { FlattenedExploreESResponse } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
+
+import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import { DisplayMessages } from '@/constants/display-messages';
+import { DataType } from '@/constants/explore-section/list-views';
+import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+import { DetailProps } from '@/types/explore-section/application';
+import FieldsDefinitionRegistry from '@/entity-configuration/definitions';
 
 export const useMorphometrics = (
-  dataType: DataType,
-  metrics?: FlattenedExploreESResponse<ExploreSectionResource>['hits'] | null,
-  showLabel?: boolean
+  morphology: IReconstructionMorphologyExpanded,
+  showLabel: boolean = false
 ) => {
-  const groupedCardFields = getGroupedCardFields(dataType);
+  const groupedCardFields = groupBy(
+    getViewDefinitionByLegacyType(DataType.ExperimentalNeuronMorphology)!.cardViewFields,
+    (item) => FieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
+  );
 
   const filteredGroupedCardFields = omit(groupedCardFields, 'Metadata');
 
-  const renderMetric = (metricType: MorphoMetricCompartment, field: DetailProps) => {
-    if (!metrics) return null;
+  const renderMetric = (field: DetailProps) => {
+    if (!morphology) return null;
 
-    const fieldObj = EXPLORE_FIELDS_CONFIG[field.field];
-    const metricSource = metrics?.find((metric) =>
-      metric?._source && isNeuronMorphologyFeatureAnnotation(metric._source)
-        ? metric._source.compartment === metricType
-        : -1
-    );
+    const fieldObj = FieldsDefinitionRegistry[field.field];
 
     return (
       <div className="text-primary-8 mr-10" key={field.field}>
         {showLabel && <div className="text-neutral-4 uppercase">{fieldObj.title}</div>}
         <div className={`${showLabel ? 'mt-2' : 'mt-0 ml-6'}`}>
           <div className={`mb-2 h-6 truncate ${field.className}`}>
-            {metricSource
-              ? fieldObj?.render?.esResourceViewFn?.('text', metricSource)
-              : DisplayMessages.NO_DATA_STRING}
+            {morphology ? fieldObj?.render?.(morphology) : DisplayMessages.NO_DATA_STRING}
           </div>
         </div>
       </div>

@@ -1,24 +1,24 @@
 'use client';
 
-import { useMemo, ReactNode, memo } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
+import { ReactNode, memo, useMemo } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import createMorphologyDataAtom from '@/state/morpho-viewer';
 import GeneralizationControls from '@/components/explore-section/WithGeneralization/GeneralizationControls';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import Morphometrics from '@/components/explore-section/Morphometrics';
+import createMorphologyDataAtom from '@/state/morpho-viewer';
 
-import WithGeneralization, {
-  notFound,
-  generalizationError,
-} from '@/features/entities/reconstruction-morphology/with-generalization-hoc';
-import { DataType } from '@/constants/explore-section/list-views';
 import { MorphoViewer } from '@/components/MorphoViewer';
+import { DataType } from '@/constants/explore-section/list-views';
+import Morphometrics from '@/features/entities/reconstruction-morphology/morphometrics';
+import WithGeneralization, {
+  generalizationError,
+  notFound,
+} from '@/features/entities/reconstruction-morphology/with-generalization-hoc';
 import { ensureArray } from '@/utils/array';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
@@ -35,10 +35,7 @@ export default function MorphologyDetailView({ detail }: { detail: IReconstructi
   return (
     <>
       {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
-        <Morphometrics
-          legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
-          dataType={DataType.ExperimentalNeuronMorphology}
-        />
+        <Morphometrics morphology={detail} />
       )}
       <ErrorBoundary
         FallbackComponent={withErrorConfig({

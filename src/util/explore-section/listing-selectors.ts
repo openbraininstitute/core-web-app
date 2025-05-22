@@ -19,6 +19,12 @@ import {
 import { DisplayMessages } from '@/constants/display-messages';
 import { formatEsContributors } from '@/components/explore-section/Contributors';
 import { Contributor } from '@/types/explore-section/es-properties';
+import {
+  IReconstructionMorphology,
+  IReconstructionMorphologyExpanded,
+  ReconstructionMorphologyExpand,
+} from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { ReactNode } from 'react';
 
 type Record = { _source: Experiment };
 type ContributorEsProperty = Unionize<Contributor>;
@@ -164,34 +170,4 @@ export const selectorFnSynaptic = (
     preOrPost === SynapticPosition.Pre ? source.preSynapticPathway : source.postSynapticPathway;
   const preSynaptic = synapticList.find((synaptic) => synaptic.about === type);
   return preSynaptic?.label ?? DisplayMessages.NO_DATA_STRING;
-};
-
-/**
- * Selects and formats a statistic from the series array
- * @param { ReconstructedNeuronMorphology } source
- * @param {string} compartment - The compartment to serialize.
- * @param {string} label - The label to serialize.
- * @param {string} statistic - The statistic of to serialize.
- */
-export const selectorFnMorphologyFeature = (
-  source: ReconstructedNeuronMorphology,
-  compartment: string,
-  label: string,
-  statistic: string,
-  showUnits?: boolean
-) => {
-  if (!source || !source.featureSeries) return DisplayMessages.NO_DATA_STRING;
-
-  const feature = source.featureSeries.find((s) => isMatch(s, { compartment, label, statistic }));
-
-  if (feature && isNumber(feature?.value) && feature?.value !== 0) {
-    let { value } = feature;
-    const unit = showUnits ? ` ${feature.unit}` : '';
-
-    if (label === 'Soma Radius') value = 2 * feature.value;
-
-    return `${formatNumber(value)}${unit}`;
-  }
-
-  return DisplayMessages.NO_DATA_STRING;
 };

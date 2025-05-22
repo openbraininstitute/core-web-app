@@ -1,12 +1,37 @@
-import { renderEmptyOrValue, renderArray } from './renderer';
+import LayerThicknessField from '@/components/explore-section/Fields/LayerThicknessField';
+import MeanStdField from '@/components/explore-section/Fields/MeanStdField';
+import SubjectAgeField from '@/components/explore-section/Fields/SubjectAgeField';
+import WeightField from '@/components/explore-section/Fields/WeightField';
 import License from '@/components/explore-section/License';
+import Species from '@/components/explore-section/Species';
+import { DisplayMessages } from '@/constants/display-messages';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
+import {
+  renderArray,
+  renderEmptyOrValue,
+} from '@/constants/explore-section/fields-config/renderer';
+import {
+  ExploreFieldsConfigProps,
+  FieldType,
+} from '@/constants/explore-section/fields-config/types';
+import { EModel, NeuronMorphology } from '@/types/e-model';
+import {
+  Experiment as DeltaExperiment,
+  EntityCore,
+  ExperimentalBoutonDensity,
+  ExperimentalLayerThickness,
+  ExperimentalNeuronDensity,
+  ExperimentalSynapsesPerConnection,
+  ExperimentalTrace,
+} from '@/types/explore-section/delta-experiment';
+import { FilterTypeEnum } from '@/types/explore-section/filters';
+import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
 import {
   selectorFnBasic,
   selectorFnBrainRegion,
   selectorFnLayer,
   selectorFnLayerThickness,
   selectorFnMeanStd,
-  selectorFnMorphologyFeature,
   selectorFnSpecies,
   selectorFnStatistic,
   selectorFnSynaptic,
@@ -17,31 +42,7 @@ import {
   selectorFnStatisticDetail,
   semSelectorFn,
 } from '@/util/explore-section/selector-functions';
-import Species from '@/components/explore-section/Species';
-import WeightField from '@/components/explore-section/Fields/WeightField';
-import SubjectAgeField from '@/components/explore-section/Fields/SubjectAgeField';
-import LayerThicknessField from '@/components/explore-section/Fields/LayerThicknessField';
-import MeanStdField from '@/components/explore-section/Fields/MeanStdField';
-import {
-  ExploreFieldsConfigProps,
-  FieldType,
-} from '@/constants/explore-section/fields-config/types';
-import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
-import {
-  ExperimentalBoutonDensity,
-  ExperimentalLayerThickness,
-  ExperimentalNeuronDensity,
-  ExperimentalSynapsesPerConnection,
-  ExperimentalTrace,
-  Experiment as DeltaExperiment,
-  EntityCore,
-} from '@/types/explore-section/delta-experiment';
-import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
-import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
-import { DisplayMessages } from '@/constants/display-messages';
 import { getEtypeFromEModel, getMtypeFromMModel } from '@/util/modelMEtypes';
-import { EModel, NeuronMorphology } from '@/types/e-model';
 import { ensureArray } from '@/util/nexus';
 
 export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExperiment> = {
@@ -543,254 +544,6 @@ export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExpe
     vocabulary: {
       plural: 'Cell Type [To]',
       singular: 'Cell Type [To]',
-    },
-  },
-  [Field.AxonTotalLength]: {
-    group: MorphoMetricCompartment.Axon,
-    title: 'Total Length',
-    description: 'Total length of the axon',
-    filter: null,
-    vocabulary: {
-      plural: 'Total Length',
-      singular: 'Total Length',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.Axon,
-          'Total Length',
-          'raw',
-          true
-        ),
-    },
-  },
-  [Field.AxonStrahlerNumber]: {
-    group: MorphoMetricCompartment.Axon,
-    title: 'Strahler number',
-    description: 'Strahler number',
-    filter: null,
-    vocabulary: {
-      plural: 'Strahler number',
-      singular: 'Strahler number',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.Axon,
-          'Section Strahler Orders',
-          'maximum'
-        ),
-    },
-  },
-  [Field.AxonArborAsymmetryIndex]: {
-    group: MorphoMetricCompartment.Axon,
-    title: 'Arbor Asymmetry Index',
-    description: 'Arbor asymmetry index (if calculated)',
-    filter: null,
-    vocabulary: {
-      plural: 'Arbor Asymmetry Index',
-      singular: 'Arbor Asymmetry Index',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.Axon,
-          'Partition Asymmetry',
-          'mean'
-        ),
-    },
-  },
-  [Field.BasalDendriticTotalLength]: {
-    group: MorphoMetricCompartment.BasalDendrite,
-    title: 'Total Length',
-    description: 'Total length of the basal dendrites',
-    filter: null,
-    vocabulary: {
-      plural: 'Total Length',
-      singular: 'Total Length',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.BasalDendrite,
-          'Total Length',
-          'raw',
-          true
-        ),
-    },
-  },
-  [Field.BasalDendriteStrahlerNumber]: {
-    group: MorphoMetricCompartment.BasalDendrite,
-    title: 'Strahler number',
-    description: 'Strahler number',
-    filter: null,
-    vocabulary: {
-      plural: 'Strahler number',
-      singular: 'Strahler number',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.BasalDendrite,
-          'Section Strahler Orders',
-          'maximum'
-        ),
-    },
-  },
-  [Field.BasalArborAsymmetryIndex]: {
-    group: MorphoMetricCompartment.BasalDendrite,
-    title: 'Arbor Asymmetry Index',
-    description: 'Basal Arbor asymmetry index (if calculated)',
-    filter: null,
-    vocabulary: {
-      plural: 'Arbor Asymmetry Index',
-      singular: 'Arbor Asymmetry Index',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.BasalDendrite,
-          'Partition Asymmetry',
-          'mean'
-        ),
-    },
-  },
-  [Field.ApicalDendriticTotalLength]: {
-    group: MorphoMetricCompartment.ApicalDendrite,
-    title: 'Total Length',
-    description: 'Total length of the apical dendrites',
-    filter: null,
-    vocabulary: {
-      plural: 'Total Length',
-      singular: 'Total Length',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.ApicalDendrite,
-          'Total Length',
-          'raw',
-          true
-        ),
-    },
-  },
-  [Field.ApicalDendtriteStrahlerNumber]: {
-    group: MorphoMetricCompartment.ApicalDendrite,
-    title: 'Strahler number',
-    description: 'Apical Dendrite Strahler number',
-    filter: null,
-    vocabulary: {
-      plural: 'Strahler number',
-      singular: 'Strahler number',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.ApicalDendrite,
-          'Section Strahler Orders',
-          'maximum'
-        ),
-    },
-  },
-  [Field.ApicalArborAsymmetryIndex]: {
-    group: MorphoMetricCompartment.ApicalDendrite,
-    title: 'Arbor Asymmetry Index',
-    description: 'Apical Arbor asymmetry index (if calculated)',
-    filter: null,
-    vocabulary: {
-      plural: 'Arbor Asymmetry Index',
-      singular: 'Arbor Asymmetry Index',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.ApicalDendrite,
-          'Partition Asymmetry',
-          'mean'
-        ),
-    },
-  },
-  [Field.NeuronMorphologyWidth]: {
-    group: MorphoMetricCompartment.NeuronMorphology,
-    title: 'Total Width',
-    description: 'Neuron morphology total width',
-    filter: null,
-    vocabulary: {
-      plural: 'Total Width',
-      singular: 'Total Width',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.NeuronMorphology,
-          'Total Width',
-          'raw',
-          true
-        ),
-    },
-  },
-  [Field.NeuronMorphologyHeight]: {
-    group: MorphoMetricCompartment.NeuronMorphology,
-    title: 'Total Height',
-    description: 'Neuron morphology total height',
-    filter: null,
-    vocabulary: {
-      plural: 'Total Height',
-      singular: 'Total Height',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.NeuronMorphology,
-          'Total Height',
-          'raw',
-          true
-        ),
-    },
-  },
-  [Field.NeuronMorphologyDepth]: {
-    group: MorphoMetricCompartment.NeuronMorphology,
-    title: 'Total Depth',
-    description: 'Neuron morphology total depth',
-    filter: null,
-    vocabulary: {
-      plural: 'Total Depth',
-      singular: 'Total Depth',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(
-          r._source,
-          MorphoMetricCompartment.NeuronMorphology,
-          'Total Depth',
-          'raw',
-          true
-        ),
-    },
-  },
-  [Field.SomaDiameter]: {
-    group: MorphoMetricCompartment.Soma,
-    title: 'Diameter',
-    description: 'Diameter of the soma',
-    filter: null,
-    vocabulary: {
-      plural: 'Diameter',
-      singular: 'Diameter',
-    },
-    render: {
-      esResourceViewFn: (_text, r) =>
-        selectorFnMorphologyFeature(r._source, 'Soma', 'Soma Radius', 'raw', true),
     },
   },
 };

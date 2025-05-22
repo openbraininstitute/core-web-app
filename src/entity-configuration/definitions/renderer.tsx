@@ -1,22 +1,28 @@
 'use client';
 
+import { Empty } from 'antd';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
+import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import isNil from 'lodash/isNil';
-import find from 'lodash/find';
-import { Empty } from 'antd';
+import { ReactNode } from 'react';
 
-import PreviewThumbnail from '@/features/thumbnail/preview';
 import PreviewImage from '@/features/thumbnail/image';
+import PreviewThumbnail from '@/features/thumbnail/preview';
 
 import type {
+  EntityCoreDensityObjectTypes,
+  IReconstructionMorphology,
+} from '@/api/entitycore/types';
+import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type {
   EntityCoreResource,
-  MeasurementBase,
   ILicense,
+  MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreDensityObjectTypes } from '@/api/entitycore/types';
 
 export const EmptyValue = '—';
+
 export const EmptyPreview = (
   <Empty
     key="no-asset-empty-thumbnail"
@@ -106,3 +112,44 @@ export function renderMeanStd({
     : `${renderFloatNumber(mean?.value)}`;
   return <>{field}</>;
 }
+
+/**
+ * Renders a specific morphology measurement
+ *
+ * @param {IReconstructionMorphologyExpanded} morphology
+ * @param {string} structuralDomain - The compartment to serialize.
+ * @param {string} label - The label to serialize.
+ * @param {string} measurementType - The statistic to serialize.
+ * @param {boolean} showUnits - Whether to show the units.
+ *
+ * @returns {string} - The rendered text value.
+ */
+export const renderMorphologyMeasurement = (
+  morphology: IReconstructionMorphologyExpanded | IReconstructionMorphology,
+  structuralDomain: string,
+  label: string,
+  measurementType: string,
+  showUnits?: boolean
+): ReactNode => {
+  if (!morphology || !('measurement_annotation' in morphology)) return EmptyValue;
+
+  const measurementKinds = morphology.measurement_annotation.measurement_kinds;
+
+  const measurementKind = measurementKinds?.find(
+    (mk) => mk.structural_domain === structuralDomain && mk.pref_label === label
+  );
+
+  const measurement = measurementKind?.measurement_items.find((mi) => mi.name === measurementType);
+
+  if (!measurement) return EmptyValue;
+
+  const { unit } = measurement;
+  let { value } = measurement;
+
+  const unitSuffix = showUnits ? `${unit}` : '';
+
+  // TODO: This is a workaround to show soma diameter when a radius is provided.
+  if (label === 'soma_radius') value = 2 * measurement.value;
+
+  return `${renderFloatNumber(value)}${unitSuffix}`;
+};

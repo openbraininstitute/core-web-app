@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { FilterType } from '@/features/listing-filter-panel/types';
 import { DeltaResource } from '@/types/explore-section/resources';
-import { MorphoMetricCompartment } from '@/types/explore-section/es-experiment';
+import { StructuralDomain } from '@/types/explore-section/es-experiment';
 import { EntityCore } from '@/types/explore-section/delta-experiment';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
@@ -30,7 +30,7 @@ export type ExploreFieldConfig<T = EntityCoreIdentifiable> = {
     value: string;
   };
   unit?: ReactNode;
-  group?: MorphoMetricCompartment;
+  group?: StructuralDomain;
   render?: (resource: T) => ReactNode;
   vocabulary: {
     plural: string;
