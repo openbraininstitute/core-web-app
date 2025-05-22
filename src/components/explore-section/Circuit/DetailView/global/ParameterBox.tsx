@@ -5,6 +5,15 @@ import { useState } from 'react';
 
 import { CloseIcon } from '@/components/icons';
 
+export function SingleContributorPill({ name, lastName }: { name: string; lastName: string }) {
+  return (
+    <div className="border border-solid border-gray-200 text-sm font-normal text-primary-9">
+      <div>{name}</div>
+      <div>{lastName}</div>
+    </div>
+  );
+}
+
 export default function ParameterBox({
   name,
   value,
