@@ -21,6 +21,8 @@ import {
   type ISingleNeuronSimulation,
 } from '@/api/entitycore/types';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import PreviewThumbnail from '@/features/thumbnail/preview';
+import { kebabCase } from 'lodash';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -147,7 +149,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-center',
     title: 'Injection location',
     filter: null,
-    render: (r) => ('injectionLocation' in r ? r.injectionLocation.join(', ') : undefined),
+    render: (r) => ('injection_location' in r ? r.injection_location.join(', ') : undefined),
     vocabulary: {
       plural: 'Injection locations',
       singular: 'Injection location',
@@ -160,7 +162,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-center',
     title: 'Recording location',
     filter: null,
-    render: (r) => ('recordingLocation' in r ? r.recordingLocation.join(', ') : undefined),
+    render: (r) => ('recording_location' in r ? r.recording_location.join(', ') : undefined),
     vocabulary: {
       plural: 'Recording locations',
       singular: 'Recording location',
@@ -186,7 +188,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-center',
     title: 'Stimulus',
     filter: null,
-    render: (r) => <span className="text-error">Thumbnail generation needed</span>,
+    render: (r) => {
+      if (!hasAssets(r) || r.type !== EntityTypeEnum.SingleNeuronSimulation) return EmptyPreview;
+
+      r.type
+
+      return <PreviewThumbnail resource={r} target={r.type} />;
+    },
     vocabulary: {
       plural: 'Stimuli',
       singular: 'Stimulus',

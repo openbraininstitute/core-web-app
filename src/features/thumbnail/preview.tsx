@@ -11,6 +11,7 @@ import { getPreviewBlob } from '@/api/thumbnail-svc';
 import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import { EntityTypeEnum } from '@/api/entitycore/types';
 
 interface T extends EntityCoreResource {}
 
@@ -26,7 +27,7 @@ export default function PreviewThumbnail({
   className?: string;
   dpi?: number;
   size?: { height: number; width: number } | string;
-  target?: 'simulation' | 'stimulus';
+  target?: EntityTypeEnum.SingleNeuronSimulation | EntityTypeEnum.SynaptomeSimulation;
   alt?: string;
 }) {
   const { ref, inView } = useInView({ threshold: 0.2 });
@@ -43,7 +44,7 @@ export default function PreviewThumbnail({
   useEffect(() => {
     async function buildPreview() {
       setState((prev) => ({ ...prev, loading: true }));
-      const { data, error } = await tryCatch<Blob>(getPreviewBlob(resource));
+      const { data, error } = await tryCatch<Blob>(getPreviewBlob(resource, undefined, target));
       if (data && data.type === 'image/png') {
         setState((prev) => ({
           ...prev,
@@ -66,7 +67,7 @@ export default function PreviewThumbnail({
         URL.revokeObjectURL(state.thumbnail);
       }
     };
-  }, [dpi, target, inView, resource]);
+  }, [dpi, target, inView, resource, state.thumbnail]);
 
   const component = match(state)
     .with({ loading: true }, () => (
