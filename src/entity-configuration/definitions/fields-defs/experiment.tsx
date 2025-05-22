@@ -3,7 +3,10 @@ import {
   renderEmptyOrValue,
   EmptyPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type {
@@ -56,6 +59,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     style: { width: 184, align: 'left' },
     isFilterable: false,
+    isDisplayable: true,
+  },
+  [EntityCoreFields.SimulationStatus]: {
+    className: 'text-center',
+    title: 'Status',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue('status' in r ? r.status : undefined),
+    vocabulary: {
+      plural: 'Statuses',
+      singular: 'Status',
+    },
+    style: { width: 184, align: 'left' },
+    isFilterable: true,
     isDisplayable: true,
   },
   [EntityCoreFields.SimulationStimulus]: {
