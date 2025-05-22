@@ -1,7 +1,6 @@
 import { Divider } from 'antd';
 import startCase from 'lodash/startCase';
 
-import { StructuralDomain } from '@/types/explore-section/es-experiment';
 import { measurementAnnotationsAtomFamily } from '@/state/explore-section/generalization';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { useUnwrappedValue } from '@/hooks/hooks';
@@ -25,15 +24,12 @@ export default function Morphometrics({ morphology }: { morphology: IReconstruct
       <Divider className="w-full" />
       <h1 className="text-primary-8 text-xl font-bold">Morphometrics</h1>
       <div className="grid grid-cols-5 gap-4 break-words">
-        {Object.entries(filteredGroupedCardFields).length &&
-          Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
-            <div key={group}>
-              <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
-              {fields.map((field) =>
-                group in StructuralDomain ? renderMetric(group, field) : null
-              )}
-            </div>
-          ))}
+        {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
+          <div key={group}>
+            <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
+            {fields.map((field) => renderMetric(field))}
+          </div>
+        ))}
       </div>
     </div>
   );
