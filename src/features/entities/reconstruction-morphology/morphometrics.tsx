@@ -4,8 +4,10 @@ import startCase from 'lodash/startCase';
 import { measurementAnnotationsAtomFamily } from '@/state/explore-section/generalization';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { useUnwrappedValue } from '@/hooks/hooks';
-import { IReconstructionMorphology } from '@/api/entitycore/types';
-import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import {
+  IReconstructionMorphology,
+  IReconstructionMorphologyExpanded,
+} from '@/api/entitycore/types';
 
 export default function Morphometrics({ morphology }: { morphology: IReconstructionMorphology }) {
   const measurementKinds = useUnwrappedValue(measurementAnnotationsAtomFamily(morphology.id));

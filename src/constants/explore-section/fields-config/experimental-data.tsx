@@ -1,5 +1,33 @@
-import { renderEmptyOrValue, renderArray } from './renderer';
+import LayerThicknessField from '@/components/explore-section/Fields/LayerThicknessField';
+import MeanStdField from '@/components/explore-section/Fields/MeanStdField';
+import SubjectAgeField from '@/components/explore-section/Fields/SubjectAgeField';
+import WeightField from '@/components/explore-section/Fields/WeightField';
 import License from '@/components/explore-section/License';
+import Species from '@/components/explore-section/Species';
+import { DisplayMessages } from '@/constants/display-messages';
+import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
+import {
+  renderArray,
+  renderEmptyOrValue,
+} from '@/constants/explore-section/fields-config/renderer';
+import {
+  ExploreFieldsConfigProps,
+  FieldType,
+} from '@/constants/explore-section/fields-config/types';
+import { renderMorphologyMeasurement } from '@/entity-configuration/definitions/renderer';
+import { EModel, NeuronMorphology } from '@/types/e-model';
+import {
+  Experiment as DeltaExperiment,
+  EntityCore,
+  ExperimentalBoutonDensity,
+  ExperimentalLayerThickness,
+  ExperimentalNeuronDensity,
+  ExperimentalSynapsesPerConnection,
+  ExperimentalTrace,
+} from '@/types/explore-section/delta-experiment';
+import { StructuralDomain } from '@/types/explore-section/es-experiment';
+import { FilterTypeEnum } from '@/types/explore-section/filters';
+import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
 import {
   selectorFnBasic,
   selectorFnBrainRegion,
@@ -16,35 +44,8 @@ import {
   selectorFnStatisticDetail,
   semSelectorFn,
 } from '@/util/explore-section/selector-functions';
-import Species from '@/components/explore-section/Species';
-import WeightField from '@/components/explore-section/Fields/WeightField';
-import SubjectAgeField from '@/components/explore-section/Fields/SubjectAgeField';
-import LayerThicknessField from '@/components/explore-section/Fields/LayerThicknessField';
-import MeanStdField from '@/components/explore-section/Fields/MeanStdField';
-import {
-  ExploreFieldsConfigProps,
-  FieldType,
-} from '@/constants/explore-section/fields-config/types';
-import { StructuralDomain } from '@/types/explore-section/es-experiment';
-import {
-  ExperimentalBoutonDensity,
-  ExperimentalLayerThickness,
-  ExperimentalNeuronDensity,
-  ExperimentalSynapsesPerConnection,
-  ExperimentalTrace,
-  Experiment as DeltaExperiment,
-  EntityCore,
-} from '@/types/explore-section/delta-experiment';
-import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
-import { FilterTypeEnum } from '@/types/explore-section/filters';
-import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
-import { DisplayMessages } from '@/constants/display-messages';
 import { getEtypeFromEModel, getMtypeFromMModel } from '@/util/modelMEtypes';
-import { EModel, NeuronMorphology } from '@/types/e-model';
 import { ensureArray } from '@/util/nexus';
-import { renderEmptyOrValue, renderArray } from './renderer';
-import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { renderMorphologyMeasurement } from '@/entity-configuration/definitions/renderer';
 
 export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExperiment> = {
   [Field.License]: {
