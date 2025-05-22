@@ -12,17 +12,11 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { hasAssets } from '@/api/entitycore/guards';
 
-import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import {
-  EntityTypeEnum,
-  type EntityCoreObjectTypes,
-  type ISingleNeuronSimulation,
-} from '@/api/entitycore/types';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import PreviewThumbnail from '@/features/thumbnail/preview';
-import { kebabCase } from 'lodash';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -53,7 +47,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Response',
     filter: null,
     // use image field in nexus
-    render: (r) => <span className="text-red-500">Entitycore Needed</span>,
+    render: () => <span className="text-red-500">Entitycore Needed</span>,
     vocabulary: {
       plural: 'responses',
       singular: 'response',
@@ -102,7 +96,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
   [EntityCoreFields.MEModelValidationStatus]: {
-    className: 'text-center',
+    className: 'text-left',
     title: 'Validated',
     filter: null,
     render: (r) => {
@@ -119,7 +113,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
   [EntityCoreFields.SynaptomeUsedMEModelName]: {
-    className: 'text-center',
+    className: 'text-left',
     title: 'ME-model',
     filter: null,
     isFilterable: false,

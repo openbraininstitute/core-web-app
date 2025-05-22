@@ -1,6 +1,6 @@
 'use client';
 
-import { Form, Input, Select, Button, FormListFieldData, InputNumber } from 'antd';
+import { Form, Input, Select, Button, FormListFieldData, InputNumber, App } from 'antd';
 import { useMemo, useReducer, useRef, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { Color } from 'three';
@@ -16,6 +16,7 @@ import findIndex from 'lodash/findIndex';
 import isEqual from 'lodash/isEqual';
 import groupBy from 'lodash/groupBy';
 
+import { useParams, usePathname } from 'next/navigation';
 import useNotification from '@/hooks/notifications';
 import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
@@ -33,6 +34,9 @@ import { classNames } from '@/util/utils';
 import { getSession } from '@/authFetch';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { WorkspaceContext } from '@/types/common';
+import { tryCatch } from '@/api/utils';
+import { ErrorCause } from '@/api/apiClient';
 
 type Props = {
   modelId: string;
@@ -53,7 +57,8 @@ export default function SynapseSet({
   removeGroup,
   disableApplyChanges,
 }: Props) {
-  const { error: notifyError } = useNotification();
+  const { notification } = App.useApp();
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const form = Form.useFormInstance();
   const secNames = useAtomValue(secNamesAtom);
   const [synapseVis, setSynapseVis] = useState(false);
@@ -164,54 +169,48 @@ export default function SynapseSet({
     config?.exclusion_rules?.some((p) => !p.distance_soma_gte && !p.distance_soma_lte) &&
     !displayExclusionRules;
 
-  const onVisualizationError = async (response?: Response) => {
+  const onVisualizationError = async (response?: Error) => {
     if (!response) {
-      notifyError(
-        messages.GenerationSynapsesFailed.replace('$$', (index + 1).toString()),
-        undefined,
-        'topRight'
-      );
+      notification.error({
+        message: messages.GenerationSynapsesFailed.replace('$$', (index + 1).toString()),
+        placement: 'topRight',
+      });
       return;
     }
 
     try {
-      const errorDetails = await response.json();
-      notifyError(errorDetails.details, undefined, 'topRight');
+      notification.error({
+        message: 'Failed to generate synapses, The error occurred in the server',
+        placement: 'topRight',
+      });
     } catch {
-      notifyError(
-        messages.GenerationSynapsesFailed.replace('$$', (index + 1).toString()),
-        undefined,
-        'topRight'
-      );
+      notification.error({
+        message: messages.GenerationSynapsesFailed.replace('$$', (index + 1).toString()),
+        placement: 'topRight',
+      });
     }
   };
 
   const onVisualizeSynaptome = async () => {
-    if (isAlreadyVisualized) {
-      return;
-    }
-
+    if (isAlreadyVisualized) return;
     setLoadingVisualize(true);
     onHideSynapse();
 
     try {
-      const session = await getSession();
-      if (!session?.accessToken) {
-        throw new Error('No session found');
-      }
-      const response = await getSynaptomePlacement({
-        modelId,
-        seed,
-        config: { ...config },
-        token: session?.accessToken,
-      });
-      if (!response.ok) {
-        return onVisualizationError(response);
-      }
+      const { data, error } = await tryCatch(
+        getSynaptomePlacement({
+          ctx: { virtualLabId, projectId },
+          payload: {
+            seed,
+            config,
+          },
+          model_id: modelId,
+        })
+      );
 
-      const result: { synapses: Array<SectionSynapses> } = await response.json();
+      if (error) return onVisualizationError(error);
 
-      const synapsePositions = result.synapses
+      const synapsePositions = data.synapses
         .flat()
         .flatMap((p) => p.synapses)
         .map((o) => o.coordinates);
@@ -223,7 +222,7 @@ export default function SynapseSet({
       setSynapsesPlacementAtom({
         ...synapsesPlacement,
         [config.id]: {
-          sectionSynapses: result.synapses,
+          sectionSynapses: data.synapses,
           count: synapsePositions.length,
           meshId: mesh.uuid,
           synapsePlacementConfigId: config.id,

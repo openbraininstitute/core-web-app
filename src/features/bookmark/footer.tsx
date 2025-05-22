@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
+import { useSetAtom } from 'jotai';
 import { App } from 'antd';
 
 import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
-import { dataAtom } from '@/state/explore-section/list-view-atoms';
+import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { ensureArray } from '@/utils/array';
 import { tryCatch } from '@/api/utils';
@@ -26,11 +27,12 @@ export default function Footer<T extends EntityCoreIdentifiable>({
   virtualLabId,
   projectId,
   category,
-  dataKey,
 }: Props<T>) {
   const [loading, setLoading] = useState(false);
   const { notification } = App.useApp();
-
+  const refreshBookmarks = useSetAtom(
+    bookmarksForProjectAtomFamily({ virtualLabId, projectId, category })
+  );
   const notifySuccess = useCallback(() => {
     notification.success({
       message: 'Resources successfully removed from the library',
@@ -64,14 +66,16 @@ export default function Footer<T extends EntityCoreIdentifiable>({
           entity_id: r.id,
         })),
       }),
-      () => setLoading(false)
+      () => {
+        setLoading(false);
+        refreshBookmarks();
+      }
     );
 
     if (error) {
       return notifyError();
     }
-    // NOTE: this is required to avoid infinite loops
-    setTimeout(() => dataAtom.remove({ key: dataKey, dataType: category }));
+
     notifySuccess();
     clearSelectedRows();
   };

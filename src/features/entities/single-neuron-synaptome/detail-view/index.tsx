@@ -6,17 +6,20 @@ import Link from 'next/link';
 
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import Configuration from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
+import Results from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Tabs, { useTabs } from '@/components/detail-view-tabs';
 import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 
-import { DataType } from '@/constants/explore-section/list-views';
-import { CommonSummaryViewFields } from '@/entity-configuration/definitions/view-defs';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { DataType } from '@/constants/explore-section/list-views';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -37,6 +40,12 @@ const TabsConfig: Array<{ key: TabKeys; title: string }> = [
   { key: 'configuration', title: 'Configuration' },
   { key: 'simulation', title: 'Simulation' },
 ];
+
+export const CommonSummaryViewFields = [
+  { field: EntityCoreFields.Description, className: 'col-span-3' },
+  { field: EntityCoreFields.CreatedBy },
+  { field: EntityCoreFields.CreationDate },
+] as TypeSummaryProps[];
 
 export default function Page({
   params: { virtualLabId, projectId, id },
@@ -88,9 +97,12 @@ export default function Page({
                       )}
                     </div>
                   </If>
-                  {/* <If id="simulation" condition={activeTab === 'simulation'}>
-                    <Results params={{ virtualLabId, projectId }} modelId={info.id} />
-                  </If> */}
+                  <If id="simulation" condition={activeTab === 'simulation'}>
+                    <Results
+                      type={EntitySlug.SingleNeuronSynaptomeSimulation}
+                      modelId={source.id}
+                    />
+                  </If>
                 </div>
               </div>
             );

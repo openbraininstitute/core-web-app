@@ -37,7 +37,7 @@ export type StimulusDropdownInfo = {
 export type SynaptomeConfig = SynapseConfig[];
 export interface CurrentInjectionSimulationConfig {
   id: number;
-  configId: string;
+  config_id: string;
   inject_to: string;
   stimulus: StimulusConfig;
 }
@@ -65,11 +65,11 @@ export interface SimulationConfiguration {
 
 export type SynapseConfig = {
   id: string;
-  configId: string;
+  config_id: string;
   delay: number;
   duration: number;
   frequency: number | number[];
-  weightScalar: number;
+  weight_scalar: number;
   color: string;
 };
 

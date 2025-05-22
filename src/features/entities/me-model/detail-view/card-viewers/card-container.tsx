@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 import Link from 'next/link';
 
-import { EmptyValue } from '@/entity-configuration/definitions/renderer';
+import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { classNames } from '@/util/utils';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
@@ -25,7 +25,7 @@ export function ModelDetails({ details }: ModelDetailsProps) {
       {details.map((detail) => (
         <div key={`${detail.label}-${detail.value?.toString()}`}>
           <div className={subtitleStyle}>{detail.label}</div>
-          <div>{detail.value || EmptyValue}</div>
+          <div>{renderEmptyOrValue(detail.value)}</div>
         </div>
       ))}
     </div>

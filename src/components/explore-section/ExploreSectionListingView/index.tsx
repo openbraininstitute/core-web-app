@@ -12,12 +12,11 @@ import ResultsCount from '@/features/listing-filter-panel/numeric-results-info';
 import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
-import { sortStateAtom, dataAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
+import { sortStateAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
-import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
@@ -61,19 +60,10 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
 
   const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
+
   const { node } = useBrainRegionHierarchy({ dataKey });
 
-  const result = useLoadableValue(
-    dataAtom({
-      dataType,
-      dataScope,
-      workspace: virtualLabInfo,
-      key: dataKey,
-      brainRegionId: useBrainRegion ? node.id : undefined,
-    })
-  );
-
-  const dataSource = useDataAtom<T>({
+  const { result: dataSource, isLoading } = useDataAtom<T>({
     dataType,
     dataScope,
     workspace: virtualLabInfo,
@@ -124,7 +114,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
                 dataContext={{ virtualLabInfo, dataScope, dataType }}
                 dataSource={dataSource}
-                loading={showLoadingState && result.state === 'loading'}
+                loading={showLoadingState && isLoading}
                 onCellClick={onCellClick}
                 renderButton={renderButton}
                 selectionType={selectionType}

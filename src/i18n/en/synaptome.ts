@@ -1,8 +1,6 @@
 export const messages = {
   CreationModelSucceed:
     'The Synaptome model has been successfully created. It may take up to 5 seconds for the new model to appear in the list of records under both the Explore and Build sections.',
-  CreationSimulationSucceed:
-    'Simulation results have been successfully saved. It may take up to 5 seconds for the simulation to appear in the list of records under the Simulate section.',
   CreationModelFailed:
     'Failed to process your synaptome addition request. Please review the form and try again or contact support.',
   CreateModelConfigFailed:

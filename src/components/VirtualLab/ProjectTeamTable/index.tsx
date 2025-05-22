@@ -11,7 +11,7 @@ import find from 'lodash/find';
 import sortBy from 'lodash/sortBy';
 import compact from 'lodash/compact';
 
-import CustomPopover from '@/components/simulate/single-neuron/molecules/Popover';
+import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import AddMembersModal from '@/components/VirtualLab/create-entity-flows/project/add-members';
 import useUserPermissions from '@/hooks/useUserPermission';
 import useNotification from '@/hooks/notifications';

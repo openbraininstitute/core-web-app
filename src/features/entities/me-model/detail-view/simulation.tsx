@@ -1,46 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import { LoadingOutlined } from '@ant-design/icons';
+import { ErrorBoundary } from '@sentry/nextjs';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
 
-import SimulationDetail from './simulation-details';
+import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-
-import type { WorkspaceContext } from '@/types/common';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
-import { ISingleNeuronSimulation } from '@/api/entitycore/types';
+import { EntityTypeEnum } from '@/api/entitycore/types';
+import { tryCatch } from '@/api/utils';
 
-export default function Simulation() {
-  const params = useParams<WorkspaceContext & { id: string }>();
-  const [simulations, setSimulations] = useState<ISingleNeuronSimulation[]>([]);
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
+import type { WorkspaceContext } from '@/types/common';
+
+type Props = {
+  type: EntitySlugValue;
+  modelId: string;
+};
+
+export default function Results({ modelId }: Props) {
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const [simulations, setSimulations] = useState<Array<ISingleNeuronSimulation>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const { virtualLabId, projectId, id } = params;
 
   useEffect(() => {
-    const fetchSims = async () => {
+    async function getSimulations() {
       setLoading(true);
-      setError(false);
-      try {
-        const sims = await getSingleNeuronSimulations({
+      const { data: result, error } = await tryCatch(
+        getSingleNeuronSimulations({
           context: { virtualLabId, projectId },
+          filters: { me_model__id: modelId },
           withFacets: false,
-          filters: {
-            me_model__id: id,
-          },
-        });
+        }),
+        () => setLoading(false)
+      );
+      if (result) setSimulations(result.data);
+      if (error) setError(!!error);
+    }
 
-        setSimulations(sims.data);
-      } catch (err) {
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSims();
-  }, [projectId, virtualLabId, id]);
+    getSimulations();
+  }, [modelId]);
 
   if (loading) {
     return (
@@ -81,18 +82,19 @@ export default function Simulation() {
     <div className="flex w-full flex-col gap-2">
       {simulations.map((sim, indx) => (
         <ErrorBoundary
-          FallbackComponent={withErrorConfig({
-            cls: { container: 'bg-white' },
-            showButtons: false,
-            customError: 'Error while loading simulation ',
-          })}
+          fallback={({ error }) =>
+            withErrorConfig({
+              cls: { container: 'bg-white' },
+              showButtons: false,
+              customError: 'Error while loading simulation ',
+            })({ error: error as (Error & { cause?: unknown }) | undefined })
+          }
           key={sim.id}
         >
-          <SimulationDetail
-            simulation={sim}
+          <SimulationDetail<ISingleNeuronSimulation>
             index={indx}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
+            type={EntityTypeEnum.SingleNeuronSimulation}
+            simulation={sim}
           />
         </ErrorBoundary>
       ))}

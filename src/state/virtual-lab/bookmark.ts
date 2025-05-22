@@ -11,7 +11,7 @@ const isVirtualLabInfoAtomEqual = (a: VirtualLabInfo, b: VirtualLabInfo): boolea
 
 export const bookmarksForProjectAtomFamily = atomFamily(
   ({ virtualLabId, projectId, category }: WorkspaceContext & { category?: DataType }) =>
-    atomWithRefresh<Promise<VlmGetProjectBookmarksResponse>>(async (get) => {
+    atomWithRefresh<Promise<VlmGetProjectBookmarksResponse>>(async () => {
       return await getAllBookmarksByCategory({ virtualLabId, projectId }, { category });
     }),
   isVirtualLabInfoAtomEqual

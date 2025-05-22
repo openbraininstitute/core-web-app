@@ -13,8 +13,6 @@ export default function SelectedBrainRegionMETypes() {
   const brainRegion = useAtomValue(selectedBrainRegionAtom);
   const composition = useAtomValue(useMemo(() => loadable(analysedCompositionAtom), []));
 
-  console.log('–– – index.tsx:16 – SelectedBrainRegionMETypes – composition:', composition);
-
   const meTypesMetadata = useAtomValue(useMemo(() => unwrap(cellTypesByIdAtom), []));
 
   if (!brainRegion) {

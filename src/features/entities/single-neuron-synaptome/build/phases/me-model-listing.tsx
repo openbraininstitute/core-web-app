@@ -53,11 +53,11 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
 
   const gotoSynaptomeConfiguration = async () => {
     setEmptyMEmodelError(false);
-    await validateFields(['modelUrl']);
+    await validateFields(['model_id']);
     const { success } = await memodelSchema.safeParseAsync(selectedRows);
     if (success) {
       const value = selectedRows[0].id;
-      setFieldValue('modelUrl', value);
+      setFieldValue('model_id', value);
       updateQueryConfig({ phase: 'placement', memodelId: value, stateId });
     } else {
       setEmptyMEmodelError(true);
@@ -86,8 +86,8 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
         phase !== 'me-model' && 'hidden'
       )}
     >
-      <Form.Item name="modelUrl" hidden>
-        <input name="modelUrl" aria-hidden hidden />
+      <Form.Item name="model_id" hidden>
+        <input name="model_id" aria-hidden hidden />
       </Form.Item>
       <div className="mb-4">
         <h1 className="text-primary-8 text-xl font-bold">

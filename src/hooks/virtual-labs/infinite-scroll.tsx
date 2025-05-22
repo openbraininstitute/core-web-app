@@ -16,7 +16,7 @@ export default function useInfiniteScroll(
   const { loadMore, loading } = useLoadMore(
     useMemo(() => {
       return {
-        virtualLabInfo: {
+        workspace: {
           virtualLabId,
           projectId,
         },

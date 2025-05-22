@@ -2,19 +2,20 @@ import range from 'lodash/range';
 import round from 'lodash/round';
 
 import {
+  CurrentInjectionSimulationConfig,
+  SimulationExperimentalSetup,
+  SimulationConfiguration,
   StimulusDropdownInfo,
   StimulusTypeOption,
-  SimulationConfiguration,
-  StimulusConfig,
-  CurrentInjectionSimulationConfig,
-  SynapseConfig,
-  RecordLocation,
-  SimulationExperimentalSetup,
-  StimulusModule,
   ProtocolDetails,
+  RecordLocation,
+  StimulusConfig,
+  StimulusModule,
+  SynapseConfig,
 } from '@/types/simulation/single-neuron';
-import { SingleSynaptomeConfig } from '@/types/synaptome';
-import { SynapseType } from '@/components/neuron-viewer/hooks/events';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { SynapseType } from '@/components/neuron-viewer/hooks/events';
 
 export const stimulusTypeParams: StimulusDropdownInfo & {
   options: StimulusTypeOption[];
@@ -139,7 +140,7 @@ export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup 
 
 export const DEFAULT_PROTOCOL = 'idrest';
 
-export const DEFAULT_STIM_CONFIG: StimulusConfig = {
+export const DEFAULT_STIMULUS_CONFIG: StimulusConfig = {
   stimulus_type: 'current_clamp',
   stimulus_protocol: DEFAULT_PROTOCOL,
   amplitudes: [40, 80, 120],
@@ -147,9 +148,9 @@ export const DEFAULT_STIM_CONFIG: StimulusConfig = {
 
 export const DEFAULT_CURRENT_INJECTION_CONFIG: CurrentInjectionSimulationConfig = {
   id: 0,
-  configId: crypto.randomUUID(),
+  config_id: crypto.randomUUID(),
   inject_to: DEFAULT_SECTION,
-  stimulus: DEFAULT_STIM_CONFIG,
+  stimulus: DEFAULT_STIMULUS_CONFIG,
 };
 
 export const DEFAULT_SIM_CONFIG: SimulationConfiguration = {
@@ -165,17 +166,17 @@ export const SYNAPSE_CODE_TO_TYPE: Record<number, SynapseType> = {
 };
 
 export const getDefaultSynapseConfig = (
-  synapsePlacementConfig?: SingleSynaptomeConfig[]
+  synapsePlacementConfig?: Array<TSingleNeuronSynaptomeConfiguration>
 ): SynapseConfig | null => {
   if (synapsePlacementConfig) {
     return {
       id: synapsePlacementConfig[0].id,
-      configId: crypto.randomUUID(),
+      config_id: crypto.randomUUID(),
       color: synapsePlacementConfig[0].color,
       delay: 100,
       duration: 2000,
       frequency: 20,
-      weightScalar: 1,
+      weight_scalar: 1,
     };
   }
   return null;
