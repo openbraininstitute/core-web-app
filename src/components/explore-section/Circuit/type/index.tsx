@@ -39,7 +39,8 @@ export type CircuitSchemaProps = {
   numberOfSynapses: number;
   metadata: {
     contributorSimple?: string;
-    contributors?: string;
+    contributors?: ContributorsProps[];
+    organizations: string[];
     contributingInstitution?: string;
     publishedIn?: string;
     registrationDate?: string;
@@ -147,4 +148,9 @@ export type CollaboratingInstitution = {
   name: string;
   url: string;
   location: string;
+};
+
+export type ContributorsProps = {
+  name: string;
+  lastName: string;
 };
