@@ -5,7 +5,6 @@ import {
   selectorFnLayer,
   selectorFnLayerThickness,
   selectorFnMeanStd,
-  renderMorphologyMeasurement,
   selectorFnSpecies,
   selectorFnStatistic,
   selectorFnSynaptic,
@@ -44,6 +43,7 @@ import { EModel, NeuronMorphology } from '@/types/e-model';
 import { ensureArray } from '@/util/nexus';
 import { renderEmptyOrValue, renderArray } from './renderer';
 import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { renderMorphologyMeasurement } from '@/entity-configuration/definitions/renderer';
 
 export const EXPERIMENTAL_DATA_FIELDS_CONFIG: ExploreFieldsConfigProps<DeltaExperiment> = {
   [Field.License]: {
