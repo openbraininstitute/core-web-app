@@ -7,11 +7,11 @@ import { match, P } from 'ts-pattern';
 import isEmpty from 'lodash/isEmpty';
 import Image from 'next/image';
 
+import { useParams } from 'next/navigation';
 import { getPreviewBlob } from '@/api/thumbnail-svc';
 import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import { useParams } from 'next/navigation';
 
 interface T extends EntityCoreResource {}
 

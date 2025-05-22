@@ -236,7 +236,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
       // TODO: better handling when we have IDs filter
       if (ctx.shouldUseIds) {
         const IDs = get(entityTargetIdentifiersAtom(ctx.key));
-        if (Boolean(IDs.length)) {
+        if (IDs.length) {
           filters.push({
             constraint: 'id__in',
             field: EntityCoreFields.ID,
