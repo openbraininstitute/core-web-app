@@ -78,6 +78,7 @@ export default function SynaptomeConfigurationForm({
   const { notification } = App.useApp();
   const { push: navigate } = useRouter();
   const [loading, setLoading] = useState(false);
+
   const [synapsesHasErrors, setSynapsesHasErrors] = useState<Array<(string | number)[]>>([]);
   const form = Form.useFormInstance<SynaptomeModelConfiguration>();
   const seed = Form.useWatch<number>('seed', form);
@@ -85,6 +86,7 @@ export default function SynaptomeConfigurationForm({
   const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
   const setSimulationScope = useSetAtom(selectedSimulationScopeAtom);
   const [isPending, startTransition] = useTransition();
+
   const { sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     virtualLabId,
     projectId,
@@ -177,7 +179,7 @@ export default function SynaptomeConfigurationForm({
             },
           })
         );
-        if (error) throw error;
+        if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
         const { data: assetData, error: err } = await tryCatch(
           createJsonAsset({
             ctx: { virtualLabId, projectId },
@@ -188,7 +190,7 @@ export default function SynaptomeConfigurationForm({
             payload: { synapses: values.synapses },
           })
         );
-        if (err) throw error;
+        if (err) throw new Error(messages.CreateConfigurationAssetFailed);
         return {
           entity: data,
           asset: assetData,
@@ -203,35 +205,46 @@ export default function SynaptomeConfigurationForm({
       });
 
       startTransition(async () => {
-        const result = await accountingSession.useWith<{
-          entity: ISingleNeuronSynaptome;
-          asset: IAsset;
-        } | null>(() => buildSingleNeuronSynaptome());
-        if (result) {
+        try {
+          const result = await accountingSession.useWith<{
+            entity: ISingleNeuronSynaptome;
+            asset: IAsset;
+          } | null>(buildSingleNeuronSynaptome);
+          if (result) {
+            setLoading(false);
+            form.resetFields();
+            sendResetSynapses3DEvent();
+            setSimulationScope(SimulationType.Synaptome);
+            notification.success({
+              message: messages.CreationModelSucceed,
+              duration: 7,
+              placement: 'topRight',
+              key: dataKey,
+            });
+            refreshDataAtom();
+            const urlParams = new URLSearchParams();
+            urlParams.set(DEFAULT_BRAIN_REGION_QUERY_ID, entity.brain_region.id);
+            urlParams.set(
+              DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+              String(entity.brain_region.annotation_value)
+            );
+            const url = resolveExploreDetailsPageUrl({
+              ctx: { virtualLabId, projectId },
+              dataType: DataType.SingleNeuronSynaptome,
+              entityId: result?.entity.id,
+            });
+
+            navigate(`${url}?${urlParams.toString()}`);
+          }
+        } catch (error) {
           setLoading(false);
-          form.resetFields();
-          sendResetSynapses3DEvent();
-          setSimulationScope(SimulationType.Synaptome);
-          notification.success({
-            message: messages.CreationModelSucceed,
+          notification.error({
+            message: messages.CreationModelFailed,
+            description: (error as { message: string })?.message ?? '',
             duration: 7,
             placement: 'topRight',
             key: dataKey,
           });
-          refreshDataAtom();
-          const urlParams = new URLSearchParams();
-          urlParams.set(DEFAULT_BRAIN_REGION_QUERY_ID, entity.brain_region.id);
-          urlParams.set(
-            DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-            String(entity.brain_region.annotation_value)
-          );
-          const url = resolveExploreDetailsPageUrl({
-            ctx: { virtualLabId, projectId },
-            dataType: DataType.SingleNeuronSynaptome,
-            entityId: result?.entity.id,
-          });
-
-          navigate(`${url}?${urlParams.toString()}`);
         }
       });
     } catch (error) {
@@ -310,7 +323,7 @@ export default function SynaptomeConfigurationForm({
           htmlType="button"
           aria-label="Add Synapse"
           onClick={addNewSynapse}
-          className="border-primary-8 text-primary-8"
+          className="border-primary-8 text-primary-8 rounded-none bg-transparent"
           size="large"
         >
           Add new synapses set

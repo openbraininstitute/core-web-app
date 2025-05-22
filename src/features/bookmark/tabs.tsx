@@ -185,7 +185,6 @@ function NestedTypeLink({
 }
 
 function NestedTypeTitle({ title, active }: { title: string; active: boolean }) {
-  const { pending } = useLinkStatus();
   return (
     <div
       className={classNames(
@@ -197,7 +196,6 @@ function NestedTypeTitle({ title, active }: { title: string; active: boolean }) 
       )}
     >
       <span>{title}</span>
-      {pending && <LoadingOutlined />}
     </div>
   );
 }
