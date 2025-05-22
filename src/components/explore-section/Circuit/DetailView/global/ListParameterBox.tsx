@@ -52,14 +52,16 @@ export default function ListParameterBox({
         })}
       </div>
 
-      <button
-        type="button"
-        aria-label="View more"
-        className="mt-2 rounded-full border border-solid border-gray-300 bg-white px-4 py-2 text-base font-normal text-neutral-5"
-        onClick={() => setViewMore(true)}
-      >
-        View more
-      </button>
+      {value.length > slice && (
+        <button
+          type="button"
+          aria-label="View more"
+          className="mt-2 rounded-full border border-solid border-gray-300 bg-white px-4 py-2 text-base font-normal text-neutral-5"
+          onClick={() => setViewMore(true)}
+        >
+          View more
+        </button>
+      )}
 
       {viewMore && (
         <div className="fixed left-0 top-0 z-[99999] flex h-screen w-screen items-center justify-center bg-black/60">
