@@ -28,7 +28,7 @@ export default function Results({ modelId }: Props) {
   useEffect(() => {
     async function getSimulations() {
       setLoading(true);
-      const { data: result, error } = await tryCatch(
+      const { data: result, error: returnedError } = await tryCatch(
         getSingleNeuronSimulations({
           context: { virtualLabId, projectId },
           filters: { me_model__id: modelId },
@@ -36,12 +36,13 @@ export default function Results({ modelId }: Props) {
         }),
         () => setLoading(false)
       );
+
       if (result) setSimulations(result.data);
-      if (error) setError(!!error);
+      if (returnedError) setError(!!returnedError);
     }
 
     getSimulations();
-  }, [modelId]);
+  }, [modelId, error, virtualLabId, projectId]);
 
   if (loading) {
     return (
@@ -82,12 +83,12 @@ export default function Results({ modelId }: Props) {
     <div className="flex w-full flex-col gap-2">
       {simulations.map((sim, indx) => (
         <ErrorBoundary
-          fallback={({ error }) =>
+          fallback={({ error: returnedError }) =>
             withErrorConfig({
               cls: { container: 'bg-white' },
               showButtons: false,
               customError: 'Error while loading simulation ',
-            })({ error: error as (Error & { cause?: unknown }) | undefined })
+            })({ error: returnedError as (Error & { cause?: unknown }) | undefined })
           }
           key={sim.id}
         >
