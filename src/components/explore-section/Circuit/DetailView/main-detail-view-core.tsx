@@ -23,7 +23,7 @@ function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="py-10 pl-20 pr-10 text-primary-9">
+    <div className="relative py-10 pl-20 pr-10 text-primary-9">
       <HeaderDetailView content={content} />
       <Visualiser content={content} />
       <SectionMainContainer

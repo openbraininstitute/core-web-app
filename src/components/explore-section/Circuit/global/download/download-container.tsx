@@ -62,7 +62,7 @@ export default function DownloadContainer({
   );
 
   return (
-    <div className="w-full">
+    <div className="relative w-full">
       <HeaderDownloadModal
         handleCloseDownloadModal={handleCloseDownloadModal}
         content={content.files}

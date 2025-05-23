@@ -109,6 +109,13 @@ module.exports = {
         '20vh': '20vh',
         '25vh': '25vh',
       },
+      zIndex: {
+        60: '60',
+        70: '70',
+        80: '80',
+        90: '90',
+        100: '100',
+      },
       listStyleType: {
         square: 'square',
       },
