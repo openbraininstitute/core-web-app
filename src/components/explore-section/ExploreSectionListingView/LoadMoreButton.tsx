@@ -40,21 +40,18 @@ export function useLoadMore<T>(
   useBrainRegion?: boolean
 ) {
   const { node } = useBrainRegionHierarchy({ dataKey: key });
-  const [pageNumber, setPageNumber] = useAtom(
-    pageNumberAtom(`${key}${useBrainRegion ? `/${node.id}` : ''}`)
-  );
-  const setPrevData = useSetAtom(
-    previousDataAtom({ ...dataContext, brainRegionId: useBrainRegion ? node.id : undefined, key })
-  );
+  const [pageNumber, setPageNumber] = useAtom(pageNumberAtom(key));
+  const brainRegionId = useBrainRegion ? node.id : undefined;
+  const setPrevData = useSetAtom(previousDataAtom({ ...dataContext, brainRegionId, key }));
   const { result: data } = useDataAtom<T>({
     ...dataContext,
     key,
-    brainRegionId: useBrainRegion ? node.id : undefined,
+    brainRegionId,
   });
   const res = useLoadableValue(
     dataAtom({
       ...dataContext,
-      brainRegionId: useBrainRegion ? node.id : undefined,
+      brainRegionId,
       key,
     })
   );

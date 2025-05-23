@@ -1,4 +1,4 @@
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { EntityCoreIdentifiable, EntityCoreOwnership } from '@/api/entitycore/types/shared/global';
 
 export enum SingleNeuronSimulationStatus {
   started = 'started',
@@ -6,7 +6,7 @@ export enum SingleNeuronSimulationStatus {
   success = 'success',
 }
 
-export interface ISingleNeuronSimulationBase extends EntityCoreIdentifiable {
+export interface ISingleNeuronSimulationBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
   description: string;
   seed: number;

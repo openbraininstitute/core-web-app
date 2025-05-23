@@ -26,7 +26,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
-  const setPageNumber = useSetAtom(pageNumberAtom(`${dataKey}${node.id ? `/${node.id}` : ''}`));
+  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
 
   if (!brainRegionHierarchyResult) {
     return (

@@ -63,12 +63,15 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
 
   const { node } = useBrainRegionHierarchy({ dataKey });
 
+  const dataKeyExpand = useBrainRegion ? `${dataKey}/${node.id}` : dataKey;
+  const brainRegionId = useBrainRegion ? node.id : undefined;
+
   const { result: dataSource, isLoading } = useDataAtom<T>({
     dataType,
     dataScope,
+    brainRegionId,
     workspace: virtualLabInfo,
-    brainRegionId: useBrainRegion ? node.id : undefined,
-    key: dataKey,
+    key: dataKeyExpand,
   });
 
   return (
@@ -88,7 +91,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
-          dataKey={dataKey}
+          dataKey={dataKeyExpand}
           className="relative"
         >
           {({ activeColumns, displayControlPanel, setDisplayControlPanel, filters }) => (
@@ -98,7 +101,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 displayControlPanel={displayControlPanel}
                 dataType={dataType}
                 dataScope={dataScope}
-                dataKey={dataKey}
+                dataKey={dataKeyExpand}
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
               >
@@ -106,7 +109,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                   dataType={dataType}
                   dataScope={dataScope}
                   virtualLabInfo={virtualLabInfo}
-                  dataKey={dataKey}
+                  dataKey={dataKeyExpand}
                   useBrainRegion={useBrainRegion}
                 />
               </FilterControls>
@@ -121,7 +124,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 scrollable={tableScrollable}
                 controlsVisible={controlsVisible}
                 onRowsSelected={onRowsSelected}
-                dataKey={dataKey}
+                dataKey={dataKeyExpand}
                 useBrainRegion={useBrainRegion}
               />
             </>

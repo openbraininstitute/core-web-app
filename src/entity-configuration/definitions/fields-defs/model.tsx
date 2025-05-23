@@ -115,8 +115,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-left',
     title: 'ME-model',
     filter: null,
-    isFilterable: false,
-    isDisplayable: false,
+    isFilterable: true,
+    isDisplayable: true,
     render: (r) => 'me_model' in r && r.me_model.name,
     vocabulary: {
       plural: 'ME-models',

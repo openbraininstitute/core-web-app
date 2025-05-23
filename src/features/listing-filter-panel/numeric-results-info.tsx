@@ -58,13 +58,16 @@ function ResultsCount({
 }) {
   const [persistedDisplay, setPersistedDisplay] = useState<JSX.Element | null>(null);
   const { node } = useBrainRegionHierarchy({ dataKey });
+
+  const brainRegionId = useBrainRegion ? node.id : undefined;
+
   const result = useLoadableValue(
     dataAtom({
       dataType,
       dataScope,
       workspace: virtualLabInfo,
       key: dataKey,
-      brainRegionId: useBrainRegion ? node.id : undefined,
+      brainRegionId,
     })
   );
 

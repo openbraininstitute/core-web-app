@@ -182,14 +182,16 @@ export default function ListingFilterPanel({
   useBrainRegion,
 }: Props) {
   const { node } = useBrainRegionHierarchy({ dataKey });
+  const brainRegionId = useBrainRegion ? node.id : undefined;
+
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(
     filtersAtom({
       dataType,
       dataScope,
       resourceId,
+      brainRegionId,
       key: dataKey,
-      brainRegionId: useBrainRegion ? node.id : undefined,
     })
   );
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
@@ -198,14 +200,12 @@ export default function ListingFilterPanel({
       workspace: virtualLabInfo,
       dataType,
       dataScope,
+      brainRegionId,
       key: dataKey,
-      brainRegionId: useBrainRegion ? node.id : undefined,
     })
   );
 
-  const setPageNumber = useSetAtom(
-    pageNumberAtom(`${dataKey}${useBrainRegion ? `/${node.id}` : ''}`)
-  );
+  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
       () =>
@@ -213,13 +213,14 @@ export default function ListingFilterPanel({
           activeColumnsAtom({
             dataType,
             dataScope,
-            key: useBrainRegion ? `${dataKey}/${node.id}` : dataKey,
-            brainRegionId: useBrainRegion ? node.id : undefined,
+            brainRegionId,
+            key: dataKey,
           })
         ),
       [dataType, dataScope, dataKey]
     )
   );
+  // TODO: to be deleted when confirm filtering works
   const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
 
   const onToggleActive = useCallback(

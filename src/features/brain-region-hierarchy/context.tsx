@@ -37,6 +37,7 @@ type BrainRegionHierarchyOption = {
   data: IBrainRegionHierarchy;
 };
 type BrainRegionHierarchyAtomReturnType = {
+  root: IBrainRegionHierarchy;
   nodes: IBrainRegionHierarchy | null;
   options: Array<BrainRegionHierarchyOption>;
 } | null;
@@ -71,7 +72,7 @@ export const brainRegionHierarchyAtom = atom(
       }));
     }
 
-    return { nodes, options };
+    return { root, nodes, options };
   }
 );
 

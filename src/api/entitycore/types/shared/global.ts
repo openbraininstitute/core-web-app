@@ -17,8 +17,8 @@ export type EntityCoreType = {
 };
 
 export type EntityCoreOwnership = {
-  createdBy: Agent;
-  updatedBy: Array<Agent> | null;
+  created_by: IPerson | null;
+  updated_by: IPerson | null;
 };
 
 export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
@@ -114,8 +114,8 @@ export interface IOrganization extends OrganizationBase, Timestamps, EntityCoreI
 
 type PersonBase = {
   type: 'person';
-  givenName: string;
-  familyName: string;
+  givenName: string | null;
+  familyName: string | null;
   pref_label: string;
 };
 

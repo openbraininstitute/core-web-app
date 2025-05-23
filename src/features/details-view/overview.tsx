@@ -8,10 +8,7 @@ import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { classNames } from '@/util/utils';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type {
-  EntityCoreIdentifiableNamed,
-  EntityCoreResource,
-} from '@/api/entitycore/types/shared/global';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 
 type FieldProps = {
   field: EntityCoreFields;
@@ -21,6 +18,7 @@ type FieldProps = {
 
 export function Field({ field, className, data }: FieldProps) {
   const fieldObj = getFieldDefinition(field);
+
   return (
     <div className={classNames('text-primary-7 mr-10', className)}>
       <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>

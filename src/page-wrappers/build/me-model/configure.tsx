@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { App, Button } from 'antd';
 import omit from 'lodash/omit';
 import get from 'lodash/get';
@@ -28,6 +28,11 @@ import { tryCatch } from '@/api/utils';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
+import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { resolveDataKey } from '@/utils/key-builder';
+import { MEmodel } from '@/entity-configuration/domain/model';
+import { refreshDataAtomFamily, useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
@@ -141,6 +146,15 @@ export default function Configure({ params, searchParams }: Props) {
   const morphologyId = get(searchParams, 'm', undefined);
   const stateId = get(searchParams, 's', undefined);
 
+  const exploreDataKey = resolveDataKey({
+    projectId: params.projectId,
+    section: 'explore',
+    entity: MEmodel,
+  });
+
+  const refreshEntityCountsToParent = useEntitiesCountAtom();
+  const refreshDataAtom = useRefreshDataAtom(exploreDataKey);
+
   const { sessionValue } = useBuildMeModelSessionState({
     stateId: stateId || '',
     virtualLabId: params.virtualLabId,
@@ -249,7 +263,8 @@ export default function Configure({ params, searchParams }: Props) {
         }
       );
       if (data) {
-        // refreshMeModels();
+        refreshDataAtom();
+        refreshEntityCountsToParent(validationData.brain_region_id);
         navigate(
           resolveExploreDetailsPageUrl({
             ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },

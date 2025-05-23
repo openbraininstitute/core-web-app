@@ -2,6 +2,7 @@ import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-
 import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
+  EntityCoreOwnership,
   IAsset,
   ILicense,
   ISubject,
@@ -12,7 +13,8 @@ import type {
 export interface IExperimentalDensity
   extends EntityCoreIdentifiable,
     EntityAuthorization,
-    Timestamps {
+    Timestamps,
+    EntityCoreOwnership {
   name: string;
   description: string;
   subject: ISubject;

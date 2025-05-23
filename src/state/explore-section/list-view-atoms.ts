@@ -55,10 +55,7 @@ type DataAtomBinding = {
 };
 
 const isListAtomEqual = (a: DataAtomBinding, b: DataAtomBinding): boolean => {
-  return (
-    ('brainRegionId' in a ? `${a.key}/${a.brainRegionId}` : a.key) ===
-    ('brainRegionId' in b ? `${b.key}/${b.brainRegionId}` : b.key)
-  );
+  return a.key === b.key;
 };
 
 export const pageNumberAtom = atomFamily((_key: string) => {
@@ -112,33 +109,33 @@ export const dimensionColumnsAtom = atomFamily((scope: DataAtomBinding) =>
   })
 );
 
-export const filtersAtom = atomFamily(
-  (scope: DataAtomBinding) =>
-    atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
-      const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
-      const fields = columns ? getFieldsDefinition(columns) : [];
-      const dimensionsColumns = await get(dimensionColumnsAtom(scope));
+export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
+  const childAtom = atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
+    const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
+    const fields = columns ? getFieldsDefinition(columns) : [];
+    const dimensionsColumns = await get(dimensionColumnsAtom(scope));
 
-      return [
-        ...(columns
-          ?.filter(
-            (o) =>
-              _get(fields, o, { isFilterable: false })?.isFilterable === true ||
-              _get(fields, o, { isDisplayable: false })?.isDisplayable === true
-          )
-          ?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
-        ...(dimensionsColumns || []).map(
-          (dimension) =>
-            ({
-              field: dimension,
-              type: CoreFieldFilterTypeEnum.ValueOrRange,
-              value: { gte: null, lte: null },
-            }) as CoreFilter
-        ),
-      ];
-    }),
-  isListAtomEqual
-);
+    return [
+      ...(columns
+        ?.filter(
+          (o) =>
+            _get(fields, o, { isFilterable: false })?.isFilterable === true ||
+            _get(fields, o, { isDisplayable: false })?.isDisplayable === true
+        )
+        ?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
+      ...(dimensionsColumns || []).map(
+        (dimension) =>
+          ({
+            field: dimension,
+            type: CoreFieldFilterTypeEnum.ValueOrRange,
+            value: { gte: null, lte: null },
+          }) as CoreFilter
+      ),
+    ];
+  });
+  childAtom.debugLabel = `filter-atom/${scope.key}`;
+  return childAtom;
+}, isListAtomEqual);
 
 export const totalByExperimentAndRegionsAtom = atomFamily(
   (scope: DataAtomBinding) =>
@@ -205,7 +202,7 @@ export const queryAtom = atomFamily(
 
 export const previousDataAtom = atomFamily(<T>(ctx: DataAtomBinding) => {
   const childAtom = atom<T[]>([]);
-  childAtom.debugLabel = `previous-data-atom/${ctx.key}${ctx.brainRegionId ? `/${ctx.brainRegionId}` : ''}`;
+  childAtom.debugLabel = `previous-data-atom/${ctx.key}`;
   return childAtom;
 }, isListAtomEqual);
 
@@ -230,7 +227,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
     async (get): Promise<EntityCoreResponse<T>> => {
       get(refreshDataAtom);
       const searchString = get(searchStringAtom(ctx.key));
-      const pageNumber = get(pageNumberAtom(`${ctx.key}/${ctx.brainRegionId}`));
+      const pageNumber = get(pageNumberAtom(ctx.key));
       const filters = await get(filtersAtom(ctx));
 
       // TODO: better handling when we have IDs filter
@@ -262,7 +259,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         page: pageNumber,
         search: isEmpty(searchString) ? null : searchString,
         order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
-        within_brain_region_hierachy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+        within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
         within_brain_region_brain_region_id: ctx.brainRegionId,
         within_brain_region_ascendants: false,
         ...transformQueryParamsArrayToString(transformFiltersToQuery(filters as any)),
@@ -293,7 +290,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
       } as EntityCoreResponse<T>;
     }
   );
-  childAtom.debugLabel = `data-atom/${ctx.key}${ctx.brainRegionId ? `/${ctx.brainRegionId}` : ''}`;
+  childAtom.debugLabel = `data-atom/${ctx.key}`;
   return childAtom;
 }, isListAtomEqual);
 

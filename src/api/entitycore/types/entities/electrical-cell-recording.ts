@@ -15,6 +15,7 @@ import type {
   Timestamps,
   ILicense,
   EntityCoreType,
+  EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 
 export type ElectricalCellRecordingExpandFields =
@@ -34,7 +35,7 @@ export type ElectricalCellRecordingFilter = Partial<
     SharedFilter
 >;
 
-export interface IElectricalCellRecordingBase extends EntityCoreIdentifiable {
+export interface IElectricalCellRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
