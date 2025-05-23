@@ -6,8 +6,9 @@ import { Empty, Skeleton } from 'antd';
 import { match, P } from 'ts-pattern';
 import isEmpty from 'lodash/isEmpty';
 import Image from 'next/image';
-
 import { useParams } from 'next/navigation';
+import type { WorkspaceContext } from '@/types/common';
+
 import { getPreviewBlob } from '@/api/thumbnail-svc';
 import { tryCatch } from '@/api/utils';
 
@@ -43,8 +44,7 @@ export default function PreviewThumbnail({
     error: null,
   });
 
-import type { WorkspaceContext } from '@/types/common';
-const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
 
   useEffect(() => {
     async function buildPreview() {

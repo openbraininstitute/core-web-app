@@ -38,7 +38,7 @@ export default function ModelDetails({ virtualLabId, projectId, meModel }: Props
             </div>
 
             <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-              <PreviewThumbnail resource={meModel.emodel} width={400} height={400}/>
+              <PreviewThumbnail resource={meModel.emodel} width={400} height={400} />
             </div>
           </div>
         </div>
