@@ -44,11 +44,11 @@ export default function ModelDetails({ type, virtualLabId, projectId, meModel }:
           </span>
           <div className="flex items-start gap-2">
             <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-              <PreviewThumbnail resource={meModel.morphology} size={{ height: 300, width: 400 }} />
+              <PreviewThumbnail resource={meModel.morphology} width={400} height={400} />
             </div>
 
             <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-              <PreviewThumbnail resource={meModel.emodel} size={{ height: 300, width: 400 }} />
+              <PreviewThumbnail resource={meModel.emodel} width={400} height={400} />
             </div>
           </div>
         </div>

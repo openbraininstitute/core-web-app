@@ -19,14 +19,16 @@ export default function PreviewThumbnail({
   resource,
   className,
   dpi,
-  size,
+  width,
+  height,
   target,
   alt = 'img preview',
 }: {
   resource: T;
   className?: string;
   dpi?: number;
-  size?: { height: number; width: number };
+  width?: number | string;
+  height?: number | string;
   target?: 'simulation' | 'stimulus';
   alt?: string;
 }) {
@@ -94,8 +96,8 @@ export default function PreviewThumbnail({
         alt={`${'name' in resource ? resource.name : alt}`}
         src={thumbnail}
         className={className}
-        height={size?.height ?? 300}
-        width={size?.width ?? 400}
+        height={typeof height === 'number' ? height : 300}
+        width={typeof height === 'number' ? height : 400}
       />
     ))
     .with({ error: P.nonNullable }, () => (
@@ -120,8 +122,8 @@ export default function PreviewThumbnail({
       ref={ref}
       className="flex items-center justify-center"
       style={{
-        height: typeof size !== 'string' && size ? size?.height : size,
-        width: typeof size !== 'string' && size ? size?.width : size,
+        height,
+        width,
       }}
     >
       {component}
