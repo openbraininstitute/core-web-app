@@ -1,6 +1,5 @@
 import find from 'lodash/find';
 import kebabCase from 'lodash/kebabCase';
-import { EntityTypeEnum } from '../entitycore/types';
 import buildQueryString from '@/util/query-params-builder';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { thumbnailGenerationBaseUrl } from '@/config';
