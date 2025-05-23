@@ -97,7 +97,7 @@ export default function BookmarksView({
     //   updateQuery({ category, slug: tabs.at(0)?.key ?? null });
     // } else {
     // }
-    if (!!ids.length) {
+    if (ids.length) {
       updateTargetIds(ids);
     }
     () => updateTargetIds([]);

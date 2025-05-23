@@ -2,6 +2,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import map from 'lodash/map';
 import isMatch from 'lodash/isMatch';
 import isNumber from 'lodash/isNumber';
+import { ReactNode } from 'react';
 import { Unionize } from '../typing';
 import { normalizeContributors } from './sort-contributors';
 import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
@@ -24,7 +25,6 @@ import {
   IReconstructionMorphologyExpanded,
   ReconstructionMorphologyExpand,
 } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { ReactNode } from 'react';
 
 type Record = { _source: Experiment };
 type ContributorEsProperty = Unionize<Contributor>;

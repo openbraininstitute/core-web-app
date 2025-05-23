@@ -556,7 +556,7 @@ export default function SynapseSet({
             loading={visualizeLoading}
             size="large"
             className={classNames(
-              'bg-primary-8 h-14 cursor-pointer self-end text-lg font-bold text-white',
+              'bg-primary-8 h-14 cursor-pointer self-end rounded-none text-lg font-bold text-white',
               'disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-neutral-400'
             )}
             icon={<PlusCircleOutlined />}
