@@ -20,7 +20,7 @@ export async function getBulkEntityCoreResult({
   const queryParams = {
     page: 1,
     page_size: 1,
-    within_brain_region_hierachy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+    within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
     within_brain_region_brain_region_id: brainRegionId,
     within_brain_region_ascendants: false,
   };

@@ -262,7 +262,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         page: pageNumber,
         search: isEmpty(searchString) ? null : searchString,
         order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
-        within_brain_region_hierachy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+        within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
         within_brain_region_brain_region_id: ctx.brainRegionId,
         within_brain_region_ascendants: false,
         ...transformQueryParamsArrayToString(transformFiltersToQuery(filters as any)),
