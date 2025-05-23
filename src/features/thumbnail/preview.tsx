@@ -43,8 +43,8 @@ export default function PreviewThumbnail({
     error: null,
   });
 
-  const params = useParams();
-  const { virtualLabId, projectId } = params;
+import type { WorkspaceContext } from '@/types/common';
+const { virtualLabId, projectId } = useParams<WorkspaceContext>();
 
   useEffect(() => {
     async function buildPreview() {
