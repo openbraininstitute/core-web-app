@@ -47,7 +47,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   const memoizedDetailAtom = useMemo(() => {
     const detailFetchAtom = detailFamily({ id, virtualLabId, projectId, dataType, ...params });
     return conditionalAtom<T>(payload, detailFetchAtom);
-  }, [payload, id, virtualLabId, projectId, dataType, JSON.stringify(params)]); // adjust dependencies as needed
+  }, [payload, id, virtualLabId, projectId, dataType, JSON.stringify(params)]);
 
   const detail = useAtomValue(memoizedDetailAtom);
 

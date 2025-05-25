@@ -87,6 +87,7 @@ export default function ListingView({
         onCellClick,
         renderButton,
         virtualLabInfo,
+        useBrainRegion: true,
       }}
     />
   );

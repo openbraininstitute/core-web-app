@@ -162,13 +162,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Created by',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
-      if ('createdBy' in r) renderEmptyOrValue(r.createdBy);
+      if ('created_by' in r) return renderEmptyOrValue(r.created_by?.pref_label);
       return EmptyValue;
     },
     vocabulary: {
       plural: 'Users',
       singular: 'User',
     },
+    constraint: 'created_by__pref_label__in',
     isDisplayable: true,
     isFilterable: true,
   },
@@ -176,13 +177,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Updated by',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
-      if ('updatedBy' in r) renderEmptyOrValue(r.updatedBy);
+      if ('updated_by' in r) return renderEmptyOrValue(r.updated_by?.pref_label);
       return EmptyValue;
     },
     vocabulary: {
       plural: 'Users',
       singular: 'User',
     },
+    constraint: 'updated_by__pref_label__in',
     isDisplayable: true,
   },
 };

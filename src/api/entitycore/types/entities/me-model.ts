@@ -13,6 +13,7 @@ import type {
   IEType,
   IMType,
   EntityCoreType,
+  EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -45,7 +46,8 @@ export interface IMEModel
     IMEModelBase,
     Timestamps,
     EntityAuthorization,
-    EntityCoreType {
+    EntityCoreType,
+    EntityCoreOwnership {
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: BrainRegionHierarchyBase;

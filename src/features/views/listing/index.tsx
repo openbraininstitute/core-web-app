@@ -33,6 +33,7 @@ export default function ListingView({ entity, projectId, virtualLabId }: Props) 
   const dataKey = resolveDataKey({ section: 'explore', projectId, entity });
   return (
     <ExploreSectionListingView
+      useBrainRegion
       dataType={entity.legacyType as DataType}
       dataScope={ExploreDataScope.SelectedBrainRegion}
       virtualLabInfo={{

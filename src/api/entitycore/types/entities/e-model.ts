@@ -12,6 +12,7 @@ import type {
   IMType,
   EntityCoreType,
   EntityCoreBaseAsset,
+  EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
@@ -30,7 +31,7 @@ interface ExemplarMorphology extends Timestamps, EntityCoreIdentifiable {
   legacy_id: Array<string> | null;
 }
 
-export interface IEModelBase extends EntityCoreIdentifiable {
+export interface IEModelBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
   description: string;
   iteration: string;

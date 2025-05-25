@@ -11,7 +11,7 @@ import circuitsFlat from '@/components/explore-section/Circuit/content/circuits_
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
-import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { entitiesCountAtom } from '@/services/entitycore/entities-count';
 import { resolveDataKey } from '@/utils/key-builder';
 import {
   EntityCoreExperimentalConfiguration,
@@ -138,7 +138,7 @@ function EntityTypeStatsPanelContainer({ children }: Props) {
 
   const { data, error } = useAtomValue(
     useMemo(
-      () => EntitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id }),
+      () => entitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id }),
       [virtualLabId, projectId, node.id]
     )
   );

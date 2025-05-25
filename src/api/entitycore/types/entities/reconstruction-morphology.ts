@@ -23,6 +23,7 @@ import type {
   IStrain,
   IMType,
   EntityCoreType,
+  EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 import { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
 
@@ -57,7 +58,8 @@ export interface IReconstructionMorphology
     Timestamps,
     EntityCoreBaseAsset,
     EntityAuthorization,
-    EntityCoreType {
+    EntityCoreType,
+    EntityCoreOwnership {
   license?: ILicense | null;
   species: ISpecies;
   strain?: IStrain | null;

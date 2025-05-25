@@ -10,7 +10,6 @@ export const MODEL_DATATYPES = [
   DataType.CircuitEModel,
   DataType.CircuitMEModel,
   DataType.SingleNeuronSynaptome,
-  DataType.SingleNeuronSimulation,
 ] as const;
 
 export enum ModelTypeNames {

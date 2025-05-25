@@ -8,7 +8,7 @@ import { useAtomValue } from 'jotai';
 import get from 'lodash/get';
 
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { EntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { entitiesCountAtom } from '@/services/entitycore/entities-count';
 import { DataType } from '@/constants/explore-section/list-views';
 import { resolveDataKey } from '@/utils/key-builder';
 
@@ -35,7 +35,7 @@ export default function NavigationMenu({ activePath, items, onClick }: Props) {
     dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
   const { data, error } = useAtomValue(
-    EntitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id })
+    entitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id })
   );
   const allData = data ? { ...data.experimental, ...data.model } : {};
 
