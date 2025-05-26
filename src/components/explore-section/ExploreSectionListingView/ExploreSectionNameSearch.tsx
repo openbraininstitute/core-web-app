@@ -1,23 +1,40 @@
 import { ChangeEvent, RefObject, useEffect, useRef, useState } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { SearchOutlined } from '@ant-design/icons';
 
-import { searchStringAtom } from '@/state/explore-section/list-view-atoms';
-
+import {
+  pageNumberAtom,
+  previousDataAtom,
+  searchStringAtom,
+} from '@/state/explore-section/list-view-atoms';
+import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { useDebouncedCallback } from '@/hooks/hooks';
 
 type SearchProps = {
-  dataKey?: string;
+  dataKey: string;
+  dataType: DataType;
 };
 
-export default function ExploreSectionNameSearch({ dataKey }: SearchProps) {
+export default function ExploreSectionNameSearch({ dataType, dataKey }: SearchProps) {
   const [searchString, setSearchString] = useAtom(searchStringAtom(dataKey ?? ''));
 
   const searchInputRef: RefObject<HTMLInputElement | null> = useRef(null);
   useEffect(() => searchInputRef?.current?.focus(), []); // Auto-focus on render
+  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
+
+  const setPrevData = useSetAtom(
+    previousDataAtom({
+      key: dataKey,
+      dataType,
+    })
+  );
 
   const debouncedUpdateAtom = useDebouncedCallback(
-    (searchStr: string) => setSearchString(searchStr),
+    (searchStr: string) => {
+      setPrevData([]);
+      setPageNumber(PAGE_NUMBER);
+      setSearchString(searchStr);
+    },
     [setSearchString],
     600
   );
