@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 import { useSanityContentForTutorialsList } from './hooks';
@@ -38,7 +40,7 @@ export function TutorialsCarrousel({ className }: TutorialsCarrouselProps) {
   };
 
   return (
-    <div className={classNames(className, styles.tutorialsCarrousel)}>
+    <div className={classNames(className, styles.tutorialsCarrousel, 'w-full max-w-7xl')}>
       <header>
         <h1>Our tutorials</h1>
         {showNavigation && (
