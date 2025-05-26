@@ -14,6 +14,7 @@ import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscri
 import { ErrorListing } from '@/components/VirtualLab/labs-listing/elements';
 import { getUserStats } from '@/api/virtual-lab-svc/queries/stats';
 import { tryCatch } from '@/api/utils';
+import { TutorialsCarrousel } from '@/components/tutorials-carrousel';
 
 const tabs = [
   {
@@ -98,6 +99,7 @@ export default async function Home({ searchParams }: Props) {
           )}
         </Suspense>
       </ErrorBoundary>
+      <TutorialsCarrousel />
     </div>
   );
 }
