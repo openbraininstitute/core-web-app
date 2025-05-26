@@ -16,6 +16,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.SimulationModel,
       EntityCoreFields.SimulationStimulus,
       EntityCoreFields.SimulationResponse,
+      EntityCoreFields.SimulationStatus,
       EntityCoreFields.InjectionLocation,
       EntityCoreFields.RecordingLocation,
       EntityCoreFields.BrainRegion,

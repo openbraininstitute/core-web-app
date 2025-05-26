@@ -1,4 +1,8 @@
-import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import {
+  renderArray,
+  renderEmptyOrValue,
+  EmptyPreview,
+} from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -8,9 +12,12 @@ import type { FieldsDefinitionRegistry } from '@/entity-configuration/definition
 import type {
   EntityCoreObjectTypes,
   EntityCoreSimulationObjectTypes,
-  ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+
+import { hasAssets } from '@/api/entitycore/guards';
+
+import PreviewThumbnail from '@/features/thumbnail/preview';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.SimulationSeed]: {
@@ -71,7 +78,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-center',
     title: 'Stimulus',
     filter: null,
-    render: () => <span className="text-error">Thumbnail generation needed</span>,
+    render: (r) => {
+      if (
+        !hasAssets(r) ||
+        (r.type !== 'single_neuron_synaptome_simulation' && r.type !== 'single_neuron_simulation')
+      )
+        return EmptyPreview;
+
+      return <PreviewThumbnail resource={r} target="stimulus" />;
+    },
     vocabulary: {
       plural: 'Stimuli',
       singular: 'Stimulus',
@@ -84,7 +99,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-center',
     title: 'Response',
     filter: null,
-    render: () => <span className="text-error">Thumbnail generation needed</span>,
+    render: (r) => {
+      if (
+        !hasAssets(r) ||
+        (r.type !== 'single_neuron_synaptome_simulation' && r.type !== 'single_neuron_simulation')
+      )
+        return EmptyPreview;
+
+      return <PreviewThumbnail resource={r} target="simulation" />;
+    },
     vocabulary: {
       plural: 'Responses',
       singular: 'Response',

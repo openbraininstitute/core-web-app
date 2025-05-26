@@ -1,6 +1,5 @@
 import find from 'lodash/find';
 import kebabCase from 'lodash/kebabCase';
-
 import buildQueryString from '@/util/query-params-builder';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { thumbnailGenerationBaseUrl } from '@/config';
@@ -8,7 +7,13 @@ import { getSession } from '@/authFetch';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
-function buildAssetUrl(resource: EntityCoreResource, options?: { dpi?: number }) {
+function buildAssetUrl(
+  resource: EntityCoreResource,
+  options?: {
+    dpi?: number;
+    target?: 'simulation' | 'stimulus';
+  }
+) {
   let queryParams = '';
   const extension = getEntityByCoreType({ type: resource.type })?.asset.extension;
   const asset = find(resource.assets, { content_type: extension });
@@ -16,6 +21,7 @@ function buildAssetUrl(resource: EntityCoreResource, options?: { dpi?: number })
     dpi: options?.dpi,
     entity_id: resource.id,
     asset_id: asset?.id,
+    target: options?.target,
   });
   queryParams = queryParams ? `?${queryParams}` : '';
   const type = kebabCase(resource.type);
@@ -23,16 +29,28 @@ function buildAssetUrl(resource: EntityCoreResource, options?: { dpi?: number })
   return `${thumbnailGenerationBaseUrl}/core/${type}/preview${queryParams}`;
 }
 
-export async function getPreviewBlob(resource: EntityCoreResource, accept: string = 'image/png') {
-  const url = buildAssetUrl(resource, { dpi: 400 });
+export async function getPreviewBlob(
+  resource: EntityCoreResource,
+  virtualLabId?: string,
+  projectId?: string,
+  target?: 'simulation' | 'stimulus',
+
+  accept: string = 'image/png'
+) {
+  const url = buildAssetUrl(resource, { dpi: 400, target });
   const session = await getSession();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${session?.accessToken}`,
+    Accept: accept,
+  };
+
+  if (virtualLabId) headers['virtual-lab-id'] = virtualLabId;
+  if (projectId) headers['project-id'] = projectId;
+
   const response = await fetch(url, {
     method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-      Accept: accept,
-    },
+    headers,
   });
   if (!response.ok) {
     throw new Error('Error generating thumbnail', { cause: await response.json() });

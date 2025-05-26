@@ -60,31 +60,29 @@ export default function SimulationDetail<T extends GenericSimulation>({
           filter: (s) => s.label === entity?.asset.configfile,
         });
         if (asset) {
-          const { data, error } = await tryCatch(
-            downloadAsset<any>({
-              // TODO: to fix type
+          const { data, error: returnedError } = await tryCatch(
+            downloadAsset<ArrayBuffer>({
               ctx: { virtualLabId, projectId },
               entityId: simulation.id,
               entityType: entity?.type,
               id: asset?.id,
             })
           );
-          if (error) {
-            setError(error);
-          }
+
+          if (returnedError) setError(returnedError);
+
           if (data) {
             const config = arrayBufferToJson(data);
             setConfigAsset(config);
             setSimulationPlot(Object.keys(config.simulation).at(0));
           }
         }
-        setError(new Error('No configuration found'));
       }
       setLoadingConfig(false);
     }
 
     getConfigurationAsset();
-  }, [simulation]);
+  }, [simulation, projectId, type, virtualLabId]);
 
   if (loadingConfig) {
     return (

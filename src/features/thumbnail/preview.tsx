@@ -6,6 +6,8 @@ import { Empty, Skeleton } from 'antd';
 import { match, P } from 'ts-pattern';
 import isEmpty from 'lodash/isEmpty';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
+import type { WorkspaceContext } from '@/types/common';
 
 import { getPreviewBlob } from '@/api/thumbnail-svc';
 import { tryCatch } from '@/api/utils';
@@ -18,14 +20,16 @@ export default function PreviewThumbnail({
   resource,
   className,
   dpi,
-  size,
+  width,
+  height,
   target,
   alt = 'img preview',
 }: {
   resource: T;
   className?: string;
   dpi?: number;
-  size?: { height: number; width: number } | string;
+  width?: number | string;
+  height?: number | string;
   target?: 'simulation' | 'stimulus';
   alt?: string;
 }) {
@@ -40,10 +44,19 @@ export default function PreviewThumbnail({
     error: null,
   });
 
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+
   useEffect(() => {
     async function buildPreview() {
       setState((prev) => ({ ...prev, loading: true }));
-      const { data, error } = await tryCatch<Blob>(getPreviewBlob(resource));
+      const { data, error } = await tryCatch<Blob>(
+        getPreviewBlob(
+          resource,
+          virtualLabId as string | undefined,
+          projectId as string | undefined,
+          target
+        )
+      );
       if (data && data.type === 'image/png') {
         setState((prev) => ({
           ...prev,
@@ -66,7 +79,7 @@ export default function PreviewThumbnail({
         URL.revokeObjectURL(state.thumbnail);
       }
     };
-  }, [dpi, target, inView, resource]);
+  }, [dpi, target, inView, resource, state.thumbnail, virtualLabId, projectId]);
 
   const component = match(state)
     .with({ loading: true }, () => (
@@ -83,8 +96,8 @@ export default function PreviewThumbnail({
         alt={`${'name' in resource ? resource.name : alt}`}
         src={thumbnail}
         className={className}
-        height={typeof size !== 'string' ? size?.height : undefined}
-        width={typeof size !== 'string' ? size?.width : undefined}
+        height={typeof height === 'number' ? height : 300}
+        width={typeof height === 'number' ? height : 400}
       />
     ))
     .with({ error: P.nonNullable }, () => (
@@ -109,8 +122,8 @@ export default function PreviewThumbnail({
       ref={ref}
       className="flex items-center justify-center"
       style={{
-        height: typeof size !== 'string' && size ? size?.height : size,
-        width: typeof size !== 'string' && size ? size?.width : size,
+        height,
+        width,
       }}
     >
       {component}
