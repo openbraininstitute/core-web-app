@@ -20,18 +20,12 @@ export async function getEtypes({
   ctx?: WorkspaceContext;
 }) {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<EntityCoreResponse<IEType>>(
-    baseUri,
-    {
-      ...getEntityCoreContext(ctx),
-      queryParams: {
-        ...filters,
-      },
+  return await api.get<EntityCoreResponse<IEType>>(baseUri, {
+    ...getEntityCoreContext(ctx),
+    queryParams: {
+      ...filters,
     },
-    {
-      cache: { cacheName: 'etypes', enabled: true, ttlInSeconds: 86_400 },
-    }
-  );
+  });
 }
 
 /**
@@ -41,7 +35,5 @@ export async function getEtypes({
  */
 export async function getEtype({ id }: { id: string }) {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<IEType>(`${baseUri}/${id}`, undefined, {
-    cache: { cacheName: 'etype', enabled: true, ttlInSeconds: 86_400 },
-  });
+  return await api.get<IEType>(`${baseUri}/${id}`);
 }

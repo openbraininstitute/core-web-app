@@ -1,11 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type {
-  ICellCompositionOntologyRoot,
-  ICellCompositionRoot,
-} from '@/api/entitycore/types/entities/cell-composition';
+import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
 import type { WorkspaceContext } from '@/types/common';
-import { sleep } from '@/utils/promise';
 
 const baseUri = '/cell-composition';
 
@@ -20,23 +16,5 @@ const baseUri = '/cell-composition';
  */
 export async function getCellCompositionSummary(ctx?: WorkspaceContext) {
   const api = await entityCoreApi();
-  // await sleep(30000);
-  return await api.get<ICellCompositionRoot>(
-    `${baseUri}`,
-    { ...getEntityCoreContext(ctx) },
-    {
-      cache: { cacheName: 'cell-composition-summary', enabled: true, ttlInSeconds: 86_400 },
-    }
-  );
-}
-
-export async function getCellCompositionVolume(ctx?: WorkspaceContext) {
-  const api = await entityCoreApi();
-  return await api.get<ICellCompositionOntologyRoot>(
-    `${baseUri}/volume`,
-    { ...getEntityCoreContext(ctx) },
-    {
-      cache: { cacheName: 'cell-composition-volume', enabled: true, ttlInSeconds: 86_400 },
-    }
-  );
+  return await api.get<ICellCompositionRoot>(`${baseUri}`, { ...getEntityCoreContext(ctx) });
 }

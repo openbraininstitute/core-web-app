@@ -90,14 +90,12 @@ export type MeasurementBase = {
   value: number;
 };
 
-<<<<<<< HEAD
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
   pref_label__in: string | null;
   order_by: string | null;
 }
-=======
 export type MorphologyMeasurementSerie = {
   name: string;
   value: number;
@@ -117,7 +115,6 @@ export type TypeFilter = {
 
 export interface IMTypeFilter extends PaginationFilter, TypeFilter {}
 export interface IETypeFilter extends PaginationFilter, TypeFilter {}
->>>>>>> cae005c6e (use mtype etype alt_label on tree item)
 
 type RoleBase = {
   name: string;

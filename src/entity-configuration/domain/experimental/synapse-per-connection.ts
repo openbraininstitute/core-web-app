@@ -1,8 +1,10 @@
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
-import * as entitycore from '@/api/entitycore/queries';
+import {
+  getExperimentalSynapsesPerConnections,
+  getExperimentalSynapsesPerConnection,
+} from '@/api/entitycore/queries/experimental/synapses-per-connection';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -19,8 +21,8 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
       allowedParams: 'all',
     },
     query: {
-      list: entitycore.getExperimentalSynapsesPerConnections,
-      one: entitycore.getExperimentalSynapsesPerConnection,
+      list: getExperimentalSynapsesPerConnections,
+      one: getExperimentalSynapsesPerConnection,
     },
   },
   explore: {
@@ -30,6 +32,5 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   asset: {
     extension: 'application/json',
   },
-  // viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalSynapsePerConnection],
   isBookmarkable: true,
 } as const;

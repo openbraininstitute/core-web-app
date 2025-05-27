@@ -18,7 +18,7 @@ export default function ExploreInteractivePanel() {
   const dataKey = resolveDataKey({ projectId, section: 'explore' });
 
   return (
-    <div className="relative flex h-full min-w-0 flex-1 overflow-hidden">
+    <div className="relative flex h-full w-full min-w-0 flex-1 overflow-hidden">
       <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-[#012766]">
         <div
           id="interactive-layout"

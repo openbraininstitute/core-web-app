@@ -1,4 +1,6 @@
+import { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { Prettify } from '@/utils/type';
 
 export function findParentIds(root: IBrainRegionHierarchy, targetId: string): string[] {
   function dfs(node: IBrainRegionHierarchy, path: string[]): string[] | null {
@@ -17,10 +19,11 @@ export function findParentIds(root: IBrainRegionHierarchy, targetId: string): st
   }
 
   return dfs(root, []) ?? [];
+}
 
 export interface IBrainRegionLeaves {
   id: string;
-  leaves: string[];
+  leaves: IBrainRegionHierarchy[];
 }
 
 /**
@@ -28,12 +31,12 @@ export interface IBrainRegionLeaves {
  * @param region - The brain region node to start from.
  * @returns An array of leaf node IDs.
  */
-function getLeafIds(region: IBrainRegionHierarchy): string[] {
+function getLeafIds(region: IBrainRegionHierarchy): IBrainRegionHierarchy[] {
   if (!region.children || region.children.length === 0) {
-    return [region.id];
+    return [region];
   }
 
-  let leaves: string[] = [];
+  let leaves: IBrainRegionHierarchy[] = [];
   for (const child of region.children) {
     leaves = leaves.concat(getLeafIds(child));
   }
@@ -47,7 +50,7 @@ function getLeafIds(region: IBrainRegionHierarchy): string[] {
  */
 export function getLeavesForEachRegion(
   brainHierarchy: IBrainRegionHierarchy | IBrainRegionHierarchy[]
-): IBrainRegionLeaves[] {
+): Map<string, IBrainRegionHierarchy[]> {
   const results: IBrainRegionLeaves[] = [];
   const regionsToProcess: IBrainRegionHierarchy[] = Array.isArray(brainHierarchy)
     ? [...brainHierarchy]
@@ -68,5 +71,5 @@ export function getLeavesForEachRegion(
     processRegion(rootRegion);
   }
 
-  return results;
+  return new Map<string, IBrainRegionHierarchy[]>(results.map((item) => [item.id, item.leaves]));
 }

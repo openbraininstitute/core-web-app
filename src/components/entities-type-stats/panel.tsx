@@ -115,7 +115,7 @@ export function EntityTypeStats(props: StatsPanelProps) {
           type="Circuit"
           records={`${circuitsFlat.length} records`}
           title="Circuit"
-          isLoading={isLoading}
+          isLoading={false}
         />
       </>
     ))

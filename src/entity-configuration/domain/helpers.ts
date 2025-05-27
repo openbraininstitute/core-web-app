@@ -1,9 +1,8 @@
 import filter from 'lodash/filter';
 import find from 'lodash/find';
-
 import set from 'lodash/set';
-import get from 'lodash/get';
-import { EntityCoreConfiguration } from '.';
+
+import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
 import type {
   EntityCoreTypeConfig,

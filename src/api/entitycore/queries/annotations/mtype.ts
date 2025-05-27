@@ -20,18 +20,12 @@ export async function getMtypes({
   ctx: WorkspaceContext;
 }) {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<EntityCoreResponse<IMType>>(
-    baseUri,
-    {
-      ...getEntityCoreContext(ctx),
-      queryParams: {
-        ...filters,
-      },
+  return await api.get<EntityCoreResponse<IMType>>(baseUri, {
+    ...getEntityCoreContext(ctx),
+    queryParams: {
+      ...filters,
     },
-    {
-      cache: { cacheName: 'mtypes', enabled: true, ttlInSeconds: 86_400 },
-    }
-  );
+  });
 }
 
 /**
