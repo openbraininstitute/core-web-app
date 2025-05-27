@@ -13,10 +13,6 @@ import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
 import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
 
-import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
-import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
-import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
-
 function MainDetailViewCore({
   content,
   parentCircuit,
@@ -27,7 +23,7 @@ function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="relative py-10 pl-20 pr-10 text-primary-9">
+    <div className="relative ml-20 py-10 pr-10 text-primary-9">
       <HeaderDetailView content={content} />
       <Visualiser content={content} />
       <SectionMainContainer
@@ -131,7 +127,7 @@ export default function CircuitDetailPage() {
   }
 
   return (
-    <div className="relative overflow-y-scroll bg-white">
+    <div className="relative flex flex-row flex-nowrap overflow-y-scroll bg-white">
       <DetailsPageSideBackLink />
       {circuitData && (
         <MainDetailViewCore
