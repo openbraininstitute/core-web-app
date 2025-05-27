@@ -24,14 +24,14 @@ export default function ListParameterBox({
 }) {
   const [viewMore, setViewMore] = useState<boolean>(false);
 
-  const contentList = viewMore ? value : value.slice(0, slice);
+  const slicedContent = value.slice(0, slice);
 
   return (
     <div className="relative flex w-full flex-col items-start">
       <div className="text-sm font-light uppercase tracking-wider text-gray-500">{name}</div>
 
       <div className="mt-2 flex flex-row flex-wrap gap-2">
-        {contentList.map((item: ContributorsProps | string) => {
+        {slicedContent.map((item: ContributorsProps | string) => {
           if (typeof item === 'string') {
             return (
               <span
@@ -77,7 +77,7 @@ export default function ListParameterBox({
               </button>
             </div>
             <div className="flex flex-row flex-wrap gap-2">
-              {contentList.map((item: ContributorsProps | string) => {
+              {value.map((item: ContributorsProps | string) => {
                 if (typeof item === 'string') {
                   return (
                     <span

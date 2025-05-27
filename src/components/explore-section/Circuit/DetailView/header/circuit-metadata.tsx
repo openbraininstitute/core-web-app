@@ -9,7 +9,11 @@ export default function CircuitMetadata({ content }: { content: CircuitSchemaPro
         <ParameterBox name="Description" value={content.description} />
       </div>
       <div>
-        <ListParameterBox name="Contributors" value={content.metadata.contributors ?? []} />
+        <ListParameterBox
+          name="Contributors"
+          value={content.metadata.contributors ?? []}
+          slice={4}
+        />
       </div>
       <div>
         <ListParameterBox
