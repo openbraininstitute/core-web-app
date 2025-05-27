@@ -64,7 +64,7 @@ export const renderDate = (isoDateString: string) => {
   return format(parseISO(isoDateString), 'dd.MM.yyyy');
 };
 
-export const renderTimestamp = (timestamp: string) => {
+export const renderTimestamp = (timestamp: Date) => {
   if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
 };
 

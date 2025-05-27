@@ -22,6 +22,7 @@ import type {
   TimestampsFilter,
   IDFilter,
   PaginationFilter,
+  OwnershipFilter,
 } from '@/api/entitycore/types/shared/request';
 import type { SingleNeuronSynaptomeBase } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
@@ -62,7 +63,8 @@ export interface ISingleNeuronSynaptomeSimulationFilter
     MtypeFilter,
     EtypeFilter,
     SynaptomeFilter,
-    PaginationFilter {}
+    PaginationFilter,
+    OwnershipFilter {}
 
 export const CreateSingleNeuronSynaptomeSimulationSchema = z.object({
   name: z.string(),
