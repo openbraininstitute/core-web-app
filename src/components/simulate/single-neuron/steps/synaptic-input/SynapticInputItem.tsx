@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import { Button, Form, InputNumber, Select, SelectProps } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
+import { useParams } from 'next/navigation';
 import { Color } from 'three';
 
 import ConfigInputList from './ConfigInput';
@@ -32,6 +33,7 @@ import { calculateRangeOutput } from '@/constants/simulate/single-neuron';
 import { Switch } from '@/components/common/Switch';
 import { UpdateSynapseSimulationProperty } from '@/types/simulation/single-neuron';
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
+import type { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 type Props = {
   index: number;
@@ -50,6 +52,7 @@ export default function SynapticInputItem({
   synaptomeModelConfig,
   selectedSynapticInputPlacementConfig,
 }: Props) {
+  const { virtualLabId, projectId } = useParams<VirtualLabInfo>();
   const { error: notifyError } = useNotification();
   const [synapticInputOpened, setSynapticInputOpened] = useState(false);
   const [synapseDisplayed, setSynapseDisplayed] = useState(false);
@@ -108,6 +111,7 @@ export default function SynapticInputItem({
 
       abortController.current = new AbortController();
       const response = await getSynaptomePlacement({
+        context: { virtualLabId, projectId },
         modelId: synaptomeModelConfig.meModelSelf,
         seed: selectedSynapticInputPlacementConfig?.seed!,
         config: selectedSynapticInputPlacementConfig!,
@@ -193,7 +197,7 @@ export default function SynapticInputItem({
                 {synapseDisplayed ? (
                   <EyeInvisibleOutlined className="h-8 w-8 px-2 text-primary-8" />
                 ) : visualizeLoading ? (
-                  <LoadingOutlined className="h-8 w-8  px-2 text-primary-8" />
+                  <LoadingOutlined className="h-8 w-8 px-2 text-primary-8" />
                 ) : (
                   <EyeOutlined className="h-8 w-8 px-2 text-primary-8" />
                 )}
@@ -345,7 +349,7 @@ function FrequencyFormItem({
         <div className="flex">
           {disableFrequencyStepper && (
             <CustomPopover message={disableStepperContent} when="hover">
-              <div className="mr-2  text-sm text-primary-9">
+              <div className="mr-2 text-sm text-primary-9">
                 <WarningFilled className="mr-2" />
                 Stepper already assigned
               </div>
@@ -453,7 +457,7 @@ function FrequencyFormItem({
             </div>
 
             {calculatedFrequencies.map((f) => (
-              <span className="mx-2 text-sm " key={f}>
+              <span className="mx-2 text-sm" key={f}>
                 {f}
               </span>
             ))}
