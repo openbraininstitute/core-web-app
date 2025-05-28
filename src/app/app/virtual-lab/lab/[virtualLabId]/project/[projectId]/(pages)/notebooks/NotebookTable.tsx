@@ -23,6 +23,7 @@ import ContentModal from './ContentModal';
 import NotebookTabs from './NotebookTabs';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhite, EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
+import { startNotebook, NotebookStartResponse } from '@/services/notebooks';
 import useSearch from '@/components/VirtualLab/Search';
 
 import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
@@ -105,7 +106,19 @@ function NotebookTable({
   }, [notebooks, search]);
 
   const runNotebook = async (notebook: Notebook) => {
-    notification.info(`Request received to run notebook: ${notebook.name}`);
+    // notification.info(`Request received to run notebook: ${notebook.name}`);
+    try {
+      const retval: NotebookStartResponse = await startNotebook(notebook, vlabId, projectId);
+      notification.success(`Notebook started successfully: ${retval.message}`);
+    } catch (error) {
+      if (error instanceof Error && 'cause' in error) {
+        if (
+          (error.cause as { error_code: string; hint: string }).error_code === 'SESSION_NOT_FOUND'
+        )
+          notification.error(`You need to be logged in to start a notebook.`);
+        else notification.error(`Failed to start notebook, cause: ${error.cause}`);
+      } else notification.error(`Failed to start notebook, unknown error: ${error}`);
+    }
   };
 
   const handleDownloadClick = async (notebook: Notebook) => {
