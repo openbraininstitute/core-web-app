@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 
 import { NewWindowAdd, UserCircle } from '@/components/icons/EditorIcons';
 import { ActionCard, HeroSection } from '@/components/VirtualLab/labs-listing/elements';
-import { TutorialsCarrousel } from '@/components/tutorials-carrousel';
 
 type Props = {
   showCreateSubscription?: boolean;
@@ -12,7 +11,7 @@ type Props = {
 
 export default function VirtualSplashScreen({ showCreateSubscription = true }: Props) {
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col py-10">
+    <div className="relative z-10 mx-auto flex h-max w-full max-w-7xl flex-col py-10">
       <HeroSection />
       <div className="mx-auto mt-6 flex w-full flex-col gap-3">
         <motion.div
@@ -44,7 +43,6 @@ export default function VirtualSplashScreen({ showCreateSubscription = true }: P
           </motion.div>
         )}
       </div>
-      <TutorialsCarrousel />
     </div>
   );
 }
