@@ -33,6 +33,11 @@ export type LinkAndDownloadArtifactProps = {
   _type: string;
 };
 
+export type ArticfactTypeProps = {
+  id: string;
+  name: string;
+};
+
 export type MEModelsProps = {
   file: string;
   name: string;
