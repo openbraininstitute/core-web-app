@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import SingleArtifact from '../SingleArtifact';
+import E_MODEL_CONTENT from '../tables/content/E-MODEL-CONTENT';
+import EModelTable from '../tables/e-model-table';
 import { LinkAndDownloadArtifactProps, ShowCaseProjectQueryType } from '../type';
 import ArtifactsTabNav from './artifact/artifacts-tab-nav';
 
@@ -41,9 +43,20 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
     (content?.minimalMeModel?.length ?? 0) +
     (content?.eModelsList?.length ?? 0);
 
+  let activeTable = null;
+
+  switch (activeArtifactType) {
+    case 'eModel':
+      activeTable = <EModelTable content={E_MODEL_CONTENT} />;
+      break;
+    default:
+      activeTable = <LinkAndDownloadArtifactList content={content.artifact} />;
+      break;
+  }
+
   return (
     <div className="relative flex w-full flex-col gap-y-12 scroll-smooth" id="artifacts">
-      <header className="sticky top-0 z-50 mb-12 flex w-full flex-row items-center justify-between bg-white">
+      <header className="sticky top-0 z-50 flex w-full flex-row items-center justify-between bg-white">
         <div className="relative flex flex-row text-base">
           Total artifacts: <span className="ml-2 block font-bold">{totalDataCount}</span>
         </div>
@@ -53,6 +66,7 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
           setActiveArtifactType={setActiveArtifactType}
         />
       </header>
+      <div className="w-full overflow-hidden">{activeTable}</div>
     </div>
   );
 }

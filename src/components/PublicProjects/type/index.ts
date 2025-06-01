@@ -98,6 +98,8 @@ export type ShowCaseProjectQueryType = {
   eModelsList: EModelsProps[];
   notebook: NotebooksProps[];
   minimalMeModel: MinimalMeModelProps[];
+  eModelsTable: EModelsProps[];
+  meModelsTable: MEModelsProps[];
   _updatedAt: string;
 };
 
