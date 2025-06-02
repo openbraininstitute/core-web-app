@@ -14,7 +14,6 @@ import compact from 'lodash/compact';
 import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import AddMembersModal from '@/components/VirtualLab/create-entity-flows/project/add-members';
 import useUserPermissions from '@/hooks/useUserPermission';
-import useNotification from '@/hooks/notifications';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import {
   cancelProjectInvite,
@@ -25,6 +24,8 @@ import { classNames } from '@/util/utils';
 import { extractInitials } from '@/util/slugify';
 import { tryCatch } from '@/api/utils';
 import { projectStatsAtomFamily } from '@/state/virtual-lab/projects';
+import { useAppNotification } from '@/components/notification';
+
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
@@ -52,7 +53,8 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
   const [loading, setLoading] = useState(false);
   const [removeLoading, seRemoveLoading] = useState(false);
   const refreshProjectStats = useSetAtom(projectStatsAtomFamily({ virtualLabId, projectId }));
-  const { error: notifyError, success: notifySuccess } = useNotification();
+
+  const { error: notifyError, success: notifySuccess } = useAppNotification();
 
   const onChange = async (_role: Role) => {
     setLoading(true);
@@ -68,24 +70,21 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
       }
     );
     if (error) {
-      notifyError(
-        'Failed to update user role. Please try again or contact support if the issue persists.',
-        undefined,
-        'topRight',
-        true,
-        'user-role-update'
-      );
+      notifyError({
+        message:
+          'Failed to update user role. Please try again or contact support if the issue persists.',
+        placement: 'topRight',
+        key: 'user-role-update',
+      });
       return;
     }
     if (result.data) {
       updateRole(_role);
-      notifySuccess(
-        `User "${user.name}" role updated to ${get(find(roleOptions, { value: _role }), 'label')} successfully`,
-        undefined,
-        'topRight',
-        true,
-        'user-role-update'
-      );
+      notifySuccess({
+        message: `User "${user.name}" role updated to ${get(find(roleOptions, { value: _role }), 'label')} successfully`,
+        placement: 'topRight',
+        key: 'user-role-update',
+      });
     }
   };
 
@@ -103,23 +102,20 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
       }
     );
     if (error) {
-      notifyError(
-        'Failed to cancel invite. Please try again or contact support if the issue persists.',
-        undefined,
-        'topRight',
-        true,
-        'user-cancel-invite'
-      );
+      notifyError({
+        message:
+          'Failed to cancel invite. Please try again or contact support if the issue persists.',
+        placement: 'topRight',
+        key: 'user-cancel-invite',
+      });
       return;
     }
     if (result.message) {
-      notifySuccess(
-        `Invite for ${user.email} cancelled successfully`,
-        undefined,
-        'topRight',
-        true,
-        'user-cancel-invite'
-      );
+      notifySuccess({
+        message: `Invite for ${user.email} cancelled successfully`,
+        placement: 'topRight',
+        key: 'user-cancel-invite',
+      });
       refreshProjectStats();
       onRemove(user.email);
     }
@@ -139,32 +135,27 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
     );
     if (error) {
       if (get(error, 'cause.error_code') === 'FORBIDDEN_OPERATION') {
-        notifyError(
-          'You are not authorized to remove this user from the virtual lab.',
-          undefined,
-          'topRight',
-          true,
-          'user-remove-from-vlab'
-        );
+        notifyError({
+          message: 'You are not authorized to remove this user from the virtual lab.',
+          placement: 'topRight',
+          key: 'user-remove-from-vlab',
+        });
         return;
       }
-      notifyError(
-        'Failed to remove user from virtual lab. Please try again or contact support if the issue persists.',
-        undefined,
-        'topRight',
-        true,
-        'user-remove-from-vlab'
-      );
+      notifyError({
+        message:
+          'Failed to remove user from virtual lab. Please try again or contact support if the issue persists.',
+        placement: 'topRight',
+        key: 'user-remove-from-vlab',
+      });
       return;
     }
     if (result.message) {
-      notifySuccess(
-        `User "${user.name}" removed from virtual lab successfully`,
-        undefined,
-        'topRight',
-        true,
-        'user-remove-from-vlab'
-      );
+      notifySuccess({
+        message: `User "${user.name}" removed from virtual lab successfully`,
+        placement: 'topRight',
+        key: 'user-remove-from-vlab',
+      });
       refreshProjectStats();
       onRemove(user.id);
     }

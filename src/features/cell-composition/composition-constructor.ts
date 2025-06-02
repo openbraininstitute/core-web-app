@@ -1,3 +1,5 @@
+import memoizeOne from 'memoize-one';
+
 import { log } from '@/utils/logger';
 
 import type { BrainRegionHierarchyAtomReturnType } from '@/features/brain-region-hierarchy/context';
@@ -9,8 +11,9 @@ import type {
   ICellCompositionRoot,
 } from '@/api/entitycore/types/entities/cell-composition';
 import type { NeuronComposition, RawTreeNode } from '@/features/cell-composition/types';
+import { memoize } from '@/util/utils';
 
-const NEURON_COUNT_SCALE = 1e-9;
+const NEURON_DENSITY_SCALE = 1e-9;
 
 /**
  * retrieves the ids of leaf nodes for a given brain region Id from the hierarchy.
@@ -61,11 +64,11 @@ function buildTreeNode(
     const mt = data as CellCompositionMType;
     label = mt.label;
 
-    const eTypeResults = Object.entries(mt.hasPart).map(([originalEtId, etData]) => {
+    const eTypeResults = Object.entries(mt.hasPart).map(([originalEtypeId, etData]) => {
       // create a composite id for the eType node to ensure uniqueness in the tree
       // when the same eType (by originalEtId) is a child of different mTypes,
       // or to correctly instance it under this specific mType.
-      const compositeEtId = `${id}__${originalEtId}`; // mTypeId__eTypeId
+      const compositeEtId = `${id}__${originalEtypeId}`; // mTypeId__eTypeId
 
       return buildTreeNode(
         etData,
@@ -75,7 +78,7 @@ function buildTreeNode(
         parentBrainRegionId,
         cellCompositionRoot,
         leafVolumeMap,
-        originalEtId // pass eType id
+        originalEtypeId // pass eType id
       );
     });
 
@@ -101,7 +104,7 @@ function buildTreeNode(
     const composition = {
       neuron: {
         density: volume > 0 ? cellCounts.neuron / volume : 0,
-        count: cellCounts.neuron * NEURON_COUNT_SCALE,
+        count: cellCounts.neuron * NEURON_DENSITY_SCALE,
       },
       glia: {
         density: volume > 0 ? cellCounts.glia / volume : 0,
@@ -140,7 +143,7 @@ function buildTreeNode(
     const composition = {
       neuron: {
         density: neuronDensity,
-        count: cellCounts.neuron * NEURON_COUNT_SCALE,
+        count: cellCounts.neuron * NEURON_DENSITY_SCALE,
       },
       glia: {
         density: gliaDensity,
@@ -176,12 +179,17 @@ function buildTreeNode(
  * @param hierarchy - brain region hierarchy information.
  * @returns an object containing nodes, tree structure, links, total volume, and total composition.
  */
-export function resolveBrainRegionCellComposition(
-  brainRegionId: string,
-  cellCompositionRoot: ICellCompositionRoot,
-  atlasRegions: IBrainAtlasRegion[],
-  hierarchy: BrainRegionHierarchyAtomReturnType
-): {
+export function resolveBrainRegionCellCompositionFn({
+  brainRegionId,
+  cellCompositionRoot,
+  atlasRegions,
+  hierarchy,
+}: {
+  brainRegionId: string;
+  cellCompositionRoot: ICellCompositionRoot;
+  atlasRegions: IBrainAtlasRegion[];
+  hierarchy: BrainRegionHierarchyAtomReturnType;
+}): {
   nodes: RawTreeNode[];
   links: { source: string; target: string }[];
   totalVolume: number;
@@ -274,7 +282,7 @@ export function resolveBrainRegionCellComposition(
           existingNode.composition.neuron = {
             density:
               totalVolumeForNode > 0 ? existingNode.cellCounts.neuron / totalVolumeForNode : 0,
-            count: existingNode.cellCounts.neuron * NEURON_COUNT_SCALE,
+            count: existingNode.cellCounts.neuron * NEURON_DENSITY_SCALE,
           };
           existingNode.composition.glia = {
             density: totalVolumeForNode > 0 ? existingNode.cellCounts.glia / totalVolumeForNode : 0,
@@ -297,7 +305,7 @@ export function resolveBrainRegionCellComposition(
                   : currentNode.about === 'EType'
                     ? ((currentNode as RawTreeNode).composition?.neuron.density ?? 0)
                     : 0,
-              count: currentNode.cellCounts.neuron * NEURON_COUNT_SCALE,
+              count: currentNode.cellCounts.neuron * NEURON_DENSITY_SCALE,
             };
             currentNode.composition.glia = {
               density:
@@ -355,7 +363,7 @@ export function resolveBrainRegionCellComposition(
   const totalComposition: NeuronComposition = {
     neuron: {
       density: totalVolume > 0 ? totalNeuronCount / totalVolume : 0,
-      count: totalNeuronCount * NEURON_COUNT_SCALE,
+      count: totalNeuronCount * NEURON_DENSITY_SCALE,
     },
     glia: {
       density: totalVolume > 0 ? totalGliaCount / totalVolume : 0,
@@ -365,3 +373,8 @@ export function resolveBrainRegionCellComposition(
 
   return { nodes, links, totalVolume, totalComposition };
 }
+
+export const resolveBrainRegionCellComposition = memoize(
+  resolveBrainRegionCellCompositionFn,
+  ({ brainRegionId }) => brainRegionId
+);
