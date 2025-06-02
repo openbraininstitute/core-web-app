@@ -1,4 +1,5 @@
 import { CircuitSchemaProps } from '../../type';
+import ListParameterBox from '../global/ListParameterBox';
 import ParameterBox from '../global/ParameterBox';
 
 export default function CircuitMetadata({ content }: { content: CircuitSchemaProps }) {
@@ -8,17 +9,17 @@ export default function CircuitMetadata({ content }: { content: CircuitSchemaPro
         <ParameterBox name="Description" value={content.description} />
       </div>
       <div>
-        <ParameterBox
+        <ListParameterBox
           name="Contributors"
-          value={content.metadata.contributors || '–'}
-          hasViewMore
+          value={content.metadata.contributors ?? []}
+          slice={4}
         />
       </div>
       <div>
-        <ParameterBox
+        <ListParameterBox
           name="Contributing institutions"
-          value={content.metadata.contributingInstitution || '–'}
-          hasViewMore
+          value={content.metadata.organizations}
+          slice={2}
         />
       </div>
     </div>

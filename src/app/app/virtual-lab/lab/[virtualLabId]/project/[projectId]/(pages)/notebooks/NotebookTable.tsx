@@ -4,20 +4,26 @@ import { ConfigProvider, DatePicker, Input, Select } from 'antd';
 
 import { useMemo, useState } from 'react';
 
-import { DeleteOutlined, LoadingOutlined, PlusOutlined, UndoOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  LoadingOutlined,
+  PlusOutlined,
+  UndoOutlined,
+  PlayCircleOutlined,
+} from '@ant-design/icons';
 import Table from 'antd/es/table';
 import { Popover } from 'antd/lib';
 import { compareAsc, format } from 'date-fns';
 import { saveAs } from 'file-saver';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
 import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
 import { getSorter } from './utils';
 import ContentModal from './ContentModal';
 import NotebookTabs from './NotebookTabs';
+import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
+import { EyeIconWhite, EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import useSearch from '@/components/VirtualLab/Search';
-import { basePath } from '@/config';
 
 import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
 
@@ -36,6 +42,7 @@ function NotebookTable({
   vlabId,
   projectId,
   serverError,
+  enableRunNotebook = false,
 }: {
   vlabId: string;
   projectId: string;
@@ -43,6 +50,7 @@ function NotebookTable({
   failed?: string[];
   onDelete?: (id: string) => void;
   serverError?: string;
+  enableRunNotebook?: boolean;
 }) {
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
@@ -96,6 +104,10 @@ function NotebookTable({
     });
   }, [notebooks, search]);
 
+  const runNotebook = async (notebook: Notebook) => {
+    notification.info(`Request received to run notebook: ${notebook.name}`);
+  };
+
   const handleDownloadClick = async (notebook: Notebook) => {
     setLoadingZip(true);
 
@@ -116,48 +128,35 @@ function NotebookTable({
           content={
             <div className="flex min-w-[120px] flex-col gap-2 text-white">
               <div className="flex gap-4">
-                <Image
-                  src={`${basePath}/images/icons/eye-2.svg`}
-                  width={12}
-                  height={12}
-                  alt="View"
-                />
                 <button
                   type="button"
                   onClick={() => {
                     setDisplay('readme');
                     setCurrentNotebook(notebook);
                   }}
+                  className="inline-flex items-center gap-[10px]"
                 >
+                  <EyeIconWhiteWithinBox className="text-xs" aria-label="Readme" />
                   Readme
                 </button>
               </div>
               <div className="flex gap-4">
-                <Image
-                  src={`${basePath}/images/icons/eye.svg`}
-                  width={12}
-                  height={12}
-                  alt="Readme"
-                />
                 <a
                   href={`https://nbviewer.org/github/${notebook.githubUser}/${notebook.githubRepo}/blob/${notebook.defaultBranch}/${notebook.path}`}
                   target="_blank"
+                  className="inline-flex items-center gap-[10px]"
                 >
+                  <EyeIconWhite className="text-xs" aria-label="Preview" />
                   Preview
                 </a>
               </div>
               <div className="flex gap-4">
-                <Image
-                  src={`${basePath}/images/icons/download.svg`}
-                  width={12}
-                  height={12}
-                  alt="download"
-                />
                 <button
                   type="button"
-                  className="hover:text-primary-4"
+                  className="inline-flex items-center gap-[10px] hover:text-primary-4"
                   onClick={() => handleDownloadClick(notebook)}
                 >
+                  <DownloadIconWhiteWithCorners className="text-xs" aria-label="Download" />
                   Download
                 </button>
                 {loadingZip && <LoadingOutlined />}
@@ -165,13 +164,27 @@ function NotebookTable({
 
               {onDelete && (
                 <div className="flex gap-4 text-error">
-                  <DeleteOutlined className="text-error" />
                   <button
                     type="button"
-                    className="hover:text-primary-4"
+                    className="inline-flex items-center gap-[10px] hover:text-primary-4"
                     onClick={() => onDelete(notebook.id)}
                   >
+                    <DeleteOutlined className="text-xs text-error" aria-label="Delete" />
                     Delete
+                  </button>
+                </div>
+              )}
+              {enableRunNotebook && (
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-[10px]"
+                    onClick={() => {
+                      runNotebook(notebook);
+                    }}
+                  >
+                    <PlayCircleOutlined aria-label="Run" />
+                    Run
                   </button>
                 </div>
               )}

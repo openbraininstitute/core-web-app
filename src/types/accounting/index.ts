@@ -45,6 +45,7 @@ export enum ServiceSubtype {
   MlRetrieval = 'ml-retrieval',
   MlLlm = 'ml-llm',
   MlRag = 'ml-rag',
+  Notebook = 'notebook',
 }
 
 export type JobReport = {

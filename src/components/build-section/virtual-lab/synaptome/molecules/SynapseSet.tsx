@@ -11,6 +11,7 @@ import {
   PlusCircleOutlined,
 } from '@ant-design/icons';
 import { Color } from 'three';
+import { useParams } from 'next/navigation';
 
 import isEqual from 'lodash/isEqual';
 import groupBy from 'lodash/groupBy';
@@ -30,8 +31,9 @@ import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { getSynaptomePlacement } from '@/api/bluenaas';
 import { getSession } from '@/authFetch';
-
 import useNotification from '@/hooks/notifications';
+
+import type { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 type Props = {
   modelId: string;
@@ -52,6 +54,7 @@ export default function SynapseSet({
   removeGroup,
   disableApplyChanges,
 }: Props) {
+  const { virtualLabId, projectId } = useParams<VirtualLabInfo>();
   const { error: notifyError } = useNotification();
   const form = Form.useFormInstance();
   const secNames = useAtomValue(secNamesAtom);
@@ -199,6 +202,7 @@ export default function SynapseSet({
         throw new Error('No session found');
       }
       const response = await getSynaptomePlacement({
+        context: { virtualLabId, projectId },
         modelId,
         seed,
         config,
