@@ -8,11 +8,11 @@ import MessageItem from './message-item';
 import Prompt from './prompt';
 import { Spinner } from './spinner';
 import SuggestedQuestions from './suggested-questions';
+import { useCollapsedPanel } from './hooks';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
 import styles from './literature-suggestions.module.css';
-import { useCollapsedPanel } from './hooks';
 
 export interface LiteratureSuggestionsProps {
   className?: string;
