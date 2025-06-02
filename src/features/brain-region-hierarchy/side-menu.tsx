@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import find from 'lodash/find';
 
 import {
-  brainRegionHierarchyAtom,
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
@@ -21,7 +21,9 @@ export default function TreeSideMenu({ dataKey }: Props) {
   const [isCollapsed, setIsCollapsed] = useAtom(brainRegionSidebarAtom);
   const onToggleCollapse = () => setIsCollapsed((prev) => !prev);
   const { node } = useBrainRegionHierarchy({ dataKey });
-  const result = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), [dataKey]));
+  const result = useAtomValue(
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [dataKey])
+  );
   const nodeLabel = find(result?.options, (o) => o.data.id === node.id)?.label;
 
   return (

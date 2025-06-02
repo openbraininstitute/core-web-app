@@ -8,7 +8,7 @@ import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 
 import {
-  brainRegionHierarchyAtom,
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
   DEFAULT_BRAIN_REGION_QUERY_ID,
   useBrainRegionHierarchy,
@@ -41,7 +41,9 @@ export default function NewMEModelPage(props: Params) {
     virtualLabId,
     projectId,
   });
-  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
+  const brainRegionHierarchy = useAtomValue(
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
+  );
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
 

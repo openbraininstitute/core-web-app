@@ -19,8 +19,7 @@ import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
 import { resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
 
-import type { DensityOrCount } from '@/features/cell-composition/types';
-import type { TreeNode } from '@/features/cell-composition/types';
+import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
 import type { RenderNodeProps } from '@/components/tree/types';
 import type { WorkspaceContext } from '@/types/common';
 

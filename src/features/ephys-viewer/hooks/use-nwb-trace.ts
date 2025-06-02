@@ -27,7 +27,7 @@ export default function useTrace(
       return;
     }
 
-    downloadAsset({
+    downloadAsset<ArrayBuffer | null>({
       entityType: EntityTypeEnum.ElectricalCellRecording,
       entityId: resource.id,
       id: asset.id,

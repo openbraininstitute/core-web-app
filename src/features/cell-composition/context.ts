@@ -1,15 +1,14 @@
 import { arrayToTree } from 'performant-array-to-tree';
 import { atomFamily } from 'jotai/utils';
 import { Atom, atom } from 'jotai';
+
 import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
 import { getCellCompositionSummary } from '@/api/entitycore/queries/general/cell-composition';
+import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
+import { brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { renameKeyDeep } from '@/components/tree/elements/helpers';
-import {
-  brainRegionHierarchyAtom,
-  brainRegionAtlasAtom,
-} from '@/features/brain-region-hierarchy/context';
 import { tryCatch } from '@/api/utils';
 import { log } from '@/utils/logger';
 
@@ -43,7 +42,7 @@ export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionI
     try {
       const [cellComposition, brainRegions, brainRegionAtlas] = await Promise.all([
         get(cellCompositionSummaryAtom),
-        get(brainRegionHierarchyAtom),
+        get(brainRegionBasicCellGroupsRegionsHierarchyAtom),
         get(brainRegionAtlasAtom),
       ]);
 

@@ -2,13 +2,13 @@ import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import { ApplicationSection } from '@/types/common';
-import { loadingAtom } from '@/components/ThreeDeeBrain/state';
+import { loadingAtom } from '@/features/brain-atlas-viewer/state';
 
 type LoadingHandlerProps = {
   section: ApplicationSection;
 };
 
-export function LoadingHandler({ section }: LoadingHandlerProps) {
+export default function LoadingHandler({ section }: LoadingHandlerProps) {
   const loading = useAtomValue(loadingAtom);
   return (
     loading[section].length > 0 && (

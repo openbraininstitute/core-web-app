@@ -16,7 +16,7 @@ import NavigationMenu from '@/components/explore-section/ExploreListingLayout/na
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
 import {
-  brainRegionHierarchyAtom,
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
 import { circuitCountAtom } from '@/components/explore-section/Circuit/content/circuits_flat';
@@ -40,7 +40,9 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   const params = useParams<WorkspaceContext & { type: EntitySlugValue; id: string }>();
   const pathname = usePathname();
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
-  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
+  const brainRegionHierarchy = useAtomValue(
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
+  );
 
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
 

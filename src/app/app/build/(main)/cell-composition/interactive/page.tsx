@@ -1,7 +1,7 @@
 'use client';
 
 import useLiteratureCleanNavigate from '@/components/explore-section/Literature/useLiteratureCleanNavigate';
-import ThreeDeeBrain from '@/components/ThreeDeeBrain';
+import ThreeDeeBrain from '@/features/brain-atlas-viewer';
 
 export default function InteractiveView() {
   useLiteratureCleanNavigate();

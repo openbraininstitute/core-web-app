@@ -2,6 +2,7 @@ import type {
   EntityCoreIdentifiable,
   Timestamps,
   ISpecies,
+  IAsset,
 } from '@/api/entitycore/types/shared/global';
 import {
   PaginationFilter,
@@ -28,6 +29,7 @@ export interface BrainAtlasRegionBase {
 
 export interface IBrainAtlasRegion extends BrainAtlasRegionBase, Timestamps {
   id: string;
+  assets: Array<IAsset>;
 }
 
 export interface IBrainAtlasFilter
