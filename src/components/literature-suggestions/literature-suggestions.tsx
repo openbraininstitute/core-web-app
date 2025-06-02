@@ -12,13 +12,14 @@ import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
 import styles from './literature-suggestions.module.css';
+import { useCollapsedPanel } from './hooks';
 
 export interface LiteratureSuggestionsProps {
   className?: string;
 }
 
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
-  const [collapsedPanel, setCollapsedPanel] = React.useState(false);
+  const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');

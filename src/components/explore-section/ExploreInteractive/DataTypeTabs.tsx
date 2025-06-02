@@ -35,11 +35,8 @@ export default function DataTypeTabs() {
 
   const onTabClick = async (activeKey: string) => {
     setDataTypeTab(activeKey as DataTypeActiveTab);
-    if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
-    }
-    const artifact = DATA_TYPE_TABS.find((o) => o.id === activeKey)?.label;
-    await userJourneyTracker.handleClick('data_type', artifact!);
+    const artifactName = DATA_TYPE_TABS.find((o) => o.id === activeKey)?.label;
+    if (artifactName) userJourneyTracker.registerArtifactClick(artifactName);
   };
 
   return (

@@ -1,10 +1,8 @@
 import { WarningOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
@@ -21,17 +19,10 @@ export default function StatItem({
   subtitle: ReactNode;
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const onClick = async () => {
-    const current = await userJourneyTracker.getCurrentTuple();
-
-    if (!current) {
-      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
-    }
     const artifact = ensureString(title, 'Morphology');
-
     setCurrentExplorerArtifact(artifact);
-    await userJourneyTracker.handleClick('artifact', artifact);
+    userJourneyTracker.registerArtifactClick(artifact);
   };
 
   return (

@@ -12,7 +12,7 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
     }
   ): Promise<string[]> => {
     const { threadId = null, virtualLabId = null, projectId = null } = options ?? {};
-    const journey = await userJourneyTracker.getLastTuples();
+    const journey = userJourneyTracker.value;
 
     const data = await fetchJSON({
       accessToken,
