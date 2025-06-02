@@ -104,23 +104,20 @@ export async function getBrainAtlasRegions({
  * @returns A promise that resolves to the brain atlas region data wrapped in an EntityCoreResponse.
  */
 export async function getBrainAtlasRegion({
-  id,
+  atlasRegionId,
   atlasId,
   context,
 }: {
-  id: string;
+  atlasRegionId: string;
   atlasId: string;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IBrainAtlasRegion>>(
-    `${baseUri}/${atlasId}/regions/${id}`,
-    {
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        ...getEntityCoreContext(context).headers,
-      },
-    }
-  );
+  return await api.get<IBrainAtlasRegion>(`${baseUri}/${atlasId}/regions/${atlasRegionId}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
 }

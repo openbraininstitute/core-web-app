@@ -9,11 +9,11 @@ import {
   FrontSide,
   AdditiveBlending,
   Mesh,
+  BufferAttribute as ThreeBufferAttribute,
+  Color as ThreeColor,
 } from 'three';
-import { BufferAttribute as ThreeBufferAttribute } from 'three/src/core/BufferAttribute';
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
-import { Color as Threecolor } from 'three/src/math/Color';
-import { Point } from '@/components/ThreeDeeBrain/types';
+import { Point } from '@/features/brain-atlas-viewer/types';
 import { basePath } from '@/config';
 
 const parseWFObj = require('wavefront-obj-parser');
@@ -136,7 +136,7 @@ export function createPointCloud(arrayBuffer: ArrayBuffer, color: string) {
   });
   const sprite = new ThreeTextureLoader().load(`${basePath}/images/disc.png`);
   const material = new ThreePointsMaterial({
-    color: new Threecolor(color),
+    color: new ThreeColor(color),
     size: 100,
     map: sprite,
     sizeAttenuation: true,

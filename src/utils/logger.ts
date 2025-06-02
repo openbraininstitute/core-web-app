@@ -18,6 +18,6 @@ export function log(
 ) {
   if (env.NEXT_PUBLIC_DEPLOYMENT_ENV !== 'production') {
     // eslint-disable-next-line no-console
-    console[type](`${logColors[type]}${args.map((arg) => arg.toString()).join(' ')}${resetColor}`);
+    console[type](`${logColors[type]}${args[0]}${resetColor}\n`, ...args.slice(1));
   }
 }

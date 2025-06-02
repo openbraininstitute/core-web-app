@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ConfigProvider, Select } from 'antd';
+import delay from 'lodash/delay';
 
 import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
 
@@ -20,12 +21,13 @@ export default function TreeSearch({ options, onSelect }: Props) {
       const selectedOption = options.find((option) => option.value === value);
       if (selectedOption) {
         onSelect?.(selectedOption.data);
-        setTimeout(() => {
+        delay(() => {
           scrollToNode(selectedOption.data);
+          setSearchValue(undefined);
         }, 100);
       }
     },
-    [options, onSelect]
+    [options, onSelect, scrollToNode]
   );
 
   return (

@@ -6,12 +6,13 @@ import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
+import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
 import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import {
   DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
-  brainRegionHierarchyAtom,
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
@@ -22,7 +23,7 @@ import type { TTreeNode } from '@/components/tree/types';
 
 export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
-  const brainRegionHierarchyResult = useAtomValue(brainRegionHierarchyAtom);
+  const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
   const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
@@ -46,6 +47,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     updateHierarchyConfig(node as IBrainRegionHierarchy);
     scrollToNode(node as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
+    makeBrainRegionClickEvent({ dataKey, node: node as IBrainRegionHierarchy });
   };
 
   return (
@@ -64,12 +66,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
               isCollapsed ? 'invisible max-h-0 opacity-0' : 'visible max-h-[100vh] opacity-100'
             )}
           >
-            <TreeSearch
-              options={brainRegionHierarchyResult.options}
-              onSelect={(node) => {
-                updateHierarchyConfig(node as unknown as IBrainRegionHierarchy);
-              }}
-            />
+            <TreeSearch options={brainRegionHierarchyResult.options} onSelect={onClick} />
             {brainRegionHierarchyResult.nodes && (
               <Tree
                 dataKey={dataKey}

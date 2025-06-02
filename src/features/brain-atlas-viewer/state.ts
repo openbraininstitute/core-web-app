@@ -1,29 +1,17 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithReset } from 'jotai/utils';
+import uniqBy from 'lodash/uniqBy';
 import sessionAtom from '@/state/session';
 import { meshDistributionsAtom } from '@/state/brain-regions';
 import { ApplicationSection } from '@/types/common';
-import { LoadingState, MeshVisibility, VisibilityType } from '@/components/ThreeDeeBrain/types';
-import { BRAIN_REGION_PREFIX } from '@/constants/brain-hierarchy';
-import { fetchMesh, fetchPointCloud } from '@/components/ThreeDeeBrain/api';
+import { LoadingState, MeshVisibility, VisibilityType } from '@/features/brain-atlas-viewer/types';
+
+import { fetchMesh, fetchPointCloud } from '@/features/brain-atlas-viewer/api';
 import { CIRCUIT_NOT_BUILT_ERROR } from '@/constants/errors';
 import { partialCircuitAtom } from '@/state/brain-model-config/cell-position';
 import { cellSvcBaseUrl } from '@/config';
 
 export const meshVisibilityAtom = atomFamily(() => atomWithReset<MeshVisibility[]>([]));
-
-/**
- * Returns an async atom that fetches the mesh of a given brain region
- * @param brainRegionId
- */
-export const getMeshAtom = (brainRegionId: string) =>
-  atom(async (get) => {
-    const session = get(sessionAtom);
-    const meshes = await get(meshDistributionsAtom);
-    if (!session || !meshes) return undefined;
-    const brContentUrl = meshes[brainRegionId].contentUrl;
-    return await fetchMesh(session.accessToken, brContentUrl);
-  });
 
 export const addMeshVisibilityAtom = atom(
   null,
@@ -36,7 +24,13 @@ export const addMeshVisibilityAtom = atom(
     sceneId: string
   ) => {
     const visibility = get(meshVisibilityAtom(section));
-    set(meshVisibilityAtom(section), [...visibility, { brainRegionId, type, sceneId }]);
+    set(
+      meshVisibilityAtom(section),
+      uniqBy(
+        [...visibility, { brainRegionId, type, sceneId }],
+        (item) => `${item.brainRegionId}-${item.type}`
+      )
+    );
   }
 );
 
@@ -47,7 +41,7 @@ export const addMeshVisibilityAtom = atom(
  * @param brainRegionId
  * @param circuitConfigPathOverride
  */
-export const getPointCloudAtom = (brainRegionId: string) =>
+export const getPointCloudAtom = (brainRegionAnnotationValue: number) =>
   atom(async (get) => {
     const partialCircuit = await get(partialCircuitAtom);
 
@@ -62,7 +56,7 @@ export const getPointCloudAtom = (brainRegionId: string) =>
     const bucket = partialCircuit._project.split('/').slice(-2).join('/');
     const url = `${cellSvcBaseUrl}/circuit?circuit_id=${encodeURIComponent(
       partialCircuit['@id']
-    )}&region=${brainRegionId.replace(BRAIN_REGION_PREFIX, '')}&how=arrow`;
+    )}&region=${brainRegionAnnotationValue}&how=arrow`;
     return await fetchPointCloud(url, session.accessToken, bucket);
   });
 

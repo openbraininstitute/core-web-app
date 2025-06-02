@@ -9,7 +9,7 @@ import { tryCatch } from '@/api/utils';
 
 import type { ExperimentalDataType } from '@/entity-configuration/domain/experimental';
 import type { ModelDataType } from '@/entity-configuration/domain/model';
-import { brainRegionHierarchyAtom } from '@/features/brain-region-hierarchy/context';
+import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
 
 export type BulkEntityCoreCountResult = {
   experimental: Record<ExperimentalDataType, number | string>;
@@ -70,7 +70,7 @@ export const entitiesCountAtom = atomFamily(
 
 export const useEntitiesCountAtom = () => {
   const keys = [...entitiesCountAtom.getParams()];
-  const brainRegionHierarchyResult = useAtomValue(brainRegionHierarchyAtom);
+  const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
 
   return function refreshEntityCountsToParent(brainRegionId: string) {
     if (brainRegionHierarchyResult) {

@@ -337,14 +337,12 @@ class ApiClient {
           });
           return runRequest();
         }
-        if (env.NEXT_PUBLIC_DEPLOYMENT_ENV !== 'production') {
-          log('error', 'Request failed', {
-            status: response.status,
-            message:
-              (responseData as any).message || `Request failed with status ${response.status}`,
-            data: responseData,
-          });
-        }
+        log('error', 'Request failed', {
+          url: url.toString(),
+          status: response.status,
+          message: (responseData as any).message || `Request failed with status ${response.status}`,
+          data: responseData,
+        });
         throw Error(`Request ${request.url} failed `, {
           cause: {
             status: response.status,
