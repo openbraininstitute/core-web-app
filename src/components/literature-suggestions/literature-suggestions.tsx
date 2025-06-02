@@ -13,6 +13,7 @@ import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
 import styles from './literature-suggestions.module.css';
+import { useCollapsedPanel } from './hooks';
 
 export interface LiteratureSuggestionsProps {
   className?: string;
