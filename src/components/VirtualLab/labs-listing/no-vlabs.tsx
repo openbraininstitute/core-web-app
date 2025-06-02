@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 
 import { NewWindowAdd, UserCircle } from '@/components/icons/EditorIcons';
 import { ActionCard, HeroSection } from '@/components/VirtualLab/labs-listing/elements';
+import { TutorialsCarrousel } from '@/components/tutorials-carrousel';
 
 type Props = {
   showCreateSubscription?: boolean;
@@ -43,6 +44,7 @@ export default function VirtualSplashScreen({ showCreateSubscription = true }: P
           </motion.div>
         )}
       </div>
+      <TutorialsCarrousel />
     </div>
   );
 }
