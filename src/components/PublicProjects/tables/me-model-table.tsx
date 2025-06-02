@@ -2,19 +2,19 @@
 
 import { Table, TableProps } from 'antd';
 import { Key, useState } from 'react';
-import { MEModelProps } from '../type/artifactsType';
+import { MEModelsProps } from '../type';
 import columns from './columns/me-model-columns';
 
 import { classNames } from '@/util/utils';
 
 import styles from './tables.module.scss';
 
-export default function MEModelTable({ content }: { content: MEModelProps[] }) {
-  const [selectedRow, setSelectedRow] = useState<MEModelProps | null>(null);
+export default function MEModelTable({ content }: { content: MEModelsProps[] }) {
+  const [selectedRow, setSelectedRow] = useState<MEModelsProps | null>(null);
 
-  const rowSelection: TableProps<MEModelProps>['rowSelection'] = {
+  const rowSelection: TableProps<MEModelsProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (selectedRowKeys: Key[], selectedRows: MEModelProps[]) => {
+    onChange: (selectedRowKeys: Key[], selectedRows: MEModelsProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
   };

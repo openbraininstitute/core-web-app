@@ -1,5 +1,3 @@
-import { ArticfactTypeProps } from '../../type';
-
 import { classNames } from '@/util/utils';
 
 export default function ArtifactsTabNav({
@@ -7,27 +5,47 @@ export default function ArtifactsTabNav({
   activeArtifactType,
   setActiveArtifactType,
 }: {
-  content: ArticfactTypeProps[];
-  activeArtifactType: ArticfactTypeProps | null;
-  setActiveArtifactType: (type: ArticfactTypeProps | null) => void;
+  content: string[];
+  activeArtifactType: string | null;
+  setActiveArtifactType: (type: string | null) => void;
 }) {
   return (
     <div className="flex flex-row gap-x-4">
-      {content.map((item: ArticfactTypeProps) => {
+      {content.map((item: string) => {
+        let title;
+
+        switch (item) {
+          case 'meModelsTable':
+            title = 'ME Models';
+            break;
+          case 'eModelsTable':
+            title = 'E Models';
+            break;
+          case 'synaptomesTable':
+            title = 'Synaptome';
+            break;
+          case 'downloadsLinks':
+            title = 'Downloads & Links';
+            break;
+          default:
+            title = item.charAt(0).toUpperCase() + item.slice(1);
+            break;
+        }
+
         return (
           <button
-            key={item.id}
+            key={item}
             type="button"
             aria-label="Change artifact type"
             onClick={() => setActiveArtifactType(item)}
             className={classNames(
               'rounded-full text-sm uppercase tracking-wider text-primary-9',
-              activeArtifactType?.id === item.id
+              activeArtifactType === item
                 ? 'border border-gray-300 px-5 py-2 font-bold'
                 : 'border-white font-normal'
             )}
           >
-            {item.name}
+            {title}
           </button>
         );
       })}

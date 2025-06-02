@@ -1,6 +1,8 @@
 import { PortableTextBlock } from 'next-sanity';
 import { EModelsProps, MEModelsProps, SynaptomeProps } from './artifactsType';
 
+export type { EModelsProps, MEModelsProps, SynaptomeProps } from './artifactsType';
+
 export type TimestampProps = {
   timestamp: number;
   label: string;

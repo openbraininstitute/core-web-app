@@ -16,22 +16,34 @@ export default function MEModelRow({ content, index }: { content: MEModelsProps;
       <div className="relative flex w-full flex-row items-center text-base text-primary-9">
         <div className="w-[350px]">{name(content.name, 40)}</div>
         <div className="w-[116px]">
-          <Image
-            src={content.morphology}
-            width={400}
-            height={400}
-            alt={`Image of the morphology of ${content.name}`}
-            className="h-20 w-auto border border-solid border-neutral-2"
-          />
+          {content.morphologyThumbnail ? (
+            <Image
+              src={content.morphologyThumbnail}
+              width={400}
+              height={400}
+              alt={`Image of the morphology of ${content.name}`}
+              className="h-20 w-auto border border-solid border-neutral-2"
+            />
+          ) : (
+            <div className="flex h-20 w-auto items-center justify-center border border-solid border-neutral-2">
+              No image
+            </div>
+          )}
         </div>
         <div className="w-[116px]">
-          <Image
-            src={content.trace}
-            width={400}
-            height={400}
-            alt={`Image of the trace of ${content.name}`}
-            className="h-20 w-auto border border-solid border-neutral-2"
-          />
+          {content.traceThumbnail ? (
+            <Image
+              src={content.traceThumbnail}
+              width={400}
+              height={400}
+              alt={`Image of the trace of ${content.name}`}
+              className="h-20 w-auto border border-solid border-neutral-2"
+            />
+          ) : (
+            <div className="flex h-20 w-auto items-center justify-center border border-solid border-neutral-2">
+              No image
+            </div>
+          )}
         </div>
         <div className="w-24">{content.validated ? 'True' : 'False'}</div>
         <div className="w-[200px]">{content.brainRegion}</div>
