@@ -1,4 +1,7 @@
 import { PortableTextBlock } from 'next-sanity';
+import { EModelsProps, MEModelsProps, SynaptomeProps } from './artifactsType';
+
+export type { EModelsProps, MEModelsProps, SynaptomeProps } from './artifactsType';
 
 export type TimestampProps = {
   timestamp: number;
@@ -33,21 +36,9 @@ export type LinkAndDownloadArtifactProps = {
   _type: string;
 };
 
-export type MEModelsProps = {
-  file: string;
+export type ArticfactTypeProps = {
+  id: string;
   name: string;
-  brainRegion: string;
-  validated: boolean;
-  mType: string;
-  eType: string;
-  morphologyId: string;
-  hasMorphologyThumbnail: boolean;
-  morphology: string;
-  traceFileId: string;
-  hasTraceThumbnail: boolean;
-  trace: string;
-  url: string;
-  _type: string;
 };
 
 export type MinimalMeModelProps = {
@@ -56,21 +47,6 @@ export type MinimalMeModelProps = {
   mType: string;
   eType: string;
   species: string;
-};
-
-export type EModelsProps = {
-  name: string;
-  hasResponseThumbnail: boolean;
-  response: string;
-  brainRegion: string;
-  mType: string;
-  eType: string;
-  hasMorphologyThumbnail: boolean;
-  morphology?: string;
-  modelCumulatedScore: number;
-  species: string;
-  contributor: string;
-  creationDate: string;
 };
 
 export type NotebooksProps = {
@@ -90,9 +66,12 @@ export type ShowCaseProjectQueryType = {
   artifactType: string[];
   artifact: LinkAndDownloadArtifactProps[];
   meModelsList: MEModelsProps[];
-  eModelsList: EModelsProps[];
+  eModelTable: EModelsProps[];
   notebook: NotebooksProps[];
   minimalMeModel: MinimalMeModelProps[];
+  eModelsTable: EModelsProps[];
+  meModelTable: MEModelsProps[];
+  synaptomeTable: SynaptomeProps[];
   _updatedAt: string;
 };
 
