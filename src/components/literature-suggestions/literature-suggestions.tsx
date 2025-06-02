@@ -8,6 +8,7 @@ import MessageItem from './message-item';
 import Prompt from './prompt';
 import { Spinner } from './spinner';
 import SuggestedQuestions from './suggested-questions';
+import { useCollapsedPanel } from './hooks';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
@@ -18,7 +19,7 @@ export interface LiteratureSuggestionsProps {
 }
 
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
-  const [collapsedPanel, setCollapsedPanel] = React.useState(false);
+  const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');

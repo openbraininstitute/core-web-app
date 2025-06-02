@@ -83,12 +83,10 @@ export default function ExploreListingLayout({
     domEvent.preventDefault();
     domEvent.stopPropagation();
 
-    if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(selectedBrainRegion?.title!);
-    }
+    if (selectedBrainRegion) userJourneyTracker.registerBrainRegionClick(selectedBrainRegion.title);
     const artifact = ensureString(find(DATA_TYPES_TO_CONFIGS, { name: key })?.title, 'Morphology');
     setCurrentExplorerArtifact(artifact);
-    await userJourneyTracker.handleClick('artifact', artifact);
+    userJourneyTracker.registerArtifactClick(artifact);
     router.push(key);
   };
 
