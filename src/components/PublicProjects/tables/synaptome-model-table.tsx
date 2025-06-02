@@ -2,18 +2,18 @@
 
 import { Table, TableProps } from 'antd';
 import { useState } from 'react';
-import { EModelsProps } from '../type/artifactsType';
-import columns from './columns/e-model-columns';
+import { SynaptomeProps } from '../type/artifactsType';
+import columns from './columns/synaptome-columns';
 
 import { classNames } from '@/util/utils';
 import styles from './tables.module.scss';
 
-export default function EModelTable({ content }: { content: EModelsProps[] }) {
-  const [selectedRow, setSelectedRow] = useState<EModelsProps | null>(null);
+export default function SynaptomeTable({ content }: { content: SynaptomeProps[] }) {
+  const [selectedRow, setSelectedRow] = useState<SynaptomeProps | null>(null);
 
-  const rowSelection: TableProps<EModelsProps>['rowSelection'] = {
+  const rowSelection: TableProps<SynaptomeProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (selectedRowKeys: React.Key[], selectedRows: EModelsProps[]) => {
+    onChange: (selectedRowKeys: React.Key[], selectedRows: SynaptomeProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
   };
@@ -36,7 +36,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
           selectedRow ? 'bottom-4' : 'bottom-[-100px]'
         )}
         type="button"
-        onClick={() => console.log(selectedRow?.download)}
+        onClick={() => console.log(selectedRow)}
         aria-label="Download selected model"
       >
         Download Model

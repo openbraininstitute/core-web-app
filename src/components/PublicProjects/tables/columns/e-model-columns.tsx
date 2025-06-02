@@ -1,22 +1,24 @@
 import { Tooltip } from 'antd';
 import Image from 'next/image';
-import { EModelProps } from '../../type/artifactsType';
+import { EModelsProps } from '../../type/artifactsType';
 
 const columns = () => {
   return [
     {
       title: 'Name',
       key: 'name',
-      width: '200px',
-      render: (_value: any, record: EModelProps, _index: number) => (
-        <div className="font-normal">{record.name}</div>
+      width: '100px',
+      render: (_value: any, record: EModelsProps, _index: number) => (
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap font-normal">
+          {record.name}
+        </div>
       ),
     },
     {
       title: 'Response',
       key: 'response',
       width: '150px',
-      render: (_value: any, record: EModelProps, _index: number) => (
+      render: (_value: any, record: EModelsProps, _index: number) => (
         <div className="font-normal">
           <Image src={record.response} alt="Response thumbnail" width="150" height="100" />
         </div>
@@ -26,7 +28,7 @@ const columns = () => {
       title: 'Brain region',
       key: 'brainRegion',
       width: '200px',
-      render: (_value: any, record: EModelProps, _index: number) => (
+      render: (_value: any, record: EModelsProps, _index: number) => (
         <div className="font-normal">{record.brainRegion}</div>
       ),
     },
@@ -34,7 +36,7 @@ const columns = () => {
       title: 'M-Type',
       key: 'mType',
       width: '100px',
-      render: (_value: any, record: EModelProps, _index: number) => (
+      render: (_value: any, record: EModelsProps, _index: number) => (
         <div className="font-normal">{record.mType}</div>
       ),
     },
@@ -42,7 +44,7 @@ const columns = () => {
       title: 'MCS',
       key: 'modelCumulatedScore',
       width: '80px',
-      render: (_value: any, record: EModelProps, _index: number) => (
+      render: (_value: any, record: EModelsProps, _index: number) => (
         <Tooltip title="Model Cumulated Score" placement="top">
           <span className="cursor-pointer font-normal">{record.modelCumulatedScore}</span>
         </Tooltip>
@@ -52,7 +54,7 @@ const columns = () => {
       title: 'Species',
       key: 'species',
       width: '150px',
-      render: (_value: any, record: EModelProps, _index: number) => (
+      render: (_value: any, record: EModelsProps, _index: number) => (
         <div className="font-normal">{record.species}</div>
       ),
     },
@@ -60,7 +62,7 @@ const columns = () => {
       title: 'Contributors',
       key: 'contributors',
       width: '150px',
-      render: (_value: any, record: EModelProps, _index: number) => (
+      render: (_value: any, record: EModelsProps, _index: number) => (
         <div className="font-normal">{record.contributors}</div>
       ),
     },
@@ -68,7 +70,7 @@ const columns = () => {
       title: 'Creation Date',
       key: 'creationDate',
       width: '150px',
-      render: (_value: any, record: EModelProps, _index: number) => (
+      render: (_value: any, record: EModelsProps, _index: number) => (
         <div className="font-normal">{record.creationDate}</div>
       ),
     },

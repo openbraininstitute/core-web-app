@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { MEModelProps } from '../../type/artifactsType';
+import { MEModelsProps } from '../../type/artifactsType';
 
 const columns = () => {
   return [
@@ -7,7 +7,7 @@ const columns = () => {
       title: 'Name',
       key: 'name',
       width: '200px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.name}</div>
       ),
     },
@@ -15,10 +15,10 @@ const columns = () => {
       title: 'Morphology',
       key: 'morphologyThumbnail',
       width: '150px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">
           <Image
-            src={record.morphologyThumbnail}
+            src={record.morphologyThumbnail ?? '/placeholder.png'}
             alt="Response thumbnail"
             width="150"
             height="100"
@@ -30,9 +30,14 @@ const columns = () => {
       title: 'Trace',
       key: 'traceThumbnail',
       width: '150px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">
-          <Image src={record.traceThumbnail} alt="Response thumbnail" width="150" height="100" />
+          <Image
+            src={record.traceThumbnail ?? '/placeholder.png'}
+            alt="Response thumbnail"
+            width="150"
+            height="100"
+          />
         </div>
       ),
     },
@@ -40,7 +45,7 @@ const columns = () => {
       title: 'Validated',
       key: 'validated',
       width: '200px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.validated ? 'Yes' : 'No'}</div>
       ),
     },
@@ -48,7 +53,7 @@ const columns = () => {
       title: 'Brain region',
       key: 'brainRegion',
       width: '200px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.brainRegion}</div>
       ),
     },
@@ -56,7 +61,7 @@ const columns = () => {
       title: 'M-Type',
       key: 'mType',
       width: '100px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.mType}</div>
       ),
     },
@@ -64,7 +69,7 @@ const columns = () => {
       title: 'E-Type',
       key: 'eType',
       width: '100px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.eType}</div>
       ),
     },
@@ -72,7 +77,7 @@ const columns = () => {
       title: 'Species',
       key: 'species',
       width: '150px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.species}</div>
       ),
     },
@@ -80,7 +85,7 @@ const columns = () => {
       title: 'Created by',
       key: 'createdBy',
       width: '150px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
+      render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.createdBy}</div>
       ),
     },
@@ -88,8 +93,10 @@ const columns = () => {
       title: 'Creation Date',
       key: 'creationDate',
       width: '150px',
-      render: (_value: any, record: MEModelProps, _index: number) => (
-        <div className="font-normal">{record.creationDate}</div>
+      render: (_value: any, record: MEModelsProps, _index: number) => (
+        <div className="font-normal">
+          {record.creationDate == null ? '2024-02-21' : record.creationDate}
+        </div>
       ),
     },
   ];
