@@ -1,19 +1,20 @@
 'use client';
 
 import { Table, TableProps } from 'antd';
-import { useState } from 'react';
-import { EModelProps } from '../type/artifactsType';
-import columns from './columns/e-model-columns';
+import { Key, useState } from 'react';
+import { MEModelProps } from '../type/artifactsType';
+import columns from './columns/me-model-columns';
 
 import { classNames } from '@/util/utils';
+
 import styles from './tables.module.scss';
 
-export default function EModelTable({ content }: { content: EModelProps[] }) {
-  const [selectedRow, setSelectedRow] = useState<EModelProps | null>(null);
+export default function MEModelTable({ content }: { content: MEModelProps[] }) {
+  const [selectedRow, setSelectedRow] = useState<MEModelProps | null>(null);
 
-  const rowSelection: TableProps<EModelProps>['rowSelection'] = {
+  const rowSelection: TableProps<MEModelProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (selectedRowKeys: React.Key[], selectedRows: EModelProps[]) => {
+    onChange: (selectedRowKeys: Key[], selectedRows: MEModelProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
   };

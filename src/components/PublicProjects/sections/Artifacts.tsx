@@ -1,36 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import SingleArtifact from '../SingleArtifact';
 import E_MODEL_CONTENT from '../tables/content/E-MODEL-CONTENT';
+import ME_MODEL_CONTENT from '../tables/content/ME-MODEL-CONTENT';
 import EModelTable from '../tables/e-model-table';
-import { LinkAndDownloadArtifactProps, ShowCaseProjectQueryType } from '../type';
+import MEModelTable from '../tables/me-model-table';
+import { ShowCaseProjectQueryType } from '../type';
 import ArtifactsTabNav from './artifact/artifacts-tab-nav';
 
 export const typePlaceholder = [
-  { id: 'eModel', name: 'E-Model' },
-  { id: 'meModel', name: 'ME-Model' },
+  { id: 'eModelsTable', name: 'E-Model' },
+  { id: 'meModelsTable', name: 'ME-Model' },
   { id: 'synaptome', name: 'Synaptome' },
-  { id: 'downloadItem', name: 'Download Item' },
-  { id: 'linkItem', name: 'Link Item' },
+  { id: 'downloadsLinks', name: 'Downloads & Links' },
 ];
 
-export function LinkAndDownloadArtifactList({
-  content,
-}: {
-  content: LinkAndDownloadArtifactProps[];
-}) {
-  return (
-    <div className="flex w-full flex-col gap-12">
-      {content.map((singleArtifact: LinkAndDownloadArtifactProps, index: number) => (
-        <SingleArtifact
-          key={`Artifact_${singleArtifact.title}_${index + 1}`}
-          content={singleArtifact}
-        />
-      ))}
-    </div>
-  );
-}
+// {title: 'Downloads & Links', value: 'downloadsLinks'},
+//           {title: 'ME Model', value: 'meModel'},
+//           {title: 'M Model', value: 'mModel'},
+//           {title: 'E Model', value: 'eModel'},
+//           {title: 'ME-models table', value: 'meModelsTable'},
+//           {title: 'E-models table', value: 'eModelsTable'},
+//           {title: 'Synaptome', value: 'synaptome'},
+//           {title: 'Single Cell Experiment', value: 'singleCellExperiment'},
 
 export default function ArtifactsSection({ content }: { content: ShowCaseProjectQueryType }) {
   const [activeArtifactType, setActiveArtifactType] = useState<string | null>(
@@ -43,15 +35,20 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
     (content?.minimalMeModel?.length ?? 0) +
     (content?.eModelsList?.length ?? 0);
 
-  let activeTable = null;
+  let activeTable;
 
-  switch (activeArtifactType) {
-    case 'eModel':
-      activeTable = <EModelTable content={E_MODEL_CONTENT} />;
-      break;
-    default:
-      activeTable = <LinkAndDownloadArtifactList content={content.artifact} />;
-      break;
+  if (content !== null) {
+    switch (activeArtifactType) {
+      case 'eModelsTable':
+        activeTable = <EModelTable content={E_MODEL_CONTENT} />;
+        break;
+      case 'meModelsTable':
+        activeTable = <MEModelTable content={ME_MODEL_CONTENT} />;
+        break;
+      default:
+        activeTable = <EModelTable content={E_MODEL_CONTENT} />;
+        break;
+    }
   }
 
   return (
