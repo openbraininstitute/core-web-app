@@ -1,9 +1,9 @@
-import { ArrowRightIcon } from '@/components/icons';
-import CalendarIcon from '@/components/icons/Calendar';
 import Image from 'next/image';
 import Link from 'next/link';
 import ImagePosterPlaceholder from '../img/workshop_video_placeholder.jpg';
 import { SingleWorkshopProps } from '../type';
+import CalendarIcon from '@/components/icons/Calendar';
+import { ArrowRightIcon } from '@/components/icons';
 
 export default function SingleWorkshopCard({ content }: { content: SingleWorkshopProps }) {
   return (

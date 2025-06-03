@@ -1,12 +1,13 @@
-import { ContentForTutorialItem } from '@/components/tutorials-carrousel/hooks';
 import Image from 'next/image';
 import Link from 'next/link';
 import PlaceholderImage from '../img/thumbnail_placeholder.jpg';
 
+import { ContentForTutorialItem } from '@/components/tutorials-carrousel/hooks';
+
 export default function SingleTutorialCard({ content }: { content: ContentForTutorialItem }) {
   return (
     <Link
-      href={`/documentation/tutorials/${content.slug}`}
+      href={`/app/documentation/tutorials/${content.slug}`}
       className="grid grid-cols-2 gap-x-2 overflow-hidden rounded-lg bg-white p-4 text-primary-9"
     >
       <div className="overflow-hiddden h-full w-full rounded-md shadow-lg">

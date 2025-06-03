@@ -32,6 +32,27 @@ export type SingleSectionProps = {
   disabled: boolean;
 };
 
+export type StepProps = {
+  title: string;
+  content: PortableText | null;
+  time: number;
+};
+
+export type SingleTutorialProps = {
+  _id: string;
+  title: string;
+  slug: string;
+  description: string;
+  url: string;
+  imageURL: string;
+  imageWidth: number;
+  imageHeight: number;
+  content: PortableText | null;
+  videoUrl: string;
+  transcript: PortableText | null;
+  steps: StepProps[] | null;
+};
+
 export type SingleGuideProps = {
   title: string;
   slug: string;

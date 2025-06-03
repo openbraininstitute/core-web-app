@@ -1,6 +1,6 @@
-import { ArrowRightIcon, GuideIcon } from '@/components/icons';
 import Link from 'next/link';
 import { SingleGuideProps } from '../type';
+import { ArrowRightIcon, GuideIcon } from '@/components/icons';
 
 export default function SingleGuideCard({ content }: { content: SingleGuideProps }) {
   return (
