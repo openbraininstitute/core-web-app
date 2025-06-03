@@ -34,6 +34,7 @@ import { MembersGroupIcon } from './MembersGroupIcon';
 import MissingData from './MissingData';
 import IconPlus from './Plus';
 import RangeIcon from './Range';
+import ReadMeIcon from './ReadMeIcon';
 import ResetIcon from './ResetIcon';
 import SettingsIcon from './Settings';
 import SimulateIcon from './SimulateIcon';
@@ -81,6 +82,7 @@ export {
   MissingData,
   IconPlus as PlusIcon,
   RangeIcon,
+  ReadMeIcon,
   ResetIcon,
   SettingsIcon,
   SimulateIcon,
