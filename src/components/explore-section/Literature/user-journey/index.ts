@@ -1,5 +1,6 @@
 'use client';
 
+import { defaultExploreRegion } from '@/constants/explore-section/default-brain-region';
 import GenericEvent from '@/util/generic-event';
 import { logError } from '@/util/logger';
 import { getLocalStorageHelper } from '@/util/storage';
@@ -48,7 +49,17 @@ class UserJourneyTracker {
 
   constructor() {
     try {
-      this.history = getLocalStorageHelper().get(this.KEY, [], isUserJourney);
+      this.history = getLocalStorageHelper().get(
+        this.KEY,
+        [
+          {
+            timestamp: Date.now(),
+            region: defaultExploreRegion.title,
+            artifact: null,
+          },
+        ],
+        isUserJourney
+      );
       if (this.trim()) this.save();
     } catch (ex) {
       logError('Bad format for UserJourney in local storage:', ex);
