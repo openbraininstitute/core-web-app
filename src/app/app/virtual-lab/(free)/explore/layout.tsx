@@ -2,7 +2,7 @@
 
 import { useSetAtom } from 'jotai/index';
 import dynamic from 'next/dynamic';
-import { ReactNode, useEffect, useLayoutEffect } from 'react';
+import { ReactNode, useLayoutEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';

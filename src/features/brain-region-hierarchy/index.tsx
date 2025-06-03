@@ -20,6 +20,7 @@ import { classNames } from '@/util/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 
 export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
@@ -48,6 +49,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     scrollToNode(node as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
     makeBrainRegionClickEvent({ dataKey, node: node as IBrainRegionHierarchy });
+    userJourneyTracker.registerBrainRegionClick(node.name);
   };
 
   return (

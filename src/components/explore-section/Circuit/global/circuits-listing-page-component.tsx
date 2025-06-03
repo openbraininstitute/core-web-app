@@ -1,8 +1,13 @@
 'use client';
 
+import { useParams } from 'next/navigation';
+
 import ExploreCircuitTable, {
   useFilteredCircuits,
 } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
+import { resolveDataKey } from '@/utils/key-builder';
+
+import type { WorkspaceContext } from '@/types/common';
 
 export type ColumnType = {
   name: string;
@@ -14,7 +19,9 @@ export type ColumnType = {
 };
 
 export default function CircuitsListingPageComponent() {
-  const { filteredCircuits, loading, error } = useFilteredCircuits();
+  const { projectId } = useParams<WorkspaceContext>();
+  const dataKey = resolveDataKey({ projectId, section: 'explore' });
+  const { filteredCircuits, loading, error } = useFilteredCircuits({ dataKey });
 
   if (loading) {
     return (

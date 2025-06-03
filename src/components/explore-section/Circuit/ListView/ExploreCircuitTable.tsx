@@ -6,10 +6,13 @@ import CircuitTable from '../global/circuit-table';
 import { CircuitSchemaProps } from '../type';
 
 import {
-  brainRegionByIdMapAtom,
-  selectedBrainRegionAtom,
-  selectedBrainRegionWithDescendantsAndAncestorsAtom,
-} from '@/state/brain-regions';
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  useBrainRegionHierarchy,
+} from '@/features/brain-region-hierarchy/context';
+import {
+  buildHierarchyMap,
+  getBrainRegionDescendantsAndAncestorsNodes,
+} from '@/features/brain-region-hierarchy/helpers';
 
 function brainRegionFilter({
   circuits,
@@ -46,7 +49,8 @@ function brainRegionFilter({
   };
 }
 
-export function useFilteredCircuits() {
+export function useFilteredCircuits({ dataKey }: { dataKey: string }) {
+  const { node } = useBrainRegionHierarchy({ dataKey });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [circuitsData, setCircuitsData] = useState<CircuitSchemaProps[]>([]);
@@ -74,20 +78,23 @@ export function useFilteredCircuits() {
     fetchCircuit();
   }, []);
 
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
-  const selectedBrainRegions = useAtomValue(selectedBrainRegionWithDescendantsAndAncestorsAtom);
-  const brainRegionByIdMap = useAtomValue(brainRegionByIdMapAtom);
+  const brainRegions = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
+  const selectedBrainRegions = getBrainRegionDescendantsAndAncestorsNodes(
+    [node.id],
+    brainRegions?.root!
+  );
+  const brainRegionByIdMap = buildHierarchyMap(brainRegions?.root!);
 
   const brainRegionSet = useMemo(() => {
     return new Set(
       selectedBrainRegions.map(
-        (br) => brainRegionByIdMap?.get(br)?.title.toLocaleLowerCase().trim() ?? ''
+        (br) => brainRegionByIdMap.get(br.id)?.name.toLowerCase().trim() ?? ''
       )
     );
   }, [selectedBrainRegions, brainRegionByIdMap]);
 
   const filteredCircuits = brainRegionFilter({
-    region: selectedBrainRegion?.id,
+    region: node?.id,
     regionSet: brainRegionSet,
     circuits: circuitsData,
   });

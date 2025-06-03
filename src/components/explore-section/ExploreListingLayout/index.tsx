@@ -29,6 +29,7 @@ import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
 } from '@/entity-configuration/domain';
+import { resolveDataKey } from '@/utils/key-builder';
 import { ensureString } from '@/util/type-guards';
 
 import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
@@ -40,6 +41,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   const router = useRouter();
   const params = useParams<WorkspaceContext & { type: EntitySlugValue; id: string }>();
   const pathname = usePathname();
+  const dataKey = resolveDataKey({ projectId: params.projectId, section: 'explore' });
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
   const brainRegionHierarchy = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
@@ -105,7 +107,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     };
   });
 
-  const { filteredCircuits, loading, error } = useFilteredCircuits();
+  const { filteredCircuits, loading, error } = useFilteredCircuits({ dataKey });
 
   if (error) {
     return <StatError text={error} />;
