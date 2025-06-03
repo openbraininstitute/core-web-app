@@ -1,7 +1,7 @@
-import query from './hooks.groq';
-import { assertType, TypeDef } from '@/util/type-guards';
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
+import { assertType, TypeDef } from '@/util/type-guards';
+import query from './hooks.groq';
 
 export function useSanityContentForTutorialsList() {
   return useSanity(query, isContentForTutorialsList) ?? [];
@@ -10,6 +10,7 @@ export function useSanityContentForTutorialsList() {
 export interface ContentForTutorialItem {
   url: string;
   title: string;
+  slug: string;
   description: string;
   imageURL: string;
   imageWidth: number;
@@ -26,6 +27,7 @@ function isContentForTutorialsList(data: unknown): data is ContentForTutorialIte
         {
           url: 'string',
           title: typeStringOrNull,
+          slug: 'string',
           description: typeStringOrNull,
           imageURL: 'string',
           imageWidth: 'number',

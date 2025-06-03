@@ -21,6 +21,7 @@ import EyeTargetIcon from './EyeTarget';
 import FileIcon from './File';
 import FlatListViewIcon from './FlatListViewIcon';
 import GripDotsVerticalIcon from './GripDotsVerticalIcon';
+import GuideIcon from './GuideIcon';
 import HierarchicalViewIcon from './HierarchicalViewIcon';
 import HomeIcon from './Home';
 import HomeFillIcon from './HomeFillIcon';
@@ -67,6 +68,7 @@ export {
   FileIcon,
   FlatListViewIcon,
   GripDotsVerticalIcon,
+  GuideIcon,
   HierarchicalViewIcon,
   HomeFillIcon,
   HomeIcon,
