@@ -2,6 +2,7 @@
 
 import GenericEvent from '@/util/generic-event';
 import { logError } from '@/util/logger';
+import { getLocalStorageHelper } from '@/util/storage';
 import { assertType } from '@/util/type-guards';
 
 const MAX_COUNT = 3;
@@ -24,6 +25,16 @@ function assertUserJourney(data: unknown): asserts data is UserJourney {
   ]);
 }
 
+function isUserJourney(data: unknown): data is UserJourney {
+  try {
+    assertUserJourney(data);
+    return true;
+  } catch (ex) {
+    logError('Invalid format for UserJourney:', data);
+    return false;
+  }
+}
+
 class UserJourneyTracker {
   public readonly eventChange = new GenericEvent<UserJourney>();
 
@@ -37,9 +48,7 @@ class UserJourneyTracker {
 
   constructor() {
     try {
-      const data = JSON.parse(globalThis.localStorage.getItem(this.KEY) ?? '[]');
-      assertUserJourney(data);
-      this.history = data;
+      this.history = getLocalStorageHelper().get(this.KEY, [], isUserJourney);
       if (this.trim()) this.save();
     } catch (ex) {
       logError('Bad format for UserJourney in local storage:', ex);
@@ -97,7 +106,7 @@ class UserJourneyTracker {
   }
 
   private save() {
-    globalThis.localStorage.setItem(this.KEY, JSON.stringify(this.history));
+    getLocalStorageHelper().set(this.KEY, this.history);
   }
 }
 
