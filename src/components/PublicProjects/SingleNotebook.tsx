@@ -1,11 +1,11 @@
 'use client';
 
 import { PortableText } from 'next-sanity';
+import { useState } from 'react';
+import { ChevronRight, ReadMeIcon } from '../icons';
 import { NotebooksProps } from './type';
 
 import { classNames } from '@/util/utils';
-import { useState } from 'react';
-import { ChevronRight, ReadMeIcon } from '../icons';
 import styles from './style/notebook.module.css';
 
 export default function SingleNotebook({

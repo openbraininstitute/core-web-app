@@ -1,22 +1,24 @@
 .readMeParagraph {
+  font-family: 'Titillium Web';
   background: #f5f5f5;
   width: 100%;
   padding: 32px;
 }
 
-.readMeParagraph ol {
+.readMeParagraph > ol {
   list-style-type: decimal;
   padding-left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px 0;
+  gap: 12px 0;
+  margin: 12px 0;
 }
 
 .readMeParagraph li {
   font-size: 18px;
   font-weight: normal;
   line-height: 1.55;
-  padding-left: 18px;
+  padding-left: 4px;
 }
 
 .readMeParagraph > h1 {
@@ -29,23 +31,16 @@
   flex-direction: row;
   align-items: center;
   font-size: 20px;
-  font-weight: 600;
-  margin-top: 12px;
-}
-
-.readMeParagraph > h2::after {
-  content: '';
-  display: block;
-  width: 50px;
-  height: 1px;
-  background: #002766;
-  margin-left: 4px;
+  font-weight: 700;
+  margin-top: 22px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .readMeParagraph > h3 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: bold;
-  margin-top: 30px;
+  margin-top: 12px;
 }
 
 .readMeParagraph > h3::after {
@@ -72,12 +67,19 @@
   margin: 0;
   padding: 0;
   list-style: disc;
+  margin-bottom: 4px;
 }
 
 .readMeParagraph code {
-  font-size: 18px;
-  padding: 4px 8px;
-  background: #ffeaea;
+  font-family: 'Titillium Web';
+  font-size: 18px !important;
+  padding: 2px 8px;
+  background: #eaf8ff;
   border-radius: 4px;
-  border: solid 1px #b12828;
+  border: solid 1px #56a7cf;
+}
+
+.readMeParagraph a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
