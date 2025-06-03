@@ -1,7 +1,8 @@
 'use client';
 
-import { PortableText } from 'next-sanity';
 import { useState } from 'react';
+
+import { PortableText } from 'next-sanity';
 import { ChevronRight, ReadMeIcon } from '../icons';
 import { NotebooksProps } from './type';
 
