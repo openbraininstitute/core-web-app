@@ -1,8 +1,8 @@
-import LogoAsLink from '@/components/logo/as-link';
 import DOCUMENTATION_ARCHITECTURE from '../CONTENT/ARCHITECTURE';
 import { SingleSectionProps } from '../type';
 import NavItem from './nav-item';
 import TutorialNavList from './tutorial-nav-list';
+import LogoAsLink from '@/components/logo/as-link';
 
 export default function DocumentationSideBloc() {
   return (

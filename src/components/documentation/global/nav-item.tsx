@@ -1,9 +1,9 @@
 'use client';
 
-import { ArrowRightIcon, ChevronRight } from '@/components/icons';
-import { classNames } from '@/util/utils';
 import { useState } from 'react';
 import { SingleSectionProps } from '../type';
+import { ArrowRightIcon, ChevronRight } from '@/components/icons';
+import { classNames } from '@/util/utils';
 
 export default function NavItem({ content }: { content: SingleSectionProps }) {
   const [sectionOpen, setSectionOpen] = useState<boolean>(false);
