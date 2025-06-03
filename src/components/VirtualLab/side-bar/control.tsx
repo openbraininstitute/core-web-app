@@ -12,7 +12,7 @@ export default function Profile() {
   return (
     <div className="mt-auto flex flex-col gap-4">
       <Link
-        href="/app/virtual-lab/documentation"
+        href="/app/documentation"
         aria-label="documentation"
         className={classNames(
           'flex h-12 w-12 items-center justify-center p-3',
@@ -31,7 +31,7 @@ export default function Profile() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-white hover:border-primary-5 hover:bg-primary-5'
+            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
           )}
         >
           <QuestionCircleOutlined className="text-xl" />
@@ -44,7 +44,7 @@ export default function Profile() {
         className={classNames(
           'flex w-max items-center justify-center p-3',
           'text-white transition-all duration-200',
-          'border border-white hover:border-primary-5 hover:bg-primary-5'
+          'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
         )}
       >
         <HomeOutlined className="text-xl" />
@@ -58,7 +58,7 @@ export default function Profile() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-white hover:border-primary-5 hover:bg-primary-5'
+            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
           )}
         >
           <UserOutlined className="text-xl" />
