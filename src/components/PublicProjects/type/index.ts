@@ -51,8 +51,13 @@ export type MinimalMeModelProps = {
 
 export type NotebooksProps = {
   name: string;
-  url: string;
+  description: string;
+  objectOfInterest: string;
+  scale: string;
+  authors: string;
+  creationDate: string;
   readMe: PortableTextBlock[];
+  url: string;
 };
 
 export type ShowCaseProjectQueryType = {

@@ -96,12 +96,13 @@ const singleCaseQuery = (slug: string) =>
         },
         notebook[] {
             name,
-            readMe,
-            url,
+            description,
             objectOfInterest,
             scale,
             authors,
             creationDate,
+            readMe,
+            url,
         },
         synaptomeTable[] {
             name,
