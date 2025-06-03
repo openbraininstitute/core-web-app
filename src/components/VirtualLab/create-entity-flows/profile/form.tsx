@@ -1,103 +1,31 @@
 'use client';
 
-import React, { ForwardedRef, useEffect, useState, useTransition } from 'react';
-import { Form, InputProps, InputRef, Input, Button } from 'antd';
-import omit from 'lodash/omit';
-import get from 'lodash/get';
+import React, { useEffect, useState, useTransition } from 'react';
+import { Form, Button } from 'antd';
 
 import countries from '../../../../../public/static/country';
+import { ProfileFormData } from './types';
+import { Label, XInput } from './elements';
+import { validate, validateEMail } from './validator';
+import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
 import useNotification from '@/hooks/notifications';
-
 import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
-import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { classNames } from '@/util/utils';
-import { tryCatch } from '@/api/utils';
 
-function XInput({ placeholder, className, ...props }: InputProps, ref: ForwardedRef<InputRef>) {
-  return (
-    <Input
-      ref={ref}
-      placeholder={placeholder}
-      className={classNames(
-        'border-primary-4! rounded-none border-0 border-b bg-transparent! px-1 font-bold tracking-wide text-white focus:ring-0',
-        'hover:bg-transparent! hover:text-white! focus:bg-transparent! focus:text-white! [&_.ant-input-outlined]:bg-transparent!',
-        'focus:border-pr placeholder:text-white hover:border-white focus:border-b-2',
-        'focus-within:border-primary-4! focus-within:border-b-2! focus-within:ring-0!',
-        '[&.ant-XInput-status-error]:border-0! [&.ant-XInput-status-error]:border-b-2! [&.ant-XInput-status-error]:border-red-300!',
-        '[&.ant-XInput-status-error]:focus:ring-0!',
-        className
-      )}
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      {...props}
-    />
-  );
-}
-
-function Label({ title }: { title: string }) {
-  return <span className="text-primary-4 text-sm font-light">{title}</span>;
-}
-
-type Props = {
+type ProfileProps = {
   data: UserProfileResponse | undefined;
 };
 
-function Profile({ data }: Props) {
+function Profile({ data }: ProfileProps) {
+  const initialValues = useInitialValues(data);
+  const [valid, setValid] = React.useState(validate(initialValues));
+  const handleFieldsChange = useFieldsChangeHandler(setValid);
   const [hydrated, setHydrated] = useState(false);
   const { error: errorNotify, success: successNotify } = useNotification();
   const [form] = Form.useForm<UserProfileResponse>();
   const [pending, startTransition] = useTransition();
-
-  const initialValues = {
-    email: data?.email,
-    first_name: data?.first_name,
-    last_name: data?.last_name,
-    street: data?.address.street,
-    postal_code: data?.address.postal_code,
-    locality: data?.address.locality,
-    region: data?.address.region,
-    country: data?.address.country,
-  };
-
-  const onSubmit = (values: UserProfileResponse) => {
-    startTransition(async () => {
-      const { error } = await tryCatch(
-        updateUserProfile(omit(values, ['email_verified', 'id'])),
-        undefined,
-        {
-          section: 'profile-page',
-          feature: 'update-user-profile',
-        }
-      );
-      if (error) {
-        if (get(error, 'cause.error_code') === 'ENTITY_UPDATE__ERROR') {
-          errorNotify(
-            `We couldn’t update your information. Please check your input and try again.`,
-            undefined,
-            'topRight',
-            true,
-            'profile-update-error'
-          );
-          return;
-        }
-        errorNotify(
-          'Unable to save your profile changes due to a server error.\nPlease verify your information and try submitting again.',
-          undefined,
-          'topRight',
-          true,
-          'profile-update-error'
-        );
-      } else {
-        successNotify(
-          'Your profile information has been successfully updated',
-          undefined,
-          'topRight',
-          true,
-          'profile-update-success'
-        );
-      }
-    });
-  };
+  const onSubmit = useSubmitCallback(startTransition, errorNotify, successNotify);
   useEffect(() => setHydrated(true), []);
 
   if (!hydrated) return null;
@@ -115,6 +43,9 @@ function Profile({ data }: Props) {
           initialValues={initialValues}
           disabled={pending}
           onFinish={onSubmit}
+          onInvalid={() => setValid(false)}
+          scrollToFirstError
+          onFieldsChange={handleFieldsChange}
         >
           <div className="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-2">
             <Form.Item name="first_name" className="space-y-1" label={<Label title="First name" />}>
@@ -159,15 +90,17 @@ function Profile({ data }: Props) {
                 )}
                 popupClassName="rounded-none shadow-md"
                 onSearch={(va) => {
-                  const countriesObject = countries.filter((o) =>
-                    o.name.toLowerCase().includes(va.toLowerCase())
-                  );
+                  const countriesObject = countries
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .filter((o) => o.name.toLowerCase().includes(va.toLowerCase()));
                   return countriesObject.map((o) => ({ label: o.name, value: o.name }));
                 }}
-                options={countries.map((o) => ({
-                  label: o.name,
-                  value: o.name,
-                }))}
+                options={countries
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((o) => ({
+                    label: o.name,
+                    value: o.name,
+                  }))}
               />
             </Form.Item>
 
@@ -175,6 +108,7 @@ function Profile({ data }: Props) {
               name="email"
               className="space-y-1 md:col-span-2"
               label={<Label title="Email" />}
+              rules={[{ required: true, validator: validateEMail }]}
             >
               <XInput id="email" name="email" type="email" className="disabled:text-white!" />
             </Form.Item>
@@ -207,7 +141,7 @@ function Profile({ data }: Props) {
               type="default"
               size="large"
               htmlType="submit"
-              disabled={pending}
+              disabled={pending || !valid}
               loading={pending}
             >
               Update
@@ -220,3 +154,17 @@ function Profile({ data }: Props) {
 }
 
 export default Profile;
+
+function useInitialValues(data: UserProfileResponse | undefined): ProfileFormData {
+  const initialValues: ProfileFormData = {
+    email: data?.email ?? '',
+    first_name: data?.first_name ?? '',
+    last_name: data?.last_name ?? '',
+    street: data?.address.street ?? '',
+    postal_code: data?.address.postal_code ?? '',
+    locality: data?.address.locality ?? '',
+    region: data?.address.region ?? '',
+    country: data?.address.country ?? '',
+  };
+  return initialValues;
+}

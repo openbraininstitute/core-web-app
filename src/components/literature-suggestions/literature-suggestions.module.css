@@ -26,10 +26,13 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 1em;
+  border-left: 1px solid var(--color-neutral-4);
 }
 
-.literatureSuggestions.collapsed {
-  width: 48px;
+.literatureSuggestions[data-collapsed='true'] {
+  padding: 0;
+  padding-top: 20px;
+  width: 40px;
 }
 
 .literatureSuggestions > button.header {
@@ -43,18 +46,23 @@
   font-size: 24px;
 }
 
-.literatureSuggestions.collapsed > button.header {
+.literatureSuggestions[data-collapsed='true'] > button.header {
   flex-direction: column;
   padding: 0;
+  gap: 0.5em;
 }
 
 .literatureSuggestions > button.header > h1 {
-  font-size: inherit;
+  position: relative;
+  left: -2px;
+  font-size: 18px;
   font-weight: bold;
+  transform-origin: center;
 }
 
-.literatureSuggestions.collapsed > button.header > h1 {
+.literatureSuggestions[data-collapsed='true'] > button.header > h1 {
   order: 9;
+  transform: rotate(180deg);
   writing-mode: vertical-lr;
 }
 
@@ -124,7 +132,7 @@ button.cancelButton:active {
   margin-top: 2em;
   font-size: 120%;
   padding: 1em;
-  box-shadow: 0 0.5em 1em #0005;
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 6px 16px;
   border-radius: 1em;
 }
 

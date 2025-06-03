@@ -38,11 +38,8 @@ export default function EntityGroupTabs({ dataKey }: { dataKey: string }) {
 
   const onTabClick = async (activeKey: string) => {
     setDataTypeTab(activeKey as DataTypeActiveTab);
-    if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(brainRegion?.label!);
-    }
-    const artifact = DATA_TYPE_TABS.find((o) => o.id === activeKey)?.label;
-    await userJourneyTracker.handleClick('data_type', artifact!);
+    const artifactName = DATA_TYPE_TABS.find((o) => o.id === activeKey)?.label;
+    if (artifactName) userJourneyTracker.registerArtifactClick(artifactName);
   };
 
   return (

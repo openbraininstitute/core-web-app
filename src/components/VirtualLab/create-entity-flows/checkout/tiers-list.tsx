@@ -243,7 +243,7 @@ function TiersComparison({
                           <span className="text-sm font-light">{interval}</span>
                         </span>
                         <span className="border-primary-2 text-primary-2 ml-2 rounded-full border px-3 py-1 text-sm">
-                          Launch
+                          Launch Price
                         </span>
                       </div>
                     </div>

@@ -14,6 +14,7 @@ import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscri
 import { ErrorListing } from '@/components/VirtualLab/labs-listing/elements';
 import { getUserStats } from '@/api/virtual-lab-svc/queries/stats';
 import { tryCatch } from '@/api/utils';
+import { TutorialsCarrousel } from '@/components/tutorials-carrousel';
 
 import type { ServerSideComponentProp } from '@/types/common';
 
@@ -87,13 +88,14 @@ export default async function Home({ searchParams }: Props) {
   }
 
   if (!hasVirtualLabs) {
-    return <VirtualSplashScreen />;
+    return <VirtualSplashScreen showCreateSubscription={!hasProSubscription} />;
   }
   const Loading = (
     <div className="flex h-screen items-center justify-center">
       <Spin indicator={<LoadingOutlined />} size="large" />
     </div>
   );
+
   return (
     <div className="container mx-auto p-4">
       <Tabs items={tabs} activeTabId={activeTabId} basePath="/app/virtual-lab" />
@@ -107,6 +109,7 @@ export default async function Home({ searchParams }: Props) {
           )}
         </Suspense>
       </ErrorBoundary>
+      <TutorialsCarrousel />
     </div>
   );
 }

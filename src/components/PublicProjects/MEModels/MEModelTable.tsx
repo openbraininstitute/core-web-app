@@ -142,7 +142,7 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
-                  key={header.id}
+                  key={`${header.id}`}
                   className="text-neutral-4 cursor-pointer p-2 text-left text-sm font-normal tracking-wide uppercase"
                   onClick={header.column.getToggleSortingHandler()}
                 >
