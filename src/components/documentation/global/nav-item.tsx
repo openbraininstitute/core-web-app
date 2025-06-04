@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { SingleSectionProps } from '../type';
-import { ArrowRightIcon, ChevronRight } from '@/components/icons';
+import ComingSoonPill from './coming-soon-pill';
 import { classNames } from '@/util/utils';
+import { ArrowRightIcon, ChevronRight } from '@/components/icons';
 
 export default function NavItem({ content }: { content: SingleSectionProps }) {
   const [sectionOpen, setSectionOpen] = useState<boolean>(false);
@@ -11,7 +12,10 @@ export default function NavItem({ content }: { content: SingleSectionProps }) {
   return (
     <div>
       <div className="flex flex-row items-center justify-between">
-        <div className="font-sans text-base font-normal text-white">{content.name}</div>
+        <div className="flex flex-row items-center gap-x-2">
+          <div className="font-sans text-base font-normal text-white">{content.name}</div>
+          {content.disabled ? <ComingSoonPill /> : null}
+        </div>
         {!content.children ? (
           <ArrowRightIcon className="h-3 w-auto text-primary-3" />
         ) : (

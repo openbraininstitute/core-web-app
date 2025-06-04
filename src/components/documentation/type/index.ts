@@ -35,7 +35,7 @@ export type SingleSectionProps = {
 export type StepProps = {
   title: string;
   content: PortableText | null;
-  time: number;
+  time: number | null;
 };
 
 export type SingleTutorialProps = {

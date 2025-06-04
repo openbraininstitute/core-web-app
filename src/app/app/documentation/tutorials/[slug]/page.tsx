@@ -16,6 +16,12 @@ export default function SingleTutorialPage() {
 
   const content = useSanityForSingleTutorial({ slug });
 
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setVideoTime(Math.floor(videoRef.current.currentTime));
+    }
+  };
+
   if (!content) {
     return (
       <div className="container mx-auto p-4 text-white">
@@ -32,16 +38,21 @@ export default function SingleTutorialPage() {
         <h1 className="text-3xl font-bold">{content.title}</h1>
       </header>
       <div className="mb-4 w-full">
-        <video
-          playsInline
-          loop
-          controls
-          className="h-auto w-full rounded-lg border border-solid border-primary-7"
-          src={content.url}
-          ref={videoRef}
-        >
-          <track kind="captions" srcLang="en" label="English captions" />
-        </video>
+        {content.url ? (
+          <video
+            playsInline
+            loop
+            controls
+            className="h-auto w-full rounded-lg border border-solid border-primary-7"
+            src={content.url}
+            ref={videoRef}
+            onTimeUpdate={handleTimeUpdate}
+          >
+            <track kind="captions" srcLang="en" label="English captions" />
+          </video>
+        ) : (
+          <p className="text-white">Video URL not available.</p>
+        )}
       </div>
       <SliderTimestamps
         content={content.steps ?? []}

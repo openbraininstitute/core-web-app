@@ -5,37 +5,37 @@ const DOCUMENTATION_ARCHITECTURE: SingleSectionProps[] = [
     name: 'Overview',
     slug: 'overview',
     children: null,
-    disabled: false,
+    disabled: true,
   },
   {
     name: 'Ontology',
     slug: 'ontology',
     children: null,
-    disabled: false,
+    disabled: true,
   },
   {
     name: 'Your virtual lab',
     slug: 'virtual-lab',
     children: null,
-    disabled: false,
+    disabled: true,
   },
   {
     name: 'Projects',
     slug: 'projects',
     children: null,
-    disabled: false,
+    disabled: true,
   },
   {
     name: 'Notebooks',
     slug: 'notebooks',
     children: null,
-    disabled: false,
+    disabled: true,
   },
   {
     name: 'Explore',
     slug: 'explore',
     children: null,
-    disabled: false,
+    disabled: true,
   },
   {
     name: 'Build',
@@ -114,7 +114,7 @@ const DOCUMENTATION_ARCHITECTURE: SingleSectionProps[] = [
         disabled: false,
       },
     ],
-    disabled: false,
+    disabled: true,
   },
   {
     name: 'Experiment',
@@ -193,7 +193,7 @@ const DOCUMENTATION_ARCHITECTURE: SingleSectionProps[] = [
         disabled: false,
       },
     ],
-    disabled: false,
+    disabled: true,
   },
 ];
 

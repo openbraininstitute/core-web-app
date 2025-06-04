@@ -13,12 +13,14 @@ export default function SingleStep({
   videoTime,
   setVideoTime,
   videoRef,
+  nextStepTime,
   index,
 }: {
   content: StepProps;
   videoTime: number;
   setVideoTime: (time: number) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
+  nextStepTime?: number;
   index: number;
 }) {
   const [mouseHover, setMouseHover] = useState<boolean>(false);
@@ -32,15 +34,27 @@ export default function SingleStep({
     }
   };
 
+  if (nextStepTime === undefined) {
+    throw new Error('Next step time is not defined');
+  }
+
+  const isActive = content.time !== null && videoTime >= content.time && videoTime < nextStepTime;
+
+  let backgroundClass = 'bg-primary-9';
+  if (isActive) {
+    backgroundClass = 'bg-white/10';
+  } else if (videoTime === content.time) {
+    backgroundClass = 'bg-primary-7';
+  }
+
   return (
     <button
       type="button"
-      aria-label="Show step"
+      aria-label={`Show step ${index + 1}`}
       onClick={handlePlayAtTime}
       className={classNames(
-        'rounded-xl border border-solid  text-white transition-all duration-500 ease-in-out',
-        videoTime === content.time ? 'bg-primary-7' : 'bg-primary-9',
-
+        'rounded-xl border border-solid text-white transition-all duration-500 ease-in-out',
+        backgroundClass,
         mouseHover ? 'border-primary-6' : 'border-primary-9'
       )}
       onMouseOver={() => setMouseHover(true)}
@@ -51,11 +65,14 @@ export default function SingleStep({
       <div
         className={classNames(
           'flex origin-center flex-col items-start transition-all duration-500 ease-in-out',
-          mouseHover ? 'scale-90' : 'scale-100'
+          mouseHover || isActive ? 'scale-90' : 'scale-100'
         )}
       >
         <div className="text-base font-normal">
-          Step {index + 1} - <span className="text-primary-4">{secondsToMMSS(content.time)}</span>
+          Step {index + 1} -{' '}
+          <span className="text-primary-4">
+            {content.time != null ? secondsToMMSS(content.time) : '--:--'}
+          </span>
         </div>
         <h4 className="mb-2 text-2xl font-bold ">{content.title}</h4>
         <div className={styles['small-transcript']}>

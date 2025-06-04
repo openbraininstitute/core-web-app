@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { StepProps } from '../type';
-import SingleStep from './single-step';
-
+import { StepProps } from '@/components/documentation/type';
+import { useEffect, useState } from 'react';
 import HeaderSliderTimestamps from './header-slider-timestamps';
+import SingleStep from './single-step';
 
 export type ActiveSteps = {
   first: number;
@@ -22,10 +21,44 @@ export default function SliderTimestamps({
   setVideoTime: (time: number) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
 }) {
-  const [activeSteps, setActiveSteps] = useState<ActiveSteps>({ first: 0, last: 2 });
+  const [activeSteps, setActiveSteps] = useState<ActiveSteps>({
+    first: 0,
+    last: Math.min(2, content.length - 1),
+  });
+
+  useEffect(() => {
+    const getActiveStepIndex = () => {
+      for (let i = 0; i < content.length; i++) {
+        const step = content[i];
+        const nextStepTime = i < content.length - 1 ? (content[i + 1].time ?? Infinity) : Infinity;
+        if (step.time != null && videoTime >= step.time && videoTime < nextStepTime) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
+    const activeIndex = getActiveStepIndex();
+    if (activeIndex === -1) return;
+
+    if (activeIndex < activeSteps.first || activeIndex > activeSteps.last) {
+      let newFirst = activeIndex - 1;
+      let newLast = activeIndex + 1;
+
+      if (newFirst < 0) {
+        newFirst = 0;
+        newLast = Math.min(2, content.length - 1);
+      } else if (newLast >= content.length) {
+        newLast = content.length - 1;
+        newFirst = Math.max(0, newLast - 2);
+      }
+
+      setActiveSteps({ first: newFirst, last: newLast });
+    }
+  }, [videoTime, content, activeSteps.first, activeSteps.last]);
 
   const handleNextStep = () => {
-    if (activeSteps.last < content.length) {
+    if (activeSteps.last < content.length - 1) {
       setActiveSteps({
         first: activeSteps.first + 1,
         last: activeSteps.last + 1,
@@ -57,17 +90,22 @@ export default function SliderTimestamps({
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(${translateX})` }}
         >
-          {content.map((step: StepProps, index: number) => (
-            <div key={step.title || index} className="w-1/3 min-w-[33.33%] pr-4">
-              <SingleStep
-                content={step}
-                videoTime={videoTime}
-                setVideoTime={setVideoTime}
-                videoRef={videoRef}
-                index={index}
-              />
-            </div>
-          ))}
+          {content.map((step: StepProps, index: number) => {
+            const nextStepTime =
+              index < content.length - 1 ? (content[index + 1].time ?? Infinity) : Infinity;
+            return (
+              <div key={step.title || index} className="w-1/3 min-w-[33.333%] px-2">
+                <SingleStep
+                  content={step}
+                  videoTime={videoTime}
+                  setVideoTime={setVideoTime}
+                  videoRef={videoRef}
+                  index={index}
+                  nextStepTime={nextStepTime}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
