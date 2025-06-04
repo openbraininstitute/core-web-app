@@ -1,0 +1,11 @@
+.transcript {
+  width: 100%;
+  color: white;
+  padding-top: 24px;
+}
+
+.transcript > p {
+  font-size: 18px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}

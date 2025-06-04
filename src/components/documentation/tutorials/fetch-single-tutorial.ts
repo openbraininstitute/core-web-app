@@ -23,14 +23,15 @@ export function useSanityForSingleTutorial({ slug }: { slug: string }) {
     }
 
     `;
-  return useSanity(query, isContentForTutorialsList) ?? [];
+  const data = useSanity(query, isContentForTutorialsList);
+  return data ?? null;
 }
 
 export type ContentForSingleTutorial = {
   url: string;
-  title: string;
+  title: string | null;
   slug: string;
-  description: string;
+  description: string | null;
   imageURL: string;
   imageWidth: number;
   imageHeight: number;
@@ -44,32 +45,37 @@ const portableTextTypeDef: TypeDef = [
   {
     _type: 'string',
     _key: 'string',
-    style: ['|', 'string', 'null'],
+    style: ['|', 'string', 'null', 'undefined'],
     children: [
-      'array',
-      {
-        _type: 'string',
-        _key: 'string',
-        text: 'string',
-        marks: ['|', ['array', 'string'], 'null'],
-      },
+      '|',
+      [
+        'array',
+        {
+          _type: 'string',
+          _key: 'string',
+          text: 'string',
+          marks: ['|', ['array', 'string'], 'null', 'undefined'],
+        },
+      ],
+      'null',
+      'undefined',
     ],
-    markDefs: ['|', ['array', { _key: 'string', _type: 'string' }], 'null'],
-    level: ['|', 'number', 'null'],
-    listItem: ['|', 'string', 'null'],
+    markDefs: ['|', ['array', { _key: 'string', _type: 'string' }], 'null', 'undefined'],
+    level: ['|', 'number', 'null', 'undefined'],
+    listItem: ['|', 'string', 'null', 'undefined'],
   },
 ];
 
 const stepPropsTypeDef: TypeDef = {
   title: 'string',
-  content: ['|', portableTextTypeDef, 'null'],
-  time: 'number',
+  content: ['|', portableTextTypeDef, 'null', 'undefined'],
+  time: ['|', 'number', 'null', 'undefined'],
 };
 
 function isContentForTutorialsList(data: unknown): data is ContentForSingleTutorial {
-  const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
-  const typePortableTextOrNull: TypeDef = ['|', portableTextTypeDef, 'null'];
-  const typeStepsOrNull: TypeDef = ['|', ['array', stepPropsTypeDef], 'null'];
+  const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
+  const typePortableTextOrNull: TypeDef = ['|', portableTextTypeDef, 'null', 'undefined'];
+  const typeStepsOrNull: TypeDef = ['|', ['array', stepPropsTypeDef], 'null', 'undefined'];
   try {
     assertType(
       data,

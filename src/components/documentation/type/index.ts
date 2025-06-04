@@ -50,7 +50,7 @@ export type SingleTutorialProps = {
   content: PortableText | null;
   videoUrl: string;
   transcript: PortableText | null;
-  steps: StepProps[] | null;
+  steps: StepProps[] | null | undefined;
 };
 
 export type SingleGuideProps = {
