@@ -49,10 +49,10 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
 
   switch (activeArtifactType) {
     case 'eModelsTable':
-      contentTitle = 'E Models';
+      contentTitle = 'E-Models';
       break;
     case 'meModelsTable':
-      contentTitle = 'ME Models';
+      contentTitle = 'ME-Models';
       break;
     case 'synaptomesTable':
       contentTitle = 'Synaptome';
@@ -61,9 +61,7 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
       contentTitle = 'Downloads & Links';
       break;
     default:
-      contentTitle = activeArtifactType
-        ? activeArtifactType.charAt(0).toUpperCase() + activeArtifactType.slice(1)
-        : '';
+      contentTitle = '';
       break;
   }
 
