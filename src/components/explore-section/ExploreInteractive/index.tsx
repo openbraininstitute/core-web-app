@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation';
 import EntityGroupTabs from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import CellCompositionExplorer from '@/features/cell-composition/elements/cell-composition-explorer';
 import EntityTypeStatsPanel from '@/components/entities-type-stats/panel';
-import ThreeDeeBrain from '@/components/ThreeDeeBrain';
+import AtlasViewer from '@/features/brain-atlas-viewer';
+import HydrateWrapper from '@/wrappers/hydrate-wrapper';
 
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveDataKey } from '@/utils/key-builder';
@@ -25,7 +26,9 @@ export default function ExploreInteractivePanel() {
           className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px_repeat(4,1fr)_minmax(80px,max-content)] gap-y-4"
         >
           <div id="interactive-header" style={{ gridArea: '1 / 1 / 2 / 6' }}>
-            <EntityGroupTabs dataKey={dataKey} />
+            <HydrateWrapper>
+              <EntityGroupTabs dataKey={dataKey} />
+            </HydrateWrapper>
           </div>
           <div
             id="neurons-panel"
@@ -39,7 +42,7 @@ export default function ExploreInteractivePanel() {
             className="3d relative mr-4 ml-2 h-full rounded-md border border-[#0250b3] p-1"
             style={{ gridArea: '2 / 3 / 6 / 6' }}
           >
-            <ThreeDeeBrain />
+            <AtlasViewer dataKey={dataKey} />
           </div>
           <div id="statistic-panel" style={{ gridArea: '6 / 1 / 7 / 5' }}>
             <ErrorBoundary

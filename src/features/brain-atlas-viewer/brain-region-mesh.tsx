@@ -1,17 +1,21 @@
 import { useAtomValue, useSetAtom } from 'jotai';
+import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { loadable } from 'jotai/utils';
-import { useThree } from '@react-three/fiber';
-import { ApplicationSection } from '@/types/common';
-import { createMesh } from '@/components/ThreeDeeBrain/utils';
+
+import { getAtlasMeshAsset } from '@/features/brain-atlas-viewer/context';
+import { createMesh } from '@/features/brain-atlas-viewer/utils';
 import {
-  addLoadingAtom,
   addMeshVisibilityAtom,
   disableLoadingAtom,
-  getMeshAtom,
-} from '@/components/ThreeDeeBrain/state';
+  addLoadingAtom,
+} from '@/features/brain-atlas-viewer/state';
+import { useAppNotification } from '@/components/notification';
+import { messages } from '@/i18n/en/atlas';
 
-export function BrainRegionMesh({
+import type { ApplicationSection } from '@/types/common';
+
+export default function BrainRegionMesh({
   brainRegionId,
   section,
   color,
@@ -20,11 +24,12 @@ export function BrainRegionMesh({
   section: ApplicationSection;
   color?: string;
 }) {
+  const { warning } = useAppNotification();
   const addLoading = useSetAtom(addLoadingAtom);
   const disableLoading = useSetAtom(disableLoadingAtom);
 
   const brainRegionMesh = useAtomValue(
-    useMemo(() => loadable(getMeshAtom(brainRegionId)), [brainRegionId])
+    useMemo(() => loadable(getAtlasMeshAsset(brainRegionId)), [brainRegionId])
   );
 
   const addMeshVisibility = useSetAtom(addMeshVisibilityAtom);
@@ -36,10 +41,17 @@ export function BrainRegionMesh({
     }
     if (brainRegionMesh.state === 'hasError') {
       disableLoading(section, brainRegionId, 'mesh');
+      warning({
+        message: messages.brainRegionMeshLoadingError,
+        description: typeof brainRegionMesh.error === 'string' ? brainRegionMesh.error : '',
+        placement: 'topRight',
+        key: 'brain-region-mesh',
+      });
       return;
     }
     if (brainRegionMesh.state === 'hasData' && brainRegionMesh.data) {
-      const mesh = createMesh(brainRegionMesh.data, color || '#FFF');
+      const mesh = createMesh(brainRegionMesh.data.data, color || '#FFF');
+      mesh.userData = { brainRegionId };
       scene.add(mesh);
       addMeshVisibility(section, brainRegionId, 'mesh', mesh.uuid);
       disableLoading(section, brainRegionId, 'mesh');

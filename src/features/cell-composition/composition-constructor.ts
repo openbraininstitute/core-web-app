@@ -1,5 +1,4 @@
-import memoizeOne from 'memoize-one';
-
+import { memoize } from '@/util/utils';
 import { log } from '@/utils/logger';
 
 import type { BrainRegionHierarchyAtomReturnType } from '@/features/brain-region-hierarchy/context';
@@ -11,7 +10,6 @@ import type {
   ICellCompositionRoot,
 } from '@/api/entitycore/types/entities/cell-composition';
 import type { NeuronComposition, RawTreeNode } from '@/features/cell-composition/types';
-import { memoize } from '@/util/utils';
 
 const NEURON_DENSITY_SCALE = 1e-9;
 

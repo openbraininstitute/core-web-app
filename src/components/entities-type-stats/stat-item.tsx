@@ -10,7 +10,7 @@ import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 import {
-  brainRegionHierarchyAtom,
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
 
@@ -28,7 +28,9 @@ export default function StatItem({
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
-  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
+  const brainRegionHierarchy = useAtomValue(
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
+  );
 
   const onClick = async () => {
     const brainRegionName = brainRegionHierarchy?.options.find(
@@ -93,7 +95,9 @@ export function EntityTypeCount({
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
-  const brainRegionHierarchy = useAtomValue(useMemo(() => unwrap(brainRegionHierarchyAtom), []));
+  const brainRegionHierarchy = useAtomValue(
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
+  );
 
   const onClick = async () => {
     const brainRegionName = brainRegionHierarchy?.options.find(
