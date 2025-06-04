@@ -40,21 +40,11 @@ export default function DefaultNode<TNode extends TTreeNode>({
       }
     >
       <div className="mr-1.5 flex min-w-0 flex-shrink flex-grow basis-0 items-center">
-        {subtitle?.position === 'bottom' ? (
-          <div className="flex flex-col">
-            <span className={classNames('text-base', isSelected ? 'line-clamp-1' : '')}>
-              {nodeName}
-            </span>
-            {subtitle?.text && <span className="text-primary-1 text-xs">{subtitle.text}</span>}
-          </div>
-        ) : (
-          <div className="flex items-baseline">
-            <span className={classNames('text-base', isSelected ? 'line-clamp-1' : '')}>
-              {nodeName}
-            </span>
-            {subtitle && <span className="text-primary-1 ml-2 text-xs">({subtitle.text})</span>}
-          </div>
-        )}
+        <div className="flex items-baseline">
+          <span className={classNames('text-base', isSelected ? 'line-clamp-1' : '')}>
+            {nodeName}
+          </span>
+        </div>
       </div>
       {hasChildren && (
         <button

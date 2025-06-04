@@ -1,6 +1,6 @@
 'use client';
 
-import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
+import { WarningOutlined } from '@ant-design/icons';
 import { CSSProperties, ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import { Menu, MenuProps } from 'antd';

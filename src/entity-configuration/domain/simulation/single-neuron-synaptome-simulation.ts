@@ -4,13 +4,12 @@ import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { DataType } from '@/constants/explore-section/list-views';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
 import {
   createSingleNeuronSynaptomeSimulation,
-  getMEModel,
   getSingleNeuronSynaptomeSimulation,
   getSingleNeuronSynaptomeSimulations,
-} from '@/api/entitycore/queries';
+} from '@/api/entitycore/queries/simulation/single-neuron-synaptome-simulation';
+import { getMEModel } from '@/api/entitycore/queries/model/me-model';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {

@@ -19,17 +19,11 @@ export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
   const api = await entityCoreApi(); // cached it for 1 day
   return await api.get<
     T extends true ? TemporaryFlatBrainRegionHierarchy : ITemporaryBrainRegionHierarchy
-  >(
-    '/brain-region',
-    {
-      queryParams: {
-        flat,
-      },
+  >('/brain-region', {
+    queryParams: {
+      flat,
     },
-    {
-      cache: { cacheName: 'brain-region', enabled: true, ttlInSeconds: 86_400 },
-    }
-  );
+  });
 }
 
 /**
@@ -57,11 +51,5 @@ export async function getBrainRegionHierarchy({
   id?: string;
 }) {
   const api = await entityCoreApi();
-  return await api.get<IBrainRegionHierarchy>(
-    `/brain-region-hierarchy/${id}/hierarchy`,
-    {},
-    {
-      cache: { cacheName: 'brain-region-hierarchy', enabled: true, ttlInSeconds: 86_400 },
-    }
-  );
+  return await api.get<IBrainRegionHierarchy>(`/brain-region-hierarchy/${id}/hierarchy`);
 }

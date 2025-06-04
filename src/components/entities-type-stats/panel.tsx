@@ -9,7 +9,7 @@ import get from 'lodash/get';
 import circuitsFlat from '@/components/explore-section/Circuit/content/circuits_flat';
 
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
+import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';
 import { resolveDataKey } from '@/utils/key-builder';
@@ -115,7 +115,7 @@ export function EntityTypeStats(props: StatsPanelProps) {
           type="Circuit"
           records={`${circuitsFlat.length} records`}
           title="Circuit"
-          isLoading={isLoading}
+          isLoading={false}
         />
       </>
     ))

@@ -2,13 +2,16 @@ import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import * as entitycore from '@/api/entitycore/queries';
+import {
+  getReconstructionMorphologies,
+  getReconstructionMorphology,
+} from '@/api/entitycore/queries/experimental/reconstruction-morphology';
 
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
   IReconstructionMorphologyExpanded,
   IReconstructionMorphology,
 } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const ReconstructionMorphology: EntityCoreTypeConfig<
   IReconstructionMorphology | IReconstructionMorphologyExpanded
@@ -24,8 +27,8 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
       allowedParams: 'all',
     },
     query: {
-      list: entitycore.getReconstructionMorphologies,
-      one: entitycore.getReconstructionMorphology,
+      list: getReconstructionMorphologies,
+      one: getReconstructionMorphology,
     },
   },
   explore: {

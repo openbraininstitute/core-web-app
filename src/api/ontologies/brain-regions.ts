@@ -91,10 +91,6 @@ export const serializeBrainRegionOntologyViews = (
     title: nexusView.label,
   }));
 
-/**
- * Retrieves the brain regions from Nexus
- * @param accessToken
- */
 const getBrainRegionOntology = async (): Promise<BrainRegionOntology> => {
   const { id, org, project, tag } = brainRegionOntologyResource;
   const url = composeUrl('resource', id, { org, project, source: true, tag });

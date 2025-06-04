@@ -1,17 +1,32 @@
-import { useAtomValue } from 'jotai';
-import { loadable, unwrap } from 'jotai/utils';
-import { useMemo } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
+import { loadable, unwrap } from 'jotai/utils';
+import { useParams } from 'next/navigation';
+import { useAtomValue } from 'jotai';
+import { useMemo } from 'react';
+
 import { METypeDetails } from './METypeDetails';
 import { selectedBrainRegionAtom } from '@/state/brain-regions';
 import { analysedCompositionAtom } from '@/state/build-composition';
 import { classNames } from '@/util/utils';
 import { cellTypesByIdAtom } from '@/state/build-section/cell-types';
 import { NoCompositionAvailable } from '@/components/common/METypeHierarchy/NoCompositionAvailable';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { resolveDataKey } from '@/utils/key-builder';
+
+import type { WorkspaceContext } from '@/types/common';
+import { cellCompositionAtom } from '@/features/cell-composition/context';
 
 export default function SelectedBrainRegionMETypes() {
+  const { projectId } = useParams<WorkspaceContext>();
   const brainRegion = useAtomValue(selectedBrainRegionAtom);
   const composition = useAtomValue(useMemo(() => loadable(analysedCompositionAtom), []));
+  const { node } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: 'explore', projectId }),
+  });
+
+  const cellComposition = useAtomValue(
+    useMemo(() => cellCompositionAtom({ brainRegionId: node.id }), [node.id])
+  );
 
   const meTypesMetadata = useAtomValue(useMemo(() => unwrap(cellTypesByIdAtom), []));
 

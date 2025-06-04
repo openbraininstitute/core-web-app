@@ -1,11 +1,13 @@
-// import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import * as entitycore from '@/api/entitycore/queries';
+import {
+  getElectricalCellRecordings,
+  getElectricalCellRecording,
+} from '@/api/entitycore/queries/experimental/electrical-cell-recording';
 
+import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 
 export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: 'experimental',
@@ -19,8 +21,8 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
       allowedParams: 'all',
     },
     query: {
-      list: entitycore.getElectricalCellRecordings,
-      one: entitycore.getElectricalCellRecording,
+      list: getElectricalCellRecordings,
+      one: getElectricalCellRecording,
     },
   },
   explore: {
@@ -30,6 +32,5 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   asset: {
     extension: 'application/nwb',
   },
-  // viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalElectroPhysiology],
   isBookmarkable: true,
 } as const;

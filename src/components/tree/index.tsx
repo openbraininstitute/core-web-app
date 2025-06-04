@@ -15,18 +15,19 @@ import type {
 
 export interface Props<TNode extends TTreeNode> {
   dataKey: string;
-  data: TNode;
+  data: TNode | TNode[];
   height?: string | number;
   onClick?: (node: TNode) => void;
   onToggle?: (node: TNode, expanded: boolean) => void;
   defaultExpandedNodes?: Array<string | number>;
-  subtitle?: NodeSubtitle;
+  subtitle?: NodeSubtitle<TNode>;
   className?: string;
   indentation?: NodeIndentation;
   nodeRowHeight?: number;
   renderNode?: (props: RenderNodeProps<TNode>) => ReactNode;
   defaultColor?: string;
   selectedNode: TNode | null;
+  separator?: boolean;
 }
 
 function Container({
@@ -53,7 +54,6 @@ export default function Tree<TNode extends TTreeNode>({
   data,
   onClick,
   onToggle,
-  subtitle,
   className,
   indentation = {
     h: false,
@@ -67,20 +67,27 @@ export default function Tree<TNode extends TTreeNode>({
   renderNode,
   defaultColor,
   selectedNode,
+  separator = true,
 }: Props<TNode>) {
+  const nodes = Array.isArray(data) ? data : [data];
+
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(
-      flatMap(defaultExpandedNodes, (id) => map(getParentsToRoot(id.toString(), data as any), 'id'))
+      flatMap(defaultExpandedNodes, (id) =>
+        flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
+      )
     )
   );
 
   useEffect(() => {
     if (selectedNode) {
       setExpandedIds((prev) => {
-        const currentParents = flatMap(getParentsToRoot(selectedNode.id, data as any), 'id');
+        const currentParents = flatMap(nodes, (node) =>
+          flatMap(getParentsToRoot(selectedNode.id, node as any), 'id')
+        );
         const list = [...prev, ...currentParents];
         const initialParents = flatMap(defaultExpandedNodes, (id) =>
-          map(getParentsToRoot(id.toString(), data as any), 'id')
+          flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
         );
         list.push(...defaultExpandedNodes, ...initialParents);
 
@@ -113,21 +120,24 @@ export default function Tree<TNode extends TTreeNode>({
 
   return (
     <Container {...{ height, className }}>
-      <Node
-        dataKey={dataKey}
-        node={data}
-        level={0}
-        isLast
-        renderNode={renderNode as any}
-        expandedIds={expandedIds}
-        selectedNode={selectedNode as unknown as TNode}
-        onToggle={handleToggle}
-        onClick={handleClick}
-        subtitle={subtitle}
-        nodeRowHeight={nodeRowHeight}
-        indentation={indentation}
-        defaultColor={defaultColor}
-      />
+      {nodes.map((node, index, array) => (
+        <Node
+          key={node.id}
+          dataKey={dataKey}
+          node={node}
+          level={0}
+          isLast={index === array.length - 1}
+          renderNode={renderNode as any}
+          expandedIds={expandedIds}
+          selectedNode={selectedNode as unknown as TNode}
+          onToggle={handleToggle}
+          onClick={handleClick}
+          nodeRowHeight={nodeRowHeight}
+          indentation={indentation}
+          defaultColor={defaultColor}
+          separator={separator}
+        />
+      ))}
     </Container>
   );
 }

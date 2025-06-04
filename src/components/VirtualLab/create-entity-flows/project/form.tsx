@@ -6,17 +6,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { Form, ConfigProvider, Button } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useSession } from 'next-auth/react';
 import { unwrap } from 'jotai/utils';
-import { useAtomValue, useSetAtom } from 'jotai';
+
 import uniqBy from 'lodash/uniqBy';
 import reject from 'lodash/reject';
 import find from 'lodash/find';
-
 import VirtualLabsList from '@/components/VirtualLab/create-entity-flows/project/vlabs-list';
 import Overview from '@/components/VirtualLab/create-entity-flows/project/overview';
 import Footer from '@/components/VirtualLab/create-entity-flows/project/footer';
-import useNotification from '@/hooks/notifications';
 
 import type {
   ProjectFlowSteps,
@@ -32,6 +31,7 @@ import { virtualLabDetailAtomFamily, virtualLabMembersAtomFamily } from '@/state
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+import { useAppNotification } from '@/components/notification';
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
@@ -44,7 +44,7 @@ type Props = {
 };
 
 export default function CreationForm({ step, steps, onCancel, onStepChange }: Props) {
-  const notify = useNotification();
+  const { success: notifySuccess, error: notifyError } = useAppNotification();
   const { data } = useSession();
 
   const { push: navigate } = useRouter();
@@ -124,20 +124,16 @@ export default function CreationForm({ step, steps, onCancel, onStepChange }: Pr
       };
       const { data: resultCreation, error } = await tryCatch(createProject(id, formValues));
       if (error || !resultCreation || !resultCreation.data) {
-        notify.error(
-          'Project creation failed. Please check your details and try again.',
-          undefined,
-          'topRight',
-          undefined
-        );
+        notifyError({
+          message: 'Project creation failed. Please check your details and try again.',
+          placement: 'topRight',
+        });
       }
       if (resultCreation && resultCreation.data) {
-        notify.success(
-          `Your Project ${values.name} has been created successfully and is now ready to use.`,
-          undefined,
-          'topRight',
-          undefined
-        );
+        notifySuccess({
+          message: `Your Project ${values.name} has been created successfully and is now ready to use.`,
+          placement: 'topRight',
+        });
         refreshProjects();
         virtualLabDetailAtomFamily.remove(virtualLabId);
         navigate(`${generateVlProjectUrl(id, resultCreation.data.project.id)}/home`);

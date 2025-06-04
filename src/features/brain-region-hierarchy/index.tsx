@@ -55,7 +55,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
         isCollapsed ? 'collapsed w-[40px]' : 'w-[340px]'
       )}
     >
-      <div className="flex w-full flex-col gap-4 overflow-hidden p-4">
+      <div className="flex w-full flex-col gap-4 overflow-hidden p-4 pt-6">
         <div className="flex flex-col items-center justify-center">
           <TreeSideMenu dataKey={dataKey} />
           <div
@@ -74,7 +74,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
               <Tree
                 dataKey={dataKey}
                 data={brainRegionHierarchyResult.nodes}
-                height="calc(100vh - 130px)" // 130px for header and search
+                height="calc(100vh - 146px)" // 130px for header and search
                 defaultExpandedNodes={defaultBrainRegion ? [defaultBrainRegion] : []}
                 indentation={{
                   v: true,

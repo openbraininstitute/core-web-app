@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react';
 import { ConfigProvider, Select } from 'antd';
 
-import { scrollToNode } from '@/components/tree/elements/helpers';
 import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
 
-import type { TTreeNode } from '@/components/tree/types';
+import { scrollToNode } from '@/components/tree/elements/helpers';
 import { classNames } from '@/util/utils';
+
+import type { TTreeNode } from '@/components/tree/types';
 
 interface Props {
   options: Array<{ value: string; label: string; data: TTreeNode }>;

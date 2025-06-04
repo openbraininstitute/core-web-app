@@ -32,6 +32,7 @@ export type SpeciesFilter = {
   species_id__in: number | null;
   species__name: string | null;
   species__name__in: string | null;
+  species__name__ilike: string | null;
   species__order_by: string | null;
 };
 
@@ -40,6 +41,7 @@ export type StainFilter = {
   strain__name: string | null;
   strain__name__in: string | null;
   strain__order_by: string | null;
+  strain__name__ilike: string | null;
 };
 
 export type IdFilter = Partial<{
@@ -49,6 +51,7 @@ export type IdFilter = Partial<{
 
 export type SharedFilter = {
   name__ilike: string | null;
+  name__in: string | null;
   order_by: string;
   search: string | null;
 };

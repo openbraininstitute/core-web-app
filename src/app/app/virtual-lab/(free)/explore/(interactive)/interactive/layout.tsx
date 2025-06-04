@@ -15,6 +15,9 @@ import { defaultModelRelease } from '@/config';
 
 const BrainRegionsHierarchy = dynamic(() => import('@/features/brain-region-hierarchy'), {
   ssr: false,
+  loading() {
+    return <div className="bg-primary-8 w-[340px]" />;
+  },
 });
 
 export default function ExploreInteractiveLayout({ children }: { children: ReactNode }) {
