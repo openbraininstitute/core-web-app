@@ -4,7 +4,6 @@ import isNil from 'lodash/isNil';
 import { compactRecord } from '@/utils/dictionary';
 import { getSession } from '@/authFetch';
 import { log } from '@/utils/logger';
-import { env } from '@/env';
 
 type BackoffStrategy = {
   type: 'exponential' | 'custom';

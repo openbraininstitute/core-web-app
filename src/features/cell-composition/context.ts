@@ -59,12 +59,12 @@ export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionI
         };
       }
 
-      const { nodes, totalComposition } = resolveBrainRegionCellComposition(
+      const { nodes, totalComposition } = resolveBrainRegionCellComposition({
         brainRegionId,
-        cellComposition,
-        brainRegionAtlas.data?.data,
-        brainRegions
-      );
+        cellCompositionRoot: cellComposition,
+        atlasRegions: brainRegionAtlas.data?.data,
+        hierarchy: brainRegions,
+      });
 
       const neurons = renameKeyDeep(
         arrayToTree(

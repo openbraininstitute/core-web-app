@@ -6,6 +6,7 @@ import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
 import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
@@ -20,7 +21,6 @@ import { classNames } from '@/util/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
-import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 
 export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);

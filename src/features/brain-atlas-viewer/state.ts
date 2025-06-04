@@ -1,14 +1,13 @@
-import { atom } from 'jotai';
 import { atomFamily, atomWithReset } from 'jotai/utils';
+import { atom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import sessionAtom from '@/state/session';
-import { meshDistributionsAtom } from '@/state/brain-regions';
-import { ApplicationSection } from '@/types/common';
-import { LoadingState, MeshVisibility, VisibilityType } from '@/features/brain-atlas-viewer/types';
 
-import { fetchMesh, fetchPointCloud } from '@/features/brain-atlas-viewer/api';
-import { CIRCUIT_NOT_BUILT_ERROR } from '@/constants/errors';
+import { LoadingState, MeshVisibility, VisibilityType } from '@/features/brain-atlas-viewer/types';
 import { partialCircuitAtom } from '@/state/brain-model-config/cell-position';
+import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
+import { CIRCUIT_NOT_BUILT_ERROR } from '@/constants/errors';
+import { ApplicationSection } from '@/types/common';
 import { cellSvcBaseUrl } from '@/config';
 
 export const meshVisibilityAtom = atomFamily(() => atomWithReset<MeshVisibility[]>([]));

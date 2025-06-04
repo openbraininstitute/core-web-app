@@ -7,12 +7,12 @@ import EntityGroupTabs from '@/components/explore-section/ExploreInteractive/int
 import CellCompositionExplorer from '@/features/cell-composition/elements/cell-composition-explorer';
 import EntityTypeStatsPanel from '@/components/entities-type-stats/panel';
 import AtlasViewer from '@/features/brain-atlas-viewer';
+import HydrateWrapper from '@/wrappers/hydrate-wrapper';
 
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveDataKey } from '@/utils/key-builder';
 
 import type { WorkspaceContext } from '@/types/common';
-import HydrateWrapper from '@/wrappers/hydrate-wrapper';
 
 export default function ExploreInteractivePanel() {
   const { projectId } = useParams<WorkspaceContext>();

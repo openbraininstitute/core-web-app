@@ -1,5 +1,5 @@
 import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
-import { ReactNode, useMemo } from 'react';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
@@ -77,7 +77,6 @@ export function EntityTypeCount({
   isLoading?: boolean;
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-
   const onClick = async () => {
     const artifact = ensureString(title, 'Morphology');
     setCurrentExplorerArtifact(artifact);

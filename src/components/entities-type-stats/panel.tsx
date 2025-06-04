@@ -11,7 +11,6 @@ import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListVi
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';
-import { resolveDataKey } from '@/utils/key-builder';
 import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
