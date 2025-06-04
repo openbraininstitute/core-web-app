@@ -43,15 +43,13 @@ export default function SingleTutorialPage() {
           <track kind="captions" srcLang="en" label="English captions" />
         </video>
       </div>
-      {(!content.steps || content.steps.length === 0) && (
-        <SliderTimestamps
-          content={content.steps ?? []}
-          videoTime={videoTime}
-          setVideoTime={setVideoTime}
-          videoRef={videoRef}
-        />
-      )}
-      {!content.transcript && <TextContentBloc content={content} />}
+      <SliderTimestamps
+        content={content.steps ?? []}
+        videoTime={videoTime}
+        setVideoTime={setVideoTime}
+        videoRef={videoRef}
+      />
+      <TextContentBloc content={content} />
     </div>
   );
 }
