@@ -98,6 +98,7 @@ function BrowseSimsTab() {
               tableClass={classNames('overflow-y-auto grow', Styles.table)}
               dataKey={dataKey}
               showLoadingState={false}
+              useBrainRegion={false}
             />
             {loadMoreDiv}
           </div>

@@ -10,7 +10,6 @@ import {
   renameKeyDeep,
 } from '@/components/tree/elements/helpers';
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
-import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
 import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';

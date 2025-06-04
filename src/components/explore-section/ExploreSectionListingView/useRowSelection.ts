@@ -3,9 +3,6 @@ import { useAtom } from 'jotai';
 import { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
-import { ExploreESHit } from '@/types/explore-section/es';
-import { ExploreSectionResource } from '@/types/explore-section/resources';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { EntityTypeValue } from '@/api/entitycore/types';
 
 type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
