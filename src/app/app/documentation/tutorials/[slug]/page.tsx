@@ -1,13 +1,18 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useRef, useState } from 'react';
 
 import { useSanityForSingleTutorial } from '@/components/documentation/tutorials/fetch-single-tutorial';
+import SliderTimestamps from '@/components/documentation/tutorials/slider-timestamps';
 import TextContentBloc from '@/components/documentation/tutorials/TextContentBloc';
 
 export default function SingleTutorialPage() {
   const params = useParams();
   const slug = params.slug as string;
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoTime, setVideoTime] = useState<number>(0);
 
   const content = useSanityForSingleTutorial({ slug });
 
@@ -21,8 +26,8 @@ export default function SingleTutorialPage() {
   }
 
   return (
-    <div className="relative flex w-full flex-col gap-y-6">
-      <header className="w-full text-white">
+    <div className="relative flex w-full flex-col">
+      <header className="mb-4 w-full text-white">
         <div className="text-base font-normal uppercase tracking-wider">Tutorial</div>
         <h1 className="text-3xl font-bold">{content.title}</h1>
       </header>
@@ -33,10 +38,17 @@ export default function SingleTutorialPage() {
           controls
           className="h-auto w-full rounded-lg border border-solid border-primary-7"
           src={content.url}
+          ref={videoRef}
         >
           <track kind="captions" srcLang="en" label="English captions" />
         </video>
       </div>
+      <SliderTimestamps
+        content={content.steps ?? []}
+        videoTime={videoTime}
+        setVideoTime={setVideoTime}
+        videoRef={videoRef}
+      />
       <TextContentBloc content={content} />
     </div>
   );
