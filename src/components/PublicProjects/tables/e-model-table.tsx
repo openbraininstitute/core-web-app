@@ -18,6 +18,18 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
     },
   };
 
+  const handleDownload = () => {
+    console.log('Want to download:', selectedRow?.download);
+    if (selectedRow?.downloadLink) {
+      const link = document.createElement('a');
+      link.href = selectedRow.download ?? '';
+      link.download = selectedRow.name || 'model'; // Use model name as filename or fallback to 'model'
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div>
       <Table
@@ -32,11 +44,11 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
 
       <button
         className={classNames(
-          'fixed right-4 bg-primary-9 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
+          'fixed right-4 bg-green-600 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
           selectedRow ? 'bottom-4' : 'bottom-[-100px]'
         )}
         type="button"
-        onClick={() => console.log(selectedRow?.download)}
+        onClick={handleDownload}
         aria-label="Download selected model"
       >
         Download Model

@@ -21,8 +21,6 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
 
   let activeTable;
 
-  console.log('Full content', content);
-
   if (content !== null) {
     switch (activeArtifactType) {
       case 'eModelsTable':
@@ -71,11 +69,13 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
         <div className="relative flex flex-row text-base">
           Total artifacts: <span className="ml-2 block font-bold">{totalDataCount}</span>
         </div>
-        <ArtifactsTabNav
-          content={content.artifactType}
-          activeArtifactType={activeArtifactType}
-          setActiveArtifactType={setActiveArtifactType}
-        />
+        {content.artifactType.length > 1 && (
+          <ArtifactsTabNav
+            content={content.artifactType}
+            activeArtifactType={activeArtifactType}
+            setActiveArtifactType={setActiveArtifactType}
+          />
+        )}
       </header>
       <div className="w-full overflow-hidden">
         <div className="mb-3 w-full text-3xl font-bold text-primary-9">{contentTitle}</div>
