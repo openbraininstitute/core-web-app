@@ -9,7 +9,7 @@ export type JSONSchema = {
   required?: string[];
   enum?: any[];
   const?: any;
-  additionalProperties?: boolean | JSONSchema;
+  additionalProperties?:  JSONSchema;
   oneOf?: JSONSchema[];
   anyOf?: JSONSchema[];
   allOf?: JSONSchema[];

@@ -55,8 +55,6 @@ export default function TinyCircuitSimulation() {
 
   const [config] = useAtom(configAtom);
 
-  console.log(config);
-
   useEffect(() => {
     async function fetchSpec() {
       try {
@@ -126,7 +124,7 @@ export default function TinyCircuitSimulation() {
         </div>
         <div>
           {schema.properties && schema.properties?.[configTab] && (
-            <JSONSchemaForm schema={schema.properties[configTab]} stateAtom={atomsMap[configTab]} /> // Todo types
+            <JSONSchemaForm schema={schema.properties[configTab]} stateAtom={atomsMap[configTab]} />
           )}
         </div>
       </div>
