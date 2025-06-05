@@ -59,7 +59,9 @@ export default function Overview({ allowAskCode }: Props) {
                 if (exists) {
                   setValidName({ loading: false, status: 'non-valid' });
                   return Promise.reject(
-                    new Error('Another virtual lab with same name already exists')
+                    new Error(
+                      'Another virtual lab with the same name already exists. Please use a different name'
+                    )
                   );
                 }
                 setValidName({ loading: false, status: 'valid' });
