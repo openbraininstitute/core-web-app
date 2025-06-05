@@ -1,7 +1,5 @@
 'use client';
 
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
 import {
   DownOutlined,
   HomeOutlined,
@@ -9,15 +7,18 @@ import {
   UpOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
 import Link from 'next/link';
-
 import HelpMenu from '../HelpMenu';
+import DocumentationIcon from '../icons/DocumentationIcon';
+
 import UserMenu from '@/components/user-menu';
 import { LabItem, LinkItem, ProjectItem } from '@/components/VerticalLinks';
+import { useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 import { virtualLabProjectDetailsAtomFamily } from '@/state/virtual-lab/projects';
 import { classNames } from '@/util/utils';
-import { useUnwrappedValue } from '@/hooks/hooks';
 
 type SideMenuProps = {
   lab: LabItem;
@@ -99,6 +100,9 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
         </div>
 
         <div className="mb-5 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
+          <Link href="/app/virtual-lab" className="group cursor-pointer">
+            <DocumentationIcon iconColor="white" />
+          </Link>
           <HelpMenu>
             <QuestionCircleOutlined className="group-hover:text-white" />
           </HelpMenu>

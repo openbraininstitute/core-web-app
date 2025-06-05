@@ -1,0 +1,23 @@
+.transcript {
+  width: 100%;
+  color: white;
+  padding-top: 24px;
+}
+
+.small-transcript {
+  font-size: 16px;
+  text-align: left;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  color: #91d5ff;
+}
+
+.transcript > p {
+  font-size: 18px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}

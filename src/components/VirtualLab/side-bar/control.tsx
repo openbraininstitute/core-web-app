@@ -1,15 +1,27 @@
 'use client';
 
-import Link from 'next/link';
 import { HomeOutlined, QuestionCircleOutlined, UserOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 
-import { classNames } from '@/util/utils';
-import UserMenu from '@/components/user-menu';
 import HelpMenu from '@/components/HelpMenu';
+import { DocumentationIcon } from '@/components/icons';
+import UserMenu from '@/components/user-menu';
+import { classNames } from '@/util/utils';
 
 export default function Profile() {
   return (
     <div className="mt-auto flex flex-col gap-4">
+      <Link
+        href="/app/documentation"
+        aria-label="documentation"
+        className={classNames(
+          'flex h-12 w-12 items-center justify-center p-3',
+          'text-white transition-all duration-200',
+          'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+        )}
+      >
+        <DocumentationIcon className="h-auto w-5 text-white" />
+      </Link>
       <HelpMenu
         cls={{
           trigger: '!p-0',
@@ -19,7 +31,7 @@ export default function Profile() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-white hover:border-primary-5 hover:bg-primary-5'
+            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
           )}
         >
           <QuestionCircleOutlined className="text-xl" />
@@ -32,7 +44,7 @@ export default function Profile() {
         className={classNames(
           'flex w-max items-center justify-center p-3',
           'text-white transition-all duration-200',
-          'border border-white hover:border-primary-5 hover:bg-primary-5'
+          'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
         )}
       >
         <HomeOutlined className="text-xl" />
@@ -46,7 +58,7 @@ export default function Profile() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-white hover:border-primary-5 hover:bg-primary-5'
+            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
           )}
         >
           <UserOutlined className="text-xl" />

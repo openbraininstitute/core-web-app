@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, TableProps } from 'antd';
-import { useState } from 'react';
+import { Key, useState } from 'react';
 import { EModelsProps } from '../type/artifactsType';
 import columns from './columns/e-model-columns';
 
@@ -13,17 +13,17 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
 
   const rowSelection: TableProps<EModelsProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (selectedRowKeys: React.Key[], selectedRows: EModelsProps[]) => {
+    onChange: (selectedRowKeys: Key[], selectedRows: EModelsProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
   };
 
   const handleDownload = () => {
-    console.log('Want to download:', selectedRow?.download);
     if (selectedRow?.downloadLink) {
       const link = document.createElement('a');
       link.href = selectedRow.download ?? '';
-      link.download = selectedRow.name || 'model'; // Use model name as filename or fallback to 'model'
+      link.download = selectedRow.name || 'model';
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

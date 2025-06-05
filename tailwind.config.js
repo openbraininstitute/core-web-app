@@ -64,6 +64,9 @@ module.exports = {
       backgroundColor: {
         'ocean-blue': 'radial-gradient(circle, rgba(77,194,237,1) 0%, rgba(33,36,77,1) 100%)',
       },
+      backgroundImage: {
+        documentationHome: "url('/images/documentation/documentation_image_header.jpg')",
+      },
       fontFamily: {
         sans: ['var(--font-titillium-web)', ...fontFamily.sans],
         title: ['var(--font-gabarito)', ...fontFamily.sans],

@@ -2,10 +2,11 @@
 
 import React from 'react';
 
-import { useSanityContentForTutorialsList } from './hooks';
-import { TutorialCard } from './tutorial-card';
-import { scrollCardIntoView } from './scroll';
+import SingleTutorialCard from '../documentation/main/single-tutorial-card';
+import { ContentForTutorialItem, useSanityContentForTutorialsList } from './hooks';
 import { Navigation } from './navigation';
+import { scrollCardIntoView } from './scroll';
+
 import { classNames } from '@/util/utils';
 
 import styles from './tutorials-carrousel.module.css';
@@ -52,8 +53,8 @@ export function TutorialsCarrousel({ className }: TutorialsCarrouselProps) {
         )}
       </header>
       <div ref={refContainer}>
-        {tutorials.map((value) => (
-          <TutorialCard key={value.url} value={value} />
+        {tutorials.map((value: ContentForTutorialItem) => (
+          <SingleTutorialCard key={value.url} content={value} />
         ))}
       </div>
     </div>
