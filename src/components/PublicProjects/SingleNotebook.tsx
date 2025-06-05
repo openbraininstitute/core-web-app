@@ -68,10 +68,10 @@ export default function SingleNotebook({
             type="button"
             aria-label="Open read-me block"
             onClick={() => setReadMeOpen(!readMeOpen)}
-            className="mt-6 flex w-full flex-row justify-between border border-solid border-gray-200 px-4 py-2"
+            className="bg-whhite mt-6 flex w-full flex-row justify-between rounded-md border border-solid border-gray-100 px-4 py-2 shadow-skeumorphic"
           >
             <div className="flex flex-row items-center text-lg font-normal text-primary-9">
-              <ReadMeIcon iconColor="#A6A6A6" className="mr-2 h-4 w-auto" />
+              <ReadMeIcon iconColor="#A6A6A6" className="mr-2 h-4 w-auto uppercase tracking-wide" />
               Read me
             </div>
             <div>
