@@ -5,7 +5,8 @@ const DOCUMENTATION_ARCHITECTURE: SingleSectionProps[] = [
     name: 'Overview',
     slug: 'overview',
     children: null,
-    disabled: true,
+    disabled: false,
+    link: '/app/documentation',
   },
   {
     name: 'Ontology',
