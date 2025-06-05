@@ -23,7 +23,7 @@ export function useSanityForSingleTutorial({ slug }: { slug: string }) {
     }
 
     `;
-  const data = useSanity(query, isContentForTutorialsList);
+  const data = useSanity(query, isContentForSingleTutorial);
   return data ?? null;
 }
 
@@ -72,7 +72,7 @@ const stepPropsTypeDef: TypeDef = {
   time: ['|', 'number', 'null', 'undefined'],
 };
 
-function isContentForTutorialsList(data: unknown): data is ContentForSingleTutorial {
+function isContentForSingleTutorial(data: unknown): data is ContentForSingleTutorial {
   const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
   const typePortableTextOrNull: TypeDef = ['|', portableTextTypeDef, 'null', 'undefined'];
   const typeStepsOrNull: TypeDef = ['|', ['array', stepPropsTypeDef], 'null', 'undefined'];

@@ -38,8 +38,8 @@ export default function SingleTutorialCard({ content }: { content: ContentForTut
         />
       </div>
       <div className="w-1/2">
-        <h2 className="mb-1 text-2xl font-bold leading-tight">{content.title}</h2>
-        <p className="text-base font-normal">{content.description}</p>
+        <h2 className="mb-1 hyphens-auto text-xl font-bold leading-tight">{content.title}</h2>
+        <p className="hyphens-auto text-base font-normal leading-tight">{content.description}</p>
       </div>
       <div />
     </Link>

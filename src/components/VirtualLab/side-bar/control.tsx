@@ -4,7 +4,7 @@ import { HomeOutlined, QuestionCircleOutlined, UserOutlined } from '@ant-design/
 import Link from 'next/link';
 
 import HelpMenu from '@/components/HelpMenu';
-import { DocumentIcon } from '@/components/icons';
+import { DocumentationIcon } from '@/components/icons';
 import UserMenu from '@/components/user-menu';
 import { classNames } from '@/util/utils';
 
@@ -20,7 +20,7 @@ export default function Profile() {
           'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
         )}
       >
-        <DocumentIcon iconColor="white" className="h-auto w-4" />
+        <DocumentationIcon className="h-auto w-5 text-white" />
       </Link>
       <HelpMenu
         cls={{

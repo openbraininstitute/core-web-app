@@ -1,9 +1,9 @@
 import { PortableText } from 'next-sanity';
-import { useState } from 'react';
 import { StepProps } from '../type';
 
 import playVideoAtTime from '@/util/play-video-at-time';
 
+import useMouseHover from '@/hooks/useMouveHover';
 import secondsToMMSS from '@/util/convert-seconds-to-minutes';
 import { classNames } from '@/util/utils';
 import styles from './text-content-bloc.module.css';
@@ -23,7 +23,7 @@ export default function SingleStep({
   nextStepTime?: number;
   index: number;
 }) {
-  const [mouseHover, setMouseHover] = useState<boolean>(false);
+  const [mouseHover, mouseHoverProps] = useMouseHover();
 
   const handlePlayAtTime = () => {
     if (content.time != null) {
@@ -57,10 +57,8 @@ export default function SingleStep({
         backgroundClass,
         mouseHover ? 'border-primary-6' : 'border-primary-9'
       )}
-      onMouseOver={() => setMouseHover(true)}
-      onFocus={() => setMouseHover(true)}
-      onMouseOut={() => setMouseHover(false)}
-      onBlur={() => setMouseHover(false)}
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...mouseHoverProps}
     >
       <div
         className={classNames(
