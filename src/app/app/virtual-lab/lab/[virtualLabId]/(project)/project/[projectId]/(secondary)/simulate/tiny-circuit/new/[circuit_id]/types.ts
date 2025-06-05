@@ -1,17 +1,23 @@
-export type JSONSchema = {
-  type: string;
-  title?: string;
-  description?: string;
-  properties: {
-    [key: string]: JSONSchema | JSONSchemaPrimitive;
-  };
-  required?: string[];
-};
+import { WorkspaceContext } from "@/types/common";
 
-type JSONSchemaPrimitive = {
-  type: 'string' | 'number' | 'boolean' | 'null' | 'integer';
+export type Params = WorkspaceContext & {circuit_id: string}
+
+export type JSONSchema = {
+  type?: 'string' | 'number' | 'integer' | 'object' | 'array' | 'boolean' | 'null';
+  properties?: { [key: string]: JSONSchema };
+  items?: JSONSchema | JSONSchema[];
+  required?: string[];
+  enum?: any[];
+  const?: any;
+  additionalProperties?: boolean | JSONSchema;
+  oneOf?: JSONSchema[];
+  anyOf?: JSONSchema[];
+  allOf?: JSONSchema[];
+  not?: JSONSchema;
+  format?: string;
   title?: string;
   description?: string;
-  enum?: any[];
   default?: any;
+  examples?: any[];
+  [key: string]: any;
 };

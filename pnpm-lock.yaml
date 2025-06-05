@@ -26,6 +26,9 @@ importers:
       '@apache-arrow/es2015-esm':
         specifier: ^19.0.1
         version: 19.0.1
+      '@apidevtools/json-schema-ref-parser':
+        specifier: ^13.0.1
+        version: 13.0.1
       '@bbp/morphoviewer':
         specifier: ^0.21.1
         version: 0.21.1
@@ -122,6 +125,12 @@ importers:
       '@react-three/fiber':
         specifier: ^9.1.2
         version: 9.1.2(@types/react@19.1.0)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(three@0.159.0)
+      '@rjsf/core':
+        specifier: ^5.24.11
+        version: 5.24.11(@rjsf/utils@5.24.11(react@19.1.0))(react@19.1.0)
+      '@rjsf/validator-ajv8':
+        specifier: ^5.24.11
+        version: 5.24.11(@rjsf/utils@5.24.11(react@19.1.0))
       '@sanity/image-url':
         specifier: ^1.1.0
         version: 1.1.0
@@ -200,6 +209,9 @@ importers:
       input-otp:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      install:
+        specifier: ^0.13.0
+        version: 0.13.0
       jotai:
         specifier: ^2.7.2
         version: 2.12.2(@types/react@19.1.0)(react@19.1.0)
@@ -573,6 +585,10 @@ packages:
   '@apache-arrow/es2015-esm@19.0.1':
     resolution: {integrity: sha512-qLMA5ZQAal2w/qHTWE1K3Y2U/aF+uVEQqbkZ69xwVk68jkca7ASKwSZOqQNljFihXALLIYL7yaW+sSceU5jriw==}
     hasBin: true
+
+  '@apidevtools/json-schema-ref-parser@13.0.1':
+    resolution: {integrity: sha512-91uy6MGWqu7CjcV7tLPMuYh/Wj/RNPBXquSdEaCEpj2H/cFy0Yu+t1EdxExSyaryl1ykhDo30plq9tIm/HVZnw==}
+    engines: {node: '>= 16'}
 
   '@ark/schema@0.46.0':
     resolution: {integrity: sha512-c2UQdKgP2eqqDArfBqQIJppxJHvNNXuQPeuSPlDML4rjw+f1cu0qAlzOG4b8ujgm9ctIDWwhpyw6gjG5ledIVQ==}
@@ -3227,6 +3243,25 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
+  '@rjsf/core@5.24.11':
+    resolution: {integrity: sha512-iSO8IIrsBREQZPPVb6AdtnQBclDcU0YK8cnF9oqS/mV+Qk/r8kU6On0X8j/lj8setGBdFJKDFA0hdJkNquQI1Q==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@rjsf/utils': ^5.24.x
+      react: ^16.14.0 || >=17
+
+  '@rjsf/utils@5.24.11':
+    resolution: {integrity: sha512-2OyQM4Eum67jr4GJly6eflZhD8qoWkl7brCvCZ10z+pW6dgsGEusqRvTioK0L7thWJ5LwbJ2i4SFqJjiChZGxA==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      react: ^16.14.0 || >=17
+
+  '@rjsf/validator-ajv8@5.24.11':
+    resolution: {integrity: sha512-x6pZojVPVFB1bVk3e8GvStyDXJN8ufa3Aoz4wx+UJRSdh7J4Iud+jaATPxyrjhLIuxsQhUy7ed39/4iP+YYZ/Q==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@rjsf/utils': ^5.24.x
+
   '@rollup/plugin-commonjs@28.0.1':
     resolution: {integrity: sha512-+tNWdlWKbpB3WgBN7ijjYkq9X5uhjmcvyjEght4NmH5fAU++zfQzAJ6wumLS+dNcvwEZhKx2Z+skY8m7v0wGSA==}
     engines: {node: '>=16.0.0 || 14 >= 14.17'}
@@ -5311,6 +5346,12 @@ packages:
     resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
     engines: {node: '>= 14'}
 
+  compute-gcd@1.2.1:
+    resolution: {integrity: sha512-TwMbxBNz0l71+8Sc4czv13h4kEqnchV9igQZBi6QUaz09dnz13juGnnaWWJTRsP3brxOoxeB4SA2WELLw1hCtg==}
+
+  compute-lcm@1.1.2:
+    resolution: {integrity: sha512-OFNPdQAXnQhDSKioX8/XYT6sdUlXwpeMjfd6ApxMJfyZ4GxmLR1xvMERctlYhlHwIiz6CSpBc2+qYKjHGZw4TQ==}
+
   compute-scroll-into-view@3.1.1:
     resolution: {integrity: sha512-VRhuHOLoKYOy4UbilLbUzbYg93XLjv2PncJC50EuTWPA3gaja1UjBsUP/D/9/juV3vQFr6XBEzn9KCAHdUvOHw==}
 
@@ -7033,6 +7074,10 @@ packages:
       '@types/node':
         optional: true
 
+  install@0.13.0:
+    resolution: {integrity: sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==}
+    engines: {node: '>= 0.10'}
+
   internal-slot@1.1.0:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
     engines: {node: '>= 0.4'}
@@ -7618,6 +7663,13 @@ packages:
   json-reduce@3.0.0:
     resolution: {integrity: sha512-zvnhEvwhqTOxBIcXnxvHvhqtubdwFRp+FascmCaL56BT9jdttRU8IFc+Ilh2HPJ0AtioF8mFPxmReuJKLW0Iyw==}
 
+  json-schema-compare@0.2.2:
+    resolution: {integrity: sha512-c4WYmDKyJXhs7WWvAWm3uIYnfyWFoIp+JEoX34rctVvEkMYCPGhXtvmFFXiffBbxfZsvQ0RNnV5H7GvDF5HCqQ==}
+
+  json-schema-merge-allof@0.8.1:
+    resolution: {integrity: sha512-CTUKmIlPJbsWfzRRnOXz+0MjIqvnleIXwFTzz+t9T86HnYX/Rozria6ZVGLktAU9e+NygNljveP+yxqtQp/Q4w==}
+    engines: {node: '>=12.0.0'}
+
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
@@ -7653,6 +7705,10 @@ packages:
     engines: {node: '>=8.17.0'}
     hasBin: true
     bundledDependencies: []
+
+  jsonpointer@5.0.1:
+    resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
+    engines: {node: '>=0.10.0'}
 
   jsx-ast-utils@3.3.5:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
@@ -7973,6 +8029,12 @@ packages:
 
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
+
+  markdown-to-jsx@7.7.6:
+    resolution: {integrity: sha512-/PWFFoKKMidk4Ut06F5hs5sluq1aJ0CGvUJWsnCK6hx/LPM8vlhvKAxtGHJ+U+V2Il2wmnfO6r81ICD3xZRVaw==}
+    engines: {node: '>= 10'}
+    peerDependencies:
+      react: '>= 0.14.0'
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -10836,6 +10898,21 @@ packages:
   validate-npm-package-name@3.0.0:
     resolution: {integrity: sha512-M6w37eVCMMouJ9V/sdPGnC5H4uDr73/+xdq0FBLO3TFFX1+7wiUY6Es328NN+y43tmY+doUdN9g9J21vqB7iLw==}
 
+  validate.io-array@1.0.6:
+    resolution: {integrity: sha512-DeOy7CnPEziggrOO5CZhVKJw6S3Yi7e9e65R1Nl/RTN1vTQKnzjfvks0/8kQ40FP/dsjRAOd4hxmJ7uLa6vxkg==}
+
+  validate.io-function@1.0.2:
+    resolution: {integrity: sha512-LlFybRJEriSuBnUhQyG5bwglhh50EpTL2ul23MPIuR1odjO7XaMLFV8vHGwp7AZciFxtYOeiSCT5st+XSPONiQ==}
+
+  validate.io-integer-array@1.0.0:
+    resolution: {integrity: sha512-mTrMk/1ytQHtCY0oNO3dztafHYyGU88KL+jRxWuzfOmQb+4qqnWmI+gykvGp8usKZOM0H7keJHEbRaFiYA0VrA==}
+
+  validate.io-integer@1.0.5:
+    resolution: {integrity: sha512-22izsYSLojN/P6bppBqhgUDjCkr5RY2jd+N2a3DCAUey8ydvrZ/OkGvFPR7qfOpwR2LC5p4Ngzxz36g5Vgr/hQ==}
+
+  validate.io-number@1.0.3:
+    resolution: {integrity: sha512-kRAyotcbNaSYoDnXvb4MHg/0a1egJdLwS6oJ38TJY7aw9n93Fl/3blIXdyYvPOp55CNxywooG/3BcrwNrBpcSg==}
+
   vfile-location@5.0.3:
     resolution: {integrity: sha512-5yXvWDEgqeiYiBe1lbxYF7UMAIm/IcopxMHrMQDq3nvKcjPKIhZklUKL+AE7J7uApI4kwe2snsK+eI6UTj9EHg==}
 
@@ -11426,6 +11503,11 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@75lb/nature'
+
+  '@apidevtools/json-schema-ref-parser@13.0.1':
+    dependencies:
+      '@types/json-schema': 7.0.15
+      js-yaml: 4.1.0
 
   '@ark/schema@0.46.0':
     dependencies:
@@ -14458,6 +14540,33 @@ snapshots:
       md5-o-matic: 0.1.1
       react: 19.1.0
 
+  '@rjsf/core@5.24.11(@rjsf/utils@5.24.11(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@rjsf/utils': 5.24.11(react@19.1.0)
+      lodash: 4.17.21
+      lodash-es: 4.17.21
+      markdown-to-jsx: 7.7.6(react@19.1.0)
+      nanoid: 3.3.11
+      prop-types: 15.8.1
+      react: 19.1.0
+
+  '@rjsf/utils@5.24.11(react@19.1.0)':
+    dependencies:
+      json-schema-merge-allof: 0.8.1
+      jsonpointer: 5.0.1
+      lodash: 4.17.21
+      lodash-es: 4.17.21
+      react: 19.1.0
+      react-is: 18.3.1
+
+  '@rjsf/validator-ajv8@5.24.11(@rjsf/utils@5.24.11(react@19.1.0))':
+    dependencies:
+      '@rjsf/utils': 5.24.11(react@19.1.0)
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
+      lodash: 4.17.21
+      lodash-es: 4.17.21
+
   '@rollup/plugin-commonjs@28.0.1(rollup@4.35.0)':
     dependencies:
       '@rollup/pluginutils': 5.1.4(rollup@4.35.0)
@@ -16863,6 +16972,19 @@ snapshots:
       normalize-path: 3.0.0
       readable-stream: 4.7.0
 
+  compute-gcd@1.2.1:
+    dependencies:
+      validate.io-array: 1.0.6
+      validate.io-function: 1.0.2
+      validate.io-integer-array: 1.0.0
+
+  compute-lcm@1.1.2:
+    dependencies:
+      compute-gcd: 1.2.1
+      validate.io-array: 1.0.6
+      validate.io-function: 1.0.2
+      validate.io-integer-array: 1.0.0
+
   compute-scroll-into-view@3.1.1: {}
 
   concat-map@0.0.1: {}
@@ -18972,6 +19094,8 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.14.0
 
+  install@0.13.0: {}
+
   internal-slot@1.1.0:
     dependencies:
       es-errors: 1.3.0
@@ -19774,6 +19898,16 @@ snapshots:
 
   json-reduce@3.0.0: {}
 
+  json-schema-compare@0.2.2:
+    dependencies:
+      lodash: 4.17.21
+
+  json-schema-merge-allof@0.8.1:
+    dependencies:
+      compute-lcm: 1.1.2
+      json-schema-compare: 0.2.2
+      lodash: 4.17.21
+
   json-schema-traverse@0.4.1: {}
 
   json-schema-traverse@1.0.0: {}
@@ -19800,6 +19934,8 @@ snapshots:
     dependencies:
       chalk: 3.0.0
       diff-match-patch: 1.0.5
+
+  jsonpointer@5.0.1: {}
 
   jsx-ast-utils@3.3.5:
     dependencies:
@@ -20111,6 +20247,10 @@ snapshots:
       vt-pbf: 3.1.3
 
   markdown-table@3.0.4: {}
+
+  markdown-to-jsx@7.7.6(react@19.1.0):
+    dependencies:
+      react: 19.1.0
 
   math-intrinsics@1.1.0: {}
 
@@ -23738,6 +23878,21 @@ snapshots:
   validate-npm-package-name@3.0.0:
     dependencies:
       builtins: 1.0.3
+
+  validate.io-array@1.0.6: {}
+
+  validate.io-function@1.0.2: {}
+
+  validate.io-integer-array@1.0.0:
+    dependencies:
+      validate.io-array: 1.0.6
+      validate.io-integer: 1.0.5
+
+  validate.io-integer@1.0.5:
+    dependencies:
+      validate.io-number: 1.0.3
+
+  validate.io-number@1.0.3: {}
 
   vfile-location@5.0.3:
     dependencies:

@@ -1,21 +1,26 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { assertErrorMessage, classNames, memoize } from '@/util/utils';
 
 import { WorkspaceContext } from '@/types/common';
 import memoizeOne from 'memoize-one';
 import { atom, useAtom } from 'jotai';
-import { Params } from './types';
+import { Params, JSONSchema } from './types';
 // import { InitializeForm } from './components';
 import { getErrorsAtom } from './state';
-import { Loading3QuartersOutlined, LoadingOutlined, WarningFilled } from '@ant-design/icons';
+import { Loading3QuartersOutlined, LoadingOutlined } from '@ant-design/icons';
 import { notification } from 'antd/lib';
-import { JSONSchema } from './types';
-import { Special_Elite } from 'next/font/google';
+import $RefParser from '@apidevtools/json-schema-ref-parser';
+
+import JSONSchemaForm from './components';
+import { selectedTabFamily } from '@/components/VirtualLab/ScopeSelector/state';
+import { set } from 'lodash';
 
 type TabType = 'configuration' | 'simulations';
+
+export type Object = null | boolean | number | string | Object[] | { [key: string]: Object };
 
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
@@ -23,14 +28,16 @@ export default function TinyCircuitSimulation() {
   const configTabClass = 'h-[50px] w-[90%] text-left';
   const { projectId, circuit_id } = useParams<Params>();
   const [errors] = useAtom(getErrorsAtom(circuit_id));
-  const [spec, setSpec] = useState<{ [key: string]: JSONSchema } | null>(null);
+  const [schema, setSchema] = useState<JSONSchema | null>(null);
 
   useEffect(() => {
     async function fetchSpec() {
       try {
         const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
         const json = await res.json();
-        setSpec(json.components.schemas);
+        const dereferenced = await $RefParser.dereference(json);
+        // @ts-ignore
+        setSchema(dereferenced.components.schemas.SimulationsForm);
       } catch (e) {
         notification.error({ message: assertErrorMessage(e) });
       }
@@ -39,7 +46,7 @@ export default function TinyCircuitSimulation() {
     fetchSpec();
   }, []);
 
-  if (!spec || !spec.SimulationsForm) {
+  if (!schema) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <LoadingOutlined />
@@ -74,11 +81,26 @@ export default function TinyCircuitSimulation() {
       </div>
       <div className="grid flex-1 grid-cols-3 gap-5 overflow-auto">
         <div className="flex flex-col items-center gap-5">
-          {Object.keys(spec.SimulationsForm?.properties ?? {}).map((k) => (
-            <Tab tab={k} key={k} selectedTab={configTab} onClick={() => setConfigTab(k)} extraClass=''>
-              {snakeToTitleCase(k)}
-            </Tab>
-          ))}
+          {schema.properties &&
+            Object.keys(schema.properties)
+              .filter((k) => k !== 'type')
+              .map((k) => (
+                <Tab
+                  tab={k}
+                  key={k}
+                  selectedTab={configTab}
+                  onClick={() => setConfigTab(k)}
+                  extraClass="w-[90%] flex justify-between h-[50px] items-center"
+                >
+                  {schema.properties?.[k]?.title}
+                  <Chevron />
+                </Tab>
+              ))}
+        </div>
+        <div>
+          {schema.properties && schema.properties?.[configTab] && (
+            <JSONSchemaForm schema={schema.properties[configTab]} />
+          )}
         </div>
       </div>
     </div>
@@ -141,11 +163,4 @@ function Chevron({ rotate }: { rotate?: number }) {
       />
     </svg>
   );
-}
-
-function snakeToTitleCase(snakeStr: string): string {
-  return snakeStr
-    .split('_') // split by underscore
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // capitalize first letter
-    .join(' '); // join words with space
 }
