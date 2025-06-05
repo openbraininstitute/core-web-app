@@ -36,7 +36,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
         className={styles.circuitTable}
         dataSource={content}
         columns={columns()}
-        rowKey="name"
+        rowKey={(record, index) => `${record.name}_${index}`}
         pagination={false}
         rowSelection={rowSelection}
         scroll={{ x: 'max-content' }}

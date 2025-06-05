@@ -13,7 +13,7 @@ export default function SynaptomeTable({ content }: { content: SynaptomeProps[] 
         className={styles.circuitTable}
         dataSource={content}
         columns={columns()}
-        rowKey="name"
+        rowKey={(record, index) => `${record.name}_${index}`}
         pagination={false}
         scroll={{ x: 'max-content' }}
       />
