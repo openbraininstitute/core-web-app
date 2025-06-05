@@ -30,6 +30,7 @@ export type SingleSectionProps = {
   slug: string;
   children: SingleSectionProps[] | null;
   disabled: boolean;
+  link?: string;
 };
 
 export type StepProps = {

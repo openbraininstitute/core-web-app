@@ -1,38 +1,56 @@
 'use client';
 
+import { Tooltip } from 'antd';
+
+import Link from 'next/link';
 import { useState } from 'react';
 import { SingleSectionProps } from '../type';
-import ComingSoonPill from './coming-soon-pill';
+
+import { ChevronRight } from '@/components/icons';
 import { classNames } from '@/util/utils';
-import { ArrowRightIcon, ChevronRight } from '@/components/icons';
 
-export default function NavItem({ content }: { content: SingleSectionProps }) {
-  const [sectionOpen, setSectionOpen] = useState<boolean>(false);
-
+export function ItemDisabled({ name }: { name: string }) {
   return (
+    <Tooltip title="Coming soon" placement="topLeft">
+      <div className="font-sans text-base font-normal text-white opacity-40">{name}</div>
+    </Tooltip>
+  );
+}
+
+export function ItemEnabled({
+  content,
+  name,
+  link,
+  sectionOpen,
+  setSectionOpen,
+}: {
+  content: SingleSectionProps;
+  name: string;
+  link?: string;
+  sectionOpen: boolean;
+  setSectionOpen: (open: boolean) => void;
+}) {
+  return !content.children ? (
+    <Link href={link ?? '#'} className="font-sans text-base font-normal text-white">
+      {name}
+    </Link>
+  ) : (
     <div>
-      <div className="flex flex-row items-center justify-between">
-        <div className="flex flex-row items-center gap-x-2">
-          <div className="font-sans text-base font-normal text-white">{content.name}</div>
-          {content.disabled ? <ComingSoonPill /> : null}
-        </div>
-        {!content.children ? (
-          <ArrowRightIcon className="h-3 w-auto text-primary-3" />
-        ) : (
-          <button
-            type="button"
-            aria-label="Toggle section"
-            onClick={() => setSectionOpen(!sectionOpen)}
-          >
-            <ChevronRight
-              fill="#69c0ff"
-              className={classNames(
-                'h-3 w-auto text-primary-3 transition-transform duration-200 ',
-                sectionOpen ? 'rotate-90' : 'rotate-0'
-              )}
-            />
-          </button>
-        )}
+      <div className="flex w-full flex-row items-center justify-between">
+        <div className="font-sans text-base font-normal text-white">{name}</div>
+        <button
+          type="button"
+          aria-label="Toggle section"
+          onClick={() => setSectionOpen(!sectionOpen)}
+        >
+          <ChevronRight
+            fill="#69c0ff"
+            className={classNames(
+              'h-3 w-auto text-primary-3 transition-transform duration-200 ',
+              sectionOpen ? 'rotate-90' : 'rotate-0'
+            )}
+          />
+        </button>
       </div>
 
       <div
@@ -50,5 +68,21 @@ export default function NavItem({ content }: { content: SingleSectionProps }) {
         )}
       </div>
     </div>
+  );
+}
+
+export default function NavItem({ content }: { content: SingleSectionProps }) {
+  const [sectionOpen, setSectionOpen] = useState<boolean>(false);
+
+  return content.disabled ? (
+    <ItemDisabled name={content.name} />
+  ) : (
+    <ItemEnabled
+      content={content}
+      name={content.name}
+      link={content.link}
+      sectionOpen={sectionOpen}
+      setSectionOpen={setSectionOpen}
+    />
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+
 import {
   ContentForTutorialItem,
   useSanityContentForTutorialsList,
@@ -12,10 +13,13 @@ export default function TutorialNavList() {
 
   return (
     <div className="relative mt-12 flex w-full flex-col gap-y-3">
-      <header className="relative flex w-full flex-row items-center">
+      <Link
+        href="/app/documentation/tutorials"
+        className="relative flex w-full flex-row items-center"
+      >
         <h1 className="text-base font-bold text-primary-4 after:ml-2">Tutorials</h1>
         <div className="relative top-1 ml-1 block h-px w-full bg-primary-5" />
-      </header>
+      </Link>
 
       <div className="flex flex-col gap-y-2">
         {tutorials.map((tutorial: ContentForTutorialItem) => (
