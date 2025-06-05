@@ -8,16 +8,32 @@ import { ShowCaseProjectQueryType } from '../type';
 import ArtifactsTabNav from './artifact/artifacts-tab-nav';
 import LinkAndDownloadList from './blocs/LinkAndDownloadList';
 
+const getActiveArtifactsCount = (
+  activeArtifactType: string | null,
+  content: ShowCaseProjectQueryType
+): number => {
+  if (!activeArtifactType || !content) {
+    return 0;
+  }
+
+  switch (activeArtifactType) {
+    case 'eModelsTable':
+      return Array.isArray(content.eModelTable) ? content.eModelTable.length : 0;
+    case 'meModelsTable':
+      return Array.isArray(content.meModelTable) ? content.meModelTable.length : 0;
+    case 'synaptomesTable':
+      return Array.isArray(content.synaptomeTable) ? content.synaptomeTable.length : 0;
+    case 'downloadsLinks':
+      return Array.isArray(content.artifact) ? content.artifact.length : 0;
+    default:
+      return 0;
+  }
+};
+
 export default function ArtifactsSection({ content }: { content: ShowCaseProjectQueryType }) {
   const [activeArtifactType, setActiveArtifactType] = useState<string | null>(
     content.artifactType[0] ?? null
   );
-
-  const totalDataCount =
-    (content?.artifact?.length ?? 0) +
-    (content?.meModelsList?.length ?? 0) +
-    (content?.minimalMeModel?.length ?? 0) +
-    (content?.eModelTable?.length ?? 0);
 
   let activeTable;
 
@@ -67,7 +83,10 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
     <div className="relative flex w-full flex-col gap-y-6 scroll-smooth" id="artifacts">
       <header className="sticky top-0 z-50 flex w-full flex-row items-center justify-between bg-white">
         <div className="relative flex flex-row text-base">
-          Total artifacts: <span className="ml-2 block font-bold">{totalDataCount}</span>
+          Total artifacts:{' '}
+          <span className="ml-2 block font-bold">
+            {getActiveArtifactsCount(activeArtifactType, content)}
+          </span>
         </div>
         {content.artifactType.length > 1 && (
           <ArtifactsTabNav
