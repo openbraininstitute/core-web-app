@@ -33,7 +33,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'M-Type',
+      title: 'M-type',
       key: 'mType',
       width: '100px',
       render: (_value: any, record: EModelsProps, _index: number) => (
@@ -67,7 +67,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'Creation Date',
+      title: 'Creation date',
       key: 'creationDate',
       width: '150px',
       render: (_value: any, record: EModelsProps, _index: number) => (
