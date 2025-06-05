@@ -1,18 +1,27 @@
 import { InputNumber, Input, Select } from 'antd';
 import { JSONSchema } from './types';
 import { atom, useAtom } from 'jotai';
+
 import { type Object } from './page';
+import { useState } from 'react';
 
 export default function JSONSchemaForm({
   schema,
   stateAtom,
+  onApply,
 }: {
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: Object | string }>>;
+  onApply?: () => void;
 }) {
   const skip = ['circuit', 'type']; // TODO: handle when circuit changes
 
-  const [state, setState] = useAtom(stateAtom);
+  const [globalState, setGlobalState] = useAtom(stateAtom);
+  const [localState, setLocalState] = useState<{ [key: string]: Object | string }>({});
+
+  const setState = schema.additionalProperties ? setLocalState : setGlobalState;
+
+  console.log(schema);
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((v) => v.type !== 'array') };
@@ -21,18 +30,16 @@ export default function JSONSchemaForm({
       return (
         <Select
           className="w-[150px]"
-          defaultValue={v.default}
           options={obj.enum.map((v: string) => {
             return { label: v, value: v };
           })}
         />
       );
-    if (obj.type === 'number' || obj.type === 'integer')
-      return <InputNumber defaultValue={obj.default} />;
+    if (obj.type === 'number' || obj.type === 'integer') return <InputNumber />;
     if (obj.type === 'string')
       return (
         <Input
-          defaultValue={obj.default}
+          className="max-w-[300px]"
           onChange={(e) => {
             setState((prev) => {
               return { ...prev, [k]: e.currentTarget.value };
@@ -57,6 +64,8 @@ export default function JSONSchemaForm({
       });
   }
 
+  const keys = Object.keys(globalState).length;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="text-primary-8 text-lg uppercase">{schema.title}</div>
@@ -66,6 +75,19 @@ export default function JSONSchemaForm({
         {schema.additionalProperties?.properties &&
           renderProperties(schema.additionalProperties.properties)}
       </div>
+      {schema.additionalProperties && (
+        <button
+          type="button"
+          onClick={() => {
+            setGlobalState((prev) => {
+              return { ...prev, [(schema.title ?? '') + keys]: localState };
+            });
+            if (onApply) onApply();
+          }}
+        >
+          Apply
+        </button>
+      )}
     </div>
   );
 }
