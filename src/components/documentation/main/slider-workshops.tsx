@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import ComingSoonPill from '../global/coming-soon-pill';
 import { SingleWorkshopProps } from '../type';
 import SingleWorkshopCard from './single-workshop-card';
 
@@ -15,9 +16,12 @@ const placeholderWorkshop: SingleWorkshopProps = {
 
 export default function SliderWorkshop() {
   return (
-    <div className="w-full">
+    <div className="pointer-events-none w-full opacity-30">
       <div className="mb-3 flex w-full flex-row items-center justify-between">
-        <h1 className="text-lg font-bold text-white">Our latest workshop</h1>
+        <div className="flex flex-row gap-x-2">
+          <h1 className="text-lg font-bold text-white">Our latest workshop</h1>
+          <ComingSoonPill />
+        </div>
         <Link
           href="/documentation/workshops"
           className="text-sm font-semibold text-white hover:underline"

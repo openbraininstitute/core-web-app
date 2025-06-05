@@ -125,6 +125,8 @@ module.exports = {
       boxShadow: {
         strongImage: '0px 22px 22px -16px rgba(0,0,0,0.36)',
         superShadow: '0px 24px 60px 0px rgba(0,0,0,0.40)',
+        skeumorphism:
+          ' -16px -16px 20px 0px rgba(255, 255, 255, 0.82), 5px 8px 16px 0px rgba(0, 0, 0, 0.06);',
       },
       transitionTimingFunction: {
         'in-expo': 'cubic-bezier(0.95, 0.05, 0.795, 0.035)',
