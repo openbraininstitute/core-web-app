@@ -30,6 +30,33 @@ export default function TinyCircuitSimulation() {
   const [errors] = useAtom(getErrorsAtom(circuit_id));
   const [schema, setSchema] = useState<JSONSchema | null>(null);
 
+  const atomsMap = useMemo(() => {
+    const map: { [key: string]: ReturnType<typeof atom<{ [key: string]: Object | string }>> } = {};
+    if (!schema?.properties) return map;
+    Object.entries(schema.properties).forEach(([k, v]) => {
+      if (v.type === 'string' && v.const) map[k] = atom(v.const);
+      else {
+        map[k] = atom({});
+      }
+    });
+
+    return map;
+  }, [schema]);
+
+  const configAtom = useMemo(() => {
+    return atom((get) => {
+      const result: Record<string, object> = {};
+      Object.keys(atomsMap).forEach((key) => {
+        result[key] = get(atomsMap[key]);
+      });
+      return result;
+    });
+  }, [atomsMap]);
+
+  const [config] = useAtom(configAtom);
+
+  console.log(config);
+
   useEffect(() => {
     async function fetchSpec() {
       try {
@@ -99,7 +126,7 @@ export default function TinyCircuitSimulation() {
         </div>
         <div>
           {schema.properties && schema.properties?.[configTab] && (
-            <JSONSchemaForm schema={schema.properties[configTab]} />
+            <JSONSchemaForm schema={schema.properties[configTab]} stateAtom={atomsMap[configTab]} /> // Todo types
           )}
         </div>
       </div>

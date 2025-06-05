@@ -1,10 +1,19 @@
 import { InputNumber, Input, Select } from 'antd';
 import { JSONSchema } from './types';
+import { atom, useAtom } from 'jotai';
 
-export default function JSONSchemaForm({ schema }: { schema: JSONSchema }) {
+export default function JSONSchemaForm({
+  schema,
+  stateAtom,
+}: {
+  schema: JSONSchema;
+  stateAtom: ReturnType<typeof atom<{ [key: string]: Object | string }>> | null;
+}) {
   const skip = ['circuit', 'type']; // TODO: handle when circuit changes
 
-  function renderInput(v: JSONSchema) {
+  const [state, setState] = useAtom(stateAtom);
+
+  function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((v) => v.type !== 'array') };
 
     if (obj.enum)
@@ -19,7 +28,17 @@ export default function JSONSchemaForm({ schema }: { schema: JSONSchema }) {
       );
     if (obj.type === 'number' || obj.type === 'integer')
       return <InputNumber defaultValue={obj.default} />;
-    if (obj.type === 'string') return <Input defaultValue={obj.default} />;
+    if (obj.type === 'string')
+      return (
+        <Input
+          defaultValue={obj.default}
+          onChange={(e) => {
+            setState((prev) => {
+              return { ...prev, [k]: e.currentTarget.value };
+            });
+          }}
+        />
+      );
   }
 
   return (
@@ -36,7 +55,7 @@ export default function JSONSchemaForm({ schema }: { schema: JSONSchema }) {
               return (
                 <div key={k}>
                   <div className="text-primary-8 text-lg uppercase">{v.title}</div>
-                  {renderInput(v)}
+                  {renderInput(k, v)}
                 </div>
               );
             })}
