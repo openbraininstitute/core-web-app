@@ -7,6 +7,7 @@ import {
   UpOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import Link from 'next/link';
@@ -19,7 +20,6 @@ import { useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 import { virtualLabProjectDetailsAtomFamily } from '@/state/virtual-lab/projects';
 import { classNames } from '@/util/utils';
-import { Tooltip } from 'antd';
 
 type SideMenuProps = {
   lab: LabItem;
@@ -102,7 +102,7 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
 
         <div className="mb-5 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
           <Tooltip title="Documentation" placement="topLeft">
-            <Link href="/app/virtual-lab" className="flex h-10 w-10 items-center justify-center">
+            <Link href="/app/documentation" className="flex h-10 w-10 items-center justify-center">
               <DocumentationIcon iconColor="#91d5ff" className="h-3 w-auto" />
             </Link>
           </Tooltip>
