@@ -23,6 +23,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
       const link = document.createElement('a');
       link.href = selectedRow.download ?? '';
       link.download = selectedRow.name || 'model';
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
