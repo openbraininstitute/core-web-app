@@ -1,9 +1,10 @@
 'use client';
 
-import { StepProps } from '@/components/documentation/type';
 import { useEffect, useState } from 'react';
 import HeaderSliderTimestamps from './header-slider-timestamps';
 import SingleStep from './single-step';
+
+import { StepProps } from '@/components/documentation/type';
 
 export type ActiveSteps = {
   first: number;

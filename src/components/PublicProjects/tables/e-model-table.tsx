@@ -19,7 +19,6 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
   };
 
   const handleDownload = () => {
-    console.log('Want to download:', selectedRow?.download);
     if (selectedRow?.downloadLink) {
       const link = document.createElement('a');
       link.href = selectedRow.download ?? '';
