@@ -131,14 +131,26 @@ export default function TinyCircuitSimulation() {
                     <Chevron />
                   </Tab>
                   {v.additionalProperties && configTab === k && (
-                    <button
-                      className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
-                      type="button"
-                      onClick={() => setEditing(true)}
-                    >
-                      Add {v.title}
-                      <PlusCircleOutlined />
-                    </button>
+                    <>
+                      {Object.entries(config[k]).map(([k, v]) => {
+                        return (
+                          <div
+                            key={k}
+                            className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                          >
+                            {k}
+                          </div>
+                        );
+                      })}
+                      <button
+                        className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                        type="button"
+                        onClick={() => setEditing(true)}
+                      >
+                        Add {v.title}
+                        <PlusCircleOutlined />
+                      </button>
+                    </>
                   )}
                 </Fragment>
               ))}
