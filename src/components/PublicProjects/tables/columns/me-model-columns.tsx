@@ -1,14 +1,17 @@
 import Image from 'next/image';
 import { MEModelsProps } from '../../type/artifactsType';
 
+import truncateText from '@/util/truncate';
+
 const columns = () => {
   return [
     {
       title: 'Name',
       key: 'name',
-      width: '200px',
+      width: 150,
+      ellipsis: true,
       render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{record.name}</div>
+        <div className="font-normal">{truncateText(record.name, 30)}</div>
       ),
     },
     {
@@ -16,7 +19,15 @@ const columns = () => {
       key: 'morphologyThumbnail',
       width: '150px',
       render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">
+        <div
+          className="font-normal"
+          style={{
+            maxWidth: '150px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           <Image
             src={record.morphologyThumbnail ?? '/placeholder.png'}
             alt="Response thumbnail"
@@ -44,7 +55,7 @@ const columns = () => {
     {
       title: 'Validated',
       key: 'validated',
-      width: '200px',
+      width: 80,
       render: (_value: any, record: MEModelsProps, _index: number) => (
         <div className="font-normal">{record.validated ? 'Yes' : 'No'}</div>
       ),
@@ -93,11 +104,18 @@ const columns = () => {
       title: 'Creation date',
       key: 'creationDate',
       width: '150px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">
-          {record.creationDate == null ? '2024-02-21' : record.creationDate}
-        </div>
-      ),
+      render: (_value: any, record: MEModelsProps, _index: number) => {
+        const formatDate = (dateInput: string | null) => {
+          if (!dateInput) return '21.02.2024'; // Fallback date in DD.MM.YYYY
+          const date = new Date(dateInput);
+          if (Number.isNaN(date.getTime())) return '21.02.2024'; // Handle invalid dates
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}.${month}.${year}`;
+        };
+        return <div className="font-normal">{formatDate(record.creationDate)}</div>;
+      },
     },
   ];
 };

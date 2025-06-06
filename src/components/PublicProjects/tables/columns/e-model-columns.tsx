@@ -2,16 +2,16 @@ import { Tooltip } from 'antd';
 import Image from 'next/image';
 import { EModelsProps } from '../../type/artifactsType';
 
+import truncateText from '@/util/truncate';
+
 const columns = () => {
   return [
     {
       title: 'Name',
       key: 'name',
-      width: '100px',
+      width: 150,
       render: (_value: any, record: EModelsProps, _index: number) => (
-        <div className="overflow-hidden text-ellipsis whitespace-nowrap font-normal">
-          {record.name}
-        </div>
+        <div className="font-normal">{truncateText(record.name, 30)}</div>
       ),
     },
     {
@@ -41,12 +41,12 @@ const columns = () => {
       ),
     },
     {
-      title: 'MCS',
+      title: 'Model Cumulated Score',
       key: 'modelCumulatedScore',
-      width: '80px',
+      width: 200,
       render: (_value: any, record: EModelsProps, _index: number) => (
         <Tooltip title="Model Cumulated Score" placement="top">
-          <span className="cursor-pointer font-normal">{record.modelCumulatedScore}</span>
+          <div className="cursor-pointer font-normal">{record.modelCumulatedScore}</div>
         </Tooltip>
       ),
     },
