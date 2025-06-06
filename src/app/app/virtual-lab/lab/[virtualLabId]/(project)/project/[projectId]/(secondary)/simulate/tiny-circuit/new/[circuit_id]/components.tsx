@@ -3,7 +3,7 @@ import { JSONSchema } from './types';
 import { atom, useAtom } from 'jotai';
 
 import { type Object } from './page';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 export default function JSONSchemaForm({
   schema,
@@ -16,10 +16,9 @@ export default function JSONSchemaForm({
 }) {
   const skip = ['circuit', 'type']; // TODO: handle when circuit changes
 
-  console.log(schema);
-
   const [globalState, setGlobalState] = useAtom(stateAtom);
   const [localState, setLocalState] = useState<{ [key: string]: Object | string }>({});
+  const [selectedCategory, setSelectingCategory] = useState('');
 
   const setState = schema.additionalProperties ? setLocalState : setGlobalState;
 
@@ -64,15 +63,24 @@ export default function JSONSchemaForm({
       });
   }
 
-  if (schema.additionalProperties?.anyOf) {
+  if (schema.additionalProperties?.anyOf && !selectedCategory) {
     return (
-      <div className="flex flex-col gap-2">
-        {schema.additionalProperties.anyOf.map((o) => (
-          <div key={o.title} className="min-h-[50px] w-[90%] border border-gray-200">
-            {o.title}
-            {o.description}
-          </div>
-        ))}
+      <div className="flex flex-col items-center gap-5">
+        {schema.additionalProperties.anyOf.map((o) => {
+          if (!o.title) throw new Error('invalid schema, title missing');
+          return (
+            <Fragment key={o.title}>
+              {/* eslint-disable-next-line */}
+              <div
+                className="min-h-[100px] w-[70%] cursor-pointer rounded-xl bg-white p-5 shadow"
+                onClick={() => setSelectingCategory(o.title as string)}
+              >
+                <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                <div className="mt-3">{o.description}</div>
+              </div>
+            </Fragment>
+          );
+        })}
       </div>
     );
   }
@@ -85,6 +93,11 @@ export default function JSONSchemaForm({
         {schema.properties && renderProperties(schema.properties)}
         {schema.additionalProperties?.properties &&
           renderProperties(schema.additionalProperties.properties)}
+        {selectedCategory &&
+          schema.additionalProperties?.anyOf &&
+          renderProperties(
+            schema.additionalProperties.anyOf.find((s) => s.title === selectedCategory)?.properties!
+          )}
       </div>
       {schema.additionalProperties && (
         <button
