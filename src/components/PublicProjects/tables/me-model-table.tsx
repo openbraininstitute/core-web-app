@@ -19,17 +19,6 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
     },
   };
 
-  // const handleDownload = () => {
-  //   if (selectedRow?.download) {
-  //     const link = document.createElement('a');
-  //     link.href = selectedRow.download;
-  //     link.download = selectedRow.name || 'model';
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-  //   }
-  // };
-
   const handleDownload = () => {
     if (selectedRow?.download) {
       window.open(selectedRow.download, '_blank');

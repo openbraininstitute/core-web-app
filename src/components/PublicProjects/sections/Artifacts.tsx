@@ -8,6 +8,8 @@ import { ShowCaseProjectQueryType } from '../type';
 import ArtifactsTabNav from './artifact/artifacts-tab-nav';
 import LinkAndDownloadList from './blocs/LinkAndDownloadList';
 
+import { InformationIcon } from '@/components/icons';
+
 const getActiveArtifactsCount = (
   activeArtifactType: string | null,
   content: ShowCaseProjectQueryType
@@ -83,7 +85,7 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
     <div className="relative flex w-full flex-col gap-y-6 scroll-smooth" id="artifacts">
       <header className="sticky top-0 z-50 flex w-full flex-row items-center justify-between bg-white">
         <div className="relative flex flex-row text-base">
-          Total artifacts:{' '}
+          <div>Total artifacts: </div>
           <span className="ml-2 block font-bold">
             {getActiveArtifactsCount(activeArtifactType, content)}
           </span>
@@ -97,7 +99,17 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
         )}
       </header>
       <div className="w-full overflow-hidden">
-        <div className="mb-3 w-full text-3xl font-bold text-primary-9">{contentTitle}</div>
+        <div className="flex w-full flex-row justify-between">
+          <div className="mb-3 w-full text-3xl font-bold text-primary-9">{contentTitle}</div>
+          {contentTitle === 'meModelsTable' ||
+            (contentTitle === 'eModelsTable' && (
+              <p className="flex flex-row items-center whitespace-nowrap text-base font-normal text-gray-400">
+                <InformationIcon className="mr-1" iconColor="#9ca3af " />
+                To download an artifact, use the radio button to select it and click on the download
+                button
+              </p>
+            ))}
+        </div>
         {activeTable}
       </div>
     </div>
