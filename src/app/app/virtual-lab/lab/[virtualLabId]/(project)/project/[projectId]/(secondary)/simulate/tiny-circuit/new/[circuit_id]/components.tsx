@@ -16,12 +16,12 @@ export default function JSONSchemaForm({
 }) {
   const skip = ['circuit', 'type']; // TODO: handle when circuit changes
 
+  console.log(schema);
+
   const [globalState, setGlobalState] = useAtom(stateAtom);
   const [localState, setLocalState] = useState<{ [key: string]: Object | string }>({});
 
   const setState = schema.additionalProperties ? setLocalState : setGlobalState;
-
-  console.log(schema);
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((v) => v.type !== 'array') };
@@ -64,7 +64,18 @@ export default function JSONSchemaForm({
       });
   }
 
-  const keys = Object.keys(globalState).length;
+  if (schema.additionalProperties?.anyOf) {
+    return (
+      <div className="flex flex-col gap-2">
+        {schema.additionalProperties.anyOf.map((o) => (
+          <div key={o.title} className="min-h-[50px] w-[90%] border border-gray-200">
+            {o.title}
+            {o.description}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -80,7 +91,10 @@ export default function JSONSchemaForm({
           type="button"
           onClick={() => {
             setGlobalState((prev) => {
-              return { ...prev, [(schema.title ?? '') + keys]: localState };
+              return {
+                ...prev,
+                [(schema.title ?? '') + Object.keys(globalState).length]: localState,
+              };
             });
             if (onApply) onApply();
           }}

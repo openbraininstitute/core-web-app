@@ -57,8 +57,6 @@ export default function TinyCircuitSimulation() {
 
   const [config] = useAtom(configAtom);
 
-  console.log(config);
-
   useEffect(() => {
     async function fetchSpec() {
       try {
