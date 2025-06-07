@@ -27,10 +27,11 @@ export type Object = null | boolean | number | string | Object[] | { [key: strin
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('');
-  const configTabClass = 'h-[50px] w-[90%] text-left';
-  const { projectId, circuit_id } = useParams<Params>();
+  const { circuit_id } = useParams<Params>();
   const [editing, setEditing] = useState(false);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedItemIdx, setSelectedItemIdx] = useState('');
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -92,8 +93,6 @@ export default function TinyCircuitSimulation() {
     );
   }
 
-  console.log(config);
-
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
@@ -148,17 +147,24 @@ export default function TinyCircuitSimulation() {
                   </Tab>
                   {v.additionalProperties && configTab === k && (
                     <>
-                      {Object.entries(config[k]).map(([subkey]) => {
+                      {Object.entries(config[k]).map(([subkey, subValue]) => {
                         return (
-                          <div
-                            key={subkey}
-                            className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
-                          >
-                            {subkey}
-                            {errors?.find((error) =>
-                              error.instancePath.startsWith(`/${k}/${subkey}`)
-                            ) && <WarningFilled className="text-yellow-400" />}
-                          </div>
+                          <Fragment key={subkey}>
+                            {/* eslint-disable-next-line */}
+                            <div
+                              className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                              onClick={() => {
+                                setSelectedCategory(subValue.type);
+                                setSelectedItemIdx(subkey.split('_')[1]);
+                                setEditing(true);
+                              }}
+                            >
+                              {subkey}
+                              {errors?.find((error) =>
+                                error.instancePath.startsWith(`/${k}/${subkey}`)
+                              ) && <WarningFilled className="text-yellow-400" />}
+                            </div>
+                          </Fragment>
                         );
                       })}
                       <button
@@ -179,7 +185,14 @@ export default function TinyCircuitSimulation() {
             <JSONSchemaForm
               schema={schema.properties[configTab]}
               stateAtom={atomsMap[configTab]}
-              onApply={() => setEditing(false)}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              selectedItemIdx={selectedItemIdx}
+              onApply={() => {
+                setEditing(false);
+                setSelectedCategory('');
+                setSelectedItemIdx('');
+              }}
             />
           )}
         </div>

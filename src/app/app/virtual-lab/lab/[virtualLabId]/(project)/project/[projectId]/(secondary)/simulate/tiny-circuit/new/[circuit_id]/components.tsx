@@ -4,24 +4,31 @@ import { atom, useAtom } from 'jotai';
 
 import { type Object } from './page';
 import { Fragment, useEffect, useState } from 'react';
-import { all } from 'lodash/fp';
+import { ConsoleSqlOutlined } from '@ant-design/icons';
 
 export default function JSONSchemaForm({
   schema,
   stateAtom,
+  selectedCategory,
+  setSelectedCategory,
+  selectedItemIdx,
   onApply,
 }: {
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: Object }>>;
+  selectedCategory: string;
+  setSelectedCategory: (v: string) => void;
+  selectedItemIdx: string;
   onApply?: () => void;
 }) {
   const skip = ['circuit', 'type']; // TODO: handle when circuit changes
 
+  if (!schema.title) throw new Error('Invalid schema, no title');
+
   const [globalState, setGlobalState] = useAtom(stateAtom);
   const [localState, setLocalState] = useState<{ [key: string]: Object }>({});
-  const [selectedCategory, setSelectingCategory] = useState('');
   const selectedCatSchema = schema.additionalProperties?.anyOf?.find(
-    (s) => s.title === selectedCategory
+    (s) => s.properties?.type.const === selectedCategory
   );
 
   useEffect(() => {
@@ -41,24 +48,45 @@ export default function JSONSchemaForm({
     setLocalState(initialValues);
   }, [selectedCatSchema, schema]);
 
-  console.log(schema);
-
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((v) => v.type !== 'array') };
+
+    const state = schema.additionalProperties
+      ? (globalState[`${schema.title}_${selectedItemIdx}`] ?? {})
+      : globalState;
+
+    
 
     if (obj.enum)
       return (
         <Select
+          onChange={(newV) =>
+            setLocalState((prev) => {
+              return { ...prev, [k]: newV };
+            })
+          }
+          value={state[k]}
           className="w-[150px]"
           options={obj.enum.map((v: string) => {
             return { label: v, value: v };
           })}
         />
       );
-    if (obj.type === 'number' || obj.type === 'integer') return <InputNumber />;
+    if (obj.type === 'number' || obj.type === 'integer')
+      return (
+        <InputNumber
+          value={state[k]}
+          onChange={(value) => {
+            setLocalState((prev) => {
+              return { ...prev, [k]: value };
+            });
+          }}
+        />
+      );
     if (obj.type === 'string')
       return (
         <Input
+          value={state[k]}
           className="max-w-[300px]"
           onChange={(e) => {
             setLocalState((prev) => {
@@ -88,13 +116,12 @@ export default function JSONSchemaForm({
     return (
       <div className="flex flex-col items-center gap-5">
         {schema.additionalProperties.anyOf.map((o) => {
-          if (!o.title) throw new Error('invalid schema, title missing');
           return (
             <Fragment key={o.title}>
               {/* eslint-disable-next-line */}
               <div
                 className="min-h-[100px] w-[70%] cursor-pointer rounded-xl bg-white p-5 shadow"
-                onClick={() => setSelectingCategory(o.title as string)}
+                onClick={() => setSelectedCategory(o.properties?.type.const as string)}
               >
                 <div className="text-primary-9 text-lg font-bold">{o.title}</div>
                 <div className="mt-3">{o.description}</div>
@@ -126,7 +153,7 @@ export default function JSONSchemaForm({
             setGlobalState((prev) => {
               return {
                 ...prev,
-                [`${selectedCatSchema?.title ?? schema.title ?? ''}_${Object.keys(globalState).length}`]:
+                [`${schema.title}_${selectedItemIdx || Object.keys(globalState).length}`]:
                   localState,
               };
             });
