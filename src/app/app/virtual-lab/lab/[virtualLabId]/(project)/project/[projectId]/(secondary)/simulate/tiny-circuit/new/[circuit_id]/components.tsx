@@ -3,7 +3,8 @@ import { JSONSchema } from './types';
 import { atom, useAtom } from 'jotai';
 
 import { type Object } from './page';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import { all } from 'lodash/fp';
 
 export default function JSONSchemaForm({
   schema,
@@ -11,16 +12,36 @@ export default function JSONSchemaForm({
   onApply,
 }: {
   schema: JSONSchema;
-  stateAtom: ReturnType<typeof atom<{ [key: string]: Object | string }>>;
+  stateAtom: ReturnType<typeof atom<{ [key: string]: Object }>>;
   onApply?: () => void;
 }) {
   const skip = ['circuit', 'type']; // TODO: handle when circuit changes
 
   const [globalState, setGlobalState] = useAtom(stateAtom);
-  const [localState, setLocalState] = useState<{ [key: string]: Object | string }>({});
+  const [localState, setLocalState] = useState<{ [key: string]: Object }>({});
   const [selectedCategory, setSelectingCategory] = useState('');
+  const selectedCatSchema = schema.additionalProperties?.anyOf?.find(
+    (s) => s.title === selectedCategory
+  );
 
-  const setState = schema.additionalProperties ? setLocalState : setGlobalState;
+  useEffect(() => {
+    const theSchema = selectedCatSchema ?? schema;
+
+    const allProps: { [key: string]: JSONSchema } = {
+      ...theSchema.properties,
+      ...theSchema.additionalProperties?.properties,
+    };
+    const initialValues: { [key: string]: Object } = {};
+
+    Object.entries(allProps).forEach(([k, v]) => {
+      if (k === 'type') initialValues[k] = v.const ?? null;
+      else initialValues[k] = v.default ?? null;
+    });
+
+    setLocalState(initialValues);
+  }, [selectedCatSchema, schema]);
+
+  console.log(schema);
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((v) => v.type !== 'array') };
@@ -40,7 +61,7 @@ export default function JSONSchemaForm({
         <Input
           className="max-w-[300px]"
           onChange={(e) => {
-            setState((prev) => {
+            setLocalState((prev) => {
               return { ...prev, [k]: e.currentTarget.value };
             });
           }}
@@ -95,26 +116,28 @@ export default function JSONSchemaForm({
           renderProperties(schema.additionalProperties.properties)}
         {selectedCategory &&
           schema.additionalProperties?.anyOf &&
-          renderProperties(
-            schema.additionalProperties.anyOf.find((s) => s.title === selectedCategory)?.properties!
-          )}
+          renderProperties(selectedCatSchema?.properties!)}
       </div>
-      {schema.additionalProperties && (
-        <button
-          type="button"
-          onClick={() => {
+
+      <button
+        type="button"
+        onClick={() => {
+          if (schema.additionalProperties)
             setGlobalState((prev) => {
               return {
                 ...prev,
-                [(schema.title ?? '') + Object.keys(globalState).length]: localState,
+                [`${selectedCatSchema?.title ?? schema.title ?? ''}_${Object.keys(globalState).length}`]:
+                  localState,
               };
             });
-            if (onApply) onApply();
-          }}
-        >
-          Apply
-        </button>
-      )}
+          else {
+            setGlobalState(localState);
+          }
+          if (onApply) onApply();
+        }}
+      >
+        Apply
+      </button>
     </div>
   );
 }

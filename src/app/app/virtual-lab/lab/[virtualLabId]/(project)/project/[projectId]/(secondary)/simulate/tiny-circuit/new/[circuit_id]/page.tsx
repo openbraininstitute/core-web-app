@@ -8,16 +8,17 @@ import { WorkspaceContext } from '@/types/common';
 import memoizeOne from 'memoize-one';
 import { atom, useAtom } from 'jotai';
 import { Params, JSONSchema } from './types';
-// import { InitializeForm } from './components';
-import { getErrorsAtom } from './state';
-import { Loading3QuartersOutlined, LoadingOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import {
+  Loading3QuartersOutlined,
+  LoadingOutlined,
+  PlusCircleOutlined,
+  WarningFilled,
+} from '@ant-design/icons';
 import { notification } from 'antd/lib';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
 import JSONSchemaForm from './components';
-import { selectedTabFamily } from '@/components/VirtualLab/ScopeSelector/state';
-import { set } from 'lodash';
-import { Object3D } from 'three';
+import Ajv, { AnySchema } from 'ajv';
 
 type TabType = 'configuration' | 'simulations';
 
@@ -28,12 +29,17 @@ export default function TinyCircuitSimulation() {
   const [configTab, setConfigTab] = useState<string>('');
   const configTabClass = 'h-[50px] w-[90%] text-left';
   const { projectId, circuit_id } = useParams<Params>();
-  const [errors] = useAtom(getErrorsAtom(circuit_id));
   const [editing, setEditing] = useState(false);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
 
+  const validate = useMemo(() => {
+    const ajv = new Ajv({ strictSchema: false, allErrors: true });
+    if (!schema) return;
+    return ajv.compile(schema as AnySchema);
+  }, [schema]);
+
   const atomsMap = useMemo(() => {
-    const map: { [key: string]: ReturnType<typeof atom<{ [key: string]: Object | string }>> } = {};
+    const map: { [key: string]: ReturnType<typeof atom<{ [key: string]: Object }>> } = {};
     if (!schema?.properties) return map;
     Object.entries(schema.properties).forEach(([k, v]) => {
       if (v.type === 'string' && v.const) map[k] = atom(v.const);
@@ -56,6 +62,11 @@ export default function TinyCircuitSimulation() {
   }, [atomsMap]);
 
   const [config] = useAtom(configAtom);
+
+  const errors = useMemo(() => {
+    if (validate) validate(config);
+    return validate?.errors;
+  }, [validate, config]);
 
   useEffect(() => {
     async function fetchSpec() {
@@ -80,6 +91,8 @@ export default function TinyCircuitSimulation() {
       </div>
     );
   }
+
+  console.log(config);
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
@@ -126,17 +139,25 @@ export default function TinyCircuitSimulation() {
                     extraClass="w-full flex justify-between h-[50px] items-center drop-shadow"
                   >
                     {schema.properties?.[k]?.title}
-                    <Chevron />
+                    <div className="flex gap-1">
+                      {errors?.find((error) => error.instancePath.startsWith('/' + k)) && (
+                        <WarningFilled className="text-yellow-400" />
+                      )}
+                      <Chevron />
+                    </div>
                   </Tab>
                   {v.additionalProperties && configTab === k && (
                     <>
-                      {Object.entries(config[k]).map(([k, v]) => {
+                      {Object.entries(config[k]).map(([subkey]) => {
                         return (
                           <div
-                            key={k}
+                            key={subkey}
                             className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                           >
-                            {k}
+                            {subkey}
+                            {errors?.find((error) =>
+                              error.instancePath.startsWith(`/${k}/${subkey}`)
+                            ) && <WarningFilled className="text-yellow-400" />}
                           </div>
                         );
                       })}
