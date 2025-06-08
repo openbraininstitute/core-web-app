@@ -1,6 +1,6 @@
-import { WorkspaceContext } from "@/types/common";
+import { WorkspaceContext } from '@/types/common';
 
-export type Params = WorkspaceContext & {circuit_id: string}
+export type Params = WorkspaceContext & { circuit_id: string };
 
 export type JSONSchema = {
   type?: 'string' | 'number' | 'integer' | 'object' | 'array' | 'boolean' | 'null';
@@ -8,8 +8,8 @@ export type JSONSchema = {
   items?: JSONSchema | JSONSchema[];
   required?: string[];
   enum?: any[];
-  const?: any;
-  additionalProperties?:  JSONSchema;
+  const?: string;
+  additionalProperties?: JSONSchema;
   oneOf?: JSONSchema[];
   anyOf?: JSONSchema[];
   allOf?: JSONSchema[];

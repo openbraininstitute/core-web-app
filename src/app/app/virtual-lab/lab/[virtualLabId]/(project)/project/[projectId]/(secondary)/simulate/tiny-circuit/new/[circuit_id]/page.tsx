@@ -6,7 +6,7 @@ import { assertErrorMessage, classNames, memoize } from '@/util/utils';
 
 import { WorkspaceContext } from '@/types/common';
 import memoizeOne from 'memoize-one';
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, Atom } from 'jotai';
 import { Params, JSONSchema } from './types';
 import {
   Loading3QuartersOutlined,
@@ -19,10 +19,16 @@ import $RefParser from '@apidevtools/json-schema-ref-parser';
 
 import JSONSchemaForm from './components';
 import Ajv, { AnySchema } from 'ajv';
+import { isArray } from 'lodash';
 
 type TabType = 'configuration' | 'simulations';
 
-export type Object = null | boolean | number | string | Object[] | { [key: string]: Object };
+type Primitive = null | boolean | number | string;
+export type Object = Primitive | Primitive[];
+
+function isAtom<T>(val: unknown): val is Atom<T> {
+  return typeof val === 'object' && val !== null && 'read' in val;
+}
 
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
@@ -31,7 +37,10 @@ export default function TinyCircuitSimulation() {
   const [editing, setEditing] = useState(false);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedItemIdx, setSelectedItemIdx] = useState('');
+  const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
+  const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
+    (s) => s.properties?.type.const === selectedCategory
+  );
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -39,28 +48,31 @@ export default function TinyCircuitSimulation() {
     return ajv.compile(schema as AnySchema);
   }, [schema]);
 
-  const atomsMap = useMemo(() => {
-    const map: { [key: string]: ReturnType<typeof atom<{ [key: string]: Object }>> } = {};
-    if (!schema?.properties) return map;
-    Object.entries(schema.properties).forEach(([k, v]) => {
-      if (v.type === 'string' && v.const) map[k] = atom(v.const);
-      else {
-        map[k] = atom({});
-      }
-    });
-
-    return map;
-  }, [schema]);
+  const [atomsMap, setAtomsMap] = useState<{
+    [key: string]:
+      | ReturnType<typeof atom<Record<string, Object>>>
+      | Record<string, ReturnType<typeof atom<Record<string, Object>>>>;
+  }>({});
 
   const configAtom = useMemo(() => {
     return atom((get) => {
-      const result: Record<string, object> = {};
+      const result: Record<string, Record<string, Object | Record<string, Object>> | string> = {};
       Object.keys(atomsMap).forEach((key) => {
-        result[key] = get(atomsMap[key]);
+        if (isAtom(atomsMap[key])) result[key] = get(atomsMap[key]);
+        else {
+          result[key] = {};
+          Object.entries(atomsMap[key]).forEach(([subkey, v]) => {
+            if (typeof result[key] === 'string') return;
+            result[key][subkey] = get(v);
+          });
+        }
       });
+
+      result.type = schema?.properties?.type.const ?? '';
+
       return result;
     });
-  }, [atomsMap]);
+  }, [atomsMap, schema]);
 
   const [config] = useAtom(configAtom);
 
@@ -76,7 +88,23 @@ export default function TinyCircuitSimulation() {
         const json = await res.json();
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
-        setSchema(dereferenced.components.schemas.SimulationsForm);
+        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        setSchema(theSchema);
+
+        if (!theSchema.properties) return;
+        const map: {
+          [key: string]:
+            | ReturnType<typeof atom<Record<string, Object>>>
+            | Record<string, ReturnType<typeof atom<Record<string, Object>>>>;
+        } = {};
+
+        Object.entries(theSchema.properties).forEach(([k, v]) => {
+          if (!v.additionalProperties) {
+            map[k] = atom<Record<string, Object>>({ type: v.properties?.type.const ?? '' });
+          } else map[k] = {};
+        });
+
+        setAtomsMap(map);
       } catch (e) {
         notification.error({ message: assertErrorMessage(e) });
       }
@@ -145,7 +173,7 @@ export default function TinyCircuitSimulation() {
                       <Chevron />
                     </div>
                   </Tab>
-                  {v.additionalProperties && configTab === k && (
+                  {v.additionalProperties && configTab === k && config[k] && (
                     <>
                       {Object.entries(config[k]).map(([subkey, subValue]) => {
                         return (
@@ -154,8 +182,16 @@ export default function TinyCircuitSimulation() {
                             <div
                               className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                               onClick={() => {
-                                setSelectedCategory(subValue.type);
-                                setSelectedItemIdx(subkey.split('_')[1]);
+                                if (
+                                  typeof subValue === 'object' &&
+                                  !isArray(subValue) &&
+                                  subValue !== null
+                                ) {
+                                  setSelectedCategory(
+                                    typeof subValue.type === 'string' ? subValue.type : ''
+                                  );
+                                  setSelectedItemIdx(parseInt(subkey.split('_')[1]));
+                                }
                                 setEditing(true);
                               }}
                             >
@@ -170,7 +206,24 @@ export default function TinyCircuitSimulation() {
                       <button
                         className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                         type="button"
-                        onClick={() => setEditing(true)}
+                        onClick={() => {
+                          console.log('here, here', v);
+                          setEditing(true);
+                          if (!isAtom(atomsMap[configTab])) {
+                            const itemIdx = Object.keys(atomsMap[configTab]).length;
+                            setSelectedItemIdx(itemIdx);
+                            setSelectedCategory('');
+                            setAtomsMap({
+                              ...atomsMap,
+                              [configTab]: {
+                                ...atomsMap[configTab],
+                                [`${schema.properties?.[configTab].title}_${itemIdx}`]: atom<
+                                  Record<string, Object>
+                                >({}),
+                              },
+                            });
+                          }
+                        }}
                       >
                         Add {v.title}
                         <PlusCircleOutlined />
@@ -181,20 +234,49 @@ export default function TinyCircuitSimulation() {
               ))}
         </div>
         <div>
-          {schema.properties && schema.properties?.[configTab] && editing && (
-            <JSONSchemaForm
-              schema={schema.properties[configTab]}
-              stateAtom={atomsMap[configTab]}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              selectedItemIdx={selectedItemIdx}
-              onApply={() => {
-                setEditing(false);
-                setSelectedCategory('');
-                setSelectedItemIdx('');
-              }}
-            />
-          )}
+          {schema.properties &&
+            schema.properties?.[configTab]?.additionalProperties?.anyOf &&
+            !selectedCategory &&
+            editing && (
+              <div className="flex flex-col items-center gap-5">
+                {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
+                  return (
+                    <Fragment key={o.title}>
+                      {/* eslint-disable-next-line */}
+                      <div
+                        className="min-h-[100px] w-[70%] cursor-pointer rounded-xl bg-white p-5 shadow"
+                        onClick={() => {
+                          setSelectedCategory(o.properties?.type.const ?? '');
+                        }}
+                      >
+                        <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                        <div className="mt-3">{o.description}</div>
+                      </div>
+                    </Fragment>
+                  );
+                })}
+              </div>
+            )}
+
+          {schema.properties &&
+            schema.properties?.[configTab] &&
+            editing &&
+            (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
+              <JSONSchemaForm
+                schema={
+                  selectedCatSchema ??
+                  schema.properties[configTab]?.additionalProperties ??
+                  schema.properties[configTab]
+                }
+                stateAtom={
+                  isAtom(atomsMap[configTab])
+                    ? atomsMap[configTab]
+                    : atomsMap[configTab][
+                        `${schema.properties?.[configTab].title}_${selectedItemIdx}`
+                      ]
+                }
+              />
+            )}
         </div>
         <div>
           <div className="bg-primary-1 h-full w-full opacity-30" />
