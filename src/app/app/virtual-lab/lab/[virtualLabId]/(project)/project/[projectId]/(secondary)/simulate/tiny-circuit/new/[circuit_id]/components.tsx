@@ -1,10 +1,8 @@
+import { useEffect } from 'react';
+import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
 import { JSONSchema } from './types';
-import { atom, useAtom } from 'jotai';
-
 import { type Object } from './page';
-import { Fragment, useEffect, useState } from 'react';
-import { ConsoleSqlOutlined } from '@ant-design/icons';
 
 export default function JSONSchemaForm({
   schema,
@@ -21,10 +19,10 @@ export default function JSONSchemaForm({
     setState((prev) => {
       return { ...prev, type: schema.properties?.type.const ?? '' };
     });
-  }, [stateAtom]);
+  }, [stateAtom, setState, schema.properties?.type.const]);
 
   function renderInput(k: string, v: JSONSchema) {
-    const obj = { ...v, ...v.anyOf?.find((v) => v.type !== 'array') };
+    const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
 
     if (obj.enum)
       return (
@@ -32,8 +30,8 @@ export default function JSONSchemaForm({
           onChange={(newV) => setState({ ...state, [k]: newV })}
           value={state[k]}
           className="w-[150px]"
-          options={obj.enum.map((v: string) => {
-            return { label: v, value: v };
+          options={obj.enum.map((subv: string) => {
+            return { label: subv, value: subv };
           })}
         />
       );

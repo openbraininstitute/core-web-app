@@ -1,25 +1,17 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { assertErrorMessage, classNames, memoize } from '@/util/utils';
-
-import { WorkspaceContext } from '@/types/common';
-import memoizeOne from 'memoize-one';
+import Ajv, { AnySchema } from 'ajv';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { atom, useAtom, Atom } from 'jotai';
-import { Params, JSONSchema } from './types';
-import {
-  Loading3QuartersOutlined,
-  LoadingOutlined,
-  PlusCircleOutlined,
-  WarningFilled,
-} from '@ant-design/icons';
+
+import { LoadingOutlined, PlusCircleOutlined, WarningFilled } from '@ant-design/icons';
 import { notification } from 'antd/lib';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
 import JSONSchemaForm from './components';
-import Ajv, { AnySchema } from 'ajv';
-import { isArray } from 'lodash';
+import { Params, JSONSchema } from './types';
+import { assertErrorMessage, classNames } from '@/util/utils';
 
 type TabType = 'configuration' | 'simulations';
 
@@ -184,13 +176,13 @@ export default function TinyCircuitSimulation() {
                               onClick={() => {
                                 if (
                                   typeof subValue === 'object' &&
-                                  !isArray(subValue) &&
+                                  !Array.isArray(subValue) &&
                                   subValue !== null
                                 ) {
                                   setSelectedCategory(
                                     typeof subValue.type === 'string' ? subValue.type : ''
                                   );
-                                  setSelectedItemIdx(parseInt(subkey.split('_')[1]));
+                                  setSelectedItemIdx(parseInt(subkey.split('_')[1], 10));
                                 }
                                 setEditing(true);
                               }}
@@ -207,7 +199,6 @@ export default function TinyCircuitSimulation() {
                         className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                         type="button"
                         onClick={() => {
-                          console.log('here, here', v);
                           setEditing(true);
                           if (!isAtom(atomsMap[configTab])) {
                             const itemIdx = Object.keys(atomsMap[configTab]).length;
