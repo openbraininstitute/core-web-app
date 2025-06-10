@@ -20,7 +20,15 @@
 
   width: max(320px, 25vw);
   height: 100%;
+<<<<<<< HEAD
+<<<<<<< HEAD
   background-color: var(--color-neutral-7);
+=======
+  background-color: var(--color-neutral-9);
+>>>>>>> 027bbb3de (Tools selection)
+=======
+  background-color: var(--color-neutral-7);
+>>>>>>> bd4858569 (Added styles)
   color: var(--color-primary-1);
   padding: 1em;
   display: grid;
@@ -77,12 +85,17 @@
 
 .literatureSuggestions button.actionButton {
   font: inherit;
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> bd4858569 (Added styles)
   border: 2px solid #f0f0f0;
   background: #fff;
   border-radius: 999vmax;
   box-shadow:
     0 0.5em 1em #0005,
     0 -0.5em 1em #fff;
+<<<<<<< HEAD
   line-height: 2;
   padding: 0 1em;
   cursor: pointer;
@@ -92,13 +105,39 @@
   justify-content: flex-start;
   align-items: center;
   gap: 1em;
+=======
+  border: 2px solid var(--color-primary-2);
+  border-radius: 4px;
+  line-height: 2;
+  padding: 0 1em;
+  cursor: pointer;
+>>>>>>> 027bbb3de (Tools selection)
+=======
+  line-height: 2;
+  padding: 0 1em;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+>>>>>>> bd4858569 (Added styles)
 }
 
 .footerButtons {
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
+<<<<<<< HEAD
+<<<<<<< HEAD
   justify-content: flex-start;
+=======
+  justify-content: flex-end;
+>>>>>>> 027bbb3de (Tools selection)
+=======
+  justify-content: flex-start;
+>>>>>>> bd4858569 (Added styles)
   align-items: center;
   gap: 1em;
   margin: 1em 0;
@@ -142,10 +181,22 @@ button.cancelButton:active {
   margin-top: 2em;
   font-size: 120%;
   padding: 1em;
+<<<<<<< HEAD
+<<<<<<< HEAD
   box-shadow: rgba(0, 0, 0, 0.12) 0 6px 16px;
   border-radius: 1em;
   border: 2px solid var(--color-neutral-9);
   background-color: var(--color-neutral-8);
+=======
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 6px 16px;
+  border-radius: 1em;
+>>>>>>> 027bbb3de (Tools selection)
+=======
+  box-shadow: rgba(0, 0, 0, 0.12) 0 6px 16px;
+  border-radius: 1em;
+  border: 2px solid var(--color-neutral-9);
+  background-color: var(--color-neutral-8);
+>>>>>>> bd4858569 (Added styles)
 }
 
 .welcome > div > p {

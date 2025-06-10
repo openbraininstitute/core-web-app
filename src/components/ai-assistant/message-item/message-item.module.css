@@ -5,17 +5,34 @@
 .user {
   display: flex;
   flex-wrap: nowrap;
+<<<<<<< HEAD
+<<<<<<< HEAD
   flex-direction: column;
+=======
+  flex-direction: row;
+>>>>>>> 027bbb3de (Tools selection)
+=======
+  flex-direction: column;
+>>>>>>> bd4858569 (Added styles)
   justify-content: flex-start;
   align-items: stretch;
   gap: 0;
   color: var(--color-on-primary);
   margin: 8px 0;
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> bd4858569 (Added styles)
   margin-bottom: 32px;
 }
 
 .timestamp {
   color: #000b;
+<<<<<<< HEAD
+=======
+>>>>>>> 027bbb3de (Tools selection)
+=======
+>>>>>>> bd4858569 (Added styles)
 }
 
 .userAvatar {
@@ -43,7 +60,14 @@
 }
 
 .userContent {
+<<<<<<< HEAD
+<<<<<<< HEAD
   position: relative;
+=======
+>>>>>>> 027bbb3de (Tools selection)
+=======
+  position: relative;
+>>>>>>> bd4858569 (Added styles)
   flex: 1 1 auto;
   padding: 8px;
   border-radius: 6px;
@@ -56,6 +80,10 @@
   min-height: 64px;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> bd4858569 (Added styles)
 .userContent::after {
   content: '';
   position: absolute;
@@ -69,10 +97,19 @@
   clip-path: path('M0,0h24L32,24,0,0z');
 }
 
+<<<<<<< HEAD
+=======
+>>>>>>> 027bbb3de (Tools selection)
+=======
+>>>>>>> bd4858569 (Added styles)
 .userContent > div {
   padding: 0 1em;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> bd4858569 (Added styles)
 .markdown {
   border-radius: 1em;
   border: 2px solid var(--color-neutral-9);
@@ -84,6 +121,11 @@
   z-index: 1;
 }
 
+<<<<<<< HEAD
+=======
+>>>>>>> 027bbb3de (Tools selection)
+=======
+>>>>>>> bd4858569 (Added styles)
 .markdown ul {
   list-style: disc;
 }

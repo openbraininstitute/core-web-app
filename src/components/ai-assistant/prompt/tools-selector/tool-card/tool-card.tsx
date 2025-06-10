@@ -35,11 +35,7 @@ export default function ToolCard({ className, tool }: ToolCardProps) {
         {checked ? <IconChecked /> : <IconUnchecked />}
       </header>
       <p>{tool.description}</p>
-      <Link
-        href={`/documentation/chat-tools/${tool.id}`}
-        target="documentation"
-        className={styles.readmore}
-      >
+      <Link href={tool.docURL} target="documentation" className={styles.readmore}>
         Read more
       </Link>
     </div>
