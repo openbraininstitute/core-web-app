@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 
 export default function GlobalSideMenu() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="fixed bottom-8 left-8 z-50 flex flex-col gap-4">
       <HelpMenu
         cls={{
           trigger: '!p-0',
@@ -19,7 +19,7 @@ export default function GlobalSideMenu() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+            'border border-primary-6 bg-primary-9 hover:border-primary-5 hover:bg-primary-5'
           )}
         >
           <QuestionCircleOutlined className="text-xl" />
@@ -32,7 +32,7 @@ export default function GlobalSideMenu() {
         className={classNames(
           'flex w-max items-center justify-center p-3',
           'text-white transition-all duration-200',
-          'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+          'border border-primary-6 bg-primary-9 hover:border-primary-5 hover:bg-primary-5'
         )}
       >
         <HomeOutlined className="text-xl" />
@@ -46,7 +46,7 @@ export default function GlobalSideMenu() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+            'border border-primary-6 bg-primary-9 hover:border-primary-5 hover:bg-primary-5'
           )}
         >
           <UserOutlined className="text-xl" />
