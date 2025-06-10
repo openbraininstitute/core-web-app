@@ -2,18 +2,15 @@
 
 import { HomeOutlined, QuestionCircleOutlined, UserOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import HelpMenu from '@/components/HelpMenu';
 import { DocumentationIcon } from '@/components/icons';
 import UserMenu from '@/components/user-menu';
 import { classNames } from '@/util/utils';
 
-import { usePathname } from 'next/navigation';
-
 export default function Profile() {
   const pathName = usePathname();
-
-  console.log('Profile pathName', pathName);
 
   return (
     <div className="mt-auto flex flex-col gap-4">
