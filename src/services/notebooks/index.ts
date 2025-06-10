@@ -4,7 +4,7 @@ import { Notebook } from '@/util/virtual-lab/github';
 import { assertApiResponse } from '@/util/utils';
 import authFetch, { getSession } from '@/authFetch';
 
-enum NotebookImplementationType {
+export enum NotebookImplementationType {
   DUMMY = 'dummy',
   EKS = 'eks',
   OLD_EC2 = 'old-ec2',
@@ -14,6 +14,7 @@ enum NotebookImplementationType {
 export type NotebookStartResponse = {
   uniqueId: string;
   message: string;
+  url: string;
 };
 
 export interface NotebookStartRequest {
@@ -39,7 +40,8 @@ export interface NotebookInstance {
 export async function startNotebook(
   notebook: Notebook,
   vlabId: string,
-  projectId: string
+  projectId: string,
+  implementationTypetype: NotebookImplementationType
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
   if (!session) {
@@ -55,7 +57,7 @@ export async function startNotebook(
     vlabId,
     projectId,
     session,
-    implementationType: NotebookImplementationType.DUMMY,
+    implementationType: implementationTypetype,
   };
 
   const res = await authFetch(`${notebookSvcBaseUrl}/notebook/start`, {

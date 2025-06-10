@@ -23,7 +23,11 @@ import ContentModal from './ContentModal';
 import NotebookTabs from './NotebookTabs';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhite, EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { startNotebook, NotebookStartResponse } from '@/services/notebooks';
+import {
+  startNotebook,
+  NotebookStartResponse,
+  NotebookImplementationType,
+} from '@/services/notebooks';
 import useSearch from '@/components/VirtualLab/Search';
 
 import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
@@ -105,11 +109,20 @@ function NotebookTable({
     });
   }, [notebooks, search]);
 
-  const runNotebook = async (notebook: Notebook) => {
+  const runNotebook = async (
+    notebook: Notebook,
+    implementationType: NotebookImplementationType
+  ) => {
     // notification.info(`Request received to run notebook: ${notebook.name}`);
     try {
-      const retval: NotebookStartResponse = await startNotebook(notebook, vlabId, projectId);
-      notification.success(`Notebook started successfully: ${retval.message}`);
+      const retval: NotebookStartResponse = await startNotebook(
+        notebook,
+        vlabId,
+        projectId,
+        implementationType
+      );
+      // TODO: instead of showing a notification, somehow open the URL in a new window.
+      notification.success(`Notebook started successfully: ${retval.message}, URL: ${retval.url}`);
     } catch (error) {
       if (error instanceof Error && 'cause' in error) {
         if (
@@ -193,7 +206,7 @@ function NotebookTable({
                     type="button"
                     className="inline-flex items-center gap-[10px]"
                     onClick={() => {
-                      runNotebook(notebook);
+                      runNotebook(notebook, NotebookImplementationType.OLD_EC2);
                     }}
                   >
                     <PlayCircleOutlined aria-label="Run" />
