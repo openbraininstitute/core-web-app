@@ -29,7 +29,7 @@ export class AIAssistantTool {
   }
 }
 
-function getIcon(toolId: string): React.FC<SVGSVGElement> {
+function getIcon(toolId: string): React.FC<{}> {
   switch (toolId) {
     case 'literature-search-tool':
       return IconLiteratureSearchTool;
