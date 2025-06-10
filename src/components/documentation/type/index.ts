@@ -30,7 +30,7 @@ export type SingleSectionProps = {
   slug: string;
   children: SingleSectionProps[] | null;
   disabled: boolean;
-  link?: string;
+  link: string;
 };
 
 export type StepProps = {
@@ -69,4 +69,14 @@ export type SingleWorkshopProps = {
   description: string;
   date: string;
   content: PortableText | null;
+};
+
+export type AITooslsProps = {
+  name: string;
+  name_frontend: string;
+  description: string;
+  description_frontend: string;
+  input_schema: string;
+  hil: boolean;
+  is_online: boolean;
 };
