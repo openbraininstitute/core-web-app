@@ -81,8 +81,8 @@
   background: #fff;
   border-radius: 999vmax;
   box-shadow:
-    0 0.5em 1em #0005,
-    0 -0.5em 1em #fff;
+    0 0.5em 1em #0004,
+    0 -0.5em 0.5em #fff;
   line-height: 2;
   padding: 0 1em;
   cursor: pointer;

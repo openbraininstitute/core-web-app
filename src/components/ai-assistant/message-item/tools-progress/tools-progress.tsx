@@ -1,6 +1,7 @@
 import React from 'react';
 import { UIMessage } from '@ai-sdk/ui-utils';
 
+import Link from 'next/link';
 import { IconGear } from '../../icons/gear';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { classNames } from '@/util/utils';
@@ -25,11 +26,16 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
       {toolsStates.map(({ tool, state }) => {
         const Icon = tool.icon;
         return (
-          <div className={styles.toolState} key={tool.id}>
+          <Link
+            className={styles.toolState}
+            key={tool.id}
+            href={tool.docURL}
+            target="documentation"
+          >
             {state === 'result' ? <Icon /> : <IconGear className={styles.spin} />}
             <div className={styles.name}>{tool.name}</div>
             <div>{state === 'result' ? 'done' : 'running'}</div>
-          </div>
+          </Link>
         );
       })}
     </div>
