@@ -167,7 +167,7 @@ function NotebookTable({
               <div className="flex gap-4">
                 <button
                   type="button"
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                  className="inline-flex items-center gap-[10px] hover:text-primary-4"
                   onClick={() => handleDownloadClick(notebook)}
                 >
                   <DownloadIconWhiteWithCorners className="text-xs" aria-label="Download" />
@@ -177,13 +177,13 @@ function NotebookTable({
               </div>
 
               {onDelete && (
-                <div className="text-error flex gap-4">
+                <div className="flex gap-4 text-error">
                   <button
                     type="button"
-                    className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                    className="inline-flex items-center gap-[10px] hover:text-primary-4"
                     onClick={() => onDelete(notebook.id)}
                   >
-                    <DeleteOutlined className="text-error text-xs" aria-label="Delete" />
+                    <DeleteOutlined className="text-xs text-error" aria-label="Delete" />
                     Delete
                   </button>
                 </div>
