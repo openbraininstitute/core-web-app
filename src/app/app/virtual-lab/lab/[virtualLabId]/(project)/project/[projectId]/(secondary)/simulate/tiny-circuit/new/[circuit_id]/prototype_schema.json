@@ -1,0 +1,390 @@
+{
+  "$defs": {
+    "IDNeuronSet": {
+      "description": "Any predefined set of neurons.",
+      "properties": {
+        "type": {
+          "const": "IDNeuronSet",
+          "title": "Type",
+          "type": "string"
+        },
+        "param_a": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          ],
+          "default": 0.0,
+          "description": "Parameter A for the neuron set",
+          "title": "Param A"
+        },
+        "param_b": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          ],
+          "default": 0.0,
+          "description": "Parameter B for the neuron set",
+          "title": "Param B"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "IDNeuronSet",
+      "type": "object"
+    },
+    "Info": {
+      "properties": {
+        "type": {
+          "const": "Info",
+          "title": "Type",
+          "type": "string"
+        },
+        "campaign_name": {
+          "default": "No name provided",
+          "description": "The users name for the simulation",
+          "title": "Campaign Name",
+          "type": "string"
+        },
+        "campaign_description": {
+          "default": "No description provided",
+          "description": "Description of the simulation",
+          "title": "Campaign Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Info",
+      "type": "object"
+    },
+    "Initialize": {
+      "description": "A form for defining the initialization of a simulation.",
+      "properties": {
+        "type": {
+          "const": "Initialize",
+          "title": "Type",
+          "type": "string"
+        },
+        "circuit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReconstructionMorphologyFromID"
+            },
+            {
+              "items": {
+                "$ref": "#/$defs/ReconstructionMorphologyFromID"
+              },
+              "type": "array"
+            }
+          ],
+          "description": "Circuit to be used in the simulation",
+          "title": "Circuit"
+        },
+        "simulation_length": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "default": 100.0,
+          "title": "Simulation Length"
+        },
+        "node_set": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PredefinedNeuronSet"
+            },
+            {
+              "$ref": "#/$defs/IDNeuronSet"
+            }
+          ],
+          "title": "Node Set"
+        },
+        "random_seed": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "default": 1,
+          "title": "Random Seed"
+        },
+        "extracellular_calcium_concentration": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "default": 1.1,
+          "title": "Extracellular Calcium Concentration"
+        },
+        "v_init": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "default": -80.0,
+          "title": "V Init"
+        }
+      },
+      "required": [
+        "type",
+        "circuit",
+        "node_set"
+      ],
+      "title": "Initialize",
+      "type": "object"
+    },
+    "NeuronSetBlockReference": {
+      "allowed_block_types": [
+        "PredefinedNeuronSet",
+        "IDNeuronSet"
+      ],
+      "properties": {
+        "type": {
+          "const": "NeuronSetBlockReference",
+          "title": "Type",
+          "type": "string"
+        },
+        "block_dict_name": {
+          "default": "",
+          "title": "Block Dict Name",
+          "type": "string"
+        },
+        "block_name": {
+          "default": "",
+          "title": "Block Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "NeuronSetBlockReference",
+      "type": "object"
+    },
+    "PredefinedNeuronSet": {
+      "description": "Any predefined set of neurons.",
+      "properties": {
+        "type": {
+          "const": "PredefinedNeuronSet",
+          "title": "Type",
+          "type": "string"
+        },
+        "param_a": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "default": "",
+          "description": "Parameter A for the neuron set",
+          "title": "Param A"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "PredefinedNeuronSet",
+      "type": "object"
+    },
+    "RateStimulus": {
+      "description": "A stimulus is a component of a Form that defines a stimulus to be applied.",
+      "properties": {
+        "type": {
+          "const": "RateStimulus",
+          "title": "Type",
+          "type": "string"
+        },
+        "neuron_set": {
+          "$ref": "#/$defs/NeuronSetBlockReference",
+          "default": null
+        },
+        "param_a": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          ],
+          "default": 0.0,
+          "description": "Parameter A for the stimulus",
+          "title": "Param A"
+        },
+        "param_b": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          ],
+          "default": 0.0,
+          "description": "Parameter B for the stimulus",
+          "title": "Param B"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "RateStimulus",
+      "type": "object"
+    },
+    "ReconstructionMorphologyFromID": {
+      "properties": {
+        "id_str": {
+          "description": "ID of the entity in string format.",
+          "title": "Id Str",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id_str"
+      ],
+      "title": "ReconstructionMorphologyFromID",
+      "type": "object"
+    },
+    "SpikeStimulus": {
+      "description": "A stimulus is a component of a Form that defines a stimulus to be applied.",
+      "properties": {
+        "type": {
+          "const": "SpikeStimulus",
+          "title": "Type",
+          "type": "string"
+        },
+        "neuron_set": {
+          "$ref": "#/$defs/NeuronSetBlockReference",
+          "default": null
+        },
+        "param_a": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          ],
+          "default": 0.0,
+          "description": "Parameter A for the stimulus",
+          "title": "Param A"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "SpikeStimulus",
+      "type": "object"
+    }
+  },
+  "description": "A Form for defining simulations.",
+  "properties": {
+    "type": {
+      "const": "SimulationsForm",
+      "title": "Type",
+      "type": "string"
+    },
+    "initialize": {
+      "$ref": "#/$defs/Initialize"
+    },
+    "info": {
+      "$ref": "#/$defs/Info"
+    },
+    "neuron_sets": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/PredefinedNeuronSet"
+          },
+          {
+            "$ref": "#/$defs/IDNeuronSet"
+          }
+        ]
+      },
+      "default": {},
+      "title": "Neuron Sets",
+      "type": "object"
+    },
+    "stimuli": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/SpikeStimulus"
+          },
+          {
+            "$ref": "#/$defs/RateStimulus"
+          }
+        ]
+      },
+      "default": {},
+      "title": "Stimuli",
+      "type": "object"
+    }
+  },
+  "required": [
+    "type",
+    "initialize",
+    "info"
+  ],
+  "title": "SimulationsForm",
+  "type": "object"
+}

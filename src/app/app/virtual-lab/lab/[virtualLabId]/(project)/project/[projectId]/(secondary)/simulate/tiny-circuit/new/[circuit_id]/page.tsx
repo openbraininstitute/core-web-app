@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { atom, useAtom, Atom } from 'jotai';
+import prototype_schema from './prototype_schema.json';
 
 import {
   CheckCircleFilled,
@@ -38,6 +39,8 @@ export default function TinyCircuitSimulation() {
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
     (s) => s.properties?.type.const === selectedCategory
   );
+
+  console.log(schema);
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -83,9 +86,10 @@ export default function TinyCircuitSimulation() {
       try {
         const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
         const json = await res.json();
-        const dereferenced = await $RefParser.dereference(json);
+        const dereferenced = await $RefParser.dereference(prototype_schema);
         // @ts-ignore
-        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        // const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        const theSchema = dereferenced as JSONSchema;
 
         if (!theSchema.properties) return;
 
@@ -112,6 +116,7 @@ export default function TinyCircuitSimulation() {
 
         setAtomsMap(map);
       } catch (e) {
+        console.log(assertErrorMessage(e));
         notification.error({ message: assertErrorMessage(e) });
       }
     }
@@ -218,9 +223,14 @@ export default function TinyCircuitSimulation() {
                               }}
                             >
                               {subkey}
+
                               {errors?.find((error) =>
                                 error.instancePath.startsWith(`/${k}/${subkey}`)
-                              ) && <WarningFilled className="text-yellow-400" />}
+                              ) ? (
+                                <WarningFilled className="text-yellow-400" />
+                              ) : (
+                                <CheckCircleFilled className="text-green-600" />
+                              )}
                             </div>
                           </Fragment>
                         );
