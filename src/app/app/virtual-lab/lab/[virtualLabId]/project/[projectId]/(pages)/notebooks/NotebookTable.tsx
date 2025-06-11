@@ -167,7 +167,7 @@ function NotebookTable({
               <div className="flex gap-4">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-[10px] hover:text-primary-4"
+                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                   onClick={() => handleDownloadClick(notebook)}
                 >
                   <DownloadIconWhiteWithCorners className="text-xs" aria-label="Download" />
@@ -177,13 +177,13 @@ function NotebookTable({
               </div>
 
               {onDelete && (
-                <div className="flex gap-4 text-error">
+                <div className="text-error flex gap-4">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-[10px] hover:text-primary-4"
+                    className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                     onClick={() => onDelete(notebook.id)}
                   >
-                    <DeleteOutlined className="text-xs text-error" aria-label="Delete" />
+                    <DeleteOutlined className="text-error text-xs" aria-label="Delete" />
                     Delete
                   </button>
                 </div>
@@ -425,7 +425,8 @@ function NotebookTable({
                   `https://github.com/${r.githubUser}/${r.githubRepo}`
                 );
                 const path = encodeURIComponent(`lab/tree/${r.githubRepo}/${r.path}`);
-                const url = `https://${env.NEXT_PUBLIC_DEPLOYMENT_ENV}.openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=entitycore`;
+                const environment = env.NEXT_PUBLIC_DEPLOYMENT_ENV;
+                const url = `https://${environment === 'staging' ? 'staging.' : ''}openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=entitycore`;
 
                 window.open(url, '_blank');
               },
