@@ -32,6 +32,7 @@ import { notification } from '@/api/notifications';
 import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import FilterControls from '@/components/FilterControls/FilterControls';
+import { env } from '@/env.mjs';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 const { Option } = Select;
@@ -424,7 +425,7 @@ function NotebookTable({
                   `https://github.com/${r.githubUser}/${r.githubRepo}`
                 );
                 const path = encodeURIComponent(`lab/tree/${r.githubRepo}/${r.path}`);
-                const url = `https://staging.openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=entitycore`;
+                const url = `https://${env.NEXT_PUBLIC_DEPLOYMENT_ENV}.openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=entitycore`;
 
                 window.open(url, '_blank');
               },
