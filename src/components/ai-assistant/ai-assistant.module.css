@@ -1,0 +1,153 @@
+.literatureSuggestions {
+  --color-neutral-9: #ffffff;
+  --color-neutral-8: #f7f7f7;
+  --color-neutral-7: #f0f0f0;
+  --color-neutral-6: #e7e7e7;
+  --color-neutral-5: #e0e0e0;
+  --color-neutral-4: #ddd;
+  --color-neutral-3: #bbb;
+  --color-neutral-2: #888;
+  --color-neutral-1: #444;
+  --color-neutral-0: #000;
+  --color-primary-0: #001;
+  --color-primary-1: #004;
+  --color-primary-3: #012766;
+  --color-primary-5: #003a8c;
+  --color-primary-2: color-mix(in srgb, var(--color-primary-1), var(--color-primary-3));
+  --color-primary-4: color-mix(in srgb, var(--color-primary-3), var(--color-primary-5));
+  --color-on-primary: #fffe;
+  --color-secondary-5: #062;
+
+  width: max(320px, 25vw);
+  height: 100%;
+  background-color: var(--color-neutral-7);
+  color: var(--color-primary-1);
+  padding: 1em;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1em;
+  border-left: 1px solid var(--color-neutral-4);
+}
+
+.literatureSuggestions[data-collapsed='true'] {
+  padding: 0;
+  padding-top: 20px;
+  width: 40px;
+}
+
+.literatureSuggestions > button.header {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  padding: 0 1em;
+  font-size: 24px;
+}
+
+.literatureSuggestions[data-collapsed='true'] > button.header {
+  flex-direction: column;
+  padding: 0;
+  gap: 0.5em;
+}
+
+.literatureSuggestions > button.header > h1 {
+  position: relative;
+  left: -2px;
+  font-size: 18px;
+  font-weight: bold;
+  transform-origin: center;
+}
+
+.literatureSuggestions[data-collapsed='true'] > button.header > h1 {
+  order: 9;
+  transform: rotate(180deg);
+  writing-mode: vertical-lr;
+}
+
+.articles {
+  overflow: auto;
+}
+
+.bottom {
+  content: '';
+  height: 1em;
+}
+
+.literatureSuggestions button.actionButton {
+  font: inherit;
+  border: 2px solid #f0f0f0;
+  background: #fff;
+  border-radius: 999vmax;
+  box-shadow:
+    0 0.5em 1em #0005,
+    0 -0.5em 1em #fff;
+  line-height: 2;
+  padding: 0 1em;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+}
+
+.footerButtons {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  margin: 1em 0;
+}
+
+.spinnerContainer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+}
+
+.spinnerContainer > * {
+  flex: 1 1 auto;
+}
+
+button.cancelButton {
+  flex: 0 0 auto;
+  border: none;
+  background-color: var(--color-primary-5);
+  color: #fffe;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+button.cancelButton:hover,
+button.cancelButton:active {
+  border: none;
+  background-color: var(--color-primary-4);
+  color: #fffe;
+}
+
+.welcome {
+  display: grid;
+  place-items: center;
+}
+
+.welcome > div {
+  margin-top: 2em;
+  font-size: 120%;
+  padding: 1em;
+  box-shadow: rgba(0, 0, 0, 0.12) 0 6px 16px;
+  border-radius: 1em;
+  border: 2px solid var(--color-neutral-9);
+  background-color: var(--color-neutral-8);
+}
+
+.welcome > div > p {
+  margin: 1em 0;
+}

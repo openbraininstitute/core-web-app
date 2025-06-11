@@ -1,12 +1,12 @@
 import React from 'react';
 import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
-
 import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
-
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { logError } from '@/util/logger';
 
 let toolsListSingleton: Promise<AIAssistantTool[] | null> | null = null;
+
+export const SELECTABLE_AI_TOOLS = ['literature-search-tool', 'web-search-tool'];
 
 /**
  *
@@ -30,11 +30,19 @@ export function useAITools(): AIAssistantTool[] | undefined | null {
 }
 
 async function loadTools(accessToken: string): Promise<AIAssistantTool[] | null> {
-  const list = await serviceAiAgentListTools(accessToken);
+  const list = (await serviceAiAgentListTools(accessToken)).filter(({ name }) =>
+    SELECTABLE_AI_TOOLS.includes(name)
+  );
   const tools: AIAssistantTool[] = [];
   for (const { name: id } of list) {
     const tool = await serviceAiAgentGetTool(accessToken, id);
     tools.push(new AIAssistantTool(tool.name, tool.name_frontend, tool.description_frontend));
   }
-  return tools;
+  return tools.sort(sortToolsByName);
+}
+
+function sortToolsByName(a: AIAssistantTool, b: AIAssistantTool): number {
+  if (a.name > b.name) return +1;
+  if (a.name < b.name) return -1;
+  return 0;
 }
