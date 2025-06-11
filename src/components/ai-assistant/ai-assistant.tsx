@@ -9,12 +9,12 @@ import Prompt from './prompt';
 import { Spinner } from './spinner';
 import SuggestedQuestions from './suggested-questions';
 import { useCollapsedPanel } from './hooks';
+import { IconClear } from './icons/clear';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import styles from './ai-assistant.module.css';
-import { IconClear } from './icons/clear';
 
 export interface LiteratureSuggestionsProps {
   className?: string;
