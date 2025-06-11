@@ -92,7 +92,14 @@ export default function TinyCircuitSimulation() {
 
         Object.entries(theSchema.properties).forEach(([k, v]) => {
           if (!v.additionalProperties) {
-            map[k] = atom<Record<string, Object>>({ type: v.properties?.type.const ?? '' });
+            const initial: Record<string, Object> = {};
+            if (v.properties)
+              Object.entries(v.properties).forEach(([subkey, subValue]) => {
+                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                else initial[subkey] = subValue.default ?? null;
+              });
+
+            map[k] = atom<Record<string, Object>>(initial);
           } else map[k] = {};
         });
 
@@ -112,6 +119,8 @@ export default function TinyCircuitSimulation() {
       </div>
     );
   }
+
+  console.log(config);
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
@@ -201,6 +210,14 @@ export default function TinyCircuitSimulation() {
                         onClick={() => {
                           setEditing(true);
                           if (!isAtom(atomsMap[configTab])) {
+                            const initial: Record<string, Object> = {};
+
+                            if (v.properties)
+                              Object.entries(v.properties).forEach(([subkey, subValue]) => {
+                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                                else initial[subkey] = subValue.default ?? null;
+                              });
+
                             const itemIdx = Object.keys(atomsMap[configTab]).length;
                             setSelectedItemIdx(itemIdx);
                             setSelectedCategory('');
@@ -208,9 +225,8 @@ export default function TinyCircuitSimulation() {
                               ...atomsMap,
                               [configTab]: {
                                 ...atomsMap[configTab],
-                                [`${schema.properties?.[configTab].title}_${itemIdx}`]: atom<
-                                  Record<string, Object>
-                                >({}),
+                                [`${schema.properties?.[configTab].title}_${itemIdx}`]:
+                                  atom<Record<string, Object>>(initial),
                               },
                             });
                           }
