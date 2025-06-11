@@ -7,6 +7,10 @@ import Header from './Header';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 
+import DocumentationIcon from '@/components/icons/Documentation';
+import { mechanismLocations } from '@/constants/cell-model-assignment/e-model';
+import { useUnwrappedValue } from '@/hooks/hooks';
+import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import {
   eModelEditModeAtom,
   eModelUIConfigAtom,
@@ -14,10 +18,6 @@ import {
 import { eModelMechanismsAtomFamily } from '@/state/e-model';
 import { detailFamily } from '@/state/explore-section/detail-view-atoms';
 import { EModelConfigurationMechanism, MechanismForUI, MechanismLocation } from '@/types/e-model';
-import { mechanismLocations } from '@/constants/cell-model-assignment/e-model';
-import DocumentationIcon from '@/components/icons/Documentation';
-import { useUnwrappedValue } from '@/hooks/hooks';
-import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 
 type Params = {
   id: string;
@@ -95,7 +95,7 @@ function MechanismTable({ mechanismCollection }: MechanismTableProps) {
         <div key={location} className="flex flex-col">
           <div className="my-4 flex items-center gap-2 text-gray-400">
             {location.toUpperCase()}
-            <DocumentationIcon />
+            <DocumentationIcon className="h-3 w-auto" />
           </div>
           {getMechanismInfo(location).map((mechanism, index) => (
             <div key={`${location}_${mechanism?.name}`}>
