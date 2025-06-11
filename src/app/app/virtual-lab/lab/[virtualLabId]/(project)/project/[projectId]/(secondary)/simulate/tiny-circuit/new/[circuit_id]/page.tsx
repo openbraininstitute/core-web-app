@@ -8,6 +8,7 @@ import prototype_schema from './prototype_schema.json';
 
 import {
   CheckCircleFilled,
+  DeleteOutlined,
   LoadingOutlined,
   PlusCircleOutlined,
   WarningFilled,
@@ -223,14 +224,41 @@ export default function TinyCircuitSimulation() {
                               }}
                             >
                               {subkey}
+                              <div className="flex gap-2">
+                                {errors?.find((error) =>
+                                  error.instancePath.startsWith(`/${k}/${subkey}`)
+                                ) ? (
+                                  <WarningFilled className="text-yellow-400" />
+                                ) : (
+                                  <CheckCircleFilled className="text-green-600" />
+                                )}
 
-                              {errors?.find((error) =>
-                                error.instancePath.startsWith(`/${k}/${subkey}`)
-                              ) ? (
-                                <WarningFilled className="text-yellow-400" />
-                              ) : (
-                                <CheckCircleFilled className="text-green-600" />
-                              )}
+                                <DeleteOutlined
+                                  className="cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    setSelectedCategory('');
+                                    setEditing(false);
+                                    const selectedTabAtoms = atomsMap[configTab];
+
+                                    if (!isAtom(selectedTabAtoms) && selectedItemIdx !== null) {
+                                      delete selectedTabAtoms[
+                                        `${schema.properties?.[configTab].title}_${selectedItemIdx}`
+                                      ];
+
+                                      setAtomsMap({
+                                        ...atomsMap,
+                                        [configTab]: {
+                                          ...selectedTabAtoms,
+                                        },
+                                      });
+                                    }
+
+                                    setSelectedItemIdx(null);
+                                  }}
+                                />
+                              </div>
                             </div>
                           </Fragment>
                         );
