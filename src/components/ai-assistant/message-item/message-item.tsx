@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 
 import ToolArticles from '../../../services/ai-agent/tools/articles/tool-articles';
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
+import ToolsProgress from './tools-progress';
 import { classNames } from '@/util/utils';
 
 import styles from './message-item.module.css';
@@ -31,23 +32,26 @@ function renderMessage(value: UIMessage, hideTools: boolean, debug: boolean): Re
     case 'user':
       return (
         <div className={styles.user}>
-          {/* <div className={styles.userAvatar}><ChevronRight fill="currentColor" /></div> */}
           <div className={styles.userContent}>
             <div>{value.content}</div>
           </div>
+          <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
         </div>
       );
     case 'assistant': {
       return (
         <>
-          <ReactMarkdown
-            className={styles.markdown}
-            components={{
-              a: LinkWithExternalTarget,
-            }}
-          >
-            {value.content}
-          </ReactMarkdown>
+          <ToolsProgress message={value} />
+          {value.content.trim().length > 0 && (
+            <ReactMarkdown
+              className={styles.markdown}
+              components={{
+                a: LinkWithExternalTarget,
+              }}
+            >
+              {value.content}
+            </ReactMarkdown>
+          )}
           {!hideTools && (
             <>
               <ToolArticles message={value} />
@@ -107,4 +111,12 @@ function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnc
       {children}
     </Link>
   );
+}
+
+function formatDate(d: Date): string {
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+  return formatter.format(d);
 }

@@ -5,12 +5,17 @@
 .user {
   display: flex;
   flex-wrap: nowrap;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
   gap: 0;
   color: var(--color-on-primary);
   margin: 8px 0;
+  margin-bottom: 32px;
+}
+
+.timestamp {
+  color: #000b;
 }
 
 .userAvatar {
@@ -38,6 +43,7 @@
 }
 
 .userContent {
+  position: relative;
   flex: 1 1 auto;
   padding: 8px;
   border-radius: 6px;
@@ -50,8 +56,32 @@
   min-height: 64px;
 }
 
+.userContent::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  bottom: -24px;
+  width: 32px;
+  height: 24px;
+  background-color: var(--color-primary-5);
+  border-radius: 0;
+  z-index: 1;
+  clip-path: path('M0,0h24L32,24,0,0z');
+}
+
 .userContent > div {
   padding: 0 1em;
+}
+
+.markdown {
+  border-radius: 1em;
+  border: 2px solid var(--color-neutral-9);
+  background-color: #f8f8f8;
+  padding: 1em;
+  margin: 1em 0;
+  box-shadow: 0 0.5em 1em #0005;
+  clip-path: none;
+  z-index: 1;
 }
 
 .markdown ul {

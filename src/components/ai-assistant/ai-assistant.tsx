@@ -14,6 +14,7 @@ import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-ag
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import styles from './ai-assistant.module.css';
+import { IconClear } from './icons/clear';
 
 export interface LiteratureSuggestionsProps {
   className?: string;
@@ -88,7 +89,8 @@ export default function ArtificialIntelligenceAssistant({ className }: Literatur
                 {status === 'ready' && messages.length > 0 && (
                   <div className={styles.footerButtons}>
                     <button type="button" className={styles.actionButton} onClick={handleClearChat}>
-                      Clear the Chat
+                      <IconClear />
+                      <div>Clear chat</div>
                     </button>
                   </div>
                 )}

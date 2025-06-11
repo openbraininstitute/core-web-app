@@ -12,7 +12,7 @@ interface RateLimit {
 }
 
 export function useServiceAiAgentChat(threadId: string) {
-  const toolsSelection = useAIToolsSelection();
+  const [toolsSelection] = useAIToolsSelection();
   const [rateLimit, setRateLimit] = React.useState<RateLimit | null>(null);
   const session = useSession();
   const chat = useChat({

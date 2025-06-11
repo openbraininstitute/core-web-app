@@ -1,6 +1,12 @@
-export function IconGear() {
+export function IconGear({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.5em" height="1.5em">
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width="1.5em"
+      height="1.5em"
+    >
       <title>Tools</title>
       <path
         fill="currentColor"
