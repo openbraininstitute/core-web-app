@@ -36,6 +36,7 @@ import { notification } from '@/api/notifications';
 import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import FilterControls from '@/components/FilterControls/FilterControls';
+import { env } from '@/env.mjs';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 const { Option } = Select;
@@ -233,20 +234,8 @@ function NotebookTable({
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, notebook: Notebook) => (
-        <button
-          className="cursor-pointer text-left hover:text-primary-5"
-          aria-label="preview"
-          type="button"
-          onClick={() => {
-            setDisplay('notebook');
-            setCurrentNotebook(notebook);
-          }}
-        >
-          {name}
-        </button>
-      ),
       sorter: getSorter('name'),
+      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -255,6 +244,7 @@ function NotebookTable({
       key: 'description',
       sorter: getSorter('description'),
       render: (text) => <div className="line-clamp-2 max-w-[40em]">{text}</div>,
+      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -262,6 +252,7 @@ function NotebookTable({
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
       sorter: getSorter('objectOfInterest'),
+      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -269,6 +260,7 @@ function NotebookTable({
       dataIndex: 'scale',
       key: 'scale',
       sorter: getSorter('scale'),
+      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -276,6 +268,7 @@ function NotebookTable({
       dataIndex: 'authors',
       key: 'authors',
       sorter: getSorter('authors'),
+      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -295,6 +288,7 @@ function NotebookTable({
         }
         return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
       },
+      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -437,6 +431,20 @@ function NotebookTable({
           columns={filteredColumns}
           pagination={false}
           locale={{ emptyText: <div className="mt-5 text-lg text-gray-400">No data</div> }}
+          onRow={(r) => {
+            return {
+              onClick: () => {
+                const repo = encodeURIComponent(
+                  `https://github.com/${r.githubUser}/${r.githubRepo}`
+                );
+                const path = encodeURIComponent(`lab/tree/${r.githubRepo}/${r.path}`);
+                const environment = env.NEXT_PUBLIC_DEPLOYMENT_ENV;
+                const url = `https://${environment === 'staging' ? 'staging.' : ''}openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=entitycore`;
+
+                window.open(url, '_blank');
+              },
+            };
+          }}
         />
       </div>
 
