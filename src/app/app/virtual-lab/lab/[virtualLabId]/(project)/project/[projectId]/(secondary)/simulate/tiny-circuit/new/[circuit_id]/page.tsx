@@ -5,7 +5,12 @@ import Ajv, { AnySchema } from 'ajv';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { atom, useAtom, Atom } from 'jotai';
 
-import { LoadingOutlined, PlusCircleOutlined, WarningFilled } from '@ant-design/icons';
+import {
+  CheckCircleFilled,
+  LoadingOutlined,
+  PlusCircleOutlined,
+  WarningFilled,
+} from '@ant-design/icons';
 import { notification } from 'antd/lib';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
@@ -81,9 +86,11 @@ export default function TinyCircuitSimulation() {
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
         const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
-        setSchema(theSchema);
 
         if (!theSchema.properties) return;
+
+        setSchema(theSchema);
+
         const map: {
           [key: string]:
             | ReturnType<typeof atom<Record<string, Object>>>
@@ -120,8 +127,6 @@ export default function TinyCircuitSimulation() {
     );
   }
 
-  console.log(config);
-
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
@@ -152,6 +157,10 @@ export default function TinyCircuitSimulation() {
           {schema.properties &&
             Object.entries(schema.properties)
               .filter(([k]) => k !== 'type')
+              .sort(([k, _]) => {
+                if (k === 'Initialize') return 0;
+                return 1;
+              })
               .map(([k, v]) => (
                 <Fragment key={k}>
                   <Tab
@@ -159,6 +168,7 @@ export default function TinyCircuitSimulation() {
                     selectedTab={configTab}
                     onClick={() => {
                       setConfigTab(k);
+                      setSelectedItemIdx(null);
                       if (!v.additionalProperties) setEditing(true);
                       else {
                         setEditing(false);
@@ -168,20 +178,31 @@ export default function TinyCircuitSimulation() {
                   >
                     {schema.properties?.[k]?.title}
                     <div className="flex gap-1">
-                      {errors?.find((error) => error.instancePath.startsWith('/' + k)) && (
+                      {errors?.find((error) => error.instancePath.startsWith('/' + k)) ? (
                         <WarningFilled className="text-yellow-400" />
+                      ) : (
+                        <CheckCircleFilled className="text-green-600" />
                       )}
-                      <Chevron />
+                      <Chevron rotate={v.additionalProperties ? 90 : 0} />
                     </div>
                   </Tab>
                   {v.additionalProperties && configTab === k && config[k] && (
                     <>
                       {Object.entries(config[k]).map(([subkey, subValue]) => {
+                        const idx = parseInt(subkey.split('_')[1], 10);
+
+                        const isSelected = configTab === k && idx === selectedItemIdx;
+
                         return (
                           <Fragment key={subkey}>
                             {/* eslint-disable-next-line */}
                             <div
-                              className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                              className={classNames(
+                                'text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                                isSelected
+                                  ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+                                  : ''
+                              )}
                               onClick={() => {
                                 if (
                                   typeof subValue === 'object' &&
