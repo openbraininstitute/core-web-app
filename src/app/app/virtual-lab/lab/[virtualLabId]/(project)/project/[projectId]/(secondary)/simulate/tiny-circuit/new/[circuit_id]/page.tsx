@@ -41,8 +41,6 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  console.log(schema);
-
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
     if (!schema) return;
@@ -87,10 +85,11 @@ export default function TinyCircuitSimulation() {
       try {
         const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
         const json = await res.json();
-        const dereferenced = await $RefParser.dereference(prototype_schema);
+        // const json = prototype_schema
+        const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
-        // const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
-        const theSchema = dereferenced as JSONSchema;
+        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        //const theSchema = dereferenced as JSONSchema;
 
         if (!theSchema.properties) return;
 
@@ -132,6 +131,8 @@ export default function TinyCircuitSimulation() {
       </div>
     );
   }
+
+  console.log(config);
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
@@ -242,9 +243,9 @@ export default function TinyCircuitSimulation() {
                                     setEditing(false);
                                     const selectedTabAtoms = atomsMap[configTab];
 
-                                    if (!isAtom(selectedTabAtoms) && selectedItemIdx !== null) {
+                                    if (!isAtom(selectedTabAtoms)) {
                                       delete selectedTabAtoms[
-                                        `${schema.properties?.[configTab].title}_${selectedItemIdx}`
+                                        `${schema.properties?.[configTab].title}_${idx}`
                                       ];
 
                                       setAtomsMap({
@@ -277,7 +278,14 @@ export default function TinyCircuitSimulation() {
                                 else initial[subkey] = subValue.default ?? null;
                               });
 
-                            const itemIdx = Object.keys(atomsMap[configTab]).length;
+                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                              parseInt(subkey.split('_')[1], 10)
+                            );
+
+                            itemIndexes.sort((a, b) => a - b);
+
+                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+
                             setSelectedItemIdx(itemIdx);
                             setSelectedCategory('');
                             setAtomsMap({
