@@ -2,6 +2,11 @@
 
 import { useParams } from 'next/navigation';
 
+import {
+  SingleScaleTypeProps,
+  useScaleArchitecture,
+} from '@/components/documentation/CONTENT/scale-content';
+import ScaleCard from '@/components/documentation/features/scale-card';
 import SingleFeatureCard from '@/components/documentation/features/single-feature-card';
 import {
   ContentForFeatureItem,
@@ -11,6 +16,7 @@ import Slugify from '@/util/slugify';
 
 export default function SingleFeaturePage() {
   const content = useSanityContentForFeatureItems();
+  const scaleContent = useScaleArchitecture();
 
   const params = useParams();
   const slug = params.slug as string;
@@ -45,6 +51,11 @@ export default function SingleFeaturePage() {
     ? content.filter((item: ContentForFeatureItem) => Slugify(item.Scale) === slug)
     : [];
 
+  const sectionContent: SingleScaleTypeProps[] | [] =
+    scaleContent.find((section) => Slugify(section.name) === slug)?.content || [];
+
+  console.log('Section Content:', sectionContent);
+
   if (!featureContent) {
     return (
       <div className="container mx-auto p-4 text-white">
@@ -57,7 +68,15 @@ export default function SingleFeaturePage() {
   return (
     <div className="w-full px-8">
       <div className="mb-12 text-4xl font-bold text-white">{pageTitle}</div>
-      <div className="flex w-full flex-col gap-x-5">
+      <header className="w-full">
+        <div className="text-xl font-semibold text-primary-4">Scale elements</div>
+        <div className="my-4 grid grid-cols-3 gap-4">
+          {sectionContent?.map((item: SingleScaleTypeProps) => (
+            <ScaleCard key={item.title} content={item} />
+          ))}
+        </div>
+      </header>
+      <div className="mt-12 flex w-full flex-col gap-x-5">
         {featureContent.map((item: ContentForFeatureItem) => {
           return (
             <SingleFeatureCard key={item.Feature_title} content={item} imageNumber={imageNumber} />
