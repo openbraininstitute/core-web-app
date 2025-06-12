@@ -1,15 +1,23 @@
 import { useEffect } from 'react';
 import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
+import isArray from 'lodash/isArray';
 import { JSONSchema } from './types';
-import { type Object } from './page';
+import { Config, type Object } from './page';
 import { classNames } from '@/util/utils';
+import { ConsoleSqlOutlined } from '@ant-design/icons';
+
+function isPlainObject<T extends object>(value: unknown): value is T {
+  return typeof value === 'object' && !Array.isArray(value) && value !== null;
+}
 
 export function JSONSchemaForm({
   schema,
   stateAtom,
   circuitId,
+  config,
 }: {
+  config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: Object }>>;
   circuitId: string;
@@ -17,6 +25,11 @@ export function JSONSchemaForm({
   const skip = ['type']; // TODO: handle when circuit changes
 
   const [state, setState] = useAtom(stateAtom);
+
+  const referenceTypesToConfigKeys: Record<string, string> = {
+    NeuronSetReference: 'neuron_sets',
+    TimestampsReference: 'timestamps',
+  };
 
   useEffect(() => {
     setState((prev) => {
@@ -27,7 +40,64 @@ export function JSONSchemaForm({
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
 
-    if (k === 'circuit') return <Input value={circuitId} disabled/>;
+    if (k === 'circuit') return <Input value={circuitId} disabled />;
+
+    if (
+      v.is_block_reference &&
+      v.title &&
+      typeof v.title === 'string' &&
+      v.properties &&
+      typeof v.properties.type.const === 'string' &&
+      Array.isArray(v.allowed_block_types)
+    ) {
+      const referenceKey = referenceTypesToConfigKeys[v.title];
+      if (!referenceKey) return null;
+      const referenceConfig = config[referenceKey];
+      if (!isPlainObject(referenceConfig)) return null;
+
+      const referees = Object.entries(referenceConfig).filter(([_, val]) => {
+        return isPlainObject(val) && 'type' in val && v.allowed_block_types.includes(val.type);
+      });
+
+      if (referees.length === 0) {
+        return `No valid ${referenceKey} found.`;
+      }
+
+      const defaultV: string | null =
+        isPlainObject(state.node_set) &&
+        'block_name' in state.node_set &&
+        typeof state.node_set.block_name === 'string'
+          ? state.node_set.block_name
+          : null;
+
+      return (
+        <Select
+          onChange={(newV: string) => {
+            const referee = referees.find(([k, v]) => k === newV);
+            if (!referee) throw new Error(`No ${k} found in ${referenceKey} `);
+            const refereeV = referee[1];
+            if (
+              !isPlainObject(refereeV) ||
+              Array.isArray(refereeV) ||
+              typeof refereeV.type !== 'string'
+            )
+              throw new Error('Invalid referee');
+
+            setState({
+              ...state,
+              [k]: { block_name: newV, type: refereeV.type, block_dict_name: referenceKey },
+            });
+          }}
+          value={defaultV}
+          options={referees.map(([k]) => {
+            return {
+              label: k,
+              value: k,
+            };
+          })}
+        />
+      );
+    }
 
     if (obj.enum)
       return (

@@ -29,6 +29,8 @@ function isAtom<T>(val: unknown): val is Atom<T> {
   return typeof val === 'object' && val !== null && 'read' in val;
 }
 
+export type Config = Record<string, Record<string, Object | Record<string, Object>> | string>;
+
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('');
@@ -55,7 +57,7 @@ export default function TinyCircuitSimulation() {
 
   const configAtom = useMemo(() => {
     return atom((get) => {
-      const result: Record<string, Record<string, Object | Record<string, Object>> | string> = {};
+      const result: Config = {};
       Object.keys(atomsMap).forEach((key) => {
         if (isAtom(atomsMap[key])) result[key] = get(atomsMap[key]);
         else {
@@ -103,16 +105,23 @@ export default function TinyCircuitSimulation() {
 
         Object.entries(theSchema.properties).forEach(([k, v]) => {
           if (!v.additionalProperties) {
-            const initial: Record<string, Object> = {
-              circuit: { type: 'CircuitFromID', id_str: circuitId },
-            };
+            const initial: Record<string, Object> = {};
+
             if (v.properties)
               Object.entries(v.properties).forEach(([subkey, subValue]) => {
                 if (subkey === 'type') initial[subkey] = subValue.const ?? null;
                 else initial[subkey] = subValue.default ?? null;
               });
 
+            if (k === 'initialize') {
+              initial['circuit'] = {
+                type: 'CircuitFromId',
+                str_id: circuitId,
+              };
+            }
+
             map[k] = atom<Record<string, Object>>(initial);
+            // console.log('\n\n initial set', initial)
           } else map[k] = {};
         });
 
@@ -125,6 +134,8 @@ export default function TinyCircuitSimulation() {
 
     fetchSpec();
   }, [circuitId]);
+
+  console.log(config);
 
   if (!schema) {
     return (
@@ -337,6 +348,7 @@ export default function TinyCircuitSimulation() {
             editing &&
             (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
               <JSONSchemaForm
+                config={config}
                 circuitId={circuitId}
                 schema={
                   selectedCatSchema ??
