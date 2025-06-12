@@ -22,7 +22,7 @@ export default function FullGlossaryPage() {
         setActiveItem={setActiveItem}
       />
 
-      <div className="w-full">{activeItem && <GlossaryContent content={activeItem} />}</div>
+      <div className="w-full">{activeItem && <GlossaryContent activeItem={activeItem} />}</div>
     </div>
   );
 }
