@@ -77,26 +77,23 @@ export function JSONSchemaForm({
       return (
         <Select
           onChange={(newV: string) => {
-            const referee = referees.find(([k, v]) => k === newV);
-            if (!referee) throw new Error(`No ${k} found in ${referenceKey} `);
-            const refereeV = referee[1];
-            if (
-              !isPlainObject(refereeV) ||
-              Array.isArray(refereeV) ||
-              typeof refereeV.type !== 'string'
-            )
-              throw new Error('Invalid referee');
+            if (!v.properties?.type.const || typeof v.properties.type.const !== 'string')
+              throw new Error('Invalid reference definition');
 
             setState({
               ...state,
-              [k]: { block_name: newV, type: refereeV.type, block_dict_name: referenceKey },
+              [k]: {
+                block_name: newV,
+                type: v.properties.type.const,
+                block_dict_name: referenceKey,
+              },
             });
           }}
           value={defaultV}
-          options={referees.map(([k]) => {
+          options={referees.map(([subkey]) => {
             return {
-              label: k,
-              value: k,
+              label: subkey,
+              value: subkey,
             };
           })}
         />

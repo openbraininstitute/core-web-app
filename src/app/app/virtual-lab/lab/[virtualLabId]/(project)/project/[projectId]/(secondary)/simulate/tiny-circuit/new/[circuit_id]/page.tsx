@@ -4,7 +4,6 @@ import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { atom, useAtom, Atom } from 'jotai';
-import prototype_schema from './prototype_schema.json';
 
 import {
   CheckCircleFilled,
@@ -22,13 +21,9 @@ import { assertErrorMessage, classNames } from '@/util/utils';
 
 type TabType = 'configuration' | 'simulations';
 
-
-
 function isAtom<T>(val: unknown): val is Atom<T> {
   return typeof val === 'object' && val !== null && 'read' in val;
 }
-
-
 
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
@@ -86,15 +81,14 @@ export default function TinyCircuitSimulation() {
       try {
         const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
         const json = await res.json();
-        // const json = prototype_schema;
+
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
         const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
-        // const theSchema = dereferenced as JSONSchema;
+
+        console.log('schema \n\n', theSchema);
 
         if (!theSchema.properties) return;
-
-        console.log(theSchema)
 
         setSchema(theSchema);
 
@@ -116,8 +110,8 @@ export default function TinyCircuitSimulation() {
 
             if (k === 'initialize') {
               initial.circuit = {
-                type: 'CircuitFromId',
-                str_id: circuitId,
+                type: 'ReconstructionMorphologyFromID',
+                id_str: circuitId,
               };
             }
 
@@ -137,6 +131,8 @@ export default function TinyCircuitSimulation() {
   }, [circuitId]);
 
   console.log(config);
+
+  console.log(errors)
 
   if (!schema) {
     return (
