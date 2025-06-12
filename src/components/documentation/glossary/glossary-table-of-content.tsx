@@ -1,10 +1,11 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { ContentForGlossaryItem } from '../hooks/use-sanity-content-for-glossary';
 
 import { classNames } from '@/util/utils';
-import { useEffect } from 'react';
 
 export default function GlossaryTableOfContent({
   content,
@@ -52,8 +53,8 @@ export default function GlossaryTableOfContent({
             onClick={() => handleItemClick(item)}
             key={item.Name}
             className={classNames(
-              'text-base',
-              activeItem?.Name === item.Name ? 'font-bold text-white' : 'font-normal text-primary-2'
+              'text-lg',
+              activeItem?.Name === item.Name ? 'font-bold text-white' : 'font-normal text-primary-1'
             )}
           >
             {item.Name}
