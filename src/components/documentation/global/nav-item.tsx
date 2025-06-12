@@ -15,7 +15,7 @@ import { classNames } from '@/util/utils';
 export function ItemDisabled({ name }: { name: string }) {
   return (
     <Tooltip title="Coming soon" placement="topLeft">
-      <div className="font-sans text-base font-normal text-white opacity-40">{name}</div>
+      <div className="font-sans text-lg font-normal text-white opacity-40">{name}</div>
     </Tooltip>
   );
 }
@@ -65,8 +65,10 @@ export function ItemEnabled({
     <Link
       href={link}
       className={classNames(
-        'font-sans text-base',
-        activeNavItem?.slug === content.slug ? 'font-bold text-white' : 'font-normal text-primary-2'
+        'font-sans text-lg',
+        activeNavItem?.slug === content.slug
+          ? 'flex flex-row items-center gap-x-6 font-bold after:relative after:top-0.5 after:block after:h-2 after:w-2 after:rounded-full after:bg-white after:content-[""]'
+          : 'font-normal'
       )}
       aria-label={name}
     >
@@ -75,7 +77,7 @@ export function ItemEnabled({
   ) : (
     <div>
       <div className="flex w-full flex-row items-center justify-between">
-        <div className="font-sans text-base font-normal text-white">{name}</div>
+        <div className="font-sans text-lg font-normal text-white">{name}</div>
         <button
           type="button"
           aria-label="Toggle section"

@@ -1,20 +1,13 @@
+import { ContentForTutorialItem } from '../documentation/type';
+
 import query from './hooks.groq';
+
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
 import { assertType, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForTutorialsList() {
   return useSanity(query, isContentForTutorialsList) ?? [];
-}
-
-export interface ContentForTutorialItem {
-  url: string;
-  title: string;
-  slug: string;
-  description: string;
-  imageURL: string;
-  imageWidth: number;
-  imageHeight: number;
 }
 
 function isContentForTutorialsList(data: unknown): data is ContentForTutorialItem[] {
