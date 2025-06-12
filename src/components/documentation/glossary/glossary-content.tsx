@@ -1,8 +1,9 @@
+import RichContentBloc from '../global/rich-content-bloc';
 import { ContentForGlossaryItem } from '../hooks/use-sanity-content-for-glossary';
 
 export default function GlossaryContent({ content }: { content: ContentForGlossaryItem | null }) {
   return (
-    <div className="w-full pl-16 pt-[105px] text-white">
+    <div className="w-full pl-16 text-white">
       <header className="mb-4">
         <h1 className="mb-3 text-3xl font-bold">{content?.Name}</h1>
         <div className="flex flex-row gap-x-4 border-y border-solid border-primary-6 py-3">
@@ -16,7 +17,8 @@ export default function GlossaryContent({ content }: { content: ContentForGlossa
           </div>
         </div>
       </header>
-      <p className="text-lg leading-normal">{content?.Description}</p>
+      {/* <p className="text-lg leading-normal">{content?.Description}</p> */}
+      <RichContentBloc content={content?.Description ?? ''} />
     </div>
   );
 }

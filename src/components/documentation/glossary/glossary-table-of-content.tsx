@@ -12,7 +12,7 @@ export default function GlossaryTableOfContent({
   setActiveItem: (item: ContentForGlossaryItem | null) => void;
 }) {
   return (
-    <div className="w-[255px] pt-[112px]">
+    <div className="w-[255px]">
       <div className="mb-2 text-xl font-bold text-primary-3">Glossary</div>
       <div className="flex flex-col items-start gap-y-2">
         {content.map((item: ContentForGlossaryItem) => (
