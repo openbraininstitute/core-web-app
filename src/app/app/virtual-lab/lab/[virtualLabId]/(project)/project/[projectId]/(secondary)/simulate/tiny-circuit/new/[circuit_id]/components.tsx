@@ -8,11 +8,13 @@ import { classNames } from '@/util/utils';
 export function JSONSchemaForm({
   schema,
   stateAtom,
+  circuitId,
 }: {
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: Object }>>;
+  circuitId: string;
 }) {
-  const skip = ['circuit', 'type']; // TODO: handle when circuit changes
+  const skip = ['type']; // TODO: handle when circuit changes
 
   const [state, setState] = useAtom(stateAtom);
 
@@ -24,6 +26,8 @@ export function JSONSchemaForm({
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
+
+    if (k === 'circuit') return <Input value={circuitId} disabled/>;
 
     if (obj.enum)
       return (

@@ -23,7 +23,7 @@ import { assertErrorMessage, classNames } from '@/util/utils';
 type TabType = 'configuration' | 'simulations';
 
 type Primitive = null | boolean | number | string;
-export type Object = Primitive | Primitive[];
+export type Object = Primitive | Primitive[] | Record<string, Primitive>;
 
 function isAtom<T>(val: unknown): val is Atom<T> {
   return typeof val === 'object' && val !== null && 'read' in val;
@@ -32,7 +32,7 @@ function isAtom<T>(val: unknown): val is Atom<T> {
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('');
-  const { circuit_id } = useParams<Params>();
+  const { circuit_id: circuitId } = useParams<Params>();
   const [editing, setEditing] = useState(false);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -84,12 +84,12 @@ export default function TinyCircuitSimulation() {
     async function fetchSpec() {
       try {
         const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
-        const json = await res.json();
-        // const json = prototype_schema
+        // const json = await res.json();
+        const json = prototype_schema;
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
-        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
-        //const theSchema = dereferenced as JSONSchema;
+        // const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        const theSchema = dereferenced as JSONSchema;
 
         if (!theSchema.properties) return;
 
@@ -103,7 +103,9 @@ export default function TinyCircuitSimulation() {
 
         Object.entries(theSchema.properties).forEach(([k, v]) => {
           if (!v.additionalProperties) {
-            const initial: Record<string, Object> = {};
+            const initial: Record<string, Object> = {
+              circuit: { type: 'CircuitFromID', id_str: circuitId },
+            };
             if (v.properties)
               Object.entries(v.properties).forEach(([subkey, subValue]) => {
                 if (subkey === 'type') initial[subkey] = subValue.const ?? null;
@@ -122,7 +124,7 @@ export default function TinyCircuitSimulation() {
     }
 
     fetchSpec();
-  }, []);
+  }, [circuitId]);
 
   if (!schema) {
     return (
@@ -131,8 +133,6 @@ export default function TinyCircuitSimulation() {
       </div>
     );
   }
-
-  console.log(config);
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
@@ -337,6 +337,7 @@ export default function TinyCircuitSimulation() {
             editing &&
             (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
               <JSONSchemaForm
+                circuitId={circuitId}
                 schema={
                   selectedCatSchema ??
                   schema.properties[configTab]?.additionalProperties ??
