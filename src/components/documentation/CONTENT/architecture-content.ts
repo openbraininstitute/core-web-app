@@ -14,11 +14,11 @@ export function useDocumentationArchitecture(): SingleSectionProps[] {
       link: '/app/documentation',
     },
     {
-      name: 'Ontology',
-      slug: 'ontology',
+      name: 'Glossary',
+      slug: 'glossary',
       children: null,
-      disabled: true,
-      link: '/app/documentation/ontology',
+      disabled: false,
+      link: '/app/documentation/glossary',
     },
     {
       name: 'Your virtual lab',

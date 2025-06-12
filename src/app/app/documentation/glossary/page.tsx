@@ -1,11 +1,28 @@
+'use client';
+
+import { useState } from 'react';
+
+import GlossaryContent from '@/components/documentation/glossary/glossary-content';
+import GlossaryTableOfContent from '@/components/documentation/glossary/glossary-table-of-content';
+import {
+  ContentForGlossaryItem,
+  useSanityContentForGlossary,
+} from '@/components/documentation/hooks/use-sanity-content-for-glossary';
+
 export default function FullGlossaryPage() {
+  const content = useSanityContentForGlossary();
+
+  const [activeItem, setActiveItem] = useState<ContentForGlossaryItem | null>(null);
+
   return (
-    <div className="flex w-full flex-col gap-y-6">
-      <h1 className="text-3xl font-bold">Glossary</h1>
-      <p className="text-lg text-gray-700">
-        A comprehensive glossary of terms used in the documentation.
-      </p>
-      <div className="mt-4">{/* Glossary content will go here */}</div>
+    <div className="flex w-full flex-row">
+      <GlossaryTableOfContent
+        content={content}
+        activeItem={activeItem}
+        setActiveItem={setActiveItem}
+      />
+
+      <div className="w-full">{activeItem && <GlossaryContent content={activeItem} />}</div>
     </div>
   );
 }

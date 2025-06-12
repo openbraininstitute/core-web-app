@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+
+import { ContentForTutorialItem } from '../type';
 import SingleTutorialCard from './single-tutorial-card';
-import {
-  ContentForTutorialItem,
-  useSanityContentForTutorialsList,
-} from '@/components/tutorials-carrousel/hooks';
+
+import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
 
 export default function SliderTutorial() {
   const tutorials = useSanityContentForTutorialsList();
