@@ -1,11 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { ContentForTutorialItem } from '../type';
 
-import {
-  ContentForTutorialItem,
-  useSanityContentForTutorialsList,
-} from '@/components/tutorials-carrousel/hooks';
+import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
 import truncateText from '@/util/truncate';
 
 export default function TutorialNavList() {

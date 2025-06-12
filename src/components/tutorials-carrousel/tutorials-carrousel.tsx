@@ -3,7 +3,8 @@
 import React from 'react';
 
 import SingleTutorialCard from '../documentation/main/single-tutorial-card';
-import { ContentForTutorialItem, useSanityContentForTutorialsList } from './hooks';
+import { ContentForTutorialItem } from '../documentation/type';
+import { useSanityContentForTutorialsList } from './hooks';
 import { Navigation } from './navigation';
 import { scrollCardIntoView } from './scroll';
 

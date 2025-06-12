@@ -4,8 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import PlaceholderImage from '../img/thumbnail_placeholder.jpg';
+import { ContentForTutorialItem } from '../type';
 
-import { ContentForTutorialItem } from '@/components/tutorials-carrousel/hooks';
 import { classNames } from '@/util/utils';
 
 export default function SingleTutorialCard({ content }: { content: ContentForTutorialItem }) {
