@@ -1,5 +1,6 @@
 import React from 'react';
 import { UIMessage } from '@ai-sdk/ui-utils';
+
 import { extractTool, uniquify } from '../../common';
 import { isLiteratureSearchToolResult, isWebSearchToolResult, ScientificArticle } from './types';
 
@@ -19,6 +20,7 @@ function extractFromLiteratureSearch(message: UIMessage, articles: ScientificArt
 
     for (const item of output.articles) {
       const article: ScientificArticle = {
+        tool: 'literature-search-tool',
         title: item.article_title,
         abstract: item.abstract ?? 'No abstract.',
         authors: item.article_authors,
@@ -36,6 +38,7 @@ function extractFromWebSearch(message: UIMessage, articles: ScientificArticle[])
 
     for (const item of output.results) {
       const article: ScientificArticle = {
+        tool: 'web-search-tool',
         title: item.title,
         abstract: item.content,
         authors: [],

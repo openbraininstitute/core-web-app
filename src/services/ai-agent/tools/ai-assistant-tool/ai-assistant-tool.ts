@@ -27,6 +27,10 @@ export class AIAssistantTool {
   ) {
     this.icon = getIcon(id);
   }
+
+  get docURL() {
+    return `/app/documentation/ai-chat-tools/${this.id}`;
+  }
 }
 
 function getIcon(toolId: string): React.FC<{}> {

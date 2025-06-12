@@ -6,6 +6,7 @@ export interface ScientificArticle {
   abstract: string;
   authors: string[];
   url: string;
+  tool: string;
 }
 
 export interface LiteratureSearchToolItem {

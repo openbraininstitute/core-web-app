@@ -15,7 +15,7 @@ export default function SliderTutorial() {
       <div className="mb-3 flex w-full flex-row items-center justify-between">
         <h1 className="text-lg font-bold text-white">Our latest video tutorials</h1>
         <Link
-          href="/documentation/tutorials"
+          href="/app/documentation/tutorials"
           className="text-sm font-semibold text-white hover:underline"
         >
           See all tutorials
