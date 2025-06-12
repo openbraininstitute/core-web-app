@@ -3,13 +3,17 @@ import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
 import isArray from 'lodash/isArray';
 import { JSONSchema } from './types';
-import { Config, type Object } from './page';
+
 import { classNames } from '@/util/utils';
-import { ConsoleSqlOutlined } from '@ant-design/icons';
 
 function isPlainObject<T extends object>(value: unknown): value is T {
   return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
+
+type Primitive = null | boolean | number | string;
+export type Object = Primitive | Primitive[] | Record<string, Primitive>;
+
+export type Config = Record<string, Record<string, Object | Record<string, Object>> | string>;
 
 export function JSONSchemaForm({
   schema,

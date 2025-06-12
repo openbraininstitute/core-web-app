@@ -16,20 +16,19 @@ import {
 import { notification } from 'antd/lib';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
-import { JSONSchemaForm, Chevron, Tab } from './components';
+import { JSONSchemaForm, Chevron, Tab, type Config, type Object } from './components';
 import { Params, JSONSchema } from './types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 type TabType = 'configuration' | 'simulations';
 
-type Primitive = null | boolean | number | string;
-export type Object = Primitive | Primitive[] | Record<string, Primitive>;
+
 
 function isAtom<T>(val: unknown): val is Atom<T> {
   return typeof val === 'object' && val !== null && 'read' in val;
 }
 
-export type Config = Record<string, Record<string, Object | Record<string, Object>> | string>;
+
 
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
@@ -86,14 +85,16 @@ export default function TinyCircuitSimulation() {
     async function fetchSpec() {
       try {
         const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
-        // const json = await res.json();
-        const json = prototype_schema;
+        const json = await res.json();
+        // const json = prototype_schema;
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
-        // const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
-        const theSchema = dereferenced as JSONSchema;
+        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        // const theSchema = dereferenced as JSONSchema;
 
         if (!theSchema.properties) return;
+
+        console.log(theSchema)
 
         setSchema(theSchema);
 
@@ -114,7 +115,7 @@ export default function TinyCircuitSimulation() {
               });
 
             if (k === 'initialize') {
-              initial['circuit'] = {
+              initial.circuit = {
                 type: 'CircuitFromId',
                 str_id: circuitId,
               };
