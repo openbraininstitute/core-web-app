@@ -47,14 +47,19 @@ export default function SingleFeaturePage() {
       break;
   }
 
-  const featureContent: ContentForFeatureItem[] = content
-    ? content.filter((item: ContentForFeatureItem) => Slugify(item.Scale) === slug)
-    : [];
+  const featureContent: ContentForFeatureItem[] = (() => {
+    if (!content) {
+      return [];
+    }
+
+    if (slug === 'all-features') {
+      return content;
+    }
+    return content.filter((item: ContentForFeatureItem) => Slugify(item.Scale) === slug);
+  })();
 
   const sectionContent: SingleScaleTypeProps[] | [] =
     scaleContent.find((section) => Slugify(section.name) === slug)?.content || [];
-
-  console.log('Section Content:', sectionContent);
 
   if (!featureContent) {
     return (
@@ -65,17 +70,21 @@ export default function SingleFeaturePage() {
     );
   }
 
+  console.log('The slug is:', slug);
+
   return (
     <div className="w-full px-8">
       <div className="mb-12 text-4xl font-bold text-white">{pageTitle}</div>
-      <header className="w-full">
-        <div className="text-xl font-semibold text-primary-4">Scale elements</div>
-        <div className="my-4 grid grid-cols-3 gap-4">
-          {sectionContent?.map((item: SingleScaleTypeProps) => (
-            <ScaleCard key={item.title} content={item} />
-          ))}
-        </div>
-      </header>
+      {slug !== 'all-features' && (
+        <header className="w-full">
+          <div className="text-xl font-semibold text-primary-4">Scale elements</div>
+          <div className="my-4 grid grid-cols-3 gap-4">
+            {sectionContent?.map((item: SingleScaleTypeProps) => (
+              <ScaleCard key={item.title} content={item} />
+            ))}
+          </div>
+        </header>
+      )}
       <div className="mt-12 flex w-full flex-col gap-x-5">
         {featureContent.map((item: ContentForFeatureItem) => {
           return (
