@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
+import { ReactNode } from 'react';
 
 import {
   Menubar,
@@ -46,9 +46,9 @@ export default function HelpMenu({ children, cls }: Props) {
             asChild
             className="h-[40.5px] cursor-pointer hover:bg-white hover:text-primary-8"
           >
-            <a href="/contact" className="!text-lg">
+            <Link href="/contact" className="!text-lg">
               Contact support
-            </a>
+            </Link>
           </MenubarItem>
           <MenubarItem
             asChild
