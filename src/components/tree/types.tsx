@@ -1,13 +1,18 @@
+import { JSX } from 'react';
+
 export interface TTreeNode {
   id: string;
   name: string;
   children?: Array<TTreeNode>;
 }
 
-export interface NodeSubtitle {
-  text: string;
-  position: 'bottom' | 'right';
-}
+export type NodeSubtitle<T extends TTreeNode> = ({
+  node,
+  ...props
+}: {
+  node: TTreeNode & T;
+  props: Partial<RenderNodeProps<T>>;
+}) => JSX.Element;
 
 export interface NodeIndentation {
   h?: boolean;
@@ -26,7 +31,7 @@ export interface RenderNodeProps<TNode extends TTreeNode> {
   level: number;
   isLast: boolean;
   dataKey: string;
-  subtitle?: NodeSubtitle;
+  subtitle?: NodeSubtitle<TNode>;
   indentation?: NodeIndentation;
   nodeRowHeight?: number;
   defaultColor?: string;

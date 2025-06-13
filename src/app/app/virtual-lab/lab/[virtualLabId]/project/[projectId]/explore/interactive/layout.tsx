@@ -6,16 +6,21 @@ import { useSetAtom } from 'jotai';
 import dynamic from 'next/dynamic';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import SideMenu from '@/components/SideMenu';
 
 import { Label, Content, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
+import { Container as SideMenuContainer } from '@/components/SideMenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { resolveDataKey } from '@/utils/key-builder';
 import { defaultModelRelease } from '@/config';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
+const SideMenu = dynamic(() => import('@/components/SideMenu'), {
+  ssr: false,
+  loading: () => <SideMenuContainer />,
+});
 
 type Props = ServerSideComponentProp<WorkspaceContext, null> & {
   children: React.ReactNode;
@@ -23,6 +28,9 @@ type Props = ServerSideComponentProp<WorkspaceContext, null> & {
 
 const BrainRegionsHierarchy = dynamic(() => import('@/features/brain-region-hierarchy'), {
   ssr: false,
+  loading() {
+    return <div className="bg-primary-8 w-[340px]" />;
+  },
 });
 
 export default function Layout(props: Props) {
@@ -68,7 +76,6 @@ export default function Layout(props: Props) {
           />
         </div>
       </ErrorBoundary>
-      {/* <BrainRegionsTree /> */}
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
         <Suspense
           fallback={

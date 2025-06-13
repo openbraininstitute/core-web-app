@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import type { Parser } from 'nuqs';
+import { parseAsString, useQueryState } from 'nuqs';
 
 import { tryType } from '../LandingPage/content';
 
@@ -14,6 +15,7 @@ import DescriptionSection from './sections/Description';
 import NotebookSection from './sections/Notebook';
 
 import { useSanity } from '@/services/sanity';
+import { Sections } from '@/types/public-projects';
 
 const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType => {
   return tryType('ShowCaseProjectProps', data, {
@@ -40,9 +42,9 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
           url: 'string',
           title: ['|', 'null', 'string'],
           alt: 'string',
-          hasCaption: 'boolean',
+          hasCaption: ['|', 'null', 'boolean'],
           caption: ['|', 'null', 'undefined', 'string'],
-          useTimestamps: 'boolean',
+          useTimestamps: ['|', 'null', 'boolean'],
           timestamps: [
             '|',
             'null',
@@ -87,7 +89,7 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
           validated: 'boolean',
           mType: 'string',
           eType: 'string',
-          hasMorphologyThumbnail: 'boolean',
+          hasMorphologyThumbnail: ['|', 'null', 'undefined', 'boolean'],
           morphologyId: 'string',
           morphology: ['|', 'null', 'string'],
           traceFileId: 'string',
@@ -124,12 +126,71 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
           brainRegion: 'string',
           mType: ['|', 'null', 'string'],
           eType: 'string',
-          hasMorphologyThumbnail: 'boolean',
+          hasMorphologyThumbnail: ['|', 'null', 'undefined', 'boolean'],
           // morphology: 'string',
           modelCumulatedScore: 'number',
           species: 'string',
-          contributor: ['|', 'null', 'string'],
+          contributor: ['|', 'null', 'string', 'undefined'],
           creationDate: 'string',
+        },
+      ],
+    ],
+    synaptomeTable: [
+      '|',
+      'null',
+      [
+        'array',
+        {
+          name: 'string',
+          description: 'string',
+          MEModel: 'string',
+          MType: 'string',
+          EType: 'string',
+          brainRegion: 'string',
+          species: 'string',
+          createdBy: 'string',
+          creationDate: ['|', 'null', 'string'],
+          download: ['|', 'null', 'string'],
+        },
+      ],
+    ],
+    meModelTable: [
+      '|',
+      'null',
+      [
+        'array',
+        {
+          name: 'string',
+          morphologyThumbnail: ['|', 'null', 'string'],
+          traceThumbnail: ['|', 'null', 'string'],
+          validated: 'boolean',
+          brainRegion: 'string',
+          mType: 'string',
+          eType: 'string',
+          species: 'string',
+          createdBy: 'string',
+          creationDate: ['|', 'null', 'string'],
+          download: ['|', 'null', 'string'],
+        },
+      ],
+    ],
+    eModelTable: [
+      '|',
+      'null',
+      [
+        'array',
+        {
+          name: 'string',
+          response: 'string',
+          brainRegion: 'string',
+          mType: ['|', 'null', 'string'],
+          eType: 'string',
+          morphology: 'string',
+          modelCumulatedScore: 'number',
+          species: 'string',
+          contributor: ['|', 'null', 'string', 'undefined'],
+          creationDate: ['|', 'null', 'string'],
+          downloadLink: ['|', 'null', 'string'],
         },
       ],
     ],
@@ -142,6 +203,10 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
           name: ['|', 'null', 'string'],
           readMe: 'unknown',
           url: ['|', 'null', 'string'],
+          objectOfInterest: ['|', 'null', 'string'],
+          scale: ['|', 'null', 'string'],
+          authors: ['|', 'null', 'string'],
+          creationDate: ['|', 'null', 'string'],
         },
       ],
     ],
@@ -150,34 +215,41 @@ const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType
 };
 
 export default function PublicProjectMain({ slug }: { slug: string }) {
-  const content = useSanity(singleCaseQuery(slug), isShowCaseProjectProps) ?? null;
+  const content =
+    useSanity<ShowCaseProjectQueryType>(singleCaseQuery(slug), isShowCaseProjectProps) ?? null;
 
-  const [activeSection, setActiveSection] = useState<string>('description');
+  const [section, updateSection] = useQueryState(
+    'description',
+    parseAsString.withDefault('description') as Parser<Sections>
+  );
+  const handleTabChange = (tab: Sections) => updateSection(tab);
 
   let activeSectionContent;
 
-  switch (activeSection) {
-    case 'description':
-      activeSectionContent = content !== null && <DescriptionSection content={content} />;
-      break;
-    case 'artifacts':
-      activeSectionContent = content !== null && <ArtifactsSection content={content} />;
-      break;
-    case 'notebooks':
-      activeSectionContent = content !== null && <NotebookSection content={content} />;
-      break;
-    default:
-      activeSectionContent = content !== null && <DescriptionSection content={content} />;
-      break;
+  if (content !== null) {
+    switch (section) {
+      case 'description':
+        activeSectionContent = <DescriptionSection content={content} />;
+        break;
+      case 'artifacts':
+        activeSectionContent = <ArtifactsSection content={content} />;
+        break;
+      case 'notebooks':
+        activeSectionContent = <NotebookSection content={content} />;
+        break;
+      default:
+        activeSectionContent = <DescriptionSection content={content} />;
+        break;
+    }
   }
 
   return (
     content !== null && (
       <div className="bg-primary-9 relative flex min-h-screen w-full flex-col gap-y-12 py-6 pr-10 pl-28">
-        <HeaderPublicProject title={content.name} headerImage={content?.heroImage} />
+        <HeaderPublicProject title={content.name} headerImage={content.heroImage} />
 
         <div className="flex flex-col">
-          <NavigationSections activeSection={activeSection} setActiveSection={setActiveSection} />
+          <NavigationSections section={section ?? 'description'} updateSection={handleTabChange} />
           <div className="scroll-behavior: smooth; text-primary-9 flex min-h-[70vh] w-full flex-row gap-x-12 bg-white p-8">
             {activeSectionContent}
           </div>

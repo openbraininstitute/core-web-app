@@ -1,0 +1,25 @@
+'use client';
+
+import SingleTutorialCard from '@/components/documentation/main/single-tutorial-card';
+import {
+  ContentForTutorialItem,
+  useSanityContentForTutorialsList,
+} from '@/components/tutorials-carrousel/hooks';
+
+export default function AllTutorialsPage() {
+  const tutorials = useSanityContentForTutorialsList();
+
+  return (
+    <div className="w-full">
+      <div className="flex flex-row items-baseline gap-x-3">
+        <h1 className="mb-6 text-3xl font-bold text-white">All Tutorials</h1>
+        <div className="text-primary-3 text-lg">{tutorials.length} tutorials available</div>
+      </div>
+      <div className="relative grid grid-cols-3 gap-6">
+        {tutorials.map((value: ContentForTutorialItem) => (
+          <SingleTutorialCard key={value.url} content={value} />
+        ))}
+      </div>
+    </div>
+  );
+}

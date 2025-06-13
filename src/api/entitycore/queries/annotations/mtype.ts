@@ -1,8 +1,10 @@
 import authApiClient from '@/api/apiClient';
-import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { IMType, IMtypeFilter } from '@/api/entitycore/types/shared/global';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
+
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { IMType, IMTypeFilter } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/mtype';
 /**
@@ -10,10 +12,16 @@ const baseUri = '/mtype';
 
  * @returns {Promise<EntityCoreResponse<IMType>>} A promise that resolves to the list of mtypes
  */
-export async function getMtypes({ filters }: { filters?: IMtypeFilter }) {
+export async function getMtypes({
+  filters,
+  ctx,
+}: {
+  filters?: IMTypeFilter;
+  ctx: WorkspaceContext;
+}) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<EntityCoreResponse<IMType>>(baseUri, {
-    ...getEntityCoreContext(),
+    ...getEntityCoreContext(ctx),
     queryParams: {
       ...filters,
     },

@@ -25,9 +25,9 @@ interface NodeProps<TNode extends TTreeNode> {
   selectedNode: TNode | null;
   onToggle: (node: TNode) => void;
   onClick: (node: TNode) => void;
-  subtitle?: NodeSubtitle;
   indentation?: NodeIndentation;
   defaultColor?: string;
+  separator?: boolean;
 }
 
 function Node<TNode extends TTreeNode>({
@@ -40,10 +40,10 @@ function Node<TNode extends TTreeNode>({
   selectedNode,
   onToggle,
   onClick,
-  subtitle,
   nodeRowHeight,
   indentation,
   defaultColor,
+  separator = true,
 }: NodeProps<TNode>) {
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedNode?.id === node.id;
@@ -106,12 +106,11 @@ function Node<TNode extends TTreeNode>({
             level={level}
             isLast={isLast}
             dataKey={dataKey}
-            subtitle={subtitle}
             indentation={indentation}
             nodeRowHeight={nodeRowHeight}
             defaultColor={defaultColor}
           />
-          {!isLast && !isExpanded && (
+          {!isLast && !isExpanded && separator && (
             <div
               className={classNames(
                 `border-b-primary-6 absolute border-b`,
@@ -154,10 +153,10 @@ function Node<TNode extends TTreeNode>({
               selectedNode={selectedNode}
               onToggle={onToggle}
               onClick={onClick}
-              subtitle={subtitle}
               nodeRowHeight={nodeRowHeight}
               indentation={indentation}
               defaultColor={defaultColor}
+              separator={separator}
             />
           ))}
         </div>

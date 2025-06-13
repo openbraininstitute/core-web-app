@@ -1,7 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithDefault, selectAtom, unwrap } from 'jotai/utils';
 import { arrayToTree } from 'performant-array-to-tree';
-import cloneDeep from 'lodash/cloneDeep';
 import uniqBy from 'lodash/uniqBy';
 import { findDeep, reduceDeep } from 'deepdash-es/standalone';
 import sessionAtom from '@/state/session';
@@ -14,7 +13,6 @@ import {
   Mesh,
 } from '@/types/ontologies';
 import { getBrainRegionOntology, getDistributions } from '@/api/ontologies';
-import { buildAlternateChildren, buildAlternateTree } from '@/state/brain-regions/alternate-view';
 import { DefaultBrainRegionType, NavValue, SelectedBrainRegion } from '@/state/brain-regions/types';
 import {
   compositionHistoryAtom,

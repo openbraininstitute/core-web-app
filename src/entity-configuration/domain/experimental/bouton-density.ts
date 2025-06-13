@@ -2,7 +2,10 @@
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
-import * as entitycore from '@/api/entitycore/queries';
+import {
+  getExperimentalBoutonDensities,
+  getExperimentalBoutonDensity,
+} from '@/api/entitycore/queries/experimental/bouton-density';
 
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -19,8 +22,8 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
       allowedParams: 'all',
     },
     query: {
-      list: entitycore.getExperimentalBoutonDensities,
-      one: entitycore.getExperimentalBoutonDensity,
+      list: getExperimentalBoutonDensities,
+      one: getExperimentalBoutonDensity,
     },
   },
   explore: {

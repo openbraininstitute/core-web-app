@@ -37,4 +37,5 @@ export interface ITemporaryBrainRegionHierarchy {
   hasPart: string[];
   view?: BrainViewId;
   representedInAnnotation?: boolean; // This property is removed for brainRegionsWithRepresentationAtom
+  volume: number;
 }

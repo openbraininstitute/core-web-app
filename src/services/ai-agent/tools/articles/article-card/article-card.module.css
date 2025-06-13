@@ -1,0 +1,57 @@
+.articleCard {
+  display: block;
+  margin: 1em 0;
+  padding: 1em;
+  border: 1px solid #777;
+  border-radius: 0.5em;
+  background-color: #f7f7f7;
+  transition: all 0.3s;
+}
+
+.articleCard:hover {
+  border-radius: 0;
+  background-color: #eee;
+}
+
+.articleCard h2 {
+  font-weight: bold;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+
+.articleCard h2 > svg {
+  flex: 0 0 auto;
+  width: 2em;
+}
+
+.articleCard p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--custom-max-lines, 2);
+}
+
+.articleCard > footer {
+  margin-top: 1em;
+  color: #888;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 1em;
+}
+
+.articleCard > footer .author {
+  display: inline-block;
+  color: #ddd;
+  border: 1px solid #777;
+  border-radius: 99vmax;
+  margin: 0.25em;
+  padding: 0 0.5em;
+}

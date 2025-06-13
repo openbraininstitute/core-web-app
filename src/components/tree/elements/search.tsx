@@ -1,11 +1,13 @@
 import { useCallback, useState } from 'react';
 import { ConfigProvider, Select } from 'antd';
+import delay from 'lodash/delay';
 
-import { scrollToNode } from '@/components/tree/elements/helpers';
 import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
 
-import type { TTreeNode } from '@/components/tree/types';
+import { scrollToNode } from '@/components/tree/elements/helpers';
 import { classNames } from '@/util/utils';
+
+import type { TTreeNode } from '@/components/tree/types';
 
 interface Props {
   options: Array<{ value: string; label: string; data: TTreeNode }>;
@@ -19,12 +21,13 @@ export default function TreeSearch({ options, onSelect }: Props) {
       const selectedOption = options.find((option) => option.value === value);
       if (selectedOption) {
         onSelect?.(selectedOption.data);
-        setTimeout(() => {
+        delay(() => {
           scrollToNode(selectedOption.data);
+          setSearchValue(undefined);
         }, 100);
       }
     },
-    [options, onSelect]
+    [options, onSelect, scrollToNode]
   );
 
   return (

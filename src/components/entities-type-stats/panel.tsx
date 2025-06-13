@@ -6,13 +6,11 @@ import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
 import get from 'lodash/get';
 
-import circuitsFlat from '@/components/explore-section/Circuit/content/circuits_flat';
-
+import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
+import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/DataTypeTabs';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';
-import { resolveDataKey } from '@/utils/key-builder';
 import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
@@ -22,6 +20,7 @@ import type { BulkEntityCoreCountResult } from '@/services/entitycore/entities-c
 import type { WorkspaceContext } from '@/types/common';
 
 type EntityTypeCountProps = {
+  dataKey: string;
   data: BulkEntityCoreCountResult | null;
   error: Error | null;
 };
@@ -29,10 +28,12 @@ type EntityTypeCountProps = {
 type StatsPanelProps =
   | EntityTypeCountProps
   | {
+      dataKey: string;
       isLoading?: boolean;
     };
 
 type Props = {
+  dataKey: string;
   children: ({ data, error }: EntityTypeCountProps) => ReactNode;
 };
 
@@ -43,6 +44,7 @@ function isEntityTypeCountProps(p: StatsPanelProps): p is EntityTypeCountProps {
 export function EntityTypeStats(props: StatsPanelProps) {
   const pathName = usePathname();
   const selectedTab = useAtomValue(dataTabAtom);
+  const { error: circuitError, filteredCircuits } = useFilteredCircuits({ dataKey: props.dataKey });
 
   let data: BulkEntityCoreCountResult | null = null;
   let error: Error | null = null;
@@ -109,13 +111,13 @@ export function EntityTypeStats(props: StatsPanelProps) {
           );
         })}
         <EntityTypeCount
-          isError={false}
+          isError={!!circuitError}
           key="count-circuit"
           href={`${pathName}/model/circuit`}
           type="Circuit"
-          records={`${circuitsFlat.length} records`}
+          records={`${filteredCircuits.count} record${filteredCircuits.count !== 1 ? 's' : ''}`}
           title="Circuit"
-          isLoading={isLoading}
+          isLoading={false}
         />
       </>
     ))
@@ -130,12 +132,9 @@ export function EntityTypeStats(props: StatsPanelProps) {
   // }
 }
 
-function EntityTypeStatsPanelContainer({ children }: Props) {
+function EntityTypeStatsPanelContainer({ children, dataKey }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const { node } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: 'explore', projectId }),
-  });
-
+  const { node } = useBrainRegionHierarchy({ dataKey });
   const { data, error } = useAtomValue(
     useMemo(
       () => entitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id }),
@@ -145,23 +144,23 @@ function EntityTypeStatsPanelContainer({ children }: Props) {
 
   return (
     <div className="relative grid h-full grid-flow-row grid-cols-2 gap-x-3 gap-y-1 p-4 pt-0">
-      {children({ data, error })}
+      {children({ data, error, dataKey })}
     </div>
   );
 }
 
-function EntityTypeStatsPanel() {
+function EntityTypeStatsPanel({ dataKey }: { dataKey: string }) {
   return (
     <Suspense
       name="entity-type-stats-panel"
       fallback={
         <div className="relative grid h-full grid-flow-row grid-cols-2 gap-x-3 gap-y-1 p-4 pt-0">
-          <EntityTypeStats isLoading />
+          <EntityTypeStats dataKey={dataKey} isLoading />
         </div>
       }
     >
-      <EntityTypeStatsPanelContainer>
-        {({ data, error }) => <EntityTypeStats {...{ data, error }} />}
+      <EntityTypeStatsPanelContainer dataKey={dataKey}>
+        {({ data, error }) => <EntityTypeStats {...{ data, error, dataKey }} />}
       </EntityTypeStatsPanelContainer>
     </Suspense>
   );

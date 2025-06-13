@@ -96,6 +96,25 @@ export interface IMtypeFilter extends PaginationFilter {
   pref_label__in: string | null;
   order_by: string | null;
 }
+export type MorphologyMeasurementSerie = {
+  name: string;
+  value: number;
+};
+
+export type Measurement = {
+  measurement_of: string;
+  measurement_serie: MorphologyMeasurementSerie[];
+};
+
+export type TypeFilter = {
+  id?: string | null;
+  pref_label?: string | null;
+  pref_label__in?: string | null;
+  order_by?: string | null;
+};
+
+export interface IMTypeFilter extends PaginationFilter, TypeFilter {}
+export interface IETypeFilter extends PaginationFilter, TypeFilter {}
 
 type RoleBase = {
   name: string;

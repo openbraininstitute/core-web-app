@@ -11,7 +11,7 @@ type Props = {
 
 export default function VirtualSplashScreen({ showCreateSubscription = true }: Props) {
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col py-10">
+    <div className="relative z-10 mx-auto flex h-max w-full max-w-7xl flex-col py-10">
       <HeroSection />
       <div className="mx-auto mt-6 flex w-full flex-col gap-3">
         <motion.div

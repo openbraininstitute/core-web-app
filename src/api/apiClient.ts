@@ -1,8 +1,9 @@
 import omitBy from 'lodash/omitBy';
 import isNil from 'lodash/isNil';
 
-import { getSession } from '@/authFetch';
 import { compactRecord } from '@/utils/dictionary';
+import { getSession } from '@/authFetch';
+import { log } from '@/utils/logger';
 
 type BackoffStrategy = {
   type: 'exponential' | 'custom';
@@ -152,7 +153,7 @@ class ApiClient {
         response: cachedResponse,
       };
     } catch (e) {
-      console.warn('Cache API access failed:', e);
+      log('warn', 'Cache API access failed:', e);
       return { valid: false, response: null };
     }
   }
@@ -190,7 +191,7 @@ class ApiClient {
 
       await cache.put(url, cachedResponseToStore);
     } catch (e) {
-      console.warn('Failed to store in cache:', e);
+      log('warn', 'Failed to store in cache:', e);
     }
   }
 
@@ -242,7 +243,7 @@ class ApiClient {
       );
 
       if (valid && cachedResponse) {
-        console.debug(`[cached] ${urlString}`);
+        log('debug', `[cached] ${urlString}`);
         const contentType = cachedResponse.headers.get('Content-Type') || '';
         if (config.asRawResponse) {
           return cachedResponse as unknown as T;
@@ -261,7 +262,7 @@ class ApiClient {
 
       // if cache is invalid or expired, continue with the request
       if (cachedResponse) {
-        console.log(`Cache expired for ${urlString}, fetching fresh data`);
+        log('log', `Cache expired for ${urlString}, fetching fresh data`);
       }
     }
 
@@ -274,12 +275,15 @@ class ApiClient {
           ...(this._token ? { Authorization: `Bearer ${this._token}` } : {}),
           ...options.headers,
         }),
-        body:
-          options.body && !(options.body instanceof FormData)
-            ? JSON.stringify(options.body)
-            : options.body
-              ? options.body
-              : undefined,
+        body: (() => {
+          if (!options.body) {
+            return undefined;
+          }
+          if (options.body instanceof FormData) {
+            return options.body;
+          }
+          return JSON.stringify(options.body);
+        })(),
         signal: options.signal,
         cache: options.cache,
         next: options.next,
@@ -297,7 +301,10 @@ class ApiClient {
 
       if (!response.ok && (config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
         const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        log('log', 'Retrying request in', delay, 'ms');
+        await new Promise((resolve) => {
+          setTimeout(resolve, delay);
+        });
         return runRequest();
       }
 
@@ -324,10 +331,17 @@ class ApiClient {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
 
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise((resolve) => {
+            setTimeout(resolve, delay);
+          });
           return runRequest();
         }
-
+        log('error', 'Request failed', {
+          url: url.toString(),
+          status: response.status,
+          message: (responseData as any).message || `Request failed with status ${response.status}`,
+          data: responseData,
+        });
         throw Error(`Request ${request.url} failed `, {
           cause: {
             status: response.status,
@@ -350,7 +364,9 @@ class ApiClient {
       }
       if ((config.retryOnException ?? this._retryOnException) && attempt < maxAttempts) {
         const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await new Promise((resolve) => {
+          setTimeout(resolve, delay);
+        });
         return this._request<T>(method, endpoint, options, { ...config, attempts: attempt + 1 });
       }
       throw error;
@@ -397,7 +413,7 @@ class ApiClient {
 
       return true;
     } catch (e) {
-      console.error('Failed to clear cache:', e);
+      log('error', 'Failed to clear cache:', e);
       return false;
     }
   }

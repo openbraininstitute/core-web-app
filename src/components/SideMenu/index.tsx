@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 
+import { ReactNode } from 'react';
 import HelpMenu from '@/components/HelpMenu';
 import UserMenu from '@/components/user-menu';
 import { LabItem, LinkItem, ProjectItem } from '@/components/VerticalLinks';
@@ -54,8 +55,7 @@ function ProjectLink({ project, lab }: { project: ProjectItem; lab: LabItem }) {
   );
 }
 
-export default function SideMenu({ lab, project, links }: SideMenuProps) {
-  const result = useAtomValue(unwrap(virtualLabDetailAtomFamily(lab.id)));
+export function Container({ children }: { children?: ReactNode }) {
   return (
     <div
       className={classNames(
@@ -63,6 +63,15 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
         'flex-col items-center justify-center gap-2 border-r-[1px] transition-transform ease-in-out will-change-auto'
       )}
     >
+      {children}
+    </div>
+  );
+}
+
+export default function SideMenu({ lab, project, links }: SideMenuProps) {
+  const result = useAtomValue(unwrap(virtualLabDetailAtomFamily(lab.id)));
+  return (
+    <Container>
       <div className="flex w-[45px] grow flex-col items-center justify-between overflow-hidden">
         <div className="mt-4 flex w-full flex-col items-center gap-2 overflow-hidden">
           {links
@@ -119,6 +128,6 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
           </Link>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

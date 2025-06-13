@@ -1,0 +1,9 @@
+*[_type=="tutorial"][]
+{
+  title,
+  description,
+  "url": videoUrl,
+  "imageURL": thumbnail.asset->url,
+  "imageWidth": thumbnail.asset->metadata.dimensions.width,
+  "imageHeight": thumbnail.asset->metadata.dimensions.height
+}

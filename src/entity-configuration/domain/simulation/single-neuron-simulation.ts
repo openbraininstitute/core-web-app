@@ -7,8 +7,8 @@ import {
   createSingleNeuronSimulation,
   getSingleNeuronSimulation,
   getSingleNeuronSimulations,
-  getMEModel,
-} from '@/api/entitycore/queries';
+} from '@/api/entitycore/queries/simulation/single-neuron-simulation';
+import { getMEModel } from '@/api/entitycore/queries/model/me-model';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { ISingleNeuronSimulation } from '@/api/entitycore/types';

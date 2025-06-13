@@ -6,12 +6,14 @@ import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
 import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import {
   DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
-  brainRegionHierarchyAtom,
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
@@ -22,7 +24,7 @@ import type { TTreeNode } from '@/components/tree/types';
 
 export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
-  const brainRegionHierarchyResult = useAtomValue(brainRegionHierarchyAtom);
+  const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
   const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
@@ -46,6 +48,8 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     updateHierarchyConfig(node as IBrainRegionHierarchy);
     scrollToNode(node as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
+    makeBrainRegionClickEvent({ dataKey, node: node as IBrainRegionHierarchy });
+    userJourneyTracker.registerBrainRegionClick(node.name);
   };
 
   return (
@@ -55,7 +59,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
         isCollapsed ? 'collapsed w-[40px]' : 'w-[340px]'
       )}
     >
-      <div className="flex w-full flex-col gap-4 overflow-hidden p-4">
+      <div className="flex w-full flex-col gap-4 overflow-hidden p-4 pt-6">
         <div className="flex flex-col items-center justify-center">
           <TreeSideMenu dataKey={dataKey} />
           <div
@@ -64,17 +68,12 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
               isCollapsed ? 'invisible max-h-0 opacity-0' : 'visible max-h-[100vh] opacity-100'
             )}
           >
-            <TreeSearch
-              options={brainRegionHierarchyResult.options}
-              onSelect={(node) => {
-                updateHierarchyConfig(node as unknown as IBrainRegionHierarchy);
-              }}
-            />
+            <TreeSearch options={brainRegionHierarchyResult.options} onSelect={onClick} />
             {brainRegionHierarchyResult.nodes && (
               <Tree
                 dataKey={dataKey}
                 data={brainRegionHierarchyResult.nodes}
-                height="calc(100vh - 130px)" // 130px for header and search
+                height="calc(100vh - 146px)" // 130px for header and search
                 defaultExpandedNodes={defaultBrainRegion ? [defaultBrainRegion] : []}
                 indentation={{
                   v: true,

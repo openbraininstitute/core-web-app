@@ -36,13 +36,25 @@ jobs:
         with:
           registry-type: public
 
-      - name: Build a Docker image
+      # For now tag the image for AWS as both entitycore-migration and entitycore-migration-aws, until the
+      # terraform code is updated.
+      - name: Build a Docker image for AWS
         run: |
-          docker build --build-arg DEPLOYMENT_ENV=staging-next -t ${{ vars.PUBLICECR_URI }}:entitycore-migration .
+          docker build --build-arg DEPLOYMENT_ENV=staging-next-aws -t ${{ vars.PUBLICECR_URI }}:entitycore-migration-aws .
 
-      - name: Publish To AWS ECR
+      - name: Publish the image for AWS To AWS ECR
         run: |
+          docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration-aws
+          docker tag ${{ vars.PUBLICECR_URI }}:entitycore-migration-aws ${{ vars.PUBLICECR_URI }}:entitycore-migration
           docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration
+
+      - name: Build a Docker image for Azure
+        run: |
+          docker build --build-arg DEPLOYMENT_ENV=staging-next-azure -t ${{ vars.PUBLICECR_URI }}:entitycore-migration-azure .
+
+      - name: Publish the image for Azure To AWS ECR
+        run: |
+          docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration-azure
 
       - name: Authenticate with AWS ECS
         uses: aws-actions/configure-aws-credentials@v4

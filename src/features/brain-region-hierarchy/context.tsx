@@ -5,14 +5,16 @@ import { useEffect } from 'react';
 import { atom } from 'jotai';
 
 import {
-  findNodeByKey,
   flattenTreeAsObject,
+  findNodeByKey,
   renameKeyDeep,
 } from '@/components/tree/elements/helpers';
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
 import { tryCatch } from '@/api/utils';
+import { log } from '@/utils/logger';
 import { env } from '@/env';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
@@ -21,10 +23,14 @@ type Props = {
   dataKey: string;
 };
 
+export const DEFAULT_BRAIN_ATLAS_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID;
 export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
 export const DEFAULT_SELECTED_BRAIN_REGION_ID = env.NEXT_PUBLIC_DEFAULT_SELECTED_BRAIN_REGION_ID;
-export const DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE =
-  env.NEXT_PUBLIC_DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE;
+export const ROOT_BRAIN_REGION_ANNOTATION_VALUE =
+  env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE;
+export const ROOT_BRAIN_REGION_ID = env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ID;
+export const BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE =
+  env.NEXT_PUBLIC_BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE;
 export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567;
 export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
@@ -36,43 +42,64 @@ type BrainRegionHierarchyOption = {
   label: string;
   data: IBrainRegionHierarchy;
 };
-type BrainRegionHierarchyAtomReturnType = {
+export type BrainRegionHierarchyAtomReturnType = {
   root: IBrainRegionHierarchy;
   nodes: IBrainRegionHierarchy | null;
   options: Array<BrainRegionHierarchyOption>;
+  leaves: Map<string, IBrainRegionHierarchy[]>;
 } | null;
 
 export const brainRegionSidebarAtom = atom(false);
-export const brainRegionHierarchyAtom = atom(
-  async (): Promise<BrainRegionHierarchyAtomReturnType> => {
-    const { data: brainRegions, error } = await tryCatch(getBrainRegionHierarchy({}));
-    if (error) {
-      console.error('Failed to fetch brain regions:', error);
-      throw error;
-    }
+
+export const brainRegionRootHierarchyAtom = atom(async () => {
+  const { data: root, error } = await tryCatch(getBrainRegionHierarchy({}));
+  if (error) {
+    log('error', 'Failed to fetch brain regions:', error);
+    throw error;
+  }
+  const options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map((region) => ({
+    value: region.id,
+    label: `${region.name}`,
+    data: region,
+  }));
+
+  return {
+    root,
+    options,
+  };
+});
+
+export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
+  async (get): Promise<BrainRegionHierarchyAtomReturnType> => {
+    const { root: master } = await get(brainRegionRootHierarchyAtom);
+
     const root = findNodeByKey<IBrainRegionHierarchy>(
       DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
-      DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE,
-      brainRegions
+      BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
+      master
     );
 
     if (!root) {
-      console.warn(
-        `Brain region with annotation_value ${DEFAULT_ROOT_BRAIN_REGION_ANNOTATION_VALUE} not found.`
+      log(
+        'warn',
+        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`
       );
       return null;
     }
     let options: Array<BrainRegionHierarchyOption> = [];
+    let leaves: Map<string, IBrainRegionHierarchy[]> = new Map();
     const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color');
+
     if (nodes) {
       options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map((region) => ({
         value: region.id,
         label: `${region.name}`,
         data: region,
       }));
+      leaves = getLeavesForEachRegion(root);
     }
 
-    return { root, nodes, options };
+    return { root, nodes, options, leaves };
   }
 );
 
@@ -154,5 +181,6 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   };
 };
 
-brainRegionHierarchyAtom.debugLabel = 'brainRegionHierarchyAtom';
+brainRegionBasicCellGroupsRegionsHierarchyAtom.debugLabel =
+  'brainRegionBasicCellGroupsRegionsHierarchyAtom';
 brainRegionSidebarAtom.debugLabel = 'brainRegionSidebarAtom';

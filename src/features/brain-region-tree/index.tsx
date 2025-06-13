@@ -45,11 +45,6 @@ function NavTitle({
   viewId,
   scope = 'explore',
 }: TitleComponentProps) {
-  const section = useAtomValue(sectionAtom);
-  if (!section) {
-    throw new Error('Section is not set');
-  }
-
   const brainRegionViews = useAtomValue(brainRegionOntologyViewsAtom);
   const selectedBrainRegion = useAtomValue(selectedBrainRegionFamily(scope));
   const brainRegions = useAtomValue(brainRegionsAtom);
@@ -168,9 +163,9 @@ export default function BrainRegions({ scope = 'explore' }: { scope?: string }) 
   const setResetAtlasVisualization = useResetAtom(atlasVisualizationAtom);
   const resetSelectedBrainRegion = useSetAtom(resetSelectedBrainRegionAtom);
 
-  const onNavTitle = async (id: string, title: string, leaves: any) => {
-    await userJourneyTracker.handleBrainRegionClick(title);
-    setSelectedBrainRegion(id, title, leaves);
+  const onNavTitle = async (id: string, brainRegionName: string, leaves: any) => {
+    userJourneyTracker.registerBrainRegionClick(brainRegionName);
+    setSelectedBrainRegion(id, brainRegionName, leaves);
   };
 
   useExpandRegionTree(scope);
