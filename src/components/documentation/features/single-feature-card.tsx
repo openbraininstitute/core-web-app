@@ -9,7 +9,7 @@ export default function SingleFeatureCard({
   imageNumber: number;
 }) {
   return (
-    <div className="my-16 mr-12 flex flex-row items-center gap-x-6">
+    <div className="mr-12 flex flex-row items-center gap-x-6">
       <div className="h-60 w-60 overflow-hidden rounded-full shadow-superShadow">
         <Image
           src={`/images/documentation/scale_image-0${imageNumber}.webp`}

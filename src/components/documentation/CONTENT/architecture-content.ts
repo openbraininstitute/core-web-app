@@ -25,20 +25,6 @@ export function useDocumentationArchitecture(): SingleSectionProps[] {
       slug: 'features',
       children: [
         {
-          name: 'Coming Features ✨',
-          slug: 'coming-features',
-          children: null,
-          disabled: true,
-          link: '/app/documentation/features/coming-features',
-        },
-        {
-          name: 'All',
-          slug: 'all',
-          children: null,
-          disabled: false,
-          link: '/app/documentation/features/all-features',
-        },
-        {
           name: 'Subcellular',
           slug: 'subcellular',
           children: null,

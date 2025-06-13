@@ -77,7 +77,9 @@ export function ItemEnabled({
   ) : (
     <div>
       <div className="flex w-full flex-row items-center justify-between">
-        <div className="font-sans text-lg font-normal text-white">{name}</div>
+        <Link href={link} className="font-sans text-lg font-normal text-white">
+          {name}
+        </Link>
         <button
           type="button"
           aria-label="Toggle section"

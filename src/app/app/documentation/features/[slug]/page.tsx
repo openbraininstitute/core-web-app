@@ -55,8 +55,8 @@ export default function SingleFeaturePage() {
 
   return (
     <div className="w-full px-8">
-      <div className="mb-12 text-4xl font-bold text-white">{pageTitle}</div>
-      <div className="mt-12 flex w-full flex-col gap-x-5">
+      <div className="mb-24 text-4xl font-bold text-white">{pageTitle}</div>
+      <div className="mt-12 flex w-full flex-col gap-y-20">
         {featureContent.map((item: ContentForFeatureItem) => {
           return (
             <SingleFeatureCard key={item.Feature_title} content={item} imageNumber={imageNumber} />
