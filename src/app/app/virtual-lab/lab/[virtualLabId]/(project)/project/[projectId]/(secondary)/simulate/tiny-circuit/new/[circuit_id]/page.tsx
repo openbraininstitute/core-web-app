@@ -235,30 +235,32 @@ export default function TinyCircuitSimulation() {
                                   <CheckCircleFilled className="text-green-600" />
                                 )}
 
-                                <DeleteOutlined
-                                  className="cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+                                {configTab !== 'timestamps' && configTab !== 'neuron_sets' && (
+                                  <DeleteOutlined
+                                    className="cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
 
-                                    setSelectedCategory('');
-                                    setEditing(false);
-                                    const selectedTabAtoms = atomsMap[configTab];
-                                    if (!isAtom(selectedTabAtoms)) {
-                                      delete selectedTabAtoms[
-                                        `${schema.properties?.[configTab].title}_${idx}`
-                                      ];
+                                      setSelectedCategory('');
+                                      setEditing(false);
+                                      const selectedTabAtoms = atomsMap[configTab];
+                                      if (!isAtom(selectedTabAtoms)) {
+                                        delete selectedTabAtoms[
+                                          `${schema.properties?.[configTab].title}_${idx}`
+                                        ];
 
-                                      setAtomsMap({
-                                        ...atomsMap,
-                                        [configTab]: {
-                                          ...selectedTabAtoms,
-                                        },
-                                      });
-                                    }
+                                        setAtomsMap({
+                                          ...atomsMap,
+                                          [configTab]: {
+                                            ...selectedTabAtoms,
+                                          },
+                                        });
+                                      }
 
-                                    setSelectedItemIdx(null);
-                                  }}
-                                />
+                                      setSelectedItemIdx(null);
+                                    }}
+                                  />
+                                )}
                               </div>
                             </div>
                           </Fragment>
