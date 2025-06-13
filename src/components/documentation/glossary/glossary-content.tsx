@@ -1,15 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
 import RichContentBloc from '../global/rich-content-bloc';
 import { ContentForGlossaryItem } from '../hooks/use-sanity-content-for-glossary';
 
 export default function GlossaryContent({ content }: { content: ContentForGlossaryItem | null }) {
-  const processedContent = useMemo(() => {
-    if (!content || !content.Description) return '';
-    return content.Description.replace(/\n\*\*(.*?)\*\*:/g, '\n- **$1**:');
-  }, [content]);
-
   return (
     <div className="w-full text-white">
       <header className="mb-4">
@@ -25,7 +19,7 @@ export default function GlossaryContent({ content }: { content: ContentForGlossa
           </div>
         </div>
       </header>
-      <RichContentBloc content={processedContent} />
+      <RichContentBloc content={content?.Description || ''} />
     </div>
   );
 }
