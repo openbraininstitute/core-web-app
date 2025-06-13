@@ -34,9 +34,9 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
   }>();
 
   const getSelectUrlQueryParams = () => {
-    const _params = new URLSearchParams(searchParams?.toString());
-    _params.delete('m');
-    return _params.toString();
+    const urlSearchParams = new URLSearchParams(searchParams?.toString());
+    urlSearchParams.delete('m');
+    return urlSearchParams.toString();
   };
 
   if (data) {

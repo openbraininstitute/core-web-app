@@ -66,10 +66,12 @@ export function EntityTypeStats(props: StatsPanelProps) {
           let isError = false;
 
           if (!isLoading) {
-            const _result = get(data?.experimental, `${value.legacyType}`, '');
+            const tmpResult = get(data?.experimental, `${value.legacyType}`, '');
             records =
-              typeof _result === 'number' ? `${_result} record${_result > 0 ? 's' : ''}` : 'error';
-            isError = !!error || typeof _result === 'string';
+              typeof tmpResult === 'number'
+                ? `${tmpResult} record${tmpResult > 0 ? 's' : ''}`
+                : 'error';
+            isError = !!error || typeof tmpResult === 'string';
           }
 
           return (
@@ -93,10 +95,12 @@ export function EntityTypeStats(props: StatsPanelProps) {
           let records = '';
           let isError = false;
           if (!isLoading) {
-            const _result = get(data?.model, `${value.legacyType}`, '');
+            const tmpResult = get(data?.model, `${value.legacyType}`, '');
             records =
-              typeof _result === 'number' ? `${_result} record${_result > 0 ? 's' : ''}` : 'error';
-            isError = !!error || typeof _result === 'string';
+              typeof tmpResult === 'number'
+                ? `${tmpResult} record${tmpResult > 0 ? 's' : ''}`
+                : 'error';
+            isError = !!error || typeof tmpResult === 'string';
           }
           return (
             <EntityTypeCount
