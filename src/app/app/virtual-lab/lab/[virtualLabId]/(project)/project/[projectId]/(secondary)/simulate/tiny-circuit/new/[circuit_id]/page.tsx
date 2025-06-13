@@ -86,8 +86,6 @@ export default function TinyCircuitSimulation() {
         // @ts-ignore
         const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
 
-        console.log('schema \n\n', theSchema);
-
         if (!theSchema.properties) return;
 
         setSchema(theSchema);
@@ -116,7 +114,6 @@ export default function TinyCircuitSimulation() {
             }
 
             map[k] = atom<Record<string, Object>>(initial);
-            // console.log('\n\n initial set', initial)
           } else map[k] = {};
         });
 
@@ -129,10 +126,6 @@ export default function TinyCircuitSimulation() {
 
     fetchSpec();
   }, [circuitId]);
-
-  console.log(config);
-
-  console.log(errors)
 
   if (!schema) {
     return (
@@ -250,7 +243,6 @@ export default function TinyCircuitSimulation() {
                                     setSelectedCategory('');
                                     setEditing(false);
                                     const selectedTabAtoms = atomsMap[configTab];
-
                                     if (!isAtom(selectedTabAtoms)) {
                                       delete selectedTabAtoms[
                                         `${schema.properties?.[configTab].title}_${idx}`
