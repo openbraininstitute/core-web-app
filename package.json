@@ -151,7 +151,7 @@
     "@types/three": "^0.159.0",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
-    "@vitejs/plugin-react": "^4.4.0",
+    "@vitejs/plugin-react": "^4.5.2",
     "autoprefixer": "^10.4.14",
     "dotenv": "^16.5.0",
     "dotenv-cli": "^8.0.0",
