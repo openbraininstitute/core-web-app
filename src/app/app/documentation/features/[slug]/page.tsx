@@ -2,11 +2,6 @@
 
 import { useParams } from 'next/navigation';
 
-import {
-  SingleScaleTypeProps,
-  useScaleArchitecture,
-} from '@/components/documentation/CONTENT/scale-content';
-import ScaleCard from '@/components/documentation/features/scale-card';
 import SingleFeatureCard from '@/components/documentation/features/single-feature-card';
 import {
   ContentForFeatureItem,
@@ -16,7 +11,6 @@ import Slugify from '@/util/slugify';
 
 export default function SingleFeaturePage() {
   const content = useSanityContentForFeatureItems();
-  const scaleContent = useScaleArchitecture();
 
   const params = useParams();
   const slug = params.slug as string;
@@ -48,43 +42,20 @@ export default function SingleFeaturePage() {
   }
 
   const featureContent: ContentForFeatureItem[] = (() => {
-    if (!content) {
-      return [];
-    }
-
-    if (slug === 'all-features') {
-      return content;
-    }
-    return content.filter((item: ContentForFeatureItem) => Slugify(item.Scale) === slug);
-  })();
-
-  const sectionContent: SingleScaleTypeProps[] | [] =
-    scaleContent.find((section) => Slugify(section.name) === slug)?.content || [];
-
-  if (!featureContent) {
-    return (
-      <div className="container mx-auto p-4 text-white">
-        <h1 className="text-3xl font-bold">Feature Not Found</h1>
-        <p>The feature could not be found or is still loading.</p>
-      </div>
+    const filteredBySlug = content.filter(
+      (item: ContentForFeatureItem) => Slugify(item.Scale) === slug
     );
-  }
 
-  console.log('The slug is:', slug);
+    const filteredByStatus = filteredBySlug.filter(
+      (item: ContentForFeatureItem) => item.Status === 'Available'
+    );
+
+    return filteredByStatus.length > 0 ? filteredByStatus : [];
+  })();
 
   return (
     <div className="w-full px-8">
       <div className="mb-12 text-4xl font-bold text-white">{pageTitle}</div>
-      {slug !== 'all-features' && (
-        <header className="w-full">
-          <div className="text-xl font-semibold text-primary-4">Scale elements</div>
-          <div className="my-4 grid grid-cols-3 gap-4">
-            {sectionContent?.map((item: SingleScaleTypeProps) => (
-              <ScaleCard key={item.title} content={item} />
-            ))}
-          </div>
-        </header>
-      )}
       <div className="mt-12 flex w-full flex-col gap-x-5">
         {featureContent.map((item: ContentForFeatureItem) => {
           return (
