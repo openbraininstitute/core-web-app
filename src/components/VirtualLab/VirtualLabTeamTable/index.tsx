@@ -11,9 +11,7 @@ import find from 'lodash/find';
 import sortBy from 'lodash/sortBy';
 import compact from 'lodash/compact';
 
-import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import InviteModal from '@/components/VirtualLab/create-entity-flows/invite';
-import useUserPermissions from '@/hooks/useUserPermission';
 import useNotification from '@/hooks/notifications';
 import {
   cancelVirtualLabInvite,
@@ -25,6 +23,7 @@ import { virtualLabStatsAtomFamily } from '@/state/virtual-lab/lab';
 import { extractInitials } from '@/util/slugify';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
@@ -250,10 +249,6 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
   const [isOpen, setOpen] = useState(false);
   const [users, setUsers] = useState(initialUsers);
-  const [popoverOpen, setIsPopoverOpen] = useState(false);
-
-  const { isAllowedBySubscription, isAdmin, loading } = useUserPermissions({ virtualLabId });
-  const allowedOperation = isAllowedBySubscription && isAdmin && !loading;
 
   const onClose = () => setOpen(false);
   const onOpen = () => setOpen(true);
@@ -341,12 +336,6 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
     [ownerId, virtualLabId]
   );
 
-  const onOpenChange = (visible: boolean) => {
-    if (loading) return;
-    if (!allowedOperation || !visible) setIsPopoverOpen(true);
-    else setIsPopoverOpen(false);
-  };
-
   const orderedUsers = useMemo(
     () =>
       sortBy(users, [
@@ -402,32 +391,22 @@ export default function TeamTable({ users: initialUsers, total, ownerId }: Props
         </ConfigProvider>
       </div>
       <div className="mt-auto flex flex-shrink-0 items-center justify-end">
-        <CustomPopover
-          when={['hover']}
-          message="Only on Pro and Premium plans the Owner/Administrator can invite members."
-          placement="topLeft"
-          visible={popoverOpen}
-          onOpenChange={onOpenChange}
+        <Button
+          key="add-member"
+          data-testid="add-member-btn"
+          className={classNames(
+            'text-primary-9 h-14 rounded-none border border-white bg-white px-14',
+            'hover:!border-primary-8 hover:bg-primary-8 hover:!border hover:font-bold hover:!text-white hover:shadow-sm',
+            'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
+            'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
+          )}
+          type="default"
+          size="large"
+          htmlType="button"
+          onClick={onOpen}
         >
-          <Button
-            key="add-member"
-            data-testid="add-member-btn"
-            className={classNames(
-              'text-primary-9 h-14 rounded-none border border-white bg-white px-14',
-              'hover:!border-primary-8 hover:bg-primary-8 hover:!border hover:font-bold hover:!text-white hover:shadow-sm',
-              'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-              'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
-            )}
-            type="default"
-            size="large"
-            htmlType="button"
-            disabled={!allowedOperation}
-            onClick={onOpen}
-            onMouseLeave={() => setIsPopoverOpen(false)}
-          >
-            Add member
-          </Button>
-        </CustomPopover>
+          Add member
+        </Button>
       </div>
       <InviteModal
         type="vlab"

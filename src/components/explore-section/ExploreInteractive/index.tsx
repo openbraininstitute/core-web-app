@@ -51,7 +51,7 @@ export default function ExploreInteractivePanel() {
                 showButtons: false,
               })}
             >
-              <EntityTypeStatsPanel />
+              <EntityTypeStatsPanel dataKey={dataKey} />
             </ErrorBoundary>
           </div>
         </div>

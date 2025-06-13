@@ -47,6 +47,18 @@ export default function CreateVirtualLabForm() {
     startTransition(async () => {
       const { data: result, error } = await tryCatch(createVirtualLab(values));
       if (error || !result || !result.data) {
+        const errorCause = error?.cause as Record<string, unknown>;
+        if (
+          errorCause &&
+          'error_code' in errorCause &&
+          errorCause.error_code === 'ENTITY_ALREADY_EXISTS'
+        ) {
+          notify.error({
+            message: 'A Virtual Lab with this name already exists. Please choose a different name.',
+            placement: 'topRight',
+          });
+          return;
+        }
         notify.error({
           message: 'Virtual Lab creation failed. Please check your details and try again.',
           placement: 'topRight',

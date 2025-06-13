@@ -58,7 +58,9 @@ export default function Overview({ allowAskCode }: Props) {
                 const exists = await checkVirtualLabExists({ name });
                 if (exists) {
                   setValidName({ loading: false, status: 'non-valid' });
-                  return Promise.reject(new Error('This virtual lab name is already taken.'));
+                  return Promise.reject(
+                    new Error('Another virtual lab with same name already exists')
+                  );
                 }
                 setValidName({ loading: false, status: 'valid' });
                 return Promise.resolve();

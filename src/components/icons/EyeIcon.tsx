@@ -5,6 +5,7 @@ type EyeIconProps = {
   style?: CSSProperties;
 };
 
+/** Black eye on a transparant background */
 export default function EyeIcon({ className, style }: EyeIconProps) {
   return (
     <svg
@@ -21,6 +22,7 @@ export default function EyeIcon({ className, style }: EyeIconProps) {
   );
 }
 
+/** Black outline of an eye on a transparant background */
 export function EyeIconOutline(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -47,6 +49,54 @@ export function EyeIconOutline(props: SVGProps<SVGSVGElement>) {
         stroke="currentColor"
         strokeMiterlimit="10"
         strokeWidth="32"
+      />
+    </svg>
+  );
+}
+
+/** White eye icon on a transparant background */
+export function EyeIconWhite(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="15"
+      height="10"
+      viewBox="0 0 15 10"
+      fill="none"
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...props}
+    >
+      <g id="Eye Icon">
+        <path
+          d="M7.5 0.237869C3.08868 0.237869 0 5.09091 0 5.09091C0 5.09091 2.24992 9.94395 7.5 9.94395C12.7939 9.94395 15 5.09091 15 5.09091C15 5.09091 11.956 0.237869 7.5 0.237869ZM7.5 8.17875C5.77948 8.17875 4.41216 6.81143 4.41216 5.09091C4.41216 3.37039 5.77948 2.00307 7.5 2.00307C9.22052 2.00307 10.5878 3.37039 10.5878 5.09091C10.5878 6.81143 9.22052 8.17875 7.5 8.17875Z"
+          fill="white"
+        />
+        <path
+          d="M8.82347 5.09091C8.82347 5.82213 8.23121 6.41439 7.49999 6.41439C6.76878 6.41439 6.17651 5.82213 6.17651 5.09091C6.17651 4.35969 6.76878 3.76743 7.49999 3.76743C8.23121 3.76743 8.82347 4.35969 8.82347 5.09091Z"
+          fill="white"
+        />
+      </g>
+    </svg>
+  );
+}
+
+/** White eye icon, surrounded by a box representing a screen
+ */
+export function EyeIconWhiteWithinBox(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="15"
+      height="16"
+      viewBox="0 0 15 16"
+      fill="none"
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...props}
+    >
+      <path
+        id="Vector"
+        d="M13 15.0909H2C0.899733 15.0909 0 14.1912 0 13.0909V2.09091C0 0.990645 0.899733 0.0909119 2 0.0909119H13C14.1003 0.0909119 15 0.990645 15 2.09091V13.0909C15 14.1912 14.1003 15.0909 13 15.0909ZM1.33333 3.75758V13.0909C1.33333 13.4574 1.63347 13.7576 2 13.7576H13C13.3665 13.7576 13.6667 13.4574 13.6667 13.0909V3.75758H1.33333ZM7.5 12.2576C4.35033 12.2576 2.80017 9.35791 2.75 9.22441C2.64974 9.02455 2.64974 8.80774 2.75 8.60788C2.80013 8.49069 4.35027 5.59088 7.5 5.59088C10.6497 5.59088 12.1998 8.49055 12.25 8.62405C12.3503 8.82391 12.3503 9.04071 12.25 9.24058C12.1999 9.35777 10.6497 12.2576 7.5 12.2576ZM7.5 9.59091C7.13347 9.59091 6.83333 9.29078 6.83333 8.92425C6.83333 8.55771 7.13347 8.25758 7.5 8.25758C7.86653 8.25758 8.16667 8.55771 8.16667 8.92425C8.16667 9.29078 7.86653 9.59091 7.5 9.59091ZM9.5 8.92425C9.5 7.82398 8.60027 6.92425 7.5 6.92425C6.39973 6.92425 5.5 7.82398 5.5 8.92425C5.5 10.0245 6.39973 10.9242 7.5 10.9242C8.60027 10.9242 9.5 10.0245 9.5 8.92425Z"
+        fill="white"
       />
     </svg>
   );

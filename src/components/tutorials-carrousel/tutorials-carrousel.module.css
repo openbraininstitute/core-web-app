@@ -1,0 +1,28 @@
+.tutorialsCarrousel {
+  margin: 2em auto;
+}
+
+.tutorialsCarrousel > header {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+}
+
+.tutorialsCarrousel > header > h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: bolder;
+}
+
+.tutorialsCarrousel > div {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 1em;
+  overflow-x: auto;
+}

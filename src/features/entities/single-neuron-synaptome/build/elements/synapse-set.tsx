@@ -3,6 +3,7 @@
 import { Form, Input, Select, Button, FormListFieldData, InputNumber, App } from 'antd';
 import { useMemo, useReducer, useRef, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
+import { useParams } from 'next/navigation';
 import { Color } from 'three';
 import {
   CloseOutlined,
@@ -16,13 +17,12 @@ import findIndex from 'lodash/findIndex';
 import isEqual from 'lodash/isEqual';
 import groupBy from 'lodash/groupBy';
 
-import { useParams, usePathname } from 'next/navigation';
-import useNotification from '@/hooks/notifications';
 import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { SectionSynapses, synapsesPlacementAtom } from '@/state/synaptome';
+import { synapsesPlacementAtom } from '@/state/synaptome';
 import { validateFormula } from '@/api/bluenaas/validate-synapse-formula';
 import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
+import { useAppNotification } from '@/components/notification';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { getSynaptomePlacement } from '@/api/bluenaas';
 import { messages } from '@/i18n/en/synaptome';
@@ -31,12 +31,10 @@ import {
   sendRemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
 import { classNames } from '@/util/utils';
-import { getSession } from '@/authFetch';
+import { tryCatch } from '@/api/utils';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { WorkspaceContext } from '@/types/common';
-import { tryCatch } from '@/api/utils';
-import { ErrorCause } from '@/api/apiClient';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   modelId: string;
@@ -57,7 +55,7 @@ export default function SynapseSet({
   removeGroup,
   disableApplyChanges,
 }: Props) {
-  const { notification } = App.useApp();
+  const notification = useAppNotification();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const form = Form.useFormInstance();
   const secNames = useAtomValue(secNamesAtom);

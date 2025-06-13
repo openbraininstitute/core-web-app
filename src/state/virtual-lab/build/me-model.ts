@@ -25,7 +25,12 @@ import { Experiment } from '@/types/explore-section/es-experiment';
 const retrieveESResourceByID = async (id: string) => {
   const query = esb
     .requestBodySearch()
-    .query(esb.boolQuery().must(esb.termQuery('@id', id)))
+    .query(
+      esb
+        .boolQuery()
+        .should([esb.termQuery('@id', id), esb.termQuery('@id.keyword', id)])
+        .minimumShouldMatch(1)
+    )
     .size(1);
 
   return authFetch(API_SEARCH, {

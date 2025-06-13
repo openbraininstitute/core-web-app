@@ -1,0 +1,27 @@
+.navigation {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.navigation > button.page {
+  content: '';
+  width: 24px;
+  height: 6px;
+  border-radius: 99vmax;
+  background-color: #096dd9;
+}
+
+.navigation > button.page.selected {
+  background-color: #fff;
+}
+
+.navigation > button.arrow {
+  width: 3em;
+  display: grid;
+  place-items: center;
+}

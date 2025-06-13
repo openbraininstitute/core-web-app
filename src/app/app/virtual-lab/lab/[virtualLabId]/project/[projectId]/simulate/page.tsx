@@ -160,7 +160,7 @@ function NewSim() {
       <ScopeSelector />
       {/* TODO: replace this list with items saved in Model Library */}
       <div
-        className="relative mb-5 flex w-full grow flex-col"
+        className="mb-5 flex w-full grow flex-col"
         id="explore-table-container-for-observable"
         ref={tableRef}
       >

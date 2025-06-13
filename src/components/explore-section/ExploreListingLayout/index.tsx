@@ -8,9 +8,11 @@ import { Menu, type MenuProps } from 'antd';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
-import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
+import { StatError } from '../ExploreInteractive/StatItem';
+
+import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
@@ -19,16 +21,16 @@ import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
-import { circuitCountAtom } from '@/components/explore-section/Circuit/content/circuits_flat';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { DataTypeGroup } from '@/types/explore-section/data-types';
-import { ensureString } from '@/util/type-guards';
 import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
 } from '@/entity-configuration/domain';
+import { resolveDataKey } from '@/utils/key-builder';
+import { ensureString } from '@/util/type-guards';
 
 import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -39,6 +41,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   const router = useRouter();
   const params = useParams<WorkspaceContext & { type: EntitySlugValue; id: string }>();
   const pathname = usePathname();
+  const dataKey = resolveDataKey({ projectId: params.projectId, section: 'explore' });
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
   const brainRegionHierarchy = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
@@ -60,7 +63,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
 
   const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
-  const circuitCount = useAtomValue(circuitCountAtom);
 
   const onClick: MenuProps['onClick'] = async (info) => {
     const { key, domEvent } = info;
@@ -71,15 +73,13 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
       (o) => o.value === brainRegionId
     )?.label;
 
-    if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(brainRegionName!);
-    }
     const artifact = ensureString(
       getEntityBySlug({ slug: key as EntitySlugValue })?.title,
       'Morphology'
     );
+    if (brainRegionName) userJourneyTracker.registerBrainRegionClick(brainRegionName);
     setCurrentExplorerArtifact(artifact);
-    await userJourneyTracker.handleClick('artifact', artifact);
+    userJourneyTracker.registerArtifactClick(artifact);
     router.push(key);
   };
 
@@ -107,16 +107,21 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     };
   });
 
-  if (showCircuitMenu) {
+  const { filteredCircuits, loading, error } = useFilteredCircuits({ dataKey });
+
+  if (error) {
+    return <StatError text={error} />;
+  }
+
+  if (showCircuitMenu && !loading) {
     const circuitActive = activePath === 'circuit';
 
     items.push({
       key: 'circuit',
       title: 'Circuit',
-      // TODO: circuit should be included to the supported types when ready in entitycore
       // @ts-expect-error
       entitytype: 'Circuit',
-      label: `Circuit (${circuitCount})`,
+      label: `Circuit (${filteredCircuits.count})`,
       className: 'text-center font-semibold',
       style: {
         backgroundColor: circuitActive ? 'white' : '#002766',
@@ -128,6 +133,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
 
   // NOTE: this is legacy to handle details page,
   // TODO: (this should change to layout per page type (one for listing and one for details))
+  // ! The menu is not rendered for details pages (where the route contains `id` segment)
   if (params?.id) {
     return <ErrorBoundary FallbackComponent={SimpleErrorComponent}>{children}</ErrorBoundary>;
   }

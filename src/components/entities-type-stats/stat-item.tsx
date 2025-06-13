@@ -1,18 +1,11 @@
 import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
-import { ReactNode, useMemo } from 'react';
-import { useAtomValue } from 'jotai';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 
-import { useQueryState } from 'nuqs';
-import { unwrap } from 'jotai/utils';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
-import {
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
-  DEFAULT_BRAIN_REGION_QUERY_ID,
-} from '@/features/brain-region-hierarchy/context';
 
 // TODO: to delete when confirm the LiteratureForExperimentType is not needed
 export default function StatItem({
@@ -27,21 +20,11 @@ export default function StatItem({
   subtitle: ReactNode;
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
 
   const onClick = async () => {
-    const brainRegionName = brainRegionHierarchy?.options.find(
-      (o) => o.value === brainRegionId
-    )?.label;
-    if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(brainRegionName!);
-    }
     const artifact = ensureString(title, 'Morphology');
     setCurrentExplorerArtifact(artifact);
-    await userJourneyTracker.handleClick('artifact', artifact);
+    await userJourneyTracker.registerBrainRegionClick(artifact);
   };
 
   return (
@@ -94,21 +77,10 @@ export function EntityTypeCount({
   isLoading?: boolean;
 }) {
   const [, setCurrentExplorerArtifact] = useCurrentExplorerArtifact();
-  const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
-
   const onClick = async () => {
-    const brainRegionName = brainRegionHierarchy?.options.find(
-      (o) => o.value === brainRegionId
-    )?.label;
-    if (!(await userJourneyTracker.getCurrentTuple())) {
-      await userJourneyTracker.handleBrainRegionClick(brainRegionName!);
-    }
     const artifact = ensureString(title, 'Morphology');
     setCurrentExplorerArtifact(artifact);
-    await userJourneyTracker.handleClick('artifact', artifact);
+    await userJourneyTracker.registerArtifactClick(artifact);
   };
 
   return (
