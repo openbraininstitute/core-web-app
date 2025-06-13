@@ -1,7 +1,7 @@
 import SanityClient from 'next-sanity-client';
 
 import tiersQuery from './tiers.query.groq';
-import { env } from '@/env.mjs';
+import { env } from '@/env';
 
 import { ContentForPricing } from '@/components/LandingPage/content/pricing';
 
