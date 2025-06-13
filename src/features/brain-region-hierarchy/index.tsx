@@ -6,6 +6,7 @@ import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
 import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
@@ -48,6 +49,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     scrollToNode(node as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
     makeBrainRegionClickEvent({ dataKey, node: node as IBrainRegionHierarchy });
+    userJourneyTracker.registerBrainRegionClick(node.name);
   };
 
   return (

@@ -1,6 +1,6 @@
-import { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
+import memoize from 'memoize-one';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { Prettify } from '@/utils/type';
 
 export function findParentIds(root: IBrainRegionHierarchy, targetId: string): string[] {
   function dfs(node: IBrainRegionHierarchy, path: string[]): string[] | null {
@@ -73,3 +73,60 @@ export function getLeavesForEachRegion(
 
   return new Map<string, IBrainRegionHierarchy[]>(results.map((item) => [item.id, item.leaves]));
 }
+
+type IBrainRegionHierarchyMap = Map<string, IBrainRegionHierarchy & { parent?: string }>;
+
+/**
+ * Builds a flat map of all nodes from the tree, including parent linkage.
+ */
+export function buildHierarchyMap(
+  root: IBrainRegionHierarchy,
+  map: IBrainRegionHierarchyMap = new Map(),
+  parentId: string | null = null
+): IBrainRegionHierarchyMap {
+  map.set(root.id, { ...root, parent: parentId || undefined });
+  root.children.forEach((child) => buildHierarchyMap(child, map, root.id));
+  return map;
+}
+
+/**
+ * Returns descendants and ancestors for a list of brain region ids
+ */
+export function getBrainRegionDescendantsAndAncestors(
+  brainRegionIds: string[],
+  root: IBrainRegionHierarchy
+): IBrainRegionHierarchy[] {
+  const nodeMap = buildHierarchyMap(root);
+  const resultMap = new Map<string, IBrainRegionHierarchy>();
+
+  for (const id of brainRegionIds) {
+    const node = nodeMap.get(id);
+    if (!node) continue;
+
+    // Add the node itself
+    resultMap.set(node.id, node);
+
+    // Collect descendants with DFS (iterative)
+    const stack = [...node.children];
+    while (stack.length) {
+      const child = stack.pop()!;
+      resultMap.set(child.id, child);
+      stack.push(...child.children);
+    }
+
+    // Collect ancestors using parent linkage
+    let parentId = node.parent;
+    while (parentId) {
+      const parent = nodeMap.get(parentId);
+      if (!parent || resultMap.has(parent.id)) break;
+      resultMap.set(parent.id, parent);
+      parentId = parent.parent;
+    }
+  }
+
+  return Array.from(resultMap.values());
+}
+
+export const getBrainRegionDescendantsAndAncestorsNodes = memoize(
+  getBrainRegionDescendantsAndAncestors
+);

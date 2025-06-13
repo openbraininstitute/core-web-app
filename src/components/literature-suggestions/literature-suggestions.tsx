@@ -1,13 +1,15 @@
 'use client';
 
-import React from 'react';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
+import React from 'react';
 
-import SuggestedQuestions from './suggested-questions';
+import ErrorPanel from './error';
 import MessageItem from './message-item';
 import Prompt from './prompt';
-import ErrorPanel from './error';
+
+import SuggestedQuestions from './suggested-questions';
+import { useCollapsedPanel } from './hooks';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
 
@@ -22,11 +24,16 @@ const Spinner = dynamic(() => import('@/components/literature-suggestions/spinne
 });
 
 export default function LiteratureSuggestions({ className }: LiteratureSuggestionsProps) {
-  const [collapsedPanel, setCollapsedPanel] = React.useState(false);
+  const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
   const { messages, clear, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
+
+  // TODO: for future improvement, to disable the spinner for user has not virtual lab
+  // const userStats = useAtomValue(userStatsAtom);
+  // const userHasVirtualLab = Boolean(userStats?.data?.owned_labs_count);
+
   const handleQuery = React.useCallback(
     (content: string) => {
       append({
@@ -47,19 +54,20 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
 
   return (
     <div
-      className={classNames(
-        className,
-        styles.literatureSuggestions,
-        collapsedPanel && styles.collapsed
-      )}
+      className={classNames(className, styles.literatureSuggestions)}
+      data-collapsed={collapsedPanel}
     >
       <button
         className={styles.header}
         type="button"
         onClick={() => setCollapsedPanel(!collapsedPanel)}
       >
-        <h1 title={status}>AI literature search</h1>
-        {collapsedPanel ? <PlusOutlined /> : <MinusOutlined />}
+        <h1 title={status}>AI Assistant</h1>
+        {collapsedPanel ? (
+          <PlusOutlined className="h-[1em] w-[1em]" />
+        ) : (
+          <MinusOutlined className="w-[1em]" />
+        )}
       </button>
       {!collapsedPanel && (
         <>
@@ -98,6 +106,7 @@ export default function LiteratureSuggestions({ className }: LiteratureSuggestio
               <footer>
                 {status === 'ready' && (
                   <SuggestedQuestions
+                    threadId={threadId}
                     messagesLength={messages.length}
                     onClick={(selectedPrompt) => {
                       setPrompt(selectedPrompt);

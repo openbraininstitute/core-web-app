@@ -51,28 +51,21 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
  */
 export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<VirtualLabResponse> {
   const session = await getSession();
-  try {
-    const response = await fetch(BASE_URL, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify(lab),
-    });
+  const response = await fetch(BASE_URL, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    body: JSON.stringify(lab),
+  });
 
-    if (!response.ok) {
-      throw new Error(`creating virtual lab failed`, { cause: await response.json() });
-    }
-
-    const result: VirtualLabResponse = await response.json();
-    return result;
-  } catch (error) {
-    // TODO: capture exception with sentry
-    // eslint-disable-next-line no-console
-    console.error('Error creating virtual lab:', error);
-    throw new Error(`Failed to create virtual lab: ${(error as Error).message}`);
+  if (!response.ok) {
+    throw new Error(`creating virtual lab failed`, { cause: await response.json() });
   }
+
+  const result: VirtualLabResponse = await response.json();
+  return result;
 }
 
 /**

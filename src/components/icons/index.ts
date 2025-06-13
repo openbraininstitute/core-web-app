@@ -19,7 +19,9 @@ import DownloadIcon from './DownloadIcon';
 import EyeIcon from './EyeIcon';
 import EyeTargetIcon from './EyeTarget';
 import FileIcon from './File';
+import FlatListViewIcon from './FlatListViewIcon';
 import GripDotsVerticalIcon from './GripDotsVerticalIcon';
+import HierarchicalViewIcon from './HierarchicalViewIcon';
 import HomeIcon from './Home';
 import HomeFillIcon from './HomeFillIcon';
 import InformationIcon from './InformationIcon';
@@ -31,6 +33,7 @@ import { MembersGroupIcon } from './MembersGroupIcon';
 import MissingData from './MissingData';
 import IconPlus from './Plus';
 import RangeIcon from './Range';
+import ReadMeIcon from './ReadMeIcon';
 import ResetIcon from './ResetIcon';
 import SettingsIcon from './Settings';
 import SimulateIcon from './SimulateIcon';
@@ -63,7 +66,9 @@ export {
   EyeIcon,
   EyeTargetIcon,
   FileIcon,
+  FlatListViewIcon,
   GripDotsVerticalIcon,
+  HierarchicalViewIcon,
   HomeFillIcon,
   HomeIcon,
   InformationIcon,
@@ -75,6 +80,7 @@ export {
   MissingData,
   IconPlus as PlusIcon,
   RangeIcon,
+  ReadMeIcon,
   ResetIcon,
   SettingsIcon,
   SimulateIcon,

@@ -37,7 +37,7 @@ export default function PointCloudMesh({
 
   const pointCloudData = useAtomValue(
     useMemo(
-      () => loadable(getPointCloudAtom(brainRegionAnnotationValue)),
+      () => loadable<ArrayBuffer>(getPointCloudAtom(brainRegionAnnotationValue)),
       [brainRegionAnnotationValue]
     )
   );

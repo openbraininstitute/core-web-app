@@ -1,32 +1,20 @@
 'use client';
 
-import { Key, useEffect, useMemo, useState } from 'react';
-import { Table, Tooltip } from 'antd';
-import { TableRowSelection } from 'antd/es/table/interface';
-import { InfoCircleOutlined } from '@ant-design/icons';
-import { useAtomValue, useSetAtom } from 'jotai';
-import circuitsFlat, { circuitCountAtom } from '../content/circuits_flat';
-import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
-import CIRCUITS from '../content/circuits_tree';
-import { CircuitColumn, CircuitSchemaProps } from '../type';
-import { ChevronRight } from '@/components/icons';
-import truncate from '@/util/truncate';
-import { classNames, memoize } from '@/util/utils';
+import { useAtomValue } from 'jotai';
+import { useEffect, useMemo, useState } from 'react';
+import CircuitTable from '../global/circuit-table';
+import { CircuitSchemaProps } from '../type';
+
 import {
-  brainRegionByIdMapAtom,
-  selectedBrainRegionAtom,
-  selectedBrainRegionWithDescendantsAndAncestorsAtom,
-} from '@/state/brain-regions';
-import styles from './ExploreCircuiteTable.module.scss';
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  useBrainRegionHierarchy,
+} from '@/features/brain-region-hierarchy/context';
+import {
+  buildHierarchyMap,
+  getBrainRegionDescendantsAndAncestorsNodes,
+} from '@/features/brain-region-hierarchy/helpers';
 
-const getExpandableRowKeys = (data: CircuitSchemaProps[]): string[] => {
-  return data.reduce((acc, row) => {
-    const subKeys = row.subcircuits ? getExpandableRowKeys(row.subcircuits) : [];
-    return row.hasSubcircuits ? [...acc, row.key, ...subKeys] : [...acc, ...subKeys];
-  }, [] as string[]);
-};
-
-function brainRegionFilterFunction({
+function brainRegionFilter({
   circuits,
   regionSet,
 }: {
@@ -61,255 +49,63 @@ function brainRegionFilterFunction({
   };
 }
 
-const brainRegionFilter = memoize(brainRegionFilterFunction, (param) => param.region ?? '');
+export function useFilteredCircuits({ dataKey }: { dataKey: string }) {
+  const { node } = useBrainRegionHierarchy({ dataKey });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [circuitsData, setCircuitsData] = useState<CircuitSchemaProps[]>([]);
 
-export default function ExploreCircuitTable() {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>(getExpandableRowKeys(CIRCUITS));
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
-  const selectedBrainRegions = useAtomValue(selectedBrainRegionWithDescendantsAndAncestorsAtom);
-  const brainRegionNotationById = useAtomValue(brainRegionByIdMapAtom);
-  const setCircuitCount = useSetAtom(circuitCountAtom);
+  useEffect(() => {
+    const fetchCircuit = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/circuits/ALL_CIRCUITS.json');
+
+        if (!response.ok) {
+          throw new Error('Error: ' + response.statusText);
+        }
+
+        const data: CircuitSchemaProps[] = await response.json();
+
+        setCircuitsData(data);
+      } catch (er) {
+        setError(er instanceof Error ? er.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCircuit();
+  }, []);
+
+  const brainRegions = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
+  const selectedBrainRegions = getBrainRegionDescendantsAndAncestorsNodes(
+    [node.id],
+    brainRegions?.root!
+  );
+  const brainRegionByIdMap = buildHierarchyMap(brainRegions?.root!);
 
   const brainRegionSet = useMemo(() => {
     return new Set(
       selectedBrainRegions.map(
-        (br) => brainRegionNotationById?.get(br)?.title.toLocaleLowerCase().trim() ?? ''
+        (br) => brainRegionByIdMap.get(br.id)?.name.toLowerCase().trim() ?? ''
       )
     );
-  }, [selectedBrainRegions, brainRegionNotationById]);
+  }, [selectedBrainRegions, brainRegionByIdMap]);
 
   const filteredCircuits = brainRegionFilter({
-    region: selectedBrainRegion?.id,
+    region: node?.id,
     regionSet: brainRegionSet,
-    circuits: CIRCUITS,
+    circuits: circuitsData,
   });
 
-  useEffect(() => {
-    setCircuitCount(filteredCircuits.count);
-  }, [filteredCircuits.count, setCircuitCount]);
+  return { loading, error, filteredCircuits };
+}
 
-  const handleExpandRow = (row: CircuitSchemaProps, _index: number) => {
-    if (!row.hasSubcircuits) return;
-    const rowKey = row.key;
-    setExpandedRowKeys((prev) =>
-      prev.includes(rowKey) ? prev.filter((key) => key !== rowKey) : [...prev, rowKey]
-    );
-  };
-
-  const rowSelection: TableRowSelection<CircuitSchemaProps> = {
-    type: 'radio',
-    selectedRowKeys,
-    onChange: (newSelectedRows: Key[]) => {
-      setSelectedRowKeys(newSelectedRows);
-    },
-  };
-
-  const calculateSubcircuitsForParent = (row: CircuitSchemaProps): number => {
-    const directSubcircuits = row.subcircuits?.length || 0;
-    const nestedSubcircuits = row.subcircuits
-      ? row.subcircuits.reduce((sum, sub) => sum + calculateSubcircuitsForParent(sub), 0)
-      : 0;
-    return directSubcircuits + nestedSubcircuits;
-  };
-
-  const columns: CircuitColumn[] = [
-    {
-      title: 'Name',
-      key: 'name',
-      render: (value: CircuitSchemaProps) => (
-        <span className="whitespace-nowrap">{value.name}</span>
-      ),
-    },
-    {
-      title: 'Description',
-      key: 'description',
-      render: (value: CircuitSchemaProps) => (
-        <span className="font-normal whitespace-nowrap">{truncate(value.description, 40)}</span>
-      ),
-      width: 300,
-    },
-    {
-      title: 'Brain region',
-      key: 'brainRegion',
-      render: (value: CircuitSchemaProps) => (
-        <span className="font-normal whitespace-nowrap">{value.brainRegion}</span>
-      ),
-    },
-    {
-      title: '# Neurons',
-      key: 'numberOfNeurons',
-      render: (value: CircuitSchemaProps) => (
-        <span className="font-normal whitespace-nowrap">{value.numberOfNeurons}</span>
-      ),
-    },
-    {
-      title: 'Species',
-      key: 'specie',
-      render: (value: CircuitSchemaProps) => (
-        <span className="font-normal whitespace-nowrap">{value.species}</span>
-      ),
-    },
-    {
-      title: 'Contributor',
-      key: 'contributorSimple',
-      render: (value: CircuitSchemaProps) => (
-        <span className="font-normal whitespace-nowrap">{value.metadata.contributorSimple}</span>
-      ),
-    },
-    {
-      title: 'Registration date',
-      key: 'registrationDate',
-      render: (value: CircuitSchemaProps) => (
-        <span className="font-normal whitespace-nowrap">{value.metadata.registrationDate}</span>
-      ),
-    },
-    {
-      title: 'Subcircuits',
-      key: 'hasSubcircuits',
-      render: (value: CircuitSchemaProps, index?: number) => {
-        const isExpanded = expandedRowKeys.includes(value.key);
-        const totalSubcircuitsForParent = calculateSubcircuitsForParent(value);
-
-        return (
-          value.hasSubcircuits && (
-            <button
-              type="button"
-              className="relative flex h-6 items-center justify-center text-base font-normal focus:outline-hidden"
-              aria-label="Open subcircuit"
-              onClick={() => handleExpandRow(value, index ?? -1)}
-              disabled={!value.hasSubcircuits}
-            >
-              <div className="relative mr-6 block">{totalSubcircuitsForParent}</div>
-              <ChevronRight
-                fill="#003A8C"
-                className={classNames(
-                  'relative top-px h-4 w-auto transition-transform duration-300 ease-in-out',
-                  isExpanded ? 'rotate-90' : 'rotate-0'
-                )}
-              />
-            </button>
-          )
-        );
-      },
-    },
-  ];
-
-  // SUBCIRCUIT TABLE - LEVEL 1
-  const expandedRowRender = (circuit: CircuitSchemaProps) => {
-    if (!circuit.subcircuits || circuit.subcircuits.length === 0) return null;
-
-    return (
-      <div className="relative flex flex-col">
-        <div className="flex-row] relative flex pl-2">
-          <ArrowSmall iconColor="#8C8C8C" className="relative -top-0.5" />
-          <span className="ml-3 pb-2 text-base font-semibold tracking-wider text-[#8C8C8C] uppercase">
-            Subcircuits
-          </span>
-        </div>
-        <Table<CircuitSchemaProps>
-          className={classNames(
-            '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-            '[&_.ant-table-row]:bg-[#FAFAFA]',
-            '[&_.ant-table-thead_th]:text-sm!',
-            '[&_.ant-table-thead_th]:font-normal!',
-            '[&_.ant-table-thead_th]:text-[#8C8C8C]!',
-            '[&_.ant-table-thead_th]:uppercase',
-            '[&_.ant-table-thead_th]:tracking-[0.05em]',
-            '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-            '[&_.ant-table-thead > tr > th]:border-b-0',
-            '[&_.ant-table-expand-icon-col]:w-0',
-            '[&_.ant-table-expand-icon-col]:hidden',
-            styles.circuitTable
-          )}
-          columns={columns}
-          dataSource={circuit.subcircuits}
-          pagination={false}
-          rowSelection={rowSelection}
-          expandable={{
-            expandedRowRender,
-            expandedRowKeys,
-            onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
-              const rowKey = row.key;
-              setExpandedRowKeys((prev) =>
-                expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)
-              );
-            },
-            expandIcon: () => null,
-          }}
-        />
-      </div>
-    );
-  };
-
-  const selectedRows = circuitsFlat.filter((row: CircuitSchemaProps) =>
-    selectedRowKeys.includes(row.key)
-  );
-
-  const lastRow = selectedRows.at(-1);
-  const file = lastRow?.files?.[0];
-  const fileUrl = file?.url;
-
+export default function ExploreCircuitTable({ data }: { data: CircuitSchemaProps[] }) {
   return (
-    <div className="pt-10">
-      <Table
-        className={classNames(
-          '[&_.ant-table-tbody]:bg-[#FAFAFA]',
-          '[&_.ant-table-row]:bg-[#FAFAFA]',
-          '[&_.ant-table-thead_th]:text-sm!',
-          '[&_.ant-table-thead_th]:font-normal!',
-          '[&_.ant-table-thead_th]:text-[#8C8C8C]!',
-          '[&_.ant-table-thead_th]:uppercase',
-          '[&_.ant-table-thead_th]:tracking-[0.05em]',
-          '[&_.ant-table-tbody > tr:last-child > td]:border-b-0',
-          '[&_.ant-table-thead > tr > th]:border-b-0',
-          '[&_.ant-table-expand-icon-col]:w-0',
-          '[&_.ant-table-expand-icon-col]:hidden',
-          styles.circuitTable
-        )}
-        style={{ '--ant-table-expand-icon-col-width': '0px' } as React.CSSProperties}
-        dataSource={filteredCircuits.filteredTree}
-        columns={columns}
-        pagination={false}
-        rowSelection={rowSelection}
-        expandable={{
-          expandedRowRender,
-          expandedRowKeys,
-          onExpand: (expanded: boolean, row: CircuitSchemaProps) => {
-            const rowKey = row.key;
-            setExpandedRowKeys((prev) =>
-              expanded ? [...prev, rowKey] : prev.filter((key: string) => key !== rowKey)
-            );
-          },
-          expandIcon: () => null,
-        }}
-      />
-
-      {fileUrl && (
-        <a
-          href={fileUrl}
-          type="button"
-          className="bg-primary-8 transition-bottom absolute right-10 bottom-6 flex h-20 w-[150px] items-center justify-center text-xl duration-300 ease-in-out"
-          style={{
-            visibility: selectedRowKeys && selectedRowKeys.length > 0 ? 'visible' : 'hidden',
-          }}
-        >
-          <span>Download</span>
-          <Tooltip
-            title={
-              <a
-                href="https://github.com/openbraininstitute/ConnectomeUtilities/blob/main/README.md"
-                target="_blank"
-                onClick={(e) => e.stopPropagation()}
-              >
-                The connectome will be downloaded in Connectome Utilities format, see more here.
-              </a>
-            }
-          >
-            <InfoCircleOutlined className="ml-2" />
-          </Tooltip>
-        </a>
-      )}
+    <div className="relative flex w-full flex-col bg-white pt-10">
+      <CircuitTable data={data} />
     </div>
   );
 }

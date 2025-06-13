@@ -108,6 +108,10 @@ export const env = createEnv({
     NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID: z.string().nonempty(),
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE: z.string().nonempty(),
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ID: z.string().nonempty(),
+    NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK: z
+      .string()
+      .transform((val) => val === 'true')
+      .default('false'),
   },
 
   experimental__runtimeEnv: {
@@ -203,5 +207,6 @@ export const env = createEnv({
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE:
       process.env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE,
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ID: process.env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ID,
+    NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK: process.env.NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK,
   },
 });
