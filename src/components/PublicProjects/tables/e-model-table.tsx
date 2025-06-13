@@ -20,13 +20,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
 
   const handleDownload = () => {
     if (selectedRow?.downloadLink) {
-      const link = document.createElement('a');
-      link.href = selectedRow.download ?? '';
-      link.download = selectedRow.name || 'model';
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      window.open(selectedRow.downloadLink, '_blank');
     }
   };
 
