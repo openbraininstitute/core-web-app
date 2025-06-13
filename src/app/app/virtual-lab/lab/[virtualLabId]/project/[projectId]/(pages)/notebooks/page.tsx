@@ -2,7 +2,7 @@ import NotebookTable from './NotebookTable';
 import { notebookRepoUrl } from '@/config';
 import { ServerSideComponentProp } from '@/types/common';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
-import { env } from '@/env.mjs';
+import { env } from '@/env';
 
 export default async function Notebooks(
   props: ServerSideComponentProp<{ projectId: string; virtualLabId: string }>
