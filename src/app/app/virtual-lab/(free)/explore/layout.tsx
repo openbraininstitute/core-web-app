@@ -10,7 +10,7 @@ import { sectionAtom } from '@/state/application';
 
 import styles from './layout.module.css';
 
-const LiteratureSuggestions = dynamic(() => import('@/components/literature-suggestions'));
+const LiteratureSuggestions = dynamic(() => import('@/components/ai-assistant'));
 
 type GenericLayoutProps = {
   children: ReactNode;
