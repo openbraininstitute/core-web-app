@@ -337,6 +337,7 @@ export default function TinyCircuitSimulation() {
             editing &&
             (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
               <JSONSchemaForm
+                configTab={configTab}
                 config={config}
                 circuitId={circuitId}
                 schema={

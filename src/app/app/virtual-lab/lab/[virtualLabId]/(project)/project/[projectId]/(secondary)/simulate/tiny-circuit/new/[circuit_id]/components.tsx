@@ -15,17 +15,19 @@ export type Object = Primitive | Primitive[] | Record<string, Primitive>;
 export type Config = Record<string, Record<string, Object | Record<string, Object>> | string>;
 
 export function JSONSchemaForm({
+  configTab,
   schema,
   stateAtom,
   circuitId,
   config,
 }: {
+  configTab: string;
   config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: Object }>>;
   circuitId: string;
 }) {
-  const skip = ['type']; // TODO: handle when circuit changes
+  const skip = ['type'];
 
   const [state, setState] = useAtom(stateAtom);
 
@@ -45,34 +47,41 @@ export function JSONSchemaForm({
 
     if (k === 'circuit') return <Input value={circuitId} disabled />;
 
-    if (
-      v.is_block_reference &&
-      v.properties &&
-      typeof v.properties.type.const === 'string' &&
-      Array.isArray(v.allowed_block_types)
-    ) {
+    if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
       const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
       if (!referenceKey) return null;
       const referenceConfig = config[referenceKey];
       if (!isPlainObject(referenceConfig)) return null;
 
       const referees = Object.entries(referenceConfig).filter(([_, val]) => {
-        return isPlainObject(val) && 'type' in val && v.allowed_block_types.includes(val.type);
+        return isPlainObject(val);
       });
 
       if (referees.length === 0) {
         return `No valid ${referenceKey} found.`;
       }
 
-      const defaultV: string | null =
-        isPlainObject(state.node_set) &&
-        'block_name' in state.node_set &&
-        typeof state.node_set.block_name === 'string'
-          ? state.node_set.block_name
-          : null;
+      let defaultV = null;
 
-      console.log('state', state);
-      console.log('schema', v);
+      if (
+        configTab === 'initialize' &&
+        typeof state.node_set === 'object' &&
+        !Array.isArray(state.node_set)
+      ) {
+        defaultV = state.node_set?.block_name;
+      } else if (
+        configTab === 'recordings' &&
+        typeof state.neuron_set === 'object' &&
+        !Array.isArray(state.neuron_set)
+      ) {
+        defaultV = state.neuron_set?.block_name;
+      } else if (
+        configTab === 'stimuli' &&
+        typeof state.timestamps === 'object' &&
+        !Array.isArray(state.timestamps)
+      ) {
+        defaultV = state.timestamps?.block_name;
+      }
 
       return (
         <Select
