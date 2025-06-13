@@ -98,7 +98,7 @@ export function JSONSchemaForm({
               },
             });
           }}
-          value={defaultV}
+          value={typeof defaultV === 'string' ? defaultV : null}
           options={referees.map(([subkey]) => {
             return {
               label: subkey,
@@ -108,6 +108,8 @@ export function JSONSchemaForm({
         />
       );
     }
+    // render this
+    if (k === 'neuron_ids') return <Input />;
 
     if (obj.enum)
       return (
