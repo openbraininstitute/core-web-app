@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
-import isArray from 'lodash/isArray';
 import { JSONSchema } from './types';
 
 import { classNames } from '@/util/utils';
@@ -48,13 +47,11 @@ export function JSONSchemaForm({
 
     if (
       v.is_block_reference &&
-      v.title &&
-      typeof v.title === 'string' &&
       v.properties &&
       typeof v.properties.type.const === 'string' &&
       Array.isArray(v.allowed_block_types)
     ) {
-      const referenceKey = referenceTypesToConfigKeys[v.title];
+      const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
       if (!referenceKey) return null;
       const referenceConfig = config[referenceKey];
       if (!isPlainObject(referenceConfig)) return null;
@@ -73,6 +70,9 @@ export function JSONSchemaForm({
         typeof state.node_set.block_name === 'string'
           ? state.node_set.block_name
           : null;
+
+      console.log('state', state);
+      console.log('schema', v);
 
       return (
         <Select
