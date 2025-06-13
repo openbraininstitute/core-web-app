@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 
 import { useSanityForSingleTutorial } from '@/components/documentation/tutorials/fetch-single-tutorial';
 import SliderTimestamps from '@/components/documentation/tutorials/slider-timestamps';
-import TextContentBloc from '@/components/documentation/tutorials/TextContentBloc';
+import TextContentBloc from '@/components/documentation/tutorials/text-content-block';
 
 export default function SingleTutorialPage() {
   const params = useParams();

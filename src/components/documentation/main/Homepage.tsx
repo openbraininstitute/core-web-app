@@ -1,4 +1,4 @@
-import ComingSoonBanner from './ComingSoonBanner';
+import ComingSoonBanner from './coming-soon-banner';
 import HeaderHome from './HeaderHome';
 import SliderTutorial from './slider-tutorials';
 

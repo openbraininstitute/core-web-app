@@ -1,65 +1,66 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 import { ContentForGlossaryItem } from '../hooks/use-sanity-content-for-glossary';
 
+import Slugify from '@/util/slugify';
 import { classNames } from '@/util/utils';
 
-export default function GlossaryTableOfContent({
-  content,
-  activeItem,
-  setActiveItem,
-}: {
-  content: ContentForGlossaryItem[];
-  activeItem: ContentForGlossaryItem | null;
-  setActiveItem: (item: ContentForGlossaryItem | null) => void;
-}) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export default function GlossaryTableOfContent({ content }: { content: ContentForGlossaryItem[] }) {
+  const { slug } = useParams();
 
-  const handleItemClick = (item: ContentForGlossaryItem) => {
-    setActiveItem(item);
-    const encodedItemName = encodeURIComponent(item.Name);
-    router.push(`/app/documentation/glossary?item=${encodedItemName}`);
-  };
+  const contentDataType = content.filter((item: ContentForGlossaryItem) =>
+    ['Experimental Data ', 'Model Data '].includes(item.Name)
+  );
 
-  useEffect(() => {
-    const itemName = searchParams.get('item');
-    if (itemName) {
-      const decodedItemName = decodeURIComponent(itemName);
-      const matchingItem = content.find((item) => item.Name === decodedItemName);
-      if (matchingItem && matchingItem !== activeItem) {
-        setActiveItem(matchingItem);
-      } else if (!matchingItem && activeItem) {
-        // Clear activeItem if query parameter is invalid
-        setActiveItem(null);
-      }
-    } else if (activeItem) {
-      // Clear activeItem if no query parameter
-      setActiveItem(null);
-    }
-  }, [content, searchParams, setActiveItem, activeItem]);
+  const contentArtifactType = content.filter(
+    (item: ContentForGlossaryItem) => !['Experimental Data ', 'Model Data '].includes(item.Name)
+  );
 
   return (
-    <div className="w-[255px]">
-      <div className="mb-2 text-xl font-bold text-primary-3">Glossary</div>
-      <div className="flex flex-col items-start gap-y-2">
-        {content.map((item: ContentForGlossaryItem) => (
-          <button
-            type="button"
-            aria-label="Select glossary item"
-            onClick={() => handleItemClick(item)}
-            key={item.Name}
-            className={classNames(
-              'text-lg',
-              activeItem?.Name === item.Name ? 'font-bold text-white' : 'font-normal text-primary-1'
-            )}
-          >
-            {item.Name}
-          </button>
-        ))}
+    <div className="fixed z-50 w-[255px]">
+      <div className="mb-4 text-xl font-bold text-primary-3">Glossary</div>
+      <div className="mb-7 flex flex-col">
+        <div className="mb-3 flex flex-row items-center whitespace-nowrap text-sm font-normal uppercase tracking-wider text-primary-3 after:ml-2 after:block after:h-px after:w-full after:bg-primary-6 after:content-['']">
+          Data types
+        </div>
+        <div className="flex flex-col gap-y-2">
+          {contentDataType.map((item: ContentForGlossaryItem) => (
+            <Link
+              href={`/app/documentation/glossary/${Slugify(item.Name)}`}
+              aria-label="Select glossary item"
+              key={item.Name}
+              className={classNames(
+                'text-lg',
+                slug === Slugify(item.Name) ? 'font-bold text-white' : 'font-normal text-primary-1'
+              )}
+            >
+              {item.Name}
+            </Link>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <div className="mb-3 flex flex-row items-center whitespace-nowrap text-sm font-normal uppercase tracking-wider text-primary-3 after:ml-2 after:block after:h-px after:w-full after:bg-primary-6 after:content-['']">
+          Artifact types
+        </div>
+        <div className="flex flex-col gap-y-2">
+          {contentArtifactType.map((item: ContentForGlossaryItem) => (
+            <Link
+              href={`/app/documentation/glossary/${Slugify(item.Name)}`}
+              aria-label="Select glossary item"
+              key={item.Name}
+              className={classNames(
+                'text-lg',
+                slug === Slugify(item.Name) ? 'font-bold text-white' : 'font-normal text-primary-1'
+              )}
+            >
+              {item.Name}
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { SingleScaleTypeProps } from '../CONTENT/scale-content';
+import { SingleScaleTypeProps } from '../content/scale-content';
 
 export default function ScaleCard({ content }: { content: SingleScaleTypeProps }) {
   return (
