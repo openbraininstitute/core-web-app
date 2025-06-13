@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useDocumentationArchitecture } from '../CONTENT/architecture-content';
+import { useDocumentationArchitecture } from '../content/architecture-content';
 import { SingleSectionProps } from '../type';
 import NavItem from './nav-item';
 import TutorialNavList from './tutorial-nav-list';
@@ -10,7 +10,7 @@ export default function DocumentationSideBloc() {
   return (
     <nav className="w-full text-white">
       <header className="mb-4 flex flex-col">
-        <div className="mb-2 text-xl font-bold text-primary-3">Documentation</div>
+        <div className="text-primary-3 mb-2 text-xl font-bold">Documentation</div>
         <Link href="/app/documentation/new-features" className="text-xl font-bold text-white">
           New Features ✨
         </Link>
