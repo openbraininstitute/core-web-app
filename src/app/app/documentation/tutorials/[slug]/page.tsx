@@ -34,7 +34,7 @@ export default function SingleTutorialPage() {
   return (
     <div className="relative flex w-full flex-col">
       <header className="mb-4 w-full text-white">
-        <div className="text-base font-normal uppercase tracking-wider">Tutorial</div>
+        <div className="text-base font-normal tracking-wider uppercase">Tutorial</div>
         <h1 className="text-3xl font-bold">{content.title}</h1>
       </header>
       <div className="mb-4 w-full">
@@ -43,7 +43,7 @@ export default function SingleTutorialPage() {
             playsInline
             loop
             controls
-            className="h-auto w-full rounded-lg border border-solid border-primary-7"
+            className="border-primary-7 h-auto w-full rounded-lg border border-solid"
             src={content.url}
             ref={videoRef}
             onTimeUpdate={handleTimeUpdate}
