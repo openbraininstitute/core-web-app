@@ -5,7 +5,7 @@ import { JSONSchema } from './types';
 
 import { classNames } from '@/util/utils';
 
-function isPlainObject<T extends object>(value: unknown): value is T {
+export function isPlainObject(value: unknown): value is Record<string, Object> {
   return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
 
@@ -60,7 +60,9 @@ export function JSONSchemaForm({
       }
 
       const defaultV =
-        typeof state[k] === 'object' && !Array.isArray(state[k]) ? state[k]?.block_name : null;
+        isPlainObject(state[k]) && typeof state[k].block_name === 'string'
+          ? state[k].block_name
+          : null;
 
       return (
         <Select
@@ -77,7 +79,7 @@ export function JSONSchemaForm({
               },
             });
           }}
-          value={typeof defaultV === 'string' ? defaultV : null}
+          value={defaultV}
           options={referees.map(([subkey]) => {
             return {
               label: subkey,

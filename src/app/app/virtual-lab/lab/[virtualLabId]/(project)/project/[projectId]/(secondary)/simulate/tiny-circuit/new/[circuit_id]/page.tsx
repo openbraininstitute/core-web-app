@@ -15,7 +15,14 @@ import {
 import { notification } from 'antd/lib';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
-import { JSONSchemaForm, Chevron, Tab, type Config, type Object } from './components';
+import {
+  JSONSchemaForm,
+  Chevron,
+  Tab,
+  type Config,
+  type Object,
+  isPlainObject,
+} from './components';
 import { Params, JSONSchema } from './types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
@@ -135,6 +142,8 @@ export default function TinyCircuitSimulation() {
     );
   }
 
+  console.log(config);
+
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
@@ -165,10 +174,6 @@ export default function TinyCircuitSimulation() {
           {schema.properties &&
             Object.entries(schema.properties)
               .filter(([k]) => k !== 'type')
-              .sort(([k, _]) => {
-                if (k === 'Initialize') return 0;
-                return 1;
-              })
               .map(([k, v]) => (
                 <Fragment key={k}>
                   <Tab
@@ -212,11 +217,7 @@ export default function TinyCircuitSimulation() {
                                   : ''
                               )}
                               onClick={() => {
-                                if (
-                                  typeof subValue === 'object' &&
-                                  !Array.isArray(subValue) &&
-                                  subValue !== null
-                                ) {
+                                if (isPlainObject(subValue)) {
                                   setSelectedCategory(
                                     typeof subValue.type === 'string' ? subValue.type : ''
                                   );
@@ -251,12 +252,9 @@ export default function TinyCircuitSimulation() {
                                       // Initialize case
 
                                       if (
-                                        typeof config.initialize === 'object' &&
-                                        typeof config.initialize.node_set === 'object' &&
-                                        config.initialize.node_set !== null &&
-                                        !Array.isArray(config.initialize.node_set) &&
-                                        config.initialize.node_set.block_name === schemaKey &&
-                                        isAtom(atomsMap.initialize)
+                                        isPlainObject(config.initialize) &&
+                                        isPlainObject(config.initialize.node_set) &&
+                                        config.initialize.node_set.block_name === schemaKey
                                       ) {
                                         atomsMap.initialize = atom<Record<string, Object>>({
                                           ...config.initialize,
@@ -272,20 +270,15 @@ export default function TinyCircuitSimulation() {
 
                                           // Check all keys in a section (e.g stimuli, recordings)
                                           Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                            if (typeof entryV !== 'object' || entryV === null)
-                                              return;
+                                            if (!isPlainObject(entryV)) return;
 
                                             // Check all values in a particular object (a single stimuli, a single timestamp, etc)
                                             Object.entries(entryV).forEach(([fieldK, field]) => {
                                               if (
-                                                typeof entryV !== 'object' ||
-                                                entryV === null ||
-                                                Array.isArray(entryV) ||
-                                                typeof field !== 'object' ||
-                                                field === null ||
-                                                Array.isArray(field) ||
+                                                !isPlainObject(entryV) ||
+                                                !isPlainObject(field) ||
                                                 field.block_name !== schemaKey ||
-                                                isAtom(atomsMap[configK]) // Skip top level atoms
+                                                isAtom(atomsMap[configK])
                                               )
                                                 return;
 
