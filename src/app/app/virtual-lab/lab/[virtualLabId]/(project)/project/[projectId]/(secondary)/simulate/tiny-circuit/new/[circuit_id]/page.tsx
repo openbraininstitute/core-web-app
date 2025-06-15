@@ -280,26 +280,16 @@ export default function TinyCircuitSimulation() {
                                               if (
                                                 typeof entryV !== 'object' ||
                                                 entryV === null ||
-                                                Array.isArray(entryV)
-                                              )
-                                                return;
-
-                                              if (
+                                                Array.isArray(entryV) ||
                                                 typeof field !== 'object' ||
                                                 field === null ||
                                                 Array.isArray(field) ||
-                                                field.block_name !== schemaKey // If this condition is true, we found a reference to the deleted obj
+                                                field.block_name !== schemaKey ||
+                                                isAtom(atomsMap[configK]) // Skip top level atoms
                                               )
                                                 return;
 
                                               // Deleting the reference to current object
-
-                                              if (
-                                                isAtom(
-                                                  atomsMap[configK] // Skip top level atoms
-                                                )
-                                              )
-                                                return;
 
                                               delete entryV[fieldK]; //eslint-disable-line
 
