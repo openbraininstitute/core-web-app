@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
-import React, { Fragment, useEffect, useMemo, useState, useRef } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { atom, useAtom, Atom } from 'jotai';
 
 import {
@@ -250,52 +250,64 @@ export default function TinyCircuitSimulation() {
 
                                       // Initialize case
 
-                                      // if (
-                                      //   typeof config.initialize === 'object' &&
-                                      //   typeof config.initialize.node_set === 'object' &&
-                                      //   config.initialize.node_set !== null &&
-                                      //   !Array.isArray(config.initialize.node_set) &&
-                                      //   config.initialize.node_set.block_name === schemaKey &&
-                                      //   isAtom(atomsMap.initialize)
-                                      // ) {
-                                      //   atomsMap.initialize = atom<Record<string, Object>>({
-                                      //     ...config.initialize,
-                                      //     node_set: null,
-                                      //   });
-                                      // }
+                                      if (
+                                        typeof config.initialize === 'object' &&
+                                        typeof config.initialize.node_set === 'object' &&
+                                        config.initialize.node_set !== null &&
+                                        !Array.isArray(config.initialize.node_set) &&
+                                        config.initialize.node_set.block_name === schemaKey &&
+                                        isAtom(atomsMap.initialize)
+                                      ) {
+                                        atomsMap.initialize = atom<Record<string, Object>>({
+                                          ...config.initialize,
+                                          node_set: null,
+                                        });
+                                      }
 
-                                      // Object.entries(config)
-                                      //   .filter(([configK, configV]) => configK !== 'initialize')
-                                      //   .forEach(([configK, configV]) => {
-                                      //     if (typeof configV !== 'object') return;
+                                      // Check all keys in the config
+                                      Object.entries(config)
+                                        .filter(([configK]) => configK !== 'initialize')
+                                        .forEach(([configK, configV]) => {
+                                          if (typeof configV !== 'object') return;
 
-                                      //     Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                      //       if (
-                                      //         typeof entryV !== 'object' ||
-                                      //         Array.isArray(entryV) ||
-                                      //         entryV === null ||
-                                      //         !entryV[configTab] ||
-                                      //         typeof entryV[configTab] !== 'object' ||
-                                      //         Array.isArray(entryV[configTab]) ||
-                                      //         entryV[configTab].block_name !== schemaKey ||
-                                      //         isAtom(atomsMap[configTab])
-                                      //         // !atomsMap[configTab][entryKey] ||
-                                      //         // typeof config[configTab] !== 'object' ||
-                                      //         // typeof config[configTab][entryKey] !== 'object'
-                                      //       )
-                                      //         return;
+                                          // Check all keys in a section (e.g stimuli, recordings)
+                                          Object.entries(configV).forEach(([entryKey, entryV]) => {
+                                            if (typeof entryV !== 'object' || entryV === null)
+                                              return;
 
-                                      //       // Dynamic case
+                                            // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+                                            Object.entries(entryV).forEach(([fieldK, field]) => {
+                                              if (
+                                                typeof entryV !== 'object' ||
+                                                entryV === null ||
+                                                Array.isArray(entryV)
+                                              )
+                                                return;
 
-                                      //       // atomsMap[configTab][entryKey] = atom({
-                                      //       //   ...config[configTab][entryKey],
+                                              if (
+                                                typeof field !== 'object' ||
+                                                field === null ||
+                                                Array.isArray(field) ||
+                                                field.block_name !== schemaKey // If this condition is true, we found a reference to the deleted obj
+                                              )
+                                                return;
 
-                                      //       // });
+                                              // Deleting the reference to current object
 
-                                      //       console.log('here here /n/n');
-                                      //       console.log(configTab, entryKey, entryV);
-                                      //     });
-                                      //   });
+                                              if (
+                                                isAtom(
+                                                  atomsMap[configK] // Skip top level atoms
+                                                )
+                                              )
+                                                return;
+
+                                              delete entryV[fieldK]; //eslint-disable-line
+
+                                              // The atom that has a reference to current object
+                                              atomsMap[configK][entryKey] = atom(entryV);
+                                            });
+                                          });
+                                        });
 
                                       setAtomsMap({
                                         ...atomsMap,
@@ -386,7 +398,6 @@ export default function TinyCircuitSimulation() {
             editing &&
             (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
               <JSONSchemaForm
-                usedReferences={usedReferencesRef.current}
                 config={config}
                 circuitId={circuitId}
                 schema={
