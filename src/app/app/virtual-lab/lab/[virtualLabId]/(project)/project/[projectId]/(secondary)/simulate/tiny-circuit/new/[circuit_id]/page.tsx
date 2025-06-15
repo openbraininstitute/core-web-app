@@ -135,9 +135,6 @@ export default function TinyCircuitSimulation() {
     );
   }
 
-
-  console.log(config)
-
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
@@ -246,6 +243,7 @@ export default function TinyCircuitSimulation() {
 
                                       setSelectedCategory('');
                                       setEditing(false);
+
                                       const selectedTabAtoms = atomsMap[configTab];
                                       if (!isAtom(selectedTabAtoms)) {
                                         delete selectedTabAtoms[
