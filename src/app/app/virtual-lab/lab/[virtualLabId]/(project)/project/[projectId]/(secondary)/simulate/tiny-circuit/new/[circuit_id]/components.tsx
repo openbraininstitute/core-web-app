@@ -15,13 +15,11 @@ export type Object = Primitive | Primitive[] | Record<string, Primitive>;
 export type Config = Record<string, Record<string, Object | Record<string, Object>> | string>;
 
 export function JSONSchemaForm({
-  configTab,
   schema,
   stateAtom,
   circuitId,
   config,
 }: {
-  configTab: string;
   config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: Object }>>;
@@ -61,27 +59,8 @@ export function JSONSchemaForm({
         return `No valid ${referenceKey} found.`;
       }
 
-      let defaultV = null;
-
-      if (
-        configTab === 'initialize' &&
-        typeof state.node_set === 'object' &&
-        !Array.isArray(state.node_set)
-      ) {
-        defaultV = state.node_set?.block_name;
-      } else if (
-        configTab === 'recordings' &&
-        typeof state.neuron_set === 'object' &&
-        !Array.isArray(state.neuron_set)
-      ) {
-        defaultV = state.neuron_set?.block_name;
-      } else if (
-        configTab === 'stimuli' &&
-        typeof state.timestamps === 'object' &&
-        !Array.isArray(state.timestamps)
-      ) {
-        defaultV = state.timestamps?.block_name;
-      }
+      const defaultV =
+        typeof state[k] === 'object' && !Array.isArray(state[k]) ? state[k]?.block_name : null;
 
       return (
         <Select

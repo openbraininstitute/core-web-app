@@ -135,6 +135,9 @@ export default function TinyCircuitSimulation() {
     );
   }
 
+
+  console.log(config)
+
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
@@ -339,7 +342,6 @@ export default function TinyCircuitSimulation() {
             editing &&
             (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
               <JSONSchemaForm
-                configTab={configTab}
                 config={config}
                 circuitId={circuitId}
                 schema={
