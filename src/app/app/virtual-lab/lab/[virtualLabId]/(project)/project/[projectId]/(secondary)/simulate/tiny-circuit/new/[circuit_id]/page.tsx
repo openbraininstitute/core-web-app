@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState, useRef } from 'react';
 import { atom, useAtom, Atom } from 'jotai';
 
 import {
@@ -235,33 +235,79 @@ export default function TinyCircuitSimulation() {
                                   <CheckCircleFilled className="text-green-600" />
                                 )}
 
-                                {configTab !== 'timestamps' && configTab !== 'neuron_sets' && (
-                                  <DeleteOutlined
-                                    className="cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
+                                <DeleteOutlined
+                                  className="cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
 
-                                      setSelectedCategory('');
-                                      setEditing(false);
+                                    setSelectedCategory('');
+                                    setEditing(false);
 
-                                      const selectedTabAtoms = atomsMap[configTab];
-                                      if (!isAtom(selectedTabAtoms)) {
-                                        delete selectedTabAtoms[
-                                          `${schema.properties?.[configTab].title}_${idx}`
-                                        ];
+                                    const selectedTabAtoms = atomsMap[configTab];
+                                    if (!isAtom(selectedTabAtoms)) {
+                                      const schemaKey = `${schema.properties?.[configTab].title}_${idx}`;
+                                      delete selectedTabAtoms[schemaKey];
 
-                                        setAtomsMap({
-                                          ...atomsMap,
-                                          [configTab]: {
-                                            ...selectedTabAtoms,
-                                          },
-                                        });
-                                      }
+                                      // Initialize case
 
-                                      setSelectedItemIdx(null);
-                                    }}
-                                  />
-                                )}
+                                      // if (
+                                      //   typeof config.initialize === 'object' &&
+                                      //   typeof config.initialize.node_set === 'object' &&
+                                      //   config.initialize.node_set !== null &&
+                                      //   !Array.isArray(config.initialize.node_set) &&
+                                      //   config.initialize.node_set.block_name === schemaKey &&
+                                      //   isAtom(atomsMap.initialize)
+                                      // ) {
+                                      //   atomsMap.initialize = atom<Record<string, Object>>({
+                                      //     ...config.initialize,
+                                      //     node_set: null,
+                                      //   });
+                                      // }
+
+                                      // Object.entries(config)
+                                      //   .filter(([configK, configV]) => configK !== 'initialize')
+                                      //   .forEach(([configK, configV]) => {
+                                      //     if (typeof configV !== 'object') return;
+
+                                      //     Object.entries(configV).forEach(([entryKey, entryV]) => {
+                                      //       if (
+                                      //         typeof entryV !== 'object' ||
+                                      //         Array.isArray(entryV) ||
+                                      //         entryV === null ||
+                                      //         !entryV[configTab] ||
+                                      //         typeof entryV[configTab] !== 'object' ||
+                                      //         Array.isArray(entryV[configTab]) ||
+                                      //         entryV[configTab].block_name !== schemaKey ||
+                                      //         isAtom(atomsMap[configTab])
+                                      //         // !atomsMap[configTab][entryKey] ||
+                                      //         // typeof config[configTab] !== 'object' ||
+                                      //         // typeof config[configTab][entryKey] !== 'object'
+                                      //       )
+                                      //         return;
+
+                                      //       // Dynamic case
+
+                                      //       // atomsMap[configTab][entryKey] = atom({
+                                      //       //   ...config[configTab][entryKey],
+
+                                      //       // });
+
+                                      //       console.log('here here /n/n');
+                                      //       console.log(configTab, entryKey, entryV);
+                                      //     });
+                                      //   });
+
+                                      setAtomsMap({
+                                        ...atomsMap,
+                                        [configTab]: {
+                                          ...selectedTabAtoms,
+                                        },
+                                      });
+                                    }
+
+                                    setSelectedItemIdx(null);
+                                  }}
+                                />
                               </div>
                             </div>
                           </Fragment>
@@ -340,6 +386,7 @@ export default function TinyCircuitSimulation() {
             editing &&
             (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
               <JSONSchemaForm
+                usedReferences={usedReferencesRef.current}
                 config={config}
                 circuitId={circuitId}
                 schema={
