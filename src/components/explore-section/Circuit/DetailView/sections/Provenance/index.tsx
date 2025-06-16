@@ -41,13 +41,13 @@ export default function ProvenanceSection({ content }: { content: CircuitSchemaP
           <button
             type="button"
             key={subsection.id}
-            className="relative flex w-full items-center justify-center py-4 text-lg"
+            className="relative flex w-full items-center justify-center py-4 text-xl"
             onClick={() => setCurrentSubsection(subsection.id)}
             aria-label="Provenance subsection"
             aria-current={currentSubsection === subsection.id ? 'true' : 'false'}
             style={{
-              color: currentSubsection === subsection.id ? 'white' : '#003A8C',
-              background: currentSubsection === subsection.id ? '#003A8C' : 'white',
+              color: currentSubsection === subsection.id ? 'white' : '#002766',
+              background: currentSubsection === subsection.id ? '#002766' : 'white',
             }}
           >
             {subsection.name}

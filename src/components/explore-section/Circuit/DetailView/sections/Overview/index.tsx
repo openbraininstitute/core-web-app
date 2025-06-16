@@ -12,7 +12,7 @@ export type ImageProps = {
 export default function OverviewSection({ content }: { content: CircuitSchemaProps }) {
   return (
     <div className="relative flex w-full flex-col">
-      <SubtitleBar title="Cell statistics " />
+      <SubtitleBar title="Cell properties" />
       <div className="relative flex flex-col gap-y-4">
         {content.overview.cellStatistics.map((image: ImageProps) => (
           <Image
@@ -26,7 +26,7 @@ export default function OverviewSection({ content }: { content: CircuitSchemaPro
         ))}
       </div>
 
-      <SubtitleBar title="Network statistics " />
+      <SubtitleBar title="Network properties" />
       <div className="relative flex flex-col gap-y-4">
         {content.overview.networkStatistics.map((image: ImageProps) => (
           <Image

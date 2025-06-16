@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { DetailsPageSideBackLink } from '../../Sidebar';
 import HeaderDetailView from './header-detail-view';
 import SectionMainContainer from './sections/section-main-container';
-import Visualiser from './visualisation/Visualiser';
 
 import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
@@ -25,7 +24,6 @@ function MainDetailViewCore({
   return (
     <div className="relative ml-20 py-10 pr-10 text-primary-9">
       <HeaderDetailView content={content} />
-      <Visualiser content={content} />
       <SectionMainContainer
         content={content}
         parentCircuit={parentCircuit}

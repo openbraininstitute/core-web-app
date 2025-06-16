@@ -3,6 +3,7 @@ import OverviewSection from './Overview';
 import ProvenanceSection from './Provenance';
 import RelatedCircuitsSection from './RelatedCircuits';
 import RelatedPublicationssSection from './RelatedPublications';
+import Visualisation from './Visualisation';
 
 export default function SectionContentBlock({
   content,
@@ -13,11 +14,14 @@ export default function SectionContentBlock({
   content: CircuitSchemaProps;
   parentCircuit: CircuitSchemaProps | null;
   derivedCircuits: CircuitSchemaProps[] | null;
-  activeSection: 'overview' | 'provenance' | 'related-publications' | 'related-circuits';
+  activeSection: 'visualisation' | 'overview' | 'provenance' | 'related-publications' | 'related-circuits';
 }) {
   let currentSection;
 
   switch (activeSection) {
+    case 'visualisation':
+      currentSection = <Visualisation content={content} />;
+      break;
     case 'overview':
       currentSection = <OverviewSection content={content} />;
       break;
@@ -40,5 +44,5 @@ export default function SectionContentBlock({
       currentSection = null;
   }
 
-  return <div className="relative flex w-full flex-col bg-white p-12">{currentSection}</div>;
+  return <div className="relative flex max-w-full w-full flex-col bg-white p-12">{currentSection}</div>;
 }
