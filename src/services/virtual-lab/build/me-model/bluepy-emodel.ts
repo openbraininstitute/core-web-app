@@ -24,11 +24,6 @@ export default class BluePyEModelCls {
 
     this.ws = new Ws(meModelAnalysisSvc.wsUrl, token, { onMessage: this.onMessage });
 
-    // TODO call runAnalysis directly not via the parents onInit which in turn calls runAnalysis
-    this.config.onInit?.();
-  }
-
-  runAnalysis() {
     this.ws.send(BluePyEModelCmd.RUN_ANALYSIS, {
       access_token: this.access_token,
       config: {
@@ -50,6 +45,9 @@ export default class BluePyEModelCls {
 
   private onMessage = (cmd: Cmd) => {
     switch (cmd) {
+      case 'run_analysis_processing':
+        this.config.onInit?.();
+        break;
       case 'run_analysis_done':
         this.config.onAnalysisDone?.();
         break;

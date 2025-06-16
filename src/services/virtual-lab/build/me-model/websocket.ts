@@ -15,7 +15,10 @@ const PING_INTERVAL = 60_000;
 
 type BluePyEModelCmdKeys = Lowercase<keyof typeof BluePyEModelCmd>;
 
-export type Cmd = `${BluePyEModelCmdKeys}_done` | `${BluePyEModelCmdKeys}_error`;
+export type Cmd =
+  | `${BluePyEModelCmdKeys}_done`
+  | `${BluePyEModelCmdKeys}_processing`
+  | `${BluePyEModelCmdKeys}_error`;
 
 export default class Ws extends WsCommon<Cmd> {
   private pingIntervalTimerId?: number;
