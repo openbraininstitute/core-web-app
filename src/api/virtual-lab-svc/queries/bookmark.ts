@@ -104,5 +104,9 @@ export async function deleteBookmarksFromProjectLibrary(
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/delete`;
   return await api.post<DeleteBookmarksResponse>(url, {
     body: { bookmarks },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
   });
 }

@@ -26,7 +26,7 @@ export const useMorphometrics = (
 
     return (
       <div className="text-primary-8 mr-10" key={field.field}>
-        {showLabel && <div className="text-neutral-4 uppercase">{fieldObj.title}</div>}
+        {showLabel && <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>}
         <div className={`${showLabel ? 'mt-2' : 'mt-0 ml-6'}`}>
           <div className={`mb-2 h-6 truncate ${field.className}`}>
             {morphology ? fieldObj?.render?.(morphology) : DisplayMessages.NO_DATA_STRING}

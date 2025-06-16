@@ -23,7 +23,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Preview',
     filter: null,
     render: (r) => {
-      if (hasAssets(r)) return renderPreview(r, { width: 184, height: 116 });
+      if (hasAssets(r))
+        return renderPreview(r, { width: 184, height: 116 }, 'border border-neutral-3 h-full');
       return EmptyPreview;
     },
     vocabulary: {
