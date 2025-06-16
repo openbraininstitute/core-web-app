@@ -2,10 +2,14 @@ import WsCommon, { OnMessageHandler } from '@/services/ws-common';
 
 export const BluePyEModelCmd = {
   // Cmd target: backend
-  SET_MODEL: 'set_model',
   RUN_ANALYSIS: 'run_analysis',
   PING: 'ping',
 };
+
+export enum ModelOrigin {
+  NEXUS = 'nexus',
+  ENTITYCORE = 'entitycore',
+}
 
 const PING_INTERVAL = 60_000;
 
