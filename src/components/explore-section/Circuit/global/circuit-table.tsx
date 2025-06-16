@@ -33,6 +33,7 @@ export default function CircuitTable({
   // FILTERING
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
+  const [scaleFilter, setScaleFilter] = useState<"smallMicrocircuit" | "microcircuit" | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
