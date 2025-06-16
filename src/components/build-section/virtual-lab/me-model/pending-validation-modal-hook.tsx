@@ -6,12 +6,21 @@ import { CloseOutlined } from '@ant-design/icons';
 
 import BluePyEModelContainer from './BluePyEModelContainer';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { WorkspaceContext } from '@/types/common';
 
 export function usePendingValidationModal() {
   const [modal, contextHolder] = Modal.useModal();
   const destroyRef = useRef<() => void>(undefined);
 
-  function createModal(virtualLabInfo: VirtualLabInfo, accessToken: string) {
+  function createModal({
+    ctx,
+    accessToken,
+    meModelId,
+  }: {
+    ctx: WorkspaceContext;
+    accessToken: string;
+    meModelId: string;
+  }) {
     const { destroy } = modal.confirm({
       title: null,
       icon: null,
@@ -27,7 +36,7 @@ export function usePendingValidationModal() {
       },
       closeIcon: <CloseOutlined className="text-primary-8 text-2xl" />,
       className: '![&>.ant-modal-content]:bg-red-500',
-      content: <BluePyEModelContainer virtualLabInfo={virtualLabInfo} accessToken={accessToken} />,
+      content: <BluePyEModelContainer ctx={ctx} meModelId={meModelId} accessToken={accessToken} />,
     });
     destroyRef.current = destroy;
     return destroy;

@@ -9,19 +9,25 @@ import CentralLoadingWheel from '@/components/CentralLoadingWheel';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import { to64 } from '@/util/common';
-import { EmodelTabKeys } from '@/components/explore-section/EModel/DetailView/SectionTabs';
+// import { EmodelTabKeys } from '@/components/explore-section/EModel/DetailView/SectionTabs';
+import { WorkspaceContext } from '@/types/common';
 
-function getMEModelPageUrl(meModelId: string, virtualLabInfo: VirtualLabInfo, tab?: EmodelTabKeys) {
+function getMEModelPageUrl(
+  meModelId: string,
+  virtualLabInfo: VirtualLabInfo
+  // tab?: EmodelTabKeys
+) {
   const { virtualLabId, projectId } = virtualLabInfo;
 
   const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
   const idSegment = to64(`${virtualLabId}/${projectId}!/!${meModelId}`);
 
-  const searchParams = new URLSearchParams();
-  if (tab) searchParams.set('tab', tab);
-  const searchStr = searchParams.toString();
+  // const searchParams = new URLSearchParams();
+  // if (tab) searchParams.set('tab', tab);
+  // const searchStr = searchParams.toString();
 
-  return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}?${searchStr}`;
+  // return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}?${searchStr}`;
+  return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}`;
 }
 
 // Format elapsed time as HH:mm:ss
@@ -151,7 +157,8 @@ function ValidationSuccess({
 }) {
   const router = useRouter();
 
-  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo, 'analysis');
+  // const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo, 'analysis');
+  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -197,23 +204,22 @@ function ValidationError({
 }
 
 export default function BluePyEModelContainer({
-  virtualLabInfo,
+  ctx,
   accessToken,
+  meModelId,
 }: {
-  virtualLabInfo: VirtualLabInfo;
+  ctx: WorkspaceContext;
   accessToken: string;
+  meModelId?: string;
 }) {
   const router = useRouter();
-
-  const meModelSelfUrl = useAtomValue(meModelSelfUrlAtom);
-  const meModelId = useAtomValue(selectedMEModelIdAtom);
 
   const bluePyEModelInstance = useRef<BluePyEModelCls | null>(null);
 
   const [analysisState, setAnalysisState] = useState<AnalisysState>('initializing');
 
   useEffect(() => {
-    if (bluePyEModelInstance.current || !meModelSelfUrl || !accessToken) return;
+    if (bluePyEModelInstance.current || !meModelId || !accessToken) return;
 
     const onInit = () => {
       setAnalysisState('running');
@@ -227,7 +233,7 @@ export default function BluePyEModelContainer({
       setAnalysisState('error');
     };
 
-    bluePyEModelInstance.current = new BluePyEModelCls(meModelSelfUrl, accessToken, {
+    bluePyEModelInstance.current = new BluePyEModelCls(ctx, meModelId, accessToken, {
       onInit,
       onAnalysisDone,
       onAnalysisError,
@@ -238,19 +244,19 @@ export default function BluePyEModelContainer({
       bluePyEModelInstance.current.destroy();
       bluePyEModelInstance.current = null;
     };
-  }, [meModelSelfUrl, router, accessToken, virtualLabInfo.projectId, virtualLabInfo.virtualLabId]);
+  }, [meModelId, router, accessToken, ctx.projectId, ctx.virtualLabId]);
 
   if (analysisState === 'initializing') {
-    return <ValidationInit virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+    return <ValidationInit virtualLabInfo={ctx} meModelId={meModelId as string} />;
   }
 
   if (analysisState === 'running') {
-    return <ValidationRunning virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+    return <ValidationRunning virtualLabInfo={ctx} meModelId={meModelId as string} />;
   }
 
   if (analysisState === 'done') {
-    return <ValidationSuccess virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+    return <ValidationSuccess virtualLabInfo={ctx} meModelId={meModelId as string} />;
   }
 
-  return <ValidationError virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+  return <ValidationError virtualLabInfo={ctx} meModelId={meModelId as string} />;
 }

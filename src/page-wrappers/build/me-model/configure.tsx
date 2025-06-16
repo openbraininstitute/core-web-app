@@ -166,15 +166,6 @@ export default function Configure({ params, searchParams }: Props) {
     return;
   }
 
-  // const refreshMeModels = useSetAtom(
-  //   dataAtom({
-  //     dataType: DataType.CircuitMEModel,
-  //     dataScope: ExploreDataScope.NoScope,
-  //     virtualLabInfo: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-  //     key: useId(),
-  //   })
-  // );
-
   const [activeProcess, setActiveProcess] = useState<
     null | 'modelCreation' | 'modelCreationWithValidation'
   >(null);
@@ -196,27 +187,13 @@ export default function Configure({ params, searchParams }: Props) {
     });
   };
 
-  const fetchFreshAccessToken = async () => {
+  const fetchFreshAccessToken = async (): Promise<string> => {
     const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
     const token = await res.json();
     return token.accessToken;
   };
 
-  // const onClickWithValidation = () => {
-  //   setActiveProcess('modelCreationWithValidation');
-
-  //   createMEModel({ virtualLabId, projectId })
-  //     .then(fetchFreshAccessToken)
-  //     .then((accessToken) => {
-  //       createValidationModal({ virtualLabId, projectId }, accessToken);
-  //       removeSessionValue();
-  //     })
-  //     .catch((err) => showErrorNotification(err))
-  //     .finally(() => setActiveProcess(null));
-  // };
-
-  const onClickWithoutValidation = async () => {
-    setActiveProcess('modelCreation');
+  const buildMeModel = async (mode: 'validation' | 'standard') => {
     const body: Partial<TCreateMeModelContext> = {
       virtualLabId: params.virtualLabId,
       projectId: params.projectId,
@@ -229,12 +206,11 @@ export default function Configure({ params, searchParams }: Props) {
       strain_id: sessionValue.mmodel?.strain?.id ?? null,
       validation_status: ValidationStatus.Initialized,
     };
-
     const { error: validationError, data: validationData } =
       await CreateMeModelContextSchema.safeParseAsync(body);
     if (validationError) {
       showErrorNotification(validationError, 'validation');
-      return;
+      return { data: null, error: validationError, errorType: 'validation' as const };
     }
     const accountingSession = new OneshotSession({
       subtype: ServiceSubtype.SingleCellBuild,
@@ -243,40 +219,65 @@ export default function Configure({ params, searchParams }: Props) {
       count: 1,
     });
 
+    const { data, error } = await tryCatch(
+      accountingSession.useWith<IMEModel>(() =>
+        createMEModel({
+          body: omit(validationData, ['virtualLabId', 'projectId']),
+          context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+        })
+      ),
+      undefined,
+      {
+        feature:
+          mode === 'validation' ? 'create-me-model-validation' : 'create-me-model-no-validation',
+        section: 'build/create-me-model',
+        extra: {
+          ...validationData,
+          virtualLabId: params.virtualLabId,
+          projectId: params.projectId,
+        },
+      }
+    );
+
+    return { data, error, errorType: 'http' as const };
+  };
+
+  const onClickWithValidation = async () => {
+    setActiveProcess('modelCreationWithValidation');
     startTransition(async () => {
-      const { data, error } = await tryCatch(
-        accountingSession.useWith<IMEModel>(() =>
-          createMEModel({
-            body: omit(validationData, ['virtualLabId', 'projectId']),
-            context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-          })
-        ),
-        undefined,
-        {
-          feature: 'create-me-model-no-validation',
-          section: 'build/create-me-model',
-          extra: {
-            ...validationData,
-            virtualLabId: params.virtualLabId,
-            projectId: params.projectId,
-          },
-        }
-      );
-      if (data) {
-        refreshDataAtom();
-        refreshEntityCountsToParent(validationData.brain_region_id);
-        navigate(
-          resolveExploreDetailsPageUrl({
-            ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-            dataType: DataType.CircuitMEModel,
-            entityId: data.id,
-          })
-        );
-      }
-      if (error) {
+      const { data, error, errorType } = await buildMeModel('validation');
+      if (error || !data) {
         setActiveProcess(null);
-        showErrorNotification(error, 'http');
+        showErrorNotification(error, errorType);
+        return;
       }
+      const accessToken = await fetchFreshAccessToken();
+      createValidationModal({
+        ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+        meModelId: data.id,
+        accessToken,
+      });
+    });
+  };
+
+  const onClickWithoutValidation = async () => {
+    setActiveProcess('modelCreation');
+    startTransition(async () => {
+      const { data, error, errorType } = await buildMeModel('standard');
+      if (error || !data) {
+        setActiveProcess(null);
+        showErrorNotification(error, errorType);
+        return;
+      }
+      refreshDataAtom();
+      refreshEntityCountsToParent(data.brain_region.id);
+      navigate(
+        resolveExploreDetailsPageUrl({
+          ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+          dataType: DataType.CircuitMEModel,
+          entityId: data.id,
+        })
+      );
     });
   };
 
@@ -292,7 +293,7 @@ export default function Configure({ params, searchParams }: Props) {
       <CustomButton
         loading={isPending && activeProcess === 'modelCreationWithValidation'}
         disable={isPending}
-        // onClick={onClickWithValidation}
+        onClick={onClickWithValidation}
       >
         Launch validation
       </CustomButton>
