@@ -40,7 +40,7 @@ export default function Page() {
     .otherwise(() => null);
 
   return (
-    <div className="flex min-h-screen w-full flex-col gap-5 pt-8 pr-5">
+    <div className="flex min-h-screen w-full flex-col gap-5 pr-5 pt-8">
       <SectionTabs />
       {content}
     </div>
@@ -103,9 +103,9 @@ function BrowseSimsTab() {
             {loadMoreDiv}
           </div>
           {selectedRows.length > 0 && (
-            <div className="fixed right-[60px] bottom-12 flex h-12 items-center justify-end gap-2">
+            <div className="fixed bottom-12 right-[60px] flex h-12 items-center justify-end gap-2">
               <Link
-                className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
+                className="flex h-12 items-center justify-center bg-primary-9 px-8 font-bold text-white hover:text-white"
                 href={resolveExploreDetailsPageUrl({
                   ctx: { virtualLabId, projectId },
                   dataType,
@@ -179,9 +179,9 @@ function NewSim() {
           showLoadingState={false}
         />
         {buttonsVisible && selectedRows.length > 0 && (
-          <div className="fixed right-[50px] bottom-8 flex items-center justify-end gap-2">
+          <div className="fixed bottom-8 right-[50px] flex items-center justify-end gap-2">
             <Link
-              className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
+              className="flex h-12 items-center justify-center bg-primary-9 px-8 font-bold text-white hover:text-white"
               href={resolveExploreDetailsPageUrl({
                 ctx: { virtualLabId, projectId },
                 dataType,
@@ -191,7 +191,7 @@ function NewSim() {
               View
             </Link>
             <Link
-              className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
+              className="flex h-12 items-center justify-center bg-primary-9 px-8 font-bold text-white hover:text-white"
               href={resolveExperimentUrl({
                 ctx: { virtualLabId, projectId },
                 dataType: entity?.type!,
@@ -219,7 +219,7 @@ function customBookmarkButton({
     <Btn
       loading={loading}
       disabled={loading}
-      className="bg-secondary-2 h-12 px-8"
+      className="h-12 bg-secondary-2 px-8"
       onClick={onClick}
     >
       {children}

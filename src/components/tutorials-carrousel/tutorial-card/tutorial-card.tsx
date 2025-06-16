@@ -1,8 +1,8 @@
-import React from 'react';
 import Image from 'next/image';
 
-import { ContentForTutorialItem } from '../hooks';
 import { PlayIcon } from './play-icon';
+
+import { ContentForTutorialItem } from '@/components/documentation/type';
 import { classNames } from '@/util/utils';
 
 import styles from './tutorial-card.module.css';

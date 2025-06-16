@@ -10,15 +10,15 @@ import UserMenu from '@/components/user-menu';
 
 export default function SideBarNavigation() {
   return (
-    <div className="border-primary-7 bg-primary-9 fixed top-0 left-0 flex h-screen w-[45px] flex-col items-center justify-between border-r-[1px]">
+    <div className="fixed left-0 top-0 flex h-screen w-[45px] flex-col items-center justify-between border-r-[1px] border-primary-7 bg-primary-9">
       <Link
         href="/app/virtual-lab"
-        className="relative top-[82px] -left-0.5 origin-center -rotate-90 font-serif text-lg whitespace-nowrap text-white"
+        className="relative -left-0.5 top-[82px] origin-center -rotate-90  whitespace-nowrap font-serif text-lg text-white"
       >
         Open Brain Institute
       </Link>
 
-      <div className="text-primary-3 mb-5 flex w-full flex-col items-center gap-2 overflow-hidden">
+      <div className="mb-5 flex w-full flex-col items-center gap-2 overflow-hidden text-primary-3">
         <Tooltip title="Documentation" placement="topLeft">
           <Link href="/app/documentation" className="flex h-10 w-10 items-center justify-center">
             <DocumentationIcon iconColor="#91d5ff" className="h-3 w-auto" />

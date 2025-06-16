@@ -110,7 +110,7 @@ const columns = (
       key: 'description',
       width: 200,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal text-ellipsis whitespace-nowrap">{record.description}</div>
+        <div className="text-ellipsis whitespace-nowrap font-normal">{record.description}</div>
       ),
     },
     {
@@ -118,7 +118,7 @@ const columns = (
       key: 'brainRegion',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">{record.brainRegion}</div>
+        <div className="whitespace-nowrap font-normal">{record.brainRegion}</div>
       ),
     },
     {
@@ -126,7 +126,7 @@ const columns = (
       key: 'numberOfNeurons',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">
+        <div className="whitespace-nowrap font-normal">
           {formatNumberWithComma(record.numberOfNeurons)}
         </div>
       ),
@@ -136,7 +136,7 @@ const columns = (
       key: 'numberOfConnections',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">
+        <div className="whitespace-nowrap font-normal">
           {formatNumberWithComma(record.numberOfConnections)}
         </div>
       ),
@@ -146,7 +146,7 @@ const columns = (
       key: 'numberOfSynapses',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">
+        <div className="whitespace-nowrap font-normal">
           {formatNumberWithComma(record.numberOfSynapses)}
         </div>
       ),
@@ -156,7 +156,7 @@ const columns = (
       key: 'specie',
       width: 120,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">{record.species}</div>
+        <div className="whitespace-nowrap font-normal">{record.species}</div>
       ),
     },
     {
@@ -164,7 +164,7 @@ const columns = (
       key: 'publishedIn',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">{record.metadata.publishedIn}</div>
+        <div className="whitespace-nowrap font-normal">{record.metadata.publishedIn}</div>
       ),
     },
     {
@@ -172,7 +172,7 @@ const columns = (
       key: 'registrationDate',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">{record.metadata.registrationDate}</div>
+        <div className="whitespace-nowrap font-normal">{record.metadata.registrationDate}</div>
       ),
     },
   ];

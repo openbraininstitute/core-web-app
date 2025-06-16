@@ -14,7 +14,7 @@ export default function HeaderSliderTimestamps({
   activeSteps: { first: number; last: number };
 }) {
   return (
-    <header className="mt-4 mb-8 flex w-full flex-row items-center justify-between">
+    <header className="mb-8 mt-4 flex w-full flex-row items-center justify-between">
       <div className="flex w-full flex-row-reverse items-center justify-between gap-x-3">
         <div className="flex flex-row gap-x-3">
           {Array.from({ length: content.length }, (_, index) => (

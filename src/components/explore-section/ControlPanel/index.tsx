@@ -251,7 +251,7 @@ export default function ControlPanel({
   return (
     <div
       data-testid="listing-view-filter-panel"
-      className="bg-primary-8 fixed top-0 right-0 z-10 flex h-full w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto pt-6 pr-16 pl-8"
+      className="fixed right-0 top-0 z-10 flex h-full w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto bg-primary-8 pl-8 pr-16 pt-6"
     >
       <div>
         <button
@@ -265,7 +265,7 @@ export default function ControlPanel({
         </button>
         <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
           Filters
-          <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
+          <small className="text-base font-light text-primary-3">{activeColumnsText}</small>
         </span>
 
         <p className="text-white">
@@ -279,12 +279,12 @@ export default function ControlPanel({
         </div>
       </div>
 
-      <div className="bg-primary-8 sticky bottom-0 left-0 flex w-full items-center justify-between px-4 py-6">
+      <div className="sticky bottom-0 left-0 flex w-full items-center justify-between bg-primary-8 px-4 py-6">
         <ClearFilters onClick={clearFilters} />
         <button
           type="submit"
           onClick={submitValues}
-          className="bg-primary-2 text-primary-9 px-8 py-3"
+          className="bg-primary-2 px-8 py-3 text-primary-9"
         >
           Apply
         </button>

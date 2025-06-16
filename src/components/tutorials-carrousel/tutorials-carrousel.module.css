@@ -13,16 +13,14 @@
 
 .tutorialsCarrousel > header > h1 {
   margin: 0;
-  font-size: 2.25rem;
+  font-size: 1.75rem;
   font-weight: bolder;
+  margin-bottom: 8px;
 }
 
 .tutorialsCarrousel > div {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1em;
   overflow-x: auto;
 }

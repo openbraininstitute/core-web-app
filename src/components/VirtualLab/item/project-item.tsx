@@ -24,7 +24,7 @@ export default function Item({ id, description, vlabId, name, creationDate, memb
     <div
       id={id}
       className={classNames(
-        'animate-scale-in group border-primary-5 bg-primary-9 overflow-hidden rounded-md border shadow-xs',
+        'animate-scale-in shadow-xs group overflow-hidden rounded-md border border-primary-5 bg-primary-9',
         'hover:bg-primary-8'
       )}
     >
@@ -32,7 +32,7 @@ export default function Item({ id, description, vlabId, name, creationDate, memb
         <div className="flex items-start justify-between">
           <div>
             <h3 className="mb-1 text-3xl font-bold">{name}</h3>
-            <p className="text-primary-2 text-base">
+            <p className="text-base text-primary-2">
               Project creation date:{' '}
               <span className="text-white">{dateColumnInfoToRender(creationDate).text}</span>
             </p>
@@ -55,19 +55,19 @@ export default function Item({ id, description, vlabId, name, creationDate, memb
         </div>
 
         {description ? (
-          <p className="mt-4 mb-4 flex max-w-2xl gap-6 text-justify text-balance">{description}</p>
+          <p className="mb-4 mt-4 flex max-w-2xl gap-6 text-balance text-justify">{description}</p>
         ) : (
-          <div className="bg-primary-2 my-4 h-[.5px] w-1/2" />
+          <div className="my-4 h-[.5px] w-1/2 bg-primary-2" />
         )}
         <div className="flex gap-5">
           <div className="flex items-center gap-2">
-            <span className="text-primary-2 text-base">
+            <span className="text-base text-primary-2">
               Members:
               <span className="ml-2 font-bold text-white">{memberCount}</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-primary-2 text-base">
+            <span className="text-base text-primary-2">
               Credit balance:
               <span className="ml-2 font-bold text-white">{balance}</span>
             </span>

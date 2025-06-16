@@ -5,7 +5,7 @@ import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import { env } from '@/env';
 
 export default async function Notebooks(
-  props: ServerSideComponentProp<{ projectId: string; virtualLabId: string }>
+  props: ServerSideComponentProp<{ projectId: string; virtualLabId: string }, null>
 ) {
   const params = await props.params;
   const { projectId, virtualLabId } = params;

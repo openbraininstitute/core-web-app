@@ -2,16 +2,16 @@ import { Tooltip } from 'antd';
 import Image from 'next/image';
 import { EModelsProps } from '../../type/artifactsType';
 
+import truncateText from '@/util/truncate';
+
 const columns = () => {
   return [
     {
       title: 'Name',
       key: 'name',
-      width: '100px',
+      width: 150,
       render: (_value: any, record: EModelsProps, _index: number) => (
-        <div className="overflow-hidden font-normal text-ellipsis whitespace-nowrap">
-          {record.name}
-        </div>
+        <div className="font-normal">{truncateText(record.name, 30)}</div>
       ),
     },
     {
@@ -33,7 +33,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'M-Type',
+      title: 'M-type',
       key: 'mType',
       width: '100px',
       render: (_value: any, record: EModelsProps, _index: number) => (
@@ -41,12 +41,12 @@ const columns = () => {
       ),
     },
     {
-      title: 'MCS',
+      title: 'Model Cumulated Score',
       key: 'modelCumulatedScore',
-      width: '80px',
+      width: 200,
       render: (_value: any, record: EModelsProps, _index: number) => (
         <Tooltip title="Model Cumulated Score" placement="top">
-          <span className="cursor-pointer font-normal">{record.modelCumulatedScore}</span>
+          <div className="cursor-pointer font-normal">{record.modelCumulatedScore}</div>
         </Tooltip>
       ),
     },
@@ -67,7 +67,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'Creation Date',
+      title: 'Creation date',
       key: 'creationDate',
       width: '150px',
       render: (_value: any, record: EModelsProps, _index: number) => (
