@@ -8,11 +8,11 @@ import styles from './styles.module.css';
 
 export default function DocumentationLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-primary-9 relative min-h-screen w-screen">
+    <div className="relative min-h-screen w-screen bg-primary-9">
       <SideBarNavigation />
       <div
         className={classNames(
-          'fixed top-0 left-[40px] flex h-screen w-[255px] flex-col justify-between overflow-y-scroll p-8',
+          'fixed left-[40px] top-0 flex h-screen w-[255px] flex-col justify-between overflow-y-scroll p-8',
           styles['hide-scrollbar']
         )}
       >

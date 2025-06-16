@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, TableProps } from 'antd';
-import { useState } from 'react';
+import { Key, useState } from 'react';
 import { EModelsProps } from '../type/artifactsType';
 import columns from './columns/e-model-columns';
 
@@ -13,9 +13,15 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
 
   const rowSelection: TableProps<EModelsProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (selectedRowKeys: React.Key[], selectedRows: EModelsProps[]) => {
+    onChange: (selectedRowKeys: Key[], selectedRows: EModelsProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
+  };
+
+  const handleDownload = () => {
+    if (selectedRow?.downloadLink) {
+      window.open(selectedRow.downloadLink, '_blank');
+    }
   };
 
   return (
@@ -24,7 +30,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
         className={styles.circuitTable}
         dataSource={content}
         columns={columns()}
-        rowKey="name"
+        rowKey={(record, index) => `${record.name}_${index}`}
         pagination={false}
         rowSelection={rowSelection}
         scroll={{ x: 'max-content' }}
@@ -32,11 +38,11 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
 
       <button
         className={classNames(
-          'bg-primary-9 fixed right-4 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
+          'fixed right-4 bg-green-600 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
           selectedRow ? 'bottom-4' : 'bottom-[-100px]'
         )}
         type="button"
-        onClick={() => console.log(selectedRow?.download)}
+        onClick={handleDownload}
         aria-label="Download selected model"
       >
         Download Model

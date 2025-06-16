@@ -50,6 +50,7 @@ export const env = createEnv({
     NEXT_PUBLIC_KG_INFERENCE_BASE_URL: z.string().url(),
     NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: z.string().url(),
     NEXT_PUBLIC_SYNTHESIS_URL: z.string().url(),
+    NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL: z.string().url(),
 
     NEXT_PUBLIC_DEFAULT_MODEL_RELEASE_NAME: z.string().min(1),
     NEXT_PUBLIC_DEFAULT_MODEL_RELEASE_DESCRIPTION: z.string().min(1),
@@ -93,7 +94,7 @@ export const env = createEnv({
     NEXT_PUBLIC_VIRTUAL_LAB_API_URL: z.string().url(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_'),
     NEXT_PUBLIC_BBS_ML_PRIVATE_BASE_URL: z.string().url().optional(),
-    NEXT_PUBLIC_DEPLOYMENT_ENV: z.enum(['staging', 'production']).optional(),
+    NEXT_PUBLIC_DEPLOYMENT_ENV: z.enum(['staging', 'production']),
     NEXT_PUBLIC_MATOMO_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_CDN_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_SITE_ID: z.string().optional(),
@@ -134,6 +135,7 @@ export const env = createEnv({
     NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL:
       process.env.NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL,
     NEXT_PUBLIC_SYNTHESIS_URL: process.env.NEXT_PUBLIC_SYNTHESIS_URL,
+    NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL: process.env.NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL,
 
     NEXT_PUBLIC_DEFAULT_MODEL_RELEASE_NAME: process.env.NEXT_PUBLIC_DEFAULT_MODEL_RELEASE_NAME,
     NEXT_PUBLIC_DEFAULT_MODEL_RELEASE_DESCRIPTION:

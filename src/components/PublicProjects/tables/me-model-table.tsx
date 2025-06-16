@@ -19,13 +19,19 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
     },
   };
 
+  const handleDownload = () => {
+    if (selectedRow?.download) {
+      window.open(selectedRow.download, '_blank');
+    }
+  };
+
   return (
     <div>
       <Table
         className={styles.circuitTable}
         dataSource={content}
         columns={columns()}
-        rowKey="name"
+        rowKey={(record, index) => `${record.name}_${index}`}
         pagination={false}
         rowSelection={rowSelection}
         scroll={{ x: 'max-content' }}
@@ -33,11 +39,12 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
 
       <button
         className={classNames(
-          'bg-primary-9 fixed right-4 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
-          selectedRow ? 'bottom-4' : 'bottom-[-100px]'
+          'fixed right-8 bg-green-600 px-10 py-4 text-lg font-normal text-white transition-all duration-500 ease-in-out',
+          selectedRow ? 'bottom-8' : 'bottom-[-100px]'
         )}
         type="button"
-        onClick={() => console.log(selectedRow)}
+        name="download-model"
+        onClick={handleDownload}
         aria-label="Download selected model"
       >
         Download Model

@@ -2,6 +2,7 @@
 {
   title,
   description,
+  "slug": slug.current,
   "url": videoUrl,
   "imageURL": thumbnail.asset->url,
   "imageWidth": thumbnail.asset->metadata.dimensions.width,

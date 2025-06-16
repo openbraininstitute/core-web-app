@@ -44,7 +44,7 @@ export default function ActionButton({
     return (
       <Link
         href={link || '#'}
-        className="text-primary-9 relative flex flex-row items-center gap-x-2 disabled:text-gray-500 disabled:opacity-50"
+        className="relative flex flex-row items-center gap-x-2 text-primary-9 disabled:text-gray-500 disabled:opacity-50"
         style={{
           color: disabled ? '#A0AEC0' : '#002766',
           opacity: disabled ? 0.8 : 1,
@@ -68,7 +68,7 @@ export default function ActionButton({
       <a
         href={link}
         type="button"
-        className="bg-primary-8 transition-bottom absolute right-10 bottom-6 flex h-20 w-[150px] items-center justify-center text-xl duration-300 ease-in-out"
+        className="absolute bottom-6 right-10 flex h-20 w-[150px] items-center justify-center bg-primary-8 text-xl transition-bottom duration-300 ease-in-out"
       >
         <span>Download</span>
         <Tooltip

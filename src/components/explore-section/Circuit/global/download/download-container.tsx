@@ -17,12 +17,12 @@ const [
 
 export function FullCircuitItem({ content }: { content: DownloadItemProps }) {
   return (
-    <div className="bg-primary-8 flex w-full flex-row justify-between rounded-lg p-8 shadow-xl">
+    <div className="flex w-full flex-row justify-between rounded-lg bg-primary-8 p-8 shadow-xl">
       <div className="w-3/4 hyphens-auto">
-        <div className="text-xl font-bold tracking-wide text-white uppercase">
+        <div className="text-xl font-bold uppercase tracking-wide text-white">
           Download full circuit
         </div>
-        <p className="text-primary-2 text-sm leading-normal font-light hyphens-auto">
+        <p className="hyphens-auto text-sm font-light leading-normal text-primary-2">
           The complete circuit compressed in SONATA format,
           <a
             href="https://sonata-extension.readthedocs.io/en/latest/"
@@ -35,12 +35,12 @@ export function FullCircuitItem({ content }: { content: DownloadItemProps }) {
           </a>
         </p>
       </div>
-      <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
+      <div className="flex flex-row gap-x-3 font-semibold text-primary-1">
         <div>{content.children?.[0]?.size || 'N/A'}</div>
         <div>h5</div>
         <Link
           href={content.children?.[0]?.url || '#'}
-          className="border-primary-6 flex h-7 w-7 items-center justify-center border border-solid"
+          className="flex h-7 w-7 items-center justify-center border border-solid border-primary-6"
           aria-label="Download the full circuit"
         >
           <DownloadIcon iconColor="white" />
@@ -73,7 +73,7 @@ export default function DownloadContainer({
       ) : (
         <div className="text-primary-2">Full circuit data is not available.</div>
       )}
-      <div className="border-primary-7 text-primary-4 my-8 border-y border-solid py-4 text-xl font-bold tracking-wide uppercase">
+      <div className="my-8 border-y border-solid border-primary-7 py-4 text-xl font-bold uppercase tracking-wide text-primary-4">
         Download components only
       </div>
       <div className="flex w-full flex-col gap-y-12">

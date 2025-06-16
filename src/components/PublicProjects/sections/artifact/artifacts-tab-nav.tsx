@@ -16,10 +16,10 @@ export default function ArtifactsTabNav({
 
         switch (item) {
           case 'meModelsTable':
-            title = 'ME Models';
+            title = 'ME-Models';
             break;
           case 'eModelsTable':
-            title = 'E Models';
+            title = 'E-Models';
             break;
           case 'synaptomesTable':
             title = 'Synaptome';
@@ -39,7 +39,7 @@ export default function ArtifactsTabNav({
             aria-label="Change artifact type"
             onClick={() => setActiveArtifactType(item)}
             className={classNames(
-              'text-primary-9 rounded-full text-sm tracking-wider uppercase',
+              'rounded-full text-sm uppercase tracking-wider text-primary-9',
               activeArtifactType === item
                 ? 'border border-gray-300 px-5 py-2 font-bold'
                 : 'border-white font-normal'

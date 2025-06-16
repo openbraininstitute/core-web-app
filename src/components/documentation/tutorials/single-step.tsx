@@ -3,10 +3,10 @@ import { StepProps } from '../type';
 
 import playVideoAtTime from '@/util/play-video-at-time';
 
-import useMouseHover from '@/hooks/mouse-over';
+import useMouseHover from '@/hooks/useMouveHover';
 import secondsToMMSS from '@/util/convert-seconds-to-minutes';
 import { classNames } from '@/util/utils';
-import styles from './text-content-block.module.css';
+import styles from './text-content-bloc.module.css';
 
 export default function SingleStep({
   content,
@@ -72,7 +72,7 @@ export default function SingleStep({
             {content.time != null ? secondsToMMSS(content.time) : '--:--'}
           </span>
         </div>
-        <h4 className="mb-2 text-2xl font-bold">{content.title}</h4>
+        <h4 className="mb-2 text-2xl font-bold ">{content.title}</h4>
         <div className={styles['small-transcript']}>
           <PortableText value={content.content ?? []} />
         </div>

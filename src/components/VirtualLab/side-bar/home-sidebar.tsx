@@ -4,11 +4,11 @@ import { usePathname } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
-import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
+import kebabCase from 'lodash/kebabCase';
 
 import Base from '@/components/VirtualLab/side-bar/base';
-import Item, { type Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
+import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import { userStatsAtom } from '@/state/virtual-lab/lab';
 
 export default function SideBar() {
@@ -35,7 +35,7 @@ export default function SideBar() {
   return (
     <Base>
       <nav className="flex max-h-max flex-1 flex-col py-4">
-        <div className="border-primary-5 mt-20 border">
+        <div className="mt-20 border border-primary-5">
           {menu.map(({ url, title, count }) => (
             <Item
               data-testid={kebabCase(title as string)}
@@ -51,13 +51,13 @@ export default function SideBar() {
         <Link
           data-testid="public-explore"
           href="/app/virtual-lab/explore/interactive"
-          className="bg-primary-8 relative mt-4 h-44 rounded-md px-4 py-2 opacity-90 hover:opacity-100"
+          className="relative mt-4 h-44 rounded-md bg-primary-8 px-4 py-2 opacity-90 hover:opacity-100"
           style={{
             background: `url(/images/multiple-brains.webp) #003A8C no-repeat bottom -122px right -108px`,
             backgroundSize: '294px 294px',
           }}
         >
-          <div className="bg-primary-8/50 absolute inset-0 h-full w-full rounded-md" />
+          <div className="absolute inset-0 h-full w-full rounded-md bg-primary-8/50" />
           <div className="relative h-full">
             <div className="flex h-full flex-col justify-between p-4">
               <h3 className="mb-2 text-xl font-bold">Explore</h3>

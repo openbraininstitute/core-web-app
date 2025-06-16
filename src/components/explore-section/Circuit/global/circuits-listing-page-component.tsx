@@ -25,7 +25,7 @@ export default function CircuitsListingPageComponent() {
 
   if (loading) {
     return (
-      <div className="text-primary-9 relative flex h-[50vh] w-full items-center justify-center text-lg font-normal">
+      <div className="relative flex h-[50vh] w-full items-center justify-center text-lg font-normal text-primary-9">
         Loading...
       </div>
     );

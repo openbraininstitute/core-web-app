@@ -148,7 +148,7 @@ export default function BookmarksView({
     ));
 
   return (
-    <div className="mr-5 h-[calc(100%-2rem)] max-w-7xl px-4">
+    <div className="mr-5 h-[calc(100%-2rem)] px-4">
       <GroupTabs
         categoryTypes={categoryTypes}
         items={Categories}

@@ -31,7 +31,7 @@ export default function PublicationCard({
   return (
     <div className="relative flex w-full flex-col">
       {showPopup && (
-        <div className="absolute top-0 left-[45%] z-50 flex transform flex-row items-center rounded-md bg-green-700 px-12 py-10 text-xl font-normal text-white">
+        <div className="absolute left-[45%] top-0 z-50 flex transform flex-row items-center rounded-md bg-green-700 px-12 py-10 text-xl font-normal text-white">
           <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full border-none bg-white text-green-700">
             <CheckIcon className="h-auto w-4" />
           </div>
@@ -40,7 +40,7 @@ export default function PublicationCard({
       )}
       <header className="relative mb-2 flex w-full flex-row items-start justify-between">
         <div className="relative flex flex-row gap-x-2">
-          <div className="bg-primary-8 relative top-px flex h-6 w-6 items-center justify-center text-base text-white">
+          <div className="relative top-px flex h-6 w-6 items-center justify-center bg-primary-8 text-base text-white">
             {index + 1}
           </div>
           <h3 className="relative flex max-w-[75%] flex-row text-xl font-semibold">
@@ -75,11 +75,11 @@ export default function PublicationCard({
             <UserIcon iconColor="#003A8C" className="relative left-px h-3 w-3" />
           </div>
 
-          <div className="relative text-base font-normal hyphens-auto text-[#003A8C]">
+          <div className="relative hyphens-auto text-base font-normal text-[#003A8C]">
             {content.authors}
           </div>
         </div>
-        <div className="text-primary-9 relative flex flex-row">
+        <div className="relative flex flex-row text-primary-9">
           <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-full border border-solid border-gray-300">
             <CalendarIcon className="relative h-3.5 w-3.5" />
           </div>
@@ -95,7 +95,7 @@ export default function PublicationCard({
           )}
         >
           <p
-            className={`text-primary-8 w-full overflow-hidden text-base leading-normal transition-all duration-300 ${
+            className={`w-full overflow-hidden  text-base leading-normal text-primary-8 transition-all duration-300 ${
               isExpanded ? 'max-h-full' : 'line-clamp-3 max-h-[6.3em]'
             }`}
           >

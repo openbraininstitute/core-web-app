@@ -276,8 +276,8 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-markdown:
-        specifier: ^9.0.3
-        version: 9.0.3(@types/react@19.1.0)(react@19.1.0)
+        specifier: ^9.1.0
+        version: 9.1.0(@types/react@19.1.0)(react@19.1.0)
       react-pdf:
         specifier: ^9.2.1
         version: 9.2.1(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -293,6 +293,9 @@ importers:
       react-syntax-highlighter:
         specifier: ^15.6.1
         version: 15.6.1(react@19.1.0)
+      rehype-raw:
+        specifier: ^7.0.0
+        version: 7.0.0
       sharp:
         specifier: ^0.34.1
         version: 0.34.1
@@ -9606,8 +9609,8 @@ packages:
       '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
 
-  react-markdown@9.0.3:
-    resolution: {integrity: sha512-Yk7Z94dbgYTOrdk41Z74GoKA7rThnsbbqBTRYuxoe08qvfQ9tJVhmAKw6BJS/ZORG7kTy/s1QvYzSuaoBA1qfw==}
+  react-markdown@9.1.0:
+    resolution: {integrity: sha512-xaijuJB0kzGiUdG7nc2MOMDUDBWPyGAjZtUrow9XxUeua8IqeP+VlIfAZ3bphpcLTnSZXz6z9jcVC/TCwbfgdw==}
     peerDependencies:
       '@types/react': '>=18'
       react: '>=18'
@@ -22294,7 +22297,7 @@ snapshots:
       isomorphic-dompurify: 2.23.0
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-      react-markdown: 9.0.3(@types/react@19.1.0)(react@19.1.0)
+      react-markdown: 9.1.0(@types/react@19.1.0)(react@19.1.0)
       react-syntax-highlighter: 15.6.1(react@19.1.0)
       rehype-mathjax: 6.0.0
       rehype-raw: 7.0.0
@@ -22321,9 +22324,10 @@ snapshots:
       react: 19.1.0
       react-base16-styling: 0.9.1
 
-  react-markdown@9.0.3(@types/react@19.1.0)(react@19.1.0):
+  react-markdown@9.1.0(@types/react@19.1.0)(react@19.1.0):
     dependencies:
       '@types/hast': 3.0.4
+      '@types/mdast': 4.0.4
       '@types/react': 19.1.0
       devlop: 1.1.0
       hast-util-to-jsx-runtime: 2.3.6
