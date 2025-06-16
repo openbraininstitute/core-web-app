@@ -45,8 +45,6 @@ jobs:
       - name: Publish the image for AWS To AWS ECR
         run: |
           docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration-aws
-          docker tag ${{ vars.PUBLICECR_URI }}:entitycore-migration-aws ${{ vars.PUBLICECR_URI }}:entitycore-migration
-          docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration
 
       - name: Build a Docker image for Azure
         run: |
