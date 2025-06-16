@@ -6,11 +6,13 @@
   border-radius: 0.5em;
   background-color: #f7f7f7;
   transition: all 0.3s;
+  color: #000;
 }
 
 .articleCard:hover {
   border-radius: 0;
   background-color: #eee;
+  color: #000;
 }
 
 .articleCard h2 {

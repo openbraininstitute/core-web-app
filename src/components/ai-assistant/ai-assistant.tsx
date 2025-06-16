@@ -1,7 +1,7 @@
 'use client';
 
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 import ErrorPanel from './error';
 import MessageItem from './message-item';
@@ -10,11 +10,16 @@ import { Spinner } from './spinner';
 import SuggestedQuestions from './suggested-questions';
 import { useCollapsedPanel } from './hooks';
 import { IconClear } from './icons/clear';
+import PanelSplitter from './panel-splitter';
 import { classNames } from '@/util/utils';
 import { useServiceAiAgentChat, useServiceAiAgentThread } from '@/services/ai-agent';
-
 import { useAITools } from '@/services/ai-agent/tools/tools';
+import { useLocalStorage } from '@/util/storage';
+import { isNumber } from '@/util/type-guards';
+
 import styles from './ai-assistant.module.css';
+import { IconFullscreenOff } from './icons/fullscreen-off';
+import { IconFullscreenOn } from './icons/fullscreen-on';
 
 export interface LiteratureSuggestionsProps {
   className?: string;
@@ -22,7 +27,9 @@ export interface LiteratureSuggestionsProps {
 
 export default function ArtificialIntelligenceAssistant({ className }: LiteratureSuggestionsProps) {
   const tools = useAITools();
+  const [panelWidth, setPanelWidth] = useLocalStorage('ai-assistant/panel-width', 25, isNumber);
   const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
+  const [fullscreen, setFullscreen] = React.useState(false);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
@@ -45,23 +52,40 @@ export default function ArtificialIntelligenceAssistant({ className }: Literatur
     clear();
     recreateThreadId();
   };
+  const style: CSSProperties = {
+    '--custom-panel-width': `${panelWidth.toFixed(2)}vw`,
+  };
+  const handleToggleFullscreen = (evt: React.MouseEvent<HTMLButtonElement>) => {
+    evt.stopPropagation();
+    evt.preventDefault();
+    setFullscreen(!fullscreen);
+  };
+  const handleToggleCollapse = () => {
+    if (fullscreen) setFullscreen(false);
+    else setCollapsedPanel(!collapsedPanel);
+  };
 
   return (
     <div
-      className={classNames(className, styles.literatureSuggestions)}
+      style={style}
+      className={classNames(className, styles.aiAssistant, fullscreen && styles.fullscreen)}
       data-collapsed={collapsedPanel}
     >
-      <button
-        className={styles.header}
-        type="button"
-        onClick={() => setCollapsedPanel(!collapsedPanel)}
-      >
+      <button className={styles.header} type="button" onClick={handleToggleCollapse}>
         <h1 title={status}>AI Assistant</h1>
-        {collapsedPanel ? (
-          <PlusOutlined className="h-[1em] w-[1em]" />
-        ) : (
-          <MinusOutlined className="w-[1em]" />
-        )}
+        <div className={styles.icons}>
+          {!collapsedPanel && (
+            <button type="button" onClick={handleToggleFullscreen}>
+              {fullscreen ? <IconFullscreenOff /> : <IconFullscreenOn />}
+            </button>
+          )}
+          {!fullscreen &&
+            (collapsedPanel ? (
+              <PlusOutlined className="h-[1em] w-[1em]" />
+            ) : (
+              <MinusOutlined className="w-[1em]" />
+            ))}
+        </div>
       </button>
       {!collapsedPanel && (
         <>
@@ -129,6 +153,7 @@ export default function ArtificialIntelligenceAssistant({ className }: Literatur
           )}
         </>
       )}
+      <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
     </div>
   );
 }
