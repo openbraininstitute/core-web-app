@@ -140,7 +140,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
 
   return (
     <div
-      className="secondary-scrollbar flex h-screen w-full overflow-x-auto bg-primary-9"
+      className="secondary-scrollbar bg-primary-9 flex h-screen w-full overflow-x-auto"
       id="interactive-data-layout"
     >
       <ErrorBoundary
@@ -164,7 +164,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
           >
             <NavigationMenu activePath={activePath} items={items} onClick={onClick} />
           </Suspense>
-          <div className="grow bg-primary-9 text-white">{children}</div>
+          <div className="bg-primary-9 grow text-white">{children}</div>
         </div>
       </ErrorBoundary>
     </div>

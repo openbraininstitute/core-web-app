@@ -43,7 +43,7 @@ export default function SectionTabs({
         return (
           <button
             key={section.id}
-            className="w-full py-4 text-center text-xl text-primary-9 transition-colors duration-300 ease-in-out"
+            className="text-primary-9 w-full py-4 text-center text-xl transition-colors duration-300 ease-in-out"
             style={{
               fontWeight: activeSection === section.id ? 'bold' : 'normal',
               background: activeSection === section.id ? 'white' : 'transparent',

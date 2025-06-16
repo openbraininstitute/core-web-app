@@ -48,7 +48,7 @@ export default function SubcircuitTable({
     <div className="relative flex flex-col">
       <div className="relative flex flex-row pl-2">
         <ArrowSmall iconColor="#8C8C8C" className="relative -top-0.5" />
-        <span className="ml-3 pb-2 text-base font-semibold uppercase tracking-wider text-[#8C8C8C]">
+        <span className="ml-3 pb-2 text-base font-semibold tracking-wider text-[#8C8C8C] uppercase">
           Subcircuits
         </span>
       </div>

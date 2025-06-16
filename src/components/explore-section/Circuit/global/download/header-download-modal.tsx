@@ -12,7 +12,7 @@ export default function HeaderDownloadModal({
 }) {
   return (
     <header className="mb-8 flex w-full flex-row justify-between">
-      <div className="flex flex-row gap-x-2 text-base text-primary-4">
+      <div className="text-primary-4 flex flex-row gap-x-2 text-base">
         <div className="font-bold">Download files</div>
         <div className="font-light">Total files: {calculateTotalDownloadableItems(content)}</div>
       </div>

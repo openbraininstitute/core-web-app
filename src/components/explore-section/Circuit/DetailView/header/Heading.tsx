@@ -30,11 +30,11 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
     <>
       <div className="relative flex w-full flex-row justify-between">
         <div className="relative flex flex-col">
-          <div className="text-sm uppercase tracking-wider text-gray-500">Name</div>
-          <h1 className="text-3xl font-bold text-primary-9">{content.name}</h1>
+          <div className="text-sm tracking-wider text-gray-500 uppercase">Name</div>
+          <h1 className="text-primary-9 text-3xl font-bold">{content.name}</h1>
         </div>
 
-        <div className="flex flex-row gap-x-6 text-primary-9">
+        <div className="text-primary-9 flex flex-row gap-x-6">
           <ActionButton
             type="button"
             label="Simulate"
@@ -70,7 +70,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
 
       <div
         className={classNames(
-          'out-expo fixed bottom-3 z-[999999] h-screen w-[44vw] overflow-y-scroll bg-primary-9 p-8 transition-right duration-500',
+          'out-expo bg-primary-9 transition-right fixed bottom-3 z-[999999] h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
           downloadModalOpen ? 'right-0' : '-right-full'
         )}
       >
@@ -78,7 +78,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
       </div>
       <div
         className={classNames(
-          'fixed left-0 top-0 z-[999998] h-screen w-screen bg-black transition-opacity duration-500 ease-out-back',
+          'ease-out-back fixed top-0 left-0 z-[999998] h-screen w-screen bg-black transition-opacity duration-500',
           downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
         )}
       />
