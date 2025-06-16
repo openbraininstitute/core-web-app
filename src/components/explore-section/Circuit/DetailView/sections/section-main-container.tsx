@@ -18,7 +18,7 @@ export default function SectionMainContainer({
   >('visualisation');
 
   return (
-    <div className="relative flex w-full flex-col mt-12">
+    <div className="relative mt-12 flex w-full flex-col">
       <SectionTabs activeSection={activeSection} setActiveSection={setActiveSection} />
       <SectionContentBlock
         content={content}

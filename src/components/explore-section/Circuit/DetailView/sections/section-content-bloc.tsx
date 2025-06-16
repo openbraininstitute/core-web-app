@@ -14,7 +14,12 @@ export default function SectionContentBlock({
   content: CircuitSchemaProps;
   parentCircuit: CircuitSchemaProps | null;
   derivedCircuits: CircuitSchemaProps[] | null;
-  activeSection: 'visualisation' | 'overview' | 'provenance' | 'related-publications' | 'related-circuits';
+  activeSection:
+    | 'visualisation'
+    | 'overview'
+    | 'provenance'
+    | 'related-publications'
+    | 'related-circuits';
 }) {
   let currentSection;
 
@@ -44,5 +49,7 @@ export default function SectionContentBlock({
       currentSection = null;
   }
 
-  return <div className="relative flex max-w-full w-full flex-col bg-white p-12">{currentSection}</div>;
+  return (
+    <div className="relative flex w-full max-w-full flex-col bg-white p-12">{currentSection}</div>
+  );
 }

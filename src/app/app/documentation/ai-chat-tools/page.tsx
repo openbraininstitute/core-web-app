@@ -21,7 +21,7 @@ export default function ChatToolsPage() {
           <Link
             href={`/app/documentation/ai-chat-tools/${tool.id}`}
             key={tool.id}
-            className="rounded-lg border border-solid border-primary-6 bg-primary-9 px-5 py-4 text-white transition-colors duration-300 ease-in-out hover:bg-primary-8"
+            className="border-primary-6 bg-primary-9 hover:bg-primary-8 rounded-lg border border-solid px-5 py-4 text-white transition-colors duration-300 ease-in-out"
           >
             <h2 className="text-xl font-semibold">{tool.name}</h2>
           </Link>

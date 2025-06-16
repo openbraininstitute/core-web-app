@@ -30,7 +30,7 @@ export default function SearchBar({ searchQuery, onSearchChange }: SearchBarProp
 
   return (
     <div className="relative flex flex-row items-center">
-      <span className="mr-2 block text-base text-primary-9">Search:</span>
+      <span className="text-primary-9 mr-2 block text-base">Search:</span>
       <div
         className="relative flex h-10 flex-row items-center overflow-hidden rounded-full bg-white transition-all duration-500 ease-out"
         style={{
@@ -47,7 +47,7 @@ export default function SearchBar({ searchQuery, onSearchChange }: SearchBarProp
               onChange={handleChange}
               id="search-input"
               aria-label="Search circuits"
-              className="w-full rounded-none border border-solid border-gray-200 bg-gray-200 py-2 text-base font-normal text-primary-9 placeholder:font-semibold placeholder:text-gray-400 focus:border-none focus:outline-none active:border-none active:outline-none"
+              className="text-primary-9 w-full rounded-none border border-solid border-gray-200 bg-gray-200 py-2 text-base font-normal placeholder:font-semibold placeholder:text-gray-400 focus:border-none focus:outline-none active:border-none active:outline-none"
             />
 
             <CloseOutlined
@@ -59,7 +59,7 @@ export default function SearchBar({ searchQuery, onSearchChange }: SearchBarProp
           <div className="relative flex h-full w-full items-center justify-center">
             <SearchOutlined
               onClick={() => setSearchOpen(true)}
-              className="relative h-auto w-4 cursor-pointer text-lg text-primary-9"
+              className="text-primary-9 relative h-auto w-4 cursor-pointer text-lg"
             />
           </div>
         )}

@@ -33,7 +33,7 @@ export default function CircuitTable({
   // FILTERING
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
-  const [scaleFilter, setScaleFilter] = useState<"smallMicrocircuit" | "microcircuit" | null>(null);
+  const [scaleFilter, setScaleFilter] = useState<'smallMicrocircuit' | 'microcircuit' | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
@@ -238,7 +238,7 @@ export default function CircuitTable({
       <div className="relative w-full overflow-x-scroll">
         <div className="tableAndButton">
           {tableData.length === 0 ? (
-            <div className="text-center text-primary-9">No matching circuits found</div>
+            <div className="text-primary-9 text-center">No matching circuits found</div>
           ) : (
             <Table
               className={styles.circuitTable}
@@ -269,7 +269,7 @@ export default function CircuitTable({
         <>
           <div
             className={classNames(
-              'out-expo fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll bg-primary-9 p-8 transition-right duration-500',
+              'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
               downloadModalOpen ? 'right-0' : '-right-full'
             )}
           >
@@ -282,7 +282,7 @@ export default function CircuitTable({
           </div>
           <div
             className={classNames(
-              'fixed left-0 top-0 z-80 h-screen w-screen bg-black transition-opacity duration-500 ease-out-back',
+              'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
               downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
             )}
           />

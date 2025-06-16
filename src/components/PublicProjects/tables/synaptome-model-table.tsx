@@ -32,7 +32,7 @@ export default function SynaptomeTable({ content }: { content: SynaptomeProps[] 
 
       <button
         className={classNames(
-          'fixed right-4 bg-primary-9 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
+          'bg-primary-9 fixed right-4 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
           selectedRow ? 'bottom-4' : 'bottom-[-100px]'
         )}
         type="button"

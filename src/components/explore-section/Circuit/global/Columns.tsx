@@ -111,7 +111,9 @@ const columns = (
       key: 'description',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="text-ellipsis whitespace-nowrap font-normal">{truncateText(record.description, 46)}</div>
+        <div className="font-normal text-ellipsis whitespace-nowrap">
+          {truncateText(record.description, 46)}
+        </div>
       ),
     },
     {
@@ -119,7 +121,7 @@ const columns = (
       key: 'brainRegion',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">{record.brainRegion}</div>
+        <div className="font-normal whitespace-nowrap">{record.brainRegion}</div>
       ),
     },
     {
@@ -127,7 +129,7 @@ const columns = (
       key: 'numberOfNeurons',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">
+        <div className="font-normal whitespace-nowrap">
           {formatNumberWithComma(record.numberOfNeurons)}
         </div>
       ),
@@ -137,7 +139,7 @@ const columns = (
       key: 'numberOfConnections',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">
+        <div className="font-normal whitespace-nowrap">
           {formatNumberWithComma(record.numberOfConnections)}
         </div>
       ),
@@ -147,7 +149,7 @@ const columns = (
       key: 'numberOfSynapses',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">
+        <div className="font-normal whitespace-nowrap">
           {formatNumberWithComma(record.numberOfSynapses)}
         </div>
       ),
@@ -161,19 +163,21 @@ const columns = (
           {
             label: 'Small microcircuit',
             value: 'smallMicrocircuit',
-            description: "Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively)."
+            description:
+              'Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively).',
           },
           {
             label: 'Microcircuit',
             value: 'microcircuit',
-            description: "Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit."
+            description:
+              'Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.',
           },
-        ]
+        ];
         return (
           <Tooltip title={content[0].description}>
-            <div className="whitespace-nowrap font-normal">{content[0].label}</div>
+            <div className="font-normal whitespace-nowrap">{content[0].label}</div>
           </Tooltip>
-        )
+        );
       },
     },
     {
@@ -181,7 +185,7 @@ const columns = (
       key: 'specie',
       width: 120,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">{record.species}</div>
+        <div className="font-normal whitespace-nowrap">{record.species}</div>
       ),
     },
     {
@@ -189,7 +193,7 @@ const columns = (
       key: 'publishedIn',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">{record.metadata.publishedIn}</div>
+        <div className="font-normal whitespace-nowrap">{record.metadata.publishedIn}</div>
       ),
     },
     {
@@ -197,7 +201,7 @@ const columns = (
       key: 'registrationDate',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="whitespace-nowrap font-normal">{record.metadata.registrationDate}</div>
+        <div className="font-normal whitespace-nowrap">{record.metadata.registrationDate}</div>
       ),
     },
   ];

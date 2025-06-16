@@ -1,1 +1,1 @@
-export { default } from "./panel-splitter"
+export { default } from './panel-splitter';

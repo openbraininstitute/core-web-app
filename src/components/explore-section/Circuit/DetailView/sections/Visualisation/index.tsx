@@ -16,7 +16,7 @@ export default function Visualisation({ content }: { content: CircuitSchemaProps
         width={1920}
         height={1080}
         alt={`Image of the circuit ${content.name}`}
-        className="w-full h-auto transition-all duration-300 ease-out"
+        className="h-auto w-full transition-all duration-300 ease-out"
         priority
       />
     </div>

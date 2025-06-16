@@ -96,7 +96,7 @@ function TiersComparison({
     if (!available && feature?.title)
       return (
         <span className="text-gray-400">
-          <CheckCircleFilled className="text-lg text-primary-4" />
+          <CheckCircleFilled className="text-primary-4 text-lg" />
         </span>
       );
 
@@ -161,11 +161,11 @@ function TiersComparison({
     <div
       data-testid="tiers-list"
       id="tiers-list"
-      className="relative flex h-full max-h-full w-full flex-col overflow-hidden bg-primary-9 px-6 py-2 text-white"
+      className="bg-primary-9 relative flex h-full max-h-full w-full flex-col overflow-hidden px-6 py-2 text-white"
     >
       <div
         id="tier-highlighter"
-        className="pointer-events-none absolute bottom-[50px] left-[20px] right-[20px] top-[10px] grid grid-cols-4 gap-6"
+        className="pointer-events-none absolute top-[10px] right-[20px] bottom-[50px] left-[20px] grid grid-cols-4 gap-6"
       >
         <div />
         {tiers.map((t) => {
@@ -179,7 +179,7 @@ function TiersComparison({
               key={`${t.id}-bg`}
               className={classNames(
                 'rounded-lg',
-                (isSelected || isFree) && 'border-2 border-primary-3 bg-primary-8/90',
+                (isSelected || isFree) && 'border-primary-3 bg-primary-8/90 border-2',
                 isHovered && !isSelected && 'bg-primary-5/20'
               )}
             />
@@ -189,7 +189,7 @@ function TiersComparison({
 
       <div
         id="tier-header"
-        className="sticky top-0 z-10 grid grid-cols-4 gap-6 bg-transparent pb-6 pt-4"
+        className="sticky top-0 z-10 grid grid-cols-4 gap-6 bg-transparent pt-4 pb-6"
       >
         <div />
         {tiers.map((t) => {
@@ -231,7 +231,7 @@ function TiersComparison({
                   </div>
                   {getPriceDisplay(t).discountPrice ? (
                     <div className="flex flex-col text-gray-400">
-                      <span className="text-lg font-light text-primary-5 line-through">
+                      <span className="text-primary-5 text-lg font-light line-through">
                         {getPriceDisplay(t).mainPrice}/
                         <span className="text-sm font-light">{interval}</span>
                       </span>
@@ -240,7 +240,7 @@ function TiersComparison({
                           {getPriceDisplay(t).discountPrice}/
                           <span className="text-sm font-light">{interval}</span>
                         </span>
-                        <span className="ml-2 rounded-full border border-primary-2 px-3 py-1 text-sm text-primary-2">
+                        <span className="border-primary-2 text-primary-2 ml-2 rounded-full border px-3 py-1 text-sm">
                           Launch Price
                         </span>
                       </div>
@@ -274,10 +274,10 @@ function TiersComparison({
       <div id="tier-details-container" className="no-scrollbar flex-1 overflow-y-auto">
         {allCategories.map((category) => (
           <div id="tier-details" key={`${kebabCase(category.title)}`} className="relative mt-8">
-            <h3 className="mb-4 uppercase text-primary-4">
+            <h3 className="text-primary-4 mb-4 uppercase">
               <span className="text-base font-bold">{category.title}</span>
               {category.available === false && (
-                <span className="select font-light! ml-3 rounded-full border border-white px-2 py-1 text-xs text-white">
+                <span className="select ml-3 rounded-full border border-white px-2 py-1 text-xs font-light! text-white">
                   Future release
                 </span>
               )}
@@ -347,8 +347,8 @@ function TiersComparison({
               <Button
                 className={classNames(
                   'relative z-20 h-10 w-full rounded-none',
-                  'border-white bg-primary-9 text-white',
-                  isHovered && 'hover:text-white! text-white hover:bg-primary-8'
+                  'bg-primary-9 border-white text-white',
+                  isHovered && 'hover:bg-primary-8 text-white hover:text-white!'
                 )}
                 onClick={controller}
                 data-testid={`select-${t.title.toLowerCase()}-btn`}
@@ -392,7 +392,7 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
   if (loading) return <TiersListSkeleton />;
   if ('error' in tiers)
     return (
-      <div className="rounded-xs mb-6 transform bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+      <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="mb-2 text-2xl font-bold text-red-200">
@@ -409,7 +409,7 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
               type="text"
               size="large"
               onClick={() => window.location.reload()}
-              className="hover:text-white! rounded-none px-6 py-2 text-white"
+              className="rounded-none px-6 py-2 text-white hover:text-white!"
             >
               Refresh Page
             </Button>

@@ -18,13 +18,13 @@ export default function GlossaryContent({
     <div className="w-full pl-16 text-white">
       <header className="mb-4">
         <h1 className="mb-3 text-3xl font-bold">{activeItem?.Name}</h1>
-        <div className="flex flex-row gap-x-4 border-y border-solid border-primary-6 py-3">
+        <div className="border-primary-6 flex flex-row gap-x-4 border-y border-solid py-3">
           <div className="flex flex-row gap-y-2">
-            <span className="mr-1 block text-primary-3">Scale:</span>
+            <span className="text-primary-3 mr-1 block">Scale:</span>
             <span>{activeItem?.Scale}</span>
           </div>
           <div className="flex flex-row gap-y-2">
-            <span className="mr-1 block text-primary-3">Data Type:</span>
+            <span className="text-primary-3 mr-1 block">Data Type:</span>
             <span>{activeItem?.Data_Type}</span>
           </div>
         </div>

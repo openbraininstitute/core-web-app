@@ -5,7 +5,7 @@ import { CloseIcon } from '@/components/icons';
 
 export function SingleContributorPill({ name, lastName }: { name: string; lastName: string }) {
   return (
-    <div className="flex flex-row flex-nowrap rounded-full border border-solid border-gray-200 px-4 py-1 text-lg font-normal text-primary-9">
+    <div className="text-primary-9 flex flex-row flex-nowrap rounded-full border border-solid border-gray-200 px-4 py-1 text-lg font-normal">
       <span>
         {name} {lastName}
       </span>
@@ -28,7 +28,7 @@ export default function ListParameterBox({
 
   return (
     <div className="relative flex w-full flex-col items-start">
-      <div className="text-sm font-light uppercase tracking-wider text-gray-500">{name}</div>
+      <div className="text-sm font-light tracking-wider text-gray-500 uppercase">{name}</div>
 
       <div className="mt-2 flex flex-row flex-wrap gap-2">
         {slicedContent.map((item: ContributorsProps | string) => {
@@ -36,7 +36,7 @@ export default function ListParameterBox({
             return (
               <span
                 key={item}
-                className="hyphens-auto text-xl font-normal leading-normal text-primary-9"
+                className="text-primary-9 text-xl leading-normal font-normal hyphens-auto"
               >
                 {item}
               </span>
@@ -56,7 +56,7 @@ export default function ListParameterBox({
         <button
           type="button"
           aria-label="View more"
-          className="mt-2 rounded-full border border-solid border-gray-300 bg-white px-4 py-2 text-base font-normal text-neutral-5"
+          className="text-neutral-5 mt-2 rounded-full border border-solid border-gray-300 bg-white px-4 py-2 text-base font-normal"
           onClick={() => setViewMore(true)}
         >
           View more
@@ -64,8 +64,8 @@ export default function ListParameterBox({
       )}
 
       {viewMore && (
-        <div className="fixed left-0 top-0 z-[99999] flex h-screen w-screen items-center justify-center bg-black/60">
-          <div className="flex w-2/3 flex-col rounded-md bg-white p-10 text-primary-9">
+        <div className="fixed top-0 left-0 z-[99999] flex h-screen w-screen items-center justify-center bg-black/60">
+          <div className="text-primary-9 flex w-2/3 flex-col rounded-md bg-white p-10">
             <div className="mb-2 flex flex-row justify-between">
               <div className="text-xl font-bold">{name}</div>
               <button
@@ -73,7 +73,7 @@ export default function ListParameterBox({
                 aria-label="Close view more modal"
                 onClick={() => setViewMore(false)}
               >
-                <CloseIcon className="h-4 w-4 text-primary-9" />
+                <CloseIcon className="text-primary-9 h-4 w-4" />
               </button>
             </div>
             <div className="flex flex-row flex-wrap gap-2">
@@ -82,7 +82,7 @@ export default function ListParameterBox({
                   return (
                     <span
                       key={item}
-                      className="flex flex-row items-center hyphens-auto text-xl font-normal leading-normal text-primary-9 before:mr-2 before:block before:h-2 before:w-2 before:rounded-full before:bg-primary-9 before:content-['']"
+                      className="text-primary-9 before:bg-primary-9 flex flex-row items-center text-xl leading-normal font-normal hyphens-auto before:mr-2 before:block before:h-2 before:w-2 before:rounded-full before:content-['']"
                     >
                       {item}.
                     </span>

@@ -22,7 +22,7 @@ export default function Profile() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+            'border-primary-6 hover:border-primary-5 hover:bg-primary-5 border'
           )}
         >
           <HomeOutlined className="text-xl" />
@@ -34,7 +34,7 @@ export default function Profile() {
         className={classNames(
           'flex h-12 w-12 items-center justify-center p-3',
           'text-white transition-all duration-200',
-          'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+          'border-primary-6 hover:border-primary-5 hover:bg-primary-5 border'
         )}
       >
         <DocumentationIcon className="h-auto w-5 text-white" />
@@ -48,7 +48,7 @@ export default function Profile() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+            'border-primary-6 hover:border-primary-5 hover:bg-primary-5 border'
           )}
         >
           <QuestionCircleOutlined className="text-xl" />
@@ -63,7 +63,7 @@ export default function Profile() {
           className={classNames(
             'flex w-max items-center justify-center p-3',
             'text-white transition-all duration-200',
-            'border border-primary-6 hover:border-primary-5 hover:bg-primary-5'
+            'border-primary-6 hover:border-primary-5 hover:bg-primary-5 border'
           )}
         >
           <UserOutlined className="text-xl" />

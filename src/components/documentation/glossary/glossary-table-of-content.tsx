@@ -44,7 +44,7 @@ export default function GlossaryTableOfContent({
 
   return (
     <div className="w-[255px]">
-      <div className="mb-2 text-xl font-bold text-primary-3">Glossary</div>
+      <div className="text-primary-3 mb-2 text-xl font-bold">Glossary</div>
       <div className="flex flex-col items-start gap-y-2">
         {content.map((item: ContentForGlossaryItem) => (
           <button
@@ -54,7 +54,7 @@ export default function GlossaryTableOfContent({
             key={item.Name}
             className={classNames(
               'text-lg',
-              activeItem?.Name === item.Name ? 'font-bold text-white' : 'font-normal text-primary-1'
+              activeItem?.Name === item.Name ? 'font-bold text-white' : 'text-primary-1 font-normal'
             )}
           >
             {item.Name}
