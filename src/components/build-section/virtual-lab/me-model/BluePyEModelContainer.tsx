@@ -216,7 +216,6 @@ export default function BluePyEModelContainer({
     if (bluePyEModelInstance.current || !meModelSelfUrl || !accessToken) return;
 
     const onInit = () => {
-      bluePyEModelInstance.current?.runAnalysis();
       setAnalysisState('running');
     };
 
