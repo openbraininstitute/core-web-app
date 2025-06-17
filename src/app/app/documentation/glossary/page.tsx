@@ -4,10 +4,8 @@ import { useState } from 'react';
 
 import GlossaryContent from '@/components/documentation/glossary/glossary-content';
 import GlossaryFilterBar from '@/components/documentation/glossary/glossary-filter-bar';
-import {
-  ContentForGlossaryItem,
-  useSanityContentForGlossary,
-} from '@/components/documentation/hooks/use-sanity-content-for-glossary';
+import { useSanityContentForGlossary } from '@/components/documentation/hooks/use-sanity-content-for-glossary';
+import { ContentForGlossaryItem } from '@/components/documentation/type';
 import Slugify from '@/util/slugify';
 
 type FilterLetter = string | null;

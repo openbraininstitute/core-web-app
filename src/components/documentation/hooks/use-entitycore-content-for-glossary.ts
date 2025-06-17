@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
+
+import { ContentForGlossaryItem } from '../type';
+
 import { logError } from '@/util/logger';
 import { assertType, TypeDef } from '@/util/type-guards';
-
-export interface ContentForGlossaryItem {
-  Name: string;
-  New_suggested_name: string;
-  Description: string;
-  Data_Type: string;
-  Scale: string;
-  Status: string;
-}
 
 export function useEntityCoreContentForGlossary(): ContentForGlossaryItem[] | null {
   const [data, setData] = useState<ContentForGlossaryItem[] | null>(null);
