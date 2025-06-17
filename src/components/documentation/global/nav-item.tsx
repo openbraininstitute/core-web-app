@@ -2,9 +2,8 @@
 
 import { Tooltip } from 'antd';
 import { useAtom } from 'jotai';
-import { usePathname } from 'next/navigation';
-
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { SingleSectionProps } from '../type';
 
@@ -49,7 +48,6 @@ export function ItemEnabled({
     const matchingItem = flatContent.find((item) => item.link === pathname);
     if (matchingItem) {
       setActiveNavItem(matchingItem);
-      // If the matching item is a child of this content, open the section
       if (
         content.children?.some((child) => child.slug === matchingItem.slug) ||
         content.slug === matchingItem.slug
@@ -61,14 +59,18 @@ export function ItemEnabled({
     }
   }, [pathname, setActiveNavItem, allContent, content, setSectionOpen]);
 
+  const isActive =
+    activeNavItem?.slug === content.slug ||
+    (name === 'Glossary' && pathname.startsWith('/app/documentation/glossary'));
+
   return !content.children ? (
     <Link
       href={link}
       className={classNames(
         'font-sans text-lg',
-        activeNavItem?.slug === content.slug
-          ? 'flex flex-row items-center gap-x-6 font-bold after:relative after:top-0.5 after:block after:h-2 after:w-2 after:rounded-full after:bg-white after:content-[""]'
-          : 'font-normal'
+        isActive
+          ? 'flex flex-row items-center gap-x-6 font-bold text-white after:relative after:top-0.5 after:block after:h-2 after:w-2 after:rounded-full after:bg-white after:content-[""]'
+          : 'text-primary-3 font-normal'
       )}
       aria-label={name}
     >
@@ -77,7 +79,15 @@ export function ItemEnabled({
   ) : (
     <div>
       <div className="flex w-full flex-row items-center justify-between">
-        <div className="font-sans text-lg font-normal text-white">{name}</div>
+        <Link
+          href={link}
+          className={classNames(
+            'font-sans text-lg',
+            isActive ? 'font-bold' : 'font-normal text-white'
+          )}
+        >
+          {name}
+        </Link>
         <button
           type="button"
           aria-label="Toggle section"

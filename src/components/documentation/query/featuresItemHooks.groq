@@ -1,0 +1,7 @@
+*[_type=="futureFeaturesItem"][]{
+  Feature_title,
+  Description,
+  Topic,
+  Scale,
+  Status
+}
