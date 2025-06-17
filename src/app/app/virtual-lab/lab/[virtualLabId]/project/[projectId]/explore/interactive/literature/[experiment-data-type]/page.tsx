@@ -20,7 +20,7 @@ export default function Page() {
   const [filters, updateFilters] = useAtom(articleListFiltersAtom);
   const [brainRegion] = useQueryState('brainRegion');
   const currentExperiment = Object.values(EXPERIMENT_DATA_TYPES).find(
-    (experiment) => experiment.name === params?.['experiment-data-type'] ?? ''
+    (experiment) => experiment.name === params?.['experiment-data-type']
   );
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
   if (!currentExperiment)

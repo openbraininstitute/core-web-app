@@ -44,7 +44,7 @@ export function ArticleListing({ basePath }: ArticleListingProps) {
   const filters = useAtomValue(articleListFiltersAtom);
   const brainRegion = useAtomValue(selectedBrainRegionAtom)?.title;
   const experiment = Object.values(EXPERIMENT_DATA_TYPES).find(
-    (exp) => exp.name === params?.['experiment-data-type'] ?? ''
+    (exp) => exp.name === params?.['experiment-data-type']
   );
 
   const [{ loading, error, pageToFetch, total, hasMoreData }, setListingState] = useReducer(
