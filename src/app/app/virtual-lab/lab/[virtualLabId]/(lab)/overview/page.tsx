@@ -5,8 +5,10 @@ import VirtualLabHome from '@/components/VirtualLab/VirtualLabHomePage';
 import { UsersHorizontalList } from '@/components/VirtualLab/projects/VirtualLabProjectHomePage';
 import { ServerSideComponentProp } from '@/types/common';
 
-export default async function VirtualLab(props: ServerSideComponentProp<{ virtualLabId: string }>) {
-  const params = await props.params;
+export default async function VirtualLab({
+  params: promisedParams,
+}: ServerSideComponentProp<{ virtualLabId: string }>) {
+  const params = await promisedParams;
   const { virtualLabId } = params;
   return (
     <div className="flex flex-col gap-2 pb-5">

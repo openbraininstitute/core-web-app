@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 
 import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 import { useAccessToken } from '@/hooks/useAccessToken';
@@ -10,7 +10,6 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   threadId: string,
   count: number
 ): [suggestions: string[], clearSuggestions: () => void] {
-  const ref = useRef(false);
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const accessToken = useAccessToken();

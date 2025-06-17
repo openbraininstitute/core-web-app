@@ -1,6 +1,5 @@
 import { Suspense, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Button } from 'antd';
 import Link from 'next/link';
 import kebabCase from 'lodash/kebabCase';
 import Icon, { UserOutlined, HomeOutlined } from '@ant-design/icons';
@@ -20,6 +19,8 @@ type TDefaulNavigation = {
 type ApplicationSidebarHeaderProps = {
   title: ({ expanded }: { expanded: boolean }) => React.ReactNode;
   expanded: boolean;
+  // @FIXME: Unused prop?
+  // eslint-disable-next-line react/no-unused-prop-types
   toggleExpand: () => void;
 };
 
@@ -152,11 +153,7 @@ export function DefaultAccountPanel({ expanded }: { expanded: boolean }) {
   );
 }
 
-function ApplicationSidebarHeader({
-  title,
-  expanded,
-  toggleExpand,
-}: ApplicationSidebarHeaderProps) {
+function ApplicationSidebarHeader({ title, expanded }: ApplicationSidebarHeaderProps) {
   return (
     <div
       className={classNames(

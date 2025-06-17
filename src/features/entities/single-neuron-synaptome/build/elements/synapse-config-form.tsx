@@ -166,7 +166,7 @@ export default function SynaptomeConfigurationForm({
     try {
       setLoading(true);
 
-      async function buildSingleNeuronSynaptome() {
+      const buildSingleNeuronSynaptome = async () => {
         const { data, error } = await tryCatch(
           SingleNeuronSynaptome.api.query.create!({
             context: { virtualLabId, projectId },
@@ -195,7 +195,7 @@ export default function SynaptomeConfigurationForm({
           entity: data,
           asset: assetData,
         };
-      }
+      };
 
       const accountingSession = new OneshotSession({
         virtualLabId,

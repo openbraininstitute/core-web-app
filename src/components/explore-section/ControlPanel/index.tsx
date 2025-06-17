@@ -47,6 +47,8 @@ export type ControlPanelProps = {
   setFilters: any;
   showDisplayTrigger?: boolean;
   resourceId?: string;
+  // @FIXME: Is that prop used?
+  // eslint-disable-next-line react/no-unused-prop-types
   virtualLabInfo?: VirtualLabInfo;
 };
 
@@ -170,7 +172,6 @@ export default function ControlPanel({
   setFilters,
   showDisplayTrigger = true,
   resourceId,
-  virtualLabInfo,
 }: ControlPanelProps) {
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
@@ -182,7 +183,7 @@ export default function ControlPanel({
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const resetFilters = useResetAtom(filtersAtom({ dataType, dataScope, resourceId, key: dataKey }));
   const setPrevData = useSetAtom(
-    previousDataAtom({ virtualLabInfo, dataType, dataScope, key: dataKey })
+    previousDataAtom({ /* virtualLabInfo, */ dataType, dataScope, key: dataKey })
   );
   const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
 

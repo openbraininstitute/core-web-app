@@ -71,7 +71,7 @@ export default function PreviewThumbnail({
         })
         .catch(() => setLoading(false));
     }
-  }, [contentUrl, dpi, target, endpoint, inView]);
+  }, [contentUrl, dpi, target, endpoint, inView, thumbnail]);
 
   if (thumbnail) {
     return <Image alt={alt} className={className} height={height} src={thumbnail} width={width} />;

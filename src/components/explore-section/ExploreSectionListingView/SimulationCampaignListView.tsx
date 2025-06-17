@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
+
 import { axesAtom } from '../Simulations/state';
 import ResultsCount from '../../../features/listing-filter-panel/numeric-results-info';
 import FilterControls from './FilterControls';
@@ -25,7 +26,10 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
     useMemo(() => unwrap(activeColumnsAtom({ dataType, key: dataType })), [dataType])
   );
   const dataSource = useAtomValue(
-    useMemo(() => unwrap(dataAtom({ dataType, key: dataType, brainRegionId: node.id })), [dataType])
+    useMemo(
+      () => unwrap(dataAtom({ dataType, key: dataType, brainRegionId: node.id })),
+      [dataType, node.id]
+    )
   );
 
   const [sortState, setSortState] = useAtom(sortStateAtom({ key: dataType }));
@@ -92,7 +96,8 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
                 <ListTable
                   {...{
                     columns,
-                    dataSource: dataSource?.data,
+                    // @FIXME: The linter is right here: there is no `.hits` on dataSource.
+                    dataSource: undefined, // dataSource?.hits,
                     loading,
                   }}
                 />

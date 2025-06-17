@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { App, Button } from 'antd';
 import omit from 'lodash/omit';
 import get from 'lodash/get';
@@ -33,6 +33,10 @@ import { tryCatch } from '@/api/utils';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
+import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { resolveDataKey } from '@/utils/key-builder';
+import { MEmodel } from '@/entity-configuration/domain/model';
+import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
@@ -40,7 +44,6 @@ const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSch
 type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
 
 function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { stateId: string }) {
-  stateId;
   const { sessionValue } = useBuildMeModelSessionState({
     stateId,
     virtualLabId,
@@ -105,6 +108,40 @@ type Props = {
   };
 };
 
+function CustomButton({
+  loading,
+  disable,
+  className,
+  onClick,
+  children,
+}: {
+  loading: boolean;
+  disable: boolean;
+  className?: string;
+  onClick?: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Button
+      key="create-project-btn"
+      className={classNames(
+        className,
+        'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
+        'hover:border-primary-8! hover:bg-primary-8! hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
+        'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
+        'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
+      )}
+      type="default"
+      size="large"
+      htmlType="button"
+      disabled={disable}
+      loading={loading}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  );
+}
 export default function Configure({ params, searchParams }: Props) {
   const { push: navigate } = useRouter();
   const { notification } = App.useApp();
@@ -128,16 +165,25 @@ export default function Configure({ params, searchParams }: Props) {
     projectId: params.projectId,
   });
 
-  if (!stateId) {
-    navigate('./');
-    return;
-  }
+  // const refreshMeModels = useSetAtom(
+  //   dataAtom({
+  //     dataType: DataType.CircuitMEModel,
+  //     dataScope: ExploreDataScope.NoScope,
+  //     virtualLabInfo: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+  //     key: useId(),
+  //   })
+  // );
 
   const [activeProcess, setActiveProcess] = useState<
     null | 'modelCreation' | 'modelCreationWithValidation'
   >(null);
 
-  const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
+  const { contextHolder } = usePendingValidationModal();
+
+  if (!stateId) {
+    navigate('./');
+    return;
+  }
 
   const showErrorNotification = (error: any, type: 'validation' | 'http') => {
     let message = messages.DefaultErrorMsg;
@@ -154,11 +200,11 @@ export default function Configure({ params, searchParams }: Props) {
     });
   };
 
-  const fetchFreshAccessToken = async (): Promise<string> => {
-    const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
-    const token = await res.json();
-    return token.accessToken;
-  };
+  // const fetchFreshAccessToken = async () => {
+  //   const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
+  //   const token = await res.json();
+  //   return token.accessToken;
+  // };
 
   const buildMeModel = async (mode: 'validation' | 'standard') => {
     const body: Partial<TCreateMeModelContext> = {

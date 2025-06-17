@@ -66,12 +66,6 @@ export interface INestedMEModel extends IMEModelBase, Timestamps {
   etypes: Array<IEType>;
 }
 
-export interface INestedMEModel extends IMEModelBase, Timestamps {
-  id: string;
-  mtypes: Array<IMType>;
-  etypes: Array<IEType>;
-}
-
 export interface IMEModelFilter
   extends ContributionFilter,
     IdFilter,

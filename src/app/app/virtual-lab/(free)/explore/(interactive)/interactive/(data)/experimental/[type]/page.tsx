@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import omit from 'lodash/omit';
 import type { Metadata } from 'next';
 
 import ListingView from '@/features/views/listing';
@@ -15,8 +14,8 @@ type Props = ServerSideComponentProp<
   null
 >;
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
+export async function generateMetadata({ params: promisedParams }: Props): Promise<Metadata> {
+  const params = await promisedParams;
   const entity = getEntityBySlug({ slug: params.type });
 
   return {
@@ -24,8 +23,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page(props: Props) {
-  const params = await props.params;
+export default async function Page({ params: promisedParams }: Props) {
+  const params = await promisedParams;
   const entity = getEntityBySlug({ slug: params.type });
 
   if (!entity) {
@@ -33,12 +32,6 @@ export default async function Page(props: Props) {
   }
 
   return (
-    <ListingView
-      {...{
-        entity: omit(entity, ['api', 'viewDefinition']),
-        virtualLabId: params.virtualLabId,
-        projectId: params.projectId,
-      }}
-    />
+    <ListingView entity={entity} virtualLabId={params.virtualLabId} projectId={params.projectId} />
   );
 }

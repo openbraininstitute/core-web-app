@@ -33,10 +33,8 @@ const BrainRegionsHierarchy = dynamic(() => import('@/features/brain-region-hier
   },
 });
 
-export default function Layout(props: Props) {
-  const { virtualLabId, projectId } = use(props.params);
-
-  const { children } = props;
+export default function Layout({ params, children }: Props) {
+  const { virtualLabId, projectId } = use(params);
 
   const setConfigId = useSetAtom(brainModelConfigIdAtom);
   useSetBrainRegionFromQuery();

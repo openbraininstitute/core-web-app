@@ -6,7 +6,6 @@ import ResultsTab from './RecordingTab';
 
 import { SimulationPayload } from '@/types/simulation/single-neuron';
 import { classNames } from '@/util/utils';
-import { NexusMEModel } from '@/types/me-model';
 import { IMEModel } from '@/api/entitycore/types';
 
 type TabKeys = 'configuration' | 'results' | 'analysis';

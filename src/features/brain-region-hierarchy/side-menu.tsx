@@ -22,7 +22,7 @@ export default function TreeSideMenu({ dataKey }: Props) {
   const onToggleCollapse = () => setIsCollapsed((prev) => !prev);
   const { node } = useBrainRegionHierarchy({ dataKey });
   const result = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [dataKey])
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
   const nodeLabel = find(result?.options, (o) => o.data.id === node.id)?.label;
 

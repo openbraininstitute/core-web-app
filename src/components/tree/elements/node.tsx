@@ -7,12 +7,7 @@ import {
 } from '@/components/tree/elements/indentation';
 import { classNames } from '@/util/utils';
 
-import type {
-  TTreeNode,
-  RenderNodeProps,
-  NodeSubtitle,
-  NodeIndentation,
-} from '@/components/tree/types';
+import type { TTreeNode, RenderNodeProps, NodeIndentation } from '@/components/tree/types';
 
 interface NodeProps<TNode extends TTreeNode> {
   dataKey: string;

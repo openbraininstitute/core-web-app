@@ -20,6 +20,8 @@ export interface Props<TNode extends TTreeNode> {
   onClick?: (node: TNode) => void;
   onToggle?: (node: TNode, expanded: boolean) => void;
   defaultExpandedNodes?: Array<string | number>;
+  // @FIXME: is this prop used?
+  // eslint-disable-next-line react/no-unused-prop-types
   subtitle?: NodeSubtitle<TNode>;
   className?: string;
   indentation?: NodeIndentation;
@@ -69,7 +71,7 @@ export default function Tree<TNode extends TTreeNode>({
   selectedNode,
   separator = true,
 }: Props<TNode>) {
-  const nodes = Array.isArray(data) ? data : [data];
+  const nodes = React.useMemo(() => (Array.isArray(data) ? data : [data]), [data]);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(
@@ -95,7 +97,7 @@ export default function Tree<TNode extends TTreeNode>({
       });
       scrollToNode(selectedNode as any, 'start');
     }
-  }, [selectedNode, data, defaultExpandedNodes]);
+  }, [selectedNode, data, defaultExpandedNodes, nodes]);
 
   const handleToggle = useCallback(
     (node: TNode) => {

@@ -1,8 +1,11 @@
 import { ServerSideComponentProp } from '@/types/common';
 
-export default async function VirtualLab(props: ServerSideComponentProp<{ notebook_uri: string }>) {
-  const params = await props.params;
+export default async function VirtualLab({
+  params: promisedParams,
+}: ServerSideComponentProp<{ notebook_uri: string }, any>) {
+  const params = await promisedParams;
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const { notebook_uri } = params;
 
   return (

@@ -15,10 +15,8 @@ type Props = {
   }>;
 };
 
-export default async function VirtualLabLayout(props: Props) {
-  const params = await props.params;
-
-  const { children } = props;
+export default async function VirtualLabLayout({ params: promisedParams, children }: Props) {
+  const params = await promisedParams;
 
   return (
     <div className="bg-primary-9 flex h-screen overflow-y-auto text-white">

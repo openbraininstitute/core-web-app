@@ -3,16 +3,13 @@
 import { parseAsString, Parser, useQueryStates } from 'nuqs';
 import { DownOutlined } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
 import Image from 'next/image';
 import map from 'lodash/map';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-
-import { useState, useEffect, useRef, MouseEventHandler } from 'react';
+import { useRef } from 'react';
 import { Button } from 'antd';
-import { scopeSelectorExpandedAtom } from './state';
+
 import { classNames } from '@/util/utils';
 import { basePath } from '@/config';
 import {
@@ -269,7 +266,7 @@ export function ScopeSelector() {
           <div className={classNames('text-sm', descStyle)}>{description}</div>
         </div>
 
-        {showImage ? (
+        {showImage && (
           <Image
             src={img}
             width={100}
@@ -278,7 +275,8 @@ export function ScopeSelector() {
             style={{ clipPath: 'circle()', shapeOutside: 'circle()' }}
             className="self-center"
           />
-        ) : url?.build ? (
+        )}
+        {url?.build ? (
           <Button
             onClick={onClick}
             className={classNames(

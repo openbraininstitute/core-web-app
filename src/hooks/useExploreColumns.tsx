@@ -6,7 +6,7 @@ import throttle from 'lodash/throttle';
 
 import { SortState } from '@/types/explore-section/application';
 import { ValueArray } from '@/components/ListTable';
-import FieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configuration/definitions';
+import fieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configuration/definitions';
 
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
@@ -51,7 +51,7 @@ export default function useExploreColumns<T>(
   dimensionColumns?: string[] | null,
   dataType?: DataType
 ): ColumnProps<T>[] {
-  const keys = useMemo(() => Object.keys(FieldsDefinitionRegistry), []);
+  const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
 
   const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
     [...keys, ...(dimensionColumns || [])].map((key) => ({

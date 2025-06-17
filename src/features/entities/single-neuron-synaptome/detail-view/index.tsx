@@ -25,6 +25,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   params: WorkspaceContext & { id: string };
+  // eslint-disable-next-line react/no-unused-prop-types
   showViewMode?: boolean;
   payload: {
     source: ISingleNeuronSynaptome;

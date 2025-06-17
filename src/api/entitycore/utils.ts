@@ -44,5 +44,6 @@ export function getAssetElement(
   if ('filter' in config) {
     return find(config.assets, config.filter);
   }
+  // eslint-disable-next-line lodash/matches-shorthand
   return find(config.assets, (v) => v.path === config.path && v.content_type === config.type);
 }

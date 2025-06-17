@@ -23,7 +23,7 @@ type RequestOptions = {
   headers?: Record<string, string | undefined>;
   queryParams?: Record<
     string,
-    string | number | string[] | number[] | null | undefined | boolean | Date
+    string | number | string[] | number[] | null | undefined | boolean | Date | (string | null)[]
   >;
   body?: any;
   signal?: AbortSignal;

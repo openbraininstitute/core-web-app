@@ -27,7 +27,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
         }, 100);
       }
     },
-    [options, onSelect, scrollToNode]
+    [options, onSelect]
   );
 
   return (

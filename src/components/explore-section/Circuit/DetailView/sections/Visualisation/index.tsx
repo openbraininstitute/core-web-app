@@ -7,8 +7,6 @@ import placeholderImage from './circuit_placeholder.jpg';
 export default function Visualisation({ content }: { content: CircuitSchemaProps }) {
   const imageUrl = content.overview.mainDisplay[0].url || placeholderImage;
 
-  console.log('Image URL:', imageUrl);
-
   return (
     <div className="relative w-full">
       <Image

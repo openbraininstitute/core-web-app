@@ -49,59 +49,8 @@ function TraceThumbnail({
   plotRevision: number;
 }) {
   const sweeps = trace.getSweeps(protocol, repetition);
-
-  const [rawData, dataUnit] = useMemo(() => {
-    let deltaTime = 1;
-    let dataUnit: string | null = null;
-    let conversionFactor = 1;
-
-    const plotData = sweeps.map((sweep, idx) => {
-      const recordingData = trace.getSweepRecordingData(protocol, repetition, sweep, recordingType);
-
-      if (idx === 0) {
-        const { timeUnit, timeRate } = recordingData;
-
-        if (timeUnit === 'seconds') {
-          deltaTime = (1 / timeRate) * 1000;
-        }
-
-        dataUnit = recordingData.unit;
-        conversionFactor = recordingData.conversionFactor;
-      }
-
-      const name = sweep;
-      const y = recordingData.data as number[]; // TODO Fix typing
-
-      const color = colorMap[recordingType];
-
-      return {
-        name,
-        y,
-        mode: 'lines',
-        line: {
-          color,
-          width: 1,
-        },
-        sweepName: sweep,
-      };
-    });
-
-    // Downsample the data.
-    const optimizedPlotData = optimizePlotData(plotData, deltaTime, {}, 100) || [];
-
-    // Convert the data to meet the desired units.
-    optimizedPlotData.forEach((d) => {
-      d.y =
-        dataUnit === 'amperes'
-          ? convertCurrentSeries(d.y, 'pA', conversionFactor)
-          : convertVoltageSeries(d.y, 'mV', conversionFactor);
-    });
-
-    return [optimizedPlotData, dataUnit];
-  }, [protocol, recordingType, repetition, sweeps, trace]);
-
+  const [rawData, dataUnit] = useDataWithUnit(protocol, recordingType, repetition, sweeps, trace);
   const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
-
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
     yTitle,
@@ -217,7 +166,7 @@ export default function TraceOverview({
   const repetitionMap = useMemo(
     () =>
       protocols.reduce(
-        (map, protocol) => map.set(protocol, trace.getRepetitions(protocol)),
+        (map, protocolItem) => map.set(protocolItem, trace.getRepetitions(protocolItem)),
         new Map<string, string[]>()
       ),
     [protocols, trace]
@@ -240,20 +189,20 @@ export default function TraceOverview({
             onChange={onProtocolChange}
           >
             <Option value="All">All</Option>
-            {Array.from(repetitionMap.entries()).map(([protocol, repetitions]) => (
-              <Option value={protocol} key={protocol}>
-                {protocol} {repetitions.length > 1 && `(${repetitions.length})`}
+            {Array.from(repetitionMap.entries()).map(([protocolItem, repetitions]) => (
+              <Option value={protocolItem} key={protocolItem}>
+                {protocolItem} {repetitions.length > 1 && `(${repetitions.length})`}
               </Option>
             ))}
           </Select>
         </div>
       )}
       <div className="flex flex-col gap-5">
-        {filteredProtocols.map((protocol) => (
+        {filteredProtocols.map((protocolItem) => (
           <ImageSetComponent
-            key={protocol}
+            key={protocolItem}
             trace={trace}
-            protocol={protocol}
+            protocol={protocolItem}
             repetitionMap={repetitionMap}
             onRepetitionClick={onRepetitionClick}
           />
@@ -261,4 +210,66 @@ export default function TraceOverview({
       </div>
     </div>
   );
+}
+
+function useDataWithUnit(
+  protocol: string,
+  recordingType: RecordingType,
+  repetition: string,
+  sweeps: string[],
+  trace: NWBTrace
+): [
+  data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
+  unit: string | null,
+] {
+  return useMemo(() => {
+    let deltaTime = 1;
+    let dataUnit: string | null = null;
+    let conversionFactor = 1;
+
+    const plotData = sweeps.map((sweep, idx) => {
+      const recordingData = trace.getSweepRecordingData(protocol, repetition, sweep, recordingType);
+
+      if (idx === 0) {
+        const { timeUnit, timeRate } = recordingData;
+
+        if (timeUnit === 'seconds') {
+          deltaTime = (1 / timeRate) * 1000;
+        }
+
+        dataUnit = recordingData.unit;
+        conversionFactor = recordingData.conversionFactor;
+      }
+
+      const name = sweep;
+      const y = recordingData.data as number[]; // TODO Fix typing
+
+      const color = colorMap[recordingType];
+
+      return {
+        name,
+        y,
+        mode: 'lines',
+        line: {
+          color,
+          width: 1,
+        },
+        sweepName: sweep,
+      };
+    });
+
+    // Downsample the data.
+    const optimizedPlotData = optimizePlotData(plotData, deltaTime, {}, 100) || [];
+
+    // Convert the data to meet the desired units.
+    optimizedPlotData.forEach((d) => {
+      // eslint-disable-next-line no-param-reassign
+      d.y =
+        dataUnit === 'amperes'
+          ? convertCurrentSeries(d.y, 'pA', conversionFactor)
+          : convertVoltageSeries(d.y, 'mV', conversionFactor);
+    });
+
+    return [optimizedPlotData, dataUnit];
+  }, [protocol, recordingType, repetition, sweeps, trace]);
 }

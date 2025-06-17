@@ -10,7 +10,6 @@ import type {
   EntityAuthorization,
   Timestamps,
   EntityCoreType,
-  IAsset,
   EntityCoreBaseAsset,
 } from '@/api/entitycore/types/shared/global';
 import type {

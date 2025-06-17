@@ -1,6 +1,4 @@
 import isNil from 'lodash/isNil';
-// import { useResetAtom } from 'jotai/utils';
-// import { resetSimulationAtom } from '@/state/simulate/single-neuron-setter';
 import Container from '@/features/entities/neuron-simulation/experiment/containers';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { apiQueryExpand } from '@/entity-configuration/domain/model/single-neuron-synaptome';
@@ -42,8 +40,9 @@ async function loadExpandedSingleNeuronSynaptome({
   };
 }
 
-export default async function SynaptomeSimulation(props: Props) {
-  const { virtualLabId, projectId, model_id } = await props.params;
+export default async function SynaptomeSimulation({ params: promisedParams }: Props) {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { virtualLabId, projectId, model_id } = await promisedParams;
 
   const payload = await loadExpandedSingleNeuronSynaptome({
     virtualLabId,

@@ -28,9 +28,9 @@ export default function EphysViewer({ resource }: { resource: IElectricalCellRec
     setView(e.target.value as VIEW);
   };
 
-  const showRepetitionDetails = (protocol: string, repetition: string) => () => {
-    setProtocol(protocol);
-    setRepetition(repetition);
+  const showRepetitionDetails = (protocolClosure: string, repetitionClosure: string) => () => {
+    setProtocol(protocolClosure);
+    setRepetition(repetitionClosure);
     setView(VIEW.DETAILED);
   };
 

@@ -25,10 +25,8 @@ import { fetchEsResourcesByType } from '@/api/explore-section/resources';
 import { ExploreSectionResource } from '@/types/explore-section/resources';
 import { isNeuronMorphologyFeatureAnnotation } from '@/util/explore-section/typeUnionTargetting';
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
-import {
-  MeasurementAnnotation,
-  MeasurementKind,
-} from '@/api/entitycore/types/entities/measurement-annotation';
+import { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
+import { Filter } from '@/features/listing-filter-panel/types';
 
 export const inferredResourcesAtom = atomFamily(() => atom(new Array<InferredResource>()));
 export const expandedRowKeysAtom = atomFamily(() => atom<readonly Key[]>([]));
@@ -182,7 +180,13 @@ export const resourceBasedResponseRawAtom = atomFamily<
       if (!ids) return null;
 
       const filters = await get(filtersAtom({ dataType, resourceId, key: dataType + resourceId }));
-      const query = fetchDataQueryUsingIds(DEFAULT_CARDS_NUMBER, PAGE_NUMBER, filters, ids);
+      const query = fetchDataQueryUsingIds(
+        DEFAULT_CARDS_NUMBER,
+        PAGE_NUMBER,
+        // @FIXME: Types Filter and CoreFilter are incompatible. There is something to dig here.
+        filters as Filter[],
+        ids
+      );
       const esResponse = query && (await fetchEsResourcesByType(query));
       if (!esResponse) return null; // Error
 

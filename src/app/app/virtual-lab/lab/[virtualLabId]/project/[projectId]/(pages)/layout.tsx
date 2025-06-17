@@ -8,10 +8,11 @@ import { LabProjectLayoutProps } from '@/types/virtual-lab/layout';
 import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 
-export default async function VirtualLabProjectLayout(props: LabProjectLayoutProps) {
-  const params = await props.params;
-
-  const { children } = props;
+export default async function VirtualLabProjectLayout({
+  params: promisedParams,
+  children,
+}: LabProjectLayoutProps) {
+  const params = await promisedParams;
 
   const labUrl = generateLabUrl(params.virtualLabId);
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;

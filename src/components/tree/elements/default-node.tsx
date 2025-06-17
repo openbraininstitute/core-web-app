@@ -14,7 +14,6 @@ export default function DefaultNode<TNode extends TTreeNode>({
   hasChildren,
   onToggle,
   onClick,
-  subtitle,
   defaultColor,
 }: Props<TNode>) {
   const color = 'color' in node ? node.color : defaultColor;
@@ -25,6 +24,8 @@ export default function DefaultNode<TNode extends TTreeNode>({
       id={node.id.toString()}
       title={nodeName}
       aria-label={nodeName}
+      role="button"
+      tabIndex={0}
       className={classNames(
         'flex min-w-0 flex-1 cursor-pointer items-center transition-colors duration-200 ease-in-out',
         'text-primary-1 hover:text-primary-1 my-1.5 h-[var(--height)] px-2 py-2 hover:bg-[var(--color)]/20 hover:font-bold',
@@ -33,6 +34,9 @@ export default function DefaultNode<TNode extends TTreeNode>({
           : 'transparent rounded-md font-medium'
       )}
       onClick={onClick}
+      onKeyDown={(evt) => {
+        if (evt.key === ' ') onClick();
+      }}
       style={
         {
           '--color': `#${color}`,
@@ -52,6 +56,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
             'ml-auto flex flex-shrink-0 items-center justify-center',
             isSelected ? 'text-primary-8' : 'text-[var(--color)]'
           )}
+          type="button"
           onClick={onToggle}
           style={{ '--color': `#${color}` } as CSSProperties}
         >

@@ -206,9 +206,9 @@ export interface IAnnotation extends EntityCoreIdentifiable, Annotation {}
 export interface IMType extends IAnnotation {}
 export interface IEType extends IAnnotation {}
 
-// check this one
-const Dimension = {
-  dimensionless: 'dimensionless',
-  linear_density: '1/μm',
-  volume_density: '1/mm³',
-} as const;
+// @FIXME: check this one
+// const Dimension = {
+//   dimensionless: 'dimensionless',
+//   linear_density: '1/μm',
+//   volume_density: '1/mm³',
+// } as const;

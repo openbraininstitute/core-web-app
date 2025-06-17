@@ -17,6 +17,8 @@ type Props<T> = {
   virtualLabId: string;
   projectId: string;
   category: DataType;
+  // @FIXME: Is that property used?
+  // eslint-disable-next-line react/no-unused-prop-types
   dataKey: string;
   clearSelectedRows: () => void;
 };
@@ -39,7 +41,7 @@ export default function Footer<T extends EntityCoreIdentifiable>({
       placement: 'topRight',
       duration: 3,
     });
-  }, []);
+  }, [notification]);
 
   const notifyError = useCallback(
     (failedBookmarks?: LibraryBookmark[]) => {
@@ -51,7 +53,7 @@ export default function Footer<T extends EntityCoreIdentifiable>({
         duration: 3,
       });
     },
-    [selectedRows]
+    [notification]
   );
 
   const removeFromLibrary = async () => {

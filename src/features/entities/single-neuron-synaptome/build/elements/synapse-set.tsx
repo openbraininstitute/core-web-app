@@ -1,6 +1,6 @@
 'use client';
 
-import { Form, Input, Select, Button, FormListFieldData, InputNumber, App } from 'antd';
+import { Form, Input, Select, Button, FormListFieldData, InputNumber } from 'antd';
 import { useMemo, useReducer, useRef, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { useParams } from 'next/navigation';
@@ -35,8 +35,6 @@ import { tryCatch } from '@/api/utils';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
-
-import type { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 type Props = {
   modelId: string;

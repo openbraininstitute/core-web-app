@@ -32,7 +32,7 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
         ctx: { virtualLabId, projectId },
       })
     );
-  }, [setBackToListPath, vlProjectUrl]);
+  }, [projectId, setBackToListPath, virtualLabId, vlProjectUrl]);
 
   return match<SerializedEntityCoreTypeConfig<any>>(entity)
     .with({ legacyType: DataType.CircuitEModel }, (en) => (

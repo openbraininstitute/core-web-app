@@ -20,7 +20,10 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Props = WorkspaceContext & {
   stateId: string;
+  // @FIXME: phase and origin are not used in <Configure .../>
+  // eslint-disable-next-line react/no-unused-prop-types
   phase: SingleNeuronSynaptomeConfigPhase;
+  // eslint-disable-next-line react/no-unused-prop-types
   origin: {
     entity?: ISingleNeuronSynaptome | null;
     config: any;
@@ -40,7 +43,7 @@ export default function Configure({ virtualLabId, projectId, stateId }: Props) {
     if (sessionValue && sessionValue?.selectedRows && sessionValue.selectedRows?.length > 0) {
       setSelectedRows(sessionValue.selectedRows);
     }
-  }, [sessionValue]);
+  }, [sessionValue, setSelectedRows]);
 
   return (
     <ConfigProvider theme={{ token: { borderRadius: 0 } }}>

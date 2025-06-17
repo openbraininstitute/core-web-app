@@ -9,9 +9,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return metadata;
 }
 
-export default async function RootPage(props: {
+export default async function RootPage({
+  searchParams: promisedParams,
+}: {
   searchParams: Promise<{ errorcode: string | undefined }>;
 }) {
-  const searchParams = await props.searchParams;
+  const searchParams = await promisedParams;
   return <LandingPage section={EnumSection.Home} errorCode={searchParams.errorcode} />;
 }

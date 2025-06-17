@@ -158,7 +158,7 @@ const columns = (
       title: 'Scale',
       key: 'scale',
       width: 150,
-      render: (_value: any, record: CircuitSchemaProps, _index: number) => {
+      render: (_value: any, _record: CircuitSchemaProps, _index: number) => {
         const content = [
           {
             label: 'Small microcircuit',
