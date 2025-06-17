@@ -1,3 +1,5 @@
+import { PortableTextBlock } from 'next-sanity';
+
 import query from '../query/glossaryHooks.groq';
 
 import { useSanity } from '@/services/sanity';
@@ -12,6 +14,7 @@ export interface ContentForGlossaryItem {
   Name: string;
   New_suggested_name: string;
   Description: string;
+  definition: PortableTextBlock[];
   Data_Type: string;
   Scale: string;
   Status: string;
@@ -28,6 +31,7 @@ function isContentForGlossary(data: unknown): data is ContentForGlossaryItem[] {
           Name: typeStringOrNull,
           New_suggested_name: typeStringOrNull,
           Description: typeStringOrNull,
+          definition: 'unknown',
           Data_Type: typeStringOrNull,
           Scale: typeStringOrNull,
           Status: typeStringOrNull,

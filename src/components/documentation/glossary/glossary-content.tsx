@@ -1,7 +1,9 @@
 'use client';
 
-import RichContentBloc from '../global/rich-content-bloc';
+import { PortableText } from 'next-sanity';
 import { ContentForGlossaryItem } from '../hooks/use-sanity-content-for-glossary';
+
+import styles from './glossary-content.module.css';
 
 export default function GlossaryContent({ content }: { content: ContentForGlossaryItem | null }) {
   return (
@@ -19,7 +21,10 @@ export default function GlossaryContent({ content }: { content: ContentForGlossa
           </div>
         </div>
       </header>
-      <RichContentBloc content={content?.Description || ''} />
+      {/* <RichContentBloc content={content?.Description || ''} /> */}
+      <div className={styles.contentBlock}>
+        <PortableText value={content?.definition ?? []} />
+      </div>
     </div>
   );
 }

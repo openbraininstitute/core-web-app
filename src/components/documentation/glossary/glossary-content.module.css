@@ -1,19 +1,28 @@
-.prose {
+.contentBlock {
+  width: 100%;
+}
+
+.contentBlock > p {
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.55;
+  color: white;
 }
 
-.prose a {
-  color: #00b4d8;
+.contentBlock > p > a {
+  color: #5af56a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.prose ul {
-  list-style-type: disc;
-  margin-left: 20px;
-  border: 1px solid red; /* Debug: highlight the list */
+.contentBlock > ul {
+  margin: 20px 0;
+  padding-left: 18px;
 }
 
-.prose li {
-  margin-bottom: 10px;
-  border: 1px solid blue; /* Debug: highlight list items */
+.contentBlock > ul > li {
+  list-style: circle;
+  font-size: 16px;
+  line-height: 1.55;
+  color: white;
+  margin-bottom: 6px;
 }
