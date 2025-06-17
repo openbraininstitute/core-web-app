@@ -14,7 +14,7 @@ export default function RelatedCircuitsSection({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="relative flex w-full flex-col">
+    <div className="relative flex w-full max-w-full flex-col overflow-x-scroll">
       {content.parent !== null && (
         <>
           <SubtitleBar title="Parent circuit" />

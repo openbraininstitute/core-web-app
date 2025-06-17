@@ -7,12 +7,13 @@ export function filterCircuitsWithParents(
   minValue: number | undefined,
   maxValue: number | undefined,
   searchQuery: string | undefined,
+  scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null = null,
   hideNonMatchingParents: boolean = false
 ): FilteredCircuit[] {
   const filtered: FilteredCircuit[] = [];
 
   // IF NO FILTERS OR SEARCH, RETURN ALL CIRCUITS
-  if (!numericFilter && (!searchQuery || searchQuery.trim() === '')) {
+  if (!numericFilter && (!searchQuery || searchQuery.trim() === '') && !scaleFilter) {
     return circuits.map((circuit) => ({
       ...circuit,
       isNonMatchingParent: false,
@@ -23,6 +24,7 @@ export function filterCircuitsWithParents(
             minValue,
             maxValue,
             searchQuery,
+            scaleFilter,
             hideNonMatchingParents
           )
         : [],
@@ -39,7 +41,8 @@ export function filterCircuitsWithParents(
       numericFilter,
       minValue,
       maxValue,
-      searchQuery || ''
+      searchQuery || '',
+      scaleFilter
     );
 
     let hasMatchingDescendant = false;
@@ -73,7 +76,9 @@ export function filterCircuitsWithParents(
               numericFilter,
               minValue,
               maxValue,
-              searchQuery
+              searchQuery,
+              scaleFilter,
+              hideNonMatchingParents
             )
           : [],
       };

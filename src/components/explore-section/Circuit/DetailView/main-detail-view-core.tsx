@@ -22,7 +22,7 @@ function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="text-primary-9 relative ml-20 py-10 pr-10">
+    <div className="text-primary-9 relative z-0 w-full max-w-full py-10 pr-10 pl-20">
       <HeaderDetailView content={content} />
       <SectionMainContainer
         content={content}
@@ -124,10 +124,8 @@ export default function CircuitDetailPage() {
     );
   }
 
-  console.log('Circuit Data:', circuitData);
-
   return (
-    <div className="relative flex flex-row flex-nowrap overflow-y-scroll bg-white">
+    <div className="relative flex w-full max-w-full flex-row flex-nowrap overflow-y-scroll bg-white">
       <DetailsPageSideBackLink />
       {circuitData && (
         <MainDetailViewCore

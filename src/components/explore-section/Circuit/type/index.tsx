@@ -106,8 +106,18 @@ export type InteractiveImageProps = {
   height: number;
 };
 
-export type NumericFilterProperty = 'numberOfNeurons' | 'numberOfConnections' | 'numberOfSynapses';
-export type NumericFilterType = 'greaterThan' | 'lessThan' | 'between';
+export type NumericFilterProperty =
+  | 'numberOfNeurons'
+  | 'numberOfConnections'
+  | 'numberOfSynapses'
+  | 'scaleType';
+
+export type NumericFilterType =
+  | 'greaterThan'
+  | 'lessThan'
+  | 'between'
+  | 'smallMicrocircuit'
+  | 'microcircuit';
 
 export type FilterOptionsProps = {
   searchQuery?: string;
@@ -154,4 +164,13 @@ export type CollaboratingInstitution = {
 export type ContributorsProps = {
   name: string;
   lastName: string;
+};
+
+export type NumericFilterProps = {
+  filter: NumericFilterOptions | null;
+  minValue: number | undefined;
+  maxValue: number | undefined;
+  onFilterChange: (filter: NumericFilterOptions | null) => void;
+  onMinChange: (value: number | undefined) => void;
+  onMaxChange: (value: number | undefined) => void;
 };
