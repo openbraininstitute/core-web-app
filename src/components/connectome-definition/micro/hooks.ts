@@ -144,9 +144,9 @@ export function useGetLeafNodesReduceFn() {
     (map: Map<Selection, string[]>, selection: Selection) => {
       const leafNotations = brainRegionByNotationMap
         ?.get(selection.brainRegionNotation)
-        ?.leaves?.map((leafId) => brainRegionByIdMap?.get(leafId))
-        ?.filter((br) => br?.representedInAnnotation)
-        ?.map((br) => br?.notation as string);
+        ?.leaves?.map((leafId: any) => brainRegionByIdMap?.get(leafId))
+        ?.filter((br: any) => br?.representedInAnnotation)
+        ?.map((br: any) => br?.notation as string);
 
       // Skip nodes with all the children not represented in annotations.
       if (Array.isArray(leafNotations) && leafNotations.length === 0) {
@@ -163,7 +163,6 @@ export function useGetChildSelections() {
   const brainRegionByNotationMap = useAtomValue(brainRegionByNotationMapAtom);
   const brainRegionByIdMap = useAtomValue(brainRegionByIdMapAtom);
 
-  const brainRegionNotationSorterFn = useBrainRegionNotationSorterFn();
   const leafBrainRegionMtypeMap = useLeafBrainRegionMtypeMap();
 
   return (selection: Selection): Selection[] => {
@@ -177,11 +176,11 @@ export function useGetChildSelections() {
 
     const childSelections =
       brainRegion.hasPart
-        ?.map((strId) => brainRegionByIdMap?.get(strId) as BrainRegion)
-        .filter((br) => br?.representedInAnnotation)
-        .map((br) => br?.notation)
-        .sort(brainRegionNotationSorterFn)
-        .map((brainRegionNotation) => ({ brainRegionNotation })) ??
+        ?.map((strId: any) => brainRegionByIdMap?.get(strId) as BrainRegion)
+        .filter((br: any) => br?.representedInAnnotation)
+        .map((br: any) => br?.notation)
+        .filter(Boolean)
+        .map((brainRegionNotation: any) => ({ brainRegionNotation })) ??
       leafBrainRegionMtypeMap
         .get(selection.brainRegionNotation)
         ?.map((mtype) => ({ brainRegionNotation: selection.brainRegionNotation, mtype }));

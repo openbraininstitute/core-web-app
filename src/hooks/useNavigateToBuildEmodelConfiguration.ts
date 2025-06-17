@@ -31,7 +31,7 @@ export default function useNavigateToBuildEmodelConfiguration() {
       const brainRegionId = selectedEModel.brainRegion;
       if (brainRegionId) {
         const brainRegion = find(brainRegions, ['id', brainRegionId]);
-        const allAncestors = getAncestors(brainRegions ?? [], brainRegionId);
+        const allAncestors = getAncestors((brainRegions as any) ?? [], brainRegionId);
         const newHierarchyTree = generateHierarchyPathTree(
           allAncestors.map((entry) => Object.keys(entry)[0])
         );

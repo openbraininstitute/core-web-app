@@ -5,12 +5,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import uniqBy from 'lodash/uniqBy';
 import { findDeep, reduceDeep } from 'deepdash-es/standalone';
 import sessionAtom from '@/state/session';
-import {
-  BrainRegion,
-  BrainRegionWithRepresentation,
-  BrainViewId,
-  Mesh,
-} from '@/types/ontologies';
+import { BrainRegion, BrainViewId, Mesh } from '@/types/ontologies';
 import { getBrainRegionOntology, getDistributions } from '@/api/ontologies';
 import { buildAlternateChildren, buildAlternateTree } from '@/state/brain-regions/alternate-view';
 import { DefaultBrainRegionType, NavValue, SelectedBrainRegion } from '@/state/brain-regions/types';
@@ -111,14 +106,13 @@ export const brainRegionsAtom = atom(async (get) => {
 export const brainRegionsWithRepresentationAtom = atom(async (get) => {
   const brainRegions = await get(brainRegionsAtom);
   const inAnnotationBrainRegionsReducer = brainRegions
-    ? getInAnnotationBrainRegionsReducer(brainRegions)
+    ? getInAnnotationBrainRegionsReducer(brainRegions as any)
     : null;
 
   return !!brainRegions && inAnnotationBrainRegionsReducer
-    ? brainRegions?.reduce<BrainRegionWithRepresentation[]>(inAnnotationBrainRegionsReducer, [])
+    ? ((brainRegions as any)?.reduce as any)(inAnnotationBrainRegionsReducer, [])
     : null;
 });
-
 
 export const brainRegionIdByNotationMapAtom = atom(async (get) => {
   const brainRegions = await get(brainRegionsAtom);
@@ -162,7 +156,7 @@ export const brainRegionsFilteredTreeAtom = atom<Promise<BrainRegion[] | null>>(
   const brainRegions = await get(brainRegionsWithRepresentationAtom);
   const defaultView = await get(defaultBrainRegionOntologyViewAtom);
   if (!brainRegions || !defaultView) return null;
-  const tree = arrayToTree(brainRegions, {
+  const tree = arrayToTree(brainRegions as any, {
     dataField: null,
     parentId: defaultView?.parentProperty,
     childrenField: 'items',
@@ -199,7 +193,7 @@ export const brainRegionsAlternateTreeAtom = atom<Promise<BrainRegion[] | null |
         const alternateChildren = buildAlternateChildren(
           brainRegionId,
           view.parentProperty,
-          brainRegions,
+          brainRegions as any,
           viewId
         );
 

@@ -92,7 +92,7 @@ export function useExpandRegionTree(key = 'explore') {
   useEffect(() => {
     if (!sectionName || !selectedBrainRegion || !brainRegions || !brainRegions.length) return;
 
-    const ancestors = getAncestors(brainRegions, selectedBrainRegion.id);
+    const ancestors = getAncestors(brainRegions as any, selectedBrainRegion.id);
 
     const brainRegionHierarchy = generateHierarchyPathTree(
       ancestors.map((ancestor) => Object.keys(ancestor)[0])

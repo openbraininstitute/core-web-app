@@ -165,7 +165,7 @@ export default function DensityChart() {
   const getNewDistinctColors = useCallback(() => {
     const nodesWithoutColors = shuffle(
       Object.entries(classObjects ?? {}).reduce<string[]>(
-        (acc, [id, { color }]) => (!color ? [...acc, id] : acc),
+        (acc, [id, classObj]) => (!(classObj as any)?.color ? [...acc, id] : acc),
         []
       )
     );

@@ -48,7 +48,7 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
 
   const onSubmit = () => {
     const values = form.getFieldsValue();
-    const brainRegion = brainRegions?.find((br) => br.id === values.brainRegion);
+    const brainRegion = brainRegions?.find((br: any) => br.id === values.brainRegion);
 
     if (values.brainRegion && !brainRegion) return;
 
@@ -68,7 +68,11 @@ export default function NewMEModelPage({ params: { projectId, virtualLabId } }: 
   };
 
   const brainRegionOptions = useMemo(
-    () => brainRegions?.map((brainRegion) => ({ label: brainRegion.title, value: brainRegion.id })),
+    () =>
+      brainRegions?.map((brainRegion: any) => ({
+        label: brainRegion.title,
+        value: brainRegion.id,
+      })),
     [brainRegions]
   );
 

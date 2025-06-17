@@ -36,14 +36,19 @@ function NavTitle({
   const leafIdsByRegionId = useAtomValue(leafIdsByRegionIdAtom);
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const checked = useMemo(
-    () => leafIdsByRegionId[id ?? '']?.every((brId) => selectedBrainRegions.has(brId)) ?? false,
+    () =>
+      (leafIdsByRegionId as any)[id ?? '']?.every((brId: any) => selectedBrainRegions.has(brId)) ??
+      false,
     [leafIdsByRegionId, id, selectedBrainRegions]
   );
   const selected = id && selectedBrainRegion?.id === id;
 
   const indeterminate = useMemo(() => {
     if (checked) return false;
-    return leafIdsByRegionId[id ?? '']?.some((brId) => selectedBrainRegions.has(brId)) ?? false;
+    return (
+      (leafIdsByRegionId as any)[id ?? '']?.some((brId: any) => selectedBrainRegions.has(brId)) ??
+      false
+    );
   }, [leafIdsByRegionId, id, selectedBrainRegions, checked]);
 
   let checkbox = null;
@@ -279,10 +284,12 @@ export default function ConnectomeEditorSidebar() {
                             if (!nestedItems || nestedItems.length === 0)
                               setFun(nestedId, nestedTitle);
                             else {
-                              const leafIds = leafIdsByRegionId[nestedId] ?? [];
-                              const some = leafIds.some((rId) => selectedBrainRegions.has(rId));
+                              const leafIds = (leafIdsByRegionId as any)[nestedId] ?? [];
+                              const some = leafIds.some((rId: any) =>
+                                selectedBrainRegions.has(rId)
+                              );
 
-                              leafIds.forEach((lid) => {
+                              leafIds.forEach((lid: any) => {
                                 const leafTitle = leafTitleById[lid];
                                 if (some) {
                                   if (selectedBrainRegions.has(lid)) setFun(lid, leafTitle); // Delete selected
