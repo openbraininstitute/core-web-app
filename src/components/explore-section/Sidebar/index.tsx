@@ -1,16 +1,16 @@
-import { useAtomValue } from 'jotai';
 import { ArrowRightOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
 
-import { useSession } from 'next-auth/react';
-import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
-import { classNames } from '@/util/utils';
-import usePathname from '@/hooks/pathname';
-import Link from '@/components/Link';
 import ApplicationSidebar, {
   NavigationItem,
   NavigationItemProps,
 } from '@/components/ApplicationSidebar';
+import Link from '@/components/Link';
 import { MainNavigation } from '@/components/main';
+import usePathname from '@/hooks/pathname';
+import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
+import { classNames } from '@/util/utils';
+import { useSession } from 'next-auth/react';
 
 export const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
   {
@@ -40,7 +40,7 @@ export function DetailsPageSideBackLink() {
 
   return prevPath ? (
     <Link
-      className="bg-neutral-1 text-primary-8 fixed flex h-full w-[40px] flex-col items-center pt-2 text-sm"
+      className="bg-neutral-1 text-primary-8 fixed z-50 flex h-full w-[40px] flex-col items-center pt-2 text-sm"
       href={prevPath}
     >
       <ArrowRightOutlined className="mt-1.5 mb-4 rotate-180" />

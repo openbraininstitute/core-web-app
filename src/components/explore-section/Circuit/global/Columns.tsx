@@ -175,7 +175,7 @@ const columns = (
         ];
         return (
           <Tooltip title={content[0].description}>
-            <div className="font-normal whitespace-nowrap">{content[0].label}</div>
+            <div className="font-normal whitespace-nowrap">{record.scale}</div>
           </Tooltip>
         );
       },

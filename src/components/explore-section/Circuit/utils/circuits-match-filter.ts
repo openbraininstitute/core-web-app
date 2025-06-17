@@ -5,11 +5,12 @@ export function circuitMatchFilter(
   filter: NumericFilterOptions | null,
   minValue: number | undefined,
   maxValue: number | undefined,
-  searchQuery: string
+  searchQuery: string,
+  scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null = null
 ): boolean {
   let numericMatch = true;
 
-  if (filter) {
+  if (filter && filter.property !== 'scaleType') {
     const { property, type } = filter;
     const value = circuit[property];
 
@@ -28,17 +29,21 @@ export function circuitMatchFilter(
     }
   }
 
+  let scaleMatch = true;
+  if (scaleFilter) {
+    scaleMatch = circuit.scale === scaleFilter;
+  }
+
   let searchMatch = true;
   if (searchQuery) {
     const query = searchQuery.toLowerCase().trim();
     searchMatch =
       circuit.name?.toLowerCase().includes(query) ||
-      false ||
       circuit.brainRegion?.toLowerCase().includes(query) ||
       false;
   }
 
-  const result = numericMatch && searchMatch;
+  const result = numericMatch && scaleMatch && searchMatch;
 
   return result;
 }

@@ -1,19 +1,10 @@
 import { Button, Input, Select } from 'antd';
 import { useState } from 'react';
-import { NumericFilterOptions } from '../utils/filter-circuits-by-numeric';
+import { NumericFilterOptions, NumericFilterProps } from '../type';
 
 const { Option } = Select;
 
-export type NumericFilterProps = {
-  filter: NumericFilterOptions | null;
-  minValue: number | undefined;
-  maxValue: number | undefined;
-  onFilterChange: (filter: NumericFilterOptions | null) => void;
-  onMinChange: (value: number | undefined) => void;
-  onMaxChange: (value: number | undefined) => void;
-};
-
-export default function NumericFilters({
+export default function CircuitFilters({
   filter,
   minValue,
   maxValue,
