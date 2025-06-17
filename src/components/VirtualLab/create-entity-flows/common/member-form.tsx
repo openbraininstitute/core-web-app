@@ -60,7 +60,7 @@ export default function Content({ ListCompo, cls }: Props) {
                     labelAlign="left"
                     className={classNames(
                       'mr-5 w-full flex-[1_60%] [&_.ant-form-item-label]:p-0',
-                      '[&_.ant-form-item-row]:flex-row [&_.ant-form-item-row]:flex-nowrap [&_.ant-form-item-row]:items-center'
+                      '[&_.ant-form-item-row]:flex-row! [&_.ant-form-item-row]:flex-nowrap [&_.ant-form-item-row]:items-center'
                     )}
                     label={
                       <span className="text-primary-8 pr-4 font-semibold whitespace-nowrap">
@@ -96,7 +96,7 @@ export default function Content({ ListCompo, cls }: Props) {
                         As a:
                       </span>
                     }
-                    className="flex-[1_40%] [&_.ant-form-item-label]:p-0 [&_.ant-form-item-row]:flex-row [&_.ant-form-item-row]:flex-nowrap [&_.ant-form-item-row]:items-center"
+                    className="flex-[1_40%] [&_.ant-form-item-label]:p-0 [&_.ant-form-item-row]:flex-row! [&_.ant-form-item-row]:flex-nowrap [&_.ant-form-item-row]:items-center"
                     initialValue="member"
                     name={[name, 'role']}
                     validateTrigger={['onChange', 'onBlur']}

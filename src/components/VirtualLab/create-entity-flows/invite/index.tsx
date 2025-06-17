@@ -130,7 +130,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
       isOpen={isOpen}
       footer={null}
       onClose={onModalClose}
-      cls={{ content: 'min-h-[30rem]!' }}
+      cls={{ content: 'min-h-[46rem]!' }}
     >
       <h1 className="text-primary-8 mb-4 text-xl font-bold">{title}</h1>
       <div className="flex h-full grow flex-col rounded-lg bg-white">

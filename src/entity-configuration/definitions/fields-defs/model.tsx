@@ -45,8 +45,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.EModelResponse]: {
     title: 'Response',
     filter: null,
-    // use image field in nexus
-    render: () => <span className="text-red-500">Entitycore Needed</span>,
+    // use image field in nexus (waiting for entitycore to add image to emodel)
+    render: () => {
+      return <span className="text-red-500">Entitycore Needed</span>;
+    },
     vocabulary: {
       plural: 'responses',
       singular: 'response',

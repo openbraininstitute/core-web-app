@@ -70,9 +70,17 @@ export const renderTimestamp = (timestamp: string) => {
 
 export function renderPreview<T extends EntityCoreResource>(
   resource: T,
-  size?: { height?: number | string; width?: number | string }
+  size?: { height?: number | string; width?: number | string },
+  className?: string
 ) {
-  return <PreviewThumbnail resource={resource} width={size?.width} height={size?.height} />;
+  return (
+    <PreviewThumbnail
+      resource={resource}
+      width={size?.width}
+      height={size?.height}
+      className={className}
+    />
+  );
 }
 
 export function renderImage<T extends EntityCoreResource>(

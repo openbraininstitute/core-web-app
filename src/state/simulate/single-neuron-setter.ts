@@ -282,10 +282,12 @@ export const launchSimulationAtom = atom<
           })),
           current: { title: 'Experimental setup' },
         });
+
         return;
       }
 
       const reader = response.body?.getReader();
+
       const decoder = new TextDecoder('utf-8');
       if (reader) {
         let buffer: string = '';

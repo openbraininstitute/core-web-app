@@ -22,6 +22,8 @@ import WithGeneralization, {
 import { ensureArray } from '@/utils/array';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { Spin } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 
 function GeneralizationContainer({ children }: { children: ReactNode }) {
   if (children !== notFound && children !== generalizationError) {
@@ -46,7 +48,7 @@ export default function MorphologyDetailView({ detail }: { detail: IReconstructi
       >
         <MorphoViewerLoaderMemo resource={detail} />
       </ErrorBoundary>
-      <ErrorBoundary
+      {/* <ErrorBoundary
         FallbackComponent={withErrorConfig({
           cls: { container: 'bg-white' },
           showButtons: false,
@@ -62,7 +64,7 @@ export default function MorphologyDetailView({ detail }: { detail: IReconstructi
             dataType={DataType.ExperimentalNeuronMorphology}
           />
         </GeneralizationContainer>
-      )}
+      )} */}
     </>
   );
 }
@@ -86,10 +88,18 @@ function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology 
           // contentUrl={swcContentUrl}
         />
       ) : (
-        <div>No data...</div>
+        <div className="border-neutral-3 flex w-full flex-col items-center justify-center gap-3 border py-20">
+          No morphology data available.
+        </div>
       );
+
     case 'loading':
-      return <div>Loading...</div>;
+      return (
+        <div className="flex w-full flex-col items-center justify-center gap-3 py-20">
+          <Spin indicator={<LoadingOutlined />} size="large" />
+          <h2 className="text-primary-9 font-light">Loading morphology...</h2>
+        </div>
+      );
     case 'hasError':
       return morphologyData.error ? (
         <div>{(morphologyData.error as { message: string }).message}</div>

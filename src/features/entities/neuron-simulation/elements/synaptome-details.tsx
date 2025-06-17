@@ -35,11 +35,11 @@ export default function ModelDetails({ virtualLabId, projectId, meModel, synapto
           <span className="text-neutral-4 mb-2 text-base uppercase">Synaptome</span>
           <div className="flex items-start gap-2">
             <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-              <PreviewThumbnail resource={meModel.morphology} width={400} height={400} />
+              <PreviewThumbnail resource={meModel.morphology} height={196} width={196} />
             </div>
 
             <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-              <PreviewThumbnail resource={meModel.emodel} width={400} height={400} />
+              <PreviewThumbnail resource={meModel.emodel} height={196} width={196} />
             </div>
           </div>
         </div>

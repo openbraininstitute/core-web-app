@@ -60,7 +60,7 @@ export default function StepTabs({ type }: { type: SimulationType }) {
   };
 
   return (
-    <div className="grid w-full grid-flow-col items-center border-b border-gray-300">
+    <div className="relative z-10 grid w-full grid-flow-col items-center border-b border-gray-300">
       {items.map((s, idx) => (
         <Step
           key={`step-${s.title}`}

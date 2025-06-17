@@ -85,7 +85,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       )
         return EmptyPreview;
 
-      return <PreviewThumbnail resource={r} target="stimulus" />;
+      return (
+        <PreviewThumbnail
+          resource={r}
+          target="stimulus"
+          width={184}
+          height={116}
+          className="h-full"
+        />
+      );
     },
     vocabulary: {
       plural: 'Stimuli',
@@ -106,7 +114,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       )
         return EmptyPreview;
 
-      return <PreviewThumbnail resource={r} target="simulation" />;
+      return (
+        <PreviewThumbnail
+          resource={r}
+          target="simulation"
+          width={184}
+          height={116}
+          className="h-full"
+        />
+      );
     },
     vocabulary: {
       plural: 'Responses',

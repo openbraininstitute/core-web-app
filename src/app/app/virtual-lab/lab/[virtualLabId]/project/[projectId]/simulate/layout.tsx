@@ -70,7 +70,7 @@ export default function VirtualLabProjectLayout({
         </div>
       </ErrorBoundary>
       <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-        <div className="secondary-scrollbar flex h-screen w-auto flex-col gap-10 overflow-y-auto pl-5">
+        <div className="secondary-scrollbar flex h-screen w-full flex-col gap-10 overflow-y-auto pl-5">
           {children}
         </div>
       </ErrorBoundary>
