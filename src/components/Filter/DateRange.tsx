@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { ConfigProvider, DatePicker } from 'antd';
-import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
-import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
+import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns';
+import type { RangeValueType } from 'rc-picker/lib/PickerInput/RangePicker';
 import { GteLteValue, DateRangeFilter } from './types';
 
 const DateRangePicker = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
@@ -21,7 +21,7 @@ export default function DateRange({
         allowEmpty={[true, true]}
         defaultValue={[filter.value.gte as Date, filter.value.lte as Date]}
         className="font-sm rounded border border-primary-4 bg-transparent p-2 text-primary-4 placeholder-primary-4"
-        onChange={(newValues: RangeValue<Date>) =>
+        onChange={(newValues: RangeValueType<Date>) =>
           onChange({ gte: newValues?.[0] ?? null, lte: newValues?.[1] ?? null })
         }
       />

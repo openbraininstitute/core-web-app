@@ -9,7 +9,7 @@ import { $createHeadingNode, $createQuoteNode, HeadingTagType } from '@lexical/r
 import { $setBlocksType } from '@lexical/selection';
 
 import { $createParagraphNode, $getSelection, $isRangeSelection, LexicalEditor } from 'lexical';
-import { MenuItemType } from 'antd/es/menu/hooks/useItems';
+import type { MenuItemType } from 'antd/es/menu/interface';
 
 import EditorButton from '../../../molecules/Button';
 import {

@@ -6,7 +6,7 @@ import {
   LexicalEditor,
   OUTDENT_CONTENT_COMMAND,
 } from 'lexical';
-import { MenuItemType } from 'antd/es/menu/hooks/useItems';
+import type { MenuItemType } from 'antd/es/menu/interface';
 
 import EditorButton from '../../../molecules/Button';
 import {
