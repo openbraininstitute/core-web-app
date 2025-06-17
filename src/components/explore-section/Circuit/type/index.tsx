@@ -37,6 +37,7 @@ export type CircuitSchemaProps = {
   numberOfNeurons: number;
   numberOfConnections: number;
   numberOfSynapses: number;
+  scale: string;
   metadata: {
     contributorSimple?: string;
     contributors?: ContributorsProps[];

@@ -124,6 +124,8 @@ export default function CircuitDetailPage() {
     );
   }
 
+  console.log('Circuit Data:', circuitData);
+
   return (
     <div className="relative flex flex-row flex-nowrap overflow-y-scroll bg-white">
       <DetailsPageSideBackLink />
