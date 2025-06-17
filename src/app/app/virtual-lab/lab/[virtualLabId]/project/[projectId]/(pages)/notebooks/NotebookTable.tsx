@@ -17,7 +17,6 @@ import { compareAsc, format } from 'date-fns';
 import { saveAs } from 'file-saver';
 import dynamic from 'next/dynamic';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns';
-import type { RangeValueType } from 'rc-picker/lib/PickerInput/RangePicker';
 import { getSorter } from './utils';
 import ContentModal from './ContentModal';
 import NotebookTabs from './NotebookTabs';
@@ -410,7 +409,14 @@ function NotebookTable({
                 onToggle={() => toggleColumn('creationDate')}
               >
                 <RangePicker
-                  value={filterValue('creationDate') ? [filterValue('creationDate')?.[0] ?? null, filterValue('creationDate')?.[1] ?? null] : null}
+                  value={
+                    filterValue('creationDate')
+                      ? [
+                          filterValue('creationDate')?.[0] ?? null,
+                          filterValue('creationDate')?.[1] ?? null,
+                        ]
+                      : null
+                  }
                   onChange={(values) => {
                     if (values) {
                       onDateChange('creationDate', [values[0] ?? null, values[1] ?? null]);
