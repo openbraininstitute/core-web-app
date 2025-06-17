@@ -90,3 +90,11 @@ export type ContentForTutorialItem = {
   imageWidth: number;
   imageHeight: number;
 };
+
+export type ContentForFeatureItem = {
+  Feature_title: string;
+  Description: string;
+  Topic: string;
+  Scale: string;
+  Status: string;
+};

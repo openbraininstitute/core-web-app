@@ -6,3 +6,14 @@
 .prose a {
   color: #00b4d8;
 }
+
+.prose ul {
+  list-style-type: disc;
+  margin-left: 20px;
+  border: 1px solid red; /* Debug: highlight the list */
+}
+
+.prose li {
+  margin-bottom: 10px;
+  border: 1px solid blue; /* Debug: highlight list items */
+}
