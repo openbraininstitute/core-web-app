@@ -412,8 +412,12 @@ function NotebookTable({
                   value={
                     filterValue('creationDate')
                       ? [
-                          filterValue('creationDate')?.[0] ?? null,
-                          filterValue('creationDate')?.[1] ?? null,
+                          filterValue('creationDate')?.[0]
+                            ? new Date(filterValue('creationDate')?.[0] as string)
+                            : null,
+                          filterValue('creationDate')?.[1]
+                            ? new Date(filterValue('creationDate')?.[1] as string)
+                            : null,
                         ]
                       : null
                   }

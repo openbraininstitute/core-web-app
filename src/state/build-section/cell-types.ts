@@ -1,9 +1,7 @@
-import { selectAtom } from 'jotai/utils';
-import { Session } from 'next-auth';
+import { atom } from 'jotai';
 import esb from 'elastic-builder';
 import toLower from 'lodash/toLower';
 import findKey from 'lodash/findKey';
-import get from 'lodash/get';
 
 import sessionAtom from '@/state/session';
 import { createHeaders } from '@/util/utils';
@@ -16,35 +14,31 @@ type ClassESResponse = {
 };
 
 // Returns cell types metadata
-export const cellTypesAtom = selectAtom<Session | null, Promise<any> | null>(
-  sessionAtom,
-  (session) => {
-    if (!session) return null;
+export const cellTypesAtom = atom<Promise<any> | null>(async (get) => {
+  const session = get(sessionAtom);
+  if (!session) return null;
 
-    const query = esb
-      .requestBodySearch()
-      .query(
-        esb
-          .boolQuery()
-          .must(esb.termQuery('@type', 'Class'))
-          .must(esb.termQuery('_deprecated', false))
-          .must(esb.termsQuery('subClassOf', [MTYPE_NEXUS_TYPE, ETYPE_NEXUS_TYPE]))
-      )
-      .size(10000);
+  const query = esb
+    .requestBodySearch()
+    .query(
+      esb
+        .boolQuery()
+        .must(esb.termQuery('@type', 'Class'))
+        .must(esb.termQuery('_deprecated', false))
+        .must(esb.termsQuery('subClassOf', [MTYPE_NEXUS_TYPE, ETYPE_NEXUS_TYPE]))
+    )
+    .size(10000);
 
-    return fetch(ATLAS_SEARCH_URL, {
-      method: 'POST',
-      headers: createHeaders(session.accessToken),
-      body: JSON.stringify(query.toJSON()),
-    }).then((res) => res.json());
-  }
-);
+  return fetch(ATLAS_SEARCH_URL, {
+    method: 'POST',
+    headers: createHeaders(session.accessToken),
+    body: JSON.stringify(query.toJSON()),
+  }).then((res) => res.json());
+});
 
 // Returns cell types metadata in key => value format where key = id of cell type
-export const cellTypesByIdAtom = selectAtom<
-  Promise<any> | null,
-  Promise<Record<string, ClassNexus> | undefined> | null
->(cellTypesAtom, (cellTypes) => {
+export const cellTypesByIdAtom = atom(async (get) => {
+  const cellTypes = await get(cellTypesAtom);
   if (!cellTypes || !cellTypes.hits) return null;
   return cellTypes.hits.hits.reduce(
     (acc: Record<string, ClassNexus>, classObj: ClassESResponse) => {
@@ -56,10 +50,8 @@ export const cellTypesByIdAtom = selectAtom<
 });
 
 // Returns cell types metadata in key => value format where key = label of cell type
-export const cellTypesByLabelAtom = selectAtom<
-  Promise<any> | null,
-  Promise<Record<string, ClassNexus> | undefined> | null
->(cellTypesAtom, (cellTypes) => {
+export const cellTypesByLabelAtom = atom(async (get) => {
+  const cellTypes = await get(cellTypesAtom);
   if (!cellTypes || !cellTypes.hits) return null;
 
   return cellTypes.hits.hits.reduce(
@@ -70,11 +62,9 @@ export const cellTypesByLabelAtom = selectAtom<
         TEMPORARY_TYPE_DEFINITION,
         (_, k) => toLower(k) === toLower(classObj._source.label)
       );
-      const matchedValue = get(
-        TEMPORARY_TYPE_DEFINITION,
-        matchedKey ?? '',
-        classObj._source?.definition
-      );
+      const matchedValue = (
+        matchedKey ? (TEMPORARY_TYPE_DEFINITION as any)[matchedKey] : classObj._source?.definition
+      ) as string | undefined;
 
       acc[classObj._source.label] = {
         ...classObj._source,

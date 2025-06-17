@@ -55,7 +55,7 @@ memoizeOne acts as an atomFamily with just one element
 export const simCampaignDimensionsFamily = memoizeOne((path: string) =>
   selectAtom(
     detailFamily(pathToResource(path)),
-    (simCamp) => (simCamp as SimulationCampaign)?.parameter?.coords // TODO: Improve type
+    (simCamp) => (simCamp as unknown as SimulationCampaign)?.parameter?.coords // TODO: Improve type
   )
 );
 

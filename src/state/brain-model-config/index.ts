@@ -1,7 +1,7 @@
 'use client';
 
 import { atom } from 'jotai';
-import { selectAtom, atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from 'jotai/utils';
 
 import sessionAtom from '@/state/session';
 import { BrainModelConfigResource } from '@/types/nexus';
@@ -50,9 +50,15 @@ export const updateConfigAtom = atom(null, async (get, set, config: BrainModelCo
   set(triggerRefetchAtom);
 });
 
-export const getNameAtom = selectAtom(configAtom, (config) => config?.name);
+export const getNameAtom = atom(async (get) => {
+  const config = await get(configAtom);
+  return config?.name;
+});
 
-export const getCreatedByAtom = selectAtom(configAtom, (config) => config?._createdBy);
+export const getCreatedByAtom = atom(async (get) => {
+  const config = await get(configAtom);
+  return config?._createdBy;
+});
 
 export const updateNameAtom = atom(null, async (get, set, name: string) => {
   const config = await get(configAtom);
@@ -64,7 +70,10 @@ export const updateNameAtom = atom(null, async (get, set, name: string) => {
   set(updateConfigAtom, updatedConfig);
 });
 
-export const getDescriptionAtom = selectAtom(configAtom, (config) => config?.description);
+export const getDescriptionAtom = atom(async (get) => {
+  const config = await get(configAtom);
+  return config?.description;
+});
 
 export const updateDescriptionAtom = atom(null, async (get, set, description: string) => {
   const config = await get(configAtom);
@@ -116,10 +125,10 @@ export const meModelConfigIdAtom = atom<Promise<string | null>>(async (get) => {
   return config?.configs.meModelConfig?.['@id'] ?? null;
 });
 
-export const microConnectomeConfigIdAtom = selectAtom(
-  configAtom,
-  (config) => config?.configs.microConnectomeConfig?.['@id']
-);
+export const microConnectomeConfigIdAtom = atom(async (get) => {
+  const config = await get(configAtom);
+  return config?.configs?.microConnectomeConfig?.['@id'];
+});
 
 export const synapseConfigIdAtom = atom<Promise<string | null>>(async (get) => {
   const config = await get(configAtom);

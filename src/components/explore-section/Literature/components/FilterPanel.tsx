@@ -8,7 +8,6 @@ import { useAtomValue } from 'jotai';
 import get from 'lodash/get';
 import { ConfigProvider, DatePicker } from 'antd';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns';
-import type { RangeValueType } from 'rc-picker/lib/PickerInput/RangePicker';
 import {
   FilterFields,
   FilterFieldsType,
@@ -96,13 +95,13 @@ export default function FilterPanel() {
               className="font-sm rounded border border-primary-4 bg-primary-9 py-2"
               allowEmpty={[true, true]}
               value={[filter.value.gte as Date, filter.value.lte as Date]}
-              onChange={(newValues: RangeValueType<Date>) => {
+              onChange={(dates) => {
                 setFilters((prevFilters) => {
                   const newFilters = prevFilters.map((f) =>
                     f.field === filter.field
                       ? {
                           ...f,
-                          value: { gte: newValues?.[0] ?? null, lte: newValues?.[1] ?? null },
+                          value: { gte: dates?.[0] ?? null, lte: dates?.[1] ?? null },
                         }
                       : f
                   ) as MLFilter[];

@@ -20,7 +20,7 @@ export default function AxisDimensionBoxEditForm({
   const inputType = useWatch('input-type', form);
   const dimensionValueModified = useSetAtom(modifyDimensionValue);
   const path = useEnsuredPath();
-  const simulationCampaignDimensions = useUnwrappedValue<Promise<ParameterCoords>>(
+  const simulationCampaignDimensions = useUnwrappedValue<ParameterCoords>(
     simCampaignDimensionsFamily(path)
   );
 

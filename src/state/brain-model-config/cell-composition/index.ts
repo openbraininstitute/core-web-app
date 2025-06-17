@@ -1,7 +1,6 @@
 'use client';
 
 import { atom } from 'jotai';
-import { selectAtom } from 'jotai/utils';
 
 import { cellCompositionConfigIdAtom } from '@/state/brain-model-config';
 import sessionAtom from '@/state/session';
@@ -27,7 +26,10 @@ export const configAtom = atom<Promise<CellCompositionConfigResource | null>>(as
   return fetchResourceById<CellCompositionConfigResource>(id, session);
 });
 
-const configPayloadUrlAtom = selectAtom(configAtom, (config) => config?.distribution.contentUrl);
+const configPayloadUrlAtom = atom(async (get) => {
+  const config = await get(configAtom);
+  return config?.distribution?.contentUrl;
+});
 
 const remoteConfigPayloadAtom = atom<Promise<CellCompositionConfigPayload | null>>(async (get) => {
   const session = get(sessionAtom);
@@ -74,31 +76,31 @@ export const configPayloadAtom = atom<Promise<CellCompositionConfigPayload | nul
 });
 
 export const createGetVariantAtom = (entityId: string) => {
-  const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
-    cellCompositionConfigPayload?.[entityId].variantDefinition;
-
-  return selectAtom(configPayloadAtom, selectorFn);
+  return atom(async (get) => {
+    const cellCompositionConfigPayload = await get(configPayloadAtom);
+    return cellCompositionConfigPayload?.[entityId]?.variantDefinition;
+  });
 };
 
 export const createGetInputsAtom = (entityId: string) => {
-  const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
-    cellCompositionConfigPayload?.[entityId].inputs;
-
-  return selectAtom(configPayloadAtom, selectorFn);
+  return atom(async (get) => {
+    const cellCompositionConfigPayload = await get(configPayloadAtom);
+    return cellCompositionConfigPayload?.[entityId]?.inputs;
+  });
 };
 
 export const createGetConfigurationAtom = (entityId: string) => {
-  const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
-    cellCompositionConfigPayload?.[entityId]?.configuration;
-
-  return selectAtom(configPayloadAtom, selectorFn);
+  return atom(async (get) => {
+    const cellCompositionConfigPayload = await get(configPayloadAtom);
+    return cellCompositionConfigPayload?.[entityId]?.configuration;
+  });
 };
 
 export const createGetJobConfigAtom = (entityId: string) => {
-  const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
-    cellCompositionConfigPayload?.[entityId].jobConfiguration;
-
-  return selectAtom(configPayloadAtom, selectorFn);
+  return atom(async (get) => {
+    const cellCompositionConfigPayload = await get(configPayloadAtom);
+    return cellCompositionConfigPayload?.[entityId]?.jobConfiguration;
+  });
 };
 
 const generatorTaskActivityAtom = atom<Promise<GeneratorTaskActivityResource | null>>(

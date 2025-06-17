@@ -106,7 +106,7 @@ function ResponsePlot({
         setZoomRanges({ x: [x1, x2], y: [y1, y2] });
       }}
       layout={{
-        title: 'Recording',
+        title: { text: 'Recording' },
         xaxis: {
           title: {
             font,

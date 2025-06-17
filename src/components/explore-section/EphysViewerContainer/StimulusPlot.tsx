@@ -115,7 +115,7 @@ function StimulusPlot({
           setZoomRanges({ x: [x1, x2], y: [y1, y2] });
         }}
         layout={{
-          title: 'Stimulus',
+          title: { text: 'Stimulus' },
           xaxis: {
             title: {
               font,
