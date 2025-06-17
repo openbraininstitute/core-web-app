@@ -26,7 +26,14 @@ export default function PanelSplitter({
     return () => handler.eventPanelWidthChange.removeListener(setPanelWidth);
   }, [setPanelWidth, handler]);
   return (
-    <div className={classNames(className, styles.panelSplitter)} {...handler.props}>
+    <div
+      className={classNames(
+        className,
+        styles.panelSplitter,
+        panelWidth >= 100 && styles.fullscreen
+      )}
+      {...handler.props}
+    >
       <div />
     </div>
   );

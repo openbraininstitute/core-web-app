@@ -18,8 +18,6 @@ import { useLocalStorage } from '@/util/storage';
 import { isNumber } from '@/util/type-guards';
 
 import styles from './ai-assistant.module.css';
-import { IconFullscreenOff } from './icons/fullscreen-off';
-import { IconFullscreenOn } from './icons/fullscreen-on';
 
 export interface LiteratureSuggestionsProps {
   className?: string;
@@ -29,7 +27,6 @@ export default function ArtificialIntelligenceAssistant({ className }: Literatur
   const tools = useAITools();
   const [panelWidth, setPanelWidth] = useLocalStorage('ai-assistant/panel-width', 25, isNumber);
   const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
-  const [fullscreen, setFullscreen] = React.useState(false);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const [threadId, recreateThreadId] = useServiceAiAgentThread();
   const [prompt, setPrompt] = React.useState('');
@@ -55,36 +52,24 @@ export default function ArtificialIntelligenceAssistant({ className }: Literatur
   const style: CSSProperties = {
     '--custom-panel-width': `${panelWidth.toFixed(2)}vw`,
   };
-  const handleToggleFullscreen = (evt: React.MouseEvent<HTMLButtonElement>) => {
-    evt.stopPropagation();
-    evt.preventDefault();
-    setFullscreen(!fullscreen);
-  };
   const handleToggleCollapse = () => {
-    if (fullscreen) setFullscreen(false);
-    else setCollapsedPanel(!collapsedPanel);
+    setCollapsedPanel(!collapsedPanel);
   };
 
   return (
     <div
       style={style}
-      className={classNames(className, styles.aiAssistant, fullscreen && styles.fullscreen)}
+      className={classNames(className, styles.aiAssistant)}
       data-collapsed={collapsedPanel}
     >
       <button className={styles.header} type="button" onClick={handleToggleCollapse}>
         <h1 title={status}>AI Assistant</h1>
         <div className={styles.icons}>
-          {!collapsedPanel && (
-            <button type="button" onClick={handleToggleFullscreen}>
-              {fullscreen ? <IconFullscreenOff /> : <IconFullscreenOn />}
-            </button>
+          {collapsedPanel ? (
+            <PlusOutlined className="h-[1em] w-[1em]" />
+          ) : (
+            <MinusOutlined className="w-[1em]" />
           )}
-          {!fullscreen &&
-            (collapsedPanel ? (
-              <PlusOutlined className="h-[1em] w-[1em]" />
-            ) : (
-              <MinusOutlined className="w-[1em]" />
-            ))}
         </div>
       </button>
       {!collapsedPanel && (

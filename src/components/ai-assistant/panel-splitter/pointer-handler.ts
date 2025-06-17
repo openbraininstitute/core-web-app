@@ -45,7 +45,9 @@ class PointerHandler {
 
     const shift = (100 * (evt.clientX - this.touchingX)) / window.innerWidth;
     this.panelWidth = clamp(this.touchingPanelWidth - shift, 25, 100);
-    if (this.panelWidth > 80) this.panelWidth = 100;
+    if (this.panelWidth > 80 && shift < 0) {
+      this.panelWidth = 100;
+    }
     this.eventPanelWidthChange.dispatch(this.panelWidth);
   };
 
