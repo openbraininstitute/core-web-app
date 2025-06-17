@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-
-import { ContentForGlossaryItem } from '../hooks/use-sanity-content-for-glossary';
+import { ContentForGlossaryItem } from '../type';
 
 import Slugify from '@/util/slugify';
 import { classNames } from '@/util/utils';
@@ -42,7 +41,7 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
           ))}
         </div>
       </div>
-      <div className="flex flex-col">
+      <div className="mb-7 flex flex-col">
         <div className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']">
           Artifact types
         </div>
@@ -60,6 +59,33 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
               {item.Name}
             </Link>
           ))}
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <div className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']">
+          Cell types
+        </div>
+        <div className="flex flex-col gap-y-2">
+          <Link
+            href="/app/documentation/glossary/cell-type/m-type"
+            aria-label="Select glossary item "
+            className={classNames(
+              'text-lg',
+              slug === 'm-type' ? 'font-bold text-white' : 'text-primary-1 font-normal'
+            )}
+          >
+            M-types
+          </Link>
+          <Link
+            href="/app/documentation/glossary/cell-type/e-type"
+            aria-label="Select glossary item "
+            className={classNames(
+              'text-lg',
+              slug === 'e-type' ? 'font-bold text-white' : 'text-primary-1 font-normal'
+            )}
+          >
+            E-types
+          </Link>
         </div>
       </div>
     </div>

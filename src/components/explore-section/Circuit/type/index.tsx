@@ -154,3 +154,12 @@ export type ContributorsProps = {
   name: string;
   lastName: string;
 };
+
+export type CellTypeProps = {
+  id: string;
+  pref_label: string;
+  alt_label: string | '';
+  definition: string;
+  creation_date: string;
+  update_date: string;
+};

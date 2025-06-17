@@ -1,7 +1,7 @@
 'use client';
 
 import { PortableText } from 'next-sanity';
-import { ContentForGlossaryItem } from '../hooks/use-sanity-content-for-glossary';
+import { ContentForGlossaryItem } from '../type';
 
 import styles from './glossary-content.module.css';
 
