@@ -1,20 +1,24 @@
-import { WorkspaceContext } from '@/types/common';
-import Ws, { BluePyEModelCmd, Cmd, ModelOrigin } from './websocket';
-
+import Ws, {
+  TransportRunnerCommandsPrefix,
+  TransportRunnerCommands,
+  ModelOrigin,
+} from '@/features/model-analysis/runner/websocket';
 import { meModelAnalysisSvc } from '@/config';
 
-interface BluePyEModelConfig {
+import type { WorkspaceContext } from '@/types/common';
+
+interface TransportRunnerConfig {
   onInit?: () => void;
   onAnalysisDone?: () => void;
   onAnalysisError?: () => void;
 }
 
-export default class BluePyEModelCls {
-  private meModelId: string;
+export default class AnalysisTransportRunner {
+  private modelId: string;
 
   private access_token: string;
 
-  private config: BluePyEModelConfig;
+  private config: TransportRunnerConfig;
 
   private ctx: WorkspaceContext;
 
@@ -24,19 +28,19 @@ export default class BluePyEModelCls {
     ctx: WorkspaceContext,
     meModelId: string,
     token: string,
-    config: BluePyEModelConfig = {}
+    config: TransportRunnerConfig = {}
   ) {
-    this.meModelId = meModelId;
+    this.modelId = meModelId;
     this.access_token = token;
     this.config = config;
     this.ctx = ctx;
     this.ws = new Ws(meModelAnalysisSvc.wsUrl, token, { onMessage: this.onMessage });
 
-    this.ws.send(BluePyEModelCmd.RUN_ANALYSIS, {
+    this.ws.send(TransportRunnerCommandsPrefix.RUN_ANALYSIS, {
       access_token: this.access_token,
       config: {
         model_origin: ModelOrigin.ENTITYCORE,
-        model_id: this.meModelId,
+        model_id: this.modelId,
         project_context: {
           virtual_lab_id: this.ctx.virtualLabId,
           project_id: this.ctx.projectId,
@@ -45,7 +49,7 @@ export default class BluePyEModelCls {
     });
   }
 
-  private onMessage = (cmd: Cmd) => {
+  private onMessage = (cmd: TransportRunnerCommands) => {
     switch (cmd) {
       case 'run_analysis_processing':
         this.config.onInit?.();

@@ -20,6 +20,7 @@ import type {
   SharedFilter,
   MtypeFilter,
   EtypeFilter,
+  PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface ISingleNeuronSimulation
@@ -63,13 +64,14 @@ export interface MeModelFilter {
   me_model__order_by?: string | null;
 }
 export interface ISingleNeuronSimulationFilter
-  extends Partial<ContributionFilter>,
-    Partial<MtypeFilter>,
-    Partial<EtypeFilter>,
-    Partial<BrainRegionFilter>,
-    Partial<SharedFilter>,
-    Partial<MeTypeFilter>,
-    Partial<MeModelFilter> {}
+  extends ContributionFilter,
+    MtypeFilter,
+    EtypeFilter,
+    BrainRegionFilter,
+    SharedFilter,
+    MeTypeFilter,
+    MeModelFilter,
+    PaginationFilter {}
 
 export const CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),

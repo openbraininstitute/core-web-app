@@ -1,16 +1,16 @@
-import {
+import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
   EntityCoreOwnership,
   Timestamps,
-} from '../shared/global';
-import {
+} from '@/api/entitycore/types/shared/global';
+import type {
   BrainRegionFilter,
   ContributionFilter,
   IdFilter,
   PaginationFilter,
   SharedFilter,
-} from '../shared/request';
+} from '@/api/entitycore/types/shared/request';
 
 export interface IValidationResult
   extends EntityCoreIdentifiable,

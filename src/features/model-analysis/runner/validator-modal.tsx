@@ -4,8 +4,7 @@ import { useRef } from 'react';
 import { Modal } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 
-import BluePyEModelContainer from './BluePyEModelContainer';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import ModelAnalysisContainer from '@/features/model-analysis/runner/validator-modal-elements';
 import { WorkspaceContext } from '@/types/common';
 
 export function usePendingValidationModal() {
@@ -15,11 +14,11 @@ export function usePendingValidationModal() {
   function createModal({
     ctx,
     accessToken,
-    meModelId,
+    modelId,
   }: {
     ctx: WorkspaceContext;
     accessToken: string;
-    meModelId: string;
+    modelId: string;
   }) {
     const { destroy } = modal.confirm({
       title: null,
@@ -36,7 +35,7 @@ export function usePendingValidationModal() {
       },
       closeIcon: <CloseOutlined className="text-primary-8 text-2xl" />,
       className: '![&>.ant-modal-content]:bg-red-500',
-      content: <BluePyEModelContainer ctx={ctx} meModelId={meModelId} accessToken={accessToken} />,
+      content: <ModelAnalysisContainer ctx={ctx} modelId={modelId} accessToken={accessToken} />,
     });
     destroyRef.current = destroy;
     return destroy;

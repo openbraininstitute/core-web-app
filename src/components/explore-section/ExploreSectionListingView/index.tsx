@@ -2,7 +2,7 @@
 
 import { RowSelectionType } from 'antd/es/table/interface';
 import { ReactNode } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import ExploreSectionTable, {
@@ -12,11 +12,16 @@ import ResultsCount from '@/features/listing-filter-panel/numeric-results-info';
 import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
-import { sortStateAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
+import {
+  sortStateAtom,
+  useDataAtom,
+  previousDataAtom,
+  pageNumberAtom,
+} from '@/state/explore-section/list-view-atoms';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType } from '@/constants/explore-section/list-views';
+import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
@@ -57,14 +62,30 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   showLoadingState = true,
   useBrainRegion = true,
 }: Props<T>) {
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
-
-  const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
-
   const { node } = useBrainRegionHierarchy({ dataKey });
 
   const dataKeyExpand = useBrainRegion ? `${dataKey}/${node.id}` : dataKey;
   const brainRegionId = useBrainRegion ? node.id : undefined;
+  const [sortState, setSortState] = useAtom(sortStateAtom({ key: dataKeyExpand }));
+
+  const setPrevData = useSetAtom(
+    previousDataAtom({
+      workspace: virtualLabInfo,
+      dataType,
+      dataScope,
+      brainRegionId,
+      key: dataKeyExpand,
+    })
+  );
+  const setPageNumber = useSetAtom(pageNumberAtom(dataKeyExpand));
+
+  const onSortChange = (newSortState: any) => {
+    setPageNumber(PAGE_NUMBER);
+    setPrevData([]);
+    setSortState(newSortState);
+  };
+
+  const columns = useExploreColumns<T>(onSortChange, sortState, [], null, dataType);
 
   const { result: dataSource, isLoading } = useDataAtom<T>({
     dataType,

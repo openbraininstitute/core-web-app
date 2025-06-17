@@ -2,6 +2,7 @@ import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/enti
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
+import { compactRecord } from '@/utils/dictionary';
 import { arrayBufferToJson } from '@/utils/buffer';
 import { tryCatch } from '@/api/utils';
 
@@ -12,7 +13,6 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/single-neuron-simulation';
 
@@ -56,7 +56,7 @@ export async function getSingleNeuronSimulations({
   context,
 }: {
   withFacets?: boolean;
-  filters?: ISingleNeuronSimulationFilter;
+  filters?: Partial<ISingleNeuronSimulationFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
