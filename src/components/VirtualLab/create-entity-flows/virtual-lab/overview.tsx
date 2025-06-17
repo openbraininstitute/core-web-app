@@ -38,7 +38,7 @@ export default function Overview({ allowAskCode }: Props) {
     >
       <Form.Item
         validateDebounce={800}
-        label={<span className="font-semibold text-primary-8">Virtual Lab&#39;s Name</span>}
+        label={<span className="text-primary-8 font-semibold">Virtual Lab&#39;s Name</span>}
         name="name"
         className="w-full flex-1"
         validateTrigger={['onBlur']}
@@ -87,19 +87,19 @@ export default function Overview({ allowAskCode }: Props) {
         />
       </Form.Item>
       <Form.Item
-        label={<span className="font-semibold text-primary-8">Description</span>}
+        label={<span className="text-primary-8 font-semibold">Description</span>}
         name="description"
       >
         <TextArea
           rows={4}
           placeholder="Enter your description here"
-          className="border! rounded-none border-primary-8"
+          className="border-primary-8 rounded-none border!"
         />
       </Form.Item>
       <Form.Item
         label={
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-primary-8">Affiliated entity</span>
+            <span className="text-primary-8 font-semibold">Affiliated entity</span>
             <Popover
               placement="top"
               trigger="hover"
@@ -109,7 +109,7 @@ export default function Overview({ allowAskCode }: Props) {
               )}
               destroyTooltipOnHide
               content={
-                <div className="flex flex-col items-center justify-center gap-4 bg-primary-8 px-5 py-3 text-white">
+                <div className="bg-primary-8 flex flex-col items-center justify-center gap-4 px-5 py-3 text-white">
                   Organization, University, Company
                 </div>
               }

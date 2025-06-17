@@ -100,10 +100,10 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
       </header>
       <div className="w-full overflow-hidden">
         <div className="flex w-full flex-row justify-between">
-          <div className="mb-3 w-full text-3xl font-bold text-primary-9">{contentTitle}</div>
+          <div className="text-primary-9 mb-3 w-full text-3xl font-bold">{contentTitle}</div>
           {contentTitle === 'meModelsTable' ||
             (contentTitle === 'eModelsTable' && (
-              <p className="flex flex-row items-center whitespace-nowrap text-base font-normal text-gray-400">
+              <p className="flex flex-row items-center text-base font-normal whitespace-nowrap text-gray-400">
                 <InformationIcon className="mr-1" iconColor="#9ca3af " />
                 To download an artifact, use the radio button to select it and click on the download
                 button

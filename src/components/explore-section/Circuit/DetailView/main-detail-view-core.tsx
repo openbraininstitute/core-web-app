@@ -22,7 +22,7 @@ function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="relative ml-20 py-10 pr-10 text-primary-9">
+    <div className="text-primary-9 relative ml-20 py-10 pr-10">
       <HeaderDetailView content={content} />
       <SectionMainContainer
         content={content}
@@ -110,7 +110,7 @@ export default function CircuitDetailPage() {
 
   if (loading) {
     return (
-      <div className="relative flex h-[50vh] w-full items-center justify-center text-lg font-normal text-primary-9">
+      <div className="text-primary-9 relative flex h-[50vh] w-full items-center justify-center text-lg font-normal">
         Loading...
       </div>
     );

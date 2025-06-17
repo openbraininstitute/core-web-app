@@ -86,7 +86,7 @@ export function ItemEnabled({
           <ChevronRight
             fill="#69c0ff"
             className={classNames(
-              'h-3 w-auto text-primary-3 transition-transform duration-200',
+              'text-primary-3 h-3 w-auto transition-transform duration-200',
               sectionOpen ? 'rotate-90' : 'rotate-0'
             )}
           />
@@ -95,12 +95,12 @@ export function ItemEnabled({
 
       <div
         className={classNames(
-          'overflow-hidden transition-height duration-500 ease-in-out',
+          'transition-height overflow-hidden duration-500 ease-in-out',
           sectionOpen ? 'block' : 'hidden'
         )}
       >
         {content.children && (
-          <div className="my-3 flex w-full flex-col gap-y-3 border-l border-solid border-primary-6 pl-4">
+          <div className="border-primary-6 my-3 flex w-full flex-col gap-y-3 border-l border-solid pl-4">
             {content.children.map((child: SingleSectionProps) => (
               <NavItem content={child} allContent={allContent} key={child.slug} />
             ))}

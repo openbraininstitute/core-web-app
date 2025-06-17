@@ -86,33 +86,32 @@ export default function NumericFilters({
         <Option value="numberOfSynapses"># of Synapses</Option>
         <Option value="scaleType">Scale Type</Option>
       </Select>
-      {
-        localProperty === 'numberOfNeurons' || localProperty === 'numberOfConnections' || localProperty === 'numberOfSynapses' ? (
-      <Select
-        className="mr-2 w-[150px]"
-        placeholder="Condition"
-        value={localType}
-        onChange={handleTypeChange}
-        disabled={!localProperty}
-      >
-        <Option value="greaterThan">Greater than</Option>
-        <Option value="lessThan">Less than</Option>
-        <Option value="between">Between</Option>
-      </Select>
-        ):(
-      <Select
-        className="mr-2 w-[150px]"
-        placeholder="Select scale"
-        value={localType}
-        onChange={handleTypeChange}
-        disabled={!localProperty}
-      >
-        <Option value="smallMicrocircuit">Small microcircuit</Option>
-        <Option value="microcircuit">Microcircuit</Option>
-      </Select>
-          
-        )
-      }
+      {localProperty === 'numberOfNeurons' ||
+      localProperty === 'numberOfConnections' ||
+      localProperty === 'numberOfSynapses' ? (
+        <Select
+          className="mr-2 w-[150px]"
+          placeholder="Condition"
+          value={localType}
+          onChange={handleTypeChange}
+          disabled={!localProperty}
+        >
+          <Option value="greaterThan">Greater than</Option>
+          <Option value="lessThan">Less than</Option>
+          <Option value="between">Between</Option>
+        </Select>
+      ) : (
+        <Select
+          className="mr-2 w-[150px]"
+          placeholder="Select scale"
+          value={localType}
+          onChange={handleTypeChange}
+          disabled={!localProperty}
+        >
+          <Option value="smallMicrocircuit">Small microcircuit</Option>
+          <Option value="microcircuit">Microcircuit</Option>
+        </Select>
+      )}
 
       {(localType === 'greaterThan' || localType === 'between') && (
         <Input

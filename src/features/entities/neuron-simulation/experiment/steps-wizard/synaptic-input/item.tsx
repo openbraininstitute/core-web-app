@@ -187,7 +187,7 @@ export default function SynapticInputItem({
             <div className="px-6 py-3 font-bold text-white" style={{ backgroundColor: color }}>
               {index + 1}
             </div>
-            <span className="font-light text-primary-8">Synaptic input</span>
+            <span className="text-primary-8 font-light">Synaptic input</span>
           </div>
           <div className="flex items-center justify-center gap-4">
             <button
@@ -204,11 +204,11 @@ export default function SynapticInputItem({
               <div className="border border-gray-200">
                 {/* eslint-disable-next-line no-nested-ternary */}
                 {synapseDisplayed ? (
-                  <EyeInvisibleOutlined className="h-8 w-8 px-2 text-primary-8" />
+                  <EyeInvisibleOutlined className="text-primary-8 h-8 w-8 px-2" />
                 ) : visualizeLoading ? (
-                  <LoadingOutlined className="h-8 w-8 px-2 text-primary-8" />
+                  <LoadingOutlined className="text-primary-8 h-8 w-8 px-2" />
                 ) : (
-                  <EyeOutlined className="h-8 w-8 px-2 text-primary-8" />
+                  <EyeOutlined className="text-primary-8 h-8 w-8 px-2" />
                 )}
               </div>
             </button>
@@ -229,16 +229,16 @@ export default function SynapticInputItem({
           </div>
         </div>
       </div>
-      <div className="flex w-full flex-col gap-6 border border-neutral-4 p-6">
+      <div className="border-neutral-4 flex w-full flex-col gap-6 border p-6">
         <div className="flex flex-col">
-          <div className="mb-2 text-left text-lg uppercase text-neutral-4">synapse group</div>
+          <div className="text-neutral-4 mb-2 text-left text-lg uppercase">synapse group</div>
           <Form.Item
             name={[formName, 'id']}
             rules={[{ required: true, type: 'string' }]}
             labelAlign="left"
             className={classNames(
               'mb-0',
-              synapticInputOpened && 'border border-b-0 border-neutral-4'
+              synapticInputOpened && 'border-neutral-4 border border-b-0'
             )}
           >
             <Select
@@ -251,14 +251,14 @@ export default function SynapticInputItem({
               optionRender={OptionRender}
               options={options}
               className={classNames(
-                '[&_.ant-select-selector]:border-0! text-left',
+                'text-left [&_.ant-select-selector]:border-0!',
                 '[&_.ant-select-dropdown]:right-auto! [&_.ant-select-dropdown]:bottom-auto! [&_.ant-select-dropdown]:left-0!',
-                '[&_.ant-select-item]:border-b [&_.ant-select-item]:border-neutral-4 [&_.ant-select-item]:p-1 last:[&_.ant-select-item]:border-none',
+                '[&_.ant-select-item]:border-neutral-4 [&_.ant-select-item]:border-b [&_.ant-select-item]:p-1 last:[&_.ant-select-item]:border-none',
                 synapticInputOpened &&
-                  '[&_.ant-select-dropdown]:top-[40px]! [&_.ant-select-dropdown]:border-neutral-4 [&_.ant-select-dropdown]:shadow-none',
+                  '[&_.ant-select-dropdown]:border-neutral-4 [&_.ant-select-dropdown]:top-[40px]! [&_.ant-select-dropdown]:shadow-none',
                 synapticInputOpened
-                  ? '[&_.ant-select-selector]:border-t-0! [&_.ant-select-selector]:shadow-none! [&_.ant-select-dropdown]:border [&_.ant-select-dropdown]:border-t-0'
-                  : 'border border-neutral-4'
+                  ? '[&_.ant-select-dropdown]:border [&_.ant-select-dropdown]:border-t-0 [&_.ant-select-selector]:border-t-0! [&_.ant-select-selector]:shadow-none!'
+                  : 'border-neutral-4 border'
               )}
               onDropdownVisibleChange={setSynapticInputOpened}
             />
@@ -357,14 +357,14 @@ function FrequencyFormItem({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <div className="mb-2 text-left text-base font-light uppercase text-neutral-4">
+        <div className="text-neutral-4 mb-2 text-left text-base font-light uppercase">
           Frequency <span className="normal-case">[Hz]</span>
         </div>
 
         <div className="flex">
           {disableFrequencyStepper && (
             <CustomPopover message={disableStepperContent} when="hover">
-              <div className="mr-2 text-sm text-primary-9">
+              <div className="text-primary-9 mr-2 text-sm">
                 <WarningFilled className="mr-2" />
                 Stepper already assigned
               </div>
@@ -372,7 +372,7 @@ function FrequencyFormItem({
           )}
           <span
             className={classNames(
-              'mr-2 text-sm font-light text-primary-9',
+              'text-primary-9 mr-2 text-sm font-light',
               disableFrequencyStepper && 'text-gray-400!'
             )}
           >
@@ -393,7 +393,7 @@ function FrequencyFormItem({
             rules={[{ required: true, message: 'Required field' }]}
           >
             <InputNumber
-              className="border-neutral-4! [&_.ant-input-number-input]:text-primary-8! rounded-xs! [&_.ant-input-number-input]:text-base! border font-bold"
+              className="border-neutral-4! [&_.ant-input-number-input]:text-primary-8! rounded-xs! border font-bold [&_.ant-input-number-input]:text-base!"
               min={0}
               onChange={(newValue) =>
                 onChange({
@@ -408,7 +408,7 @@ function FrequencyFormItem({
           <div className="mt-2 flex justify-between">
             <div className="flex items-center text-sm">
               <div>
-                <span className="font-bold text-primary-8">Start</span>
+                <span className="text-primary-8 font-bold">Start</span>
                 <InputNumber
                   required
                   defaultValue={stepFrequencyState!.start}
@@ -421,13 +421,13 @@ function FrequencyFormItem({
                   min={0}
                   step={1}
                   size="small"
-                  className="[&_.ant-input-number-input]:text-primary-8! min-w-18 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! mx-2 h-8"
+                  className="[&_.ant-input-number-input]:text-primary-8! mx-2 h-8 min-w-18 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold!"
                 />
                 <span className="text-gray-400">[Hz]</span>
               </div>
               <hr className="mx-4 w-8 border border-gray-200" />
               <div>
-                <span className="font-bold text-primary-8">Stop</span>
+                <span className="text-primary-8 font-bold">Stop</span>
                 <InputNumber
                   required
                   placeholder="end"
@@ -440,14 +440,14 @@ function FrequencyFormItem({
                   min={1}
                   step={1}
                   size="small"
-                  className="[&_.ant-input-number-input]:text-primary-8! min-w-18 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! mx-2 h-8"
+                  className="[&_.ant-input-number-input]:text-primary-8! mx-2 h-8 min-w-18 [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold!"
                 />
                 <span className="text-gray-400">[Hz]</span>
               </div>
             </div>
 
             <div className="flex items-center text-sm">
-              <span className="font-bold text-primary-8">N° of steps</span>
+              <span className="text-primary-8 font-bold">N° of steps</span>
               <InputNumber
                 required
                 placeholder="step size"
@@ -460,14 +460,14 @@ function FrequencyFormItem({
                   onFrequencyStepChange(stepFrequencyState.start, stepFrequencyState.stop, v)
                 }
                 size="small"
-                className="[&_.ant-input-number-input]:text-primary-8! [&_.ant-input-number-handler-wrap]:opacity-100! [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold! mx-2 h-8 min-w-10"
+                className="[&_.ant-input-number-input]:text-primary-8! mx-2 h-8 min-w-10 [&_.ant-input-number-handler-wrap]:opacity-100! [&_.ant-input-number-input]:pr-8! [&_.ant-input-number-input]:text-right! [&_.ant-input-number-input]:font-bold!"
               />
             </div>
           </div>
         )}
         {calculatedFrequencies && (
           <div>
-            <div className="mb-2 mt-4 text-left text-base font-light uppercase text-neutral-4">
+            <div className="text-neutral-4 mt-4 mb-2 text-left text-base font-light uppercase">
               Output values
             </div>
 
@@ -485,22 +485,22 @@ function FrequencyFormItem({
 
 function OptionRender({ data }: Parameters<NonNullable<SelectProps['optionRender']>>[0]) {
   return (
-    <div className="flex flex-col gap-2 border-b border-neutral-4 last:border-none">
+    <div className="border-neutral-4 flex flex-col gap-2 border-b last:border-none">
       <div className="flex w-full items-center gap-px">
-        <div className="line-clamp-1 text-lg font-bold text-primary-8">{data.label}</div>
+        <div className="text-primary-8 line-clamp-1 text-lg font-bold">{data.label}</div>
       </div>
       <div className="grid w-full grid-cols-3 items-start justify-start gap-3">
         <div className="flex w-full items-start gap-1">
-          <span className="text-base text-neutral-4">Target:</span>
-          <span className="line-clamp-1 text-base font-bold text-primary-8">{data.target}</span>
+          <span className="text-neutral-4 text-base">Target:</span>
+          <span className="text-primary-8 line-clamp-1 text-base font-bold">{data.target}</span>
         </div>
         <div className="flex w-full items-start gap-1">
-          <span className="text-base text-neutral-4">Type:</span>
-          <span className="line-clamp-1 text-base font-bold text-primary-8">{data.type}</span>
+          <span className="text-neutral-4 text-base">Type:</span>
+          <span className="text-primary-8 line-clamp-1 text-base font-bold">{data.type}</span>
         </div>
         <div className="line-clamp-1 flex w-full items-start gap-1">
-          <span className="text-base text-neutral-4">Distribution:</span>
-          <span className="line-clamp-1 text-base font-bold text-primary-8">
+          <span className="text-neutral-4 text-base">Distribution:</span>
+          <span className="text-primary-8 line-clamp-1 text-base font-bold">
             {data.isFormula ? <code>{data.distribution}</code> : <span>{data.distribution}</span>}
           </span>
         </div>

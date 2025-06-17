@@ -72,7 +72,7 @@ export default function SingleStep({
             {content.time != null ? secondsToMMSS(content.time) : '--:--'}
           </span>
         </div>
-        <h4 className="mb-2 text-2xl font-bold ">{content.title}</h4>
+        <h4 className="mb-2 text-2xl font-bold">{content.title}</h4>
         <div className={styles['small-transcript']}>
           <PortableText value={content.content ?? []} />
         </div>
