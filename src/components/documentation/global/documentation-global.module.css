@@ -1,6 +1,27 @@
+.ant-pagination {
+  color: white;
+}
+
 .pagination {
+  color: white;
   display: flex;
   align-items: center;
+}
+
+.pagination .ant-pagination-item-container {
+  color: white;
+}
+
+.pagination :global(.ant-pagination-item-link) {
+  color: white !important;
+}
+
+.pagination :global(.ant-pagination-item-ellipsis) {
+  color: white;
+}
+
+.anticon {
+  color: white;
 }
 
 .pagination :global(.ant-pagination-item) {
@@ -13,11 +34,11 @@
 }
 
 .pagination :global(.ant-pagination-item-active) {
-  background: white;
+  background: transparent;
 }
 
 .pagination :global(.ant-pagination-item-active a) {
-  color: #002766;
+  color: white;
 }
 
 .pagination :global(.ant-pagination-prev),
@@ -39,5 +60,46 @@
 }
 
 .pagination :global(.ant-pagination-options) {
-  display: none; /* Ensure items-per-page selector is hidden */
+  display: none;
+}
+
+.ant-pagination-item-ellipsis {
+  color: white;
+}
+
+.pagination .ant-pagination-item a {
+  color: white;
+}
+
+.pagination .ant-pagination-item-active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: transparent;
+}
+
+.pagination .ant-pagination-item-active a {
+  color: white;
+}
+
+.pagination .ant-pagination-prev .ant-pagination-item-link,
+.pagination .ant-pagination-next .ant-pagination-item-link {
+  color: white;
+}
+
+.ant-pagination-item-ellipsis {
+  display: none !important;
+}
+
+.pagination .ant-pagination-prev .ant-pagination-item-link,
+.pagination .ant-pagination-next .ant-pagination-item-link,
+.pagination .ant-pagination-jump-prev .ant-pagination-item-link,
+.pagination .ant-pagination-jump-next .ant-pagination-item-link {
+  color: white;
+}
+
+/* Optional: Use this if the above doesn’t work */
+.pagination .ant-pagination-prev .anticon svg,
+.pagination .ant-pagination-next .anticon svg,
+.pagination .ant-pagination-jump-prev .anticon svg,
+.pagination .ant-pagination-jump-next .anticon svg {
+  fill: white;
 }

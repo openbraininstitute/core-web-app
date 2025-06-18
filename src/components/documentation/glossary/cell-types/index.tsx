@@ -30,6 +30,7 @@ export default function CellTypeDefinitionsFullList() {
   });
   const { data: cellData } = cellcontent;
   const data = cellData?.data;
+  const totalPages = data ? Math.ceil(data.length / itemsPerPage) : 0;
 
   const paginatedData = data?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -38,14 +39,11 @@ export default function CellTypeDefinitionsFullList() {
     setCurrentPage(page);
   };
 
-  const itemRender: PaginationProps['itemRender'] = (_, type, originalElement) => {
-    if (type === 'page') {
-      return <span className={styles.pageItem}>{originalElement}</span>;
+  const itemRender: PaginationProps['itemRender'] = (page, type, originalElement) => {
+    if (type === 'page' && (page === 1 || page === totalPages)) {
+      return null; // Skip rendering the first and last pages
     }
-    if (type === 'prev' || type === 'next') {
-      return <span className={styles.chevron}>{originalElement}</span>;
-    }
-    return originalElement;
+    return originalElement; // Render the default element as is
   };
 
   return (
@@ -61,6 +59,7 @@ export default function CellTypeDefinitionsFullList() {
           pageSize={itemsPerPage}
           itemRender={itemRender}
           showSizeChanger={false}
+          showLessItems
           className={styles.pagination}
         />
       </header>

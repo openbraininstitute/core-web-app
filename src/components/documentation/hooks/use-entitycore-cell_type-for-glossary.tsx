@@ -28,17 +28,43 @@ export const useFetchEntityTypes = ({
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const args = {
-        filters: {
-          page: 1,
-          page_size: 100,
-          ...(filter ? { order_by: filter.order_by } : {}),
-        },
-      };
-      const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
+      let currentPage = 1;
+      const pageSize = 100;
+      let allItems: IEType[] | IMType[] = [];
+      let hasMore = true;
+
+      while (hasMore) {
+        const args = {
+          filters: {
+            page: currentPage,
+            page_size: pageSize,
+            ...(filter ? { order_by: filter.order_by } : {}),
+          },
+        };
+
+        const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
+
+        let items: IEType[] | IMType[] = [];
+        if (Array.isArray(response)) {
+          items = response;
+        } else if (response && 'data' in response && Array.isArray(response.data)) {
+          items = response.data;
+        } else if (response && 'items' in response && Array.isArray(response.items)) {
+          items = response.items;
+        } else {
+          hasMore = false;
+          break;
+        }
+
+        allItems = [...allItems, ...items];
+
+        hasMore = items.length === pageSize;
+
+        currentPage += 1;
+      }
 
       setState({
-        data: response,
+        data: { data: allItems } as EntityCoreResponse<IEType> | EntityCoreResponse<IMType>,
         loading: false,
         error: null,
       });
