@@ -263,6 +263,7 @@ export function Tab({
   onClick,
   rounded = 'rounded-full',
   extraClass,
+  disabled,
 }: {
   tab: string;
   selectedTab: string;
@@ -270,21 +271,20 @@ export function Tab({
   rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full';
   children?: React.ReactNode;
   extraClass?: string;
+  disabled?: boolean;
 }) {
   return (
     <button
-      style={
-        tab === selectedTab
-          ? { backgroundImage: 'linear-gradient(to right, #003A8C, #001026)' }
-          : undefined
-      }
-      onClick={onClick}
+      onClick={!disabled ? onClick : undefined}
       type="button"
+      style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
       className={classNames(
         'min-w-[150px] px-5 py-2',
         extraClass,
         rounded,
-        tab === selectedTab ? 'bg-primary-8 text-white' : 'text-primary-8 bg-white'
+        tab === selectedTab
+          ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+          : 'text-primary-8 bg-white'
       )}
     >
       {children}

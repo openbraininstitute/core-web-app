@@ -74,7 +74,9 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  const [disabled, setDisabled] = useState(false);
+  const [campaignId, setCampaignId] = useState('');
+
+  console.log(!!campaignId);
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -232,7 +234,7 @@ export default function TinyCircuitSimulation() {
                         <CheckCircleFilled className="text-green-600" />
                       )}
 
-                      {!disabled && (
+                      {!campaignId && (
                         <DeleteOutlined
                           className="cursor-pointer"
                           onClick={(e) => {
@@ -309,7 +311,7 @@ export default function TinyCircuitSimulation() {
                 </Fragment>
               );
             })}
-            {!disabled && (
+            {!campaignId && (
               <button
                 className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                 type="button"
@@ -372,6 +374,7 @@ export default function TinyCircuitSimulation() {
             rounded="rounded-r-full"
             selectedTab={tab}
             onClick={() => setTab('simulations')}
+            disabled={!campaignId}
           >
             Simulations
           </Tab>
@@ -406,12 +409,18 @@ export default function TinyCircuitSimulation() {
                   : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
               )}
               onClick={() => {
-                setDisabled(!disabled);
-                if (!disabled) setTab('simulations');
+                if (!campaignId) {
+                  // Call backend receive campaign Id
+                  setCampaignId('dummy campaign Id');
+                  setTab('simulations');
+                  return;
+                }
+
+                setCampaignId('');
               }}
               disabled={!!(errors && errors.length > 0)}
             >
-              {!disabled ? 'Generate simulations' : 'New configuration'}
+              {!campaignId ? 'Generate simulations' : 'New configuration'}
             </button>
           </div>
           <div>
@@ -445,7 +454,7 @@ export default function TinyCircuitSimulation() {
               (!schema.properties?.[configTab]?.additionalProperties?.anyOf ||
                 selectedCatSchema) && (
                 <JSONSchemaForm
-                  disabled={disabled}
+                  disabled={!!campaignId}
                   config={config}
                   circuitId={circuitId}
                   schema={
