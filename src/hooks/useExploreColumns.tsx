@@ -64,7 +64,7 @@ export default function useExploreColumns<T>(
     const totalKeys = dimensionColumns ? [...keys, ...dimensionColumns] : [...keys];
     setColumnWidths(
       totalKeys.map((key) => {
-        const field = getFieldDefinition(key);
+        const field = getFieldDefinition(key as EntityCoreFields);
         return {
           key,
           width: field?.style?.width ?? getProvisionedWidth(field!.title, field?.unit),
@@ -80,7 +80,6 @@ export default function useExploreColumns<T>(
       if (sortState?.order && field === sortState.field) {
         order = sortState.order === 'desc' ? 'asc' : 'desc';
       }
-
       setSortState({
         field,
         order,
@@ -151,8 +150,9 @@ export default function useExploreColumns<T>(
   const main: ColumnProps<T>[] = useMemo(
     () =>
       keys.reduce((acc, key) => {
-        const term = getFieldDefinition(key);
+        const term = getFieldDefinition(key as EntityCoreFields);
         const isSortable = term?.isSortable;
+
         return [
           ...acc,
           {
@@ -174,7 +174,7 @@ export default function useExploreColumns<T>(
             onHeaderCell: () => ({
               handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
               onClick: () => isSortable && term.order?.value && sorterES(term.order?.value),
-              showsortertooltip: {
+              showSorterTooltip: {
                 title: term?.description ? term.description : term?.title,
               },
             }),
@@ -183,6 +183,7 @@ export default function useExploreColumns<T>(
           },
         ];
       }, initialColumns),
+
     [columnWidths, getSortOrder, initialColumns, keys, onMouseDown, sorterES]
   );
 

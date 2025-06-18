@@ -12,8 +12,10 @@ import {
   dataAtom,
   sortStateAtom,
   dimensionColumnsAtom,
+  previousDataAtom,
+  pageNumberAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { DataType } from '@/constants/explore-section/list-views';
+import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 
@@ -26,11 +28,29 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
     useMemo(() => unwrap(dataAtom({ dataType, key: dataType, brainRegionId: node.id })), [dataType])
   );
 
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataType }));
+  const [sortState, setSortState] = useAtom(sortStateAtom({ key: dataType }));
   const dimensionColumns = useAtomValue(
     useMemo(() => unwrap(dimensionColumnsAtom({ dataType, key: dataType })), [dataType])
   );
-  const columns = useExploreColumns(setSortState, sortState, [], dimensionColumns).filter(
+
+  const setPrevData = useSetAtom(
+    previousDataAtom({
+      workspace: undefined,
+      dataType,
+      dataScope: ExploreDataScope.NoScope,
+      brainRegionId: node.id,
+      key: dataType,
+    })
+  );
+  const setPageNumber = useSetAtom(pageNumberAtom(dataType));
+
+  const onSortChange = (newSortState: any) => {
+    setPageNumber(PAGE_NUMBER);
+    setPrevData([]);
+    setSortState(newSortState);
+  };
+
+  const columns = useExploreColumns(onSortChange, sortState, [], dimensionColumns).filter(
     ({ key }) => (activeColumns || []).includes(key as string)
   );
 
@@ -72,7 +92,7 @@ export default function SimulationCampaignListView({ dataType }: { dataType: Dat
                 <ListTable
                   {...{
                     columns,
-                    dataSource: dataSource?.hits,
+                    dataSource: dataSource?.data,
                     loading,
                   }}
                 />

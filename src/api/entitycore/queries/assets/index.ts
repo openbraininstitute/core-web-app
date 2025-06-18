@@ -58,6 +58,24 @@ export async function getAsset({
   });
 }
 
+export async function downloadAsset<T>(params: {
+  ctx?: WorkspaceContext;
+  entityType: EntityCoreDataType;
+  entityId: string;
+  id: string;
+  asRawResponse: true;
+  retryOnError?: boolean;
+}): Promise<Response>;
+
+export async function downloadAsset<T>(params: {
+  ctx?: WorkspaceContext;
+  entityType: EntityCoreDataType;
+  entityId: string;
+  id: string;
+  asRawResponse?: false | undefined;
+  retryOnError?: boolean;
+}): Promise<T>;
+
 /**
  * Downloads a specific asset by its id from the EntityCoreAPI.
  *
@@ -81,7 +99,7 @@ export async function downloadAsset<T>({
   id: string;
   asRawResponse?: boolean;
   retryOnError?: boolean;
-}) {
+}): Promise<T | Response> {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<T>(
     `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,

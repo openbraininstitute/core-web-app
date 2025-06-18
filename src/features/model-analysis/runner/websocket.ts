@@ -1,10 +1,10 @@
 import WsCommon, { OnMessageHandler } from '@/services/ws-common';
 
-export const BluePyEModelCmd = {
+export const TransportRunnerCommandsPrefix = {
   // Cmd target: backend
   RUN_ANALYSIS: 'run_analysis',
   PING: 'ping',
-};
+} as const;
 
 export enum ModelOrigin {
   NEXUS = 'nexus',
@@ -13,14 +13,14 @@ export enum ModelOrigin {
 
 const PING_INTERVAL = 60_000;
 
-type BluePyEModelCmdKeys = Lowercase<keyof typeof BluePyEModelCmd>;
+type TransportRunnerCommandsPrefixKeys = Lowercase<keyof typeof TransportRunnerCommandsPrefix>;
 
-export type Cmd =
-  | `${BluePyEModelCmdKeys}_done`
-  | `${BluePyEModelCmdKeys}_processing`
-  | `${BluePyEModelCmdKeys}_error`;
+export type TransportRunnerCommands =
+  | `${TransportRunnerCommandsPrefixKeys}_done`
+  | `${TransportRunnerCommandsPrefixKeys}_processing`
+  | `${TransportRunnerCommandsPrefixKeys}_error`;
 
-export default class Ws extends WsCommon<Cmd> {
+export default class Ws extends WsCommon<TransportRunnerCommands> {
   private pingIntervalTimerId?: number;
 
   constructor(
@@ -30,14 +30,18 @@ export default class Ws extends WsCommon<Cmd> {
       onMessage,
       onClose,
       onOpen,
-    }: { onMessage: OnMessageHandler<Cmd>; onOpen?: () => void; onClose?: () => void }
+    }: {
+      onMessage: OnMessageHandler<TransportRunnerCommands>;
+      onOpen?: () => void;
+      onClose?: () => void;
+    }
   ) {
     const params = {
       onMessage,
       onOpen: () => {
         onOpen?.();
         this.pingIntervalTimerId = window.setInterval(() => {
-          this.send(BluePyEModelCmd.PING, {});
+          this.send(TransportRunnerCommandsPrefix.PING, {});
         }, PING_INTERVAL);
       },
       onClose: () => {

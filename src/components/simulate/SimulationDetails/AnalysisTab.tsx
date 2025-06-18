@@ -1,5 +1,5 @@
 import { IMEModel } from '@/api/entitycore/types';
-import { PDFViewerContainer } from '@/components/explore-section/common/pdf/PDFViewerContainer';
+import { PDFViewerContainer } from '@/features/analysis-viewer/container';
 
 export default function AnalysisTab({ meModel }: { meModel: IMEModel | null }) {
   // const image = meModel?.image;

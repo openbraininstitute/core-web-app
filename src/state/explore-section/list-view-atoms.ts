@@ -70,15 +70,18 @@ export const selectedRowsAtom = atomFamily(
 
 export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
-export const sortStateAtom = atomFamily((scope: DataAtomBinding) => {
-  const initialState: SortState = { field: EntityCoreFields.CreationDate, order: 'desc' };
+export const sortStateAtom = atomFamily(
+  ({ key }: { key: string }) => {
+    const initialState: SortState = { field: EntityCoreFields.CreationDate, order: 'desc' };
 
-  const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
-    set(writableAtom, update); // Correctly updates the state
-  });
+    const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
+      set(writableAtom, update); // Correctly updates the state
+    });
 
-  return writableAtom;
-}, isListAtomEqual);
+    return writableAtom;
+  },
+  (a, b) => a.key === b.key
+);
 
 export const activeColumnsAtom = atomFamily(
   (scope: DataAtomBinding) =>
@@ -229,6 +232,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
       const searchString = get(searchStringAtom(ctx.key));
       const pageNumber = get(pageNumberAtom(ctx.key));
       const filters = await get(filtersAtom(ctx));
+      const sortState = get(sortStateAtom({ key: ctx.key }));
 
       // TODO: better handling when we have IDs filter
       if (ctx.shouldUseIds) {
@@ -251,8 +255,6 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           } as EntityCoreResponse<T>;
         }
       }
-
-      const sortState = get(sortStateAtom(ctx));
 
       const queryParameters = compactRecord({
         page_size: PAGE_SIZE,

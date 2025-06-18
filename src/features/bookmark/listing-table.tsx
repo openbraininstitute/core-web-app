@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 
 import ExploreSectionTable from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
@@ -7,9 +7,15 @@ import WithControlPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 import Footer from '@/features/bookmark/footer';
 
-import { sortStateAtom, useDataAtom } from '@/state/explore-section/list-view-atoms';
+import {
+  sortStateAtom,
+  useDataAtom,
+  previousDataAtom,
+  pageNumberAtom,
+} from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { DataType } from '@/constants/explore-section/list-views';
@@ -27,8 +33,25 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   dataKey,
 }: Props) {
   const { push: navigate } = useRouter();
-  const [sortState, setSortState] = useAtom(sortStateAtom({ dataType, key: dataKey }));
-  const columns = useExploreColumns<T>(setSortState, sortState, [], null, dataType);
+  const setPrevData = useSetAtom(
+    previousDataAtom({
+      workspace: { virtualLabId, projectId },
+      dataType,
+      dataScope: ExploreDataScope.BookmarkedResources,
+      brainRegionId: undefined,
+      key: dataKey,
+    })
+  );
+  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
+  const [sortState, setSortState] = useAtom(sortStateAtom({ key: dataKey }));
+
+  const onSortChange = (newSortState: any) => {
+    setPageNumber(PAGE_NUMBER);
+    setPrevData([]);
+    setSortState(newSortState);
+  };
+
+  const columns = useExploreColumns<T>(onSortChange, sortState, [], null, dataType);
   const dataScope = ExploreDataScope.BookmarkedResources;
 
   const { result: dataSource, isLoading } = useDataAtom<T>({
