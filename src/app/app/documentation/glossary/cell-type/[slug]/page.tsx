@@ -1,11 +1,13 @@
 'use client';
 
+import { Pagination, PaginationProps } from 'antd';
 import { useParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import GlossaryMTypeCard from '@/components/documentation/glossary/glossary-m-type-card';
 import { useFetchEModelEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
-import { classNames } from '@/util/utils';
+
+import styles from '@/components/documentation/global/documentation-global.module.css';
 
 export default function GlossaryMTypeListPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -24,7 +26,7 @@ export default function GlossaryMTypeListPage() {
   }, [data]);
 
   // Calculate pagination
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  // const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const paginatedData = sortedData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -35,30 +37,31 @@ export default function GlossaryMTypeListPage() {
     setCurrentPage(page);
   };
 
+  const itemRender: PaginationProps['itemRender'] = (_, type, originalElement) => {
+    if (type === 'page') {
+      return <span className={styles.pageItem}>{originalElement}</span>;
+    }
+    if (type === 'prev' || type === 'next') {
+      return <span className={styles.chevron}>{originalElement}</span>;
+    }
+    return originalElement;
+  };
+
   return (
     <div className="relative flex w-full flex-col gap-4 text-white">
       <header className="bg-primary-9 fixed top-0 z-50 flex w-[50vw] flex-row items-center justify-between pt-7 pb-3">
         <h2 className="text-2xl font-bold capitalize">{slug}s</h2>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                type="button"
-                aria-label={`Change page to ${page}`}
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={classNames(
-                  'h-6 w-6 text-white',
-                  currentPage === page ? 'bg-primary-5' : 'bg-transparent'
-                )}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-        )}
+        <Pagination
+          current={currentPage}
+          total={sortedData.length}
+          onChange={handlePageChange}
+          pageSize={itemsPerPage}
+          itemRender={itemRender}
+          showSizeChanger={false}
+          className={styles.pagination}
+        />
       </header>
 
       {/* Items List */}

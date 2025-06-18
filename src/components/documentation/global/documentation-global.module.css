@@ -1,0 +1,43 @@
+.pagination {
+  display: flex;
+  align-items: center;
+}
+
+.pagination :global(.ant-pagination-item) {
+  background: transparent;
+  border: none;
+}
+
+.pagination :global(.ant-pagination-item a) {
+  color: white;
+}
+
+.pagination :global(.ant-pagination-item-active) {
+  background: white;
+}
+
+.pagination :global(.ant-pagination-item-active a) {
+  color: #002766;
+}
+
+.pagination :global(.ant-pagination-prev),
+.pagination :global(.ant-pagination-next) {
+  border: none;
+}
+
+.pagination :global(.ant-pagination-prev .ant-pagination-item-link),
+.pagination :global(.ant-pagination-next .ant-pagination-item-link) {
+  color: white;
+  background: transparent;
+  border: none;
+}
+
+.pagination :global(.ant-pagination-prev .ant-pagination-item-link:hover),
+.pagination :global(.ant-pagination-next .ant-pagination-item-link:hover) {
+  color: white;
+  opacity: 0.8;
+}
+
+.pagination :global(.ant-pagination-options) {
+  display: none; /* Ensure items-per-page selector is hidden */
+}
