@@ -1,5 +1,6 @@
 'use client';
 
+import { Metadata } from 'next';
 import { useState } from 'react';
 
 import GlossaryContent from '@/components/documentation/glossary/glossary-content';
@@ -10,7 +11,12 @@ import Slugify from '@/util/slugify';
 
 type FilterLetter = string | null;
 
-export default function FullGlossaryPage() {
+export const metadata: Metadata = {
+  title: 'Open Brain Platform Glossary',
+  description: 'Explore the glossary definitions in our documentation.',
+};
+
+export default function Page() {
   const content: ContentForGlossaryItem[] = useSanityContentForGlossary();
 
   const [filteredLetter, setFilteredLetter] = useState<FilterLetter>(null);

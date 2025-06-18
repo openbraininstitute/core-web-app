@@ -1,12 +1,18 @@
 'use client';
 
+import { Metadata } from 'next';
 import { useParams } from 'next/navigation';
 
 import GlossaryContent from '@/components/documentation/glossary/glossary-content';
 import { useSanityContentForGlossary } from '@/components/documentation/hooks/use-sanity-content-for-glossary';
 import Slugify from '@/util/slugify';
 
-export default function SingleGlossaryItemPage() {
+export const metadata: Metadata = {
+  title: 'Glossary definitions',
+  description: 'Explore the glossary definitions in our documentation.',
+};
+
+export default function Page() {
   const content = useSanityContentForGlossary();
 
   const { slug } = useParams();

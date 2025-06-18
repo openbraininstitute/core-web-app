@@ -1,5 +1,6 @@
 'use client';
 
+import { Metadata } from 'next';
 import { useParams } from 'next/navigation';
 
 import SingleFeatureCard from '@/components/documentation/features/single-feature-card';
@@ -8,6 +9,11 @@ import {
   useSanityContentForFeatureItems,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
 import Slugify from '@/util/slugify';
+
+export const metadata: Metadata = {
+  title: 'Available Features',
+  description: 'Explore the available features in our documentation.',
+};
 
 export default function SingleFeaturePage() {
   const content = useSanityContentForFeatureItems();

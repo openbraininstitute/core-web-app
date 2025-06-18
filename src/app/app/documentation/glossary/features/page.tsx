@@ -1,12 +1,19 @@
 'use client';
 
+import { Metadata } from 'next';
+
 import SingleFeatureCard from '@/components/documentation/features/single-feature-card';
 import {
   ContentForFeatureItem,
   useSanityContentForFeatureItems,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
 
-export default function NewFeaturesPage() {
+export const metadata: Metadata = {
+  title: 'Available Features',
+  description: 'Explore the available features in our documentation.',
+};
+
+export default function Page() {
   const content = useSanityContentForFeatureItems();
 
   const availableFeatures = content.filter(

@@ -1,6 +1,7 @@
 'use client';
 
 import { Pagination, PaginationProps } from 'antd';
+import { Metadata } from 'next';
 import { useParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
@@ -9,7 +10,12 @@ import { useFetchEModelEntityTypes } from '@/components/documentation/hooks/use-
 
 import styles from '@/components/documentation/global/documentation-global.module.css';
 
-export default function GlossaryMTypeListPage() {
+export const metadata: Metadata = {
+  title: 'Glossary cell types definitions',
+  description: 'Explore the glossary cell types definitions in our documentation.',
+};
+
+export default function Page() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 20;
   const { slug } = useParams();
