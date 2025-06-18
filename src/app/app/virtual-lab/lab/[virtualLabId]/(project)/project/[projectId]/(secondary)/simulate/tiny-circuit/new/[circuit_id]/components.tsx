@@ -20,11 +20,13 @@ export type ConfigValue = Primitive | Primitive[] | Object;
 export type Config = Record<string, Object | string>;
 
 export function JSONSchemaForm({
+  disabled,
   schema,
   stateAtom,
   circuitId,
   config,
 }: {
+  disabled: boolean;
   config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
@@ -73,6 +75,7 @@ export function JSONSchemaForm({
 
       return (
         <Select
+          disabled={disabled}
           onChange={(newV: string) => {
             if (!v.properties?.type.const || typeof v.properties.type.const !== 'string')
               throw new Error('Invalid reference definition');
@@ -108,39 +111,42 @@ export function JSONSchemaForm({
                 // eslint-disable-next-line
                 <div key={i}>
                   {e}{' '}
-                  <CloseCircleOutlined
-                    className="ml-2"
-                    onClick={() => {
-                      if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
+                  {!disabled && (
+                    <CloseCircleOutlined
+                      className="ml-2"
+                      onClick={() => {
+                        if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
 
-                      if (state[k].elements.length === 1) {
-                        setState({ ...state, [k]: null });
-                        return;
-                      }
+                        if (state[k].elements.length === 1) {
+                          setState({ ...state, [k]: null });
+                          return;
+                        }
 
-                      state[k].elements.splice(i, 1); // delete in place
+                        state[k].elements.splice(i, 1); // delete in place
 
-                      setState({
-                        ...state,
-                        [k]: {
-                          type: 'NamedTuple',
-                          name: 'example_id_neuron_set',
-                          elements: state[k].elements,
-                        },
-                      });
-                    }}
-                  />
+                        setState({
+                          ...state,
+                          [k]: {
+                            type: 'NamedTuple',
+                            name: 'example_id_neuron_set',
+                            elements: state[k].elements,
+                          },
+                        });
+                      }}
+                    />
+                  )}
                 </div>
               ))}
           </div>
 
-          {!addingElement && (
+          {!addingElement && !disabled && (
             <PlusCircleOutlined onClick={() => setAddingElement(true)} className="text-primary-8" />
           )}
 
-          {addingElement && (
+          {addingElement && !disabled && (
             <div className="flex gap-2">
               <InputNumber
+                disabled={disabled}
                 step={1}
                 min={0}
                 onChange={(newV) => {
@@ -189,6 +195,7 @@ export function JSONSchemaForm({
     if (obj.enum)
       return (
         <Select
+          disabled={disabled}
           onChange={(newV) => setState({ ...state, [k]: newV })}
           value={state[k]}
           className="w-[150px]"
@@ -200,6 +207,7 @@ export function JSONSchemaForm({
     if (obj.type === 'number' || obj.type === 'integer')
       return (
         <InputNumber
+          disabled={disabled}
           value={typeof state[k] === 'number' ? state[k] : null}
           onChange={(value) => {
             setState({ ...state, [k]: value });
@@ -209,6 +217,7 @@ export function JSONSchemaForm({
     if (obj.type === 'string')
       return (
         <Input
+          disabled={disabled}
           value={typeof state[k] === 'string' ? state[k] : ''}
           className="max-w-[300px]"
           onChange={(e) => {

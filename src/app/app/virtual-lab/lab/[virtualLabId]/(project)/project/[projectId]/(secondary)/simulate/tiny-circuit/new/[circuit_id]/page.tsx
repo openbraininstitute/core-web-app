@@ -45,6 +45,8 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
+  const [disabled, setDisabled] = useState(false);
+
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
     if (!schema) return;
@@ -143,14 +145,9 @@ export default function TinyCircuitSimulation() {
     );
   }
 
-  console.log(config);
-
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
-        <div className="text-primary-8 flex h-[40px] min-w-[100px] items-center rounded-full bg-white pl-6 text-lg">
-          name
-        </div>
         <div className="ml-5 inline-flex overflow-hidden rounded-full border border-gray-300">
           <Tab
             tab="configuration"
@@ -237,123 +234,145 @@ export default function TinyCircuitSimulation() {
                                   <CheckCircleFilled className="text-green-600" />
                                 )}
 
-                                <DeleteOutlined
-                                  className="cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+                                {!disabled && (
+                                  <DeleteOutlined
+                                    className="cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
 
-                                    setSelectedCategory('');
-                                    setEditing(false);
+                                      setSelectedCategory('');
+                                      setEditing(false);
 
-                                    const selectedTabAtoms = atomsMap[configTab];
-                                    if (!isAtom(selectedTabAtoms)) {
-                                      const schemaKey = `${schema.properties?.[configTab].title}_${idx}`;
-                                      delete selectedTabAtoms[schemaKey];
+                                      const selectedTabAtoms = atomsMap[configTab];
+                                      if (!isAtom(selectedTabAtoms)) {
+                                        const schemaKey = `${schema.properties?.[configTab].title}_${idx}`;
+                                        delete selectedTabAtoms[schemaKey];
 
-                                      // Initialize case
+                                        // Initialize case
 
-                                      if (
-                                        isPlainObject(config.initialize) &&
-                                        isPlainObject(config.initialize.node_set) &&
-                                        typeof config.initialize.node_set.block_name === 'string' &&
-                                        config.initialize.node_set.block_name === schemaKey
-                                      ) {
-                                        atomsMap.initialize = atom<Record<string, ConfigValue>>({
-                                          ...config.initialize,
-                                          node_set: null,
+                                        if (
+                                          isPlainObject(config.initialize) &&
+                                          isPlainObject(config.initialize.node_set) &&
+                                          typeof config.initialize.node_set.block_name ===
+                                            'string' &&
+                                          config.initialize.node_set.block_name === schemaKey
+                                        ) {
+                                          atomsMap.initialize = atom<Record<string, ConfigValue>>({
+                                            ...config.initialize,
+                                            node_set: null,
+                                          });
+                                        }
+
+                                        // Check all keys in the config
+                                        Object.entries(config)
+                                          .filter(([configK]) => configK !== 'initialize')
+                                          .forEach(([configK, configV]) => {
+                                            if (typeof configV !== 'object') return;
+
+                                            // Check all keys in a section (e.g stimuli, recordings)
+                                            Object.entries(configV).forEach(
+                                              ([entryKey, entryV]) => {
+                                                if (!isPlainObject(entryV)) return;
+
+                                                // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+                                                Object.entries(entryV).forEach(
+                                                  ([fieldK, field]) => {
+                                                    if (
+                                                      !isPlainObject(entryV) ||
+                                                      !isPlainObject(field) ||
+                                                      typeof field.block_name !== 'string' ||
+                                                      field.block_name !== schemaKey ||
+                                                      isAtom(atomsMap[configK])
+                                                    )
+                                                      return;
+
+                                                    // Deleting the reference to current object
+
+                                                    delete entryV[fieldK]; //eslint-disable-line
+
+                                                    // The atom that has a reference to current object
+                                                    atomsMap[configK][entryKey] =
+                                                      atom<Record<string, ConfigValue>>(entryV);
+                                                  }
+                                                );
+                                              }
+                                            );
+                                          });
+
+                                        setAtomsMap({
+                                          ...atomsMap,
+                                          [configTab]: {
+                                            ...selectedTabAtoms,
+                                          },
                                         });
                                       }
 
-                                      // Check all keys in the config
-                                      Object.entries(config)
-                                        .filter(([configK]) => configK !== 'initialize')
-                                        .forEach(([configK, configV]) => {
-                                          if (typeof configV !== 'object') return;
-
-                                          // Check all keys in a section (e.g stimuli, recordings)
-                                          Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                            if (!isPlainObject(entryV)) return;
-
-                                            // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                            Object.entries(entryV).forEach(([fieldK, field]) => {
-                                              if (
-                                                !isPlainObject(entryV) ||
-                                                !isPlainObject(field) ||
-                                                typeof field.block_name !== 'string' ||
-                                                field.block_name !== schemaKey ||
-                                                isAtom(atomsMap[configK])
-                                              )
-                                                return;
-
-                                              // Deleting the reference to current object
-
-                                              delete entryV[fieldK]; //eslint-disable-line
-
-                                              // The atom that has a reference to current object
-                                              atomsMap[configK][entryKey] =
-                                                atom<Record<string, ConfigValue>>(entryV);
-                                            });
-                                          });
-                                        });
-
-                                      setAtomsMap({
-                                        ...atomsMap,
-                                        [configTab]: {
-                                          ...selectedTabAtoms,
-                                        },
-                                      });
-                                    }
-
-                                    setSelectedItemIdx(null);
-                                  }}
-                                />
+                                      setSelectedItemIdx(null);
+                                    }}
+                                  />
+                                )}
                               </div>
                             </div>
                           </Fragment>
                         );
                       })}
-                      <button
-                        className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
-                        type="button"
-                        onClick={() => {
-                          setEditing(true);
-                          if (!isAtom(atomsMap[configTab])) {
-                            const initial: Record<string, ConfigValue> = {};
+                      {!disabled && (
+                        <button
+                          className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                          type="button"
+                          onClick={() => {
+                            setEditing(true);
+                            if (!isAtom(atomsMap[configTab])) {
+                              const initial: Record<string, ConfigValue> = {};
 
-                            if (v.properties)
-                              Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                                else initial[subkey] = subValue.default ?? null;
+                              if (v.properties)
+                                Object.entries(v.properties).forEach(([subkey, subValue]) => {
+                                  if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                                  else initial[subkey] = subValue.default ?? null;
+                                });
+
+                              const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                                parseInt(subkey.split('_')[1], 10)
+                              );
+
+                              itemIndexes.sort((a, b) => a - b);
+
+                              const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+
+                              setSelectedItemIdx(itemIdx);
+                              setSelectedCategory('');
+                              setAtomsMap({
+                                ...atomsMap,
+                                [configTab]: {
+                                  ...atomsMap[configTab],
+                                  [`${schema.properties?.[configTab].title}_${itemIdx}`]:
+                                    atom<Record<string, ConfigValue>>(initial),
+                                },
                               });
-
-                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                              parseInt(subkey.split('_')[1], 10)
-                            );
-
-                            itemIndexes.sort((a, b) => a - b);
-
-                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-
-                            setSelectedItemIdx(itemIdx);
-                            setSelectedCategory('');
-                            setAtomsMap({
-                              ...atomsMap,
-                              [configTab]: {
-                                ...atomsMap[configTab],
-                                [`${schema.properties?.[configTab].title}_${itemIdx}`]:
-                                  atom<Record<string, ConfigValue>>(initial),
-                              },
-                            });
-                          }
-                        }}
-                      >
-                        Add {v.title}
-                        <PlusCircleOutlined />
-                      </button>
+                            }
+                          }}
+                        >
+                          Add {v.title}
+                          <PlusCircleOutlined />
+                        </button>
+                      )}
                     </>
                   )}
                 </Fragment>
               ))}
+          <button
+            type="button"
+            className={classNames(
+              'mt-5 flex h-[50px] w-[100%] items-center justify-center rounded-full px-5 py-2 text-lg drop-shadow',
+              errors && errors.length > 0
+                ? 'bg-gray-300 text-gray-500'
+                : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+            )}
+            onClick={() => setDisabled(!disabled)}
+            disabled={!!(errors && errors.length > 0)}
+          >
+            {!disabled ? 'Generate simulations' : 'New configuration'}
+          </button>
         </div>
         <div>
           {schema.properties &&
@@ -385,6 +404,7 @@ export default function TinyCircuitSimulation() {
             editing &&
             (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
               <JSONSchemaForm
+                disabled={disabled}
                 config={config}
                 circuitId={circuitId}
                 schema={
