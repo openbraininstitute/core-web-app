@@ -208,6 +208,7 @@ export function JSONSchemaForm({
     if (obj.type === 'number' || obj.type === 'integer')
       return (
         <InputNumber
+          min={obj.minimum ?? null}
           disabled={disabled}
           value={typeof state[k] === 'number' ? state[k] : null}
           onChange={(value) => {

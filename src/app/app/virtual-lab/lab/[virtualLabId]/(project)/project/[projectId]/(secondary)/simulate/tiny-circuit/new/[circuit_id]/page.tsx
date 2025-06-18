@@ -21,7 +21,6 @@ import {
   Chevron,
   Tab,
   type Config,
-  type Object,
   isPlainObject,
   ConfigValue,
 } from './components';
@@ -359,7 +358,7 @@ export default function TinyCircuitSimulation() {
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
-        <div className="ml-5 inline-flex overflow-hidden rounded-full border border-gray-300">
+        <div className="inline-flex overflow-hidden rounded-full border border-gray-300">
           <Tab
             tab="configuration"
             rounded="rounded-l-full"
@@ -378,91 +377,97 @@ export default function TinyCircuitSimulation() {
           </Tab>
         </div>
       </div>
-      <div className="mt-5 grid flex-1 grid-cols-[1fr_2fr_2fr] gap-10 overflow-auto">
-        <div className="flex flex-col items-center gap-5">
-          {CATEGORIES.map((c) => {
-            return (
-              <Fragment key={c}>
-                <div className='self-start uppercase text-gray-500 mt-2'>{c}</div>
-                {schema.properties &&
-                  Object.entries(schema.properties)
-                    .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                    .sort(([k]) => {
-                      return ORDERING[k]?.order ?? 999;
-                    })
-                    .map((entry) => {
-                      return renderKey(entry);
-                    })}
-              </Fragment>
-            );
-          })}
+      {tab === 'configuration' && (
+        <div className="grid flex-1 grid-cols-[1fr_2fr_2fr] gap-10 overflow-auto">
+          <div className="flex flex-col items-center gap-5">
+            {CATEGORIES.map((c) => {
+              return (
+                <Fragment key={c}>
+                  <div className="self-start text-gray-500 uppercase">{c}</div>
+                  {schema.properties &&
+                    Object.entries(schema.properties)
+                      .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                      .sort(([k]) => {
+                        return ORDERING[k]?.order ?? 999;
+                      })
+                      .map((entry) => {
+                        return renderKey(entry);
+                      })}
+                </Fragment>
+              );
+            })}
 
-          <button
-            type="button"
-            className={classNames(
-              'mt-5 flex h-[50px] w-[100%] items-center justify-center rounded-full px-5 py-2 text-lg drop-shadow',
-              errors && errors.length > 0
-                ? 'bg-gray-300 text-gray-500'
-                : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
-            )}
-            onClick={() => setDisabled(!disabled)}
-            disabled={!!(errors && errors.length > 0)}
-          >
-            {!disabled ? 'Generate simulations' : 'New configuration'}
-          </button>
-        </div>
-        <div>
-          {schema.properties &&
-            schema.properties?.[configTab]?.additionalProperties?.anyOf &&
-            !selectedCategory &&
-            editing && (
-              <div className="flex flex-col items-center gap-5">
-                {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
-                  return (
-                    <Fragment key={o.title}>
-                      {/* eslint-disable-next-line */}
-                      <div
-                        className="min-h-[100px] w-[70%] cursor-pointer rounded-xl bg-white p-5 shadow"
-                        onClick={() => {
-                          setSelectedCategory(o.properties?.type.const ?? '');
-                        }}
-                      >
-                        <div className="text-primary-9 text-lg font-bold">{o.title}</div>
-                        <div className="mt-3">{o.description}</div>
-                      </div>
-                    </Fragment>
-                  );
-                })}
-              </div>
-            )}
+            <button
+              type="button"
+              className={classNames(
+                'mt-5 flex h-[50px] w-[100%] items-center justify-center rounded-full px-5 py-2 text-lg drop-shadow',
+                errors && errors.length > 0
+                  ? 'bg-gray-300 text-gray-500'
+                  : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+              )}
+              onClick={() => {
+                setDisabled(!disabled);
+                if (!disabled) setTab('simulations');
+              }}
+              disabled={!!(errors && errors.length > 0)}
+            >
+              {!disabled ? 'Generate simulations' : 'New configuration'}
+            </button>
+          </div>
+          <div>
+            {schema.properties &&
+              schema.properties?.[configTab]?.additionalProperties?.anyOf &&
+              !selectedCategory &&
+              editing && (
+                <div className="flex flex-col items-center gap-5">
+                  {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
+                    return (
+                      <Fragment key={o.title}>
+                        {/* eslint-disable-next-line */}
+                        <div
+                          className="min-h-[100px] w-[70%] cursor-pointer rounded-xl bg-white p-5 shadow"
+                          onClick={() => {
+                            setSelectedCategory(o.properties?.type.const ?? '');
+                          }}
+                        >
+                          <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                          <div className="mt-3">{o.description}</div>
+                        </div>
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              )}
 
-          {schema.properties &&
-            schema.properties?.[configTab] &&
-            editing &&
-            (!schema.properties?.[configTab]?.additionalProperties?.anyOf || selectedCatSchema) && (
-              <JSONSchemaForm
-                disabled={disabled}
-                config={config}
-                circuitId={circuitId}
-                schema={
-                  selectedCatSchema ??
-                  schema.properties[configTab]?.additionalProperties ??
-                  schema.properties[configTab]
-                }
-                stateAtom={
-                  isAtom(atomsMap[configTab])
-                    ? atomsMap[configTab]
-                    : atomsMap[configTab][
-                        `${schema.properties?.[configTab].title}_${selectedItemIdx}`
-                      ]
-                }
-              />
-            )}
+            {schema.properties &&
+              schema.properties?.[configTab] &&
+              editing &&
+              (!schema.properties?.[configTab]?.additionalProperties?.anyOf ||
+                selectedCatSchema) && (
+                <JSONSchemaForm
+                  disabled={disabled}
+                  config={config}
+                  circuitId={circuitId}
+                  schema={
+                    selectedCatSchema ??
+                    schema.properties[configTab]?.additionalProperties ??
+                    schema.properties[configTab]
+                  }
+                  stateAtom={
+                    isAtom(atomsMap[configTab])
+                      ? atomsMap[configTab]
+                      : atomsMap[configTab][
+                          `${schema.properties?.[configTab].title}_${selectedItemIdx}`
+                        ]
+                  }
+                />
+              )}
+          </div>
+          <div>
+            <div className="bg-primary-1 h-full w-full opacity-30" />
+          </div>
         </div>
-        <div>
-          <div className="bg-primary-1 h-full w-full opacity-30" />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
