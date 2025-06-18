@@ -381,7 +381,7 @@ export default function TinyCircuitSimulation() {
         </div>
       </div>
       {tab === 'configuration' && (
-        <div className="grid flex-1 grid-cols-[1fr_2fr_2fr] gap-10 overflow-auto">
+        <div className="grid flex-1 grid-cols-[1fr_2fr_3fr] gap-10 overflow-auto">
           <div className="flex flex-col items-center gap-5">
             {CATEGORIES.map((c) => {
               return (
@@ -420,7 +420,7 @@ export default function TinyCircuitSimulation() {
               }}
               disabled={!!(errors && errors.length > 0)}
             >
-              {!campaignId ? 'Generate simulations' : 'New configuration'}
+              {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
             </button>
           </div>
           <div>

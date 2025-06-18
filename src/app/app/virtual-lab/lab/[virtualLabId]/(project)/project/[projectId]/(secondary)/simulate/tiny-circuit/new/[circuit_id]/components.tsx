@@ -75,7 +75,7 @@ export function JSONSchemaForm({
 
       return (
         <Select
-          className="min-w-[100px]"
+          className="min-w-[200px]"
           disabled={disabled}
           onChange={(newV: string) => {
             if (!v.properties?.type.const || typeof v.properties.type.const !== 'string')
