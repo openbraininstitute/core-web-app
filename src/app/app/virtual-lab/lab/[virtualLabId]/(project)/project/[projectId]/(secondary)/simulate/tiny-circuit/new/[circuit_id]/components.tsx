@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { JSONSchema } from './types';
 
 import { classNames } from '@/util/utils';
@@ -10,9 +11,13 @@ export function isPlainObject(value: unknown): value is Record<string, Object> {
 }
 
 type Primitive = null | boolean | number | string;
-export type Object = Primitive | Primitive[] | Record<string, Primitive>;
+export interface Object {
+  [key: string]: Primitive | Primitive[] | Object;
+}
 
-export type Config = Record<string, Record<string, Object | Record<string, Object>> | string>;
+export type ConfigValue = Primitive | Primitive[] | Object;
+
+export type Config = Record<string, Object | string>;
 
 export function JSONSchemaForm({
   schema,
@@ -22,12 +27,14 @@ export function JSONSchemaForm({
 }: {
   config: Config;
   schema: JSONSchema;
-  stateAtom: ReturnType<typeof atom<{ [key: string]: Object }>>;
+  stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   circuitId: string;
 }) {
   const skip = ['type'];
 
   const [state, setState] = useAtom(stateAtom);
+  const [addingElement, setAddingElement] = useState(false);
+  const [newElement, setNewElement] = useState<number | string | null>(null);
 
   const referenceTypesToConfigKeys: Record<string, string> = {
     NeuronSetReference: 'neuron_sets',
@@ -90,7 +97,94 @@ export function JSONSchemaForm({
       );
     }
     // render this
-    if (k === 'neuron_ids') return <Input />;
+    if (k === 'neuron_ids') {
+      return (
+        <div className="text-primary-8 mt-2 flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
+            {isPlainObject(state[k]) &&
+              isPlainObject(state[k]) &&
+              Array.isArray(state[k].elements) &&
+              state[k].elements.map((e, i) => (
+                // eslint-disable-next-line
+                <div key={i}>
+                  {e}{' '}
+                  <CloseCircleOutlined
+                    className="ml-2"
+                    onClick={() => {
+                      if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
+
+                      if (state[k].elements.length === 1) {
+                        setState({ ...state, [k]: null });
+                        return;
+                      }
+
+                      state[k].elements.splice(i, 1); // delete in place
+
+                      setState({
+                        ...state,
+                        [k]: {
+                          type: 'NamedTuple',
+                          name: 'example_id_neuron_set',
+                          elements: state[k].elements,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+              ))}
+          </div>
+
+          {!addingElement && (
+            <PlusCircleOutlined onClick={() => setAddingElement(true)} className="text-primary-8" />
+          )}
+
+          {addingElement && (
+            <div className="flex gap-2">
+              <InputNumber
+                step={1}
+                min={0}
+                onChange={(newV) => {
+                  setNewElement(newV);
+                }}
+              />
+              {newElement !== null && (
+                <CheckCircleOutlined
+                  className="text-primary-8"
+                  onClick={() => {
+                    if (!state[k]) {
+                      setState({
+                        ...state,
+                        [k]: {
+                          type: 'NamedTuple',
+                          name: 'example_id_neuron_set',
+                          elements: [newElement],
+                        },
+                      });
+                    } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
+                      setState({
+                        ...state,
+                        [k]: {
+                          type: 'NamedTuple',
+                          name: 'example_id_neuron_set',
+                          elements: [...state[k].elements, newElement],
+                        },
+                      });
+                    }
+                  }}
+                />
+              )}
+              <CloseCircleOutlined
+                onClick={() => {
+                  setAddingElement(false);
+                  setNewElement(null);
+                }}
+                className="text-primary-8"
+              />
+            </div>
+          )}
+        </div>
+      );
+    }
 
     if (obj.enum)
       return (

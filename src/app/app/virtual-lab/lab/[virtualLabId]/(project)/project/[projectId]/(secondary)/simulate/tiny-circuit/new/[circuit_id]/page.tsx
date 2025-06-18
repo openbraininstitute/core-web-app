@@ -22,6 +22,7 @@ import {
   type Config,
   type Object,
   isPlainObject,
+  ConfigValue,
 } from './components';
 import { Params, JSONSchema } from './types';
 import { assertErrorMessage, classNames } from '@/util/utils';
@@ -52,8 +53,8 @@ export default function TinyCircuitSimulation() {
 
   const [atomsMap, setAtomsMap] = useState<{
     [key: string]:
-      | ReturnType<typeof atom<Record<string, Object>>>
-      | Record<string, ReturnType<typeof atom<Record<string, Object>>>>;
+      | ReturnType<typeof atom<Record<string, ConfigValue>>>
+      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
   }>({});
 
   const configAtom = useMemo(() => {
@@ -99,13 +100,13 @@ export default function TinyCircuitSimulation() {
 
         const map: {
           [key: string]:
-            | ReturnType<typeof atom<Record<string, Object>>>
-            | Record<string, ReturnType<typeof atom<Record<string, Object>>>>;
+            | ReturnType<typeof atom<Record<string, ConfigValue>>>
+            | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
         } = {};
 
         Object.entries(theSchema.properties).forEach(([k, v]) => {
           if (!v.additionalProperties) {
-            const initial: Record<string, Object> = {};
+            const initial: Record<string, ConfigValue> = {};
 
             if (v.properties)
               Object.entries(v.properties).forEach(([subkey, subValue]) => {
@@ -120,7 +121,7 @@ export default function TinyCircuitSimulation() {
               };
             }
 
-            map[k] = atom<Record<string, Object>>(initial);
+            map[k] = atom<Record<string, ConfigValue>>(initial);
           } else map[k] = {};
         });
 
@@ -254,9 +255,10 @@ export default function TinyCircuitSimulation() {
                                       if (
                                         isPlainObject(config.initialize) &&
                                         isPlainObject(config.initialize.node_set) &&
+                                        typeof config.initialize.node_set.block_name === 'string' &&
                                         config.initialize.node_set.block_name === schemaKey
                                       ) {
-                                        atomsMap.initialize = atom<Record<string, Object>>({
+                                        atomsMap.initialize = atom<Record<string, ConfigValue>>({
                                           ...config.initialize,
                                           node_set: null,
                                         });
@@ -277,6 +279,7 @@ export default function TinyCircuitSimulation() {
                                               if (
                                                 !isPlainObject(entryV) ||
                                                 !isPlainObject(field) ||
+                                                typeof field.block_name !== 'string' ||
                                                 field.block_name !== schemaKey ||
                                                 isAtom(atomsMap[configK])
                                               )
@@ -287,7 +290,8 @@ export default function TinyCircuitSimulation() {
                                               delete entryV[fieldK]; //eslint-disable-line
 
                                               // The atom that has a reference to current object
-                                              atomsMap[configK][entryKey] = atom(entryV);
+                                              atomsMap[configK][entryKey] =
+                                                atom<Record<string, ConfigValue>>(entryV);
                                             });
                                           });
                                         });
@@ -314,7 +318,7 @@ export default function TinyCircuitSimulation() {
                         onClick={() => {
                           setEditing(true);
                           if (!isAtom(atomsMap[configTab])) {
-                            const initial: Record<string, Object> = {};
+                            const initial: Record<string, ConfigValue> = {};
 
                             if (v.properties)
                               Object.entries(v.properties).forEach(([subkey, subValue]) => {
@@ -337,7 +341,7 @@ export default function TinyCircuitSimulation() {
                               [configTab]: {
                                 ...atomsMap[configTab],
                                 [`${schema.properties?.[configTab].title}_${itemIdx}`]:
-                                  atom<Record<string, Object>>(initial),
+                                  atom<Record<string, ConfigValue>>(initial),
                               },
                             });
                           }
