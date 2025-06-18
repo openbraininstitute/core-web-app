@@ -27,7 +27,6 @@ import type {
   EtypeFilter,
   IdFilter,
 } from '@/api/entitycore/types/shared/request';
-import { Pagination } from '../shared/response';
 
 export enum ValidationStatus {
   Created = 'created',

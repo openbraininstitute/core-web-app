@@ -10,7 +10,8 @@ import { EModelResource } from '@/types/explore-section/delta-model';
 import { useSessionAtomValue, useUnwrappedValue } from '@/hooks/hooks';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import { detailFamily } from '@/state/explore-section/detail-view-atoms';
-import PDFViewer from '@/features/analysis-viewer/pdf-viewer';
+// @FIXME: This file does not exist...
+// import PDFViewer from '@/features/analysis-viewer/pdf-viewer';
 import { useWorkflowAuth } from '@/components/WorkflowLauncherBtn';
 import {
   RunningAnalysis,
@@ -87,7 +88,11 @@ export default function Launcher({ analysis }: { analysis?: Analysis }) {
         </div>
       )}
       {/* @ts-ignore */}
-      {analysisPDFUrl && <PDFViewer url={analysisPDFUrl} />}
+      {
+        analysisPDFUrl && null
+        // @FIXME: Component PDFViewer does not exist. See comment on the related import.
+        // <PDFViewer url={analysisPDFUrl} />
+      }
     </>
   );
 }

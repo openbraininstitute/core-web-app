@@ -216,7 +216,7 @@ export default function ModelAnalysisContainer({
       bluePyEModelInstance.current.destroy();
       bluePyEModelInstance.current = null;
     };
-  }, [modelId, router, accessToken, ctx.projectId, ctx.virtualLabId]);
+  }, [modelId, router, accessToken, ctx.projectId, ctx.virtualLabId, ctx]);
 
   if (analysisState === 'initializing') {
     return <ValidationInit workspace={ctx} modelId={modelId as string} />;

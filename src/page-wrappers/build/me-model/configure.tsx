@@ -10,7 +10,7 @@ import z from 'zod';
 
 import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
 import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
-import CustomButton from '@/components/buttons/custom-btn';
+// import CustomButton from '@/components/buttons/custom-btn';
 
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
@@ -21,7 +21,7 @@ import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
-import { MEmodel } from '@/entity-configuration/domain/model';
+// import { MEmodel } from '@/entity-configuration/domain/model';
 import { createMEModel } from '@/api/entitycore/queries';
 import { WorkspaceContextSchema } from '@/types/common';
 import { OneshotSession } from '@/services/accounting';
@@ -33,10 +33,7 @@ import { tryCatch } from '@/api/utils';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
-import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
-import { resolveDataKey } from '@/utils/key-builder';
-import { MEmodel } from '@/entity-configuration/domain/model';
-import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
