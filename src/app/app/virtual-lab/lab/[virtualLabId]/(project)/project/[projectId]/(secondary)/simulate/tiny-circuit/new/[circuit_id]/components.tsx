@@ -100,7 +100,7 @@ export function JSONSchemaForm({
         />
       );
     }
-    // render this
+
     if (k === 'neuron_ids') {
       return (
         <div className="text-primary-8 mt-2 flex flex-col gap-2">
