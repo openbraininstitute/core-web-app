@@ -75,6 +75,7 @@ export function JSONSchemaForm({
 
       return (
         <Select
+          className="min-w-[100px]"
           disabled={disabled}
           onChange={(newV: string) => {
             if (!v.properties?.type.const || typeof v.properties.type.const !== 'string')
@@ -240,7 +241,11 @@ export function JSONSchemaForm({
             .map(([k, v]) => {
               return (
                 <div key={k}>
-                  <div className="text-primary-8 text-lg uppercase">{v.title}</div>
+                  <div className="flex items-end gap-3">
+                    <div className="text-primary-8 text-lg uppercase">{v.title}</div>
+                    {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
+                  </div>
+
                   {renderInput(k, v)}
                 </div>
               );

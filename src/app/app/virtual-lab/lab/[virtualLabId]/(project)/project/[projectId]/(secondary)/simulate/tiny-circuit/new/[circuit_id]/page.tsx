@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import uniq from 'lodash/uniq';
 import { atom, useAtom, Atom } from 'jotai';
 
 import {
@@ -32,6 +33,35 @@ type TabType = 'configuration' | 'simulations';
 function isAtom<T>(val: unknown): val is Atom<T> {
   return typeof val === 'object' && val !== null && 'read' in val;
 }
+
+const ORDERING: Record<string, { order: number; category: string }> = {
+  info: {
+    order: 0,
+    category: '',
+  },
+  initialize: {
+    order: 1,
+    category: '',
+  },
+  stimuli: {
+    order: 2,
+    category: '',
+  },
+  recordings: {
+    order: 3,
+    category: '',
+  },
+  neuron_sets: {
+    order: 4,
+    category: 'Auxiliary',
+  },
+  timestamps: {
+    order: 5,
+    category: 'Auxiliary',
+  },
+};
+
+const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
 
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
@@ -145,6 +175,187 @@ export default function TinyCircuitSimulation() {
     );
   }
 
+  function renderKey([k, v]: [string, JSONSchema]) {
+    if (!schema?.properties) return;
+    return (
+      <Fragment key={k}>
+        <Tab
+          tab={k}
+          selectedTab={configTab}
+          onClick={() => {
+            setConfigTab(k);
+            setSelectedItemIdx(null);
+            if (!v.additionalProperties) setEditing(true);
+            else {
+              setEditing(false);
+            }
+          }}
+          extraClass="w-full flex justify-between h-[50px] items-center drop-shadow"
+        >
+          {schema.properties?.[k]?.title}
+          <div className="flex gap-1">
+            {errors?.find((error) => error.instancePath.startsWith('/' + k)) ? (
+              <WarningFilled className="text-yellow-400" />
+            ) : (
+              <CheckCircleFilled className="text-green-600" />
+            )}
+            <Chevron rotate={v.additionalProperties ? 90 : 0} />
+          </div>
+        </Tab>
+        {v.additionalProperties && configTab === k && config[k] && (
+          <>
+            {Object.entries(config[k]).map(([subkey, subValue]) => {
+              const idx = parseInt(subkey.split('_')[1], 10);
+
+              const isSelected = configTab === k && idx === selectedItemIdx;
+
+              return (
+                <Fragment key={subkey}>
+                  {/* eslint-disable-next-line */}
+                  <div
+                    className={classNames(
+                      'text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                      isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
+                    )}
+                    onClick={() => {
+                      if (isPlainObject(subValue)) {
+                        setSelectedCategory(typeof subValue.type === 'string' ? subValue.type : '');
+                        setSelectedItemIdx(parseInt(subkey.split('_')[1], 10));
+                      }
+                      setEditing(true);
+                    }}
+                  >
+                    {subkey}
+                    <div className="flex gap-2">
+                      {errors?.find((error) => error.instancePath.startsWith(`/${k}/${subkey}`)) ? (
+                        <WarningFilled className="text-yellow-400" />
+                      ) : (
+                        <CheckCircleFilled className="text-green-600" />
+                      )}
+
+                      {!disabled && (
+                        <DeleteOutlined
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+
+                            setSelectedCategory('');
+                            setEditing(false);
+
+                            const selectedTabAtoms = atomsMap[configTab];
+                            if (!isAtom(selectedTabAtoms)) {
+                              const schemaKey = `${schema.properties?.[configTab].title}_${idx}`;
+                              delete selectedTabAtoms[schemaKey];
+
+                              // Initialize case
+
+                              if (
+                                isPlainObject(config.initialize) &&
+                                isPlainObject(config.initialize.node_set) &&
+                                typeof config.initialize.node_set.block_name === 'string' &&
+                                config.initialize.node_set.block_name === schemaKey
+                              ) {
+                                atomsMap.initialize = atom<Record<string, ConfigValue>>({
+                                  ...config.initialize,
+                                  node_set: null,
+                                });
+                              }
+
+                              // Check all keys in the config
+                              Object.entries(config)
+                                .filter(([configK]) => configK !== 'initialize')
+                                .forEach(([configK, configV]) => {
+                                  if (typeof configV !== 'object') return;
+
+                                  // Check all keys in a section (e.g stimuli, recordings)
+                                  Object.entries(configV).forEach(([entryKey, entryV]) => {
+                                    if (!isPlainObject(entryV)) return;
+
+                                    // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+                                    Object.entries(entryV).forEach(([fieldK, field]) => {
+                                      if (
+                                        !isPlainObject(entryV) ||
+                                        !isPlainObject(field) ||
+                                        typeof field.block_name !== 'string' ||
+                                        field.block_name !== schemaKey ||
+                                        isAtom(atomsMap[configK])
+                                      )
+                                        return;
+
+                                      // Deleting the reference to current object
+
+                                      delete entryV[fieldK]; //eslint-disable-line
+
+                                      // The atom that has a reference to current object
+                                      atomsMap[configK][entryKey] =
+                                        atom<Record<string, ConfigValue>>(entryV);
+                                    });
+                                  });
+                                });
+
+                              setAtomsMap({
+                                ...atomsMap,
+                                [configTab]: {
+                                  ...selectedTabAtoms,
+                                },
+                              });
+                            }
+
+                            setSelectedItemIdx(null);
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </Fragment>
+              );
+            })}
+            {!disabled && (
+              <button
+                className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                type="button"
+                onClick={() => {
+                  setEditing(true);
+                  if (!isAtom(atomsMap[configTab])) {
+                    const initial: Record<string, ConfigValue> = {};
+
+                    if (v.properties)
+                      Object.entries(v.properties).forEach(([subkey, subValue]) => {
+                        if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                        else initial[subkey] = subValue.default ?? null;
+                      });
+
+                    const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                      parseInt(subkey.split('_')[1], 10)
+                    );
+
+                    itemIndexes.sort((a, b) => a - b);
+
+                    const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+
+                    setSelectedItemIdx(itemIdx);
+                    setSelectedCategory('');
+                    setAtomsMap({
+                      ...atomsMap,
+                      [configTab]: {
+                        ...atomsMap[configTab],
+                        [`${schema.properties?.[configTab].title}_${itemIdx}`]:
+                          atom<Record<string, ConfigValue>>(initial),
+                      },
+                    });
+                  }
+                }}
+              >
+                Add {v.title}
+                <PlusCircleOutlined />
+              </button>
+            )}
+          </>
+        )}
+      </Fragment>
+    );
+  }
+
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
@@ -169,197 +380,23 @@ export default function TinyCircuitSimulation() {
       </div>
       <div className="mt-5 grid flex-1 grid-cols-[1fr_2fr_2fr] gap-10 overflow-auto">
         <div className="flex flex-col items-center gap-5">
-          {schema.properties &&
-            Object.entries(schema.properties)
-              .filter(([k]) => k !== 'type')
-              .map(([k, v]) => (
-                <Fragment key={k}>
-                  <Tab
-                    tab={k}
-                    selectedTab={configTab}
-                    onClick={() => {
-                      setConfigTab(k);
-                      setSelectedItemIdx(null);
-                      if (!v.additionalProperties) setEditing(true);
-                      else {
-                        setEditing(false);
-                      }
-                    }}
-                    extraClass="w-full flex justify-between h-[50px] items-center drop-shadow"
-                  >
-                    {schema.properties?.[k]?.title}
-                    <div className="flex gap-1">
-                      {errors?.find((error) => error.instancePath.startsWith('/' + k)) ? (
-                        <WarningFilled className="text-yellow-400" />
-                      ) : (
-                        <CheckCircleFilled className="text-green-600" />
-                      )}
-                      <Chevron rotate={v.additionalProperties ? 90 : 0} />
-                    </div>
-                  </Tab>
-                  {v.additionalProperties && configTab === k && config[k] && (
-                    <>
-                      {Object.entries(config[k]).map(([subkey, subValue]) => {
-                        const idx = parseInt(subkey.split('_')[1], 10);
+          {CATEGORIES.map((c) => {
+            return (
+              <Fragment key={c}>
+                <div className='self-start uppercase text-gray-500 mt-2'>{c}</div>
+                {schema.properties &&
+                  Object.entries(schema.properties)
+                    .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                    .sort(([k]) => {
+                      return ORDERING[k]?.order ?? 999;
+                    })
+                    .map((entry) => {
+                      return renderKey(entry);
+                    })}
+              </Fragment>
+            );
+          })}
 
-                        const isSelected = configTab === k && idx === selectedItemIdx;
-
-                        return (
-                          <Fragment key={subkey}>
-                            {/* eslint-disable-next-line */}
-                            <div
-                              className={classNames(
-                                'text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-                                isSelected
-                                  ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
-                                  : ''
-                              )}
-                              onClick={() => {
-                                if (isPlainObject(subValue)) {
-                                  setSelectedCategory(
-                                    typeof subValue.type === 'string' ? subValue.type : ''
-                                  );
-                                  setSelectedItemIdx(parseInt(subkey.split('_')[1], 10));
-                                }
-                                setEditing(true);
-                              }}
-                            >
-                              {subkey}
-                              <div className="flex gap-2">
-                                {errors?.find((error) =>
-                                  error.instancePath.startsWith(`/${k}/${subkey}`)
-                                ) ? (
-                                  <WarningFilled className="text-yellow-400" />
-                                ) : (
-                                  <CheckCircleFilled className="text-green-600" />
-                                )}
-
-                                {!disabled && (
-                                  <DeleteOutlined
-                                    className="cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-
-                                      setSelectedCategory('');
-                                      setEditing(false);
-
-                                      const selectedTabAtoms = atomsMap[configTab];
-                                      if (!isAtom(selectedTabAtoms)) {
-                                        const schemaKey = `${schema.properties?.[configTab].title}_${idx}`;
-                                        delete selectedTabAtoms[schemaKey];
-
-                                        // Initialize case
-
-                                        if (
-                                          isPlainObject(config.initialize) &&
-                                          isPlainObject(config.initialize.node_set) &&
-                                          typeof config.initialize.node_set.block_name ===
-                                            'string' &&
-                                          config.initialize.node_set.block_name === schemaKey
-                                        ) {
-                                          atomsMap.initialize = atom<Record<string, ConfigValue>>({
-                                            ...config.initialize,
-                                            node_set: null,
-                                          });
-                                        }
-
-                                        // Check all keys in the config
-                                        Object.entries(config)
-                                          .filter(([configK]) => configK !== 'initialize')
-                                          .forEach(([configK, configV]) => {
-                                            if (typeof configV !== 'object') return;
-
-                                            // Check all keys in a section (e.g stimuli, recordings)
-                                            Object.entries(configV).forEach(
-                                              ([entryKey, entryV]) => {
-                                                if (!isPlainObject(entryV)) return;
-
-                                                // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                                Object.entries(entryV).forEach(
-                                                  ([fieldK, field]) => {
-                                                    if (
-                                                      !isPlainObject(entryV) ||
-                                                      !isPlainObject(field) ||
-                                                      typeof field.block_name !== 'string' ||
-                                                      field.block_name !== schemaKey ||
-                                                      isAtom(atomsMap[configK])
-                                                    )
-                                                      return;
-
-                                                    // Deleting the reference to current object
-
-                                                    delete entryV[fieldK]; //eslint-disable-line
-
-                                                    // The atom that has a reference to current object
-                                                    atomsMap[configK][entryKey] =
-                                                      atom<Record<string, ConfigValue>>(entryV);
-                                                  }
-                                                );
-                                              }
-                                            );
-                                          });
-
-                                        setAtomsMap({
-                                          ...atomsMap,
-                                          [configTab]: {
-                                            ...selectedTabAtoms,
-                                          },
-                                        });
-                                      }
-
-                                      setSelectedItemIdx(null);
-                                    }}
-                                  />
-                                )}
-                              </div>
-                            </div>
-                          </Fragment>
-                        );
-                      })}
-                      {!disabled && (
-                        <button
-                          className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
-                          type="button"
-                          onClick={() => {
-                            setEditing(true);
-                            if (!isAtom(atomsMap[configTab])) {
-                              const initial: Record<string, ConfigValue> = {};
-
-                              if (v.properties)
-                                Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                                  if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                                  else initial[subkey] = subValue.default ?? null;
-                                });
-
-                              const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                                parseInt(subkey.split('_')[1], 10)
-                              );
-
-                              itemIndexes.sort((a, b) => a - b);
-
-                              const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-
-                              setSelectedItemIdx(itemIdx);
-                              setSelectedCategory('');
-                              setAtomsMap({
-                                ...atomsMap,
-                                [configTab]: {
-                                  ...atomsMap[configTab],
-                                  [`${schema.properties?.[configTab].title}_${itemIdx}`]:
-                                    atom<Record<string, ConfigValue>>(initial),
-                                },
-                              });
-                            }
-                          }}
-                        >
-                          Add {v.title}
-                          <PlusCircleOutlined />
-                        </button>
-                      )}
-                    </>
-                  )}
-                </Fragment>
-              ))}
           <button
             type="button"
             className={classNames(
