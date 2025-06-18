@@ -1,4 +1,5 @@
 import { PortableText } from 'next-sanity';
+import { RefObject } from 'react';
 import { StepProps } from '../type';
 
 import playVideoAtTime from '@/util/play-video-at-time';
@@ -19,7 +20,7 @@ export default function SingleStep({
   content: StepProps;
   videoTime: number;
   setVideoTime: (time: number) => void;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: RefObject<HTMLVideoElement>;
   nextStepTime?: number;
   index: number;
 }) {

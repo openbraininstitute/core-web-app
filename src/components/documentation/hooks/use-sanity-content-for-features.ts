@@ -1,4 +1,5 @@
-import query from '../query/featuresItemHooks.groq';
+// import query from '../query/featuresItemHooks.groq';
+import query from '@/components/documentation/query/features-item-hooks.groq';
 
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';

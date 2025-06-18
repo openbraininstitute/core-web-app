@@ -4,10 +4,16 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
-import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import type { IEType, IMType, TypeFilter } from '@/api/entitycore/types/shared/global';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
-export const useFetchEModelEntityTypes = ({ cellType }: { cellType: 'e-type' | 'm-type' }) => {
+export const useFetchEntityTypes = ({
+  cellType,
+  filter,
+}: {
+  cellType: 'e-type' | 'm-type';
+  filter?: TypeFilter | undefined;
+}) => {
   const [state, setState] = useState<{
     data: EntityCoreResponse<IEType> | EntityCoreResponse<IMType> | null;
     loading: boolean;
@@ -22,7 +28,13 @@ export const useFetchEModelEntityTypes = ({ cellType }: { cellType: 'e-type' | '
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const args = { filters: { page: 1, page_size: 100 } };
+      const args = {
+        filters: {
+          page: 1,
+          page_size: 100,
+          ...(filter ? { order_by: filter.order_by } : {}),
+        },
+      };
       const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
 
       setState({
@@ -37,7 +49,7 @@ export const useFetchEModelEntityTypes = ({ cellType }: { cellType: 'e-type' | '
         error: err instanceof Error ? err.message : 'An unknown error occurred',
       });
     }
-  }, [cellType]);
+  }, [cellType, filter]);
 
   useEffect(() => {
     fetchEntityCellTypes();
