@@ -13,7 +13,7 @@ import {
   PlusCircleOutlined,
   WarningFilled,
 } from '@ant-design/icons';
-import { notification } from 'antd/lib';
+
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
 import {
@@ -26,6 +26,8 @@ import {
 } from './components';
 import { Params, JSONSchema } from './types';
 import { assertErrorMessage, classNames } from '@/util/utils';
+import { useAppNotification } from '@/components/notification';
+import authFetch from '@/authFetch';
 
 type TabType = 'configuration' | 'simulations';
 
@@ -74,9 +76,9 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  const [campaignId, setCampaignId] = useState('');
+  const notification = useAppNotification();
 
-  console.log(!!campaignId);
+  const [campaignId, setCampaignId] = useState('');
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -166,7 +168,7 @@ export default function TinyCircuitSimulation() {
     }
 
     fetchSpec();
-  }, [circuitId]);
+  }, [circuitId, notification]);
 
   if (!schema) {
     return (
@@ -390,8 +392,9 @@ export default function TinyCircuitSimulation() {
                   {schema.properties &&
                     Object.entries(schema.properties)
                       .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                      .sort(([k]) => {
-                        return ORDERING[k]?.order ?? 999;
+                      .sort((a, b) => {
+                        const order = (k: string) => ORDERING[k]?.order ?? 999;
+                        return order(a[0]) - order(b[0]);
                       })
                       .map((entry) => {
                         return renderKey(entry);
@@ -408,9 +411,30 @@ export default function TinyCircuitSimulation() {
                   ? 'bg-gray-300 text-gray-500'
                   : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
               )}
-              onClick={() => {
+              onClick={async () => {
                 if (!campaignId) {
                   // Call backend receive campaign Id
+
+                  try {
+                    const res = await authFetch(
+                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid`,
+                      {
+                        method: 'POST',
+                        body: JSON.stringify({}),
+                      }
+                    );
+
+                    if (res.status !== 200) {
+                      notification.error({
+                        message: 'Something wrong occurred when trying to generate the simulations',
+                      });
+                      return;
+                    }
+                  } catch (e) {
+                    notification.error({ message: assertErrorMessage(e) });
+                    return;
+                  }
+
                   setCampaignId('dummy campaign Id');
                   setTab('simulations');
                   return;
