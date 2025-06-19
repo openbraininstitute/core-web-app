@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import omit from 'lodash/omit';
 
 import ListingView from '@/features/views/listing/model-listing-view';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
@@ -20,6 +21,10 @@ export default async function Page({
     notFound();
   }
   return (
-    <ListingView entity={entity} virtualLabId={params.virtualLabId} projectId={params.projectId} />
+    <ListingView
+      entity={omit(entity, ['api', 'viewDefinition'])}
+      virtualLabId={params.virtualLabId}
+      projectId={params.projectId}
+    />
   );
 }
