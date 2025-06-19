@@ -6,10 +6,10 @@ import { virtualLabApi } from '@/config';
 import { assertErrorMessage, assertApiResponse } from '@/util/utils';
 import authFetch from '@/authFetch';
 
-export default async function Notebooks(
-  props: ServerSideComponentProp<{ projectId: string; virtualLabId: string }>
-) {
-  const params = await props.params;
+export default async function Notebooks({
+  params: promisedParams,
+}: ServerSideComponentProp<{ projectId: string; virtualLabId: string }, any>) {
+  const params = await promisedParams;
   const { projectId, virtualLabId } = params;
   let error = '';
   let initialNotebooks: Notebook[] = [];

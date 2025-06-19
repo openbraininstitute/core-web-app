@@ -13,7 +13,6 @@ import SynapseSet from '@/features/entities/single-neuron-synaptome/build/elemen
 
 import { SingleNeuronSynaptomeConfigurationSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
@@ -44,6 +43,7 @@ import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 
 export const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
@@ -166,7 +166,7 @@ export default function SynaptomeConfigurationForm({
     try {
       setLoading(true);
 
-      async function buildSingleNeuronSynaptome() {
+      const buildSingleNeuronSynaptome = async () => {
         const { data, error } = await tryCatch(
           SingleNeuronSynaptome.api.query.create!({
             context: { virtualLabId, projectId },
@@ -195,7 +195,7 @@ export default function SynaptomeConfigurationForm({
           entity: data,
           asset: assetData,
         };
-      }
+      };
 
       const accountingSession = new OneshotSession({
         virtualLabId,

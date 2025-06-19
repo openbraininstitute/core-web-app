@@ -129,6 +129,11 @@ export default function NeuronViewer({
     ]);
   }
 
+  if (error) {
+    notifyError({ message: `Morphology initialization error: ${error}`, placement: 'topRight' });
+    return;
+  }
+
   return (
     <div className="relative h-full w-full">
       {loading && (

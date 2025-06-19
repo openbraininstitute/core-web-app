@@ -29,9 +29,7 @@ import { useExpandRegionTree, useSetBrainRegionToQuery } from '@/hooks/brain-reg
 import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
 import { atlasVisualizationAtom } from '@/state/atlas/atlas';
 import { NavValue } from '@/state/brain-regions/types';
-import { sectionAtom } from '@/state/application';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { ITemporaryBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 function NavTitle({
   className,
@@ -55,9 +53,7 @@ function NavTitle({
 
   const viewOptions = brainRegionViews?.map((view) => {
     const brainRegion = brainRegions?.find((br) => br.id === id);
-    const isDisabled = !!(
-      brainRegion && !brainRegion[view.childrenProperty as keyof ITemporaryBrainRegionHierarchy]
-    );
+    const isDisabled = !!(brainRegion && !(view.childrenProperty in brainRegion));
 
     return {
       value: view.id,

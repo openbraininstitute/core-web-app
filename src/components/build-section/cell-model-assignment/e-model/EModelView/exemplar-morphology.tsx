@@ -1,4 +1,4 @@
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined } from '@ant-design/icons';
@@ -40,15 +40,10 @@ const defaultColumns: ColumnsType<IReconstructionMorphology> = Object.entries(
 }));
 
 type Props = {
-  params: {
-    id: string;
-    projectId: string;
-    virtualLabId: string;
-  };
   exemplarMorphology: IReconstructionMorphology | IReconstructionMorphologyExpanded;
 };
 
-export default function ExemplarMorphology({ params, exemplarMorphology }: Props) {
+export default function ExemplarMorphology({ exemplarMorphology }: Props) {
   // const { id } = params;
 
   // const [orgProj] = from64(id).split('!/!');

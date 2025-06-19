@@ -1,6 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 
+import { useSession } from 'next-auth/react';
 import ApplicationSidebar, {
   NavigationItem,
   NavigationItemProps,
@@ -10,7 +11,6 @@ import { MainNavigation } from '@/components/main';
 import usePathname from '@/hooks/pathname';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { classNames } from '@/util/utils';
-import { useSession } from 'next-auth/react';
 
 export const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
   {

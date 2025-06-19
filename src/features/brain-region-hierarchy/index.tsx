@@ -44,12 +44,12 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     (o) => o.data.annotation_value === DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE
   )?.value;
 
-  const onClick = (node: TTreeNode) => {
-    updateHierarchyConfig(node as IBrainRegionHierarchy);
-    scrollToNode(node as IBrainRegionHierarchy, 'center');
+  const onClick = (clickedNode: TTreeNode) => {
+    updateHierarchyConfig(clickedNode as IBrainRegionHierarchy);
+    scrollToNode(clickedNode as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
-    makeBrainRegionClickEvent({ dataKey, node: node as IBrainRegionHierarchy });
-    userJourneyTracker.registerBrainRegionClick(node.name);
+    makeBrainRegionClickEvent({ dataKey, node: clickedNode as IBrainRegionHierarchy });
+    userJourneyTracker.registerBrainRegionClick(clickedNode.name);
   };
 
   return (

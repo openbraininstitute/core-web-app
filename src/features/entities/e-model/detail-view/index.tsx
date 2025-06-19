@@ -38,7 +38,7 @@ export default function EModelDetailView({ payload, params }: Props) {
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
       <Summary dataType={DataType.CircuitEModel} payload={payload.source}>
-        {(data) => (
+        {() => (
           <>
             <Tabs tabsConfig={TabsConfig} />
             <div className="w-full flex-1">

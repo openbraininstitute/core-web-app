@@ -51,7 +51,7 @@ export default function useTrace(
       trace?.destroy();
       initialized.current = false;
     };
-  }, [nwbArrayBuffer, resource.id]);
+  }, [nwbArrayBuffer, resource.id, trace]);
 
   return [trace, error];
 }

@@ -26,7 +26,6 @@ export function CheckListOption({
   id,
   filterField,
   label,
-  type,
   children,
 }: {
   children: ReactNode;
@@ -36,6 +35,7 @@ export function CheckListOption({
   id: string;
   filterField: string;
   label: string;
+  // eslint-disable-next-line react/no-unused-prop-types
   type?: string | null;
 }) {
   const onCheckedChange = () => handleCheckedChange(label);
@@ -61,21 +61,33 @@ export function CheckListOption({
   );
 }
 
+function CheckListDescriptionToMemoize({
+  id,
+}: {
+  id: string;
+  // eslint-disable-next-line react/no-unused-prop-types
+  filterField: string;
+  // eslint-disable-next-line react/no-unused-prop-types
+  label: string;
+  // eslint-disable-next-line react/no-unused-prop-types
+  type?: string | null;
+}) {
+  const [definition, setDefinition] = useState<string | null>(null);
+
+  useEffect(() => {
+    // TODO: fetch based on the type
+    async function getDefinition() {
+      const { data, error } = await tryCatch(getMtype({ id }));
+      if (error) return null;
+      setDefinition(data.definition);
+    }
+    getDefinition();
+  }, [id]);
+
+  return <span className="text-primary-1 text-justify text-balance">{definition}</span>;
+}
+
 export const CheckListDescription = memo(
-  ({ id }: { id: string; filterField: string; label: string; type?: string | null }) => {
-    const [definition, setDefinition] = useState<string | null>(null);
-
-    useEffect(() => {
-      // TODO: fetch based on the type
-      async function getDefinition() {
-        const { data, error } = await tryCatch(getMtype({ id }));
-        if (error) return null;
-        setDefinition(data.definition);
-      }
-      getDefinition();
-    }, [id]);
-
-    return <span className="text-primary-1 text-justify text-balance">{definition}</span>;
-  },
+  CheckListDescriptionToMemoize,
   ({ id }, { id: nextId }) => id !== nextId
 );

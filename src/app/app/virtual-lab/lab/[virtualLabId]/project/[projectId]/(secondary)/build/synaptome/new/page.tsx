@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 
 import Configuration from '@/page-wrappers/build/single-neuron-synaptome';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -10,11 +9,12 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 
 type Props = ServerSideComponentProp<WorkspaceContext, { mode: 'clone'; model: string; s: string }>;
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
+  const params = await promisedParams;
   const searchParams = await props.searchParams;
   let title = 'Single Neuron Synaptome';
   let description = 'Create a new single neuron synaptome';
@@ -80,9 +80,12 @@ async function getSingleNeuronSynaptomeConfiguration({
   return null;
 }
 
-export default async function Page(props: Props) {
-  const params = await props.params;
-  const searchParams = await props.searchParams;
+export default async function Page({
+  params: promisedParams,
+  searchParams: promisedSearchParams,
+}: Props) {
+  const params = await promisedParams;
+  const searchParams = await promisedSearchParams;
   const stateId = searchParams.s ?? crypto.randomUUID();
 
   const { data, error } = await tryCatch(

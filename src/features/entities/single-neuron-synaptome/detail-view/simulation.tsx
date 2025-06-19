@@ -17,6 +17,7 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
+  // eslint-disable-next-line react/no-unused-prop-types
   type: EntitySlugValue;
   modelId: string;
 };
@@ -30,7 +31,7 @@ export default function Results({ modelId }: Props) {
   useEffect(() => {
     async function getSimulations() {
       setLoading(true);
-      const { data: result, error } = await tryCatch(
+      const { data: result, error: simulationError } = await tryCatch(
         getSingleNeuronSynaptomeSimulations({
           context: { virtualLabId, projectId },
           filters: { synaptome__id: modelId },
@@ -39,11 +40,11 @@ export default function Results({ modelId }: Props) {
         () => setLoading(false)
       );
       if (result) setSimulations(result.data);
-      if (error) setError(!!error);
+      if (simulationError) setError(!!simulationError);
     }
 
     getSimulations();
-  }, [modelId]);
+  }, [modelId, projectId, virtualLabId]);
 
   if (loading) {
     return (

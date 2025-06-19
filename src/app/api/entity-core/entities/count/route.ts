@@ -116,7 +116,7 @@ export async function getBulkEntityCoreResult({
 
 export const GET = async (
   request: Request,
-  props: {
+  _props: {
     params: Promise<{ virtualLabId: string; projectId: string }>;
     searchParams: Promise<{ brainRegion: string }>;
   }

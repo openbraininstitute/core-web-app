@@ -32,7 +32,7 @@ export default function Synaptome({ payload }: { payload: SingleNeuronSynaptomeP
       newConfig(payload.config.synapses);
       ref.current = true;
     }
-  }, []);
+  });
 
   return (
     <>

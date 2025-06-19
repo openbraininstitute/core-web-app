@@ -32,7 +32,7 @@ export default function EntityGroupTabs({ dataKey }: { dataKey: string }) {
   const [dataTypeActiveTab, setDataTypeTab] = useAtom(dataTabAtom);
   const { node } = useBrainRegionHierarchy({ dataKey });
   const result = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [dataKey])
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
   const brainRegion = find(result?.options, (o) => o.data.id === node.id);
 

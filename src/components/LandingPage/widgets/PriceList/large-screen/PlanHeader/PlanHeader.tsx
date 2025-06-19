@@ -1,13 +1,17 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
+
+import { useState } from 'react';
 
 import ContactUs from '../../contact-us';
-import { classNames } from '@/util/utils';
+
+import { useCurrency } from '@/components/LandingPage/atoms';
 import {
   ContentForPricingPlan,
   MultiCurrencyPrice,
 } from '@/components/LandingPage/content/pricing';
-import { useCurrency } from '@/components/LandingPage/atoms';
+import { classNames } from '@/util/utils';
+
+import { Switch } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 
 import styles from './PlanHeader.module.css';
 
@@ -17,6 +21,7 @@ export interface PlanHeaderProps {
 }
 
 export default function PlanHeader({ className, plan }: PlanHeaderProps) {
+  const [interval, setInterval] = useState<'month' | 'year'>('month');
   const [currency] = useCurrency();
   const { discount, month, yearDiscount, yearNormal } = usePrices(currency, plan);
   const isFree = (discount || month || 0) <= 0;
@@ -24,40 +29,79 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
   return (
     <div className={classNames(className, styles.planHeader)}>
       <h2>{plan.title}</h2>
-      {plan.buttonLabel && <ContactUs>{plan.buttonLabel}</ContactUs>}
+      {plan.buttonLabel && (
+        <ContactUs email="subscription@openbraininstitute.org">{plan.buttonLabel}</ContactUs>
+      )}
       {plan.price.month.length > 0 && (
         <>
           <div className={styles.priceHeader}>
             {!isFree && (
               <>
-                <hr />
-                <em>Subscription</em>
-                <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
-                  <strong>
-                    {currency} {month}
-                  </strong>
-                  <small>/month</small>
+                <div className="mb-3 flex items-center gap-1">
+                  <span
+                    className={classNames(
+                      'text-primary-9 text-lg font-light',
+                      interval === 'month' && 'font-bold'
+                    )}
+                  >
+                    Monthly
+                  </span>
+                  <Switch
+                    checked={interval === 'year'}
+                    name="interval"
+                    thumbCls="bg-primary-9"
+                    className="border-primary-9 w-[37px]! rounded-3xl! border! p-1!"
+                    onCheckedChange={(checked) => setInterval(checked ? 'year' : 'month')}
+                  />
+                  <span
+                    className={classNames(
+                      'text-primary-9 text-lg font-light',
+                      interval === 'month' && 'font-bold'
+                    )}
+                  >
+                    Yearly
+                  </span>
                 </div>
-                <div className={classNames(styles.discount, discount ? styles.show : styles.hide)}>
-                  <strong>
-                    {currency} {yearNormal}
-                  </strong>
-                  <small>/year</small>
-                </div>
-                <div className={styles.price}>
-                  <b>
-                    {currency} {discount || month}
-                  </b>
-                  <small>/month</small>
-                  {discount && <DiscountPill />}
-                </div>
-                <div className={styles.price}>
-                  <b>
-                    {currency} {discount ? yearDiscount : yearNormal}
-                  </b>
-                  <small>/year</small>
-                  {discount && <DiscountPill />}
-                </div>
+                {interval === 'month' && (
+                  <>
+                    <div
+                      className={classNames(styles.discount, discount ? styles.show : styles.hide)}
+                    >
+                      <strong>
+                        {currency} {month}
+                      </strong>
+                      <small>/month</small>
+                    </div>
+
+                    <div className={styles.price}>
+                      <b>
+                        {currency} {discount || month}
+                      </b>
+                      <small>/month</small>
+                      {discount && <DiscountPill />}
+                    </div>
+                  </>
+                )}
+                {interval === 'year' && (
+                  <>
+                    <div
+                      className={classNames(styles.discount, discount ? styles.show : styles.hide)}
+                    >
+                      <strong>
+                        {currency} {yearNormal}
+                      </strong>
+                      <small>/year</small>
+                    </div>
+
+                    <div className={styles.price}>
+                      <b>
+                        {currency} {discount ? yearDiscount : yearNormal}
+                      </b>
+                      <small>/year</small>
+                      {discount && <DiscountPill />}
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -88,5 +132,5 @@ function extractPrice(currency: string, price?: null | MultiCurrencyPrice[]): nu
 }
 
 function DiscountPill() {
-  return <div className={styles.pill}>Special launch price</div>;
+  return <div className={styles.pill}>Launch price</div>;
 }

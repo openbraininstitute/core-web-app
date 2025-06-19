@@ -79,7 +79,7 @@ export default function WithListingFilterPanel({
             key: dataKey,
           })
         ),
-      [dataType, dataScope, dataKey, node.id]
+      [dataType, dataScope, brainRegionId, dataKey]
     )
   );
 

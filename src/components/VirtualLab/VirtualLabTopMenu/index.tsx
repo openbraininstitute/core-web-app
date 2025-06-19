@@ -1,25 +1,26 @@
 'use client';
 
 import { useEffect, useRef, ReactNode, useState, useLayoutEffect } from 'react';
-import { UserOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link'; // eslint-disable-line
 import { useSetAtom } from 'jotai';
+
 import { projectTopMenuRefAtom } from '@/state/virtual-lab/lab';
-import { classNames, signOut } from '@/util/utils';
+import { classNames } from '@/util/utils';
 
 type Props = {
   className?: string;
+  // @FIXME: Unused props?
+  // eslint-disable-next-line react/no-unused-prop-types
   extraItems?: ReactNode[];
+  // eslint-disable-next-line react/no-unused-prop-types
   ghost?: boolean;
 };
 
-export default function VirtualLabTopMenu({ className, extraItems, ghost = true }: Props) {
-  const { data: session } = useSession();
+export default function VirtualLabTopMenu({ className }: Props) {
   const localRef = useRef(null);
   const setProjectTopMenuRef = useSetAtom(projectTopMenuRefAtom);
-  const [expanded, setExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  // @FIXME: This is not used?
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [menuElementsHeight, setMenuElementsHeight] = useState<number | null>(null);
 
   useLayoutEffect(() => {
@@ -30,16 +31,6 @@ export default function VirtualLabTopMenu({ className, extraItems, ghost = true 
   useEffect(() => {
     setProjectTopMenuRef(localRef);
   }, [setProjectTopMenuRef]);
-
-  const getMenuButtonClassName = (
-    ghost: boolean // eslint-disable-line
-  ) =>
-    classNames(
-      'w-52 p-4 font-bold flex items-center border border-primary-7',
-      ghost ? 'bg-transparent' : 'bg-primary-8'
-    );
-
-  const menuButtonStyle = { height: menuElementsHeight ?? undefined }; // eslint-disable-line
 
   return (
     <div

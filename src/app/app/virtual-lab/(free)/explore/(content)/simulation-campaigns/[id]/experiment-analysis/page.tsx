@@ -17,10 +17,12 @@ import { SimulationCampaign } from '@/types/explore-section/delta-simulation-cam
 
 import { useSessionAtomValue } from '@/hooks/hooks';
 
-export default function ExperimentAnalyses(props: {
+export default function ExperimentAnalyses({
+  searchParams: promisedSearchParams,
+}: {
   searchParams?: Promise<{ targetEntity?: string }>;
 }) {
-  const searchParams = use(props.searchParams);
+  const searchParams = promisedSearchParams ? use(promisedSearchParams) : undefined;
   const [analyses, setAnalyses] = useAnalyses(searchParams?.targetEntity);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);

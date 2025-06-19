@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { memoize } from '@/util/utils';
 import { log } from '@/utils/logger';
 
@@ -297,21 +298,11 @@ export function resolveBrainRegionCellCompositionFn({
           // however, if it's the first time and it's an aggregation of one, this ensures consistency.
           if (currentNode.about === 'MType' || currentNode.about === 'EType') {
             currentNode.composition.neuron = {
-              density:
-                initialVolumeForNode > 0
-                  ? currentNode.cellCounts.neuron / initialVolumeForNode
-                  : currentNode.about === 'EType'
-                    ? ((currentNode as RawTreeNode).composition?.neuron.density ?? 0)
-                    : 0,
+              density: resolveNeuronDensity(initialVolumeForNode, currentNode),
               count: currentNode.cellCounts.neuron * NEURON_DENSITY_SCALE,
             };
             currentNode.composition.glia = {
-              density:
-                initialVolumeForNode > 0
-                  ? currentNode.cellCounts.glia / initialVolumeForNode
-                  : currentNode.about === 'EType'
-                    ? ((currentNode as RawTreeNode).composition?.glia?.density ?? 0)
-                    : 0,
+              density: resolveGliaDensity(initialVolumeForNode, currentNode),
               count: currentNode.cellCounts.glia,
             };
           }
@@ -376,3 +367,17 @@ export const resolveBrainRegionCellComposition = memoize(
   resolveBrainRegionCellCompositionFn,
   ({ brainRegionId }) => brainRegionId
 );
+
+function resolveNeuronDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {
+  if (initialVolumeForNode > 0) return currentNode.cellCounts.neuron / initialVolumeForNode;
+  return currentNode.about === 'EType'
+    ? ((currentNode as RawTreeNode).composition?.neuron.density ?? 0)
+    : 0;
+}
+
+function resolveGliaDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {
+  if (initialVolumeForNode > 0) return currentNode.cellCounts.glia / initialVolumeForNode;
+  return currentNode.about === 'EType'
+    ? ((currentNode as RawTreeNode).composition?.glia.density ?? 0)
+    : 0;
+}

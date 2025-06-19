@@ -21,22 +21,23 @@ type Props = {
 };
 
 export default function MorphologySelection({ params, searchParams }: Props) {
+  const id = useId();
   const pathname = usePathname();
   const { push: navigate } = useRouter();
 
   const { virtualLabId, projectId } = params;
   const stateId = searchParams.s;
 
-  if (!stateId) {
-    navigate('../');
-    return;
-  }
-
   const { setSessionValue, sessionValue } = useBuildMeModelSessionState({
     stateId,
     virtualLabId,
     projectId,
   });
+
+  if (!stateId) {
+    navigate('../');
+    return;
+  }
 
   const onSelect = (selectedRows: Array<IReconstructionMorphology>) => {
     if (selectedRows.length > 1) {
@@ -65,7 +66,7 @@ export default function MorphologySelection({ params, searchParams }: Props) {
       })
     );
   };
-  const dataKey = resolveDataKey({ projectId, section: 'build', suffix: useId() });
+  const dataKey = resolveDataKey({ projectId, section: 'build', suffix: id });
   return (
     <div className="h-full" id="explore-table-container-for-observable">
       <ExploreSectionListingView<IReconstructionMorphology>

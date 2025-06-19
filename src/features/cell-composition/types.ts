@@ -14,10 +14,10 @@ export interface RawTreeNode {
   id: string; // original eType id
 }
 
-export interface TreeNode<T extends 'MType' | 'EType' = 'MType'> {
+export interface TreeNode {
   about: 'MType';
   cellCounts: { neuron: number; glia: number };
-  children: Array<TreeNode<'EType'>>;
+  children: Array<TreeNode>;
   compositeId: string;
   count: number;
   density: number;

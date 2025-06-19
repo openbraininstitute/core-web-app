@@ -1,4 +1,4 @@
-import React, { type CSSProperties } from 'react';
+import React from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
@@ -27,12 +27,17 @@ export default function DefaultNode<TNode extends TTreeNode>({
       id={node.id.toString()}
       title={title}
       aria-label={nodeName}
+      role="button"
+      tabIndex={0}
       className={classNames(
         'flex min-w-0 flex-1 cursor-default items-center transition-colors duration-200 ease-in-out',
         'hover:text-primary-1 px-2 py-1 text-white hover:font-bold',
-        hasChildren ? (isExpanded ? 'my-0' : 'my-1.5') : 'mb-2'
+        figureOutMargin(hasChildren, isExpanded)
       )}
       onClick={onClick}
+      onKeyDown={(evt) => {
+        if (evt.key === ' ') onClick();
+      }}
     >
       <div className="flex w-full flex-col">
         <div className="flex w-full items-center justify-between gap-1.5 text-base">
@@ -46,6 +51,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
                   isSelected ? 'text-primary-8' : 'text-[var(--color)]'
                 )}
                 onClick={onToggle}
+                type="button"
               >
                 <CaretRightFilled
                   size={14}
@@ -69,4 +75,12 @@ export default function DefaultNode<TNode extends TTreeNode>({
       </div>
     </div>
   );
+}
+
+function figureOutMargin(
+  hasChildren: boolean,
+  isExpanded: boolean
+): string | boolean | null | undefined {
+  if (!hasChildren) return 'mb-2';
+  return isExpanded ? 'my-0' : 'my-1.5';
 }

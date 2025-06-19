@@ -1,8 +1,6 @@
 import { ReactNode } from 'react';
 import { FilterType } from '@/features/listing-filter-panel/types';
-import { DeltaResource } from '@/types/explore-section/resources';
 import { StructuralDomain } from '@/types/explore-section/es-experiment';
-import { EntityCore } from '@/types/explore-section/delta-experiment';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 type TableCellAlign = 'left' | 'right' | 'center';

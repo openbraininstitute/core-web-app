@@ -58,7 +58,7 @@ export async function getAsset({
   });
 }
 
-export async function downloadAsset<T>(params: {
+export async function downloadAsset(params: {
   ctx?: WorkspaceContext;
   entityType: EntityCoreDataType;
   entityId: string;

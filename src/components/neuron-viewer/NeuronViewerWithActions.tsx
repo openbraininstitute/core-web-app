@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { ErrorBoundary } from 'react-error-boundary';
+import { withErrorConfig } from '../GenericErrorFallback';
 import { CursorPopover, InjectionRecordingPopover } from './plugins';
 import Zoomer from './plugins/CustomZoomer';
 import NeuronViewer from '@/components/neuron-viewer';
@@ -10,8 +12,6 @@ import {
   NeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
-import { ErrorBoundary } from 'react-error-boundary';
-import { withErrorConfig } from '../GenericErrorFallback';
 
 type Props = {
   meModelId: string;

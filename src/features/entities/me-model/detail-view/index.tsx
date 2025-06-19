@@ -1,7 +1,8 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
+
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 import Configuration from '@/features/entities/me-model/detail-view/configuration';
@@ -14,8 +15,8 @@ import If from '@/components/ConditionalRenderer/If';
 
 import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { DataType } from '@/constants/explore-section/list-views';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { DataType } from '@/constants/explore-section/list-views';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
@@ -28,6 +29,8 @@ type Params = WorkspaceContext & {
 };
 
 export type Props = {
+  // @FIXME: Is this property necessary?
+  // eslint-disable-next-line react/no-unused-prop-types
   params: Params;
   showViewMode?: boolean;
   payload: {

@@ -10,8 +10,8 @@ export type Props = {
   };
 };
 
-export default async function Detail(props: Props) {
-  const { id, virtualLabId, projectId } = props.params;
+export default async function Detail({ params }: Props) {
+  const { id, virtualLabId, projectId } = params;
   const source = await entity.api.query.one!({
     id,
     context: { virtualLabId, projectId },

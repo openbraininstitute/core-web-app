@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Select } from 'antd';
 import DistinctColors from 'distinct-colors';
 
-import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
+import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
 import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
@@ -39,23 +39,7 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
     [selectedProtocol, trace]
   );
 
-  const { sweeps, sweepDataMap, colorMap } = useMemo(() => {
-    const sweeps: string[] = trace.getSweeps(selectedProtocol, selectedRepetition);
-    const colors = DistinctColors({ count: sweeps.length });
-
-    const colorMap = sweeps.reduce(
-      (map, sweep, idx) => map.set(sweep, colors[idx].hex()),
-      new Map()
-    );
-
-    const sweepDataMap = sweeps.reduce(
-      (map, sweep) =>
-        map.set(sweep, trace.getSweepData(selectedProtocol, selectedRepetition, sweep)),
-      new Map()
-    );
-
-    return { sweeps, sweepDataMap, colorMap };
-  }, [selectedProtocol, selectedRepetition, trace]);
+  const { sweeps, sweepDataMap, colorMap } = useSweeps(trace, selectedProtocol, selectedRepetition);
 
   const dataSetOptions = trace.getProtocols().map((protocol) => {
     const repetitionNum = trace.getRepetitions(protocol).length;
@@ -169,3 +153,27 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
 }
 
 export default TraceDetailsView;
+
+function useSweeps(
+  trace: NWBTrace,
+  selectedProtocol: string,
+  selectedRepetition: string
+): { sweeps: string[]; sweepDataMap: Map<string, SweepData>; colorMap: Map<string, string> } {
+  return useMemo(() => {
+    const sweeps: string[] = trace.getSweeps(selectedProtocol, selectedRepetition);
+    const colors = DistinctColors({ count: sweeps.length });
+
+    const colorMap = sweeps.reduce(
+      (map, sweep, idx) => map.set(sweep, colors[idx].hex()),
+      new Map<string, string>()
+    );
+
+    const sweepDataMap = sweeps.reduce(
+      (map, sweep) =>
+        map.set(sweep, trace.getSweepData(selectedProtocol, selectedRepetition, sweep)),
+      new Map<string, SweepData>()
+    );
+
+    return { sweeps, sweepDataMap, colorMap };
+  }, [selectedProtocol, selectedRepetition, trace]);
+}

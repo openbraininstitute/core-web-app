@@ -6,7 +6,7 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { HTMLProps, ReactNode, useCallback, useMemo, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Button, Spin, App } from 'antd';
 import { loadable } from 'jotai/utils';
@@ -45,7 +45,6 @@ export default function BookmarkButton({
   type,
   customButton,
 }: Props) {
-  const router = useRouter();
   const pathname = usePathname();
   const { notification } = App.useApp();
 
@@ -121,30 +120,33 @@ export default function BookmarkButton({
         });
       }
     },
-    [router, libraryPage]
+    [notification, libraryPage, virtualLabId, projectId]
   );
 
-  const notifyError = useCallback((action: 'add' | 'remove', err: Error) => {
-    const cause = err.cause as ErrorCause<{
-      error_code: string;
-      message: string;
-    }>;
-    if (action === 'add') {
-      notification.error({
-        message: 'Resource could not be added to the library',
-        description: get(serverMessages, get(cause, 'data.error_code'), ''),
-        duration: 3,
-        placement: 'topRight',
-      });
-    } else {
-      notification.error({
-        message: 'Resource could not be removed from the library',
-        description: get(serverMessages, get(cause, 'data.error_code'), ''),
-        duration: 3,
-        placement: 'topRight',
-      });
-    }
-  }, []);
+  const notifyError = useCallback(
+    (action: 'add' | 'remove', err: Error) => {
+      const cause = err.cause as ErrorCause<{
+        error_code: string;
+        message: string;
+      }>;
+      if (action === 'add') {
+        notification.error({
+          message: 'Resource could not be added to the library',
+          description: get(serverMessages, get(cause, 'data.error_code'), ''),
+          duration: 3,
+          placement: 'topRight',
+        });
+      } else {
+        notification.error({
+          message: 'Resource could not be removed from the library',
+          description: get(serverMessages, get(cause, 'data.error_code'), ''),
+          duration: 3,
+          placement: 'topRight',
+        });
+      }
+    },
+    [notification]
+  );
 
   const saveToLibrary = useCallback(async () => {
     onSaving();
@@ -180,12 +182,13 @@ export default function BookmarkButton({
   }, [
     virtualLabId,
     projectId,
+    dataType,
     entityId,
+    resourceId,
+    pathname,
+    notifyError,
     refreshBookmarks,
     notifySuccess,
-    notifyError,
-    category,
-    dataType,
   ]);
 
   const removeFromLibrary = useCallback(async () => {
@@ -214,7 +217,17 @@ export default function BookmarkButton({
       notifySuccess('remove');
       refreshBookmarks();
     }
-  }, [virtualLabId, projectId, entityId, resourceId, category, refreshBookmarks, notifyError]);
+  }, [
+    virtualLabId,
+    projectId,
+    dataType,
+    entityId,
+    resourceId,
+    pathname,
+    notifyError,
+    notifySuccess,
+    refreshBookmarks,
+  ]);
 
   const isBookmarked = useMemo(() => {
     return (
@@ -222,7 +235,7 @@ export default function BookmarkButton({
       bookmarks.state === 'hasData' &&
       bookmarks.data.data?.[dataType]?.some((b) => b.entity_id === entityId)
     );
-  }, [bookmarks, category, entityId]);
+  }, [bookmarks, dataType, entityId]);
 
   if (bookmarks.state === 'loading') {
     return (

@@ -65,6 +65,7 @@ export default function BrainRegionMesh({
     disableLoading,
     scene,
     section,
+    warning,
   ]);
 
   return null;

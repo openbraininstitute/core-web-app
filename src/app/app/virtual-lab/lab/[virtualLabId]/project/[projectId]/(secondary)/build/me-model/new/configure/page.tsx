@@ -11,16 +11,12 @@ type Props = ServerSideComponentProp<
   }
 >;
 
-export default async function Page(props: Props) {
-  const params = await props.params;
-  const searchParams = await props.searchParams;
+export default async function Page({
+  params: promisedParams,
+  searchParams: promisedSearchParams,
+}: Props) {
+  const params = await promisedParams;
+  const searchParams = await promisedSearchParams;
 
-  return (
-    <Configure
-      {...{
-        params,
-        searchParams,
-      }}
-    />
-  );
+  return <Configure params={params} searchParams={searchParams} />;
 }

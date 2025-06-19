@@ -30,7 +30,7 @@ import {
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
-import { getFieldDefinition, getFieldsDefinition } from '@/entity-configuration/definitions';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
@@ -38,10 +38,7 @@ import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { Facets } from '@/api/entitycore/types/shared/response';
 import { fieldTitleSentenceCase } from '@/util/utils';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -113,10 +110,10 @@ function createFilterItemComponent(
 
       case CoreFieldFilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
-        const facetItems = map(facets[filter.field], ({ id, label, count, type }) => ({
+        const facetItems = map(facets[filter.field], ({ id, label, count, type: facetType }) => ({
           id,
           label,
-          type,
+          type: facetType,
           count,
           value: label,
         }));
@@ -217,11 +214,11 @@ export default function ListingFilterPanel({
             key: dataKey,
           })
         ),
-      [dataType, dataScope, dataKey]
+      [dataType, dataScope, brainRegionId, dataKey]
     )
   );
   // TODO: to be deleted when confirm filtering works
-  const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
+  // const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
 
   const onToggleActive = useCallback(
     (key: string) => {
@@ -257,13 +254,6 @@ export default function ListingFilterPanel({
     setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 
-  if (!activeColumns) return null;
-
-  const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${
-    activeColumnsLength === 1 ? 'column' : 'columns'
-  }`;
-
   const filterItems = useMemo(
     () =>
       filters
@@ -275,7 +265,7 @@ export default function ListingFilterPanel({
               filter.type && item?.isFilterable
                 ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
                 : undefined,
-            display: item?.isDisplayable && activeColumns.includes(filter.field),
+            display: item?.isDisplayable && activeColumns?.includes(filter.field),
             label: fieldTitleSentenceCase(item?.title ?? ''),
             type: filter.type,
             toggleFunc: showDisplayTrigger
@@ -294,6 +284,13 @@ export default function ListingFilterPanel({
       onToggleActive,
     ]
   );
+
+  if (!activeColumns) return null;
+
+  const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
+  const activeColumnsText = `${activeColumnsLength} active ${
+    activeColumnsLength === 1 ? 'column' : 'columns'
+  }`;
 
   // The columnKeyToFilter method receives a string (key)
   // and in this case it is the equivalent to a filters[x].field

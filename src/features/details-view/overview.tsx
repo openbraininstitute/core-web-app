@@ -30,7 +30,6 @@ export function Field({ field, className, data }: FieldProps) {
 }
 
 export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
-  url,
   fields,
   detail,
   extraHeaderAction,
@@ -42,6 +41,8 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   fields: Array<TypeSummaryProps>;
   detail: T;
   commonFields?: Array<TypeSummaryProps>;
+  // @FIXME: this property is not used.
+  // eslint-disable-next-line react/no-unused-prop-types
   url?: string | null;
   extraHeaderAction?: ReactNode;
   commonFieldsClassName?: string;

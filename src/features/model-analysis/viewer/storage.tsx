@@ -95,7 +95,7 @@ export const useClientCachedUrl = ({
           const responseToCache = new Response(networkResponse.clone().body, {
             status: networkResponse.status,
             statusText: networkResponse.statusText,
-            headers: headers,
+            headers,
           });
 
           await cache.put(urlKey, responseToCache);
@@ -127,7 +127,7 @@ export const useClientCachedUrl = ({
         URL.revokeObjectURL(cachedUrl);
       }
     };
-  }, [url, expireAfter]);
+  }, [url, expireAfter, cacheKey, urlKey, accessToken, virtualLabId, projectId, cachedUrl]);
 
   return { cachedUrl, loading, error };
 };
@@ -153,5 +153,5 @@ export function useClearClientStorageCacheByKey(cacheKey: string = DEFAULT_CACHE
     return () => {
       clearAllCache(cacheKey);
     };
-  }, []);
+  }, [cacheKey]);
 }

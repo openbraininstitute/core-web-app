@@ -1,5 +1,5 @@
+import { DetailProps } from './types';
 import { EntityCoreFields } from '@/constants/explore-section/fields-config/enums';
-import { DetailProps } from '@/types/explore-section/application';
 
 export type DataTypeConfig = {
   title: string;

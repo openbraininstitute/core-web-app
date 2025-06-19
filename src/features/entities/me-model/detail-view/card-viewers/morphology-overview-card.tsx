@@ -1,5 +1,5 @@
+import React from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { use, memo } from 'react';
 import Link from 'next/link';
 
 import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
@@ -27,7 +27,6 @@ const selectUrl = 'configure/morphology';
 
 function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }: Props) {
   const searchParams = useSearchParams();
-  const mmodel: IReconstructionMorphology | null = null;
   const params = useParams<{
     virtualLabId: string;
     projectId: string;
@@ -91,4 +90,4 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
   );
 }
 
-export default memo(MorphologyOverviewCard);
+export default React.memo(MorphologyOverviewCard);

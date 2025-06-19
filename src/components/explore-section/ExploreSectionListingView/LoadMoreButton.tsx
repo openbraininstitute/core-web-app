@@ -1,5 +1,5 @@
 import { HTMLProps, useCallback } from 'react';
-import { useAtom, useSetAtom, useAtomValue } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import {
   dataAtom,
   useDataAtom,

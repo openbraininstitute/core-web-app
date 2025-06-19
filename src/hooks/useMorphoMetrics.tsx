@@ -6,7 +6,7 @@ import { DisplayMessages } from '@/constants/display-messages';
 import { DataType } from '@/constants/explore-section/list-views';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { DetailProps } from '@/types/explore-section/application';
-import FieldsDefinitionRegistry from '@/entity-configuration/definitions';
+import fieldsDefinitionRegistry from '@/entity-configuration/definitions';
 
 export const useMorphometrics = (
   morphology: IReconstructionMorphologyExpanded,
@@ -14,7 +14,7 @@ export const useMorphometrics = (
 ) => {
   const groupedCardFields = groupBy(
     getViewDefinitionByLegacyType(DataType.ExperimentalNeuronMorphology)!.cardViewFields,
-    (item) => FieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
+    (item) => fieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
   );
 
   const filteredGroupedCardFields = omit(groupedCardFields, 'Metadata');
@@ -22,7 +22,7 @@ export const useMorphometrics = (
   const renderMetric = (field: DetailProps) => {
     if (!morphology) return null;
 
-    const fieldObj = FieldsDefinitionRegistry[field.field];
+    const fieldObj = fieldsDefinitionRegistry[field.field];
 
     return (
       <div className="text-primary-8 mr-10" key={field.field}>
