@@ -15,8 +15,8 @@ import If from '@/components/ConditionalRenderer/If';
 
 import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { DataType } from '@/constants/explore-section/list-views';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { DataType } from '@/constants/explore-section/list-views';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
