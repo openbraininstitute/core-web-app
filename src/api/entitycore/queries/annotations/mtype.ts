@@ -2,8 +2,8 @@ import authApiClient from '@/api/apiClient';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IMType, IMTypeFilter } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/mtype';
@@ -17,7 +17,7 @@ export async function getMtypes({
   ctx,
 }: {
   filters?: IMTypeFilter;
-  ctx: WorkspaceContext;
+  ctx?: WorkspaceContext;
 }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<EntityCoreResponse<IMType>>(baseUri, {

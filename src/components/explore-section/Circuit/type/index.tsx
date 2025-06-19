@@ -174,3 +174,12 @@ export type NumericFilterProps = {
   onMinChange: (value: number | undefined) => void;
   onMaxChange: (value: number | undefined) => void;
 };
+
+export type CellTypeProps = {
+  id: string;
+  pref_label: string;
+  alt_label: string | '';
+  definition: string;
+  creation_date: string;
+  update_date: string;
+};

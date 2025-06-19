@@ -1,12 +1,12 @@
 import { Metadata } from 'next';
 
-import GlossaryFullContent from '@/components/documentation/glossary/glossary-full-content';
+import SingleGlossaryContent from '@/components/documentation/glossary/single-glossary-content';
 
 export const metadata: Metadata = {
-  title: 'Open Brain Platform Glossary',
+  title: 'Glossary definitions',
   description: 'Explore the glossary definitions in our documentation.',
 };
 
 export default function Page() {
-  return <GlossaryFullContent />;
+  return <SingleGlossaryContent />;
 }
