@@ -80,7 +80,6 @@ export default function CreditManagement({ virtualLabId }: { virtualLabId: strin
           <div className="w-32 flex-none">{actionsRenderFn(project.id)}</div>
         </div>
       ))}
-
       {contextHolder}
     </div>
   );

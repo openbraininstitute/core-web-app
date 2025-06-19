@@ -74,7 +74,7 @@ export function EntityTypeTabs({ items, activeSlug, basePath, category }: Entity
 
 export function GroupTabs({ items, categoryTypes, activeCategory, basePath }: DataTypeTabsProps) {
   return (
-    <div className="relative mx-auto mb-6 flex w-full max-w-7xl items-center justify-between">
+    <div className="relative mb-6 flex w-full max-w-7xl items-center justify-between">
       <div className="border-primary-6 divide-primary-6 sticky top-0 right-0 left-0 z-10 grid grid-cols-3 items-center justify-center divide-x border">
         {items.map(({ key, label }) => {
           const couldBeActive = get(categoryTypes, key, []).at(0);

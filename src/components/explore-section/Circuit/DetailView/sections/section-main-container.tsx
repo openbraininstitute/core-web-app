@@ -14,11 +14,11 @@ export default function SectionMainContainer({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   const [activeSection, setActiveSection] = useState<
-    'overview' | 'provenance' | 'related-publications' | 'related-circuits'
-  >('overview');
+    'visualisation' | 'overview' | 'provenance' | 'related-publications' | 'related-circuits'
+  >('visualisation');
 
   return (
-    <div className="relative flex w-full flex-col">
+    <div className="relative mt-12 flex w-full flex-col">
       <SectionTabs activeSection={activeSection} setActiveSection={setActiveSection} />
       <SectionContentBlock
         content={content}

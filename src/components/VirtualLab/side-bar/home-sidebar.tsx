@@ -4,11 +4,11 @@ import { usePathname } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
-import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
+import kebabCase from 'lodash/kebabCase';
 
 import Base from '@/components/VirtualLab/side-bar/base';
-import Item, { type Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
+import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';
 import { userStatsAtom } from '@/state/virtual-lab/lab';
 
 export default function SideBar() {

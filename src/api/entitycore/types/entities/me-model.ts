@@ -19,6 +19,7 @@ import type {
   ContributionFilter,
   IMorphologyFilter,
   BrainRegionFilter,
+  PaginationFilter,
   IEModelFilter,
   SpeciesFilter,
   SharedFilter,
@@ -26,6 +27,7 @@ import type {
   EtypeFilter,
   IdFilter,
 } from '@/api/entitycore/types/shared/request';
+import { Pagination } from '../shared/response';
 
 export enum ValidationStatus {
   Created = 'created',
@@ -78,6 +80,7 @@ export interface IMEModelFilter
     SpeciesFilter,
     BrainRegionFilter,
     IMorphologyFilter,
+    PaginationFilter,
     IEModelFilter,
     SharedFilter {
   score__lte: number | null;

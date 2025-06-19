@@ -8,6 +8,7 @@ export type EModelsProps = {
   contributors: string | null;
   creationDate: string | null;
   download: string | null;
+  downloadLink: string | null;
 };
 
 export type MEModelsProps = {

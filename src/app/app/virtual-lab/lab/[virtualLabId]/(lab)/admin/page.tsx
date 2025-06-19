@@ -6,7 +6,7 @@ import VirtualLabSettingsComponent from '@/components/VirtualLab/VirtualLabSetti
 import { ServerSideComponentProp } from '@/types/common';
 
 export default function VirtualLabAdminPage(
-  props: ServerSideComponentProp<{ virtualLabId: string }>
+  props: ServerSideComponentProp<{ virtualLabId: string }, null>
 ) {
   const params = use(props.params);
   const { virtualLabId } = params;

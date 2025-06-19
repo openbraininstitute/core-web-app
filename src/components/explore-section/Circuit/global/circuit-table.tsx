@@ -12,7 +12,7 @@ import columns from './Columns';
 import DownloadContainer from './download/download-container';
 import SubcircuitTable from './subcircuit-table';
 
-import NumericFilters from './numeric-filter';
+import CircuitFilters from './circuit-filter';
 import SearchBar from './search-bar';
 import ViewToggle from './ViewToggle';
 
@@ -33,6 +33,7 @@ export default function CircuitTable({
   // FILTERING
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
+  const [scaleFilter, setScaleFilter] = useState<'smallMicrocircuit' | 'microcircuit' | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
@@ -76,6 +77,7 @@ export default function CircuitTable({
         numberOfNeurons,
         name: circuit.name || 'Unknown',
         brainRegion: circuit.brainRegion || 'Unknown',
+        scale: circuit.scale ? circuit.scale.toLowerCase() : 'unknown',
         subcircuits: Array.isArray(circuit.subcircuits)
           ? circuit.subcircuits.map((sub) => ({
               ...sub,
@@ -97,7 +99,7 @@ export default function CircuitTable({
     return { hierarchical: result, flattened };
   }, [data]);
 
-  // IF FILTER ARE ACTIVE
+  // IF FILTERS ARE ACTIVE
   const filteredData = useMemo(() => {
     if (toggle === 'hierarchical') {
       const result = filterCircuitsWithParents(
@@ -106,20 +108,20 @@ export default function CircuitTable({
         minValue,
         maxValue,
         searchQuery,
+        scaleFilter,
         false
       );
       return result;
     }
     const result = cleanedData.flattened.filter((circuit) =>
-      circuitMatchFilter(circuit, numericFilter, minValue, maxValue, searchQuery)
+      circuitMatchFilter(circuit, numericFilter, minValue, maxValue, searchQuery, scaleFilter)
     );
-
     return result;
-  }, [cleanedData, numericFilter, minValue, maxValue, searchQuery, toggle]);
+  }, [cleanedData, numericFilter, minValue, maxValue, searchQuery, scaleFilter, toggle]);
 
   const flattenedData = useMemo(() => {
     if (toggle === 'hierarchical') {
-      return filteredData; // Use filteredData for hierarchical view
+      return filteredData;
     }
     const keyCounts = filteredData.reduce(
       (acc, circuit) => {
@@ -174,13 +176,13 @@ export default function CircuitTable({
   ]);
 
   useEffect(() => {
-    if (toggle === 'hierarchical' && (numericFilter || searchQuery)) {
+    if (toggle === 'hierarchical' && (numericFilter || searchQuery || scaleFilter)) {
       const expandableKeys = collectExpandableKeys(cleanedData.hierarchical);
       setExpandedRowKeys(expandableKeys);
     } else {
       setExpandedRowKeys([]);
     }
-  }, [numericFilter, minValue, maxValue, searchQuery, cleanedData, toggle]);
+  }, [numericFilter, minValue, maxValue, searchQuery, scaleFilter, cleanedData, toggle]);
 
   // ROW EXPANSION & SUBCIRCUITS
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
@@ -198,10 +200,11 @@ export default function CircuitTable({
           circuit={circuit}
           expandedRowKeys={expandedRowKeys}
           onExpand={handleExpandRow}
-          numericFilter={numericFilter} // Pass filter props
+          numericFilter={numericFilter}
           minValue={minValue}
           maxValue={maxValue}
           searchQuery={searchQuery}
+          scaleFilter={scaleFilter}
         />
       ) : null,
     [
@@ -211,6 +214,7 @@ export default function CircuitTable({
       minValue,
       maxValue,
       searchQuery,
+      scaleFilter,
       filteredColumns,
     ]
   );
@@ -223,11 +227,19 @@ export default function CircuitTable({
 
           <div className="relative flex flex-row items-center gap-x-8">
             <ViewToggle toggle={toggle} setToggle={setToggle} />
-            <NumericFilters
+            <CircuitFilters
               filter={numericFilter}
               minValue={minValue}
               maxValue={maxValue}
-              onFilterChange={setNumericFilter}
+              onFilterChange={(filter) => {
+                setNumericFilter(filter);
+                if (filter?.property === 'scaleType') {
+                  setScaleFilter(filter.type as 'smallMicrocircuit' | 'microcircuit');
+                  setNumericFilter(null);
+                } else {
+                  setScaleFilter(null);
+                }
+              }}
               onMinChange={setMinValue}
               onMaxChange={setMaxValue}
             />

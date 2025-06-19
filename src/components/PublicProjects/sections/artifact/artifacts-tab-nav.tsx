@@ -16,10 +16,10 @@ export default function ArtifactsTabNav({
 
         switch (item) {
           case 'meModelsTable':
-            title = 'ME Models';
+            title = 'ME-Models';
             break;
           case 'eModelsTable':
-            title = 'E Models';
+            title = 'E-Models';
             break;
           case 'synaptomesTable':
             title = 'Synaptome';

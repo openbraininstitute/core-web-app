@@ -1,22 +1,21 @@
 'use client';
 
-import { useSetAtom } from 'jotai';
-import { Suspense } from 'react';
-
 import { useParams } from 'next/navigation';
+import { Suspense } from 'react';
 import Link from 'next/link';
+
 import Configuration from '@/features/entities/me-model/detail-view/configuration';
 import Simulation from '@/features/entities/me-model/detail-view/simulation';
-import Analysis from '@/features/entities/me-model/detail-view/analysis';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Tabs, { useTabs } from '@/components/detail-view-tabs';
+import Analysis from '@/features/model-analysis/explorer';
 import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 
+import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { initializeSummaryAtom } from '@/state/virtual-lab/build/me-model-setter';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
@@ -52,18 +51,7 @@ export const CommonSummaryViewFields = [
 export default function SummaryView({ showViewMode = false, payload: { source } }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const { activeTab } = useTabs({ tabsConfig: TabsConfig });
-  const setInitializeSummary = useSetAtom(initializeSummaryAtom);
-
-  // useEffect(() => {
-  //   if (!id) return;
-  //   setInitializeSummary(id, org, project);
-  // }, [setInitializeSummary, id, org, project]);
-
-  // const getSimulationId = (meModelId: string) => {
-  //   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
-  //   const basePath = `${vlProjectUrl}/simulate/${DataTypeToNewSimulationPage[DataTypeToNexusType.CircuitMEModel]}/new`;
-  //   return `${basePath}/${to64(`${params.projectId}!/!${meModelId}`)}`;
-  // };
+  useClearClientStorageCacheByKey();
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
@@ -92,7 +80,7 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
           <>
             <Tabs tabsConfig={TabsConfig} />
             <div className="w-full flex-1">
-              <Suspense fallback={<CentralLoadingSpinner />}>
+              <Suspense>
                 <If id="configuration" condition={activeTab === 'configuration'}>
                   <Configuration model={source} />
                 </If>
@@ -104,12 +92,6 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
                 </If>
               </Suspense>
             </div>
-            {/* Hiding button SfN */}
-            {/* <GenericButton
-              text="New model"
-              className="fixed bottom-10 right-10 w-[200px] bg-primary-9 font-bold text-white hover:bg-primary-7!"
-              href={`${vlProjectUrl}/build/me-model/new`}
-            /> */}
           </>
         )}
       </Summary>

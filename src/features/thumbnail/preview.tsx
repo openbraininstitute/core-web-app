@@ -86,8 +86,12 @@ export default function PreviewThumbnail({
       <Skeleton.Image
         active
         key={`thumbnail-loader-${resource.id}`}
-        className="h-full! w-full! rounded-none"
-        rootClassName="border-neutral-2 flex h-full! w-full! flex-col items-center justify-center border m-0"
+        className="h-full! w-full! rounded-none!"
+        rootClassName="flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!"
+        style={{
+          height: typeof height === 'number' ? height : undefined,
+          width: typeof width === 'number' ? width : undefined,
+        }}
       />
     ))
     .with({ loading: false, thumbnail: P.string.minLength(1).select() }, (thumbnail) => (
@@ -96,8 +100,8 @@ export default function PreviewThumbnail({
         alt={`${'name' in resource ? resource.name : alt}`}
         src={thumbnail}
         className={className}
-        height={typeof height === 'number' ? height : 300}
-        width={typeof height === 'number' ? height : 400}
+        height={typeof height === 'number' ? height : 140}
+        width={typeof width === 'number' ? width : 196}
       />
     ))
     .with({ error: P.nonNullable }, () => (
@@ -105,7 +109,11 @@ export default function PreviewThumbnail({
         key={`thumbnail-error-${resource.id}`}
         description="Error loading thumbnail"
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        className="m-0 flex h-full! w-full! flex-col items-center justify-center"
+        className="m-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!"
+        style={{
+          height: typeof height === 'number' ? height : undefined,
+          width: typeof width === 'number' ? width : undefined,
+        }}
       />
     ))
     .otherwise(() => (
@@ -113,7 +121,11 @@ export default function PreviewThumbnail({
         key={`thumbnail-empty-${resource.id}`}
         description="No thumbnail available"
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        className="m-0 flex h-full! w-full! flex-col items-center justify-center"
+        className="m-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!"
+        style={{
+          height: typeof height === 'number' ? height : undefined,
+          width: typeof width === 'number' ? width : undefined,
+        }}
       />
     ));
 
@@ -122,8 +134,8 @@ export default function PreviewThumbnail({
       ref={ref}
       className="flex items-center justify-center"
       style={{
-        height,
-        width,
+        height: typeof height === 'number' ? height : 140,
+        width: typeof width === 'number' ? width : 196,
       }}
     >
       {component}

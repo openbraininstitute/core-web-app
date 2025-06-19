@@ -36,9 +36,9 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
   }>();
 
   const getSelectUrlQueryParams = () => {
-    const _params = new URLSearchParams(searchParams?.toString());
-    _params.delete('e');
-    return _params.toString();
+    const urlSearchParams = new URLSearchParams(searchParams?.toString());
+    urlSearchParams.delete('e');
+    return urlSearchParams.toString();
   };
 
   if (data) {

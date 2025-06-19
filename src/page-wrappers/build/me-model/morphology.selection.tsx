@@ -47,9 +47,11 @@ export default function MorphologySelection({ params, searchParams }: Props) {
     setSessionValue({ ...sessionValue, mmodel: morphology, brainRegion: morphology?.brain_region });
 
     const upOneLevel = pathname?.split('/').slice(0, -1).join('/');
-    const _params = new URLSearchParams(searchParams);
-    _params.set('m', morphology!.id);
-    const newHref = _params ? `${upOneLevel}?${_params.toString()}` : (upOneLevel ?? '');
+    const urlSearchParams = new URLSearchParams(searchParams);
+    urlSearchParams.set('m', morphology!.id);
+    const newHref = urlSearchParams
+      ? `${upOneLevel}?${urlSearchParams.toString()}`
+      : (upOneLevel ?? '');
 
     navigate(newHref);
   };

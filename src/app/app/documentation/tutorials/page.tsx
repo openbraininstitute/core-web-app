@@ -1,10 +1,8 @@
 'use client';
 
 import SingleTutorialCard from '@/components/documentation/main/single-tutorial-card';
-import {
-  ContentForTutorialItem,
-  useSanityContentForTutorialsList,
-} from '@/components/tutorials-carrousel/hooks';
+import { ContentForTutorialItem } from '@/components/documentation/type';
+import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
 
 export default function AllTutorialsPage() {
   const tutorials = useSanityContentForTutorialsList();

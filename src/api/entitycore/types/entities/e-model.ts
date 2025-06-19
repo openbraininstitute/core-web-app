@@ -22,6 +22,7 @@ import type {
   SharedFilter,
   MtypeFilter,
   EtypeFilter,
+  PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
 
 interface ExemplarMorphology extends Timestamps, EntityCoreIdentifiable {
@@ -62,7 +63,8 @@ export interface IEModelFilter
     SpeciesFilter,
     BrainRegionFilter,
     SharedFilter,
-    IMorphologyFilter {
+    IMorphologyFilter,
+    PaginationFilter {
   score__lte: number | null;
   score__gte: number | null;
 }

@@ -273,7 +273,7 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
       isOpen={isOpen}
       footer={null}
       onClose={onClose}
-      cls={{ content: '!min-h-[30rem]' }}
+      cls={{ content: 'min-h-[46rem]!' }}
     >
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-primary-8 text-xl font-bold">Add new members to project</h1>

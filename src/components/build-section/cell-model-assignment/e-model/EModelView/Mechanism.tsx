@@ -38,7 +38,7 @@ function ListingGrid({ ionChannels }: { ionChannels: Array<IonChannelModel> }) {
         <div key={location} className="flex flex-col items-start justify-start">
           <div className="my-4 flex items-center gap-2 text-gray-400">
             {location.toUpperCase()}
-            <DocumentationIcon />
+            <DocumentationIcon className="h-3 w-auto" />
           </div>
           <ol className="list-inside list-decimal">
             {channels.map((o) => (

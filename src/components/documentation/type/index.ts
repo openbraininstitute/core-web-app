@@ -80,3 +80,13 @@ export type AITooslsProps = {
   hil: boolean;
   is_online: boolean;
 };
+
+export type ContentForTutorialItem = {
+  url: string;
+  title: string;
+  slug: string;
+  description: string;
+  imageURL: string;
+  imageWidth: number;
+  imageHeight: number;
+};

@@ -98,8 +98,7 @@ export default function NeuronViewer({
   });
 
   if (error) {
-    notifyError({ message: `Morphology initialization error: ${error}`, placement: 'topRight' });
-    return;
+    throw new Error(`Morphology initialization error: ${error}`);
   }
 
   useNeuronViewerEvents({

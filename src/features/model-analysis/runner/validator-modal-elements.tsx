@@ -1,28 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAtomValue } from 'jotai';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-import BluePyEModelCls from '@/services/virtual-lab/build/me-model/bluepy-emodel';
-import { meModelSelfUrlAtom, selectedMEModelIdAtom } from '@/state/virtual-lab/build/me-model';
+import AnalysisTransportRunner from '@/features/model-analysis/runner/analysis-transport-runner';
 import CentralLoadingWheel from '@/components/CentralLoadingWheel';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { to64 } from '@/util/common';
-import { EmodelTabKeys } from '@/components/explore-section/EModel/DetailView/SectionTabs';
 
-function getMEModelPageUrl(meModelId: string, virtualLabInfo: VirtualLabInfo, tab?: EmodelTabKeys) {
-  const { virtualLabId, projectId } = virtualLabInfo;
+import { resolveExploreDetailsPageUrl, resolveProjectUrl } from '@/utils/url-builder';
+import { DataType } from '@/constants/explore-section/list-views';
 
-  const vlProjectUrl = generateVlProjectUrl(virtualLabId, projectId);
-  const idSegment = to64(`${virtualLabId}/${projectId}!/!${meModelId}`);
-
-  const searchParams = new URLSearchParams();
-  if (tab) searchParams.set('tab', tab);
-  const searchStr = searchParams.toString();
-
-  return `${vlProjectUrl}/explore/interactive/model/me-model/${idSegment}?${searchStr}`;
-}
+import type { WorkspaceContext } from '@/types/common';
 
 // Format elapsed time as HH:mm:ss
 const formatElapsedTime = (ms: number) => {
@@ -52,25 +38,25 @@ function ElapsedTime() {
   const elapsedStr = formatElapsedTime(elapsed);
 
   return (
-    <>
-      <div className="text-primary-8">
-        <div>Time elapsed:</div>
-        <div>{elapsedStr}</div>
-      </div>
-    </>
+    <div className="text-primary-8">
+      <div>Time elapsed:</div>
+      <div>{elapsedStr}</div>
+    </div>
   );
 }
 
-type AnalisysState = 'initializing' | 'running' | 'error' | 'done';
+type AnalysisState = 'initializing' | 'running' | 'error' | 'done';
+type Props = {
+  modelId: string;
+  workspace: WorkspaceContext;
+};
 
-function ValidationInit({
-  meModelId,
-  virtualLabInfo,
-}: {
-  meModelId: string;
-  virtualLabInfo: VirtualLabInfo;
-}) {
-  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+function ValidationInit({ modelId, workspace }: Props) {
+  const meModelPageUrl = `${resolveExploreDetailsPageUrl({
+    ctx: workspace,
+    dataType: DataType.CircuitMEModel,
+    entityId: modelId,
+  })}`;
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
@@ -100,14 +86,12 @@ function ValidationInit({
   );
 }
 
-function ValidationRunning({
-  meModelId,
-  virtualLabInfo,
-}: {
-  meModelId: string;
-  virtualLabInfo: VirtualLabInfo;
-}) {
-  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+function ValidationRunning({ modelId, workspace }: Props) {
+  const meModelPageUrl = resolveExploreDetailsPageUrl({
+    ctx: workspace,
+    dataType: DataType.CircuitMEModel,
+    entityId: modelId,
+  });
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
@@ -133,7 +117,7 @@ function ValidationRunning({
       <div className="mt-10 flex flex-row gap-3">
         <a
           className="border-primary-8 text-primary-8 border px-4 py-2"
-          href={`${generateVlProjectUrl(virtualLabInfo.virtualLabId, virtualLabInfo.projectId)}/activity`}
+          href={`${resolveProjectUrl(workspace)}/activity`}
         >
           View activity
         </a>
@@ -142,16 +126,13 @@ function ValidationRunning({
   );
 }
 
-function ValidationSuccess({
-  meModelId,
-  virtualLabInfo,
-}: {
-  meModelId: string;
-  virtualLabInfo: VirtualLabInfo;
-}) {
+function ValidationSuccess({ modelId, workspace }: Props) {
   const router = useRouter();
-
-  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo, 'analysis');
+  const meModelPageUrl = `${resolveExploreDetailsPageUrl({
+    ctx: workspace,
+    dataType: DataType.CircuitMEModel,
+    entityId: modelId,
+  })}?tab=analysis`;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -175,14 +156,12 @@ function ValidationSuccess({
   );
 }
 
-function ValidationError({
-  meModelId,
-  virtualLabInfo,
-}: {
-  meModelId: string;
-  virtualLabInfo: VirtualLabInfo;
-}) {
-  const meModelPageUrl = getMEModelPageUrl(meModelId, virtualLabInfo);
+function ValidationError({ modelId, workspace }: Props) {
+  const meModelPageUrl = resolveExploreDetailsPageUrl({
+    ctx: workspace,
+    dataType: DataType.CircuitMEModel,
+    entityId: modelId,
+  });
 
   return (
     <div className="flex flex-col items-center justify-center gap-y-3">
@@ -196,27 +175,25 @@ function ValidationError({
   );
 }
 
-export default function BluePyEModelContainer({
-  virtualLabInfo,
+export default function ModelAnalysisContainer({
+  ctx,
   accessToken,
+  modelId,
 }: {
-  virtualLabInfo: VirtualLabInfo;
+  ctx: WorkspaceContext;
   accessToken: string;
+  modelId?: string;
 }) {
   const router = useRouter();
 
-  const meModelSelfUrl = useAtomValue(meModelSelfUrlAtom);
-  const meModelId = useAtomValue(selectedMEModelIdAtom);
+  const bluePyEModelInstance = useRef<AnalysisTransportRunner | null>(null);
 
-  const bluePyEModelInstance = useRef<BluePyEModelCls | null>(null);
-
-  const [analysisState, setAnalysisState] = useState<AnalisysState>('initializing');
+  const [analysisState, setAnalysisState] = useState<AnalysisState>('initializing');
 
   useEffect(() => {
-    if (bluePyEModelInstance.current || !meModelSelfUrl || !accessToken) return;
+    if (bluePyEModelInstance.current || !modelId || !accessToken) return;
 
     const onInit = () => {
-      bluePyEModelInstance.current?.runAnalysis();
       setAnalysisState('running');
     };
 
@@ -228,7 +205,7 @@ export default function BluePyEModelContainer({
       setAnalysisState('error');
     };
 
-    bluePyEModelInstance.current = new BluePyEModelCls(meModelSelfUrl, accessToken, {
+    bluePyEModelInstance.current = new AnalysisTransportRunner(ctx, modelId, accessToken, {
       onInit,
       onAnalysisDone,
       onAnalysisError,
@@ -239,19 +216,19 @@ export default function BluePyEModelContainer({
       bluePyEModelInstance.current.destroy();
       bluePyEModelInstance.current = null;
     };
-  }, [meModelSelfUrl, router, accessToken, virtualLabInfo.projectId, virtualLabInfo.virtualLabId]);
+  }, [modelId, router, accessToken, ctx.projectId, ctx.virtualLabId]);
 
   if (analysisState === 'initializing') {
-    return <ValidationInit virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+    return <ValidationInit workspace={ctx} modelId={modelId as string} />;
   }
 
   if (analysisState === 'running') {
-    return <ValidationRunning virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+    return <ValidationRunning workspace={ctx} modelId={modelId as string} />;
   }
 
   if (analysisState === 'done') {
-    return <ValidationSuccess virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+    return <ValidationSuccess workspace={ctx} modelId={modelId as string} />;
   }
 
-  return <ValidationError virtualLabInfo={virtualLabInfo} meModelId={meModelId as string} />;
+  return <ValidationError workspace={ctx} modelId={modelId as string} />;
 }

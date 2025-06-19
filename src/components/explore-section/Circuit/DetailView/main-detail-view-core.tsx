@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { DetailsPageSideBackLink } from '../../Sidebar';
 import HeaderDetailView from './header-detail-view';
 import SectionMainContainer from './sections/section-main-container';
-import Visualiser from './visualisation/Visualiser';
 
 import { CircuitSchemaProps } from '@/components/explore-section/Circuit/type';
 import { buildCircuitMap } from '@/components/explore-section/Circuit/utils/circuits-map';
@@ -23,9 +22,8 @@ function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="text-primary-9 relative ml-20 py-10 pr-10">
+    <div className="text-primary-9 relative z-0 w-full max-w-full py-10 pr-10 pl-20">
       <HeaderDetailView content={content} />
-      <Visualiser content={content} />
       <SectionMainContainer
         content={content}
         parentCircuit={parentCircuit}
@@ -127,7 +125,7 @@ export default function CircuitDetailPage() {
   }
 
   return (
-    <div className="relative flex flex-row flex-nowrap overflow-y-scroll bg-white">
+    <div className="relative flex w-full max-w-full flex-row flex-nowrap overflow-y-scroll bg-white">
       <DetailsPageSideBackLink />
       {circuitData && (
         <MainDetailViewCore

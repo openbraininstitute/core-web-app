@@ -4,6 +4,7 @@ import {
   SECTION_PROVENANCE,
   SECTION_RELATED_CIRCUITS,
   SECTION_RELATED_PUBLICATIONS,
+  SECTION_VISUALISATION,
 } from '../../type/sectionTypes';
 
 type SectionProps = {
@@ -19,6 +20,10 @@ export default function SectionTabs({
   setActiveSection: (section: ActiveSection) => void;
 }) {
   const sections: SectionProps[] = [
+    {
+      name: 'Visualisation',
+      id: SECTION_VISUALISATION,
+    },
     {
       name: 'Overview',
       id: SECTION_OVERVIEW,
@@ -38,15 +43,16 @@ export default function SectionTabs({
   ];
 
   return (
-    <div className="relative top-0 grid h-16 w-full grid-cols-4 bg-[#F3F3F3]">
+    <div className="relative top-0 grid h-16 w-full grid-cols-5 bg-[#F3F3F3]">
       {sections.map((section: SectionProps) => {
         return (
           <button
             key={section.id}
-            className="text-primary-9 w-full py-4 text-center text-xl transition-colors duration-300 ease-in-out"
+            className="w-full py-4 text-center text-xl transition-colors duration-300 ease-in-out"
             style={{
+              color: activeSection === section.id ? '#FFFFFF' : '#002766',
               fontWeight: activeSection === section.id ? 'bold' : 'normal',
-              background: activeSection === section.id ? 'white' : 'transparent',
+              background: activeSection === section.id ? '#002766' : 'transparent',
             }}
             onClick={() => setActiveSection(section.id)}
             type="button"

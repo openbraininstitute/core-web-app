@@ -1,19 +1,10 @@
 import { Button, Input, Select } from 'antd';
 import { useState } from 'react';
-import { NumericFilterOptions } from '../utils/filter-circuits-by-numeric';
+import { NumericFilterOptions, NumericFilterProps } from '../type';
 
 const { Option } = Select;
 
-export type NumericFilterProps = {
-  filter: NumericFilterOptions | null;
-  minValue: number | undefined;
-  maxValue: number | undefined;
-  onFilterChange: (filter: NumericFilterOptions | null) => void;
-  onMinChange: (value: number | undefined) => void;
-  onMaxChange: (value: number | undefined) => void;
-};
-
-export default function NumericFilters({
+export default function CircuitFilters({
   filter,
   minValue,
   maxValue,
@@ -84,18 +75,34 @@ export default function NumericFilters({
         <Option value="numberOfNeurons"># of Neurons</Option>
         <Option value="numberOfConnections"># of Connections</Option>
         <Option value="numberOfSynapses"># of Synapses</Option>
+        <Option value="scaleType">Scale Type</Option>
       </Select>
-      <Select
-        className="mr-2 w-[150px]"
-        placeholder="Condition"
-        value={localType}
-        onChange={handleTypeChange}
-        disabled={!localProperty}
-      >
-        <Option value="greaterThan">Greater than</Option>
-        <Option value="lessThan">Less than</Option>
-        <Option value="between">Between</Option>
-      </Select>
+      {localProperty === 'numberOfNeurons' ||
+      localProperty === 'numberOfConnections' ||
+      localProperty === 'numberOfSynapses' ? (
+        <Select
+          className="mr-2 w-[150px]"
+          placeholder="Condition"
+          value={localType}
+          onChange={handleTypeChange}
+          disabled={!localProperty}
+        >
+          <Option value="greaterThan">Greater than</Option>
+          <Option value="lessThan">Less than</Option>
+          <Option value="between">Between</Option>
+        </Select>
+      ) : (
+        <Select
+          className="mr-2 w-[150px]"
+          placeholder="Select scale"
+          value={localType}
+          onChange={handleTypeChange}
+          disabled={!localProperty}
+        >
+          <Option value="smallMicrocircuit">Small microcircuit</Option>
+          <Option value="microcircuit">Microcircuit</Option>
+        </Select>
+      )}
 
       {(localType === 'greaterThan' || localType === 'between') && (
         <Input

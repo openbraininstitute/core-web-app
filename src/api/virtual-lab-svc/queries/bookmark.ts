@@ -27,11 +27,16 @@ export async function bookmarkToProjectLibrary(
 ): Promise<AddBookmarkResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
+
   return await api.post<AddBookmarkResponse>(url, {
     body: {
       entity_id,
       resource_id,
       category,
+    },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
   });
 }
@@ -99,5 +104,9 @@ export async function deleteBookmarksFromProjectLibrary(
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/delete`;
   return await api.post<DeleteBookmarksResponse>(url, {
     body: { bookmarks },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
   });
 }

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useDocumentationArchitecture } from '../content/architecture-content';
 import { SingleSectionProps } from '../type';
 import NavItem from './nav-item';
@@ -11,9 +10,6 @@ export default function DocumentationSideBloc() {
     <nav className="w-full text-white">
       <header className="mb-4 flex flex-col">
         <div className="text-primary-3 mb-2 text-xl font-bold">Documentation</div>
-        <Link href="/app/documentation/new-features" className="text-xl font-bold text-white">
-          New Features ✨
-        </Link>
       </header>
       <div className="relative flex w-full flex-col gap-y-3">
         {architectureData.map((item: SingleSectionProps) => {

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useSetAtom } from 'jotai';
 import { match } from 'ts-pattern';
 import { useEffect } from 'react';
+
 import compact from 'lodash/compact';
 import get from 'lodash/get';
 
@@ -15,7 +16,6 @@ import ErrorData from '@/components/message-banners/error';
 
 import { entityTargetIdentifiersAtom } from '@/state/explore-section/list-view-atoms';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
 import { EntityTypeTabs, GroupTabs } from '@/features/bookmark/tabs';
 import { resolveDataKey } from '@/utils/key-builder';
 
@@ -24,6 +24,7 @@ import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
+import type { GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
 import type { WorkspaceContext } from '@/types/common';
 
 const Categories: Array<{ key: EntityCoreTypeGroup; label: string }> = [
@@ -121,7 +122,7 @@ export default function BookmarksView({
                 fallback={
                   <ErrorData
                     borderless
-                    cls={{ container: '!text-primary-8 !bg-transparent' }}
+                    cls={{ container: '!text-primary-8 !bg-transparent w-full' }}
                     title="Something went wrong"
                     description="We couldn’t load your bookmarked resources. Please try again later or contact support if the issue persists."
                   />
@@ -144,11 +145,12 @@ export default function BookmarksView({
       <EmptyData
         title="We could not find any bookmarks saved in your account"
         description={`You haven't saved any bookmarks for ${category} data yet. Start bookmarking content to find it here later.`}
+        cls={{ container: '!text-primary-8 !bg-transparent max-w-full' }}
       />
     ));
 
   return (
-    <div className="mr-5 h-[calc(100%-2rem)] max-w-7xl px-4">
+    <div className="mr-5 h-[calc(100%-2rem)] px-4">
       <GroupTabs
         categoryTypes={categoryTypes}
         items={Categories}

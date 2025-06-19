@@ -10,6 +10,8 @@ import {
   NeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
+import { ErrorBoundary } from 'react-error-boundary';
+import { withErrorConfig } from '../GenericErrorFallback';
 
 type Props = {
   meModelId: string;
@@ -40,63 +42,69 @@ export default function NeuronViewerContainer({
     useState<NeuronViewerHoverData | null>(null);
 
   return (
-    <DefaultLoadingSuspense>
-      <NeuronViewer
-        projectId={projectId}
-        virtualLabId={virtualLabId}
-        meModelId={meModelId}
-        actions={{
-          onClick: (data) => {
-            setNeuronViewerOnClickData(data);
-            setDisableHovering(true);
-          },
-          onHover: setNeuronViewerOnHoverData,
-          onHoverEnd: () => setNeuronViewerOnHoverData(null),
-        }}
-        {...{
-          useZoomer,
-          useCursor,
-          useEvents,
-          useActions,
-          useLabels,
-        }}
-      >
-        {({
-          renderer,
-          useActions: enableActions,
-          useCursor: enableCursor,
-          useZoomer: enableZoom,
-        }) => {
-          return (
-            <>
-              {enableActions && neuronViewerClickData && (
-                <InjectionRecordingPopover
-                  show={!!neuronViewerClickData}
-                  data={{
-                    x: neuronViewerClickData.position.x,
-                    y: neuronViewerClickData.position.y,
-                    section: neuronViewerClickData.data.section,
-                    offset: neuronViewerClickData.data.offset,
-                  }}
-                  onClose={() => {
-                    setNeuronViewerOnClickData(null);
-                    setDisableHovering(false);
-                  }}
-                />
-              )}
-              {enableCursor && neuronViewerHoverData && !disableHovering && (
-                <CursorPopover
-                  show={!!neuronViewerHoverData}
-                  x={neuronViewerHoverData.position.x}
-                  y={neuronViewerHoverData.position.y}
-                  data={neuronViewerHoverData.data}
-                />
-              )}
-              {enableZoom && <Zoomer renderer={renderer} placement={zoomPlacement} />}
-            </>
-          );
-        }}
-      </NeuronViewer>
-    </DefaultLoadingSuspense>
+    <ErrorBoundary
+      FallbackComponent={withErrorConfig({
+        showButtons: false,
+      })}
+    >
+      <DefaultLoadingSuspense>
+        <NeuronViewer
+          projectId={projectId}
+          virtualLabId={virtualLabId}
+          meModelId={meModelId}
+          actions={{
+            onClick: (data) => {
+              setNeuronViewerOnClickData(data);
+              setDisableHovering(true);
+            },
+            onHover: setNeuronViewerOnHoverData,
+            onHoverEnd: () => setNeuronViewerOnHoverData(null),
+          }}
+          {...{
+            useZoomer,
+            useCursor,
+            useEvents,
+            useActions,
+            useLabels,
+          }}
+        >
+          {({
+            renderer,
+            useActions: enableActions,
+            useCursor: enableCursor,
+            useZoomer: enableZoom,
+          }) => {
+            return (
+              <>
+                {enableActions && neuronViewerClickData && (
+                  <InjectionRecordingPopover
+                    show={!!neuronViewerClickData}
+                    data={{
+                      x: neuronViewerClickData.position.x,
+                      y: neuronViewerClickData.position.y,
+                      section: neuronViewerClickData.data.section,
+                      offset: neuronViewerClickData.data.offset,
+                    }}
+                    onClose={() => {
+                      setNeuronViewerOnClickData(null);
+                      setDisableHovering(false);
+                    }}
+                  />
+                )}
+                {enableCursor && neuronViewerHoverData && !disableHovering && (
+                  <CursorPopover
+                    show={!!neuronViewerHoverData}
+                    x={neuronViewerHoverData.position.x}
+                    y={neuronViewerHoverData.position.y}
+                    data={neuronViewerHoverData.data}
+                  />
+                )}
+                {enableZoom && <Zoomer renderer={renderer} placement={zoomPlacement} />}
+              </>
+            );
+          }}
+        </NeuronViewer>
+      </DefaultLoadingSuspense>
+    </ErrorBoundary>
   );
 }

@@ -140,7 +140,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
 
   return (
     <div
-      className="bg-primary-9 secondary-scrollbar flex h-screen w-full overflow-x-auto"
+      className="secondary-scrollbar bg-primary-9 flex h-screen w-full overflow-x-auto"
       id="interactive-data-layout"
     >
       <ErrorBoundary

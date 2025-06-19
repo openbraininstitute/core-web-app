@@ -42,7 +42,7 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
             onKeyDown={handleKeyDown}
           />
         </div>
-        <button type="button" onClick={handleToolsClick} aria-label="Select tools">
+        <button type="button" onClick={handleToolsClick} aria-label="Send prompt">
           <IconGear />
         </button>
         <button type="button" onClick={handleSendClick} aria-label="Send prompt">

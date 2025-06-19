@@ -1,7 +1,6 @@
 'use client';
 
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
+import { ReactNode } from 'react';
 import {
   DownOutlined,
   HomeOutlined,
@@ -9,16 +8,19 @@ import {
   UpOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import { Tooltip } from 'antd';
+import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
 import Link from 'next/link';
+import HelpMenu from '../HelpMenu';
+import DocumentationIcon from '../icons/DocumentationIcon';
 
-import { ReactNode } from 'react';
-import HelpMenu from '@/components/HelpMenu';
 import UserMenu from '@/components/user-menu';
 import { LabItem, LinkItem, ProjectItem } from '@/components/VerticalLinks';
+import { useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabDetailAtomFamily } from '@/state/virtual-lab/lab';
 import { virtualLabProjectDetailsAtomFamily } from '@/state/virtual-lab/projects';
 import { classNames } from '@/util/utils';
-import { useUnwrappedValue } from '@/hooks/hooks';
 
 type SideMenuProps = {
   lab: LabItem;
@@ -117,6 +119,11 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
         </div>
 
         <div className="text-primary-3 mb-5 flex w-full flex-col items-center gap-2 overflow-hidden">
+          <Tooltip title="Documentation" placement="topLeft">
+            <Link href="/app/documentation" className="flex h-10 w-10 items-center justify-center">
+              <DocumentationIcon iconColor="#91d5ff" className="h-3 w-auto" />
+            </Link>
+          </Tooltip>
           <HelpMenu>
             <QuestionCircleOutlined className="group-hover:text-white" />
           </HelpMenu>

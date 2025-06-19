@@ -8,20 +8,36 @@ import { ShowCaseProjectQueryType } from '../type';
 import ArtifactsTabNav from './artifact/artifacts-tab-nav';
 import LinkAndDownloadList from './blocs/LinkAndDownloadList';
 
+import { InformationIcon } from '@/components/icons';
+
+const getActiveArtifactsCount = (
+  activeArtifactType: string | null,
+  content: ShowCaseProjectQueryType
+): number => {
+  if (!activeArtifactType || !content) {
+    return 0;
+  }
+
+  switch (activeArtifactType) {
+    case 'eModelsTable':
+      return Array.isArray(content.eModelTable) ? content.eModelTable.length : 0;
+    case 'meModelsTable':
+      return Array.isArray(content.meModelTable) ? content.meModelTable.length : 0;
+    case 'synaptomesTable':
+      return Array.isArray(content.synaptomeTable) ? content.synaptomeTable.length : 0;
+    case 'downloadsLinks':
+      return Array.isArray(content.artifact) ? content.artifact.length : 0;
+    default:
+      return 0;
+  }
+};
+
 export default function ArtifactsSection({ content }: { content: ShowCaseProjectQueryType }) {
   const [activeArtifactType, setActiveArtifactType] = useState<string | null>(
     content.artifactType[0] ?? null
   );
 
-  const totalDataCount =
-    (content?.artifact?.length ?? 0) +
-    (content?.meModelsList?.length ?? 0) +
-    (content?.minimalMeModel?.length ?? 0) +
-    (content?.eModelTable?.length ?? 0);
-
   let activeTable;
-
-  console.log('Full content', content);
 
   if (content !== null) {
     switch (activeArtifactType) {
@@ -49,10 +65,10 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
 
   switch (activeArtifactType) {
     case 'eModelsTable':
-      contentTitle = 'E Models';
+      contentTitle = 'E-Models';
       break;
     case 'meModelsTable':
-      contentTitle = 'ME Models';
+      contentTitle = 'ME-Models';
       break;
     case 'synaptomesTable':
       contentTitle = 'Synaptome';
@@ -61,9 +77,7 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
       contentTitle = 'Downloads & Links';
       break;
     default:
-      contentTitle = activeArtifactType
-        ? activeArtifactType.charAt(0).toUpperCase() + activeArtifactType.slice(1)
-        : '';
+      contentTitle = '';
       break;
   }
 
@@ -71,16 +85,31 @@ export default function ArtifactsSection({ content }: { content: ShowCaseProject
     <div className="relative flex w-full flex-col gap-y-6 scroll-smooth" id="artifacts">
       <header className="sticky top-0 z-50 flex w-full flex-row items-center justify-between bg-white">
         <div className="relative flex flex-row text-base">
-          Total artifacts: <span className="ml-2 block font-bold">{totalDataCount}</span>
+          <div>Total artifacts: </div>
+          <span className="ml-2 block font-bold">
+            {getActiveArtifactsCount(activeArtifactType, content)}
+          </span>
         </div>
-        <ArtifactsTabNav
-          content={content.artifactType}
-          activeArtifactType={activeArtifactType}
-          setActiveArtifactType={setActiveArtifactType}
-        />
+        {content.artifactType.length > 1 && (
+          <ArtifactsTabNav
+            content={content.artifactType}
+            activeArtifactType={activeArtifactType}
+            setActiveArtifactType={setActiveArtifactType}
+          />
+        )}
       </header>
       <div className="w-full overflow-hidden">
-        <div className="text-primary-9 mb-3 w-full text-3xl font-bold">{contentTitle}</div>
+        <div className="flex w-full flex-row justify-between">
+          <div className="text-primary-9 mb-3 w-full text-3xl font-bold">{contentTitle}</div>
+          {contentTitle === 'meModelsTable' ||
+            (contentTitle === 'eModelsTable' && (
+              <p className="flex flex-row items-center text-base font-normal whitespace-nowrap text-gray-400">
+                <InformationIcon className="mr-1" iconColor="#9ca3af " />
+                To download an artifact, use the radio button to select it and click on the download
+                button
+              </p>
+            ))}
+        </div>
         {activeTable}
       </div>
     </div>

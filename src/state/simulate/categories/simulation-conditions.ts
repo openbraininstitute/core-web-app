@@ -8,7 +8,7 @@ export const simulationExperimentalSetupAtom = atomWithReset<SimulationExperimen
   DEFAULT_SIMULATION_EXPERIMENTAL_SETUP
 );
 
-simulationExperimentalSetupAtom.debugLabel = 'simulationConditionsAtom';
+simulationExperimentalSetupAtom.debugLabel = 'simulationExperimentalSetupAtom';
 
 export default function useSimulationConditions() {
   const [state, update] = useAtom(simulationExperimentalSetupAtom);

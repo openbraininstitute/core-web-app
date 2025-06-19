@@ -83,7 +83,7 @@ export default function BillingTable({ payments }: Props) {
               <Button
                 aria-label="download invoice"
                 type="text"
-                icon={<FileDownloadFill className="text-xl text-white" />}
+                icon={<FileDownloadFill className="text-xl text-white!" />}
                 size="small"
               />
             </a>
@@ -93,7 +93,7 @@ export default function BillingTable({ payments }: Props) {
               <Button
                 aria-label="download invoice"
                 type="text"
-                icon={<FileDownloadFill className="text-xl text-white" />}
+                icon={<FileDownloadFill className="text-xl text-white!" />}
                 size="small"
               />
             </a>

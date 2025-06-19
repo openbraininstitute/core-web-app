@@ -3,10 +3,10 @@ import { StepProps } from '../type';
 
 import playVideoAtTime from '@/util/play-video-at-time';
 
-import useMouseHover from '@/hooks/mouse-over';
+import useMouseHover from '@/hooks/useMouveHover';
 import secondsToMMSS from '@/util/convert-seconds-to-minutes';
 import { classNames } from '@/util/utils';
-import styles from './text-content-block.module.css';
+import styles from './text-content-bloc.module.css';
 
 export default function SingleStep({
   content,

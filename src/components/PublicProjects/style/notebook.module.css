@@ -3,6 +3,7 @@
   background: #f5f5f5;
   width: 100%;
   padding: 32px;
+  word-break: break-all;
 }
 
 .readMeParagraph > ol {
@@ -56,6 +57,33 @@
   font-size: 18px;
   font-weight: normal;
   line-height: 1.55;
+  word-break: break-all;
+}
+
+.readMeParagraph > ul {
+  padding-left: 14px;
+}
+
+.readMeParagraph > ul li {
+  font-size: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: disc;
+  margin-bottom: 4px;
+}
+
+.readMeParagraph code {
+  font-family: 'Titillium Web';
+  font-size: 18px !important;
+  padding: 2px 8px;
+  background: #eaf8ff;
+  border-radius: 4px;
+  border: solid 1px #56a7cf;
+}
+
+.readMeParagraph a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .readMeParagraph > ul {

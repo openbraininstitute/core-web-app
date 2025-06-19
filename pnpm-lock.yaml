@@ -291,7 +291,7 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-markdown:
-        specifier: ^9.0.3
+        specifier: ^9.1.0
         version: 9.1.0(@types/react@19.1.0)(react@19.1.0)
       react-pdf:
         specifier: ^9.2.1
@@ -308,6 +308,9 @@ importers:
       react-syntax-highlighter:
         specifier: ^15.6.1
         version: 15.6.1(react@19.1.0)
+      rehype-raw:
+        specifier: ^7.0.0
+        version: 7.0.0
       sharp:
         specifier: ^0.34.1
         version: 0.34.1

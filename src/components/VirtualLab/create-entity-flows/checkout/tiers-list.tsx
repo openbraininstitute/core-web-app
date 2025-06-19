@@ -107,9 +107,7 @@ function TiersComparison({
           {feature.tooltip && (
             <Tooltip
               title={feature.tooltip[0]}
-              classNames={{
-                root: '[&_.ant-tooltip-inner]:bg-primary-8 [&_.ant-tooltip-inner]:text-white [&_.ant-tooltip-inner]:rounded-none [&_.ant-tooltip-arrow]:before:bg-primary-8',
-              }}
+              rootClassName="[&_.ant-tooltip-inner]:bg-primary-8 [&_.ant-tooltip-inner]:text-white [&_.ant-tooltip-inner]:rounded-none [&_.ant-tooltip-arrow]:before:bg-primary-8"
             >
               <InfoCircleOutlined className="ml-1 text-green-500" />
             </Tooltip>

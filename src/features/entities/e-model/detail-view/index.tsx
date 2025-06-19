@@ -2,14 +2,14 @@
 
 import { Suspense } from 'react';
 
-import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
-import Tabs, { useTabs } from '@/components/detail-view-tabs';
-
 import Configuration from '@/features/entities/e-model/detail-view/configuration';
 import Simulation from '@/features/entities/e-model/detail-view/simulation';
-import Analysis from '@/features/entities/e-model/detail-view/analysis';
+import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
+import Tabs, { useTabs } from '@/components/detail-view-tabs';
+import Analysis from '@/features/model-analysis/explorer';
 import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
+
 import { DataType } from '@/constants/explore-section/list-views';
 
 import type { IReconstructionMorphology, IEModel } from '@/api/entitycore/types';

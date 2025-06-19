@@ -1,15 +1,8 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { ConfigProvider, Modal } from 'antd';
 import { useRef } from 'react';
+import { Modal } from 'antd';
 
 import BalanceTransferForm from '@/components/VirtualLab/VirtualLabSettingsComponent/BalanceTransferForm';
-
-const modalTheme = {
-  token: {
-    colorBgBase: 'white',
-    colorTextBase: 'black',
-  },
-};
 
 export default function useBalanceTransferModal() {
   const [modal, contextHolder] = Modal.useModal();
@@ -42,6 +35,7 @@ export default function useBalanceTransferModal() {
       className: '![&>.ant-modal-content]:bg-red-500',
       content: (
         <BalanceTransferForm
+          key="balance-transfer-form"
           virtualLabId={virtualLabId}
           projectId={projectId}
           onClose={onClose}
@@ -57,6 +51,6 @@ export default function useBalanceTransferModal() {
 
   return {
     createModal,
-    contextHolder: <ConfigProvider theme={modalTheme}>{contextHolder}</ConfigProvider>,
+    contextHolder,
   };
 }

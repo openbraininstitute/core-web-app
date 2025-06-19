@@ -1,11 +1,4 @@
-import { CircuitSchemaProps, NumericFilterProperty, NumericFilterType } from '../type';
-
-export type NumericFilterOptions = {
-  property: NumericFilterProperty;
-  type: NumericFilterType;
-  min?: number;
-  max?: number;
-};
+import { CircuitSchemaProps, NumericFilterOptions } from '../type';
 
 const filterCircuitsByNumeric = (
   circuits: CircuitSchemaProps[],

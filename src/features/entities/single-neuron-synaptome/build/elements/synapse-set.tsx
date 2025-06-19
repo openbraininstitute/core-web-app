@@ -36,6 +36,8 @@ import { tryCatch } from '@/api/utils';
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
 
+import type { VirtualLabInfo } from '@/types/virtual-lab/common';
+
 type Props = {
   modelId: string;
   index: number;

@@ -1,0 +1,59 @@
+.panelSplitter {
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  content: '';
+  margin-top: -12px;
+  width: 16px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+  border: 1px solid #fff;
+  box-shadow: 0 8px 16px #0007;
+  cursor: col-resize;
+  z-index: 999;
+  display: grid;
+  place-items: stretch;
+  padding: 4px 0;
+}
+
+.panelSplitter:hover {
+  height: 48px;
+  margin-top: -24px;
+  border-radius: 4px 0 0 4px;
+}
+
+.panelSplitter.fullscreen {
+  left: 0;
+  margin-top: -32px;
+  width: 32px;
+  height: 64px;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.panelSplitter.fullscreen:hover {
+  left: 0;
+  margin-top: -32px;
+  width: 32px;
+  height: 64px;
+  padding: 8px;
+}
+
+.panelSplitter > div {
+  content: '';
+  width: 16px;
+  background-image: url(./dots.png);
+  background-repeat: repeat-y;
+  filter: grayscale(100%);
+  opacity: 0.5;
+}
+
+.panelSplitter:hover > div {
+  filter: none;
+  opacity: 1;
+}
+
+div[data-collapsed='true'] .panelSplitter {
+  display: none;
+}

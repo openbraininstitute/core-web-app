@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ContentForSingleTutorial } from './fetch-single-tutorial';
 
 import { classNames } from '@/util/utils';
-import styles from './text-content-block.module.css';
+import styles from './text-content-bloc.module.css';
 
 export default function TextContentBloc({
   content,

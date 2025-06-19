@@ -1,4 +1,5 @@
-.literatureSuggestions {
+.aiAssistant {
+  --custom-panel-width: 25vw;
   --color-neutral-9: #ffffff;
   --color-neutral-8: #f7f7f7;
   --color-neutral-7: #f0f0f0;
@@ -18,7 +19,8 @@
   --color-on-primary: #fffe;
   --color-secondary-5: #062;
 
-  width: max(320px, 25vw);
+  position: relative;
+  width: var(--custom-panel-width);
   height: 100%;
   background-color: var(--color-neutral-7);
   color: var(--color-primary-1);
@@ -29,13 +31,21 @@
   border-left: 1px solid var(--color-neutral-4);
 }
 
-.literatureSuggestions[data-collapsed='true'] {
+.aiAssistant[data-collapsed='true'] {
   padding: 0;
   padding-top: 20px;
   width: 40px;
 }
 
-.literatureSuggestions > button.header {
+.aiAssistant.fullscreen {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  top: 0;
+  z-index: 999999;
+}
+
+.aiAssistant > button.header {
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
@@ -46,13 +56,13 @@
   font-size: 24px;
 }
 
-.literatureSuggestions[data-collapsed='true'] > button.header {
+.aiAssistant[data-collapsed='true'] > button.header {
   flex-direction: column;
   padding: 0;
   gap: 0.5em;
 }
 
-.literatureSuggestions > button.header > h1 {
+.aiAssistant > button.header > h1 {
   position: relative;
   left: -2px;
   font-size: 18px;
@@ -60,7 +70,7 @@
   transform-origin: center;
 }
 
-.literatureSuggestions[data-collapsed='true'] > button.header > h1 {
+.aiAssistant[data-collapsed='true'] > button.header > h1 {
   order: 9;
   transform: rotate(180deg);
   writing-mode: vertical-lr;
@@ -75,7 +85,7 @@
   height: 1em;
 }
 
-.literatureSuggestions button.actionButton {
+.aiAssistant button.actionButton {
   font: inherit;
   border: 2px solid #f0f0f0;
   background: #fff;
@@ -150,4 +160,13 @@ button.cancelButton:active {
 
 .welcome > div > p {
   margin: 1em 0;
+}
+
+.icons {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
 }
