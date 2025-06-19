@@ -1,4 +1,5 @@
 import { Button } from 'antd';
+
 import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
 import { classNames } from '@/util/utils';
 
@@ -33,7 +34,7 @@ export default function ContactUs({ isOpen, onClose }: { isOpen: boolean; onClos
               'border-primary-8! hover:bg-primary-8! border! hover:font-bold hover:text-white!'
             )}
             size="large"
-            href="mailto:support@openbraininstitute.org?subject=Premium Subscription Inquiry"
+            href="mailto:subscription@openbraininstitute.org?subject=Premium Subscription Inquiry"
             htmlType="button"
           >
             Contact us
