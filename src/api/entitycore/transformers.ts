@@ -138,14 +138,14 @@ export function transformAgentToNames(
   const agents = map(agentsWithRoles, 'agent');
   const processedAgents = map(agents, (agent) => ({
     // eslint-disable-next-line no-nested-ternary
-    name: figureOutName(agent),
+    name: resolveAgentName(agent),
     type: agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
   }));
 
   return map(sortBy(processedAgents, ['type', 'name']), 'name').join('\n');
 }
 
-function figureOutName(agent: Agent) {
+function resolveAgentName(agent: Agent) {
   switch (agent.type) {
     case 'person':
     case 'organization':

@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
+import omit from 'lodash/omit';
 
-import ListingView from '@/features/views/listing';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import ListingView from '@/features/views/listing';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { ExperimentalEntitySlugValue } from '@/entity-configuration/domain/slug';
@@ -21,6 +22,10 @@ export default async function Page({
   }
 
   return (
-    <ListingView entity={entity} virtualLabId={params.virtualLabId} projectId={params.projectId} />
+    <ListingView
+      entity={omit(entity, ['api', 'viewDefinition'])}
+      virtualLabId={params.virtualLabId}
+      projectId={params.projectId}
+    />
   );
 }

@@ -337,19 +337,4 @@ export const ENTITY_CORE_COMMON_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCo
       value: 'pref_label',
     },
   },
-  [EntityCoreFields.Contributions]: {
-    title: 'Contributors',
-    filter: FilterTypeEnum.CheckList,
-    render: (r) => renderEmptyOrValue(transformAgentToNames(r.contributions)),
-    vocabulary: {
-      plural: 'Contributors',
-      singular: 'Contributor',
-    },
-    constraint: 'contribution__pref_label__in',
-    isSortable: false,
-    order: {
-      property: 'contribution__order_by',
-      value: 'pref_label',
-    },
-  },
 };
