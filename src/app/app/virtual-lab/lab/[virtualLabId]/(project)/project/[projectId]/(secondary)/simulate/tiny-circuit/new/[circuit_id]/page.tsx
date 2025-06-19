@@ -123,6 +123,8 @@ export default function TinyCircuitSimulation() {
     return validate?.errors;
   }, [validate, config]);
 
+  console.log(schema);
+
   useEffect(() => {
     async function fetchSpec() {
       try {
@@ -143,6 +145,7 @@ export default function TinyCircuitSimulation() {
             | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
         } = {};
 
+        // Setting up initial values and constants.
         Object.entries(theSchema.properties).forEach(([k, v]) => {
           if (!v.additionalProperties) {
             const initial: Record<string, ConfigValue> = {};
@@ -182,7 +185,7 @@ export default function TinyCircuitSimulation() {
     );
   }
 
-  function renderKey([k, v]: [string, JSONSchema]) {
+  function renderSection([k, v]: [string, JSONSchema]) {
     if (!schema?.properties) return;
     return (
       <Fragment key={k}>
@@ -251,8 +254,8 @@ export default function TinyCircuitSimulation() {
 
                             const selectedTabAtoms = atomsMap[configTab];
                             if (!isAtom(selectedTabAtoms)) {
-                              const schemaKey = `${schema.properties?.[configTab].title}_${idx}`;
-                              delete selectedTabAtoms[schemaKey];
+                              const refereeKey = `${schema.properties?.[configTab].title}_${idx}`;
+                              delete selectedTabAtoms[refereeKey];
 
                               // Initialize case
 
@@ -260,7 +263,7 @@ export default function TinyCircuitSimulation() {
                                 isPlainObject(config.initialize) &&
                                 isPlainObject(config.initialize.node_set) &&
                                 typeof config.initialize.node_set.block_name === 'string' &&
-                                config.initialize.node_set.block_name === schemaKey
+                                config.initialize.node_set.block_name === refereeKey
                               ) {
                                 atomsMap.initialize = atom<Record<string, ConfigValue>>({
                                   ...config.initialize,
@@ -284,8 +287,8 @@ export default function TinyCircuitSimulation() {
                                         !isPlainObject(entryV) ||
                                         !isPlainObject(field) ||
                                         typeof field.block_name !== 'string' ||
-                                        field.block_name !== schemaKey ||
-                                        isAtom(atomsMap[configK])
+                                        isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
+                                        field.block_name !== refereeKey
                                       )
                                         return;
 
@@ -401,7 +404,7 @@ export default function TinyCircuitSimulation() {
                         return order(a[0]) - order(b[0]);
                       })
                       .map((entry) => {
-                        return renderKey(entry);
+                        return renderSection(entry);
                       })}
                 </Fragment>
               );
@@ -438,6 +441,8 @@ export default function TinyCircuitSimulation() {
                       });
                       return;
                     }
+
+                    console.log(await res.json());
                   } catch (e) {
                     notification.error({ message: assertErrorMessage(e) });
                     return;
