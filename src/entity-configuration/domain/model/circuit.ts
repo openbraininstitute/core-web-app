@@ -1,0 +1,37 @@
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { DataType } from '@/constants/explore-section/list-views';
+import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { getMEModel } from '@/api/entitycore/queries';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { WorkspaceContext } from '@/types/common';
+
+export const Circuit: EntityCoreTypeConfig<ICircuit> = {
+  group: 'models',
+  title: 'Circuit',
+  legacyType: DataType.Circuit,
+  type: EntityTypeEnum.Circuit,
+  slug: EntitySlug.SingleNeuronSynaptome,
+  api: {
+    config: {
+      allowedFacets: true,
+      allowedParams: 'all',
+    },
+    query: {
+      list: getCircuits,
+      one: getCircuit,
+    },
+  },
+  explore: {
+    basePrefix: 'model',
+    routePrefix: 'interactive/model',
+  },
+  asset: {
+    extension: 'application/json',
+    // configfile: AssetLabel.single_neuron_synaptome_config,
+  },
+  isBookmarkable: true,
+} as const;

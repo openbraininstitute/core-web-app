@@ -6,7 +6,12 @@ import {
   NeuronDensity,
 } from '@/entity-configuration/domain/experimental';
 
-import { Emodel, MEmodel, SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import {
+  Emodel,
+  MEmodel,
+  SingleNeuronSynaptome,
+  Circuit,
+} from '@/entity-configuration/domain/model';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
@@ -37,6 +42,7 @@ export const EntityCoreConfiguration = {
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
   ...EntityCoreSimulationConfiguration,
+  Circuit,
 } as const;
 
 export type TEntityCoreConfigurationItem =

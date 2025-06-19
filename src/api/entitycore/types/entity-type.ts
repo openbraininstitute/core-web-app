@@ -13,6 +13,7 @@ export enum EntityTypeEnum {
   Subject = 'subject',
   SynapticPathway = 'synaptic_pathway',
   SingleNeuronSynaptomeSimulation = 'single_neuron_synaptome_simulation',
+  Circuit = 'circuit',
 }
 
 export type EntityTypeUnion = keyof typeof EntityTypeEnum;

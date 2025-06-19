@@ -3,16 +3,13 @@
 import { parseAsString, Parser, useQueryStates } from 'nuqs';
 import { DownOutlined } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAtom } from 'jotai';
 import capitalize from 'lodash/capitalize';
 import Image from 'next/image';
 import map from 'lodash/map';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { useState, useEffect, useRef, MouseEventHandler } from 'react';
+import { useRef } from 'react';
 import { Button } from 'antd';
-import { scopeSelectorExpandedAtom } from './state';
 import { classNames } from '@/util/utils';
 import { basePath } from '@/config';
 import {
@@ -23,7 +20,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 export enum ModelTileType {
   IonChannel = 'ion-channel',
-  PairedNeuron = 'paired-neuron',
+  TinyCircuit = 'tiny-circuit',
   BrainRegions = 'brain-regions',
   SingleNeuron = 'single-neuron',
   Microcircuit = 'microcircuit',
@@ -87,12 +84,12 @@ type TTileConfig = {
   img: string;
   disabled: boolean;
   entities?: {
-    build: TEntityCoreConfigurationItem;
+    build?: TEntityCoreConfigurationItem;
     simulate: TEntityCoreConfigurationItem;
   };
   url: {
-    build: string;
-    explore: string;
+    build?: string;
+    explore?: string;
   } | null;
 };
 
@@ -107,14 +104,17 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     url: null,
   },
   {
-    id: 'paired-neuron',
-    title: 'Paired Neuron',
-    type: ModelTileType.PairedNeuron,
-    description:
-      'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
+    id: 'tiny-circuit',
+    title: 'Tiny Circuit',
+    type: ModelTileType.TinyCircuit,
+    description: '',
     img: imageUrl('pairedNeuron'),
-    disabled: true,
+    disabled: false,
     url: null,
+    entities: {
+      build: EntityCoreConfiguration.Circuit,
+      simulate: EntityCoreConfiguration.Circuit,
+    },
   },
   {
     id: 'brain-regions',
@@ -278,17 +278,20 @@ export function ScopeSelector() {
             style={{ clipPath: 'circle()', shapeOutside: 'circle()' }}
             className="self-center"
           />
-        ) : url?.build ? (
-          <Button
-            onClick={onClick}
-            className={classNames(
-              'bg-primary-9 h-[55px] min-w-[100px] self-center text-xl font-bold text-white',
-              'flex items-center justify-center rounded-none hover:text-white'
-            )}
-          >
-            Build
-          </Button>
-        ) : null}
+        ) : (
+          ((url?.build && (
+            <Button
+              onClick={onClick}
+              className={classNames(
+                'bg-primary-9 h-[55px] min-w-[100px] self-center text-xl font-bold text-white',
+                'flex items-center justify-center rounded-none hover:text-white'
+              )}
+            >
+              Build
+            </Button>
+          )) ??
+          null)
+        )}
       </div>
     );
   };

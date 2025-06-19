@@ -6,6 +6,13 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
+  [DataType.Circuit]: {
+    title: 'Circuit',
+    name: EntitySlug.Circuit,
+    curated: false,
+    columns: [EntityCoreFields.Name],
+  },
+
   [DataType.SingleNeuronSimulation]: {
     title: 'Simulation',
     group: DataTypeGroup.SimulationData,

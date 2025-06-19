@@ -143,6 +143,7 @@ function NewSim() {
   });
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const dataKey = resolveDataKey({ projectId, section: 'simulate', entity });
+  console.log(dataKey);
   const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
 
   const tableRef = useRef<HTMLDivElement>(null);

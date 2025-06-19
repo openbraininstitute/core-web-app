@@ -5,6 +5,7 @@ export * from '@/entity-configuration/domain/model/single-neuron-synaptome';
 export * from '@/entity-configuration/domain/model/me-model';
 export * from '@/entity-configuration/domain/model/e-model';
 export * from '@/entity-configuration/domain/model/mesh';
+export * from '@/entity-configuration/domain/model/circuit';
 
 export const MODEL_DATATYPES = [
   DataType.CircuitEModel,

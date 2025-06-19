@@ -78,7 +78,7 @@ export default function TinyCircuitSimulation() {
 
   const [loading, setLoading] = useState(false);
 
-  console.log(loading)
+  console.log(loading);
 
   const notification = useAppNotification();
 
