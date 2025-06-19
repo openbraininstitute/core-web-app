@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import omit from 'lodash/omit';
 import type { Metadata } from 'next';
 
 import ListingView from '@/features/views/listing';
@@ -32,6 +33,10 @@ export default async function Page({ params: promisedParams }: Props) {
   }
 
   return (
-    <ListingView entity={entity} virtualLabId={params.virtualLabId} projectId={params.projectId} />
+    <ListingView
+      entity={omit(entity, ['api', 'viewDefinition'])}
+      virtualLabId={params.virtualLabId}
+      projectId={params.projectId}
+    />
   );
 }
