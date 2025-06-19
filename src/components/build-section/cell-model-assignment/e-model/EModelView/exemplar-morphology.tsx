@@ -40,12 +40,6 @@ const defaultColumns: ColumnsType<IReconstructionMorphology> = Object.entries(
 }));
 
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
-  params: {
-    id: string;
-    projectId: string;
-    virtualLabId: string;
-  };
   exemplarMorphology: IReconstructionMorphology | IReconstructionMorphologyExpanded;
 };
 

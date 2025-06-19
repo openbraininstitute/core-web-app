@@ -298,11 +298,11 @@ export function resolveBrainRegionCellCompositionFn({
           // however, if it's the first time and it's an aggregation of one, this ensures consistency.
           if (currentNode.about === 'MType' || currentNode.about === 'EType') {
             currentNode.composition.neuron = {
-              density: figureOutNeuronDensity(initialVolumeForNode, currentNode),
+              density: resolveNeuronDensity(initialVolumeForNode, currentNode),
               count: currentNode.cellCounts.neuron * NEURON_DENSITY_SCALE,
             };
             currentNode.composition.glia = {
-              density: figureOutGliaDensity(initialVolumeForNode, currentNode),
+              density: resolveGliaDensity(initialVolumeForNode, currentNode),
               count: currentNode.cellCounts.glia,
             };
           }
@@ -368,14 +368,14 @@ export const resolveBrainRegionCellComposition = memoize(
   ({ brainRegionId }) => brainRegionId
 );
 
-function figureOutNeuronDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {
+function resolveNeuronDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {
   if (initialVolumeForNode > 0) return currentNode.cellCounts.neuron / initialVolumeForNode;
   return currentNode.about === 'EType'
     ? ((currentNode as RawTreeNode).composition?.neuron.density ?? 0)
     : 0;
 }
 
-function figureOutGliaDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {
+function resolveGliaDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {
   if (initialVolumeForNode > 0) return currentNode.cellCounts.glia / initialVolumeForNode;
   return currentNode.about === 'EType'
     ? ((currentNode as RawTreeNode).composition?.glia.density ?? 0)

@@ -36,8 +36,6 @@ export default function SynaptomeTable({ content }: { content: SynaptomeProps[] 
           selectedRow ? 'bottom-4' : 'bottom-[-100px]'
         )}
         type="button"
-        // eslint-disable-next-line no-console
-        onClick={() => console.log(selectedRow)}
         aria-label="Download selected model"
       >
         Download Model

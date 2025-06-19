@@ -1,12 +1,10 @@
 import { auth } from '@/auth';
 import PaperView from '@/components/papers/PaperView';
 import retrievePaperLexicalConfig from '@/services/paper-ai/retrievePaperLexicalConfig';
-import { ServerSideComponentProp } from '@/types/common';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 type Props = ServerSideComponentProp<
-  {
-    virtualLabId: string;
-    projectId: string;
+  WorkspaceContext & {
     paperId: string;
   },
   any

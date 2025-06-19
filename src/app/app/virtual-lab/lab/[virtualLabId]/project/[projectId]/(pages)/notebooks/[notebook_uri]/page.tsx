@@ -6,13 +6,13 @@ export default async function VirtualLab({
   const params = await promisedParams;
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { notebook_uri } = params;
+  const { notebook_uri: notebookUri } = params;
 
   return (
     <div className="h-full w-full bg-white">
       <iframe
-        title={notebook_uri}
-        src={`https://nbviewer.org/github/${notebook_uri}`}
+        title={notebookUri}
+        src={`https://nbviewer.org/github/${notebookUri}`}
         width="100%"
         height="100%"
       />

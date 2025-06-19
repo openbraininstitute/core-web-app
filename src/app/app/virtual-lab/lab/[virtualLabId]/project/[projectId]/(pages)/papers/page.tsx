@@ -2,13 +2,13 @@ import Link from 'next/link';
 
 import { auth } from '@/auth';
 import PaperListView from '@/components/papers/PaperListView';
-import { ServerSideComponentProp } from '@/types/common';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import retrievePapersList from '@/services/paper-ai/retrievePapersList';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 
 export default async function PapersListing({
   params: promisedParams,
-}: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, any>) {
+}: ServerSideComponentProp<WorkspaceContext, any>) {
   const params = await promisedParams;
 
   const { virtualLabId, projectId } = params;

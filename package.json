@@ -9,6 +9,7 @@
     "build": "next build --turbopack",
     "start": "next start --turbopack",
     "lint": "npx eslint src __tests__ && npx tsc --noEmit",
+    "lint:only": "next lint",
     "lint:fix": "next lint --fix",
     "prettier:check": "prettier --check . --log-level warn",
     "prettier:write": "prettier --write . --log-level warn",

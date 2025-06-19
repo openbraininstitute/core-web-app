@@ -8,8 +8,7 @@ export default async function MainPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const params = await promisedParams;
-  const { slug } = params;
+  const { slug } = await promisedParams;
 
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>

@@ -1,10 +1,10 @@
-import { ServerSideComponentProp } from '@/types/common';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 import Form from '@/components/papers/PaperCreationView/Form';
 
 export default async function CreatePaper({
   params: promisedParams,
-}: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, any>) {
+}: ServerSideComponentProp<WorkspaceContext, any>) {
   const params = await promisedParams;
 
   const { virtualLabId, projectId } = params;
