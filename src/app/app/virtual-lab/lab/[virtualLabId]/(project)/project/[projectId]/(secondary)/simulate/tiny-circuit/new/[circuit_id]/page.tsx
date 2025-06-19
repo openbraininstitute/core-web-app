@@ -76,6 +76,10 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
+  const [loading, setLoading] = useState(false);
+
+  console.log(loading)
+
   const notification = useAppNotification();
 
   const [campaignId, setCampaignId] = useState('');
@@ -236,7 +240,7 @@ export default function TinyCircuitSimulation() {
                         <CheckCircleFilled className="text-green-600" />
                       )}
 
-                      {!campaignId && (
+                      {!campaignId && !loading && (
                         <DeleteOutlined
                           className="cursor-pointer"
                           onClick={(e) => {
@@ -313,7 +317,7 @@ export default function TinyCircuitSimulation() {
                 </Fragment>
               );
             })}
-            {!campaignId && (
+            {!campaignId && !loading && (
               <button
                 className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                 type="button"
@@ -376,7 +380,7 @@ export default function TinyCircuitSimulation() {
             rounded="rounded-r-full"
             selectedTab={tab}
             onClick={() => setTab('simulations')}
-            disabled={!campaignId}
+            disabled={!campaignId || loading}
           >
             Simulations
           </Tab>
@@ -407,32 +411,38 @@ export default function TinyCircuitSimulation() {
               type="button"
               className={classNames(
                 'mt-5 flex h-[50px] w-[100%] items-center justify-center rounded-full px-5 py-2 text-lg drop-shadow',
-                errors && errors.length > 0
+                (errors && errors.length > 0) || loading
                   ? 'bg-gray-300 text-gray-500'
                   : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
               )}
               onClick={async () => {
+                if (loading) return;
                 if (!campaignId) {
-                  // Call backend receive campaign Id
+                  setLoading(true);
 
                   try {
                     const res = await authFetch(
                       `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid`,
                       {
                         method: 'POST',
-                        body: JSON.stringify({}),
+                        body: JSON.stringify(config),
+                        headers: { 'Content-Type': 'application/json' },
                       }
                     );
 
                     if (res.status !== 200) {
+                      const errorRes = await res.json();
                       notification.error({
-                        message: 'Something wrong occurred when trying to generate the simulations',
+                        message: errorRes.message ?? 'An error ocurred',
+                        description: errorRes?.details?.[0].msg ?? '',
                       });
                       return;
                     }
                   } catch (e) {
                     notification.error({ message: assertErrorMessage(e) });
                     return;
+                  } finally {
+                    setLoading(false);
                   }
 
                   setCampaignId('dummy campaign Id');
@@ -442,9 +452,12 @@ export default function TinyCircuitSimulation() {
 
                 setCampaignId('');
               }}
-              disabled={!!(errors && errors.length > 0)}
+              disabled={!!(errors && errors.length > 0) || loading}
             >
-              {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
+              <div className="flex justify-between gap-5">
+                {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
+                {loading && <LoadingOutlined />}
+              </div>
             </button>
           </div>
           <div>
