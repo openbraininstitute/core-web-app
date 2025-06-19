@@ -72,7 +72,7 @@ export const selectedRowsAtom = atomFamily(
 export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily(
-  (_scope: DataAtomBinding) => {
+  (_ctx: { key: string }) => {
     const initialState: SortState = { field: EntityCoreFields.CreationDate, order: 'desc' };
 
     const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
