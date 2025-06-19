@@ -34,7 +34,7 @@ function TabLabel({ title, count }: { title: string; count: number }) {
 
 export function PDFViewerContainer({ validationResults }: Props) {
   const allowedValidationResults = validationResults?.filter((o) =>
-    o.assets?.some((o) => o.content_type === AllowedType)
+    o.assets?.some((obj) => obj.content_type === AllowedType)
   );
   const allCount = allowedValidationResults?.reduce(
     (acc, item) => acc + (item.assets?.filter((o) => o.content_type === AllowedType).length || 0),
@@ -59,7 +59,7 @@ export function PDFViewerContainer({ validationResults }: Props) {
         ),
       })) ?? []),
     ],
-    [validationResults]
+    [allCount, allowedValidationResults]
   );
 
   return (

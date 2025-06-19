@@ -28,9 +28,9 @@ type Params = {
   params: Promise<WorkspaceContext>;
 };
 
-export default function NewMEModelPage(props: Params) {
+export default function NewMEModelPage({ params: promisedParams }: Params) {
   const [isFormValid, setIsFormValid] = useState(false);
-  const { projectId, virtualLabId } = use(props.params);
+  const { projectId, virtualLabId } = use(promisedParams);
 
   const { push: navigate } = useRouter();
   const [form] = Form.useForm();

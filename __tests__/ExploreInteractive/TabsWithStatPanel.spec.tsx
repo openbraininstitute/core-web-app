@@ -178,8 +178,8 @@ describe('SelectedBrainRegionPanel', () => {
         {mockBrainRegions.map((brainRegion) => (
           <VizButtons key={brainRegion.id} brainRegion={brainRegion} />
         ))}
-        <EntityGroupTabs />
-        <DataTypeStatPanel />
+        <EntityGroupTabs dataKey="unknown" />
+        <DataTypeStatPanel dataKey="unknown" />
       </TestProvider>
     );
   }

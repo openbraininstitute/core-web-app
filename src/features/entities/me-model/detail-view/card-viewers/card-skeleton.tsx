@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CardContainerSkeleton: React.FC = () => {
+function CardContainerSkeleton() {
   return (
     <div className="w-full rounded-[6px] border border-gray-100 bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -40,6 +40,6 @@ const CardContainerSkeleton: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default CardContainerSkeleton;

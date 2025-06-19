@@ -4,10 +4,10 @@ import { ServerSideComponentProp } from '@/types/common';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import { env } from '@/env';
 
-export default async function Notebooks(
-  props: ServerSideComponentProp<{ projectId: string; virtualLabId: string }, null>
-) {
-  const params = await props.params;
+export default async function Notebooks({
+  params: promisedParams,
+}: ServerSideComponentProp<{ projectId: string; virtualLabId: string }, null>) {
+  const params = await promisedParams;
   const { projectId, virtualLabId } = params;
 
   const { notebooks, error } = await fetchNotebooks(notebookRepoUrl, true);

@@ -1,8 +1,5 @@
 import { format, parseISO, isValid } from 'date-fns';
 import map from 'lodash/map';
-import isMatch from 'lodash/isMatch';
-import isNumber from 'lodash/isNumber';
-import { ReactNode } from 'react';
 import { Unionize } from '../typing';
 import { normalizeContributors } from './sort-contributors';
 import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
@@ -20,11 +17,6 @@ import {
 import { DisplayMessages } from '@/constants/display-messages';
 import { formatEsContributors } from '@/components/explore-section/Contributors';
 import { Contributor } from '@/types/explore-section/es-properties';
-import {
-  IReconstructionMorphology,
-  IReconstructionMorphologyExpanded,
-  ReconstructionMorphologyExpand,
-} from '@/api/entitycore/types/entities/reconstruction-morphology';
 
 type Record = { _source: Experiment };
 type ContributorEsProperty = Unionize<Contributor>;

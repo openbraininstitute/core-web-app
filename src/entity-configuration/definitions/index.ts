@@ -14,14 +14,14 @@ import type {
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-const FieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
+const fieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   ...CommonFieldsDefinition,
   ...ExperimentalFieldsDefinition,
   ...ExperimentFieldsDefinition,
   ...ModelFieldsDefinition,
 };
 
-export default FieldsDefinitionRegistry;
+export default fieldsDefinitionRegistry;
 
 /**
  * Retrieves the field definition for a given field from the FieldsDefinitionRegistry.
@@ -34,7 +34,7 @@ export default FieldsDefinitionRegistry;
 export function getFieldDefinition<F extends EntityCoreFields, T extends EntityCoreIdentifiable>(
   field: F
 ): FieldDefinition<T> | null {
-  return get(FieldsDefinitionRegistry, field, null) as FieldDefinition<T> | null;
+  return get(fieldsDefinitionRegistry, field, null) as FieldDefinition<T> | null;
 }
 
 /**
@@ -46,6 +46,6 @@ export function getFieldDefinition<F extends EntityCoreFields, T extends EntityC
  */
 export function getFieldsDefinition<T extends EntityCoreFields[]>(
   fields: [...T]
-): Pick<typeof FieldsDefinitionRegistry, T[number]> {
-  return pick(FieldsDefinitionRegistry, fields);
+): Pick<typeof fieldsDefinitionRegistry, T[number]> {
+  return pick(fieldsDefinitionRegistry, fields);
 }

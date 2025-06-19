@@ -1,4 +1,4 @@
-import { groupBy } from 'lodash';
+import groupBy from 'lodash/groupBy';
 
 import DocumentationIcon from '@/components/icons/Documentation';
 
@@ -6,6 +6,8 @@ import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channe
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
+  // @FIXME: Unused prop?
+  // eslint-disable-next-line react/no-unused-prop-types
   params: WorkspaceContext & { id: string };
   ionChannels: Array<IonChannelModel>;
 };
@@ -25,7 +27,7 @@ function getRandomEModelType(): string {
   const index = Math.floor(Math.random() * eModelTypes.length);
   return eModelTypes[index];
 }
-export default function Mechanism({ params, ionChannels }: Props) {
+export default function Mechanism({ ionChannels }: Props) {
   const ionChannelsFormatted = ionChannels.map((o) => ({ ...o, location: getRandomEModelType() }));
   return <ListingGrid ionChannels={ionChannelsFormatted} />;
 }

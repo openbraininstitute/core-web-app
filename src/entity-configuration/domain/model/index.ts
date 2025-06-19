@@ -1,9 +1,6 @@
 // TODO: this data type should be moved from this file
 import { DataType } from '@/constants/explore-section/list-views';
 
-export * from '@/entity-configuration/domain/model/single-neuron-synaptome';
-export * from '@/entity-configuration/domain/model/me-model';
-export * from '@/entity-configuration/domain/model/e-model';
 export * from '@/entity-configuration/domain/model/mesh';
 
 export const MODEL_DATATYPES = [

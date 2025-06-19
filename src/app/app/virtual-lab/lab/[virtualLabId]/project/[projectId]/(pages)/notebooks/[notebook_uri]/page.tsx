@@ -1,15 +1,18 @@
 import { ServerSideComponentProp } from '@/types/common';
 
-export default async function VirtualLab(props: ServerSideComponentProp<{ notebook_uri: string }>) {
-  const params = await props.params;
+export default async function VirtualLab({
+  params: promisedParams,
+}: ServerSideComponentProp<{ notebook_uri: string }, any>) {
+  const params = await promisedParams;
 
-  const { notebook_uri } = params;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { notebook_uri: notebookUri } = params;
 
   return (
     <div className="h-full w-full bg-white">
       <iframe
-        title={notebook_uri}
-        src={`https://nbviewer.org/github/${notebook_uri}`}
+        title={notebookUri}
+        src={`https://nbviewer.org/github/${notebookUri}`}
         width="100%"
         height="100%"
       />

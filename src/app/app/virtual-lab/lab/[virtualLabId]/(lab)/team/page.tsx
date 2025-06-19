@@ -6,10 +6,10 @@ import VirtualLabTeamTable from '@/components/VirtualLab/VirtualLabTeamTable';
 import withVirtualLabUsers from '@/components/VirtualLab/data/WithVirtualLabUsers';
 import { ServerSideComponentProp } from '@/types/common';
 
-export default function VirtualLabTeamPage(
-  props: ServerSideComponentProp<{ virtualLabId: string }, null>
-) {
-  const { virtualLabId } = use(props.params);
+export default function VirtualLabTeamPage({
+  params: promisedParams,
+}: ServerSideComponentProp<{ virtualLabId: string }, null>) {
+  const { virtualLabId } = use(promisedParams);
   const WithVirtualLabUsers = withVirtualLabUsers(VirtualLabTeamTable, virtualLabId);
   return <WithVirtualLabUsers />;
 }

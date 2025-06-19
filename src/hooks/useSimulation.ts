@@ -26,7 +26,7 @@ export function useSimulation({
 }) {
   const [simulation, setSimulation] = useState<ISingleNeuronSimulation | null>(null);
   const [simulationConfig, setSimulationConfig] = useState<SimulationPayload | null>(null);
-  const [synaptomeModel, setSynaptomeModel] = useState<SingleNeuronSynaptomeResource | null>(null);
+  const [synaptomeModel] = useState<SingleNeuronSynaptomeResource | null>(null);
   const [meModel, setMeModel] = useState<IMEModel | null>(null);
 
   const { error: notifyError } = useNotification();

@@ -1,6 +1,6 @@
+import { useEffect, useState } from 'react';
 import { logError } from '@/util/logger';
 import { assertType, TypeDef } from '@/util/type-guards';
-import { useEffect, useState } from 'react';
 
 export interface ContentForGlossaryItem {
   Name: string;

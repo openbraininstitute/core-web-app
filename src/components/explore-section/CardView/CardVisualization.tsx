@@ -1,11 +1,5 @@
-import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
-import { atomFamily, loadable, selectAtom, unwrap } from 'jotai/utils';
-import { Spin } from 'antd';
-import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
+import { WarningOutlined } from '@ant-design/icons';
 import { DataType } from '@/constants/explore-section/list-views';
-import sessionAtom from '@/state/session';
-import { createHeaders } from '@/util/utils';
 import {
   ExperimentalTrace,
   ReconstructedNeuronMorphology,
@@ -21,15 +15,6 @@ type CardVisualizationProps = {
   width?: number;
   className?: string;
 };
-
-const swcFileAtom = atomFamily((contentUrl?: string) =>
-  selectAtom(unwrap(sessionAtom), (session) => {
-    if (!session || !contentUrl) return null;
-    return fetch(contentUrl, {
-      headers: createHeaders(session.accessToken, { Accept: '*/*' }),
-    }).then((res) => res.text());
-  })
-);
 
 export default function CardVisualization({
   dataType,

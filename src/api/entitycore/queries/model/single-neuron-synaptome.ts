@@ -1,5 +1,4 @@
 import { entityCoreApi, getEntityCoreContext, getAssetElement } from '@/api/entitycore/utils';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { arrayBufferToJson } from '@/utils/buffer';
@@ -13,6 +12,7 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 
 const baseUri = '/single-neuron-synaptome';
 

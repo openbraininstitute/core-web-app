@@ -35,12 +35,12 @@ export default function ExploreSectionNameSearch({ dataType, dataKey }: SearchPr
       setPageNumber(PAGE_NUMBER);
       setSearchString(searchStr);
     },
-    [setSearchString],
+    [setPageNumber, setPrevData, setSearchString],
     600
   );
 
-  /* TODO: Remove these effects and local state, they're only needed because lodash's 
-  debounce can't update the atom for some reason. 
+  /* TODO: Remove these effects and local state, they're only needed because lodash's
+  debounce can't update the atom for some reason.
   Use atomWithDebounce recipe instead: https://jotai.org/docs/recipes/atom-with-debounce */
 
   const [searchStringLocal, setSearchStringLocal] = useState(searchString);

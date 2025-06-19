@@ -101,8 +101,8 @@ export default function BookmarksView({
     if (ids.length) {
       updateTargetIds(ids);
     }
-    () => updateTargetIds([]);
-  }, [ids]);
+    return () => updateTargetIds([]);
+  }, [ids, updateTargetIds]);
 
   const tableList = match(tabs)
     .when(

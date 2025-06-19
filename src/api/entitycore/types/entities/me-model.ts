@@ -27,7 +27,6 @@ import type {
   EtypeFilter,
   IdFilter,
 } from '@/api/entitycore/types/shared/request';
-import { Pagination } from '../shared/response';
 
 export enum ValidationStatus {
   Created = 'created',
@@ -58,12 +57,6 @@ export interface IMEModel
   etypes: Array<IEType> | null;
   morphology: IReconstructionMorphology;
   emodel: IEModel;
-}
-
-export interface INestedMEModel extends IMEModelBase, Timestamps {
-  id: string;
-  mtypes: Array<IMType>;
-  etypes: Array<IEType>;
 }
 
 export interface INestedMEModel extends IMEModelBase, Timestamps {

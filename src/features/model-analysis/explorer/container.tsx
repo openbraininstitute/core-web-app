@@ -33,7 +33,7 @@ export default function AnalysisContainer() {
         </div>
       );
     })
-    .with({ state: 'hasError' }, (error) => {
+    .with({ state: 'hasError' }, (_error) => {
       return (
         <div className="flex h-full items-center justify-center text-xl font-bold text-red-500">
           Error loading ME-Model analysis
