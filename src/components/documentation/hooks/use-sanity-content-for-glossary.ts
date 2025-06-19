@@ -1,4 +1,4 @@
-import query from '../query/glossaryHooks.groq';
+import query from '../query/glossary-hooks.groq';
 
 import { ContentForGlossaryItem } from '../type';
 

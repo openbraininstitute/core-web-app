@@ -45,7 +45,9 @@ export default function SingleTutorialCard({ content }: { content: ContentForTut
       </div>
       <div className="w-1/2">
         <h2 className="mb-1 text-xl leading-[1.15] font-bold hyphens-auto">{content.title}</h2>
-        <p className="text-base leading-tight font-normal hyphens-auto">{content.description}</p>
+        <p className="line-clamp-3 text-base leading-tight font-normal hyphens-auto">
+          {content.description}
+        </p>
       </div>
       <div />
     </Link>

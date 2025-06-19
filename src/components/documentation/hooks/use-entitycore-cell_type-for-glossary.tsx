@@ -10,9 +10,13 @@ import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 export const useFetchEntityTypes = ({
   cellType,
   filter,
+  activePage = 1,
+  pageSize = 100,
 }: {
   cellType: 'e-type' | 'm-type';
   filter?: TypeFilter | undefined;
+  activePage?: number;
+  pageSize?: number;
 }) => {
   const [state, setState] = useState<{
     data: EntityCoreResponse<IEType> | EntityCoreResponse<IMType> | null;
@@ -28,43 +32,49 @@ export const useFetchEntityTypes = ({
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      let currentPage = 1;
-      const pageSize = 100;
-      let allItems: IEType[] | IMType[] = [];
-      let hasMore = true;
+      const args = {
+        filters: {
+          page: activePage,
+          page_size: pageSize,
+          ...(filter ? { order_by: filter.order_by } : {}),
+        },
+      };
 
-      while (hasMore) {
-        const args = {
-          filters: {
-            page: currentPage,
-            page_size: pageSize,
-            ...(filter ? { order_by: filter.order_by } : {}),
+      const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
+
+      let normalizedResponse: EntityCoreResponse<IEType> | EntityCoreResponse<IMType>;
+
+      if (Array.isArray(response)) {
+        normalizedResponse = {
+          data: response,
+          pagination: {
+            total_items: response.length,
+            page: 1,
+            page_size: response.length,
           },
         };
-
-        const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
-
-        let items: IEType[] | IMType[] = [];
-        if (Array.isArray(response)) {
-          items = response;
-        } else if (response && 'data' in response && Array.isArray(response.data)) {
-          items = response.data;
-        } else if (response && 'items' in response && Array.isArray(response.items)) {
-          items = response.items;
-        } else {
-          hasMore = false;
-          break;
-        }
-
-        allItems = [...allItems, ...items];
-
-        hasMore = items.length === pageSize;
-
-        currentPage += 1;
+      } else if (
+        response &&
+        'data' in response &&
+        Array.isArray(response.data) &&
+        'pagination' in response
+      ) {
+        normalizedResponse = response;
+      } else if (response && 'items' in response && Array.isArray(response.items)) {
+        normalizedResponse = {
+          data: response.items,
+          pagination: {
+            total_items: response.data.length || response.items.length,
+            page: response.pagination.page || 1,
+            page_size: response.pagination.page_size || response.items.length,
+          },
+        };
+      } else {
+        throw new Error('Unexpected response format');
       }
 
       setState({
-        data: { data: allItems } as EntityCoreResponse<IEType> | EntityCoreResponse<IMType>,
+        data: normalizedResponse,
         loading: false,
         error: null,
       });
@@ -75,7 +85,7 @@ export const useFetchEntityTypes = ({
         error: err instanceof Error ? err.message : 'An unknown error occurred',
       });
     }
-  }, [cellType, filter]);
+  }, [cellType, activePage, pageSize, filter]);
 
   useEffect(() => {
     fetchEntityCellTypes();
