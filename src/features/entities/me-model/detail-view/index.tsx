@@ -3,7 +3,6 @@
 import { Suspense } from 'react';
 
 import { useParams } from 'next/navigation';
-import { Suspense } from 'react';
 import Link from 'next/link';
 
 import Configuration from '@/features/entities/me-model/detail-view/configuration';
@@ -16,7 +15,6 @@ import If from '@/components/ConditionalRenderer/If';
 
 import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { resolveExperimentUrl } from '@/utils/url-builder';
