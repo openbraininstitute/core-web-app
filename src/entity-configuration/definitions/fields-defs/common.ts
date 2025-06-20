@@ -158,6 +158,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     constraint: 'brain_region_id',
     isFilterable: false,
     isDisplayable: true,
+    isSortable: false,
+    order: {
+      property: 'brain_region__order_by',
+      value: 'name',
+    },
   },
   [EntityCoreFields.CreatedBy]: {
     title: 'Created by',

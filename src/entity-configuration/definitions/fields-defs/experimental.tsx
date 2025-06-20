@@ -5,6 +5,7 @@ import getMeasurements, {
   EmptyValue,
   renderArray,
   renderEmptyOrValue,
+  renderFloatNumber,
   renderLicense,
   renderMeanStd,
   renderMorphologyMeasurement,
@@ -263,7 +264,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     unit: '1/mm³',
     render: (r) => {
       const { mean } = getMeasurements(r as EntityCoreDensityObjectTypes);
-      return renderEmptyOrValue(Number(mean?.value));
+      return renderEmptyOrValue(`${renderFloatNumber(mean?.value)}`);
     },
     vocabulary: {
       plural: 'Densities',
