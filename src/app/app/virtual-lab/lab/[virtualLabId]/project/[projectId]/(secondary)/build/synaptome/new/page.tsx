@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 
 import Configuration from '@/page-wrappers/build/single-neuron-synaptome';
+
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -9,12 +11,11 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 
 type Props = ServerSideComponentProp<WorkspaceContext, { mode: 'clone'; model: string; s: string }>;
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await promisedParams;
+  const params = await props.params;
   const searchParams = await props.searchParams;
   let title = 'Single Neuron Synaptome';
   let description = 'Create a new single neuron synaptome';
