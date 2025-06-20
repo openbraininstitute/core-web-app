@@ -130,7 +130,7 @@ export function JSONSchemaForm({
                           [k]: {
                             type: 'NamedTuple',
                             name: 'example_id_neuron_set',
-                            elements: state[k].elements,
+                            elements: [...state[k].elements],
                           },
                         });
                       }}
