@@ -215,7 +215,6 @@ function NotebookTable({
       dataIndex: 'name',
       key: 'name',
       sorter: getSorter('name'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -224,7 +223,6 @@ function NotebookTable({
       key: 'description',
       sorter: getSorter('description'),
       render: (text) => <div className="line-clamp-2 max-w-[40em]">{text}</div>,
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -232,7 +230,6 @@ function NotebookTable({
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
       sorter: getSorter('objectOfInterest'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -240,7 +237,6 @@ function NotebookTable({
       dataIndex: 'scale',
       key: 'scale',
       sorter: getSorter('scale'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -248,7 +244,6 @@ function NotebookTable({
       dataIndex: 'authors',
       key: 'authors',
       sorter: getSorter('authors'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -268,7 +263,6 @@ function NotebookTable({
         }
         return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
       },
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
