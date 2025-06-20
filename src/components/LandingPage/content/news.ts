@@ -1,12 +1,15 @@
 /* eslint-disable no-param-reassign */
+import { PortableTextBlock } from 'next-sanity';
 import { tryType, typeImage } from './_common';
 import { ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
+
 import { useSanity } from '@/services/sanity';
 import { isNumber } from '@/util/type-guards';
 
 export interface ContentForNewsItem {
   id: string;
   title: string;
+  articleContent: PortableTextBlock;
   content: string;
   article?: ContentForRichText | null;
   category: string;
@@ -18,6 +21,7 @@ export interface ContentForNewsItem {
   imageWidth: number;
   imageHeight: number;
   date: string;
+  thumbnailIntroduction?: string;
 }
 
 export type ContentForNewsList = ContentForNewsItem[];
@@ -56,19 +60,20 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
   return (
     useSanity(
       `*[_type=="news" && slug.current==${JSON.stringify(slug)}][0] {
-  "id": _id,
-  title,
-  "content": thumbnailIntroduction,
-  "article": content,
-  "slug": slug.current,
-  "isEPFL": isBBPEPFLNews,
-  category,
-  cardSize,
-  "imageURL": thumbnailImage.asset->url,
-  "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
-  "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
-  "date": customDate,
-}`,
+        "id": _id,
+        title,
+        "content": thumbnailIntroduction,
+        "article": content,
+        "slug": slug.current,
+        "isEPFL": isBBPEPFLNews,
+        category,
+        cardSize,
+        "imageURL": thumbnailImage.asset->url,
+        "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
+        "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
+        "date": customDate,
+        thumbnailIntroduction
+      }`,
       isContentForNewsItem
     ) ?? null
   );

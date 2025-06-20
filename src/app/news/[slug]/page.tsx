@@ -1,7 +1,7 @@
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import NewsPage from '@/components/LandingPage/components/NewsPage';
+import SingleNewsPage from '@/components/LandingPage/components/NewsPage/single-news-page';
 
 export default async function MainPage({
   params: promisedParams,
@@ -12,7 +12,8 @@ export default async function MainPage({
 
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-      <NewsPage slug={slug} />
+      {/* <NewsPage slug={slug} /> */}
+      <SingleNewsPage slug={slug} />
     </ErrorBoundary>
   );
 }
