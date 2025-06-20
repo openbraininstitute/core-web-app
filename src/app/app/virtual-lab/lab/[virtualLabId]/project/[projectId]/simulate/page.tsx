@@ -137,13 +137,14 @@ function BrowseSimsTab() {
 function NewSim() {
   const { type } = useTileScopeQuery();
   const model = ModelTilesConfig.find((o) => o.id === type);
-  const dataType = model?.entities?.build.legacyType;
+
+  const dataType = model?.entities?.build?.legacyType;
   const entity = getEntityByLegacyType({
-    legacyType: dataType!,
+    legacyType: dataType,
   });
+
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const dataKey = resolveDataKey({ projectId, section: 'simulate', entity });
-  console.log(dataKey);
   const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -195,7 +196,7 @@ function NewSim() {
               className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
               href={resolveExperimentUrl({
                 ctx: { virtualLabId, projectId },
-                dataType: entity?.type!,
+                dataType: entity?.type,
                 entityId: selectedRows[0].id,
               })}
             >

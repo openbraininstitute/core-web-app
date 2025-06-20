@@ -14,7 +14,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   title: 'Circuit',
   legacyType: DataType.Circuit,
   type: EntityTypeEnum.Circuit,
-  slug: EntitySlug.SingleNeuronSynaptome,
+  slug: EntitySlug.Circuit,
   api: {
     config: {
       allowedFacets: true,
