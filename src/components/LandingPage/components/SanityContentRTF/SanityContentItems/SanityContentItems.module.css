@@ -1,3 +1,7 @@
+ul.sanityContentItems {
+  margin: 80px 0;
+}
+
 ul.sanityContentItems > li {
   list-style-type: '⎯';
   padding-inline-start: 1ch;

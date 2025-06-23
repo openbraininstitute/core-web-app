@@ -1,13 +1,12 @@
-import React from 'react';
-
-import Title from '../../Title';
-import { Text } from '../../Text';
 import ProgressiveImage from '../../ProgressiveImage';
+import { Text } from '../../Text';
+import Title from '../../Title';
 import VerticalSpace from '../../VerticalSpace';
-import { classNames } from '@/util/utils';
+
 import { ContentForRichTextPreview } from '@/components/LandingPage/content';
 import { styleBlockFullWidth, styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
 import { gotoSection } from '@/components/LandingPage/utils';
+import { classNames } from '@/util/utils';
 
 import styles from './SanityContentPreview.module.css';
 
@@ -46,7 +45,7 @@ export default function SanityContentPreview({ value }: SanityContentPreviewProp
           />
         )}
         <div className={styles.text}>
-          {value.text && <Text value={value.text} />}
+          {value.text && <Text value={value.text} className="relative -top-2" />}
           {value.button && (
             <button
               type="button"

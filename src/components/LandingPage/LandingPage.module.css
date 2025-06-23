@@ -43,7 +43,6 @@
 
 .landingPage a,
 .landingPage button {
-  all: unset;
   cursor: pointer;
   font-size: var(--font-size-M);
   box-sizing: border-box;
@@ -128,10 +127,8 @@
   font-size: var(--font-size-M);
   text-wrap: auto;
   hyphens: none;
-  /* text-align: justify;
-  text-justify: distribute; */
   word-spacing: 0;
-  line-height: 1.2;
+  line-height: 1.55;
 }
 
 @media (max-width: 640px) {
