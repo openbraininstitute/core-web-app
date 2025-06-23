@@ -20,7 +20,7 @@ export default function HeaderNews({ content }: { content: ContentForNewsItem })
       <h1 className="mb-4 font-serif text-[4.5em] leading-tight font-normal text-white">
         {content.title}
       </h1>
-      <h2 className="text-primary-1 border-primary-7 border-y border-solid py-6 text-xl leading-normal font-normal">
+      <h2 className="text-primary-1 border-primary-7 border-y border-solid py-6 text-xl leading-[1.55] font-normal">
         {content.thumbnailIntroduction}
       </h2>
     </header>
