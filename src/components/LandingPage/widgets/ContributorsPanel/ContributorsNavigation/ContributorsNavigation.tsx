@@ -1,7 +1,8 @@
 /* eslint-disable react/no-array-index-key */
-import React, { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Contributor, useContributors } from '../data';
+
 import { IconChevronLeft } from '@/components/LandingPage/icons/IconChevronLeft';
 import { IconChevronRight } from '@/components/LandingPage/icons/IconChevronRight';
 import { styleBlockSmall, styleButtonHoverable } from '@/components/LandingPage/styles';
@@ -35,12 +36,6 @@ export default function ContributorsNavigation({ onPageChange }: ContributorsNav
         '--custom-margin-letter': `${LETTER_MARGIN}px`,
       }}
     >
-      {/* <header>
-        <div className={styles.thanks}>{title}</div>
-        <div className={styles.more}>
-          <PortableText value={description} />
-        </div>
-      </header> */}
       <div className={styles.pages}>
         <button
           type="button"

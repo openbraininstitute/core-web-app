@@ -22,6 +22,7 @@ export interface ContentForNewsItem {
   imageHeight: number;
   date: string;
   thumbnailIntroduction?: string;
+  isExternalLink: boolean;
 }
 
 export type ContentForNewsList = ContentForNewsItem[];
@@ -38,6 +39,7 @@ export function isContentForNewsList(data: unknown): data is ContentForNewsList 
       isEPFL: typeBooleanOrNull,
       slug: typeStringOrNull,
       date: typeStringOrNull,
+      isExternalLink: typeBooleanOrNull,
       ...typeImage,
     },
   ]);
@@ -52,6 +54,7 @@ function isContentForNewsItem(data: unknown): data is ContentForNewsItem {
     isEPFL: typeBooleanOrNull,
     slug: typeStringOrNull,
     date: typeStringOrNull,
+    isExternalLink: typeBooleanOrNull,
     ...typeImage,
   });
 }
@@ -61,6 +64,7 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
     useSanity(
       `*[_type=="news" && slug.current==${JSON.stringify(slug)}][0] {
         "id": _id,
+        articleContent,
         title,
         "content": thumbnailIntroduction,
         "article": content,
@@ -72,7 +76,8 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
         "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
         "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
         "date": customDate,
-        thumbnailIntroduction
+        thumbnailIntroduction,
+        isExternalLink
       }`,
       isContentForNewsItem
     ) ?? null
@@ -87,18 +92,19 @@ export function useSanityContentForNewsList(length = 0, start = 0): ContentForNe
   return sanitize(
     useSanity(
       `*[_type=="news"] | order(customDate desc) ${length > 0 ? `[${start}..${length - 1}]` : ''} {
-  "id": _id,
-  title,
-  "content": thumbnailIntroduction,
-  "isEPFL": isBBPEPFLNews,
-  "slug": slug.current,
-  "link": externalLink,
-  category,
-  cardSize,
-  "imageURL": thumbnailImage.asset->url,
-  "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
-  "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
-  "date": customDate,
+        "id": _id,
+        title,
+        "content": thumbnailIntroduction,
+        "isEPFL": isBBPEPFLNews,
+        "slug": slug.current,
+        "link": externalLink,
+        category,
+        cardSize,
+        "imageURL": thumbnailImage.asset->url,
+        "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
+        "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
+        "date": customDate,
+        isExternalLink
 }`,
       isContentForNewsList
     ) ?? []

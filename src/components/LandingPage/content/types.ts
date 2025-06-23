@@ -1,10 +1,11 @@
 import { RichText, tryType } from './_common';
+
 import { TypeDef } from '@/util/type-guards';
 
 export const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
 export const typeStringOrUndef: TypeDef = ['|', 'string', 'undefined'];
 export const typeNumberOrNull: TypeDef = ['|', 'number', 'null', 'undefined'];
-export const typeBooleanOrNull: TypeDef = ['|', 'boolean', 'null'];
+export const typeBooleanOrNull: TypeDef = ['|', 'boolean', 'null', 'undefined'];
 export const typeImage = {
   imageURL: 'string',
   imageWidth: 'number',

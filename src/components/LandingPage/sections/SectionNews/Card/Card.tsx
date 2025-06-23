@@ -1,12 +1,12 @@
-import React from 'react';
-
 import CategoryButton from '../CategoryButton';
-import { ContentForNewsItem } from '@/components/LandingPage/content';
-import { classNames } from '@/util/utils';
+
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
+import { ContentForNewsItem } from '@/components/LandingPage/content';
 import { IconPlus } from '@/components/LandingPage/icons/IconPlus';
 import { styleButtonHoverable } from '@/components/LandingPage/styles';
+import { classNames } from '@/util/utils';
 
+import { sanitizeURL } from '@/components/LandingPage/utils';
 import styles from './Card.module.css';
 
 export interface CardsProps {
@@ -20,7 +20,9 @@ export default function Cards({ className, news }: CardsProps) {
       <h1>{news.title}</h1>
       <div className={styles.subtitle}>
         <div>Published {formatDate(news.date)}</div>
-        <CategoryButton disabled>{news.category}</CategoryButton>
+        <CategoryButton disabled className="text-gray-500">
+          {news.category}
+        </CategoryButton>
       </div>
       <div className={styles.content}>
         <div className={styles.text}>
@@ -30,6 +32,7 @@ export default function Cards({ className, news }: CardsProps) {
           <button
             type="button"
             title={news.link ?? ''}
+            aria-label={`Read more about ${news.title}`}
             className={classNames(styleButtonHoverable, styles.button)}
             onClick={() => gotoNews(news)}
           >
@@ -57,7 +60,9 @@ function formatDate(d: string) {
 }
 
 function gotoNews(news: ContentForNewsItem): void {
-  // const url = sanitizeURL(`/welcome/news/${news.slug}`);
-  const url = news.link;
-  if (url) window.open(url);
+  const url = news.isExternalLink ? news.link : sanitizeURL(`/news/${news.slug}`);
+
+  if (url) {
+    window.open(url, news.isExternalLink ? '_blank' : '_self');
+  }
 }
