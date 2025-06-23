@@ -1,12 +1,12 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
 
-import PlanHeader from './PlanHeader';
 import FeatureBloc from './FeatureBloc';
-import { classNames } from '@/util/utils';
+import PlanHeader from './PlanHeader';
+
 import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
-import { styleBlockFullWidth, styleBlockSmall } from '@/components/LandingPage/styles';
 import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
+import { styleBlockFullWidth, styleBlockSmall } from '@/components/LandingPage/styles';
+import { classNames } from '@/util/utils';
 
 import styles from './large-screen.module.css';
 
@@ -31,7 +31,7 @@ export default function LargeScreen() {
           {features.map((bloc, index) => (
             <>
               {index > 0 && <hr className={styles.fullWidth} />}
-              <FeatureBloc key={`bloc/${index}`} bloc={bloc} plans={plans} />
+              <FeatureBloc bloc={bloc} plans={plans} />
             </>
           ))}
         </div>

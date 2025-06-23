@@ -79,7 +79,7 @@ a.roundedButton {
 }
 
 .layout .blockFullWidth {
-  display: none;
+  display: flex;
   grid-column: 1/-1;
 }
 
@@ -91,7 +91,7 @@ a.roundedButton {
   grid-column: 5/6;
   max-width: var(--S);
   margin-left: 30px;
-  margin: 30px 0 50px 30px;
+  margin: 20px 0 20px 30px;
 }
 
 .layout .blockSmallExpandRight {
