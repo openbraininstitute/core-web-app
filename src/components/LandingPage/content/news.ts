@@ -1,12 +1,15 @@
 /* eslint-disable no-param-reassign */
+import { PortableTextBlock } from 'next-sanity';
 import { tryType, typeImage } from './_common';
 import { ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
+
 import { useSanity } from '@/services/sanity';
 import { isNumber } from '@/util/type-guards';
 
 export interface ContentForNewsItem {
   id: string;
   title: string;
+  articleContent: PortableTextBlock;
   content: string;
   article?: ContentForRichText | null;
   category: string;
@@ -18,6 +21,8 @@ export interface ContentForNewsItem {
   imageWidth: number;
   imageHeight: number;
   date: string;
+  thumbnailIntroduction?: string;
+  isExternalLink: boolean;
 }
 
 export type ContentForNewsList = ContentForNewsItem[];
@@ -34,6 +39,7 @@ export function isContentForNewsList(data: unknown): data is ContentForNewsList 
       isEPFL: typeBooleanOrNull,
       slug: typeStringOrNull,
       date: typeStringOrNull,
+      isExternalLink: typeBooleanOrNull,
       ...typeImage,
     },
   ]);
@@ -48,6 +54,7 @@ function isContentForNewsItem(data: unknown): data is ContentForNewsItem {
     isEPFL: typeBooleanOrNull,
     slug: typeStringOrNull,
     date: typeStringOrNull,
+    isExternalLink: typeBooleanOrNull,
     ...typeImage,
   });
 }
@@ -56,19 +63,22 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
   return (
     useSanity(
       `*[_type=="news" && slug.current==${JSON.stringify(slug)}][0] {
-  "id": _id,
-  title,
-  "content": thumbnailIntroduction,
-  "article": content,
-  "slug": slug.current,
-  "isEPFL": isBBPEPFLNews,
-  category,
-  cardSize,
-  "imageURL": thumbnailImage.asset->url,
-  "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
-  "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
-  "date": customDate,
-}`,
+        "id": _id,
+        articleContent,
+        title,
+        "content": thumbnailIntroduction,
+        "article": content,
+        "slug": slug.current,
+        "isEPFL": isBBPEPFLNews,
+        category,
+        cardSize,
+        "imageURL": thumbnailImage.asset->url,
+        "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
+        "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
+        "date": customDate,
+        thumbnailIntroduction,
+        isExternalLink
+      }`,
       isContentForNewsItem
     ) ?? null
   );
@@ -82,18 +92,19 @@ export function useSanityContentForNewsList(length = 0, start = 0): ContentForNe
   return sanitize(
     useSanity(
       `*[_type=="news"] | order(customDate desc) ${length > 0 ? `[${start}..${length - 1}]` : ''} {
-  "id": _id,
-  title,
-  "content": thumbnailIntroduction,
-  "isEPFL": isBBPEPFLNews,
-  "slug": slug.current,
-  "link": externalLink,
-  category,
-  cardSize,
-  "imageURL": thumbnailImage.asset->url,
-  "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
-  "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
-  "date": customDate,
+        "id": _id,
+        title,
+        "content": thumbnailIntroduction,
+        "isEPFL": isBBPEPFLNews,
+        "slug": slug.current,
+        "link": externalLink,
+        category,
+        cardSize,
+        "imageURL": thumbnailImage.asset->url,
+        "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
+        "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
+        "date": customDate,
+        isExternalLink
 }`,
       isContentForNewsList
     ) ?? []

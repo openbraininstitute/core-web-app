@@ -1,9 +1,10 @@
 import { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
 import { tryType } from './_common';
+
 import { useSanity } from '@/services/sanity';
 
-interface ContentForHero {
+export interface ContentForHero {
   title: string;
   content: string | null;
   backgroundType: 'video' | 'image';

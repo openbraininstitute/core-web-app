@@ -19,9 +19,11 @@ button.categoryButton.selected {
 }
 
 button.categoryButton[disabled] {
-  font-size: calc(0.5 * var(--font-size-M));
+  font-size: var(--font-size-S);
   pointer-events: none;
   cursor: default;
   filter: grayscale(100%);
-  opacity: 0.6;
+  border: solid 1px var(--color-neutral);
+  border-radius: 30px;
+  padding: 2px 12px;
 }

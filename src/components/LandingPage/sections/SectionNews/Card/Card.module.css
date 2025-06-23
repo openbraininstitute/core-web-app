@@ -1,7 +1,7 @@
 .card {
   max-width: 1000px;
   margin: 8px;
-  margin-bottom: 64px;
+  margin-bottom: 120px;
 }
 
 .card.small {
@@ -22,7 +22,9 @@
 }
 
 .card > h1 {
-  margin: 0;
+  margin: unset;
+  margin-bottom: 1em;
+  line-height: 1.3;
 }
 
 .subtitle {
@@ -32,9 +34,8 @@
   align-items: center;
   font-size: 80%;
   color: var(--color-neutral);
-  gap: 2em;
-  margin-bottom: 2em;
-  margin-top: 0.5em;
+  gap: 1em;
+  margin-bottom: 1.4em;
 }
 
 .content {
