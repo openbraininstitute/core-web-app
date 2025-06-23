@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { Tabs, Collapse } from 'antd';
 import dynamic from 'next/dynamic';
 
-import { AllowedType } from '@/features/model-analysis/viewer/pdf-viewer';
+import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
 import { classNames } from '@/util/utils';
 
 import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
+import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
 
-const DynamicPDFViewer = dynamic(() => import('@/features/model-analysis/viewer/pdf-viewer'), {
+const Viewer = dynamic(() => import('@/features/model-analysis/viewer/viewer'), {
   ssr: false,
 });
 
@@ -32,12 +33,15 @@ function TabLabel({ title, count }: { title: string; count: number }) {
   );
 }
 
-export function PDFViewerContainer({ validationResults }: Props) {
+export function ViewerContainer({ validationResults }: Props) {
   const allowedValidationResults = validationResults?.filter((o) =>
-    o.assets?.some((obj) => obj.content_type === AllowedType)
+    o.assets?.some((obj) => AllowedTypes.includes(obj.content_type as TAllowedTypes))
   );
   const allCount = allowedValidationResults?.reduce(
-    (acc, item) => acc + (item.assets?.filter((o) => o.content_type === AllowedType).length || 0),
+    (acc, item) =>
+      acc +
+      (item.assets?.filter((o) => AllowedTypes.includes(o.content_type as TAllowedTypes)).length ||
+        0),
     0
   );
   const allValidationResultsMap = allowedValidationResults?.map((validationResult) => [
@@ -54,7 +58,10 @@ export function PDFViewerContainer({ validationResults }: Props) {
         label: (
           <TabLabel
             title={cleanTitle(item.name)}
-            count={item.assets?.filter((o) => o.content_type === AllowedType).length || 0}
+            count={
+              item.assets?.filter((o) => AllowedTypes.includes(o.content_type as TAllowedTypes))
+                .length || 0
+            }
           />
         ),
       })) ?? []),
@@ -86,19 +93,21 @@ export function PDFViewerContainer({ validationResults }: Props) {
                     {cleanTitle(name)}{' '}
                     <span className="text-neutral-4">
                       (
-                      {resultItem.assets?.filter((o) => o.content_type === AllowedType).length || 0}
+                      {resultItem.assets?.filter((o) =>
+                        AllowedTypes.includes(o.content_type as TAllowedTypes)
+                      ).length || 0}
                       )
                     </span>
                   </span>
                 ),
-                children: <DynamicPDFViewer validationResult={resultItem} key={resultItem.id} />,
+                children: <Viewer validationResult={resultItem} key={resultItem.id} />,
               }))}
             />
           ) : (
             validationResults
               ?.filter((o) => o.id === type)
               ?.map((resultItem) => {
-                return <DynamicPDFViewer validationResult={resultItem} key={resultItem.id} />;
+                return <Viewer validationResult={resultItem} key={resultItem.id} />;
               })
           )}
         </div>

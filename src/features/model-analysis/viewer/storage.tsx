@@ -8,6 +8,9 @@ import { log } from '@/utils/logger';
 
 import type { WorkspaceContext } from '@/types/common';
 
+export const AllowedTypes = ['application/pdf', 'image/png', 'image/jpeg'] as const;
+export type TAllowedTypes = (typeof AllowedTypes)[number];
+
 export const DEFAULT_CACHE_NAME = 'analysis-pdf-cache-v1';
 export const DEFAULT_CACHE_EXPIRE_AFTER = 1 * 60 * 60 * 1000; // 1 Hour
 
