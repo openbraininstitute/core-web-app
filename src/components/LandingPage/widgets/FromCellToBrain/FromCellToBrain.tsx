@@ -1,12 +1,10 @@
-import React from 'react';
-
-import { styleBlockLarge } from '../../styles';
 import ProgressiveImage from '../../components/ProgressiveImage';
 import SwipeableCardsList from '../../components/swipeable-cards-list';
+import { styleBlockLarge } from '../../styles';
 import { useMenuHeight } from '../../utils';
 import { useSanityContentForFromCelltoBrainContent } from './hooks';
-import { classNames } from '@/util/utils';
 
+import { classNames } from '@/util/utils';
 import styles from './FromCellToBrain.module.css';
 
 export interface WidgetFromCellToBrainProps {
@@ -26,17 +24,19 @@ export function WidgetFromCellToBrain({ className }: WidgetFromCellToBrainProps)
     >
       {columns.map((col) => (
         <div key={col.title} className={styles.column}>
-          <h2>{col.title}</h2>
+          <header>{col.title}</header>
           {col.cards.map((card) => (
             <div key={card.title} className={styles.card}>
-              <h3>{card.title}</h3>
-              <ProgressiveImage
-                className={styles.image}
-                src={card.imageURL}
-                width={card.imageWidth}
-                height={card.imageHeight}
-                alt={card.title}
-              />
+              <div className={styles.cardHeader}>
+                <h2>{card.title}</h2>
+                <ProgressiveImage
+                  className={styles.image}
+                  src={card.imageURL}
+                  width={card.imageWidth}
+                  height={card.imageHeight}
+                  alt={card.title}
+                />
+              </div>
               <div className={styles.description}>{card.description}</div>
             </div>
           ))}

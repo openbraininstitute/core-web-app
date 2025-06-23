@@ -93,6 +93,7 @@
 
 .landingPage h2 {
   font-size: var(--font-size-L);
+  line-height: 1.3;
 }
 
 .landingPage h3 {
