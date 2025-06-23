@@ -19,7 +19,7 @@ type Props = {
   source: IEModel;
 };
 
-export default function Mechanism({ source }: Props) {
+export default function IonChannels({ source }: Props) {
   const [channels, updateChannels] = useState<Record<string, Array<string>> | null>(null);
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
