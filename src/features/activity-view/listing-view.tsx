@@ -2,11 +2,14 @@
 
 import { ConfigProvider, Empty, Table } from 'antd';
 import { useParams } from 'next/navigation';
+import { useMemo } from 'react';
+import { useAtom } from 'jotai';
 import Link from 'next/link';
 
-import { useActivityData } from '@/features/activity-view/context';
-import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { LinkIcon, statusToColorMap, statusToIcon } from '@/features/activity-view/elements';
+import { pageNumberAtom, pageSizeAtom } from '@/state/explore-section/list-view-atoms';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { useActivityData } from '@/features/activity-view/context';
 import { useTabs } from '@/components/detail-view-tabs';
 import { resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
@@ -119,8 +122,17 @@ export default function ActivityTable() {
   });
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const key = resolveDataKey({ projectId, section: 'activity', suffix: type ?? undefined });
+  const [pageSize, setPageSize] = useAtom(
+    useMemo(() => pageSizeAtom({ key, defaultSize: 10 }), [key])
+  );
+  const [page, setPageNumber] = useAtom(pageNumberAtom(key));
 
-  const { data, isLoading } = useActivityData({ virtualLabId, projectId, type, key });
+  const { data, total, isLoading } = useActivityData({
+    virtualLabId,
+    projectId,
+    type,
+    key,
+  });
 
   if (!type) {
     return (
@@ -151,19 +163,39 @@ export default function ActivityTable() {
         <Table
           className={classNames(
             '[&_.ant-table-tbody>tr:last-child>td]:border-b-0',
-            '[&_.ant-table-thead>tr>th]:border-b-0'
+            '[&_.ant-table-thead>tr>th]:border-b-0',
+            '[&_.ant-pagination-item-link]:text-white!',
+            '[&_.ant-pagination-simple-pager]:text-white!',
+            '[&_.ant-pagination-simple-pager_input]:text-primary-8!'
           )}
           loading={isLoading}
           dataSource={data}
           columns={columns}
-          pagination={false}
+          pagination={{
+            pageSize,
+            total,
+            defaultCurrent: 1,
+            current: page,
+            hideOnSinglePage: true,
+            align: 'end',
+            simple: true,
+            size: 'default',
+            responsive: true,
+            role: 'button',
+            position: ['topRight'],
+            onChange: (_page, _pageSize) => {
+              setPageNumber(_page);
+              setPageSize(_pageSize);
+            },
+          }}
           locale={{
             emptyText: (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <span className="text-white">
-                    No activity found for this {getEntityByCoreType({ type })?.title} yet.
+                    No activity found for <strong>{getEntityByCoreType({ type })?.title}</strong>{' '}
+                    yet.
                   </span>
                 }
               />

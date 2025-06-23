@@ -65,6 +65,15 @@ export const pageNumberAtom = atomFamily((_key: string) => {
   return childAtom;
 });
 
+export const pageSizeAtom = atomFamily(
+  ({ key, defaultSize }: { key: string; defaultSize?: number }) => {
+    const childAtom = atom<number | undefined>(defaultSize);
+    childAtom.debugLabel = `page-size/${key}`;
+    return childAtom;
+  },
+  (a, b) => a.key === b.key
+);
+
 export const selectedRowsAtom = atomFamily(
   (_key: string) => atom<Array<any>>([]) // FIXME: get the right type
 );

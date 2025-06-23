@@ -8,7 +8,12 @@ type Props<T> = {
   tabsConfig?: Array<{ key: T; title: string }>;
   cls?: {
     container?: string;
-    tab?: string;
+    tab?:
+      | string
+      | {
+          active: string;
+          inactive: string;
+        };
     btn?: string;
   };
   shallow?: boolean;
@@ -26,21 +31,29 @@ export default function Tabs<T extends string>({ tabsConfig, cls, tabKey, shallo
       {tabsConfig?.map(({ key, title }) => (
         <li
           key={key}
-          title={title}
           className={classNames(
-            'border-e-neutral-2 w-1/3 flex-[1_1_33%] border-0 border-r py-3 text-center text-xl font-semibold',
+            'border-e-neutral-2 w-1/3 flex-[1_1_33%] border-0 border-r text-center text-xl font-semibold',
             'transition-all duration-200 ease-out last:border-r-0',
-            activeTab === key ? 'bg-primary-9 text-white' : 'text-primary-9 bg-white',
-            cls?.tab
+            activeTab === key ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white',
+            // eslint-disable-next-line
+            typeof cls?.tab === 'string'
+              ? cls.tab
+              : activeTab === key
+                ? cls?.tab?.active
+                : cls?.tab?.inactive
           )}
         >
           <button
+            title={title}
             type="button"
-            className={classNames('w-full', cls?.btn)}
             onClick={onChangeTab(key)}
             onKeyDown={onChangeTab(key)}
+            aria-label={title}
+            id={`tab_${key}`}
+            className="w-full py-4"
+            data-testid={`tab_${key}`}
           >
-            {title}
+            <div className={classNames('line-clamp-1 w-full', cls?.btn)}>{title}</div>
           </button>
         </li>
       ))}

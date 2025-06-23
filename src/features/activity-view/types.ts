@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 
-import { MEmodel, SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,

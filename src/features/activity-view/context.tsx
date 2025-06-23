@@ -1,11 +1,10 @@
-import { atomFamily, loadable } from 'jotai/utils';
-import { atom, useAtomValue } from 'jotai';
-import { useState } from 'react';
+import { atomFamily, atomWithRefresh, loadable } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
 import get from 'lodash/get';
 
 import sessionAtom from '@/state/session';
 
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
@@ -24,12 +23,14 @@ import {
   type ActivityRecord,
   type AllowedEntityTypes,
 } from '@/features/activity-view/types';
+import { getPersons } from '@/api/entitycore/queries/general/person-agent';
+import { pageNumberAtom, pageSizeAtom } from '@/state/explore-section/list-view-atoms';
 
 interface IActivityEntity extends EntityCoreIdentifiableNamed, Timestamps {
   status?: SingleNeuronSimulationStatus;
 }
 
-const activityAtomFamily = atomFamily(
+export const activityAtomFamily = atomFamily(
   ({
     virtualLabId,
     projectId,
@@ -44,24 +45,45 @@ const activityAtomFamily = atomFamily(
       throw new Error(`Invalid entity type: ${type}`);
     }
 
-    const childAtom = atom<Promise<EntityCoreResponse<IActivityEntity>>>(async (get) => {
-      const session = get(sessionAtom);
-      if (!entity || !entity.api.query.list) {
-        throw new Error(`Invalid entity type: ${type}`);
+    const childAtom = atomWithRefresh<Promise<EntityCoreResponse<IActivityEntity>>>(
+      async (_get) => {
+        const pageNumber = _get(pageNumberAtom(key));
+        const pageSize = _get(pageSizeAtom({ key }));
+        const session = _get(sessionAtom);
+
+        if (!entity || !entity.api.query.list) {
+          throw new Error(`Invalid entity type: ${type}`);
+        }
+
+        const { data: person, error: personError } = await tryCatch(
+          getPersons({
+            filters: {
+              sub_id: session?.user.id,
+            },
+          })
+        );
+
+        if (personError || !person.data.length) {
+          throw Error('Relative user agent not found');
+        }
+
+        const { data, error } = await tryCatch(
+          entity.api.query.list({
+            withFacets: false,
+            context: { virtualLabId, projectId },
+            filters: {
+              created_by__id: person?.data.at(0)?.id,
+              page: pageNumber,
+              page_size: pageSize,
+            },
+            order_by: '-update_date',
+          }) as Promise<EntityCoreResponse<IActivityEntity>>
+        );
+
+        if (error) throw error;
+        return data;
       }
-      const { data, error } = await tryCatch(
-        entity.api.query.list({
-          withFacets: false,
-          context: { virtualLabId, projectId },
-          // filters: { created_by__id: session?.user?.id },
-          // TODO: use the correct user ID from session
-          filters: { created_by__id: '44906734-77b0-4880-967b-e5a47933ee60' },
-          order_by: '-update_date',
-        }) as Promise<EntityCoreResponse<IActivityEntity>>
-      );
-      if (error) throw error;
-      return data;
-    });
+    );
 
     childAtom.debugLabel = `activity-table-data/${key}`;
     return childAtom;
@@ -120,26 +142,14 @@ export const useActivityData = ({
   type: AllowedEntityTypes | null;
   key: string;
 }) => {
-  const [cache, setCache] = useState<Map<string, Array<IActivityEntity>>>(new Map());
-
   const data = useAtomValue(activityAtomFamily({ virtualLabId, projectId, type, key }));
   const isLoading =
     useAtomValue(loadable(activityAtomFamily({ virtualLabId, projectId, type, key }))).state ===
     'loading';
 
-  // useEffect(() => {
-  //   if (!isLoading && data) {
-  //     const prev = cache.get(key);
-  //     setCache((prevCache) => {
-  //       prevCache.set(key, [...(prev ?? []), ...(data.data ?? [])]);
-  //       return prevCache;
-  //     });
-  //   }
-  // }, [key, data, isLoading]);
-
-  // const current = cache.get(key) || [];
   return {
     data: data ? generateRowItems(data.data, { projectId, virtualLabId }) : [],
+    total: data.pagination.total_items,
     isLoading,
   };
 };
