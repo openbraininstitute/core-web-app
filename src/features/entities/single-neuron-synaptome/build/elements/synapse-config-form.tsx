@@ -50,7 +50,7 @@ export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
   id: '',
   name: '',
   target: undefined,
-  type: undefined,
+  type: 110,
   formula: '',
   seed: 100,
   exclusion_rules: null,
@@ -97,14 +97,6 @@ export default function SynaptomeConfigurationForm({
     projectId,
   });
   const refreshDataAtom = useRefreshDataAtom(dataKey);
-  // const refreshSynaptomeModels = useSetAtom(
-  //   queryAtom({
-  //     dataType: DataType.SingleNeuronSynaptome,
-  //     dataScope: ExploreDataScope.NoScope,
-  //     workspace: { virtualLabId, projectId },
-  //     key: dataKey,
-  //   })
-  // );
 
   const addNewSynapse = useCallback(() => {
     const synapses = form.getFieldValue('synapses');
