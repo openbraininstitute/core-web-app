@@ -4,7 +4,7 @@ import {
   SECTION_PROVENANCE,
   SECTION_RELATED_CIRCUITS,
   SECTION_RELATED_PUBLICATIONS,
-  SECTION_VISUALISATION,
+  SECTION_VISUALIZATION,
 } from '../../type/sectionTypes';
 
 type SectionProps = {
@@ -21,8 +21,8 @@ export default function SectionTabs({
 }) {
   const sections: SectionProps[] = [
     {
-      name: 'Visualisation',
-      id: SECTION_VISUALISATION,
+      name: 'Visualization',
+      id: SECTION_VISUALIZATION,
     },
     {
       name: 'Overview',

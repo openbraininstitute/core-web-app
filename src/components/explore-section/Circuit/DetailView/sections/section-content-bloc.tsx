@@ -15,7 +15,7 @@ export default function SectionContentBlock({
   parentCircuit: CircuitSchemaProps | null;
   derivedCircuits: CircuitSchemaProps[] | null;
   activeSection:
-    | 'visualisation'
+    | 'visualization'
     | 'overview'
     | 'provenance'
     | 'related-publications'
@@ -24,7 +24,7 @@ export default function SectionContentBlock({
   let currentSection;
 
   switch (activeSection) {
-    case 'visualisation':
+    case 'visualization':
       currentSection = <Visualisation content={content} />;
       break;
     case 'overview':

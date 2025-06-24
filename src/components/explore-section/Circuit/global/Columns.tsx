@@ -125,6 +125,32 @@ const columns = (
       ),
     },
     {
+      title: 'Scale',
+      key: 'scale',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => {
+        const content = [
+          {
+            label: 'Small microcircuit',
+            value: 'smallMicrocircuit',
+            description:
+              'Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively).',
+          },
+          {
+            label: 'Microcircuit',
+            value: 'microcircuit',
+            description:
+              'Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.',
+          },
+        ];
+        return (
+          <Tooltip title={content[0].description}>
+            <div className="font-normal whitespace-nowrap capitalize">{record.scale}</div>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: '# Neurons',
       key: 'numberOfNeurons',
       width: 150,
@@ -153,32 +179,6 @@ const columns = (
           {formatNumberWithComma(record.numberOfSynapses)}
         </div>
       ),
-    },
-    {
-      title: 'Scale',
-      key: 'scale',
-      width: 150,
-      render: (_value: any, record: CircuitSchemaProps, _index: number) => {
-        const content = [
-          {
-            label: 'Small microcircuit',
-            value: 'smallMicrocircuit',
-            description:
-              'Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively).',
-          },
-          {
-            label: 'Microcircuit',
-            value: 'microcircuit',
-            description:
-              'Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.',
-          },
-        ];
-        return (
-          <Tooltip title={content[0].description}>
-            <div className="font-normal whitespace-nowrap">{record.scale}</div>
-          </Tooltip>
-        );
-      },
     },
     {
       title: 'Species',
