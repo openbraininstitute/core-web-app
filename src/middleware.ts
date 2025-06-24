@@ -18,6 +18,8 @@ const FREE_ACCESS_PAGES = [
   '/financing',
   '/coming-soon',
   '/the-real-digital-brain-story',
+  '/app/documentation',
+  '/app/documentation/*',
 
   '/app/log-in',
 

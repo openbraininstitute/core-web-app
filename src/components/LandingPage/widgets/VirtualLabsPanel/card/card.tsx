@@ -1,5 +1,5 @@
-import { classNames } from '@/util/utils';
 import Video from '@/components/LandingPage/components/Video';
+import { classNames } from '@/util/utils';
 
 import styles from './card.module.css';
 
@@ -16,7 +16,6 @@ export function SingleSectionCard({ index, title, description, video }: SingleSe
       <Video className={styles.background} src={video} />
       <div className={styles.content}>
         <div>
-          {/* <h3>0{index + 1}</h3> */}
           <h2>{title}</h2>
           {index > 999 && <div className={styles.comingSoon}>Releasing soon</div>}
         </div>

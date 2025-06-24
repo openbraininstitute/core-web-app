@@ -43,7 +43,6 @@
 
 .landingPage a,
 .landingPage button {
-  all: unset;
   cursor: pointer;
   font-size: var(--font-size-M);
   box-sizing: border-box;
@@ -70,7 +69,7 @@
 
 .landingPage h1 {
   font-size: var(--font-size-XL);
-  margin: 0.6em 0;
+  margin: 0.4em 0;
   box-sizing: content-box;
   line-height: 1.3;
 }
@@ -94,6 +93,7 @@
 
 .landingPage h2 {
   font-size: var(--font-size-L);
+  line-height: 1.3;
 }
 
 .landingPage h3 {
@@ -128,10 +128,8 @@
   font-size: var(--font-size-M);
   text-wrap: auto;
   hyphens: none;
-  /* text-align: justify;
-  text-justify: distribute; */
   word-spacing: 0;
-  line-height: 1.2;
+  line-height: 1.55;
 }
 
 @media (max-width: 640px) {

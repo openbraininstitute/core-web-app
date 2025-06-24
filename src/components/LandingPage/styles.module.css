@@ -89,13 +89,14 @@ a.roundedButton {
 .layout .blockSmall {
   grid-column: 5/6;
   max-width: var(--S);
-  margin-left: 160px;
-  margin-top: 50px;
+  margin-left: 30px;
+  margin: 20px 0 20px 30px;
 }
 
 .layout .blockSmallExpandRight {
   grid-column: 5/-1;
   max-width: none;
+  margin-bottom: 60px;
 }
 
 .layout .blockMedium {

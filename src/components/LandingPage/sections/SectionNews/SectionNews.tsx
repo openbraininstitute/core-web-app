@@ -1,17 +1,17 @@
 import React from 'react';
 
+import CenteredColumn from '../../components/CenteredColumn';
 import {
   ContentForNewsList,
   isContentForNewsList,
   useSanityContentForNewsListCount,
 } from '../../content';
 import { styleBlockMedium, styleButtonRounded } from '../../styles';
-import CenteredColumn from '../../components/CenteredColumn';
 import Card from './Card';
 import CategoryButton from './CategoryButton';
+
 import { fetchSanity } from '@/services/sanity';
 import { classNames } from '@/util/utils';
-
 import styles from './SectionNews.module.css';
 
 export interface SectionNewsProps {
@@ -87,7 +87,7 @@ export default function SectionNews({ className, showHeader = false }: SectionNe
           ))}
         </main>
         {newsListEPFL.length > 0 && (
-          <>
+          <div className={styles.epflNews}>
             <h1 className={styles.separator}>BBP news highlight</h1>
             <div className={styles.copyright}>Copyright © EPFL - BBP</div>
             <hr className={styles.separator} />
@@ -96,7 +96,7 @@ export default function SectionNews({ className, showHeader = false }: SectionNe
                 <Card key={item.id} news={item} />
               ))}
             </div>
-          </>
+          </div>
         )}
         {newsList.length < newsCount && (
           <CenteredColumn>

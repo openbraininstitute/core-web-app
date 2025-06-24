@@ -1,10 +1,14 @@
-import React from 'react';
+'use client';
+
+import { useState } from 'react';
 
 import { ContentForRepository } from '../hooks';
-import { classNames } from '@/util/utils';
+
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { IconEye } from '@/components/LandingPage/icons/IconEye';
 import { styleButtonHoverable } from '@/components/LandingPage/styles';
+import { classNames } from '@/util/utils';
+
 import styles from './repository-card.module.css';
 
 export interface RepositoryCardProps {
@@ -14,6 +18,10 @@ export interface RepositoryCardProps {
 }
 
 export default function RepositoryCard({ className, value, showHeader }: RepositoryCardProps) {
+  const [textExpanded, setTextExpanded] = useState<boolean>(false);
+
+  const textContent = textExpanded ? value.description : `${value.description.slice(0, 200)}...`;
+
   return (
     <div className={classNames(className, styles.repositoryCard)}>
       <h2>{value.title}</h2>
@@ -29,7 +37,17 @@ export default function RepositoryCard({ className, value, showHeader }: Reposit
         width={value.imageWidth}
         height={value.imageHeight}
       />
-      <p>{value.description}</p>
+      <div>
+        <p>{textContent}</p>
+        <button
+          type="button"
+          aria-label="Read more"
+          className={styles.readMore}
+          onClick={() => setTextExpanded(!textExpanded)}
+        >
+          {textExpanded ? 'Read less' : 'Read more'}
+        </button>
+      </div>
       <div className={styles.buttons}>
         {value.buttons.map((btn) => (
           <a

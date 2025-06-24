@@ -58,17 +58,17 @@
     rgba(240, 240, 240, 0) 61.87%
   );
   z-index: 1;
-  font-size: 4vmin;
+  font-size: 3vmin;
   line-height: 1;
-  padding: 0 7vw;
+  padding: 0 14vw;
   text-wrap: balance;
   max-width: auto;
 }
 
 .hero .text h1 {
-  margin: 0;
-  margin-bottom: 0.25em;
+  margin-bottom: 20px;
   font-size: 10vmin;
+  line-height: 1.2;
   padding: 0;
 }
 
@@ -77,7 +77,7 @@
 }
 
 .hero .text div.content {
-  line-height: 1.2;
+  line-height: 1.55;
   max-width: auto;
 }
 
