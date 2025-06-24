@@ -8,7 +8,8 @@ import { useAIToolsSelection } from '@/components/ai-assistant/state';
 export interface AiAgentRateLimit {
   limit: number;
   remaining: number;
-  reset: string;
+  /** Number of seconds before new free credits */
+  reset: number;
 }
 
 export function useServiceAiAgentChat(threadId: string) {
@@ -33,9 +34,8 @@ export function useServiceAiAgentChat(threadId: string) {
       const newRateLimit: AiAgentRateLimit = {
         limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
         remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
-        reset: resp.headers.get('x-ratelimit-reset') ?? '',
+        reset: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
       };
-      console.log('🚀 [chat] newRateLimit =', newRateLimit); // @FIXME: Remove this line written on 2025-06-24 at 09:16
       setRateLimit(newRateLimit);
       return resp;
     },

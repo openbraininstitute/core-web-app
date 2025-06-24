@@ -6,8 +6,6 @@ import { logError } from '@/util/logger';
 
 let toolsListSingleton: Promise<AIAssistantTool[] | null> | null = null;
 
-export const SELECTABLE_AI_TOOLS = ['literature-search-tool', 'web-search-tool'];
-
 /**
  *
  * @returns A list of available AI tools.
@@ -30,9 +28,7 @@ export function useAITools(): AIAssistantTool[] | undefined | null {
 }
 
 async function loadTools(accessToken: string): Promise<AIAssistantTool[] | null> {
-  const list = (await serviceAiAgentListTools(accessToken)).filter(({ name }) =>
-    SELECTABLE_AI_TOOLS.includes(name)
-  );
+  const list = await serviceAiAgentListTools(accessToken);
   const tools: AIAssistantTool[] = [];
   for (const { name: id } of list) {
     const tool = await serviceAiAgentGetTool(accessToken, id);
@@ -41,8 +37,10 @@ async function loadTools(accessToken: string): Promise<AIAssistantTool[] | null>
   return tools.sort(sortToolsByName);
 }
 
-function sortToolsByName(a: AIAssistantTool, b: AIAssistantTool): number {
-  if (a.name > b.name) return +1;
-  if (a.name < b.name) return -1;
+function sortToolsByName(tool1: AIAssistantTool, tool2: AIAssistantTool): number {
+  const name1 = tool1.name.trim().toLowerCase();
+  const name2 = tool2.name.trim().toLowerCase();
+  if (name1 < name2) return +1;
+  if (name1 > name2) return -1;
   return 0;
 }

@@ -6,8 +6,8 @@ import { IconGear } from '../icons/gear';
 import ToolsSelector from './tools-selector';
 import { classNames } from '@/util/utils';
 import SendIcon from '@/components/icons/Send';
-
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+
 import styles from './prompt.module.css';
 
 export interface PromptProps {

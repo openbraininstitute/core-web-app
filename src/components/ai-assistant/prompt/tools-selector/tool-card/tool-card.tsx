@@ -20,11 +20,11 @@ export interface ToolCardProps {
 
 export default function ToolCard({ className, tool }: ToolCardProps) {
   const [selection, setSelection] = useAIToolsSelection();
-  const checked = selection.includes(tool.id);
+  const checked = Boolean(selection && selection.includes(tool.id));
   const Icon = tool.icon;
   const handleToggle = () => {
-    if (checked) setSelection(selection.filter((id) => id !== tool.id));
-    else setSelection([...selection, tool.id]);
+    if (checked) setSelection((selection ?? []).filter((id) => id !== tool.id));
+    else setSelection([...(selection ?? []), tool.id]);
   };
 
   return (
