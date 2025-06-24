@@ -1,7 +1,8 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import Plotly, { Layout, Config } from 'plotly.js-dist-min';
-import { DownloadOutlined } from '@ant-design/icons';
+import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useRef, useEffect, useState } from 'react';
 import { Button, Spin } from 'antd';
 import lodashSet from 'lodash/set';
@@ -9,8 +10,9 @@ import lodashSet from 'lodash/set';
 import LegendItem from '@/features/entities/neuron-simulation/experiment/visualization/legend-item';
 import { exportSingleSimulationResultAsZip } from '@/util/simulation-plotly-to-csv';
 import { classNames } from '@/util/utils';
-
 import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import { useAppNotification } from '@/components/notification';
+import { isType } from '@/util/type-guards';
 
 const PLOT_LAYOUT: Partial<Layout> = {
   plot_bgcolor: '#fff',
@@ -91,7 +93,6 @@ export default function PlotRenderer({
   bordered = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-
   const [initialized, setInitialized] = useState<boolean>(false);
   const [refreshLegend, setRefreshLegend] = useState(false);
 
@@ -102,6 +103,7 @@ export default function PlotRenderer({
       result: data,
     });
   };
+  const onCopyID = useCopyIdHandler();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -128,15 +130,12 @@ export default function PlotRenderer({
   }, [data, initialized, plotConfig]);
 
   const isTraceVisible = (trace: PlotDataEntry) => trace.visible === undefined || trace.visible;
-
   const toggleTraceVisibility = (trace: PlotDataEntry, index: number) => {
     if (!containerRef.current) return;
 
     Plotly.restyle(containerRef.current!, { visible: !isTraceVisible(trace) }, [index]);
-
     setRefreshLegend((prev) => !prev);
   };
-
   const visibleTracesCount = data?.filter((t) => isTraceVisible(t)).length;
 
   return (
@@ -171,19 +170,36 @@ export default function PlotRenderer({
           )}
           <div className="ml-auto flex items-center gap-2 self-end">
             {isDownloadable && !isLoading && (
-              <Button
-                type="primary"
-                size="middle"
-                htmlType="button"
-                icon={<DownloadOutlined />}
-                onClick={onDownloadPlotDataCsv}
-                className={classNames(
-                  'border-primary-8 text-primary-8 h-10 rounded-none border bg-white',
-                  bordered && 'border-b-0'
+              <>
+                {onCopyID && (
+                  <Button
+                    type="primary"
+                    size="middle"
+                    htmlType="button"
+                    icon={<CopyOutlined />}
+                    onClick={onCopyID}
+                    className={classNames(
+                      'border-primary-8 text-primary-8 h-10 rounded-none border bg-white',
+                      bordered && 'border-b-0'
+                    )}
+                  >
+                    Copy ID
+                  </Button>
                 )}
-              >
-                Download
-              </Button>
+                <Button
+                  type="primary"
+                  size="middle"
+                  htmlType="button"
+                  icon={<DownloadOutlined />}
+                  onClick={onDownloadPlotDataCsv}
+                  className={classNames(
+                    'border-primary-8 text-primary-8 h-10 rounded-none border bg-white',
+                    bordered && 'border-b-0'
+                  )}
+                >
+                  Download
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -209,4 +225,18 @@ export default function PlotRenderer({
       </div>
     </div>
   );
+}
+
+function useCopyIdHandler() {
+  const { info } = useAppNotification();
+  const params = useParams();
+  if (isType<{ id: string }>(params, { id: 'string' })) {
+    return () => {
+      navigator.clipboard.writeText(params.id);
+      info({
+        message: 'ID has been copied to the clipboard!',
+      });
+    };
+  }
+  return null;
 }
