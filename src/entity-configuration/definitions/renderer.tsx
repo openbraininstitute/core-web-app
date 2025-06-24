@@ -87,6 +87,7 @@ export function renderImage<T extends EntityCoreResource>(
   resource: T,
   size?: { height: number; width: number } | string
 ) {
+  // @ts-ignore
   return <PreviewImage resource={resource} size={size} />;
 }
 
