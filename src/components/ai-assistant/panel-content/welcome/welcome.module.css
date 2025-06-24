@@ -1,0 +1,18 @@
+.welcome {
+  display: grid;
+  place-items: center;
+}
+
+.welcome > div {
+  margin-top: 2em;
+  font-size: 120%;
+  padding: 1em;
+  box-shadow: rgba(0, 0, 0, 0.12) 0 6px 16px;
+  border-radius: 1em;
+  border: 2px solid var(--color-neutral-9);
+  background-color: var(--color-neutral-8);
+}
+
+.welcome > div > p {
+  margin: 1em 0;
+}

@@ -129,7 +129,7 @@ export class Labels {
     const toY = (y: number) => 0.5 * h * (1 - y);
     canvas.width = w;
     canvas.height = h;
-    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.font = `bold ${fontSize * 5}px sans-serif`;
     ctx.textBaseline = 'middle';
 
     this.labelsToDraw.forEach((label) => {
