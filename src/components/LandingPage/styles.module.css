@@ -79,7 +79,6 @@ a.roundedButton {
 }
 
 .layout .blockFullWidth {
-  display: flex;
   grid-column: 1/-1;
 }
 
