@@ -1,14 +1,16 @@
+'use client';
+
 import { ErrorBoundary } from 'react-error-boundary';
 
-import { StandardFallback } from './ErrorMessageLine';
-import ExemplarMorphology from './exemplar-morphology';
-import Mechanism from './Mechanism';
-import SimulationParameters from './SimulationParameters';
-import EModelTitle from './EModelTitle';
-import WorkflowAttributes from './WorkflowAttributes';
-import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
+import { StandardFallback } from '@/components/build-section/cell-model-assignment/e-model/EModelView/ErrorMessageLine';
+import SimulationParameters from '@/components/build-section/cell-model-assignment/e-model/EModelView/SimulationParameters';
+import ExemplarMorphology from '@/components/build-section/cell-model-assignment/e-model/EModelView/exemplar-morphology';
+import WorkflowAttributes from '@/components/build-section/cell-model-assignment/e-model/EModelView/WorkflowAttributes';
+import Mechanism from '@/components/build-section/cell-model-assignment/e-model/EModelView/ion-channels';
+import EModelTitle from '@/components/build-section/cell-model-assignment/e-model/EModelView/EModelTitle';
 import SimpleErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
 import ExemplarTraces from '@/features/entities/e-model/detail-view/exemplar-traces';
+import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
 import type { IReconstructionMorphology, IEModel } from '@/api/entitycore/types';
 
@@ -61,8 +63,9 @@ export default function EModelView({
           <ExemplarTraces params={params} />
         </ErrorBoundary>
       </DefaultLoadingSuspense>
-
-      <Mechanism params={params} ionChannels={payload.source.ion_channel_models} />
+      <ErrorBoundary fallback={<StandardFallback type="info">Mechanisms</StandardFallback>}>
+        <Mechanism source={payload.source} params={params} />
+      </ErrorBoundary>
 
       <ErrorBoundary
         FallbackComponent={withErrorConfig({

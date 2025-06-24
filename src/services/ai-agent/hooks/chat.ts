@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 
 import { serviceAiAgentUrl } from '../api';
 import { useAIToolsSelection } from '@/components/ai-assistant/state';
+import { log } from '@/utils/logger';
 
 export interface AiAgentRateLimit {
   limit: number;
