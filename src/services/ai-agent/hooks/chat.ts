@@ -5,15 +5,15 @@ import { useChat } from '@ai-sdk/react';
 import { serviceAiAgentUrl } from '../api';
 import { useAIToolsSelection } from '@/components/ai-assistant/state';
 
-interface RateLimit {
-  limit: string;
-  remaining: string;
+export interface AiAgentRateLimit {
+  limit: number;
+  remaining: number;
   reset: string;
 }
 
 export function useServiceAiAgentChat(threadId: string) {
   const [toolsSelection] = useAIToolsSelection();
-  const [rateLimit, setRateLimit] = React.useState<RateLimit | null>(null);
+  const [rateLimit, setRateLimit] = React.useState<AiAgentRateLimit | null>(null);
   const session = useSession();
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -28,12 +28,16 @@ export function useServiceAiAgentChat(threadId: string) {
         tool_selection: toolsSelection,
       };
     },
-    onResponse(resp: Response) {
-      setRateLimit({
-        limit: resp.headers.get('x-ratelimit-limit') ?? '',
-        remaining: resp.headers.get('x-ratelimit-remaining') ?? '',
+    fetch: async (url, options) => {
+      const resp = await fetch(url, options);
+      const newRateLimit: AiAgentRateLimit = {
+        limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
+        remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
         reset: resp.headers.get('x-ratelimit-reset') ?? '',
-      });
+      };
+      console.log('🚀 [chat] newRateLimit =', newRateLimit); // @FIXME: Remove this line written on 2025-06-24 at 09:16
+      setRateLimit(newRateLimit);
+      return resp;
     },
   });
 

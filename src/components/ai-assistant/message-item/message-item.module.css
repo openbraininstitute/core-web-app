@@ -125,3 +125,34 @@ button.debugButton {
   cursor: pointer;
   margin: 0.5em 0;
 }
+
+div.info {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 2em;
+  color: #000;
+  margin-left: 1.5em;
+}
+
+div.price {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+}
+
+div.price em {
+  font-variant: normal;
+  font-style: normal;
+  opacity: 0.5;
+  margin-left: 1em;
+}
+
+div.price > svg {
+  font-size: 1em;
+}
