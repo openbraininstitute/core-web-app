@@ -34,6 +34,7 @@ export default function CircuitTable({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
   const [scaleFilter, setScaleFilter] = useState<'smallMicrocircuit' | 'microcircuit' | null>(null);
+  const [buildCategoryFilter, setBuildCategoryFilter] = useState<string | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
@@ -109,15 +110,33 @@ export default function CircuitTable({
         maxValue,
         searchQuery,
         scaleFilter,
-        false
+        false,
+        buildCategoryFilter
       );
       return result;
     }
     const result = cleanedData.flattened.filter((circuit) =>
-      circuitMatchFilter(circuit, numericFilter, minValue, maxValue, searchQuery, scaleFilter)
+      circuitMatchFilter(
+        circuit,
+        numericFilter,
+        minValue,
+        maxValue,
+        searchQuery,
+        scaleFilter,
+        buildCategoryFilter
+      )
     );
     return result;
-  }, [cleanedData, numericFilter, minValue, maxValue, searchQuery, scaleFilter, toggle]);
+  }, [
+    cleanedData,
+    numericFilter,
+    minValue,
+    maxValue,
+    searchQuery,
+    scaleFilter,
+    toggle,
+    buildCategoryFilter,
+  ]);
 
   const flattenedData = useMemo(() => {
     if (toggle === 'hierarchical') {
@@ -158,7 +177,8 @@ export default function CircuitTable({
       numericFilter,
       minValue,
       maxValue,
-      searchQuery
+      searchQuery,
+      buildCategoryFilter
     );
     const result =
       toggle === 'flat' ? allColumns.filter((col) => col.key !== 'subcircuits') : allColumns;
@@ -173,16 +193,29 @@ export default function CircuitTable({
     minValue,
     maxValue,
     searchQuery,
+    buildCategoryFilter,
   ]);
 
   useEffect(() => {
-    if (toggle === 'hierarchical' && (numericFilter || searchQuery || scaleFilter)) {
+    if (
+      toggle === 'hierarchical' &&
+      (numericFilter || searchQuery || scaleFilter || buildCategoryFilter)
+    ) {
       const expandableKeys = collectExpandableKeys(cleanedData.hierarchical);
       setExpandedRowKeys(expandableKeys);
     } else {
       setExpandedRowKeys([]);
     }
-  }, [numericFilter, minValue, maxValue, searchQuery, scaleFilter, cleanedData, toggle]);
+  }, [
+    numericFilter,
+    minValue,
+    maxValue,
+    searchQuery,
+    scaleFilter,
+    cleanedData,
+    toggle,
+    buildCategoryFilter,
+  ]);
 
   // ROW EXPANSION & SUBCIRCUITS
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
@@ -205,6 +238,7 @@ export default function CircuitTable({
           maxValue={maxValue}
           searchQuery={searchQuery}
           scaleFilter={scaleFilter}
+          buildCategoryFilter={buildCategoryFilter}
         />
       ) : null,
     [
@@ -215,6 +249,7 @@ export default function CircuitTable({
       maxValue,
       searchQuery,
       scaleFilter,
+      buildCategoryFilter,
       filteredColumns,
     ]
   );
@@ -236,8 +271,14 @@ export default function CircuitTable({
                 if (filter?.property === 'scaleType') {
                   setScaleFilter(filter.type as 'smallMicrocircuit' | 'microcircuit');
                   setNumericFilter(null);
+                  setBuildCategoryFilter(null);
+                } else if (filter?.property === 'buildCategory') {
+                  setBuildCategoryFilter(filter.type);
+                  setNumericFilter(null);
+                  setScaleFilter(null);
                 } else {
                   setScaleFilter(null);
+                  setBuildCategoryFilter(null);
                 }
               }}
               onMinChange={setMinValue}

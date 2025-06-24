@@ -28,7 +28,8 @@ const columns = (
   numericFilter: NumericFilterOptions | null,
   minValue: number | undefined,
   maxValue: number | undefined,
-  searchQuery: string
+  searchQuery: string,
+  buildCategoryFilter: string | null = null
 ): ResizableColumnType[] => {
   return [
     {
@@ -56,10 +57,19 @@ const columns = (
       key: 'name',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => {
-        const isFilterActive = numericFilter !== null || searchQuery.trim() !== '';
+        const isFilterActive =
+          numericFilter !== null || searchQuery.trim() !== '' || buildCategoryFilter !== null;
         const isMatching =
           isFilterActive &&
-          circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery);
+          circuitMatchFilter(
+            record,
+            numericFilter,
+            minValue,
+            maxValue,
+            searchQuery,
+            null,
+            buildCategoryFilter
+          );
         const href = isCircuitDetailPage ? `./${record.key}` : `./circuit/${record.key}`;
         return (
           <Link
@@ -143,8 +153,9 @@ const columns = (
               'Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.',
           },
         ];
+        const scaleInfo = content.find((item) => item.value === record.scale.toLowerCase());
         return (
-          <Tooltip title={content[0].description}>
+          <Tooltip title={scaleInfo?.description || ''}>
             <div className="font-normal whitespace-nowrap capitalize">{record.scale}</div>
           </Tooltip>
         );
@@ -186,6 +197,14 @@ const columns = (
       width: 120,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="font-normal whitespace-nowrap">{record.species}</div>
+      ),
+    },
+    {
+      title: 'Build category',
+      key: 'buildCategory',
+      width: 120,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="font-normal whitespace-nowrap">{record.buildCategory}</div>
       ),
     },
     {
