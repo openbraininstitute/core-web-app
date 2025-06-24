@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { getSession } from '@/authFetch';
 import { log } from '@/utils/logger';
 
 import type { WorkspaceContext } from '@/types/common';
@@ -36,7 +36,6 @@ export const useClientCachedUrl = ({
   cacheKey?: string;
 }) => {
   const { projectId, virtualLabId } = useParams<WorkspaceContext>();
-  const accessToken = useAccessToken();
 
   const [cachedUrl, setCachedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +56,7 @@ export const useClientCachedUrl = ({
       try {
         const cache = await caches.open(cacheKey);
         const cachedResponse = await cache.match(urlKey);
-
+        const session = await getSession();
         let isCacheValid = false;
         if (cachedResponse) {
           const cachedDateHeader = cachedResponse.headers.get('x-cache-date');
@@ -82,7 +81,7 @@ export const useClientCachedUrl = ({
 
           const networkResponse = await fetch(url, {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${session?.accessToken}`,
               'virtual-lab-id': virtualLabId,
               'project-id': projectId,
             },
@@ -130,7 +129,8 @@ export const useClientCachedUrl = ({
         URL.revokeObjectURL(cachedUrl);
       }
     };
-  }, [url, expireAfter, cacheKey, urlKey, accessToken, virtualLabId, projectId, cachedUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, expireAfter, cacheKey, urlKey, virtualLabId, projectId]);
 
   return { cachedUrl, loading, error };
 };
