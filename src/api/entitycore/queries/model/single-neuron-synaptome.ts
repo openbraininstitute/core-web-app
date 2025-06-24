@@ -34,7 +34,7 @@ export async function getSingleNeuronSynaptomes({
   context,
 }: {
   withFacets?: boolean;
-  filters?: ISingleNeuronSynaptomeFilter;
+  filters?: Partial<ISingleNeuronSynaptomeFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();

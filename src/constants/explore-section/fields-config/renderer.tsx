@@ -19,7 +19,7 @@ export const renderDate = (isoDateString: string) => {
 };
 
 export const renderTimestamp = (timestamp: string) => {
-  if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
+  if (isValid(timestamp)) return formatDistanceToNow(parseISO(timestamp), { addSuffix: true });
 };
 
 export function renderPreview<T>(

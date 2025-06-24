@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { App, Button } from 'antd';
 import omit from 'lodash/omit';
 import get from 'lodash/get';
@@ -19,9 +19,10 @@ import { usePendingValidationModal } from '@/features/model-analysis/runner/vali
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { activityAtomFamily } from '@/features/activity-view/context';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
-// import { MEmodel } from '@/entity-configuration/domain/model';
 import { createMEModel } from '@/api/entitycore/queries';
 import { WorkspaceContextSchema } from '@/types/common';
 import { OneshotSession } from '@/services/accounting';
@@ -33,7 +34,6 @@ import { tryCatch } from '@/api/utils';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
-import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
@@ -155,27 +155,29 @@ export default function Configure({ params, searchParams }: Props) {
 
   const refreshEntityCountsToParent = useEntitiesCountAtom();
   const refreshDataAtom = useRefreshDataAtom(exploreDataKey);
-
+  const refreshActivityAtom = useSetAtom(
+    activityAtomFamily({
+      key: resolveDataKey({
+        projectId: params.projectId,
+        section: 'activity',
+        entity: MEmodel,
+      }),
+      projectId: params.projectId,
+      virtualLabId: params.virtualLabId,
+      type: 'memodel',
+    })
+  );
   const { sessionValue } = useBuildMeModelSessionState({
     stateId: stateId || '',
     virtualLabId: params.virtualLabId,
     projectId: params.projectId,
   });
 
-  // const refreshMeModels = useSetAtom(
-  //   dataAtom({
-  //     dataType: DataType.CircuitMEModel,
-  //     dataScope: ExploreDataScope.NoScope,
-  //     virtualLabInfo: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-  //     key: useId(),
-  //   })
-  // );
-
   const [activeProcess, setActiveProcess] = useState<
     null | 'modelCreation' | 'modelCreationWithValidation'
   >(null);
 
-  const { contextHolder } = usePendingValidationModal();
+  const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
 
   if (!stateId) {
     navigate('./');
@@ -197,11 +199,11 @@ export default function Configure({ params, searchParams }: Props) {
     });
   };
 
-  // const fetchFreshAccessToken = async () => {
-  //   const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
-  //   const token = await res.json();
-  //   return token.accessToken;
-  // };
+  const fetchFreshAccessToken = async () => {
+    const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
+    const token = await res.json();
+    return token.accessToken;
+  };
 
   const buildMeModel = async (mode: 'validation' | 'standard') => {
     const body: Partial<TCreateMeModelContext> = {
@@ -280,6 +282,7 @@ export default function Configure({ params, searchParams }: Props) {
         return;
       }
       refreshDataAtom();
+      refreshActivityAtom();
       refreshEntityCountsToParent(data.brain_region.id);
       navigate(
         resolveExploreDetailsPageUrl({

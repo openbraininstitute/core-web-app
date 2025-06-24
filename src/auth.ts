@@ -96,6 +96,7 @@ export const authOptions: NextAuthOptions = {
             ...user,
             id: profile?.sub,
           },
+
           idToken: account.id_token,
         };
       }

@@ -21,6 +21,7 @@ import type {
   MtypeFilter,
   EtypeFilter,
   PaginationFilter,
+  OwnershipFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface SingleNeuronSynaptomeBase {
@@ -49,7 +50,8 @@ export interface ISingleNeuronSynaptomeFilter
     BrainRegionFilter,
     SharedFilter,
     IMEModelFilter,
-    PaginationFilter {}
+    PaginationFilter,
+    OwnershipFilter {}
 
 export const CreateSingleNeuronSynaptomeSchema = z.object({
   name: z.string(),

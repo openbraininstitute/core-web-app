@@ -23,6 +23,7 @@ export type EntityCoreOwnership = {
 
 export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
   name: string;
+  type: EntityCoreDataType;
 }
 
 export type EntityCoreBaseType = {
