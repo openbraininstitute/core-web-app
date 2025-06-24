@@ -1,4 +1,5 @@
 export enum CoreFieldFilterTypeEnum {
+  WithinList = 'WithinList',
   CheckList = 'CheckList',
   DateRange = 'DateRange',
   Search = 'Search',
