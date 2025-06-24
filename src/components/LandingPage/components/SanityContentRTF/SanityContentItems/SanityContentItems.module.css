@@ -10,8 +10,9 @@ ul.sanityContentItems > li {
 }
 
 ul.sanityContentItems > li h3 {
-  font-size: var(--font-size-M-plus);
+  font-size: var(--font-size-L);
   font-family: var(--font-serif);
+  margin-bottom: 0.2em;
 }
 
 .vignette {
