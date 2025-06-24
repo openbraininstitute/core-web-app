@@ -253,7 +253,7 @@ export function ScopeSelector() {
         key={`tile-${section}/${selectedTab}/${type}`}
         aria-hidden
         className={classNames(
-          'border-primary-4 box-border flex h-[200px] justify-between gap-5 overflow-hidden rounded-sm border p-6',
+          'border-primary-4 box-border flex h-[200px] items-start justify-between gap-5 overflow-hidden rounded-sm border p-6',
           tileStyle,
           !disabled && 'cursor-pointer'
         )}
@@ -261,32 +261,54 @@ export function ScopeSelector() {
           if (!disabled) updateScopeConfig({ selectedTab, type });
         }}
       >
-        <div className="text-left">
+        <div className="w-2/3 text-left">
           <div className="mb-2 text-3xl font-semibold">{title}</div>
-          <div className={classNames('text-sm', descStyle)}>{description}</div>
+          <div className={classNames('text-sm text-balance', descStyle)}>{description}</div>
         </div>
-
-        {showImage && (
-          <Image
-            src={img}
-            width={100}
-            height={100}
-            alt={title}
-            style={{ clipPath: 'circle()', shapeOutside: 'circle()' }}
-            className="self-center"
-          />
-        )}
-        {url?.build ? (
-          <Button
-            onClick={onClick}
-            className={classNames(
-              'bg-primary-9 h-[55px] min-w-[100px] self-center text-xl font-bold text-white',
-              'flex items-center justify-center rounded-none hover:text-white'
-            )}
-          >
-            Build
-          </Button>
-        ) : null}
+        <div className="flex h-full w-1/3 flex-col items-center justify-center gap-3">
+          {showImage && (
+            <motion.div
+              className="flex items-center justify-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Image
+                src={img}
+                width={100}
+                height={100}
+                alt={title}
+                style={{
+                  clipPath: 'circle()',
+                  shapeOutside: 'circle()',
+                  height: 'auto',
+                  width: 'auto',
+                }}
+              />
+            </motion.div>
+          )}
+          {url?.build ? (
+            <motion.div
+              className="flex items-center justify-center"
+              initial={{ opacity: 0, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Button
+                onClick={onClick}
+                className={classNames(
+                  'bg-primary-9 h-[55px] min-w-[100px] text-xl font-bold text-white',
+                  'items-center justify-center rounded-none hover:text-white',
+                  highlight && section === 'build' ? 'flex' : 'hidden'
+                )}
+              >
+                Build
+              </Button>
+            </motion.div>
+          ) : null}
+        </div>
       </div>
     );
   };
