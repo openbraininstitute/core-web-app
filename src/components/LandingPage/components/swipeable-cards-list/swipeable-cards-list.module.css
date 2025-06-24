@@ -1,8 +1,11 @@
 .swipeableCardsList {
-  width: 100vw;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
   margin: var(--gap-L) 0;
+  gap: var(--gap-S);
   padding: 0 32px;
 }
 
@@ -14,7 +17,7 @@
   gap: var(--custom-gap, 48px);
   flex-wrap: nowrap;
   scroll-behavior: smooth;
-  /* overflow-x: scroll; */
+  overflow-x: scroll;
   scroll-snap-type: x mandatory;
   padding-bottom: 24px;
   -ms-overflow-style: none;
