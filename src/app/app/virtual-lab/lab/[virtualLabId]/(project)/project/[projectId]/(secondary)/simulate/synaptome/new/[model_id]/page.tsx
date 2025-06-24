@@ -41,13 +41,12 @@ async function loadExpandedSingleNeuronSynaptome({
 }
 
 export default async function SynaptomeSimulation({ params: promisedParams }: Props) {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { virtualLabId, projectId, model_id } = await promisedParams;
+  const { virtualLabId, projectId, model_id: modelId } = await promisedParams;
 
   const payload = await loadExpandedSingleNeuronSynaptome({
     virtualLabId,
     projectId,
-    id: model_id,
+    id: modelId,
   });
 
   // const resetSimulation = useResetAtom(resetSimulationAtom);
