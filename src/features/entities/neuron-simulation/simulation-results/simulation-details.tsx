@@ -3,6 +3,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import { useParams } from 'next/navigation';
+import startsWith from 'lodash/startsWith';
+import some from 'lodash/some';
 import get from 'lodash/get';
 
 import SimulationPlotAsImage from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-as-image';
@@ -12,7 +14,6 @@ import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { arrayBufferToJson } from '@/utils/buffer';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
@@ -57,11 +58,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
       if (entity) {
         const asset = getAssetElement({
           assets: simulation.assets,
-          filter: (s) => s.label === entity?.asset.configfile,
+          filter: (s) =>
+            s.label === entity?.asset.configfile ||
+            some(['simulation-config'], (prefix) => startsWith(s.path, prefix)),
         });
         if (asset) {
-          const { data, error: returnedError } = await tryCatch(
-            downloadAsset<ArrayBuffer>({
+          const { data: config, error: returnedError } = await tryCatch(
+            downloadAsset<SimulationPayload>({
               ctx: { virtualLabId, projectId },
               entityId: simulation.id,
               entityType: entity?.type,
@@ -71,8 +74,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
 
           if (returnedError) setError(returnedError);
 
-          if (data) {
-            const config = arrayBufferToJson<SimulationPayload>(data);
+          if (config) {
             setConfigAsset(config);
             setSimulationPlot(Object.keys(config.simulation).at(0));
           }

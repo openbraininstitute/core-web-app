@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import startsWith from 'lodash/startsWith';
+import some from 'lodash/some';
 
 import { getSession } from '@/authFetch';
 
@@ -12,6 +14,7 @@ import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import { getMEModel, getSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
+import { getAssetElement } from '@/api/entitycore/utils';
 
 export function useSimulation({
   id,
@@ -47,22 +50,23 @@ export function useSimulation({
         const meModelData = await getMEModel({ id: simulationData.me_model.id, context });
         setMeModel(meModelData);
 
-        const asset = simulationData.assets.find(
-          (a) => a.label === SingleNeuronSimulation.asset.configfile
-        );
+        const configAsset = getAssetElement({
+          assets: simulationData.assets,
+          filter: (i) =>
+            i.label === SingleNeuronSimulation.asset.configfile ||
+            some(['simulation-config'], (prefix) => startsWith(i.path, prefix)),
+        });
 
-        if (!asset) throw new Error('Simulation config not found');
+        if (!configAsset) throw new Error('Simulation config not found');
 
-        const file = await downloadAsset<Buffer>({
+        const fileAsJson = await downloadAsset<SimulationPayload | null>({
           ctx: { virtualLabId, projectId },
           entityType: SingleNeuronSimulation.type,
           entityId: simulationData.id,
-          id: asset.id,
+          id: configAsset.id,
         });
 
-        const json = JSON.parse(new TextDecoder('utf-8').decode(file));
-
-        setSimulationConfig(json);
+        setSimulationConfig(fileAsJson);
       } catch (error) {
         notifyError('Error while loading the resource details', undefined, 'topRight');
       }

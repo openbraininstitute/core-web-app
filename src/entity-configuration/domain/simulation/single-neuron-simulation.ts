@@ -17,8 +17,9 @@ import type { WorkspaceContext } from '@/types/common';
 export const singleNeuronSimulationApiQueryExpand = {
   memodel: (source: ISingleNeuronSimulation, context: WorkspaceContext | undefined) =>
     getMEModel({ id: source.me_model.id, context }),
-  config: (source: ISingleNeuronSimulation, context: WorkspaceContext | undefined) =>
-    getSingleNeuronSimulationIOResult(source, context),
+  config: (source: ISingleNeuronSimulation, context: WorkspaceContext | undefined) => {
+    return getSingleNeuronSimulationIOResult(source, context);
+  },
 };
 
 export async function resolveSingleNeuronSimulation(

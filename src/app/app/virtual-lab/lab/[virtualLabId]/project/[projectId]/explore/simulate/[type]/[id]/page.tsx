@@ -36,6 +36,7 @@ export default async function Page({
       virtualLabId,
       projectId,
     });
+
     return (
       <SingleNeuronSimulationView
         params={{ id, virtualLabId, projectId }}
