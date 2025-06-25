@@ -40,27 +40,27 @@ function isAtom<T>(val: unknown): val is Atom<T> {
 const ORDERING: Record<string, { order: number; category: string }> = {
   info: {
     order: 0,
-    category: '',
+    category: 'Setup',
   },
   initialize: {
     order: 1,
-    category: '',
+    category: 'Setup',
   },
   stimuli: {
     order: 2,
-    category: '',
+    category: 'Stimuli & Recordings',
   },
   recordings: {
     order: 3,
-    category: '',
+    category: 'Stimuli & Recordings',
   },
   neuron_sets: {
     order: 4,
-    category: 'Auxiliary',
+    category: 'Circuit components',
   },
   timestamps: {
     order: 5,
-    category: 'Auxiliary',
+    category: 'Events',
   },
 };
 
@@ -369,7 +369,7 @@ export default function TinyCircuitSimulation() {
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
-        <div className="inline-flex overflow-hidden rounded-full border border-gray-300">
+        <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
           <Tab
             tab="configuration"
             rounded="rounded-l-full"
@@ -389,9 +389,13 @@ export default function TinyCircuitSimulation() {
           </Tab>
         </div>
       </div>
+
+      {/* Horizontal Divider */}
+      <div className="w-full border-t border-gray-200" />
+
       {tab === 'configuration' && (
-        <div className="grid flex-1 grid-cols-[1fr_2fr_3fr] gap-10 overflow-auto">
-          <div className="flex flex-col items-center gap-5">
+        <div className="grid flex-grow grid-cols-[1fr_1fr_2fr] gap-5 h-0 min-h-0">
+          <div className="flex flex-col items-center gap-5 overflow-y-auto h-full pr-5 border-r border-gray-200">
             {CATEGORIES.map((c) => {
               return (
                 <Fragment key={c}>
@@ -475,7 +479,7 @@ export default function TinyCircuitSimulation() {
               </div>
             </button>
           </div>
-          <div>
+          <div className="overflow-y-auto h-full pr-5 border-r border-gray-200">
             {schema.properties &&
               schema.properties?.[configTab]?.additionalProperties?.anyOf &&
               !selectedCategory &&
@@ -486,7 +490,7 @@ export default function TinyCircuitSimulation() {
                       <Fragment key={o.title}>
                         {/* eslint-disable-next-line */}
                         <div
-                          className="min-h-[100px] w-[70%] cursor-pointer rounded-xl bg-white p-5 shadow"
+                          className="min-h-[100px] w-full cursor-pointer rounded-xl p-5 border border-gray-200 hover:bg-white"
                           onClick={() => {
                             setSelectedCategory(o.properties?.type.const ?? '');
                           }}
@@ -500,6 +504,7 @@ export default function TinyCircuitSimulation() {
                 </div>
               )}
 
+            
             {schema.properties &&
               schema.properties?.[configTab] &&
               editing &&
@@ -522,17 +527,16 @@ export default function TinyCircuitSimulation() {
                         ]
                   }
                 />
-              )}
+              )}  
           </div>
-
           <NextImage
-            width={1000}
-            height={1000}
-            alt="Circuit"
-            // eslint-disable-next-line
-            src={basePath + '/images' + '/circuit_test_image.png'}
-            className="w-full bg-red-300"
-          />
+          width={1000}
+          height={1130}
+          alt="Circuit"
+          // eslint-disable-next-line
+          src={basePath + '/images' + '/circuit_test_image.png'}
+          className="w-full bg-red-300 border border-gray-200 rounded-xl"
+        />
         </div>
       )}
     </div>
