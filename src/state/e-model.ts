@@ -1,28 +1,28 @@
-import esb from 'elastic-builder';
 import groupBy from 'lodash/groupBy';
 import isEqual from 'lodash/isEqual';
 import { Atom, atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 
-import { fetchJsonFileByUrl, fetchResourceById, fetchResourceByIdUsingResolver } from '@/api/nexus';
+import { pageNumberAtom, pageSizeAtom } from '@/state/explore-section/list-view-atoms';
+import { fetchJsonFileByUrl, fetchResourceByIdUsingResolver } from '@/api/nexus';
 import {
   EModelConfiguration,
   EModelConfigurationPayload,
   EModelWorkflow,
   ExemplarMorphologyDataType,
-  ExperimentalTracesDataType,
-  ExtractionTargetsConfiguration,
   MechanismForUI,
 } from '@/types/e-model'; // TODO: Confirm these types
 import { EModelResource } from '@/types/explore-section/delta-model';
 
 import { ReconstructedNeuronMorphology } from '@/types/explore-section/delta-experiment';
 import sessionAtom from '@/state/session';
-import { convertDeltaMorphologyForUI, convertESTraceForUI } from '@/services/e-model';
+import { convertDeltaMorphologyForUI } from '@/services/e-model';
 import { ensureArray } from '@/util/nexus';
-import { API_SEARCH } from '@/constants/explore-section/queries';
-import { createHeaders } from '@/util/utils';
-import { ExperimentalTrace } from '@/types/explore-section/es-experiment';
+import { WorkspaceContext } from '@/types/common';
+import { getEntityDerivations } from '@/api/entitycore/queries/general/derivation';
+import { tryCatch } from '@/api/utils';
+import { getElectricalCellRecordings } from '@/api/entitycore/queries';
+import { IElectricalCellRecording } from '@/api/entitycore/types';
 
 export type ModelResourceInfo = {
   eModelId: string;
@@ -136,81 +136,53 @@ export const eModelExemplarMorphologyFamily = atomFamily<
   isEqual
 );
 
-const eModelExtractionTargetsConfigurationIdAtom = atomFamily<
-  ModelResourceInfo,
-  Atom<Promise<string | null>>
->(
-  (resourceInfo) =>
-    atom(async (get) => {
-      const eModelWorkflow = await get(eModelWorkflowFamily(resourceInfo));
-
-      if (!eModelWorkflow) return null;
-
-      const extractionTargetsConfiguration = ensureArray(eModelWorkflow.hasPart).find(
-        (part) => part['@type'] === 'ExtractionTargetsConfiguration'
-      );
-
-      if (!extractionTargetsConfiguration)
-        throw new Error('No ExtractionTargetsConfiguration found on EModelWorkflow');
-
-      return extractionTargetsConfiguration['@id'];
-    }),
-  isEqual
-);
-
-const eModelExtractionTargetsConfigurationAtom = atomFamily<
-  ModelResourceInfo,
-  Atom<Promise<ExtractionTargetsConfiguration | null>>
->((resourceInfo) =>
-  atom(async (get) => {
-    const session = get(sessionAtom);
-    const eModelExtractionTargetsConfigurationId = await get(
-      eModelExtractionTargetsConfigurationIdAtom(resourceInfo)
-    );
-
-    if (!session || !eModelExtractionTargetsConfigurationId) return null;
-
-    return fetchResourceById<ExtractionTargetsConfiguration>(
-      eModelExtractionTargetsConfigurationId,
-      session
-    );
-  })
-);
-
 export const experimentalTracesAtomFamily = atomFamily<
-  ModelResourceInfo,
-  Atom<Promise<ExperimentalTracesDataType[] | null>>
+  WorkspaceContext & { id: string; key: string },
+  Atom<Promise<{ error: Error | null; data?: IElectricalCellRecording[] | null; total: number }>>
 >(
-  (resourceInfo) =>
+  (ctx) =>
     atom(async (get) => {
-      const session = get(sessionAtom);
-      const eModelExtractionTargetsConfiguration = await get(
-        eModelExtractionTargetsConfigurationAtom(resourceInfo)
+      const pageNumber = get(pageNumberAtom(ctx.key));
+      const pageSize = get(pageSizeAtom({ key: ctx.key, defaultSize: 5 }));
+      const { data, error } = await tryCatch(
+        getEntityDerivations({
+          context: { virtualLabId: ctx.virtualLabId, projectId: ctx.projectId },
+          entityId: ctx.id,
+          entityRoute: 'emodel',
+          filters: {
+            page: pageNumber,
+            page_size: pageSize,
+          },
+        })
       );
-
-      if (!eModelExtractionTargetsConfiguration || !session) return null;
-
-      const traceIds = ensureArray(eModelExtractionTargetsConfiguration.uses).map(
-        (trace) => trace['@id']
+      if (error) {
+        return {
+          error,
+          data: null,
+          total: 0,
+        };
+      }
+      const { data: emodels, error: emodelsError } = await tryCatch(
+        getElectricalCellRecordings({
+          context: { virtualLabId: ctx.virtualLabId, projectId: ctx.projectId },
+          filters: { id__in: data?.data.map((o) => o.id).join(',') },
+          withFacets: false,
+        })
       );
-      const tracesQuery = new esb.BoolQuery().filter([
-        esb.boolQuery().must(esb.termQuery('deprecated', false)),
-        esb.boolQuery().must(esb.termsQuery('@id', traceIds)),
-      ]);
-
-      const traces = await fetch(
-        `${API_SEARCH}?addProject=${resourceInfo.virtualLabId}/${resourceInfo.projectId}`,
-        {
-          method: 'POST',
-          headers: createHeaders(session.accessToken),
-          body: JSON.stringify({ size: 1000, query: tracesQuery.toJSON() }),
-        }
-      )
-        .then((res) => res.json())
-        .then<ExperimentalTrace[]>((res) => res.hits.hits.map((hit: any) => hit._source));
-      return traces.map((trace) => convertESTraceForUI(trace));
+      if (emodelsError) {
+        return {
+          data: null,
+          error: emodelsError,
+          total: 0,
+        };
+      }
+      return {
+        data: emodels?.data,
+        error: null,
+        total: data.pagination.total_items,
+      };
     }),
-  isEqual
+  (a, b) => a.key === b.key
 );
 
 export const eModelConfigurationDistributionFamily = atomFamily<

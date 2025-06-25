@@ -6,18 +6,17 @@ import { StandardFallback } from '@/components/build-section/cell-model-assignme
 import SimulationParameters from '@/components/build-section/cell-model-assignment/e-model/EModelView/SimulationParameters';
 import ExemplarMorphology from '@/components/build-section/cell-model-assignment/e-model/EModelView/exemplar-morphology';
 import WorkflowAttributes from '@/components/build-section/cell-model-assignment/e-model/EModelView/WorkflowAttributes';
-import Mechanism from '@/components/build-section/cell-model-assignment/e-model/EModelView/ion-channels';
+import IonChannels from '@/components/build-section/cell-model-assignment/e-model/EModelView/ion-channels';
 import EModelTitle from '@/components/build-section/cell-model-assignment/e-model/EModelView/EModelTitle';
 import SimpleErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
 import ExemplarTraces from '@/features/entities/e-model/detail-view/exemplar-traces';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
 import type { IReconstructionMorphology, IEModel } from '@/api/entitycore/types';
+import type { WorkspaceContext } from '@/types/common';
 
-type Params = {
+type Params = WorkspaceContext & {
   id: string;
-  projectId: string;
-  virtualLabId: string;
 };
 
 export default function EModelView({
@@ -53,18 +52,17 @@ export default function EModelView({
           <ErrorBoundary
             fallback={<StandardFallback type="error">Exemplar morphology</StandardFallback>}
           >
-            <ExemplarMorphology params={params} exemplarMorphology={payload.exemplar_morphology} />
+            <ExemplarMorphology exemplarMorphology={payload.exemplar_morphology} />
           </ErrorBoundary>
         </DefaultLoadingSuspense>
       </ErrorBoundary>
 
-      <DefaultLoadingSuspense>
-        <ErrorBoundary fallback={<StandardFallback type="info">Exemplar traces</StandardFallback>}>
-          <ExemplarTraces params={params} />
-        </ErrorBoundary>
-      </DefaultLoadingSuspense>
+      <ErrorBoundary fallback={<StandardFallback type="info">Exemplar traces</StandardFallback>}>
+        <ExemplarTraces params={params} source={payload.source} />
+      </ErrorBoundary>
+
       <ErrorBoundary fallback={<StandardFallback type="info">Mechanisms</StandardFallback>}>
-        <Mechanism source={payload.source} params={params} />
+        <IonChannels source={payload.source} params={params} />
       </ErrorBoundary>
 
       <ErrorBoundary

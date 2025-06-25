@@ -44,37 +44,9 @@ type Props = {
 };
 
 export default function ExemplarMorphology({ exemplarMorphology }: Props) {
-  // const { id } = params;
-
-  // const [orgProj] = from64(id).split('!/!');
-  // const [org, proj] = orgProj.split('/');
-
-  // const info = useResourceInfoFromPath();
-
-  // const detail = useUnwrappedValue(detailFamily(info));
-
-  // const eModelExemplarMorphology = useUnwrappedValue(
-  //   eModelExemplarMorphologyFamily({
-  //     eModelId: detail?.['@id'],
-  //     projectId: proj,
-  //     virtualLabId: org,
-  //   })
-  // );
-
   const eModelEditMode = useAtomValue(eModelEditModeAtom);
   const [eModelUIConfig, setEModelUIConfig] = useAtom(eModelUIConfigAtom);
   const [openPicker, setOpenPicker] = useState(false);
-  // TODO: allow editing emodel
-  // FIXME: find a better way to edit emodel
-
-  // useEffect(() => {
-  //   if (!eModelEditMode || !exemplarMorphology) return;
-
-  //   setEModelUIConfig((oldAtomData) => ({
-  //     ...oldAtomData,
-  //     morphologies: [structuredClone(exemplarMorphology)],
-  //   }));
-  // }, [eModelEditMode, exemplarMorphology, setEModelUIConfig]);
 
   const onMorphologyDelete = (morphology: IReconstructionMorphology) => {
     setEModelUIConfig((oldAtomData) => {

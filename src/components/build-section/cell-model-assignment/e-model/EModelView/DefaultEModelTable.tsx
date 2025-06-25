@@ -2,6 +2,7 @@ import { ConfigProvider, Table, ThemeConfig } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { IElectricalCellRecording } from '@/api/entitycore/types';
 
 const theme: ThemeConfig = {
   components: {
@@ -14,7 +15,7 @@ const theme: ThemeConfig = {
   },
 };
 
-type SupportedDataTypes = IReconstructionMorphology; // TODO: add ephys
+type SupportedDataTypes = IReconstructionMorphology | IElectricalCellRecording;
 
 type Props<T> = {
   dataSource: T[];
