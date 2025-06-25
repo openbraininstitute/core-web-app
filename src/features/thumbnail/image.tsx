@@ -9,7 +9,7 @@ export default function PreviewImage({
   size,
 }: {
   className?: string;
-  size?: { height: number; width: number } | string;
+  size?: { height: number | string; width: number | string };
 }) {
   const { ref } = useInView({ threshold: 0.2 });
 
@@ -18,11 +18,12 @@ export default function PreviewImage({
       ref={ref}
       className={classNames(className, 'flex items-center justify-center')}
       style={{
-        height: typeof size !== 'string' && size ? size?.height : size,
-        width: typeof size !== 'string' && size ? size?.width : size,
+        height: typeof size !== 'string' && size ? size?.height : 116,
+        width: typeof size !== 'string' && size ? size?.width : 196,
       }}
     >
-      <div className="text-red-500">EntityCore Needed</div>
+      {/* TODO: remove this component if not needed */}
+      Not yet needed
     </div>
   );
 }
