@@ -102,7 +102,7 @@ function useProgress(slotId: number): ReactNode | null {
     case SlotState.StartingBrayns:
       return <p>Starting 3D renderer...</p>;
     case SlotState.LoadingSimulation:
-      return <p>Loading simulation data...</p>;
+      return <p>Loading experiment data...</p>;
     case SlotState.UnableToStart:
     case SlotState.UpAndRunning:
       // No progress. Now, the process is started or broken.
