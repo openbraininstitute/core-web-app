@@ -264,8 +264,9 @@ export function ScopeSelectorSmall({
               visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeInOut' } },
               exit: { opacity: 0, y: -10, transition: { duration: 0.15, ease: 'easeIn' } },
             }}
-            className="absolute left-0 z-10 grid w-full grid-cols-3 gap-5 bg-white px-8 py-6 shadow-lg"
+            className="absolute left-0 z-10 grid w-full grid-cols-4 gap-5 bg-white px-8 py-6 shadow-lg"
           >
+            {header('SUBCELLULAR')}
             {header('CELLULAR')}
             {header('CIRCUIT')}
             {header('SYSTEM')}
