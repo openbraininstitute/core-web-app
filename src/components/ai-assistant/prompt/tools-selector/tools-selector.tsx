@@ -4,7 +4,7 @@ import React from 'react';
 
 import { IconGear } from '../../icons/gear';
 import { Spinner } from '../../spinner';
-import { useAIToolsSelection } from '../../state';
+import { useAIToolsInvertedSelection } from '../../state';
 import ToolCard from './tool-card';
 import { IconClose } from './icon-close';
 import { IconUnchecked } from './tool-card/icon-unchecked';
@@ -23,7 +23,7 @@ export interface ToolsSelectorProps {
 
 export default function ToolsSelector({ className, tools, open, onClose }: ToolsSelectorProps) {
   const ref = React.useRef<HTMLDialogElement | null>(null);
-  const [selection, setSelection] = useAIToolsSelection();
+  const [invertedSelection, setInvertedSelection] = useAIToolsInvertedSelection();
   React.useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -38,8 +38,9 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
     dialog.close();
     onClose();
   };
-  const selectionCount = selection ? selection.length : 0;
+  const invertedSelectionCount = invertedSelection ? invertedSelection.length : 0;
   const toolsCount = tools?.length ?? -1;
+  const selectionCount = toolsCount - invertedSelectionCount;
   const allToolsSelected = selectionCount === toolsCount;
 
   return (
@@ -64,7 +65,7 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
               <button
                 type="button"
                 className={styles.selectButton}
-                onClick={() => setSelection([])}
+                onClick={() => setInvertedSelection(tools.map((tool) => tool.id))}
               >
                 <div>Unselect all tools</div> <IconChecked />
               </button>
@@ -73,7 +74,7 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
                 <button
                   type="button"
                   className={styles.selectButton}
-                  onClick={() => setSelection(tools.map((tool) => tool.id))}
+                  onClick={() => setInvertedSelection([])}
                 >
                   <div>Select all tools</div> <IconUnchecked />
                 </button>
