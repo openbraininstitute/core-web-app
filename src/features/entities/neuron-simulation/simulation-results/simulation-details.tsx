@@ -72,7 +72,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
           if (returnedError) setError(returnedError);
 
           if (data) {
-            const config = arrayBufferToJson(data);
+            const config = arrayBufferToJson<SimulationPayload>(data);
             setConfigAsset(config);
             setSimulationPlot(Object.keys(config.simulation).at(0));
           }

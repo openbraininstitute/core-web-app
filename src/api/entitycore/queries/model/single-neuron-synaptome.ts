@@ -1,7 +1,10 @@
+import startsWith from 'lodash/startsWith';
+import some from 'lodash/some';
+
 import { entityCoreApi, getEntityCoreContext, getAssetElement } from '@/api/entitycore/utils';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { arrayBufferToJson } from '@/utils/buffer';
 import { tryCatch } from '@/api/utils';
 
 import type {
@@ -12,7 +15,6 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 
 const baseUri = '/single-neuron-synaptome';
 
@@ -105,13 +107,21 @@ export async function getSingleNeuronSynaptomeConfiguration(
 } | null> {
   const configAsset = getAssetElement({
     assets: source.assets,
-    path: `${SingleNeuronSynaptome.asset.configfile}_${source.id}.json`,
-    type: SingleNeuronSynaptome.asset.extension!,
+    filter(i) {
+      return (
+        i.label === AssetLabel.single_neuron_synaptome_config ||
+        some(['single_neuron_synaptome_config', 'synaptome_config'], (prefix) =>
+          startsWith(i.path, prefix)
+        )
+      );
+    },
   });
 
   if (configAsset) {
     const { data: asset, error } = await tryCatch(
-      downloadAsset<ArrayBuffer>({
+      downloadAsset<{
+        synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+      }>({
         ctx: context,
         entityId: source.id,
         entityType: EntityTypeEnum.SingleNeuronSynaptome,
@@ -122,7 +132,7 @@ export async function getSingleNeuronSynaptomeConfiguration(
     if (error) {
       return null;
     }
-    return arrayBufferToJson(asset);
+    return asset;
   }
   return null;
 }
