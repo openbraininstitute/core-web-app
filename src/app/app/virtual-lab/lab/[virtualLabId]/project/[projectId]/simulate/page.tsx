@@ -29,6 +29,7 @@ import {
 
 import type { ISingleNeuronSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type { WorkspaceContext } from '@/types/common';
+import { DataType } from '@/constants/explore-section/list-views';
 import Styles from '@/styles/vlabs.module.css';
 
 export default function Page() {
@@ -182,16 +183,18 @@ function NewSim() {
         />
         {buttonsVisible && selectedRows.length > 0 && (
           <div className="fixed right-[50px] bottom-8 flex items-center justify-end gap-2">
-            <Link
-              className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
-              href={resolveExploreDetailsPageUrl({
-                ctx: { virtualLabId, projectId },
-                dataType,
-                entityId: selectedRows[0].id,
-              })}
-            >
-              View
-            </Link>
+            {dataType !== DataType.Circuit && (
+              <Link
+                className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
+                href={resolveExploreDetailsPageUrl({
+                  ctx: { virtualLabId, projectId },
+                  dataType,
+                  entityId: selectedRows[0].id,
+                })}
+              >
+                View
+              </Link>
+            )}
             <Link
               className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
               href={resolveExperimentUrl({

@@ -388,7 +388,7 @@ export default function TinyCircuitSimulation() {
         </div>
       </div>
       {tab === 'configuration' && (
-        <div className="grid flex-1 grid-cols-[1fr_2fr_3fr] gap-10 overflow-auto">
+        <div className="grid flex-1 grid-cols-[0.9fr_0.9fr_2fr] gap-10 overflow-auto">
           <div className="flex flex-col items-center gap-5">
             {CATEGORIES.map((c) => {
               return (
