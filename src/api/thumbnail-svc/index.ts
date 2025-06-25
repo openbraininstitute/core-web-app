@@ -59,3 +59,31 @@ export async function getPreviewBlob(
   const blob = await response.blob();
   return blob;
 }
+
+export async function getImageBlob(
+  entityId: string,
+  virtualLabId?: string,
+  projectId?: string,
+  accept: string = 'image/png'
+) {
+  const url = `${thumbnailGenerationBaseUrl}/core/model-trace/${entityId}/preview`;
+  const session = await getSession();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${session?.accessToken}`,
+    Accept: accept,
+  };
+
+  if (virtualLabId) headers['virtual-lab-id'] = virtualLabId;
+  if (projectId) headers['project-id'] = projectId;
+
+  const response = await fetch(url, {
+    method: 'get',
+    headers,
+  });
+  if (!response.ok) {
+    throw new Error('Error generating thumbnail', { cause: await response.json() });
+  }
+  const blob = await response.blob();
+  return blob;
+}
