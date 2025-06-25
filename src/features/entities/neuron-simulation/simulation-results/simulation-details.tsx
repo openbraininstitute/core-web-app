@@ -63,17 +63,18 @@ export default function SimulationDetail<T extends GenericSimulation>({
             some(['simulation-config'], (prefix) => startsWith(s.path, prefix)),
         });
         if (asset) {
-          const { data: config, error: returnedError } = await tryCatch(
-            downloadAsset<SimulationPayload>({
+          const { data: assetResult, error: returnedError } = await tryCatch(
+            downloadAsset({
               ctx: { virtualLabId, projectId },
               entityId: simulation.id,
               entityType: entity?.type,
               id: asset?.id,
+              asRawResponse: true,
             })
           );
 
           if (returnedError) setError(returnedError);
-
+          const config = (await assetResult?.json()) as SimulationPayload;
           if (config) {
             setConfigAsset(config);
             setSimulationPlot(Object.keys(config.simulation).at(0));
@@ -90,7 +91,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading experiment {index + 1}...</h2>
+        <h2 className="text-primary-9 font-light">Loading experiment results {index + 1}...</h2>
       </div>
     );
   }

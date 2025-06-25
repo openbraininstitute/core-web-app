@@ -49,7 +49,7 @@ export default function Results({ modelId }: Props) {
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading simulations...</h2>
+        <h2 className="text-primary-9 font-light">Loading experiments...</h2>
       </div>
     );
   }

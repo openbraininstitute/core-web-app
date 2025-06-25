@@ -115,15 +115,17 @@ export async function getSingleNeuronSimulationIOResult(
   });
 
   if (configAsset) {
-    const { data: asset, error } = await tryCatch(
+    const { data, error } = await tryCatch(
       downloadAsset({
         ctx: context,
         entityId: source.id,
         entityType: EntityTypeEnum.SingleNeuronSimulation,
         id: configAsset.id,
+        asRawResponse: true,
       })
     );
 
+    const asset = await data?.json();
     if (error) {
       return null;
     }

@@ -108,7 +108,7 @@ export async function createSingleNeuronSynaptomeSimulation({
 export async function getSingleNeuronSynaptomeSimulationIOResult(
   source: ISingleNeuronSynaptomeSimulation,
   context?: WorkspaceContext
-) {
+): Promise<SimulationPayload | null> {
   const configAsset = getAssetElement({
     assets: source.assets,
     filter: (i) =>
@@ -117,19 +117,21 @@ export async function getSingleNeuronSynaptomeSimulationIOResult(
   });
 
   if (configAsset) {
-    const { data: asset, error } = await tryCatch(
-      downloadAsset<SimulationPayload>({
+    const { data, error } = await tryCatch(
+      downloadAsset({
         ctx: context,
         entityId: source.id,
         entityType: EntityTypeEnum.SingleNeuronSynaptomeSimulation,
         id: configAsset.id,
+        asRawResponse: true,
       })
     );
+    const asset = await data?.json();
 
     if (error) {
       return null;
     }
-    return asset;
+    return asset as SimulationPayload;
   }
   return null;
 }
