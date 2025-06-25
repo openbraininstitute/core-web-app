@@ -38,11 +38,11 @@ export type Props = {
   };
 };
 
-type TabsKeys = 'configuration' | 'analysis' | 'simulation';
+type TabsKeys = 'configuration' | 'analysis' | 'experiments';
 const TabsConfig: Array<{ key: TabsKeys; title: string }> = [
   { key: 'configuration', title: 'Configuration' },
   { key: 'analysis', title: 'Analysis' },
-  { key: 'simulation', title: 'Simulation' },
+  { key: 'experiments', title: 'Experiments' },
 ];
 
 export const CommonSummaryViewFields = [
@@ -90,7 +90,7 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
                 <If id="analysis" condition={activeTab === 'analysis'}>
                   <Analysis />
                 </If>
-                <If id="simulation" condition={activeTab === 'simulation'}>
+                <If id="simulation" condition={activeTab === 'experiments'}>
                   <Simulation modelId={source.id} type={EntitySlug.SingleNeuronSimulation} />
                 </If>
               </Suspense>

@@ -88,7 +88,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading simulation {index + 1}...</h2>
+        <h2 className="text-primary-9 font-light">Loading experiment {index + 1}...</h2>
       </div>
     );
   }
@@ -98,25 +98,25 @@ export default function SimulationDetail<T extends GenericSimulation>({
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<InfoCircleOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading simulation data failed.</h2>
+        <h2 className="text-primary-9 font-light">Loading experiment data failed.</h2>
       </div>
     );
   }
 
   return (
-    <div className="border-neutral-2 flex items-start gap-8 border p-8">
+    <div className="border-neutral-2 grid grid-cols-2 gap-20 border p-8">
       <div className="text-primary-8 flex flex-[0_1_60%] flex-col gap-10">
         <NameDescription name={simulation.name} description={simulation.description} />
         <Params payload={configAsset} />
         <div className="flex w-full flex-col gap-2">
           <div className="text-primary-8 text-lg font-bold">Injection location</div>
-          <div className="mt-2 flex max-w-max items-center justify-center border border-gray-100 px-5 py-1 font-bold">
+          <div className="mt-2 flex max-w-max flex-wrap items-center justify-center border border-gray-100 px-5 py-1 font-bold">
             {configAsset.config.current_injection.inject_to}
           </div>
         </div>
         <div className="flex w-full flex-col gap-2">
           <div className="text-primary-8 text-lg font-bold">Recording locations</div>
-          <div className="mt-2 flex items-center gap-4">
+          <div className="mt-2 flex flex-wrap items-center gap-4">
             {configAsset.config.record_from.map((r, ind) => (
               <div key={`${r.section}_${r.offset}`} className="flex flex-col gap-1">
                 <div className="text-gray-400 uppercase">Recording {ind + 1}</div>
@@ -141,7 +141,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
         {children?.({ config: configAsset.config })}
       </div>
 
-      <div className="flex w-full flex-[1_1_40%] flex-col items-end justify-center gap-5">
+      <div className="flex w-full flex-col items-end justify-start gap-10">
         {configAsset.stimulus && (
           <div className="flex w-full flex-col">
             <div className="text-primary-8 mb-4 text-2xl font-bold">Stimulus</div>
@@ -157,7 +157,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
                 defaultValue="center"
                 className={classNames(
                   'mb-4 max-w-max',
-                  'bg-white [&_.ant-segmented-group]:gap-2',
+                  'bg-white [&_.ant-segmented-group]:flex [&_.ant-segmented-group]:flex-wrap [&_.ant-segmented-group]:gap-2',
                   '[&_.ant-segmented-item]:border [&_.ant-segmented-item]:border-gray-400 [&_.ant-segmented-item]:bg-white',
                   '[&_.ant-segmented-item-selected]:border-primary-8! [&_.ant-segmented-item-selected]:bg-primary-8! [&_.ant-segmented-item-selected]:text-white [&_.ant-segmented-item-selected]:shadow-md!'
                 )}
@@ -193,7 +193,7 @@ function Params({ payload }: { payload: SimulationPayload | null }) {
   if (!payload) return null;
 
   return (
-    <div className="flex justify-between gap-10">
+    <div className="flex flex-wrap justify-between gap-10">
       <div>
         <div className={subtitleStyle}>Temperature</div>
         <div>

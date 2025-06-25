@@ -50,7 +50,7 @@ export default function Results({ modelId }: Props) {
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading simulations...</h2>
+        <h2 className="text-primary-9 font-light">Loading experiment...</h2>
       </div>
     );
   }
@@ -88,8 +88,8 @@ export default function Results({ modelId }: Props) {
           fallback={withErrorConfig({
             cls: { container: 'bg-white' },
             showButtons: false,
-            customError: 'Error while loading simulation ',
-          })({ error: error ? new Error('Failed to load simulation') : undefined })}
+            customError: 'Error while loading experiment ',
+          })({ error: error ? new Error('Failed to load experiment') : undefined })}
           key={sim.id}
         >
           <SimulationDetail<ISingleNeuronSynaptomeSimulation>
@@ -102,7 +102,7 @@ export default function Results({ modelId }: Props) {
               return (
                 <>
                   <div className="text-primary-8 text-lg font-bold">Synaptic Inputs</div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-wrap gap-4">
                     {config.synaptome.map((c, ind) => (
                       <div
                         key={c.id}
