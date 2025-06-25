@@ -16,6 +16,7 @@ import {
 
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
+import NextImage from 'next/image';
 import {
   JSONSchemaForm,
   Chevron,
@@ -28,6 +29,7 @@ import { Params, JSONSchema } from './types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { useAppNotification } from '@/components/notification';
 import authFetch from '@/authFetch';
+import { basePath } from '@/config';
 
 type TabType = 'configuration' | 'simulations';
 
@@ -388,7 +390,7 @@ export default function TinyCircuitSimulation() {
         </div>
       </div>
       {tab === 'configuration' && (
-        <div className="grid flex-1 grid-cols-[0.9fr_0.9fr_2fr] gap-10 overflow-auto">
+        <div className="grid flex-1 grid-cols-[1fr_2fr_3fr] gap-10 overflow-auto">
           <div className="flex flex-col items-center gap-5">
             {CATEGORIES.map((c) => {
               return (
@@ -522,9 +524,15 @@ export default function TinyCircuitSimulation() {
                 />
               )}
           </div>
-          <div>
-            <div className="bg-primary-1 h-full w-full opacity-30" />
-          </div>
+
+          <NextImage
+            width={1000}
+            height={1000}
+            alt="Circuit"
+            // eslint-disable-next-line
+            src={basePath + '/images' + '/circuit_test_image.png'}
+            className="w-full bg-red-300"
+          />
         </div>
       )}
     </div>

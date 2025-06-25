@@ -65,7 +65,7 @@ export function JSONSchemaForm({
       });
 
       if (referees.length === 0) {
-        return `No valid ${referenceKey} found.`;
+        return <span className="text-red-500">No valid {referenceKey} found</span>;
       }
 
       const defaultV =
