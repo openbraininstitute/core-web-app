@@ -1,3 +1,19 @@
+import {
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
+  IContributor,
+  Timestamps,
+} from '../shared/global';
+import {
+  ContributionFilter,
+  TimestampsFilter,
+  OwnershipFilter,
+  IDFilter,
+  NameFilter,
+} from '@/api/entitycore/types/shared/request';
+
 export type Density = {
   density: number;
   count: number;
@@ -35,3 +51,20 @@ export interface ICellCompositionRoot {
   };
   hasPart: Record<string, CellCompositionBrainRegion>;
 }
+
+export interface ICellComposition
+  extends EntityCoreType,
+    EntityCoreIdentifiable,
+    EntityCoreOwnership,
+    Timestamps,
+    EntityCoreBaseAsset {
+  name: string;
+  description: string;
+  contributions?: Array<IContributor> | null;
+}
+export interface ICellCompositionFilter
+  extends IDFilter,
+    NameFilter,
+    TimestampsFilter,
+    OwnershipFilter,
+    ContributionFilter {}
