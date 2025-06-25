@@ -17,6 +17,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.NumberNeurons,
+      EntityCoreFields.NumberSynapses,
+      EntityCoreFields.NumberConnections,
     ],
   },
 

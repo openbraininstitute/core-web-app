@@ -16,6 +16,8 @@ export interface CircuitBase {
   name: string;
   description: string;
   number_neurons: number;
+  number_synapses: number;
+  number_connections: number;
 }
 
 export interface ICircuit
