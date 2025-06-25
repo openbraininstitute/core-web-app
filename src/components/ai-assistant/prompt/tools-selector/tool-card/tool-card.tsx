@@ -9,7 +9,7 @@ import { IconChecked } from './icon-checked';
 import { IconUnchecked } from './icon-unchecked';
 import { classNames } from '@/util/utils';
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
-import { useAIToolsSelection } from '@/components/ai-assistant/state';
+import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
 
 import styles from './tool-card.module.css';
 
@@ -19,12 +19,15 @@ export interface ToolCardProps {
 }
 
 export default function ToolCard({ className, tool }: ToolCardProps) {
-  const [selection, setSelection] = useAIToolsSelection();
-  const checked = Boolean(selection && selection.includes(tool.id));
+  const [invertedSelection, setInvertedSelection] = useAIToolsInvertedSelection();
+  /**
+   * A tool is checked if it's id is not in invertedSelection array.
+   */
+  const checked = Boolean(invertedSelection && !invertedSelection.includes(tool.id));
   const Icon = tool.icon;
   const handleToggle = () => {
-    if (checked) setSelection((selection ?? []).filter((id) => id !== tool.id));
-    else setSelection([...(selection ?? []), tool.id]);
+    if (checked) setInvertedSelection([...(invertedSelection ?? []), tool.id]);
+    else setInvertedSelection((invertedSelection ?? []).filter((id) => id !== tool.id));
   };
 
   return (
