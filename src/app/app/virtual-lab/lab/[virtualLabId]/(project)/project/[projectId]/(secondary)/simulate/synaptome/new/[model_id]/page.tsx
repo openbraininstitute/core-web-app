@@ -1,10 +1,15 @@
 import isNil from 'lodash/isNil';
-import Container from '@/features/entities/neuron-simulation/experiment/containers';
+import dynamic from 'next/dynamic';
+
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { apiQueryExpand } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { tryCatch } from '@/api/utils';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
+const Container = dynamic(
+  () => import('@/features/entities/neuron-simulation/experiment/containers')
+);
 
 type Props = ServerSideComponentProp<
   WorkspaceContext & {
@@ -48,11 +53,6 @@ export default async function SynaptomeSimulation({ params: promisedParams }: Pr
     projectId,
     id: modelId,
   });
-
-  // const resetSimulation = useResetAtom(resetSimulationAtom);
-  // useEffect(() => {
-  //   return resetSimulation;
-  // }, [resetSimulation]);
 
   return <Container payload={payload} type="synaptome-simulation" />;
 }

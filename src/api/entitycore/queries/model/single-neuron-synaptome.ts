@@ -119,20 +119,22 @@ export async function getSingleNeuronSynaptomeConfiguration(
 
   if (configAsset) {
     const { data: asset, error } = await tryCatch(
-      downloadAsset<{
-        synapses: Array<TSingleNeuronSynaptomeConfiguration>;
-      }>({
+      downloadAsset({
         ctx: context,
         entityId: source.id,
         entityType: EntityTypeEnum.SingleNeuronSynaptome,
         id: configAsset.id,
+        asRawResponse: true,
       })
     );
+    const data = await asset?.json();
 
     if (error) {
       return null;
     }
-    return asset;
+    return data as {
+      synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+    };
   }
   return null;
 }

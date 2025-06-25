@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, Form, InputNumber, Select, SelectProps } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
@@ -70,7 +72,7 @@ export default function SynapticInputItem({
   );
   const abortController = useRef(new AbortController());
 
-  const { color } = selectedSynapticInputPlacementConfig;
+  const color = selectedSynapticInputPlacementConfig?.color;
 
   const onVisualizationError = () => {
     notifyError(
@@ -184,7 +186,10 @@ export default function SynapticInputItem({
       >
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex items-center gap-4">
-            <div className="px-6 py-3 font-bold text-white" style={{ backgroundColor: color }}>
+            <div
+              className="px-6 py-3 font-bold text-white"
+              style={{ backgroundColor: color ?? '#003a8c' }}
+            >
               {index + 1}
             </div>
             <span className="text-primary-8 font-light">Synaptic input</span>
