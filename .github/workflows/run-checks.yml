@@ -106,7 +106,7 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Run linter
-        run: pnpm run lint
+        run: pnpm run lint:only
 
   build:
     needs: install_packages
