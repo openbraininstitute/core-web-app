@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
+import { compactRecord } from '@/utils/dictionary';
 import { getSession } from '@/authFetch';
 import { log } from '@/utils/logger';
 
@@ -80,11 +81,11 @@ export const useClientCachedUrl = ({
           }
 
           const networkResponse = await fetch(url, {
-            headers: {
+            headers: compactRecord({
               Authorization: `Bearer ${session?.accessToken}`,
               'virtual-lab-id': virtualLabId,
               'project-id': projectId,
-            },
+            }),
           });
 
           if (!networkResponse.ok) {
