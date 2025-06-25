@@ -5,14 +5,11 @@ import { useCallback, useState } from 'react';
 
 import { useFetchSingleType } from '@/components/documentation/hooks/use-entitycore-fetch-single-type';
 import { CopyIcon } from '@/components/explore-section/Circuit/icon/ArticlesIcons';
+import { unslugify } from '@/components/explore-section/utils';
 
 export type CopyButtonProps = {
   content: { pref_label?: string; definition?: string };
 };
-
-export function unslugify(slug: string): string {
-  return slug.replace(/-/g, ' ');
-}
 
 export default function Page() {
   const { slug } = useParams();

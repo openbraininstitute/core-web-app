@@ -6,21 +6,17 @@ import { useState } from 'react';
 
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
 import { CellTypeProps } from '@/components/explore-section/Circuit/type';
+import { slugifyForUrl } from '@/components/explore-section/utils';
 import { classNames } from '@/util/utils';
-
-export function slugify(text: string): string {
-  return text.replace(/\s+/g, '-');
-}
 
 export default function CellTypeLayout({ children }: { children: React.ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const pathname = usePathname();
 
-  // Determine cellType based on URL path
   const pathSegments = pathname.split('/').filter(Boolean);
   const cellTypeIndex = pathSegments.indexOf('cell-type') + 1;
   const cellType = pathSegments[cellTypeIndex] === 'm-type' ? 'm-type' : 'e-type';
-  const currentSlug = pathSegments[pathSegments.length - 1]; // e.g., 'acb_msn3' or 'm-type'/'e-type'
+  const currentSlug = pathSegments[pathSegments.length - 1];
 
   const cellcontent = useFetchEntityTypes({
     cellType,
@@ -32,13 +28,15 @@ export default function CellTypeLayout({ children }: { children: React.ReactNode
     update_date: item.update_date ?? '',
   })) as CellTypeProps[];
 
-  const filteredData = data.filter((item) =>
+  const sortedData = data.sort((a, b) => a.pref_label.localeCompare(b.pref_label));
+
+  const filteredData = sortedData.filter((item) =>
     item.pref_label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="relative flex w-full flex-row">
-      <div className="fixed flex w-[220px] flex-col gap-y-3 pl-10 text-base text-white">
+      <div className="no-scrollbar fixed flex h-screen w-[220px] flex-col gap-y-3 overflow-y-auto pl-10 text-base text-white">
         <div>
           <h3 className="text-primary-3 mb-4 text-xl font-bold">
             {cellType === 'm-type' ? 'M-Types' : 'E-Types'}
@@ -66,8 +64,8 @@ export default function CellTypeLayout({ children }: { children: React.ReactNode
         </Link>
 
         {filteredData?.map((item: CellTypeProps) => {
-          const isActive = slugify(item.pref_label) === currentSlug;
-          const link = `/app/documentation/glossary/cell-type/${cellType}/${slugify(item.pref_label)}`;
+          const isActive = slugifyForUrl(item.pref_label) === currentSlug;
+          const link = `/app/documentation/glossary/cell-type/${cellType}/${slugifyForUrl(item.pref_label)}`;
           return (
             <Link
               key={item.pref_label}
