@@ -1,13 +1,11 @@
 'use client';
 
-import { ReactNode, use, useEffect } from 'react';
+import { ReactNode, use } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useSetAtom } from 'jotai';
 import dynamic from 'next/dynamic';
-import ErrorComponent, { withErrorConfig } from '@/components/GenericErrorFallback';
+import { ErrorComponent, withErrorConfig } from '@/components/GenericErrorFallback';
 
 import { resolveDataKey } from '@/utils/key-builder';
-import { sectionAtom } from '@/state/application';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 type GenericLayoutProps = ServerSideComponentProp<WorkspaceContext, null> & {

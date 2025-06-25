@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SideBar from '@/components/VirtualLab/side-bar/home-sidebar';
-import ErrorComponent from '@/components/GenericErrorFallback';
+import { ErrorComponent } from '@/components/GenericErrorFallback';
 
 export default async function VirtualLabLayout({ children }: { children: ReactNode }) {
   return (

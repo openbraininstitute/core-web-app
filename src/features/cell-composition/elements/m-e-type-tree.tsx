@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-props-no-spreading */
 import { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
@@ -54,15 +55,17 @@ export function CellCompositionMETypeTree() {
         <Node<TreeNode>
           {...props}
           title={annotation?.alt_label ?? annotation?.definition}
-          subtitle={({ node, props }) => {
+          subtitle={({ node: childNode, props: childProps }) => {
             return (
               <div
                 className={classNames(
                   'mr-2',
-                  props.hasChildren ? 'font-light! hover:font-medium' : ''
+                  childProps.hasChildren ? 'font-light! hover:font-medium' : ''
                 )}
               >
-                {renderFloatNumber(densityOrCount === 'count' ? node.count : node.density)}
+                {renderFloatNumber(
+                  densityOrCount === 'count' ? childNode.count : childNode.density
+                )}
               </div>
             );
           }}
@@ -74,8 +77,8 @@ export function CellCompositionMETypeTree() {
 
   return match({ composition, annotations })
     .when(
-      ({ annotations, composition }) => {
-        if (annotations.state === 'loading' || composition.state === 'loading') return true;
+      ({ annotations: testAnnotations, composition: testComposition }) => {
+        if (testAnnotations.state === 'loading' || testComposition.state === 'loading') return true;
         return false;
       },
       () => (
@@ -85,23 +88,24 @@ export function CellCompositionMETypeTree() {
       )
     )
     .when(
-      ({ annotations, composition }) => {
-        if (annotations.state === 'hasError' || composition.state === 'hasError') return true;
+      ({ annotations: testAnnotations, composition: testComposition }) => {
+        if (testAnnotations.state === 'hasError' || testComposition.state === 'hasError')
+          return true;
         return false;
       },
-      ({ annotations, composition }) => {
+      ({ annotations: testAnnotations, composition: testComposition }) => {
         return (
           <div>
-            {annotations.state === 'hasError' &&
-              composition.state === 'hasError' &&
+            {testAnnotations.state === 'hasError' &&
+              testComposition.state === 'hasError' &&
               'loading data for cell composition and annotations failed'}
-            {annotations.state === 'hasError' && 'loading data for annotations failed'}
-            {composition.state === 'hasError' && 'loading data for cell composition failed'}
+            {testAnnotations.state === 'hasError' && 'loading data for annotations failed'}
+            {testComposition.state === 'hasError' && 'loading data for cell composition failed'}
           </div>
         );
       }
     )
-    .with({ composition: { data: P.select() } }, (composition) => (
+    .with({ composition: { data: P.select() } }, (testComposition) => (
       <>
         <h2
           className="flex justify-between text-lg font-bold text-white"
@@ -109,7 +113,7 @@ export function CellCompositionMETypeTree() {
         >
           <span className="justify-self-start">Neurons [{metricToUnit[densityOrCount]}]</span>
           <small className="text-base font-normal text-gray-300">
-            ~ {getMetric(composition.totalComposition.neuron, densityOrCount)}
+            ~ {getMetric(testComposition.totalComposition.neuron, densityOrCount)}
           </small>
         </h2>
 
@@ -121,7 +125,7 @@ export function CellCompositionMETypeTree() {
           <h6 className="px-1.5 text-sm font-normal text-gray-400">M-TYPES</h6>
           <Tree<TreeNode>
             dataKey=""
-            data={composition.neurons as Array<TreeNode>}
+            data={testComposition.neurons as Array<TreeNode>}
             selectedNode={null}
             renderNode={defaultNode}
             indentation={{ h: false, v: false, size: 10 }}

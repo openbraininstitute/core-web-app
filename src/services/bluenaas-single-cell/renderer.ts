@@ -198,7 +198,7 @@ export default class NeuronViewerRenderer {
     this.scene = new Scene();
     this.scene.background = new Color(BACKGROUND_COLOR);
     this.scene.fog = new Fog(FOG_COLOR, FOG_NEAR, FOG_FAR);
-    this.scene.add(new AmbientLight(AMBIENT_LIGHT_COLOR));
+    this.scene.add(new AmbientLight(AMBIENT_LIGHT_COLOR, 20));
     this.scene.add(this.morphObj);
     this.scene.add(this.secMarkerObj);
 

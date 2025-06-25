@@ -1,9 +1,0 @@
-*[_type=="glossaryItem"][]
-{
-  Name,
-  New_suggested_name,
-  Description,
-  Data_Type,
-  Scale,
-  Status
-}

@@ -35,12 +35,8 @@ export const getBulkEntityCoreCount = async ({
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
   const url = `${baseUrl}/api/entitycore/entities/count?${searchParam.toString()}`;
 
-  try {
-    const result = await fetch(url);
-    return await result.json();
-  } catch (error) {
-    throw error;
-  }
+  const result = await fetch(url);
+  return await result.json();
 };
 
 const entitiesCountKey = ({ virtualLabId, projectId, brainRegionId }: Params) => {

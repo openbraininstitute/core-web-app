@@ -17,7 +17,7 @@ export default function usePathChange({
     if (condition(pathname, searchParams)) {
       cb();
     }
-  }, [condition, pathname, searchParams]);
+  }, [cb, condition, pathname, searchParams]);
 
   return null;
 }

@@ -1,11 +1,12 @@
 .swipeableCardsList {
   display: flex;
-  flex-wrap: nowrap;
   flex-direction: column;
+  flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: stretch;
   margin: var(--gap-L) 0;
   gap: var(--gap-S);
+  padding: 0 32px;
 }
 
 .scroll {
@@ -39,6 +40,14 @@
 }
 
 @media (max-width: 480px) {
+  .swipeableCardsList {
+    width: 100%;
+  }
+
+  .scroll {
+    overflow-x: scroll;
+  }
+
   .swipeableCardsList > footer.onlyOnSmallScreen {
     display: flex;
   }

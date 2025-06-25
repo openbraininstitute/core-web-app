@@ -4,7 +4,7 @@ import { WarningFilled } from '@ant-design/icons';
 import Header from './Header';
 
 type Props = {
-  message?: string | null;
+  message?: ReactNode;
 };
 
 export default function ErrorMessageLine({ message }: Props) {
@@ -13,7 +13,7 @@ export default function ErrorMessageLine({ message }: Props) {
   return <div className="text-xs text-red-400">{message}</div>;
 }
 
-export function ErrorMessageBox({ message }: { message: string }) {
+export function ErrorMessageBox({ message }: Props) {
   return (
     <div className="border-error text-error flex items-center justify-center gap-4 border p-16 text-xl">
       <WarningFilled style={{ fontSize: 24 }} />
@@ -22,7 +22,7 @@ export function ErrorMessageBox({ message }: { message: string }) {
   );
 }
 
-export function InfoMessageBox({ message }: { message: string }) {
+export function InfoMessageBox({ message }: Props) {
   return (
     <div className="border-neutral-3 text-neutral-4 flex items-center justify-center gap-4 border p-16 text-xl">
       {message}
@@ -33,16 +33,18 @@ export function InfoMessageBox({ message }: { message: string }) {
 export function StandardFallback({
   children,
   type,
+  message,
 }: {
   children: ReactNode;
   type: 'error' | 'info';
+  message?: ReactNode;
 }) {
   function renderSwitch() {
     switch (type) {
       case 'error':
-        return <ErrorMessageBox message="No information available" />;
+        return <ErrorMessageBox message={message ?? 'No information available'} />;
       case 'info':
-        return <InfoMessageBox message="No information available" />;
+        return <InfoMessageBox message={message ?? 'No information available'} />;
       default:
         return undefined;
     }

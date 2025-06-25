@@ -1,4 +1,4 @@
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined } from '@ant-design/icons';
@@ -40,46 +40,13 @@ const defaultColumns: ColumnsType<IReconstructionMorphology> = Object.entries(
 }));
 
 type Props = {
-  params: {
-    id: string;
-    projectId: string;
-    virtualLabId: string;
-  };
   exemplarMorphology: IReconstructionMorphology | IReconstructionMorphologyExpanded;
 };
 
-export default function ExemplarMorphology({ params, exemplarMorphology }: Props) {
-  // const { id } = params;
-
-  // const [orgProj] = from64(id).split('!/!');
-  // const [org, proj] = orgProj.split('/');
-
-  // const info = useResourceInfoFromPath();
-
-  // const detail = useUnwrappedValue(detailFamily(info));
-
-  // const eModelExemplarMorphology = useUnwrappedValue(
-  //   eModelExemplarMorphologyFamily({
-  //     eModelId: detail?.['@id'],
-  //     projectId: proj,
-  //     virtualLabId: org,
-  //   })
-  // );
-
+export default function ExemplarMorphology({ exemplarMorphology }: Props) {
   const eModelEditMode = useAtomValue(eModelEditModeAtom);
   const [eModelUIConfig, setEModelUIConfig] = useAtom(eModelUIConfigAtom);
   const [openPicker, setOpenPicker] = useState(false);
-  // TODO: allow editing emodel
-  // FIXME: find a better way to edit emodel
-
-  // useEffect(() => {
-  //   if (!eModelEditMode || !exemplarMorphology) return;
-
-  //   setEModelUIConfig((oldAtomData) => ({
-  //     ...oldAtomData,
-  //     morphologies: [structuredClone(exemplarMorphology)],
-  //   }));
-  // }, [eModelEditMode, exemplarMorphology, setEModelUIConfig]);
 
   const onMorphologyDelete = (morphology: IReconstructionMorphology) => {
     setEModelUIConfig((oldAtomData) => {

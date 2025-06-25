@@ -12,10 +12,10 @@ const VirtualLabProjectList = dynamic(
   }
 );
 
-export default function VirtualLabProjectsPage(
-  props: ServerSideComponentProp<{ virtualLabId: string }, null>
-) {
-  const { virtualLabId } = use(props.params);
+export default function VirtualLabProjectsPage({
+  params: promisedParams,
+}: ServerSideComponentProp<{ virtualLabId: string }, null>) {
+  const { virtualLabId } = use(promisedParams);
 
   return <VirtualLabProjectList id={virtualLabId} />;
 }

@@ -9,7 +9,7 @@ import { Spin } from 'antd';
 // import CustomButton from '@/components/buttons/custom-btn';
 
 import { validationResultAtom } from '@/features/model-analysis/explorer/context';
-import { PDFViewerContainer } from '@/features/model-analysis/viewer/container';
+import { ViewerContainer } from '@/features/model-analysis/viewer/container';
 import { useLoadableValue } from '@/hooks/hooks';
 
 import type { WorkspaceContext } from '@/types/common';
@@ -33,7 +33,7 @@ export default function AnalysisContainer() {
         </div>
       );
     })
-    .with({ state: 'hasError' }, (error) => {
+    .with({ state: 'hasError' }, (_error) => {
       return (
         <div className="flex h-full items-center justify-center text-xl font-bold text-red-500">
           Error loading ME-Model analysis
@@ -56,7 +56,7 @@ export default function AnalysisContainer() {
           </div>
         );
       }
-      return <PDFViewerContainer validationResults={data} />;
+      return <ViewerContainer validationResults={data} />;
     })
     .exhaustive(() => null);
 }

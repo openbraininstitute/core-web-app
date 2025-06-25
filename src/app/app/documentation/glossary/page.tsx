@@ -1,28 +1,12 @@
-'use client';
+import { Metadata } from 'next';
 
-import { useState } from 'react';
+import GlossaryFullContent from '@/components/documentation/glossary/glossary-full-content';
 
-import GlossaryContent from '@/components/documentation/glossary/glossary-content';
-import GlossaryTableOfContent from '@/components/documentation/glossary/glossary-table-of-content';
-import {
-  ContentForGlossaryItem,
-  useSanityContentForGlossary,
-} from '@/components/documentation/hooks/use-sanity-content-for-glossary';
+export const metadata: Metadata = {
+  title: 'Open Brain Platform Glossary',
+  description: 'Explore the glossary definitions in our documentation.',
+};
 
-export default function FullGlossaryPage() {
-  const content = useSanityContentForGlossary();
-
-  const [activeItem, setActiveItem] = useState<ContentForGlossaryItem | null>(null);
-
-  return (
-    <div className="flex w-full flex-row">
-      <GlossaryTableOfContent
-        content={content}
-        activeItem={activeItem}
-        setActiveItem={setActiveItem}
-      />
-
-      <div className="w-full">{activeItem && <GlossaryContent activeItem={activeItem} />}</div>
-    </div>
-  );
+export default function Page() {
+  return <GlossaryFullContent />;
 }

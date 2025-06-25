@@ -128,6 +128,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     annotation_value: DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
   });
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const [{ id, annotation_value }, setHierarchyConfig] = useQueryStates(
     {
       id: parseAsString.withDefault(brainRegionHierarchyFamily?.id ?? ''),
@@ -158,7 +159,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
         annotation_value,
       });
     }
-  }, []);
+  }, [annotation_value, id, setHierarchyConfig]);
 
   /**
    * Updates the hierarchy configuration state

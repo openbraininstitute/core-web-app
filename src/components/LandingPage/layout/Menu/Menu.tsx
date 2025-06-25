@@ -1,18 +1,18 @@
-import React from 'react';
 import Link from 'next/link';
+import React from 'react';
 
+import { ID_MENU, MENU_ITEMS } from '../../constants';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
-import { ID_MENU, MENU_ITEMS } from '../../constants';
 import PopupMenu from './PopupMenu';
-import { classNames } from '@/util/utils';
 
+import { classNames } from '@/util/utils';
 import styles from './Menu.module.css';
 
 export interface MenuProps {
   className?: string;
   scrollHasStarted: boolean;
-  section: EnumSection;
+  section?: EnumSection;
 }
 
 export default function Menu({ className, scrollHasStarted, section }: MenuProps) {

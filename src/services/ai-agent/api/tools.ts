@@ -13,10 +13,10 @@ export const serviceAiAgentListTools = asyncCreateSquash(
   }
 );
 
-export type AiAgentListToolsResponse = Array<{ name: string }>;
+export type AiAgentListToolsResponse = Array<{ name: string; name_frontend: string }>;
 
 function isAiAgentListToolsResponse(data: unknown): data is AiAgentListToolsResponse {
-  return isType(data, ['array', { name: 'string' }]);
+  return isType(data, ['array', { name: 'string', name_frontend: 'string' }]);
 }
 
 export const serviceAiAgentGetTool = asyncCreateSquash(

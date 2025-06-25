@@ -4,9 +4,10 @@ import { FlattenedExploreESResponse, ExploreResource } from '@/types/explore-sec
 import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
 import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
 import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
-import { EntityCoreFields, Field } from '@/constants/explore-section/fields-config/enums';
 import { DataType } from '@/constants/explore-section/list-views';
-import { Prettify } from '@/types/common';
+import { Prettify } from '@/utils/type';
+
+export type { DetailProps } from './types';
 
 // defines the source from where the explore data will be retrieved
 // SelectedBrainRegion: The data will be filtered based on the selected brain region
@@ -78,8 +79,6 @@ export type SingleCard = {
   image: string;
   items?: SubSectionCardItem[] | null;
 };
-
-export type DetailProps = { field: EntityCoreFields; className?: string };
 
 export type ResourceInfo = {
   id: string;

@@ -10,8 +10,8 @@ type Props = ServerSideComponentProp<WorkspaceContext, { mode: 'clone' | ''; mod
   children: ReactNode;
 };
 
-export default async function Layout(props: Props) {
-  const { virtualLabId, projectId } = await props.params;
+export default async function Layout({ params: promisedParams, children }: Props) {
+  const { virtualLabId, projectId } = await promisedParams;
   const virtualLabUrl = resolveVirtualLabUrl({ virtualLabId });
   const projectUrl = resolveProjectUrl({
     virtualLabId,
@@ -49,7 +49,7 @@ export default async function Layout(props: Props) {
           href: `${projectUrl}/home`,
         }}
       />
-      <div>{props.children}</div>
+      <div>{children}</div>
     </div>
   );
 }

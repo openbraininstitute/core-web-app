@@ -10,7 +10,7 @@ import z from 'zod';
 
 import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
 import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
-import CustomButton from '@/components/buttons/custom-btn';
+// import CustomButton from '@/components/buttons/custom-btn';
 
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
@@ -19,9 +19,10 @@ import { usePendingValidationModal } from '@/features/model-analysis/runner/vali
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { activityAtomFamily } from '@/features/activity-view/context';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
-import { MEmodel } from '@/entity-configuration/domain/model';
 import { createMEModel } from '@/api/entitycore/queries';
 import { WorkspaceContextSchema } from '@/types/common';
 import { OneshotSession } from '@/services/accounting';
@@ -40,7 +41,6 @@ const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSch
 type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
 
 function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { stateId: string }) {
-  stateId;
   const { sessionValue } = useBuildMeModelSessionState({
     stateId,
     virtualLabId,
@@ -105,6 +105,40 @@ type Props = {
   };
 };
 
+function CustomButton({
+  loading,
+  disable,
+  className,
+  onClick,
+  children,
+}: {
+  loading: boolean;
+  disable: boolean;
+  className?: string;
+  onClick?: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Button
+      key="create-project-btn"
+      className={classNames(
+        className,
+        'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
+        'hover:border-primary-8! hover:bg-primary-8! hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
+        'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
+        'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
+      )}
+      type="default"
+      size="large"
+      htmlType="button"
+      disabled={disable}
+      loading={loading}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  );
+}
 export default function Configure({ params, searchParams }: Props) {
   const { push: navigate } = useRouter();
   const { notification } = App.useApp();
@@ -121,23 +155,34 @@ export default function Configure({ params, searchParams }: Props) {
 
   const refreshEntityCountsToParent = useEntitiesCountAtom();
   const refreshDataAtom = useRefreshDataAtom(exploreDataKey);
-
+  const refreshActivityAtom = useSetAtom(
+    activityAtomFamily({
+      key: resolveDataKey({
+        projectId: params.projectId,
+        section: 'activity',
+        entity: MEmodel,
+      }),
+      projectId: params.projectId,
+      virtualLabId: params.virtualLabId,
+      type: 'memodel',
+    })
+  );
   const { sessionValue } = useBuildMeModelSessionState({
     stateId: stateId || '',
     virtualLabId: params.virtualLabId,
     projectId: params.projectId,
   });
 
-  if (!stateId) {
-    navigate('./');
-    return;
-  }
-
   const [activeProcess, setActiveProcess] = useState<
     null | 'modelCreation' | 'modelCreationWithValidation'
   >(null);
 
   const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
+
+  if (!stateId) {
+    navigate('./');
+    return;
+  }
 
   const showErrorNotification = (error: any, type: 'validation' | 'http') => {
     let message = messages.DefaultErrorMsg;
@@ -154,7 +199,7 @@ export default function Configure({ params, searchParams }: Props) {
     });
   };
 
-  const fetchFreshAccessToken = async (): Promise<string> => {
+  const fetchFreshAccessToken = async () => {
     const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
     const token = await res.json();
     return token.accessToken;
@@ -237,6 +282,7 @@ export default function Configure({ params, searchParams }: Props) {
         return;
       }
       refreshDataAtom();
+      refreshActivityAtom();
       refreshEntityCountsToParent(data.brain_region.id);
       navigate(
         resolveExploreDetailsPageUrl({

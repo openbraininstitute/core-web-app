@@ -14,7 +14,7 @@ export interface SuggestedQuestionsProps {
   /**
    * Suggestions depend on the current chat's thread.
    */
-  threadId: string;
+  threadId: string | undefined;
   /**
    * When there is no message yet, we only use 1 generated suggestion and 2 hard-coded ones.
    * Otherwise, we use 3 generated suggestions.
@@ -30,10 +30,12 @@ export default function SuggestedQuestions({
   onClick,
 }: SuggestedQuestionsProps) {
   const [suggestions, clearSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
-    threadId,
+    threadId ?? '',
     messagesLength === 0 ? 1 : 3
   );
   const hardcodedSuggestions = useHardcodedSuggestions(messagesLength === 0 ? 2 : 0);
+
+  if (!threadId) return null;
 
   return (
     <div className={classNames(className, styles.suggestedQuestions)}>

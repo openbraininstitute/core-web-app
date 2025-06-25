@@ -1,22 +1,22 @@
-import { notFound } from 'next/navigation';
 import omit from 'lodash/omit';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
-import ListingView from '@/features/views/listing';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import ListingView from '@/features/views/listing';
 
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { ExperimentalEntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-type Props = ServerSideComponentProp<
+export type Props = ServerSideComponentProp<
   WorkspaceContext & {
     type: ExperimentalEntitySlugValue;
   },
   null
 >;
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
+export async function generateMetadata({ params: promisedParams }: Props): Promise<Metadata> {
+  const params = await promisedParams;
   const entity = getEntityBySlug({ slug: params.type });
 
   return {
@@ -24,8 +24,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page(props: Props) {
-  const params = await props.params;
+export default async function Page({ params: promisedParams }: Props) {
+  const params = await promisedParams;
   const entity = getEntityBySlug({ slug: params.type });
 
   if (!entity) {
@@ -34,11 +34,9 @@ export default async function Page(props: Props) {
 
   return (
     <ListingView
-      {...{
-        entity: omit(entity, ['api', 'viewDefinition']),
-        virtualLabId: params.virtualLabId,
-        projectId: params.projectId,
-      }}
+      entity={omit(entity, ['api', 'viewDefinition'])}
+      virtualLabId={params.virtualLabId}
+      projectId={params.projectId}
     />
   );
 }

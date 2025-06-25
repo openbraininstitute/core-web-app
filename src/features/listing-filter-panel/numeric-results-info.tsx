@@ -89,7 +89,7 @@ function ResultsCount({
     if (hasData) {
       setPersistedDisplay(generateDisplayComponent(result.data));
     }
-  }, [hasData]);
+  }, [hasData, result]);
 
   return (
     <div className="flex w-full justify-start">

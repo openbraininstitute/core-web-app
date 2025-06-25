@@ -4,7 +4,7 @@ import isEmpty from 'lodash/isEmpty';
 
 import { Filter } from '@/features/listing-filter-panel/types';
 
-import type { IContributor } from '@/api/entitycore/types/shared/global';
+import type { Agent, IContributor } from '@/api/entitycore/types/shared/global';
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
@@ -114,16 +114,14 @@ export function transformFiltersToQuery(
       if (filter.value.length > 0 && filter.constraint && typeof filter.constraint === 'string') {
         acc[filter.constraint] = filter.value;
       }
-    } else {
+    } else if (filter.value !== '' && filter.constraint && typeof filter.constraint === 'string') {
       // case: Primitive value (string, number, etc.)
-      if (filter.value !== '' && filter.constraint && typeof filter.constraint === 'string') {
-        const constraintKey = filter.constraint;
-        // apply transformToIlikePattern for ilike constraints
-        if (typeof filter.value === 'string' && constraintKey.endsWith('__ilike')) {
-          acc[constraintKey] = transformToIlikePattern(filter.value);
-        } else {
-          acc[constraintKey] = filter.value;
-        }
+      const constraintKey = filter.constraint;
+      // apply transformToIlikePattern for ilike constraints
+      if (typeof filter.value === 'string' && constraintKey.endsWith('__ilike')) {
+        acc[constraintKey] = transformToIlikePattern(filter.value);
+      } else {
+        acc[constraintKey] = filter.value;
       }
     }
 
@@ -140,15 +138,19 @@ export function transformAgentToNames(
   const agents = map(agentsWithRoles, 'agent');
   const processedAgents = map(agents, (agent) => ({
     // eslint-disable-next-line no-nested-ternary
-    name:
-      agent.type === 'person'
-        ? // ? `${agent.givenName} ${agent.familyName}`
-          agent.pref_label
-        : agent.type === 'organization'
-          ? agent.pref_label
-          : '',
+    name: resolveAgentName(agent),
     type: agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
   }));
 
   return map(sortBy(processedAgents, ['type', 'name']), 'name').join('\n');
+}
+
+function resolveAgentName(agent: Agent) {
+  switch (agent.type) {
+    case 'person':
+    case 'organization':
+      return agent.pref_label;
+    default:
+      return '';
+  }
 }

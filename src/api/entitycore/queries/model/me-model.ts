@@ -22,7 +22,7 @@ export async function getMEModels({
   context,
 }: {
   withFacets?: boolean;
-  filters?: IMEModelFilter;
+  filters?: Partial<IMEModelFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();

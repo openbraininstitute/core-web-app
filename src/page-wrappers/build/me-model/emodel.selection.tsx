@@ -23,6 +23,7 @@ type Props = {
 };
 
 export default function EmodelSelection({ params, searchParams }: Props) {
+  const id = useId();
   const { push: navigate } = useRouter();
   const pathname = usePathname();
 
@@ -47,9 +48,11 @@ export default function EmodelSelection({ params, searchParams }: Props) {
     setSessionValue({ ...sessionValue, emodel });
 
     const upOneLevel = pathname?.split('/').slice(0, -1).join('/');
-    const _params = new URLSearchParams(searchParams);
-    _params.set('e', emodel!.id);
-    const newHref = _params ? `${upOneLevel}?${_params.toString()}` : (upOneLevel ?? '');
+    const sanitizedSearchParams = new URLSearchParams(searchParams);
+    sanitizedSearchParams.set('e', emodel!.id);
+    const newHref = sanitizedSearchParams
+      ? `${upOneLevel}?${sanitizedSearchParams.toString()}`
+      : (upOneLevel ?? '');
 
     navigate(newHref);
   };
@@ -64,7 +67,7 @@ export default function EmodelSelection({ params, searchParams }: Props) {
   const dataKey = resolveDataKey({
     projectId: params.projectId,
     section: 'build',
-    suffix: useId(),
+    suffix: id,
   });
 
   return (

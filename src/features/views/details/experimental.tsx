@@ -49,7 +49,7 @@ export default function DetailView({ type }: Props) {
           DataType.ExperimentalNeuronDensity
         ).select(),
       },
-      (type) => <Summary dataType={type} />
+      (dataType) => <Summary dataType={dataType} />
     )
     .otherwise(() => null);
 

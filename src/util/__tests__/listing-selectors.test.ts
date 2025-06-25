@@ -12,7 +12,6 @@ import {
   selectorFnSynaptic,
 } from '@/util/explore-section/listing-selectors';
 import { SynapticPosition, SynapticType } from '@/types/explore-section/misc';
-import { formatNumber } from '@/util/common';
 
 describe('Selectors', () => {
   describe('selectorFnBrainRegion', () => {

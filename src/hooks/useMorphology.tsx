@@ -50,7 +50,7 @@ export default function useMorphology({
       return null;
     }
     throw new Error('Neuron morphology could not be constructed');
-  }, [modelId]);
+  }, [modelId, projectId, virtualLabId]);
 
   useEffect(() => {
     mountedRef.current = true;

@@ -22,8 +22,8 @@ export default function SliderTutorial() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-4">
-        {tutorials.slice(0, 2).map((tutorial: ContentForTutorialItem) => (
+      <div className="grid grid-cols-3 gap-x-4">
+        {tutorials.slice(0, 3).map((tutorial: ContentForTutorialItem) => (
           <SingleTutorialCard key={tutorial.title} content={tutorial} />
         ))}
       </div>

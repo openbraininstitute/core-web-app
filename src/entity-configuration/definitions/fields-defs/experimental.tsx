@@ -1,10 +1,12 @@
 import find from 'lodash/find';
 import get from 'lodash/get';
+import isEmpty from 'lodash/isEmpty';
 
 import getMeasurements, {
   EmptyValue,
   renderArray,
   renderEmptyOrValue,
+  renderFloatNumber,
   renderLicense,
   renderMeanStd,
   renderMorphologyMeasurement,
@@ -13,15 +15,20 @@ import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-import { isSingleNeuronSynaptome } from '@/api/entitycore/guards';
+import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
+import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import { ensureArray } from '@/utils/array';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
-import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type {
+  EntityCoreDensityObjectTypes,
+  EntityCoreObjectTypes,
+  IEModel,
+  IReconstructionMorphology,
+} from '@/api/entitycore/types';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
-import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.License]: {
@@ -71,6 +78,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       if (isSingleNeuronSynaptome(r)) {
         return renderEmptyOrValue(renderArray(r.me_model.mtypes?.map((m) => m.pref_label) || []));
       }
+      if (isMemodel(r) && isEmpty(r.etypes)) {
+        return renderEmptyOrValue(
+          renderArray(
+            (
+              r.morphology as IReconstructionMorphology & { etypes: Array<IMType> | null }
+            ).mtypes?.map((m) => m.pref_label) || []
+          )
+        );
+      }
       return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
@@ -100,10 +116,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       if (isSingleNeuronSynaptome(r)) {
         return renderEmptyOrValue(renderArray(r.me_model.etypes?.map((m) => m.pref_label) || []));
       }
+      if (isMemodel(r) && isEmpty(r.etypes)) {
+        return renderEmptyOrValue(
+          renderArray(
+            (r.emodel as IEModel & { etypes: Array<IEType> | null }).etypes?.map(
+              (e) => e.pref_label
+            ) || []
+          )
+        );
+      }
       return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
-            (m) => m.pref_label
+            (e) => e.pref_label
           ) || []
         )
       );
@@ -263,7 +288,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     unit: '1/mm³',
     render: (r) => {
       const { mean } = getMeasurements(r as EntityCoreDensityObjectTypes);
-      return renderEmptyOrValue(Number(mean?.value));
+      return renderEmptyOrValue(`${renderFloatNumber(mean?.value)}`);
     },
     vocabulary: {
       plural: 'Densities',
@@ -283,7 +308,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Total Length',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'total_length', 'raw', true),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.Axon,
+        'total_length',
+        'raw',
+        true
+      ),
   },
   [EntityCoreFields.AxonStrahlerNumber]: {
     group: StructuralDomain.Axon,
@@ -295,7 +326,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Strahler number',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'section_strahler_orders', 'maximum'),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.Axon,
+        'section_strahler_orders',
+        'maximum'
+      ),
   },
   [EntityCoreFields.AxonArborAsymmetryIndex]: {
     group: StructuralDomain.Axon,
@@ -307,7 +343,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Arbor Asymmetry Index',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.Axon, 'partition_asymmetry', 'mean'),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.Axon,
+        'partition_asymmetry',
+        'mean'
+      ),
   },
   [EntityCoreFields.BasalDendriticTotalLength]: {
     group: StructuralDomain.BasalDendrite,
@@ -319,7 +360,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Total Length',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.BasalDendrite, 'total_length', 'raw', true),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.BasalDendrite,
+        'total_length',
+        'raw',
+        true
+      ),
   },
   [EntityCoreFields.BasalDendriteStrahlerNumber]: {
     group: StructuralDomain.BasalDendrite,
@@ -332,7 +379,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r,
+        r as IReconstructionMorphology,
         StructuralDomain.BasalDendrite,
         'section_strahler_orders',
         'maximum'
@@ -348,7 +395,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Arbor Asymmetry Index',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.BasalDendrite, 'partition_asymmetry', 'mean'),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.BasalDendrite,
+        'partition_asymmetry',
+        'mean'
+      ),
   },
   [EntityCoreFields.ApicalDendriticTotalLength]: {
     group: StructuralDomain.ApicalDendrite,
@@ -360,7 +412,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Total Length',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.ApicalDendrite, 'Total Length', 'raw', true),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.ApicalDendrite,
+        'Total Length',
+        'raw',
+        true
+      ),
   },
   [EntityCoreFields.ApicalDendtriteStrahlerNumber]: {
     group: StructuralDomain.ApicalDendrite,
@@ -373,7 +431,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r,
+        r as IReconstructionMorphology,
         StructuralDomain.ApicalDendrite,
         'section_strahler_orders',
         'maximum'
@@ -390,7 +448,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r,
+        r as IReconstructionMorphology,
         StructuralDomain.ApicalDendrite,
         'partition_asymmetry',
         'mean'
@@ -406,7 +464,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Total Width',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.NeuronMorphology, 'total_width', 'raw', true),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.NeuronMorphology,
+        'total_width',
+        'raw',
+        true
+      ),
   },
   [EntityCoreFields.NeuronMorphologyHeight]: {
     group: StructuralDomain.NeuronMorphology,
@@ -419,7 +483,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r,
+        r as IReconstructionMorphology,
         StructuralDomain.NeuronMorphology,
         'total_height',
         'raw',
@@ -436,7 +500,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Total Depth',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r, StructuralDomain.NeuronMorphology, 'total_depth', 'raw', true),
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        StructuralDomain.NeuronMorphology,
+        'total_depth',
+        'raw',
+        true
+      ),
   },
   [EntityCoreFields.SomaDiameter]: {
     group: StructuralDomain.Soma,
@@ -447,6 +517,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Diameter',
       singular: 'Diameter',
     },
-    render: (r) => renderMorphologyMeasurement(r, 'Soma', 'soma_radius', 'raw', true),
+    render: (r) =>
+      renderMorphologyMeasurement(
+        r as IReconstructionMorphology,
+        'Soma',
+        'soma_radius',
+        'raw',
+        true
+      ),
   },
 };

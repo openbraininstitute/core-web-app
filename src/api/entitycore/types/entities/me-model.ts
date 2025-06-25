@@ -26,8 +26,8 @@ import type {
   MtypeFilter,
   EtypeFilter,
   IdFilter,
+  OwnershipFilter,
 } from '@/api/entitycore/types/shared/request';
-import { Pagination } from '../shared/response';
 
 export enum ValidationStatus {
   Created = 'created',
@@ -66,12 +66,6 @@ export interface INestedMEModel extends IMEModelBase, Timestamps {
   etypes: Array<IEType>;
 }
 
-export interface INestedMEModel extends IMEModelBase, Timestamps {
-  id: string;
-  mtypes: Array<IMType>;
-  etypes: Array<IEType>;
-}
-
 export interface IMEModelFilter
   extends ContributionFilter,
     IdFilter,
@@ -82,7 +76,8 @@ export interface IMEModelFilter
     IMorphologyFilter,
     PaginationFilter,
     IEModelFilter,
-    SharedFilter {
+    SharedFilter,
+    OwnershipFilter {
   score__lte: number | null;
   score__gte: number | null;
   validation_status: ValidationStatus;

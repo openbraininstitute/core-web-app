@@ -61,3 +61,19 @@ a.button {
   align-items: center;
   gap: 1em;
 }
+
+.repositoryCard .readMore {
+  color: var(--color-gray-500);
+  border: 1px solid var(--color-gray-300);
+  font-size: 16px;
+  padding: 2px 18px;
+  border-radius: 44px;
+  margin-top: 12px;
+  transition: all 0.3s ease-in-out;
+}
+
+.repositoryCard .readMore:hover {
+  color: var(--color-gray-700);
+  border-color: var(--color-gray-500);
+  background-color: var(--color-gray-100);
+}

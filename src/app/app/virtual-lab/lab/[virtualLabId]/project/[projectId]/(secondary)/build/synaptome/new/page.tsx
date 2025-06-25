@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 
 import Configuration from '@/page-wrappers/build/single-neuron-synaptome';
+
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -80,9 +81,12 @@ async function getSingleNeuronSynaptomeConfiguration({
   return null;
 }
 
-export default async function Page(props: Props) {
-  const params = await props.params;
-  const searchParams = await props.searchParams;
+export default async function Page({
+  params: promisedParams,
+  searchParams: promisedSearchParams,
+}: Props) {
+  const params = await promisedParams;
+  const searchParams = await promisedSearchParams;
   const stateId = searchParams.s ?? crypto.randomUUID();
 
   const { data, error } = await tryCatch(

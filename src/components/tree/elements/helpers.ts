@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import transform from 'lodash/transform';
 import isObject from 'lodash/isObject';
 import isArray from 'lodash/isArray';
@@ -198,12 +199,18 @@ export function renameKeyDeep<T extends Record<string, any>>(
   newKey: string
 ): T | null {
   if (!obj) return null;
+
   return transform(obj, (result, value, key) => {
-    const _field = key === field ? newKey : key;
-    (result as any)[_field] = isArray(value)
-      ? value.map((item) => renameKeyDeep(item, field, newKey))
-      : isObject(value)
-        ? renameKeyDeep(value, field, newKey)
-        : value;
+    if (!result) return;
+
+    const sanitizedField = key === field ? newKey : key;
+    const dic = result as Record<string, any>;
+    if (isArray(value)) {
+      dic[sanitizedField] = value.map((item) => renameKeyDeep(item, field, newKey));
+    } else if (isObject(value)) {
+      dic[sanitizedField] = renameKeyDeep(value, field, newKey);
+    } else {
+      dic[sanitizedField] = value;
+    }
   });
 }

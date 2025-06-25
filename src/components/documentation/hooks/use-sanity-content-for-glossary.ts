@@ -1,4 +1,6 @@
-import query from '../query/glossaryHooks.groq';
+import query from '../query/glossary-hooks.groq';
+
+import { ContentForGlossaryItem } from '../type';
 
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
@@ -6,15 +8,6 @@ import { assertType, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForGlossary() {
   return useSanity(query, isContentForGlossary) ?? [];
-}
-
-export interface ContentForGlossaryItem {
-  Name: string;
-  New_suggested_name: string;
-  Description: string;
-  Data_Type: string;
-  Scale: string;
-  Status: string;
 }
 
 function isContentForGlossary(data: unknown): data is ContentForGlossaryItem[] {
@@ -28,6 +21,7 @@ function isContentForGlossary(data: unknown): data is ContentForGlossaryItem[] {
           Name: typeStringOrNull,
           New_suggested_name: typeStringOrNull,
           Description: typeStringOrNull,
+          definition: 'unknown',
           Data_Type: typeStringOrNull,
           Scale: typeStringOrNull,
           Status: typeStringOrNull,

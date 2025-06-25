@@ -16,13 +16,13 @@ const SingleNeuronSimulationView = dynamic(
   () => import('@/page-wrappers/explore/single-neuron-simulation')
 );
 
-export default async function Page(
-  props: ServerSideComponentProp<
-    WorkspaceContext & { type: SimulationEntitySlugValue; id: string },
-    null
-  >
-) {
-  const { virtualLabId, projectId, type, id } = await props.params;
+export default async function Page({
+  params: promisedParams,
+}: ServerSideComponentProp<
+  WorkspaceContext & { type: SimulationEntitySlugValue; id: string },
+  null
+>) {
+  const { virtualLabId, projectId, type, id } = await promisedParams;
   const entity = getEntityBySlug({ slug: type });
 
   if (

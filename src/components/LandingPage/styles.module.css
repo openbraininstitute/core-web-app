@@ -27,10 +27,11 @@ button.squareButton,
 a.squareButton {
   display: inline-block;
   color: var(--color-primary);
-  border: 1px solid currentColor;
+  border: 1px solid currentColor !important;
   line-height: 3;
-  padding: 0 2em;
+  padding: 0.8em 2em !important;
   white-space: nowrap;
+  transition: all 0.5s ease-in-out;
 }
 
 button.roundedButton,
@@ -88,11 +89,14 @@ a.roundedButton {
 .layout .blockSmall {
   grid-column: 5/6;
   max-width: var(--S);
+  margin-left: 30px;
+  margin: 20px 0 20px 30px;
 }
 
 .layout .blockSmallExpandRight {
   grid-column: 5/-1;
   max-width: none;
+  margin-bottom: 60px;
 }
 
 .layout .blockMedium {

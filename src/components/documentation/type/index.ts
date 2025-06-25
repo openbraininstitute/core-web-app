@@ -90,3 +90,21 @@ export type ContentForTutorialItem = {
   imageWidth: number;
   imageHeight: number;
 };
+
+export type ContentForFeatureItem = {
+  Feature_title: string;
+  Description: string;
+  Topic: string;
+  Scale: string;
+  Status: string;
+};
+
+export type ContentForGlossaryItem = {
+  Name: string;
+  New_suggested_name: string;
+  Description: string;
+  definition: PortableTextBlock[];
+  Data_Type: string;
+  Scale: string;
+  Status: string;
+};

@@ -21,6 +21,7 @@ import type {
   MtypeFilter,
   EtypeFilter,
   PaginationFilter,
+  OwnershipFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface SingleNeuronSynaptomeBase {
@@ -49,7 +50,8 @@ export interface ISingleNeuronSynaptomeFilter
     BrainRegionFilter,
     SharedFilter,
     IMEModelFilter,
-    PaginationFilter {}
+    PaginationFilter,
+    OwnershipFilter {}
 
 export const CreateSingleNeuronSynaptomeSchema = z.object({
   name: z.string(),
@@ -89,9 +91,9 @@ export const SingleNeuronSynaptomeConfigurationSchema = z
     target: z.string().optional(),
     seed: z.number(),
     color: z.string(),
-    formula: z.string(),
+    formula: z.string().optional(),
     soma_synapse_count: z.number().optional(),
-    type: z.union([z.literal(110), z.literal(10)]).optional(),
+    type: z.union([z.literal(110), z.literal(10)]),
     exclusion_rules: z.array(SingleNeuronSynaptomeExclusionRuleSchema).nullable(),
   })
   .superRefine((synapse, ctx) => {
@@ -111,15 +113,18 @@ export const SingleNeuronSynaptomeConfigurationSchema = z
     }
   })
   .superRefine(async (synapse, ctx) => {
-    return validateFormula(synapse.formula).then((v) => {
-      if (!v) {
-        return ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'formula is not valid',
-          path: ['formula'],
-        });
-      }
-    });
+    if (synapse.target !== 'soma') {
+      return validateFormula(synapse.formula!).then((v) => {
+        if (!v) {
+          return ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'formula is not valid',
+            path: ['formula'],
+          });
+        }
+      });
+    }
+    return true;
   });
 
 export type TSingleNeuronSynaptomeConfiguration = z.infer<

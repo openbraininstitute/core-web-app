@@ -19,6 +19,7 @@ export default function CustomButton({
     <Button
       key="create-project-btn"
       className={classNames(
+        className,
         'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
         'hover:border-primary-8! hover:bg-primary-8! hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
         'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',

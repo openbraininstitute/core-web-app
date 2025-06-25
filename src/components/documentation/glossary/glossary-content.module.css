@@ -1,8 +1,28 @@
-.prose {
-  font-size: 16px;
-  line-height: 1.6;
+.contentBlock {
+  width: 100%;
 }
 
-.prose a {
-  color: #00b4d8;
+.contentBlock > p {
+  font-size: 16px;
+  line-height: 1.55;
+  color: white;
+}
+
+.contentBlock > p > a {
+  color: #5af56a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.contentBlock > ul {
+  margin: 20px 0;
+  padding-left: 18px;
+}
+
+.contentBlock > ul > li {
+  list-style: circle;
+  font-size: 16px;
+  line-height: 1.55;
+  color: white;
+  margin-bottom: 6px;
 }

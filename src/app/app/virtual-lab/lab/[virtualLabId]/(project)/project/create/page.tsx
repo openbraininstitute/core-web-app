@@ -9,7 +9,9 @@ export const metadata: Metadata = {
   description: 'Easily create and configure project with a user-friendly workflow.',
 };
 
-export default async function Page(props: ServerSideComponentProp<WorkspaceContext, null>) {
-  const { virtualLabId } = await props.params;
+export default async function Page({
+  params: promisedParams,
+}: ServerSideComponentProp<WorkspaceContext, null>) {
+  const { virtualLabId } = await promisedParams;
   return <CreateProjectFlow virtualLabId={virtualLabId} />;
 }

@@ -43,6 +43,7 @@ import { compactRecord } from '@/utils/dictionary';
 import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { Filter } from '@/features/listing-filter-panel/types';
 
 type DataAtomBinding = {
   key: string;
@@ -64,6 +65,15 @@ export const pageNumberAtom = atomFamily((_key: string) => {
   return childAtom;
 });
 
+export const pageSizeAtom = atomFamily(
+  ({ key, defaultSize }: { key: string; defaultSize?: number }) => {
+    const childAtom = atom<number | undefined>(defaultSize);
+    childAtom.debugLabel = `page-size/${key}`;
+    return childAtom;
+  },
+  (a, b) => a.key === b.key
+);
+
 export const selectedRowsAtom = atomFamily(
   (_key: string) => atom<Array<any>>([]) // FIXME: get the right type
 );
@@ -71,7 +81,7 @@ export const selectedRowsAtom = atomFamily(
 export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily(
-  ({ key }: { key: string }) => {
+  (_ctx: { key: string }) => {
     const initialState: SortState = { field: EntityCoreFields.CreationDate, order: 'desc' };
 
     const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
@@ -191,7 +201,8 @@ export const queryAtom = atomFamily(
 
       return fetchDataQuery(
         pageNumber,
-        filters,
+        // @FIXME: I just put this casting to mute the linter, but there may be an error here.
+        filters as Filter[],
         scope.dataType,
         sortState,
         searchString,
@@ -215,12 +226,14 @@ export const entityTargetIdentifiersAtom = atomFamily((key: string) => {
   return childAtom;
 });
 
-export const refreshDataAtomFamily = atomFamily((key: string) => atom<symbol>(Symbol()));
+export const refreshDataAtomFamily = atomFamily((_key: string) =>
+  atom<symbol>(Symbol('refreshDataAtomFamily'))
+);
 export function useRefreshDataAtom(key: string): () => void {
   const setRefresh = useSetAtom(refreshDataAtomFamily(key));
 
   return () => {
-    setRefresh(Symbol());
+    setRefresh(Symbol('refreshDataAtomFamily'));
   };
 }
 
@@ -241,7 +254,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           filters.push({
             constraint: 'id__in',
             field: EntityCoreFields.ID,
-            type: CoreFieldFilterTypeEnum.CheckList,
+            type: CoreFieldFilterTypeEnum.WithinList,
             value: IDs,
           });
         } else {

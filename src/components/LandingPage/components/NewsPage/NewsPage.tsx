@@ -1,20 +1,17 @@
 'use client';
 
-import React from 'react';
-
+import { PortableText } from 'next-sanity';
 import LandingPage from '../../LandingPage';
 import { useSanityContentForNewsItem } from '../../content';
-import { EnumSection } from '../../sections/sections';
 import FooterPanel from '../../layout/FooterPanel';
-import { styleBlockSmall } from '../../styles';
-import PaddedBlock from '../PaddedBlock';
-import stylesLandingPage from '../../LandingPage.module.css';
+import { EnumSection } from '../../sections/sections';
 
-import ProgressiveImage from '../ProgressiveImage';
-import SanityContentRTF from '../SanityContentRTF';
 import Menu from '../../layout/Menu';
+import HeaderNews from './HeaderNews';
+
 import { classNames } from '@/util/utils';
-import styles from './NewsPage.module.css';
+
+import styles from '@/components/LandingPage/components/NewsPage/single-news-page.module.css';
 
 export interface NewsPageProps {
   className?: string;
@@ -29,38 +26,13 @@ export default function NewsPage({ className, slug }: NewsPageProps) {
   }
 
   return (
-    <div className={classNames(className, stylesLandingPage.landingPage)}>
-      <div className={styles.blueBackground}>
-        <div />
-      </div>
+    <div className={classNames(className, styles.pageContent)}>
       <Menu scrollHasStarted section={EnumSection.News} />
-      <PaddedBlock>
-        <header className={classNames(styles.header, styleBlockSmall)}>
-          <h2>NEWS</h2>
-          <h1>{news.title}</h1>
-          <div className={styles.notes}>
-            <div>Published {formatDate(news.date)}</div>
-            <div>© Copyright 2024, EPFL / BBP</div>
-          </div>
-        </header>
-        <ProgressiveImage
-          className={classNames(styles.image, styleBlockSmall)}
-          forceAspectRatio
-          src={news.imageURL}
-          width={news.imageWidth}
-          height={news.imageHeight}
-        />
-        <div className={styleBlockSmall}>
-          {news.article && <SanityContentRTF value={news.article} />}
-        </div>
-      </PaddedBlock>
+      <HeaderNews content={news} />
+      <div className={styles.content}>
+        <PortableText value={news.articleContent} />
+      </div>
       <FooterPanel />
     </div>
   );
-}
-
-function formatDate(d: string) {
-  const date = new Date(d);
-  const fmt = new Intl.DateTimeFormat('en', { dateStyle: 'long' });
-  return fmt.format(date);
 }

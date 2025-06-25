@@ -53,7 +53,7 @@ export default function SimulationDetailPage({ params, simulationType, payload }
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading simulation ...</h2>
+        <h2 className="text-primary-9 font-light">Loading experiment ...</h2>
       </div>
     );
   }

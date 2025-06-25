@@ -1,3 +1,7 @@
+ul.sanityContentItems {
+  margin: 80px 0;
+}
+
 ul.sanityContentItems > li {
   list-style-type: '⎯';
   padding-inline-start: 1ch;
@@ -6,8 +10,9 @@ ul.sanityContentItems > li {
 }
 
 ul.sanityContentItems > li h3 {
-  font-size: var(--font-size-M-plus);
+  font-size: var(--font-size-L);
   font-family: var(--font-serif);
+  margin-bottom: 0.2em;
 }
 
 .vignette {

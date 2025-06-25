@@ -39,8 +39,8 @@ export async function createDownloadStream({
   const downloadStream = Readable.toWeb(gzip);
 
   const controller = new AbortController();
-  // TODO: pass abort singal to getFilesGenerator
-  const { signal } = controller;
+  // TODO: pass abort signal to getFilesGenerator
+  // const { signal } = controller;
 
   const getFilesGenerator = getEntityFilesHandlerMap[entityType];
   if (!getFilesGenerator) {

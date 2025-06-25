@@ -15,6 +15,7 @@ import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
+  // eslint-disable-next-line react/no-unused-prop-types
   type: EntitySlugValue;
   modelId: string;
 };
@@ -87,7 +88,7 @@ export default function Results({ modelId }: Props) {
             withErrorConfig({
               cls: { container: 'bg-white' },
               showButtons: false,
-              customError: 'Error while loading simulation ',
+              customError: 'Error while loading experiment',
             })({ error: returnedError as (Error & { cause?: unknown }) | undefined })
           }
           key={sim.id}

@@ -1,4 +1,3 @@
-import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
 import Link from 'next/link';
 
@@ -33,6 +32,8 @@ export function ModelDetails({ details }: ModelDetailsProps) {
 }
 
 type Props = {
+  // @FIXME: Is this property used somewhere?
+  // eslint-disable-next-line react/no-unused-prop-types
   mode: 'select' | 'summary';
   model: IEModel | IReconstructionMorphology;
   title: string;
@@ -45,7 +46,6 @@ type Props = {
 };
 
 export default function ModelCard({
-  mode,
   model,
   title,
   selectUrl,
@@ -55,8 +55,6 @@ export default function ModelCard({
   thumbnail,
   reselectLink = false,
 }: Props) {
-  const router = useRouter();
-
   const cardLink = reselectLink ? (
     <Link
       href={{

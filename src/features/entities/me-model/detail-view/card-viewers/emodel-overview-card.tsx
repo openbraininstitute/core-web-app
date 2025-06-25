@@ -1,5 +1,5 @@
 import { useParams, useSearchParams } from 'next/navigation';
-import { use, memo } from 'react';
+import { memo } from 'react';
 import Link from 'next/link';
 
 import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
@@ -9,13 +9,11 @@ import {
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { Result } from '@/api/utils';
 
 type Props = {
   mode: 'select' | 'summary';
@@ -28,7 +26,6 @@ const selectUrl = 'configure/e-model';
 
 function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Props) {
   const searchParams = useSearchParams();
-  const emodel: IEModel | null = null;
 
   const params = useParams<{
     virtualLabId?: string;
@@ -98,6 +95,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
 
 export default memo(EModelOverviewCard);
 // TODO: keep this one until migrate simulations
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function EModelThumbnail({ emodel }: { emodel: IEModel }) {
   // if (!emodel.image)
   //   return <Empty description="No thumbnail available" image={Empty.PRESENTED_IMAGE_SIMPLE} />;

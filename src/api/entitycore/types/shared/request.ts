@@ -99,3 +99,15 @@ export interface IMorphologyFilter {
 }
 
 export interface CreatorFilter {}
+
+export interface OwnershipFilter {
+  created_by__id?: string | null;
+  created_by__pref_label?: string | null;
+  created_by__pref_label__in?: Array<string> | null;
+  created_by__order_by?: string | null;
+
+  updated_by__id?: string | null;
+  updated_by__pref_label?: string | null;
+  updated_by__pref_label__in?: Array<string> | null;
+  updated_by__order_by?: string | null;
+}

@@ -24,7 +24,7 @@ export default function SynapticInputs({
     synapses: Array<TSingleNeuronSynaptomeConfiguration>;
   };
 }) {
-  const { newConfig, remove: removeSynapseConfig, state } = useSynaptomeSimulationConfig();
+  const { newConfig, remove: removeSynapseConfig } = useSynaptomeSimulationConfig();
   const [synapseSimulationAtomState, setSynapseSimState] = useAtom(synaptomeSimulationConfigAtom);
   const visualizedSynaptomes = useAtomValue(synapsesPlacementAtom);
 

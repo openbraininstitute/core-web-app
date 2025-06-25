@@ -19,8 +19,8 @@ type Props = ServerSideComponentProp<
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { virtualLabId, projectId } = await props.params;
+export async function generateMetadata({ params: promisedParams }: Props): Promise<Metadata> {
+  const { virtualLabId, projectId } = await promisedParams;
   const { data: result } = await tryCatch(
     getAllBookmarksByCategory({ virtualLabId, projectId }, {})
   );
@@ -32,9 +32,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page(props: Props) {
-  const { c: category, t: slug } = await props.searchParams;
-  const { virtualLabId, projectId } = await props.params;
+export default async function Page({
+  params: promisedParams,
+  searchParams: promisedSearchParams,
+}: Props) {
+  const { c: category, t: slug } = await promisedSearchParams;
+  const { virtualLabId, projectId } = await promisedParams;
   const { data: result, error } = await tryCatch(
     getAllBookmarksByCategory({ virtualLabId, projectId }, {})
   );

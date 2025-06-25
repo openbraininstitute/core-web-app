@@ -17,17 +17,13 @@ import { compareAsc, format } from 'date-fns';
 import { saveAs } from 'file-saver';
 import dynamic from 'next/dynamic';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
+// @ts-ignore
 import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
 import { getSorter } from './utils';
 import ContentModal from './ContentModal';
 import NotebookTabs from './NotebookTabs';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
-import { EyeIconWhite, EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import {
-  startNotebook,
-  NotebookStartResponse,
-  NotebookImplementationType,
-} from '@/services/notebooks';
+import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import useSearch from '@/components/VirtualLab/Search';
 
 import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
@@ -110,29 +106,15 @@ function NotebookTable({
     });
   }, [notebooks, search]);
 
-  const runNotebook = async (
-    notebook: Notebook,
-    implementationType: NotebookImplementationType
-  ) => {
-    // notification.info(`Request received to run notebook: ${notebook.name}`);
-    try {
-      const retval: NotebookStartResponse = await startNotebook(
-        notebook,
-        vlabId,
-        projectId,
-        implementationType
-      );
-      // TODO: instead of showing a notification, somehow open the URL in a new window.
-      notification.success(`Notebook started successfully: ${retval.message}, URL: ${retval.url}`);
-    } catch (error) {
-      if (error instanceof Error && 'cause' in error) {
-        if (
-          (error.cause as { error_code: string; hint: string }).error_code === 'SESSION_NOT_FOUND'
-        )
-          notification.error(`You need to be logged in to start a notebook.`);
-        else notification.error(`Failed to start notebook, cause: ${error.cause}`);
-      } else notification.error(`Failed to start notebook, unknown error: ${error}`);
-    }
+  const runNotebook = async (notebook: Notebook) => {
+    const repo = encodeURIComponent(
+      `https://github.com/${notebook.githubUser}/${notebook.githubRepo}`
+    );
+    const path = encodeURIComponent(`lab/tree/${notebook.githubRepo}/${notebook.path}`);
+    const environment = env.NEXT_PUBLIC_DEPLOYMENT_ENV;
+    const url = `https://${environment === 'staging' ? 'staging.' : ''}openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=entitycore`;
+
+    window.open(url, '_blank');
   };
 
   const handleDownloadClick = async (notebook: Notebook) => {
@@ -157,7 +139,8 @@ function NotebookTable({
               <div className="flex gap-4">
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setDisplay('readme');
                     setCurrentNotebook(notebook);
                   }}
@@ -168,20 +151,13 @@ function NotebookTable({
                 </button>
               </div>
               <div className="flex gap-4">
-                <a
-                  href={`https://nbviewer.org/github/${notebook.githubUser}/${notebook.githubRepo}/blob/${notebook.defaultBranch}/${notebook.path}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-[10px]"
-                >
-                  <EyeIconWhite className="text-xs" aria-label="Preview" />
-                  Preview
-                </a>
-              </div>
-              <div className="flex gap-4">
                 <button
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                  onClick={() => handleDownloadClick(notebook)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadClick(notebook);
+                  }}
                 >
                   <DownloadIconWhiteWithCorners className="text-xs" aria-label="Download" />
                   Download
@@ -194,7 +170,10 @@ function NotebookTable({
                   <button
                     type="button"
                     className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                    onClick={() => onDelete(notebook.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(notebook.id);
+                    }}
                   >
                     <DeleteOutlined className="text-error text-xs" aria-label="Delete" />
                     Delete
@@ -206,8 +185,9 @@ function NotebookTable({
                   <button
                     type="button"
                     className="inline-flex items-center gap-[10px]"
-                    onClick={() => {
-                      runNotebook(notebook, NotebookImplementationType.OLD_EC2);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      runNotebook(notebook);
                     }}
                   >
                     <PlayCircleOutlined aria-label="Run" />
@@ -235,7 +215,6 @@ function NotebookTable({
       dataIndex: 'name',
       key: 'name',
       sorter: getSorter('name'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -244,7 +223,6 @@ function NotebookTable({
       key: 'description',
       sorter: getSorter('description'),
       render: (text) => <div className="line-clamp-2 max-w-[40em]">{text}</div>,
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -252,7 +230,6 @@ function NotebookTable({
       dataIndex: 'objectOfInterest',
       key: 'objectOfInterest',
       sorter: getSorter('objectOfInterest'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -260,7 +237,6 @@ function NotebookTable({
       dataIndex: 'scale',
       key: 'scale',
       sorter: getSorter('scale'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -268,7 +244,6 @@ function NotebookTable({
       dataIndex: 'authors',
       key: 'authors',
       sorter: getSorter('authors'),
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -288,7 +263,6 @@ function NotebookTable({
         }
         return compareAsc(new Date(a.creationDate), new Date(b.creationDate));
       },
-      onCell: () => ({ className: 'cursor-pointer' }),
     },
 
     {
@@ -431,20 +405,6 @@ function NotebookTable({
           columns={filteredColumns}
           pagination={false}
           locale={{ emptyText: <div className="mt-5 text-lg text-gray-400">No data</div> }}
-          onRow={(r) => {
-            return {
-              onClick: () => {
-                const repo = encodeURIComponent(
-                  `https://github.com/${r.githubUser}/${r.githubRepo}`
-                );
-                const path = encodeURIComponent(`lab/tree/${r.githubRepo}/${r.path}`);
-                const environment = env.NEXT_PUBLIC_DEPLOYMENT_ENV;
-                const url = `https://${environment === 'staging' ? 'staging.' : ''}openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=entitycore`;
-
-                window.open(url, '_blank');
-              },
-            };
-          }}
         />
       </div>
 

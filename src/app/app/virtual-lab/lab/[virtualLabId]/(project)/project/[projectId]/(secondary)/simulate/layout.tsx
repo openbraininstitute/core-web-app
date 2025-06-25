@@ -18,10 +18,11 @@ type Props = {
   }>;
 };
 
-export default function SimulateSingleNeuronEditLayout(props: Props) {
-  const params = use(props.params);
-
-  const { children } = props;
+export default function SimulateSingleNeuronEditLayout({
+  params: promisedParams,
+  children,
+}: Props) {
+  const params = use(promisedParams);
 
   const labUrl = generateLabUrl(params.virtualLabId);
 

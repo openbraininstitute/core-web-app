@@ -8,7 +8,7 @@ import { tryCatch } from '@/api/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 type AtomParams = {
-  workspace: WorkspaceContext;
+  workspace?: WorkspaceContext;
   id: string;
 };
 
@@ -50,7 +50,7 @@ export type IValidationConstructedResult = Awaited<ReturnType<typeof resolveVali
 
 export const validationResultAtom = atomFamily(({ id, workspace }: AtomParams) => {
   const childAtom = atom(async () => {
-    if (!workspace.virtualLabId || !workspace.projectId || !id) return null;
+    if (!id) return null;
     return await resolveValidationResults({ id, workspace });
   });
 

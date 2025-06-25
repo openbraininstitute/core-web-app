@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ConfigProvider, Form } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
+import { ConfigProvider, Form } from 'antd';
+import { useResetAtom } from 'jotai/utils';
 
 import SingleNeuron from '@/features/entities/neuron-simulation/experiment/containers/single-neuron';
 import Synaptome from '@/features/entities/neuron-simulation/experiment/containers/synaptome';
@@ -12,6 +13,7 @@ import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categorie
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
 import { simulationExperimentalSetupAtom } from '@/state/simulate/categories/simulation-conditions';
 import { defaultSteps, simulateStepTrackerAtom } from '@/state/simulate/single-neuron';
+import { resetSimulationAtom } from '@/state/simulate/single-neuron-setter';
 
 import type { SingleNeuronSynaptomePayload } from '@/features/entities/neuron-simulation/experiment/containers/synaptome';
 import type { SimulationConfiguration } from '@/types/simulation/single-neuron';
@@ -64,6 +66,7 @@ export default function Container({ type, payload }: Props) {
   const recordFromConfig = useAtomValue(recordingSourceForSimulationAtom);
   const currentInjectionConfig = useAtomValue(currentInjectionSimulationConfigAtom);
   const synaptomeConfig = useAtomValue(synaptomeSimulationConfigAtom);
+  const resetSimulation = useResetAtom(resetSimulationAtom);
 
   const conditionsConfig = useAtomValue(simulationExperimentalSetupAtom);
 
@@ -117,6 +120,10 @@ export default function Container({ type, payload }: Props) {
     form.setFieldsValue(initialValues);
   }, [form, initialValues]);
 
+  useEffect(() => {
+    return resetSimulation;
+  }, [resetSimulation]);
+
   return (
     <div className="h-screen max-h-screen w-full overflow-hidden bg-white">
       <ConfigProvider theme={{ hashed: false, token: { borderRadius: 0 } }}>
@@ -133,6 +140,7 @@ export default function Container({ type, payload }: Props) {
           }}
           onValuesChange={onValuesChange}
           requiredMark={false}
+          disabled={disableForm}
         >
           {type === 'single-neuron-simulation' && <SingleNeuron />}
           {type === 'synaptome-simulation' && <Synaptome payload={payload} />}

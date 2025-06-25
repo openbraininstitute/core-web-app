@@ -25,6 +25,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   params: WorkspaceContext & { id: string };
+  // eslint-disable-next-line react/no-unused-prop-types
   showViewMode?: boolean;
   payload: {
     source: ISingleNeuronSynaptome;
@@ -35,10 +36,10 @@ type Props = {
   };
 };
 
-type TabKeys = 'configuration' | 'simulation';
+type TabKeys = 'configuration' | 'experiments';
 const TabsConfig: Array<{ key: TabKeys; title: string }> = [
   { key: 'configuration', title: 'Configuration' },
-  { key: 'simulation', title: 'Simulation' },
+  { key: 'experiments', title: 'Experiments' },
 ];
 
 export const CommonSummaryViewFields = [
@@ -97,7 +98,7 @@ export default function Page({
                       )}
                     </div>
                   </If>
-                  <If id="simulation" condition={activeTab === 'simulation'}>
+                  <If id="simulation" condition={activeTab === 'experiments'}>
                     <Results
                       type={EntitySlug.SingleNeuronSynaptomeSimulation}
                       modelId={source.id}

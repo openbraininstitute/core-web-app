@@ -1,9 +1,8 @@
 'use client';
 
 import { Document, Page, pdfjs } from 'react-pdf';
+import { Empty, Skeleton } from 'antd';
 import { Fragment, useState } from 'react';
-import { Divider, Empty, Skeleton } from 'antd';
-import lowerCase from 'lodash/lowerCase';
 
 import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
 import { classNames } from '@/util/utils';
@@ -16,47 +15,14 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 type Props = {
   validationResult: IValidationConstructedResult[number];
+  asset: IAsset;
 };
 
 const options = {
   standardFontDataUrl: '/standard_fonts/',
 };
-export const AllowedType = 'application/pdf' as const;
 
-export default function PDFViewer({ validationResult }: Props) {
-  return (
-    <div data-testid="documents-container" className="mt-4 flex flex-col items-center bg-white">
-      {validationResult.assets
-        ?.filter((o) => o.content_type === AllowedType)
-        .map((asset, ix) => {
-          return (
-            <div
-              id={`document_${asset.id}`}
-              key={`document_${asset.id}`}
-              className="mb-5 flex w-full flex-col items-center"
-            >
-              <h2 className="text-primary-8 mb-6 flex w-max items-center justify-center self-start p-3 text-center text-xl font-bold capitalize">
-                <span className="bg-neutral-1 flex h-12! w-12! items-center justify-center">
-                  {ix + 1}
-                </span>
-                <span className="ml-4">{lowerCase(asset.path.split('.').at(0))}</span>
-              </h2>
-              <DocumentViewer validationResult={validationResult} asset={asset} />
-            </div>
-          );
-        })}
-      <Divider />
-    </div>
-  );
-}
-
-function DocumentViewer({
-  validationResult,
-  asset,
-}: {
-  validationResult: IValidationConstructedResult[number];
-  asset: IAsset;
-}) {
+export default function PDFViewer({ validationResult, asset }: Props) {
   const [totalPages, setNumPages] = useState<number>();
   const pdfFileUrl = `${entityCoreUrl}/validation-result/${validationResult.id}/assets/${asset.id}/download`;
 

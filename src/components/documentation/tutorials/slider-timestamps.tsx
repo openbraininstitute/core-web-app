@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 import HeaderSliderTimestamps from './header-slider-timestamps';
 import SingleStep from './single-step';
 
@@ -20,7 +20,7 @@ export default function SliderTimestamps({
   content: StepProps[];
   videoTime: number;
   setVideoTime: (time: number) => void;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: RefObject<HTMLVideoElement>;
 }) {
   const [activeSteps, setActiveSteps] = useState<ActiveSteps>({
     first: 0,

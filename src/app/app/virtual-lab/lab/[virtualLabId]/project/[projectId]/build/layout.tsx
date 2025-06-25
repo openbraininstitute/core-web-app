@@ -13,10 +13,8 @@ type Props = ServerSideComponentProp<WorkspaceContext, null> & {
   children: ReactNode;
 };
 
-export default function VirtualLabProjectLayout(props: Props) {
-  const { virtualLabId, projectId } = use(props.params);
-
-  const { children } = props;
+export default function VirtualLabProjectLayout({ params: promisedParams, children }: Props) {
+  const { virtualLabId, projectId } = use(promisedParams);
 
   return (
     <div className="bg-primary-9 flex pr-5 text-white">

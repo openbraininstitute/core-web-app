@@ -29,7 +29,7 @@
   gap: 1em;
 }
 
-h1.separator {
+h2.separator {
   font-size: calc(1.4 * var(--font-size-XL));
   color: var(--color-neutral);
   margin: 0;
@@ -38,6 +38,7 @@ h1.separator {
 
 hr.separator {
   margin-top: 1em;
+  color: #d9d9d9;
   margin-bottom: 3em;
 }
 
@@ -53,4 +54,8 @@ div.epfl {
   justify-content: flex-start;
   align-items: flex-start;
   gap: 24px;
+}
+
+.epflNews hr.separator {
+  color: var(--color-neutral);
 }

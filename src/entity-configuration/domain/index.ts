@@ -1,17 +1,13 @@
-import {
-  ReconstructionMorphology,
-  ElectricalCellRecording,
-  SynapsePerConnection,
-  BoutonDensity,
-  NeuronDensity,
-} from '@/entity-configuration/domain/experimental';
+import { Emodel } from './model/e-model';
+import { MEmodel } from './model/me-model';
+import { SingleNeuronSynaptome } from './model/single-neuron-synaptome';
+import { ReconstructionMorphology } from './experimental/reconstruction-morphology';
+import { ElectricalCellRecording } from './experimental/electrical-cell-recording';
+import { NeuronDensity } from './experimental/neuron-density';
+import { BoutonDensity } from './experimental/bouton-density';
+import { SynapsePerConnection } from './experimental/synapse-per-connection';
+import { Circuit } from '@/entity-configuration/domain/model';
 
-import {
-  Emodel,
-  MEmodel,
-  SingleNeuronSynaptome,
-  Circuit,
-} from '@/entity-configuration/domain/model';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,

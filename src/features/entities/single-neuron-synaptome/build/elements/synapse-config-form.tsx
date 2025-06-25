@@ -12,9 +12,10 @@ import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/singl
 import SynapseSet from '@/features/entities/single-neuron-synaptome/build/elements/synapse-set';
 
 import { SingleNeuronSynaptomeConfigurationSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+import { activityAtomFamily } from '@/features/activity-view/context';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -50,7 +51,7 @@ export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
   id: '',
   name: '',
   target: undefined,
-  type: undefined,
+  type: 110,
   formula: '',
   seed: 100,
   exclusion_rules: null,
@@ -97,15 +98,18 @@ export default function SynaptomeConfigurationForm({
     projectId,
   });
   const refreshDataAtom = useRefreshDataAtom(dataKey);
-  // const refreshSynaptomeModels = useSetAtom(
-  //   queryAtom({
-  //     dataType: DataType.SingleNeuronSynaptome,
-  //     dataScope: ExploreDataScope.NoScope,
-  //     workspace: { virtualLabId, projectId },
-  //     key: dataKey,
-  //   })
-  // );
-
+  const refreshActivityAtom = useSetAtom(
+    activityAtomFamily({
+      key: resolveDataKey({
+        projectId,
+        section: 'activity',
+        entity: SingleNeuronSynaptome,
+      }),
+      projectId,
+      virtualLabId,
+      type: 'single_neuron_synaptome',
+    })
+  );
   const addNewSynapse = useCallback(() => {
     const synapses = form.getFieldValue('synapses');
     const id = crypto.randomUUID();
@@ -166,7 +170,7 @@ export default function SynaptomeConfigurationForm({
     try {
       setLoading(true);
 
-      async function buildSingleNeuronSynaptome() {
+      const buildSingleNeuronSynaptome = async () => {
         const { data, error } = await tryCatch(
           SingleNeuronSynaptome.api.query.create!({
             context: { virtualLabId, projectId },
@@ -195,7 +199,7 @@ export default function SynaptomeConfigurationForm({
           entity: data,
           asset: assetData,
         };
-      }
+      };
 
       const accountingSession = new OneshotSession({
         virtualLabId,
@@ -222,6 +226,7 @@ export default function SynaptomeConfigurationForm({
               key: dataKey,
             });
             refreshDataAtom();
+            refreshActivityAtom();
             const urlParams = new URLSearchParams();
             urlParams.set(DEFAULT_BRAIN_REGION_QUERY_ID, entity.brain_region.id);
             urlParams.set(

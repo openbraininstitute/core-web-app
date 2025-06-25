@@ -1,6 +1,6 @@
 import { IMEModel } from '@/api/entitycore/types';
-import { PDFViewerContainer } from '@/features/analysis-viewer/container';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function AnalysisTab({ meModel }: { meModel: IMEModel | null }) {
   // const image = meModel?.image;
 

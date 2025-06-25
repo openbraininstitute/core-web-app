@@ -5,11 +5,12 @@ import { Radio } from 'antd';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
-import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
+import { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
 import {
   convertCurrentSeries,
   convertVoltageSeries,
   CurrentUnit,
+  ensureCurrentUnit,
   VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
@@ -42,60 +43,14 @@ export default function InteractivePlot({
 
   const { config, layout, font, style, antBreakpoints } = useInteractivePlotConfig();
 
-  const [rawData, dataUnit] = useMemo(() => {
-    let deltaTime = 1;
-    let dataUnit: string | null = null;
-    let conversionFactor = 1;
-
-    const zoom = {
-      xstart: zoomRanges?.x[0],
-      xend: zoomRanges?.x[1],
-    };
-
-    const allSweepsData = allSweeps.map((sweep, idx) => {
-      const recordingData = sweepDataMap.get(sweep)?.[recordingType];
-      if (!recordingData) {
-        throw new Error(`No recording data found for sweep ${sweep}`);
-      }
-
-      if (idx === 0) {
-        const { timeUnit, timeRate } = recordingData;
-
-        if (timeUnit === 'seconds') {
-          deltaTime = (1 / timeRate) * 1000;
-        }
-
-        dataUnit = recordingData.unit;
-        conversionFactor = recordingData.conversionFactor;
-      }
-
-      const name = sweep;
-      const y = recordingData.data as number[]; // TODO Fix typing
-      const color = colorMap.get(sweep) as string;
-
-      return {
-        name,
-        y,
-        line: {
-          color,
-        },
-        sweepName: sweep,
-      };
-    });
-
-    // Downsample the data.
-    const optimizedPlotData = optimizePlotData(allSweepsData, deltaTime, zoom) || [];
-
-    // Convert the data to meet the desired units.
-    optimizedPlotData.forEach((d) => {
-      d.y =
-        dataUnit === 'amperes'
-          ? convertCurrentSeries(d.y, currentUnit, conversionFactor)
-          : convertVoltageSeries(d.y, DEFAULT_VOLTAGE_UNIT, conversionFactor);
-    });
-
-    return [optimizedPlotData, dataUnit];
-  }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, colorMap, currentUnit]);
+  const [rawData, dataUnit] = useData(
+    zoomRanges,
+    allSweeps,
+    sweepDataMap,
+    recordingType,
+    colorMap,
+    currentUnit
+  );
 
   const selectedResponse: Partial<PlotData>[] = useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
@@ -186,4 +141,76 @@ export default function InteractivePlot({
       )}
     </>
   );
+}
+
+function useData(
+  zoomRanges: ZoomRanges | null,
+  allSweeps: string[],
+  sweepDataMap: Map<string, SweepData>,
+  recordingType: RecordingType,
+  colorMap: Map<string, string>,
+  currentUnit: string
+): [
+  data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
+  unit: string | null,
+] {
+  return useMemo(() => {
+    let deltaTime = 1;
+    let dataUnit: string | null = null;
+    let conversionFactor = 1;
+
+    const zoom = {
+      xstart: zoomRanges?.x[0],
+      xend: zoomRanges?.x[1],
+    };
+
+    const allSweepsData = allSweeps.map((sweep, idx) => {
+      const recordingData = sweepDataMap.get(sweep)?.[recordingType];
+      if (!recordingData) {
+        throw new Error(`No recording data found for sweep ${sweep}`);
+      }
+
+      if (idx === 0) {
+        const { timeUnit, timeRate } = recordingData;
+
+        if (timeUnit === 'seconds') {
+          deltaTime = (1 / timeRate) * 1000;
+        }
+
+        dataUnit = recordingData.unit;
+        conversionFactor = recordingData.conversionFactor;
+      }
+
+      const name = sweep;
+      const y = recordingData.data as number[]; // TODO Fix typing
+      const color = colorMap.get(sweep) as string;
+
+      return {
+        name,
+        y,
+        line: {
+          color,
+        },
+        sweepName: sweep,
+      };
+    });
+
+    // Downsample the data.
+    const optimizedPlotData = optimizePlotData(allSweepsData, deltaTime, zoom) || [];
+
+    // Convert the data to meet the desired units.
+    optimizedPlotData.forEach((d) => {
+      // eslint-disable-next-line no-param-reassign
+      d.y =
+        dataUnit === 'amperes'
+          ? convertCurrentSeries(
+              d.y,
+              ensureCurrentUnit(currentUnit, DEFAULT_CURRENT_UNIT),
+              conversionFactor
+            )
+          : convertVoltageSeries(d.y, DEFAULT_VOLTAGE_UNIT, conversionFactor);
+    });
+
+    return [optimizedPlotData, dataUnit];
+  }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, colorMap, currentUnit]);
 }

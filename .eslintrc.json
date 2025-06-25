@@ -29,6 +29,7 @@
     "class-methods-use-this": "off",
     "consistent-return": "off",
     "no-plusplus": "off",
+    "import/no-cycle": "off",
     "import/order": [
       "error",
       {

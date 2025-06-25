@@ -1,3 +1,4 @@
+/* eslint-disable react/destructuring-assignment */
 import { CaretRightOutlined, DownOutlined } from '@ant-design/icons';
 import { useReducer } from 'react';
 import { Form } from 'antd';
@@ -10,6 +11,7 @@ import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = WorkspaceContext & {
+  // eslint-disable-next-line react/no-unused-prop-types
   stateId: string;
 };
 

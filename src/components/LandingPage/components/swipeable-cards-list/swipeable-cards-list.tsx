@@ -5,8 +5,8 @@ import React, { CSSProperties, type JSX } from 'react';
 import { IconChevronLeft } from '../../icons/IconChevronLeft';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { styleButtonSquare } from '../../styles';
-import { classNames } from '@/util/utils';
 
+import { classNames } from '@/util/utils';
 import styles from './swipeable-cards-list.module.css';
 
 export interface SwipeableCardsListProps {

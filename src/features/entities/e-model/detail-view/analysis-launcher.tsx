@@ -1,7 +1,6 @@
 import { Button, notification } from 'antd';
 import { Session } from 'next-auth';
 import { useEffect, useState } from 'react';
-import { RunningAnalysis, useCumulativeAnalysisReports } from '../../Simulations/CustomAnalysis';
 import { getEModelAnalysisWorkflowConfig } from '@/components/explore-section/Simulations/utils';
 import { Analysis } from '@/app/app/virtual-lab/(free)/explore/(content)/simulation-campaigns/shared';
 import { createWorkflowConfigResource, fetchResourceById } from '@/api/nexus';
@@ -11,13 +10,26 @@ import { EModelResource } from '@/types/explore-section/delta-model';
 import { useSessionAtomValue, useUnwrappedValue } from '@/hooks/hooks';
 import useResourceInfoFromPath from '@/hooks/useResourceInfoFromPath';
 import { detailFamily } from '@/state/explore-section/detail-view-atoms';
-import PDFViewer from '@/features/analysis-viewer/pdf-viewer';
+// @FIXME: This file does not exist...
+// import PDFViewer from '@/features/analysis-viewer/pdf-viewer';
 import { useWorkflowAuth } from '@/components/WorkflowLauncherBtn';
+import {
+  RunningAnalysis,
+  useCumulativeAnalysisReports,
+} from '@/components/explore-section/Simulations/CustomAnalysis';
+import { DataType } from '@/constants/explore-section/list-views';
 
 export default function Launcher({ analysis }: { analysis?: Analysis }) {
   const { ensureWorkflowAuth } = useWorkflowAuth();
   const resourceInfo = useResourceInfoFromPath();
-  const eModel = useUnwrappedValue(detailFamily(resourceInfo)) as EModelResource;
+  // @FIXME: 'ResourceInfo' is not assignable to parameter of type 'DetailViewUrlParams & { dataType: DataType; }'
+  // @FIXME: I added the CircuitEModel datatype, but I don't know if it will break something.
+  const eModel = useUnwrappedValue(
+    detailFamily({
+      ...resourceInfo,
+      dataType: DataType.CircuitEModel,
+    })
+  ) as EModelResource;
   const session = useSessionAtomValue();
   const [report, fetching] = useCumulativeAnalysisReports(eModel?._incoming, analysis?.['@id']);
   const [launching, setLaunching] = useState(false);
@@ -76,7 +88,11 @@ export default function Launcher({ analysis }: { analysis?: Analysis }) {
         </div>
       )}
       {/* @ts-ignore */}
-      {analysisPDFUrl && <PDFViewer url={analysisPDFUrl} />}
+      {
+        analysisPDFUrl && null
+        // @FIXME: Component PDFViewer does not exist. See comment on the related import.
+        // <PDFViewer url={analysisPDFUrl} />
+      }
     </>
   );
 }

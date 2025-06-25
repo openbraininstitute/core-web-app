@@ -1,6 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import type { JSX } from 'react';
+
 import { DocumentIcon, DocumentPileIcon, HomeFillIcon, UserIcon } from '../icons';
 
 type ButotnListProps = {
@@ -30,14 +32,14 @@ const ButtonsList = [
 export default function PublicProjectSideNavigation() {
   return (
     <div className="fixed top-0 left-0 z-10 flex h-screen flex-col justify-between p-6">
-      <a
+      <Link
         href="/app/public-projects"
         key="Public Projects"
         className="border-primary-6 flex h-12 w-12 items-center justify-center border border-solid"
         aria-label="Go to all public projects"
       >
         <DocumentPileIcon iconColor="white" className="h-4 w-auto" />
-      </a>
+      </Link>
 
       <div className="flex flex-col gap-4 text-white">
         {ButtonsList.map((button: ButotnListProps) => (

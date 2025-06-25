@@ -2,35 +2,22 @@
 
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
-import { ReactNode, memo, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import GeneralizationControls from '@/components/explore-section/WithGeneralization/GeneralizationControls';
+import { Spin } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import createMorphologyDataAtom from '@/state/morpho-viewer';
 
 import { MorphoViewer } from '@/components/MorphoViewer';
-import { DataType } from '@/constants/explore-section/list-views';
 import Morphometrics from '@/features/entities/reconstruction-morphology/morphometrics';
-import WithGeneralization, {
-  generalizationError,
-  notFound,
-} from '@/features/entities/reconstruction-morphology/with-generalization-hoc';
 import { ensureArray } from '@/utils/array';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
-
-function GeneralizationContainer({ children }: { children: ReactNode }) {
-  if (children !== notFound && children !== generalizationError) {
-    return <div className="max-h-max min-h-max">{children}</div>;
-  }
-  return <div className="min-h-auto">{children}</div>;
-}
 
 export default function MorphologyDetailView({ detail }: { detail: IReconstructionMorphology }) {
   if (!detail) return null;
