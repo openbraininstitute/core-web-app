@@ -67,7 +67,7 @@ const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category)
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('');
-  const { circuit_id: circuitId } = useParams<Params>();
+  const { circuit_id: circuitId, virtualLabId, projectId } = useParams<Params>();
   const [editing, setEditing] = useState(false);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -78,11 +78,11 @@ export default function TinyCircuitSimulation() {
 
   const [loading, setLoading] = useState(false);
 
-  console.log(loading);
-
   const notification = useAppNotification();
 
   const [campaignId, setCampaignId] = useState('');
+
+  console.log(campaignId);
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -123,8 +123,6 @@ export default function TinyCircuitSimulation() {
     return validate?.errors;
   }, [validate, config]);
 
-  console.log(schema);
-
   useEffect(() => {
     async function fetchSpec() {
       try {
@@ -158,7 +156,7 @@ export default function TinyCircuitSimulation() {
 
             if (k === 'initialize') {
               initial.circuit = {
-                type: 'ReconstructionMorphologyFromID',
+                type: 'CircuitFromID',
                 id_str: circuitId,
               };
             }
@@ -420,42 +418,52 @@ export default function TinyCircuitSimulation() {
               )}
               onClick={async () => {
                 if (loading) return;
-                if (!campaignId) {
-                  setLoading(true);
-
-                  try {
-                    const res = await authFetch(
-                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid`,
-                      {
-                        method: 'POST',
-                        body: JSON.stringify(config),
-                        headers: { 'Content-Type': 'application/json' },
-                      }
-                    );
-
-                    if (res.status !== 200) {
-                      const errorRes = await res.json();
-                      notification.error({
-                        message: errorRes.message ?? 'An error ocurred',
-                        description: errorRes?.details?.[0].msg ?? '',
-                      });
-                      return;
-                    }
-
-                    console.log(await res.json());
-                  } catch (e) {
-                    notification.error({ message: assertErrorMessage(e) });
-                    return;
-                  } finally {
-                    setLoading(false);
-                  }
-
-                  setCampaignId('dummy campaign Id');
-                  setTab('simulations');
+                if (campaignId) {
+                  setCampaignId('');
                   return;
                 }
 
-                setCampaignId('');
+                setLoading(true);
+                try {
+                  const res = await authFetch(
+                    `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid-save`,
+                    {
+                      method: 'POST',
+                      body: JSON.stringify(config),
+                      headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'virtual-lab-id': virtualLabId,
+                        'project-id': projectId,
+                      },
+                    }
+                  );
+
+                  if (res.status !== 200) {
+                    const errorRes = await res.json();
+                    notification.error({
+                      message: errorRes.message ?? errorRes?.detail ?? 'An error ocurred',
+                      description: errorRes?.details?.[0].msg ?? '',
+                    });
+                    return;
+                  }
+
+                  const returnedCampaignId = (await res.json()) as string;
+                  if (returnedCampaignId === '') {
+                    notification.error({
+                      message: 'An error ocurred generating the simulation campaign',
+                    });
+                    return;
+                  }
+
+                  setCampaignId(returnedCampaignId);
+                  setTab('simulations');
+                } catch (e) {
+                  notification.error({ message: assertErrorMessage(e) });
+                  return;
+                } finally {
+                  setLoading(false);
+                }
               }}
               disabled={!!(errors && errors.length > 0) || loading}
             >
