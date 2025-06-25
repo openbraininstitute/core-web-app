@@ -20,7 +20,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 export enum ModelTileType {
   IonChannel = 'ion-channel',
-  TinyCircuit = 'tiny-circuit',
+  TinyCircuit = 'small-microcircuit',
   BrainRegions = 'brain-regions',
   SingleNeuron = 'single-neuron',
   Microcircuit = 'microcircuit',
@@ -104,10 +104,11 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     url: null,
   },
   {
-    id: 'tiny-circuit',
-    title: 'Tiny Circuit',
+    id: 'small-microcircuit',
+    title: 'Small Microcircuit',
     type: ModelTileType.TinyCircuit,
-    description: '',
+    description:
+      'Design and run virtual experiments using circuits with 3-20 Hodgkin-Huxley cell models. These small microcircuits are often extracted from larger circuit models.',
     img: imageUrl('pairedNeuron'),
     disabled: false,
     url: null,
@@ -243,7 +244,7 @@ export function ScopeSelector() {
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
 
-    if (id === 'tiny-circuit' && section === 'build') {
+    if (id === 'small-microcircuit' && section === 'build') {
       // eslint-disable-next-line
       disabled = true;
     }
