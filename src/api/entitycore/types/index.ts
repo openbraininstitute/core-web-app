@@ -1,3 +1,4 @@
+import type { ICircuit } from './entities/circuit';
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type {
@@ -48,4 +49,5 @@ export type EntityCoreObjectTypes =
   | ISingleNeuronSynaptome
   | IMEModel
   | IEModel
-  | ISingleNeuronSimulation;
+  | ISingleNeuronSimulation
+  | ICircuit;

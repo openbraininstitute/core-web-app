@@ -56,8 +56,8 @@ function BrowseSimsTab() {
   const model = ModelTilesConfig.find((o) => o.id === type);
   const dataType =
     selectedTab === 'new'
-      ? model?.entities?.build.legacyType
-      : model?.entities?.simulate.legacyType;
+      ? model?.entities?.build?.legacyType
+      : model?.entities?.simulate?.legacyType;
 
   const entity = getEntityByLegacyType({
     legacyType: dataType!,

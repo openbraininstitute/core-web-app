@@ -143,4 +143,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 80 },
     isDisplayable: true,
   },
+  [EntityCoreFields.NumberNeurons]: {
+    title: 'Number of neurons',
+    filter: null,
+    render: (r) => {
+      return 'number_neurons' in r ? r.number_neurons : '-';
+    },
+    isDisplayable: true,
+  },
 };

@@ -15,6 +15,7 @@ import type {
 export interface CircuitBase {
   name: string;
   description: string;
+  number_neurons: number;
 }
 
 export interface ICircuit

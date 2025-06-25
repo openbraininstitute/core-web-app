@@ -85,7 +85,7 @@ type TTileConfig = {
   disabled: boolean;
   entities?: {
     build?: TEntityCoreConfigurationItem;
-    simulate: TEntityCoreConfigurationItem;
+    simulate?: TEntityCoreConfigurationItem;
   };
   url: {
     build?: string;
@@ -113,7 +113,6 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     url: null,
     entities: {
       build: EntityCoreConfiguration.Circuit,
-      simulate: EntityCoreConfiguration.Circuit,
     },
   },
   {
@@ -243,6 +242,14 @@ export function ScopeSelector() {
     const showImage = section !== 'build' || (section === 'build' && !highlight);
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
+
+    if (id === 'tiny-circuit' && section === 'build') {
+      // eslint-disable-next-line
+      disabled = true;
+    }
+
+    // eslint-disable-next-line
+    if (disabled) description = 'Coming soon';
 
     const onClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
       e.preventDefault();

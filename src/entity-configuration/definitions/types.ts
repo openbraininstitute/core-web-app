@@ -94,7 +94,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   unit?: ReactNode;
   group?: StructuralDomain;
   render?: (entity: T) => ReactNode;
-  vocabulary: {
+  vocabulary?: {
     plural: string;
     singular: string;
   };

@@ -10,7 +10,14 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     title: 'Circuit',
     name: EntitySlug.Circuit,
     curated: false,
-    columns: [EntityCoreFields.Name],
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.BrainRegion,
+      EntityCoreFields.CreationDate,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.NumberNeurons,
+    ],
   },
 
   [DataType.SingleNeuronSimulation]: {
