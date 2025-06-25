@@ -254,7 +254,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           filters.push({
             constraint: 'id__in',
             field: EntityCoreFields.ID,
-            type: CoreFieldFilterTypeEnum.CheckList,
+            type: CoreFieldFilterTypeEnum.WithinList,
             value: IDs,
           });
         } else {
