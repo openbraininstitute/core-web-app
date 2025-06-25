@@ -22,7 +22,7 @@ export async function getBrainAtlases({
   filters,
   context,
 }: {
-  filters?: IBrainAtlasFilter;
+  filters?: Partial<IBrainAtlasFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
