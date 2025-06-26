@@ -331,7 +331,7 @@ export default function TinyCircuitSimulation() {
 
                     if (v.properties)
                       Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                        if (subkey === 'type') initial[subkey] = subValue.default ?? null;
+                        if (subkey === 'type') initial[subkey] = subValue.const ?? null;
                         else initial[subkey] = subValue.default ?? null;
                       });
 
