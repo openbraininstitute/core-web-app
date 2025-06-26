@@ -5,6 +5,7 @@ import AnalysisTab from './AnalysisTab';
 import ResultsTab from './RecordingTab';
 
 import { SimulationPayload } from '@/types/simulation/single-neuron';
+import ErrorData from '@/components/message-banners/error';
 import { classNames } from '@/util/utils';
 import { IMEModel } from '@/api/entitycore/types';
 
@@ -27,13 +28,30 @@ const TABS: Tab[] = [
 ];
 
 type Props = {
-  experimentSetup: SimulationPayload;
+  experimentSetup: SimulationPayload | null;
   type: 'single-neuron-simulation' | 'synaptome-simulation';
   meModel: IMEModel | null;
 };
 
 export default function ExperimentSetupTab({ experimentSetup, type, meModel }: Props) {
   const [activeTab, setActiveTab] = useState<TabKeys>('configuration');
+
+  if (!experimentSetup) {
+    return (
+      <div className="flex w-full flex-1 flex-col">
+        <h1 className="text-primary-8 mt-6 mb-3 text-3xl font-bold">Experiment Setup</h1>
+        <ErrorData
+          title="No experiment setup found"
+          description="The experiment configuration is not available for this simulation."
+          cls={{
+            container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full! mt-4',
+            title: 'text-primary-9',
+            description: 'text-primary-9',
+          }}
+        />
+      </div>
+    );
+  }
   return (
     <div className="flex flex-1 flex-col">
       <h1 className="text-primary-8 mt-6 mb-3 text-3xl font-bold">Experiment Setup</h1>

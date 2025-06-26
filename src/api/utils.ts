@@ -20,12 +20,12 @@ type DebugArgs = {
 };
 
 export async function tryCatch<T, E = Error>(
-  promise: Promise<T>,
+  promise: Promise<T> | (() => Promise<T>),
   onComplete?: Function,
   debugArgs?: DebugArgs
 ): Promise<Result<T, E>> {
   try {
-    const data = await promise;
+    const data = await (typeof promise === 'function' ? promise() : promise);
     return { data, error: null };
   } catch (error) {
     captureException(error, {

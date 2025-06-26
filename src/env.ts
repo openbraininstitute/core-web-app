@@ -78,7 +78,7 @@ export const env = createEnv({
 
     NEXT_PUBLIC_CELL_COMPOSITION_ORG: z.string().min(1),
     NEXT_PUBLIC_CELL_COMPOSITION_PROJECT: z.string().min(1),
-    NEXT_PUBLIC_CELL_COMPOSITION_ID: z.string().url(),
+    NEXT_PUBLIC_CELL_COMPOSITION_ID: z.string().nonempty(),
     NEXT_PUBLIC_CELL_COMPOSITION_TAG: z.string(),
 
     NEXT_PUBLIC_SYN_PARAM_ASSIGNMENT_RESOURCE_ID: z.string().url(),

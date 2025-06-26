@@ -49,12 +49,17 @@ export type IdFilter = Partial<{
   id__in: string[];
 }>;
 
-export type SharedFilter = {
+export type SearchFilter = {
+  search: string | null;
+};
+export type NameFilter = {
+  name: string | null;
   name__ilike: string | null;
   name__in: string | null;
   order_by: string;
-  search: string | null;
 };
+
+export interface SharedFilter extends SearchFilter, NameFilter {}
 
 export type EtypeFilter = {
   etype__id: string | null;

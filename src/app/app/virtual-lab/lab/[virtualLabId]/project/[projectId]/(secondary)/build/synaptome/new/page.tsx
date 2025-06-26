@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import some from 'lodash/some';
+import startsWith from 'lodash/startsWith';
 import Configuration from '@/page-wrappers/build/single-neuron-synaptome';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
@@ -57,8 +59,14 @@ async function getSingleNeuronSynaptomeConfiguration({
     });
     const configAsset = getAssetElement({
       assets: data.assets,
-      path: `${SingleNeuronSynaptome.asset.configfile}_${data.id}.json`,
-      type: SingleNeuronSynaptome.asset.extension!,
+      filter: (i) => {
+        return (
+          i.label === SingleNeuronSynaptome.asset.configfile ||
+          some(['single_neuron_synaptome_config', 'synaptome_config'], (prefix) =>
+            startsWith(i.path, prefix)
+          )
+        );
+      },
     });
 
     if (!configAsset) {

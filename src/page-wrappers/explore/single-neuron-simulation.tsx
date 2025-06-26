@@ -1,8 +1,6 @@
 'use client';
 
-import { ArrowRightOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
-import { usePathname } from 'next/navigation';
+import { ArrowRightOutlined } from '@ant-design/icons';
 import { saveAs } from 'file-saver';
 
 import ModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
@@ -15,10 +13,8 @@ import { getViewDefinitionByLegacyType } from '@/entity-configuration/definition
 import { DataType } from '@/constants/explore-section/list-views';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
-import { useSimulation } from '@/hooks/useSimulation';
 
 import type { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
-import type { SimulationType } from '@/types/simulation/common';
 
 type Props = {
   payload: {
@@ -31,32 +27,20 @@ type Props = {
     projectId: string;
     virtualLabId: string;
   };
-  simulationType: SimulationType;
 };
 
-export default function SimulationDetailPage({ params, simulationType, payload }: Props) {
-  const id = usePathname().split('/').pop() as string;
-
-  const { simulation, meModel, simulationConfig } = useSimulation({
-    id,
-    virtualLabId: params.virtualLabId,
-    projectId: params.projectId,
-    type: simulationType,
-  });
+export default function SimulationDetailPage({ params, payload }: Props) {
+  // const { simulation, meModel, simulationConfig } = useSimulation({
+  //   id,
+  //   virtualLabId: params.virtualLabId,
+  //   projectId: params.projectId,
+  //   type: simulationType,
+  // });
 
   const vlProjectUrl = generateVlProjectUrl(params.virtualLabId, params.projectId);
   const prevPath = `${vlProjectUrl}/simulate`;
 
   const fields = getViewDefinitionByLegacyType(DataType.SingleNeuronSimulation)?.summaryViewFields;
-
-  if (!simulation || !meModel || !simulationConfig) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-3">
-        <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading experiment ...</h2>
-      </div>
-    );
-  }
 
   if (!fields)
     throw new Error(`Cannot find fields definition for ${DataType.SingleNeuronSimulation}`);
@@ -85,13 +69,13 @@ export default function SimulationDetailPage({ params, simulationType, payload }
         <div className="secondary-scrollbar flex h-full w-full flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12">
           <Overview
             fields={fields}
-            detail={simulation}
+            detail={payload.source}
             commonFields={[]}
             fieldsClassName="grid w-full auto-rows-min grid-cols-3 gap-x-8 gap-y-6"
             onDownload={() => {
-              const jsonString = JSON.stringify(simulationConfig);
+              const jsonString = JSON.stringify(payload.config);
               const blob = new Blob([jsonString], { type: 'application/json' });
-              saveAs(blob, `simulation-${simulation.id}.json`);
+              saveAs(blob, `simulation-${payload.source.id}.json`);
             }}
           />
           <ModelDetails
@@ -100,7 +84,7 @@ export default function SimulationDetailPage({ params, simulationType, payload }
             projectId={params.projectId}
           />
           <ExperimentSetup
-            experimentSetup={simulationConfig}
+            experimentSetup={payload.config}
             type="single-neuron-simulation"
             meModel={payload.memodel}
           />
