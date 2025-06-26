@@ -17,16 +17,9 @@ import {
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
 import NextImage from 'next/image';
-import {
-  JSONSchemaForm,
-  Chevron,
-  Tab,
-  type Config,
-  isPlainObject,
-  ConfigValue,
-} from './components';
-import { Params, JSONSchema } from './types';
-import { assertErrorMessage, classNames } from '@/util/utils';
+import { JSONSchemaForm, Chevron, Tab, type Config, ConfigValue } from './components';
+import { Params, JSONSchema } from '@/features/circuit/types';
+import { assertErrorMessage, classNames, isPlainObject } from '@/util/utils';
 import { useAppNotification } from '@/components/notification';
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
