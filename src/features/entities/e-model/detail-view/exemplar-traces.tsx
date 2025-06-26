@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 
 // import { eCodesDocumentationUrl } from '@/constants/cell-model-assignment/e-model';
 import DefaultEModelTable from '@/components/build-section/cell-model-assignment/e-model/EModelView/DefaultEModelTable';
+import ErrorData from '@/components/message-banners/error';
 
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { pageNumberAtom, pageSizeAtom } from '@/state/explore-section/list-view-atoms';
@@ -69,11 +70,21 @@ function ExemplarTraces({ params, source }: Props) {
 
   return (
     <>
-      {eModelExemplarTraces?.data?.length && (
+      {eModelExemplarTraces?.data?.length ? (
         <DefaultEModelTable<IElectricalCellRecording>
           key="exemplar-traces"
           dataSource={eModelExemplarTraces.data}
           columns={columns}
+        />
+      ) : (
+        <ErrorData
+          title="No exemplar traces found"
+          description="No exemplar traces found for this e-model"
+          cls={{
+            container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full!',
+            title: 'text-primary-9',
+            description: 'text-primary-9',
+          }}
         />
       )}
       {/* {eModelExemplarTraces ? (
