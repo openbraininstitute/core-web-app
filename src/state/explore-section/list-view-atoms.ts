@@ -107,7 +107,7 @@ export const activeColumnsAtom = atomFamily(
 export const dimensionColumnsAtom = atomFamily((scope: DataAtomBinding) =>
   atom<Promise<string[] | null>>(async () => {
     // if the type is not simulation campaign, we dont fetch dimension columns
-    if (scope.dataType !== DataType.SimulationCampaigns) {
+    if (scope.dataType !== DataType.SimulationCampaign) {
       return null;
     }
     const dimensionsResponse = await fetchDimensionAggs(scope.workspace);

@@ -17,6 +17,7 @@ export enum EntityTypeEnum {
   CellComposition = 'cell_composition',
   BrainAtlas = 'brain_atlas',
   BrainAtlasRegion = 'brain_atlas_region',
+  SimulationCampaign = 'simulation_campaign',
 }
 
 export type EntityTypeUnion = keyof typeof EntityTypeEnum;

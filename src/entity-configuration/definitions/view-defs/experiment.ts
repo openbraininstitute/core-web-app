@@ -66,4 +66,18 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.CreationDate },
     ],
   },
+  [DataType.SimulationCampaign]: {
+    title: 'Simulation Campaign',
+    group: DataTypeGroup.SimulationData,
+    name: EntitySlug.SimulationCampaign,
+    curated: false,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.ScanParameters,
+      EntityCoreFields.SimulationCampaignStatus,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+  },
 };

@@ -2,7 +2,7 @@
 
 import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
-import { RowSelectionType } from 'antd/es/table/interface';
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import { ConfigProvider, Table, TableProps } from 'antd';
 import { TableRef } from 'antd/es/table';
 
@@ -15,6 +15,7 @@ import {
 } from '@/components/explore-section/ExploreSectionListingView/hooks';
 import LoadMoreButton from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 
 import TableControls from '@/components/listing-table/controls';
@@ -22,7 +23,6 @@ import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
 
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
@@ -116,10 +116,12 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   showLoadMore,
   scrollable = true,
   sticky,
+  expandableConfig,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
+    expandableConfig?: ExpandableConfig<T>;
   }) {
   const [containerDimension, setContainerDimension] = useState<{ height: number; width: number }>({
     height: 0,
@@ -143,7 +145,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   }, []);
 
   // added new id explore-table-container-for-observable because we are using this component
-  // outside of the explore and we want to resize the table acording to the screen size as well
+  // outside of the explore and we want to resize the table according to the screen size as well
   useResizeObserver({
     element: parentElement,
     callback: onResize,
@@ -198,6 +200,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
               }
             : { x: 'fit-content' }
         }
+        expandable={expandableConfig}
       />
     </ConfigProvider>
   );
@@ -218,6 +221,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
   autohideControls = false,
   dataKey,
   useBrainRegion = true,
+  expandableConfig,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -228,6 +232,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
     autohideControls?: boolean;
     dataKey: string;
     useBrainRegion?: boolean;
+    expandableConfig?: ExpandableConfig<T>;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -260,6 +265,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
         rowSelection={rowSelection}
         showLoadMore={toggleDisplayMore}
         scrollable={scrollable}
+        expandableConfig={expandableConfig}
       />
       {(!autohideControls || (autohideControls && selectedRows.length > 0)) && (
         <TableControls

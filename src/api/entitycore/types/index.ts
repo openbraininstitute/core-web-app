@@ -10,6 +10,7 @@ import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/e
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
+import type { ISimulationCampaign } from '@/api/entitycore/types/entities/simulation';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
@@ -27,6 +28,7 @@ export {
   IEModel,
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
+  ISimulationCampaign,
 };
 
 export type EntityCoreDensityObjectTypes =
@@ -36,7 +38,8 @@ export type EntityCoreDensityObjectTypes =
 
 export type EntityCoreSimulationObjectTypes =
   | ISingleNeuronSynaptomeSimulation
-  | ISingleNeuronSimulation;
+  | ISingleNeuronSimulation
+  | ISimulationCampaign;
 
 export type EntityCoreObjectTypes =
   | IExperimentalSynapsesPerConnection
@@ -50,4 +53,5 @@ export type EntityCoreObjectTypes =
   | IMEModel
   | IEModel
   | ISingleNeuronSimulation
-  | ICircuit;
+  | ICircuit
+  | ISimulationCampaign;

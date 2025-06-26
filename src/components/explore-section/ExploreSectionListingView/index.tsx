@@ -1,6 +1,6 @@
 'use client';
 
-import { RowSelectionType } from 'antd/es/table/interface';
+import { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import { ReactNode } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 
@@ -43,6 +43,7 @@ export interface Props<T extends EntityCoreIdentifiable> {
   style?: Record<'background', string>;
   showLoadingState?: boolean;
   useBrainRegion?: boolean;
+  expandableConfig?: ExpandableConfig<T>;
 }
 
 export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
@@ -61,6 +62,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   tableClass = 'h-full overflow-y-hidden',
   showLoadingState = true,
   useBrainRegion = true,
+  expandableConfig,
 }: Props<T>) {
   const { node } = useBrainRegionHierarchy({ dataKey });
 
@@ -147,6 +149,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 onRowsSelected={onRowsSelected}
                 dataKey={dataKeyExpand}
                 useBrainRegion={useBrainRegion}
+                expandableConfig={expandableConfig}
               />
             </>
           )}

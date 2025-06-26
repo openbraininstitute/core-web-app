@@ -1,12 +1,18 @@
+import get from 'lodash/get';
+
+import PreviewThumbnail from '@/features/thumbnail/preview';
+
 import {
   renderArray,
   renderEmptyOrValue,
   EmptyPreview,
+  renderDictionaryKeys,
 } from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { hasAssets } from '@/api/entitycore/guards';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type {
@@ -14,10 +20,6 @@ import type {
   EntityCoreSimulationObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-
-import { hasAssets } from '@/api/entitycore/guards';
-
-import PreviewThumbnail from '@/features/thumbnail/preview';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.SimulationSeed]: {
@@ -165,6 +167,30 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) => {
       return 'number_connections' in r ? r.number_connections : '-';
     },
+    isDisplayable: true,
+  },
+  [EntityCoreFields.ScanParameters]: {
+    title: 'Scan parameters',
+    filter: null,
+    render: (r) => {
+      return renderEmptyOrValue(
+        renderDictionaryKeys(
+          get(r, 'simulations[0].scan_parameters', {}),
+          ({ field, value }) => (
+            <div className="border-neutral-1 text-primary-8 w-max rounded-full border px-2 py-1 shadow-sm">
+              {field}
+            </div>
+          ),
+          'flex flex-wrap gap-2 items-center justify-start text-sm'
+        )
+      );
+    },
+    isDisplayable: true,
+  },
+  [EntityCoreFields.SimulationCampaignStatus]: {
+    title: 'Status',
+    filter: null,
+    render: (r) => renderEmptyOrValue(get(r, 'simulations[0].generated_by[0].status', '')),
     isDisplayable: true,
   },
 };
