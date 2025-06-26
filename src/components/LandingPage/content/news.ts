@@ -64,7 +64,11 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
     useSanity(
       `*[_type=="news" && slug.current==${JSON.stringify(slug)}][0] {
         "id": _id,
-        articleContent,
+        articleContent[] {
+          ...,
+          "file": file.asset->url,
+          "image": image.asset->url
+        },
         title,
         "content": thumbnailIntroduction,
         "article": content,

@@ -6,11 +6,12 @@ export function circuitMatchFilter(
   minValue: number | undefined,
   maxValue: number | undefined,
   searchQuery: string,
-  scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null = null
+  scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null = null,
+  buildCategoryFilter: string | null = null
 ): boolean {
   let numericMatch = true;
 
-  if (filter && filter.property !== 'scaleType') {
+  if (filter && filter.property !== 'scaleType' && filter.property !== 'buildCategory') {
     const { property, type } = filter;
     const value = circuit[property];
 
@@ -31,7 +32,12 @@ export function circuitMatchFilter(
 
   let scaleMatch = true;
   if (scaleFilter) {
-    scaleMatch = circuit.scale === scaleFilter;
+    scaleMatch = circuit.scale.toLowerCase() === scaleFilter.toLowerCase();
+  }
+
+  let buildCategoryMatch = true;
+  if (buildCategoryFilter) {
+    buildCategoryMatch = circuit.buildCategory.toLowerCase() === buildCategoryFilter.toLowerCase();
   }
 
   let searchMatch = true;
@@ -43,7 +49,7 @@ export function circuitMatchFilter(
       false;
   }
 
-  const result = numericMatch && scaleMatch && searchMatch;
+  const result = numericMatch && scaleMatch && buildCategoryMatch && searchMatch;
 
   return result;
 }

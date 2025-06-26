@@ -20,6 +20,7 @@ export type SubcircuitsTableProps = {
   maxValue: number | undefined;
   searchQuery: string;
   scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null;
+  buildCategoryFilter: string | null;
 };
 
 export default function SubcircuitTable({
@@ -32,6 +33,7 @@ export default function SubcircuitTable({
   maxValue,
   searchQuery,
   scaleFilter,
+  buildCategoryFilter,
 }: SubcircuitsTableProps) {
   const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
     <SubcircuitTable
@@ -44,6 +46,7 @@ export default function SubcircuitTable({
       maxValue={maxValue}
       searchQuery={searchQuery}
       scaleFilter={scaleFilter}
+      buildCategoryFilter={buildCategoryFilter}
     />
   );
 
@@ -68,7 +71,15 @@ export default function SubcircuitTable({
           rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
         }}
         rowClassName={(record) =>
-          circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery, scaleFilter)
+          circuitMatchFilter(
+            record,
+            numericFilter,
+            minValue,
+            maxValue,
+            searchQuery,
+            scaleFilter,
+            buildCategoryFilter
+          )
             ? styles.matchingRow
             : styles.nonMatchingRow
         }

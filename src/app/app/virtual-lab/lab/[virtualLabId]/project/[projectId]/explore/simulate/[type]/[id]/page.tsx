@@ -41,7 +41,6 @@ export default async function Page({
       <SingleNeuronSimulationView
         params={{ id, virtualLabId, projectId }}
         payload={singleNeuronSimulationPayload}
-        simulationType="single-neuron-simulation"
       />
     );
   }

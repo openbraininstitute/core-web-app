@@ -3,7 +3,6 @@ import {
   EmptyPreview,
   renderEmptyOrValue,
   renderFloatNumber,
-  renderImage,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import {
@@ -16,6 +15,7 @@ import type { FieldsDefinitionRegistry } from '@/entity-configuration/definition
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -46,21 +46,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Response',
     filter: null,
     // use image field in nexus (waiting for entitycore to add image to emodel)
-    render: () => {
-      return <span className="text-red-500">Entitycore Needed</span>;
-    },
+    render: (r) =>
+      renderPreview(
+        r as EntityCoreResource,
+        { width: 184, height: 116 },
+        'border border-neutral-3 h-full'
+      ),
+    //  renderImage(r as IEModel, { width: 196, height: 116 }, 'my-4'),
     vocabulary: {
       plural: 'responses',
       singular: 'response',
     },
-    // constraint: 'species__name__in',
-    // order: {
-    //   property: 'species__order_by',
-    //   value: 'name',
-    // },
     isSortable: false,
     isFilterable: false,
     isDisplayable: true,
+    style: { width: 210 },
   },
   [EntityCoreFields.MEModelMorphologyPreview]: {
     className: 'text-center',
@@ -68,14 +68,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     render: (r) => {
       const { morphology } = r as IMEModel;
-      if (hasAssets(morphology)) return renderPreview(morphology, { width: 184, height: 116 });
+      if (hasAssets(morphology)) return renderPreview(morphology, { width: 196, height: 116 });
       return EmptyPreview;
     },
     vocabulary: {
       plural: 'Morphology',
       singular: 'Morphology',
     },
-    style: { width: 184 },
+    style: { width: 196 },
     isFilterable: false,
     isDisplayable: true,
   },
@@ -83,16 +83,17 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-center',
     title: 'Trace',
     filter: null,
-    render: (r) => {
-      const { emodel } = r as IMEModel;
-      if (hasAssets(emodel)) return renderImage(emodel, { width: 184, height: 116 });
-      return EmptyPreview;
-    },
+    render: (r) =>
+      renderPreview(
+        r as EntityCoreResource,
+        { width: 184, height: 116 },
+        'border border-neutral-3 h-full'
+      ),
     vocabulary: {
       plural: 'Trace',
       singular: 'Trace',
     },
-    style: { width: 184 },
+    style: { width: 210 },
     isFilterable: false,
     isDisplayable: true,
   },

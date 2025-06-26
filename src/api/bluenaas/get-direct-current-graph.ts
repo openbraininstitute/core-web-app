@@ -1,9 +1,10 @@
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import { blueNaasUrl } from '@/config';
-import {
+
+import type {
   CurrentInjectionGraphResponse,
   CurrentInjectionGraphRequest,
 } from '@/types/simulation/graph';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 export default async function getStimuliPlot(
   modelId: string,

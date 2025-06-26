@@ -28,7 +28,8 @@ const columns = (
   numericFilter: NumericFilterOptions | null,
   minValue: number | undefined,
   maxValue: number | undefined,
-  searchQuery: string
+  searchQuery: string,
+  buildCategoryFilter: string | null = null
 ): ResizableColumnType[] => {
   return [
     {
@@ -56,10 +57,19 @@ const columns = (
       key: 'name',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => {
-        const isFilterActive = numericFilter !== null || searchQuery.trim() !== '';
+        const isFilterActive =
+          numericFilter !== null || searchQuery.trim() !== '' || buildCategoryFilter !== null;
         const isMatching =
           isFilterActive &&
-          circuitMatchFilter(record, numericFilter, minValue, maxValue, searchQuery);
+          circuitMatchFilter(
+            record,
+            numericFilter,
+            minValue,
+            maxValue,
+            searchQuery,
+            null,
+            buildCategoryFilter
+          );
         const href = isCircuitDetailPage ? `./${record.key}` : `./circuit/${record.key}`;
         return (
           <Link
@@ -125,6 +135,37 @@ const columns = (
       ),
     },
     {
+      title: 'Scale',
+      key: 'scale',
+      width: 150,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => {
+        const content = [
+          {
+            label: 'Small microcircuit',
+            value: 'smallMicrocircuit',
+            description:
+              'Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively).',
+          },
+          {
+            label: 'Microcircuit',
+            value: 'microcircuit',
+            description:
+              'Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.',
+          },
+        ];
+        const scaleInfo = content.find(
+          (item) => item.value === (record.scale?.toLowerCase() || '')
+        );
+        return (
+          <Tooltip title={scaleInfo?.description || ''}>
+            <div className="font-normal whitespace-nowrap capitalize">
+              {record.scale || 'Unknown'}
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: '# Neurons',
       key: 'numberOfNeurons',
       width: 150,
@@ -155,32 +196,6 @@ const columns = (
       ),
     },
     {
-      title: 'Scale',
-      key: 'scale',
-      width: 150,
-      render: (_value: any, record: CircuitSchemaProps, _index: number) => {
-        const content = [
-          {
-            label: 'Small microcircuit',
-            value: 'smallMicrocircuit',
-            description:
-              'Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively).',
-          },
-          {
-            label: 'Microcircuit',
-            value: 'microcircuit',
-            description:
-              'Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.',
-          },
-        ];
-        return (
-          <Tooltip title={content[0].description}>
-            <div className="font-normal whitespace-nowrap">{record.scale}</div>
-          </Tooltip>
-        );
-      },
-    },
-    {
       title: 'Species',
       key: 'specie',
       width: 120,
@@ -202,6 +217,14 @@ const columns = (
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="font-normal whitespace-nowrap">{record.metadata.registrationDate}</div>
+      ),
+    },
+    {
+      title: 'Build category',
+      key: 'buildCategory',
+      width: 120,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="font-normal whitespace-nowrap">{record.buildCategory}</div>
       ),
     },
   ];

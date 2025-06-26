@@ -15,6 +15,7 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
+import type { SimulationPayload } from '@/types/simulation/single-neuron';
 
 const baseUri = '/single-neuron-simulation';
 
@@ -106,7 +107,7 @@ export async function createSingleNeuronSimulation({
 export async function getSingleNeuronSimulationIOResult(
   source: ISingleNeuronSimulation,
   context?: WorkspaceContext
-) {
+): Promise<SimulationPayload | null> {
   const configAsset = getAssetElement({
     assets: source.assets,
     filter: (i) =>
@@ -129,7 +130,7 @@ export async function getSingleNeuronSimulationIOResult(
     if (error) {
       return null;
     }
-    return asset;
+    return asset as SimulationPayload;
   }
   return null;
 }

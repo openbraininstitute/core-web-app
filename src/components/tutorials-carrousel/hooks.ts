@@ -10,28 +10,31 @@ export function useSanityContentForTutorialsList() {
   return useSanity(query, isContentForTutorialsList) ?? [];
 }
 
-function isContentForTutorialsList(data: unknown): data is ContentForTutorialItem[] {
+function isContentForTutorialsList(data: unknown): data is ContentForTutorialItem {
   const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
   try {
     assertType(
       data,
-      [
-        'array',
-        {
-          url: 'string',
-          title: typeStringOrNull,
-          slug: 'string',
-          description: typeStringOrNull,
-          imageURL: 'string',
-          imageWidth: 'number',
-          imageHeight: 'number',
-        },
-      ],
-      'ContentForTutorialsList'
+      {
+        tutorialOrder: [
+          'array',
+          {
+            title: typeStringOrNull,
+            description: typeStringOrNull,
+            slug: 'string',
+            url: typeStringOrNull,
+            imageURL: 'string',
+            imageWidth: 'number',
+            imageHeight: 'number',
+          },
+        ],
+      },
+      'ContentForTutorialItem'
     );
+
     return true;
-  } catch (ex) {
-    logError(ex);
+  } catch (err) {
+    logError(err);
     return false;
   }
 }

@@ -38,6 +38,7 @@ export type CircuitSchemaProps = {
   numberOfConnections: number;
   numberOfSynapses: number;
   scale: string;
+  buildCategory: string;
   metadata: {
     contributorSimple?: string;
     contributors?: ContributorsProps[];
@@ -73,6 +74,7 @@ export type CircuitSchemaProps = {
   };
 
   literature: PaperLiteratureProps[];
+  buildCategory: string;
 };
 
 export type FullCircuitData = {
@@ -125,8 +127,13 @@ export type FilterOptionsProps = {
 };
 
 export type NumericFilterOptions = {
-  property: NumericFilterProperty;
-  type: NumericFilterType;
+  property:
+    | 'numberOfNeurons'
+    | 'numberOfConnections'
+    | 'numberOfSynapses'
+    | 'scaleType'
+    | 'buildCategory';
+  type: string;
   min?: number;
   max?: number;
 };

@@ -17,15 +17,26 @@ function buildAssetUrl(
   let queryParams = '';
   const extension = getEntityByCoreType({ type: resource.type })?.asset.extension;
   const asset = find(resource.assets, { content_type: extension });
+
   queryParams = buildQueryString({
     dpi: options?.dpi,
     entity_id: resource.id,
     asset_id: asset?.id,
     target: options?.target,
   });
-  queryParams = queryParams ? `?${queryParams}` : '';
-  const type = kebabCase(resource.type);
 
+  queryParams = queryParams ? `?${queryParams}` : '';
+  let type = kebabCase(resource.type);
+  if (resource.type === 'emodel' || resource.type === 'memodel') {
+    type = 'model-trace';
+  } else if (!asset) {
+    throw Error('No Asset found', {
+      cause: {
+        message: 'No asset found',
+        code: 'NoAssetFound',
+      },
+    });
+  }
   return `${thumbnailGenerationBaseUrl}/core/${type}/preview${queryParams}`;
 }
 
@@ -34,11 +45,11 @@ export async function getPreviewBlob(
   virtualLabId?: string,
   projectId?: string,
   target?: 'simulation' | 'stimulus',
-
   accept: string = 'image/png'
 ) {
   const url = buildAssetUrl(resource, { dpi: 400, target });
   const session = await getSession();
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${session?.accessToken}`,

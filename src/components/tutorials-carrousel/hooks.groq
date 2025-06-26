@@ -1,10 +1,11 @@
-*[_type=="tutorial"][]
-{
-  title,
-  description,
-  "slug": slug.current,
-  "url": videoUrl,
-  "imageURL": thumbnail.asset->url,
-  "imageWidth": thumbnail.asset->metadata.dimensions.width,
-  "imageHeight": thumbnail.asset->metadata.dimensions.height
+*[_type=="documentationSettings"][0]{
+  tutorialOrder[] -> {
+    title,
+    description,
+    "slug": slug.current,
+    "url": videoUrl,
+    "imageURL": thumbnail.asset->url,
+    "imageWidth": thumbnail.asset->metadata.dimensions.width,
+    "imageHeight": thumbnail.asset->metadata.dimensions.height
+  }
 }

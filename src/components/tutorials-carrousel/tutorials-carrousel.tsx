@@ -3,7 +3,7 @@
 import React from 'react';
 
 import SingleTutorialCard from '../documentation/main/single-tutorial-card';
-import { ContentForTutorialItem } from '../documentation/type';
+import { TutorialProps } from '../documentation/type';
 import { useSanityContentForTutorialsList } from './hooks';
 import { Navigation } from './navigation';
 import { scrollCardIntoView } from './scroll';
@@ -20,7 +20,13 @@ export function TutorialsCarrousel({ className }: TutorialsCarrouselProps) {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
   const [showNavigation, setShowNavigation] = React.useState(false);
   const [cardIndex, setCardIndex] = React.useState(0);
+
   const tutorials = useSanityContentForTutorialsList();
+  const content =
+    tutorials && !Array.isArray(tutorials) && 'tutorialOrder' in tutorials
+      ? tutorials.tutorialOrder
+      : [];
+
   React.useEffect(() => {
     const container = refContainer.current;
     if (!container) return;
@@ -33,6 +39,7 @@ export function TutorialsCarrousel({ className }: TutorialsCarrouselProps) {
     handleResize();
     return () => observer.unobserve(container);
   });
+
   const handleScrollCardIntoView = (index: number) => {
     const container = refContainer.current;
     if (!container) return;
@@ -47,14 +54,14 @@ export function TutorialsCarrousel({ className }: TutorialsCarrouselProps) {
         <h1>Our tutorials</h1>
         {showNavigation && (
           <Navigation
-            count={tutorials.length}
+            count={content.length}
             value={cardIndex}
             onChange={handleScrollCardIntoView}
           />
         )}
       </header>
       <div ref={refContainer}>
-        {tutorials.map((value: ContentForTutorialItem) => (
+        {content.map((value: TutorialProps) => (
           <SingleTutorialCard key={value.url} content={value} />
         ))}
       </div>

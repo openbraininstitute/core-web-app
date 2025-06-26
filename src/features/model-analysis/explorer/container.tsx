@@ -6,8 +6,6 @@ import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 import { Spin } from 'antd';
 
-// import CustomButton from '@/components/buttons/custom-btn';
-
 import { validationResultAtom } from '@/features/model-analysis/explorer/context';
 import { ViewerContainer } from '@/features/model-analysis/viewer/container';
 import { useLoadableValue } from '@/hooks/hooks';
@@ -52,7 +50,6 @@ export default function AnalysisContainer() {
                 further review and analysis.
               </p>
             </div>
-            {/* <CustomButton onClick={() => {}}>Add analysis</CustomButton> */}
           </div>
         );
       }

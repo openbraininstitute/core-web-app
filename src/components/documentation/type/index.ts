@@ -81,14 +81,18 @@ export type AITooslsProps = {
   is_online: boolean;
 };
 
-export type ContentForTutorialItem = {
-  url: string;
-  title: string;
+export type TutorialProps = {
+  url: string | null;
+  title: string | null;
   slug: string;
   description: string;
   imageURL: string;
   imageWidth: number;
   imageHeight: number;
+};
+
+export type ContentForTutorialItem = {
+  tutorialOrder: TutorialProps[];
 };
 
 export type ContentForFeatureItem = {

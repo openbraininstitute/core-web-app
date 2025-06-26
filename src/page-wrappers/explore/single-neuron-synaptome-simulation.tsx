@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { saveAs } from 'file-saver';
 
 import ModelDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
-import ExperimentSetup from '@/components/simulate/SimulationDetails/ExperimentSetup';
+import ExperimentSetup from '@/components/simulate/SimulationDetails/experiment-setup';
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 import Overview from '@/features/details-view/overview';
 import Link from '@/components/Link';
@@ -15,6 +15,7 @@ import { getViewDefinitionByLegacyType } from '@/entity-configuration/definition
 import { resolveExperimentUrl, resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
+import { useSimulationConfig } from '@/hooks/useSimulation';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -24,6 +25,9 @@ type Props = {
 
 export default function SimulationDetailPage({ payload }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const { simulationConfig, error, loading } = useSimulationConfig({
+    source: payload.source,
+  });
 
   const fields = getViewDefinitionByLegacyType(
     DataType.SingleNeuronSynaptomeSimulation
@@ -65,9 +69,11 @@ export default function SimulationDetailPage({ payload }: Props) {
             commonFields={[]}
             fieldsClassName="grid w-full auto-rows-min grid-cols-3 gap-x-8 gap-y-6"
             onDownload={() => {
-              const jsonString = JSON.stringify(payload.config);
-              const blob = new Blob([jsonString], { type: 'application/json' });
-              saveAs(blob, `synaptome-simulation-${payload.source.id}.json`);
+              if (!error && simulationConfig) {
+                const jsonString = JSON.stringify(simulationConfig);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                saveAs(blob, `synaptome-simulation-${payload.source.id}.json`);
+              }
             }}
           />
           <ModelDetails
@@ -77,7 +83,9 @@ export default function SimulationDetailPage({ payload }: Props) {
             projectId={projectId}
           />
           <ExperimentSetup
-            experimentSetup={payload.config}
+            loading={loading}
+            error={error}
+            experimentSetup={simulationConfig}
             type="synaptome-simulation"
             meModel={payload.memodel}
           />
