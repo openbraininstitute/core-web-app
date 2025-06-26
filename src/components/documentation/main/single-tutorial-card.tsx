@@ -4,11 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import PlaceholderImage from '../img/thumbnail_placeholder.jpg';
-import { ContentForTutorialItem } from '../type';
+import { TutorialProps } from '../type';
 
 import { classNames } from '@/util/utils';
 
-export default function SingleTutorialCard({ content }: { content: ContentForTutorialItem }) {
+export default function SingleTutorialCard({ content }: { content: TutorialProps }) {
   const [isMouseHover, setIsMouseHover] = useState<boolean>(false);
 
   return (
@@ -36,7 +36,7 @@ export default function SingleTutorialCard({ content }: { content: ContentForTut
           width={800}
           height={600}
           src={content.imageURL || PlaceholderImage}
-          alt={content.title}
+          alt={content.title || 'Tutorial image'}
           className="absolute top-0 left-0 h-full w-full object-cover transition-all duration-300"
           style={{
             transform: isMouseHover ? 'scale(1.1) rotate(3deg)' : 'scale(1) rotate(0deg)',
