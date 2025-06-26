@@ -1,5 +1,5 @@
 import { ICircuit } from '../../types/entities/circuit';
-import { entityCoreApi, getEntityCoreContext, getAssetElement } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
   ISingleNeuronSynaptome,
