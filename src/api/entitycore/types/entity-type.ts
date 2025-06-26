@@ -13,6 +13,7 @@ export enum EntityTypeEnum {
   Subject = 'subject',
   SynapticPathway = 'synaptic_pathway',
   SingleNeuronSynaptomeSimulation = 'single_neuron_synaptome_simulation',
+  Circuit = 'circuit',
   CellComposition = 'cell_composition',
   BrainAtlas = 'brain_atlas',
   BrainAtlasRegion = 'brain_atlas_region',

@@ -143,4 +143,28 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 80 },
     isDisplayable: true,
   },
+  [EntityCoreFields.NumberNeurons]: {
+    title: 'Number of neurons',
+    filter: null,
+    render: (r) => {
+      return 'number_neurons' in r ? r.number_neurons : '-';
+    },
+    isDisplayable: true,
+  },
+  [EntityCoreFields.NumberSynapses]: {
+    title: 'Number of synapses',
+    filter: null,
+    render: (r) => {
+      return 'number_synapses' in r ? r.number_synapses : '-';
+    },
+    isDisplayable: true,
+  },
+  [EntityCoreFields.NumberConnections]: {
+    title: 'Number of connections',
+    filter: null,
+    render: (r) => {
+      return 'number_connections' in r ? r.number_connections : '-';
+    },
+    isDisplayable: true,
+  },
 };

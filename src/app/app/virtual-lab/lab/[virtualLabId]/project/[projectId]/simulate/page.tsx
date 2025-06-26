@@ -29,6 +29,7 @@ import {
 
 import type { ISingleNeuronSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type { WorkspaceContext } from '@/types/common';
+import { DataType } from '@/constants/explore-section/list-views';
 import Styles from '@/styles/vlabs.module.css';
 
 export default function Page() {
@@ -55,8 +56,8 @@ function BrowseSimsTab() {
   const model = ModelTilesConfig.find((o) => o.id === type);
   const dataType =
     selectedTab === 'new'
-      ? model?.entities?.build.legacyType
-      : model?.entities?.simulate.legacyType;
+      ? model?.entities?.build?.legacyType
+      : model?.entities?.simulate?.legacyType;
 
   const entity = getEntityByLegacyType({
     legacyType: dataType!,
@@ -137,10 +138,12 @@ function BrowseSimsTab() {
 function NewSim() {
   const { type } = useTileScopeQuery();
   const model = ModelTilesConfig.find((o) => o.id === type);
-  const dataType = model?.entities?.build.legacyType;
+
+  const dataType = model?.entities?.build?.legacyType;
   const entity = getEntityByLegacyType({
-    legacyType: dataType!,
+    legacyType: dataType,
   });
+
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const dataKey = resolveDataKey({ projectId, section: 'simulate', entity });
   const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
@@ -180,21 +183,23 @@ function NewSim() {
         />
         {buttonsVisible && selectedRows.length > 0 && (
           <div className="fixed right-[50px] bottom-8 flex items-center justify-end gap-2">
-            <Link
-              className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
-              href={resolveExploreDetailsPageUrl({
-                ctx: { virtualLabId, projectId },
-                dataType,
-                entityId: selectedRows[0].id,
-              })}
-            >
-              View
-            </Link>
+            {dataType !== DataType.Circuit && (
+              <Link
+                className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
+                href={resolveExploreDetailsPageUrl({
+                  ctx: { virtualLabId, projectId },
+                  dataType,
+                  entityId: selectedRows[0].id,
+                })}
+              >
+                View
+              </Link>
+            )}
             <Link
               className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
               href={resolveExperimentUrl({
                 ctx: { virtualLabId, projectId },
-                dataType: entity?.type!,
+                dataType: entity?.type,
                 entityId: selectedRows[0].id,
               })}
             >
