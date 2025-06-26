@@ -14,8 +14,8 @@ export default function SectionMainContainer({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   const [activeSection, setActiveSection] = useState<
-    'visualisation' | 'overview' | 'provenance' | 'related-publications' | 'related-circuits'
-  >('visualisation');
+    'visualization' | 'overview' | 'provenance' | 'related-publications' | 'related-circuits'
+  >('visualization');
 
   return (
     <div className="relative mt-12 flex w-full flex-col">

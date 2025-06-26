@@ -8,12 +8,18 @@ export function filterCircuitsWithParents(
   maxValue: number | undefined,
   searchQuery: string | undefined,
   scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null = null,
-  hideNonMatchingParents: boolean = false
+  hideNonMatchingParents: boolean = false,
+  buildCategoryFilter: string | null = null
 ): FilteredCircuit[] {
   const filtered: FilteredCircuit[] = [];
 
   // IF NO FILTERS OR SEARCH, RETURN ALL CIRCUITS
-  if (!numericFilter && (!searchQuery || searchQuery.trim() === '') && !scaleFilter) {
+  if (
+    !numericFilter &&
+    (!searchQuery || searchQuery.trim() === '') &&
+    !scaleFilter &&
+    !buildCategoryFilter
+  ) {
     return circuits.map((circuit) => ({
       ...circuit,
       isNonMatchingParent: false,
@@ -25,7 +31,8 @@ export function filterCircuitsWithParents(
             maxValue,
             searchQuery,
             scaleFilter,
-            hideNonMatchingParents
+            hideNonMatchingParents,
+            buildCategoryFilter
           )
         : [],
     }));
@@ -42,7 +49,8 @@ export function filterCircuitsWithParents(
       minValue,
       maxValue,
       searchQuery || '',
-      scaleFilter
+      scaleFilter,
+      buildCategoryFilter
     );
 
     let hasMatchingDescendant = false;
@@ -78,7 +86,8 @@ export function filterCircuitsWithParents(
               maxValue,
               searchQuery,
               scaleFilter,
-              hideNonMatchingParents
+              hideNonMatchingParents,
+              buildCategoryFilter
             )
           : [],
       };
