@@ -27,7 +27,7 @@ export default function SingleAIToolsContent() {
         </Link>
         <h1 className="text-4xl font-bold">Chat Tool {toolId}</h1>
       </div>
-      <p className="text-lg leading-normal">{selectedTool?.description}</p>
+      <p className="text-lg leading-normal whitespace-pre-wrap">{selectedTool?.description}</p>
     </div>
   );
 }
