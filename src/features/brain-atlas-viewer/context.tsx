@@ -4,52 +4,66 @@ import { atom } from 'jotai';
 import isNil from 'lodash/isNil';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
+  getBrainAtlases,
   getBrainAtlasRegion,
   getBrainAtlasRegions,
 } from '@/api/entitycore/queries/general/brain-atlas';
 import { arrayBufferToString } from '@/utils/buffer';
 import { tryCatch } from '@/api/utils';
 import { env } from '@/env';
+import { EntityTypeEnum } from '@/api/entitycore/types';
 
-export async function resolveBrainRegionAtlasMesh({
+export const defaultAtlasName = 'BlueBrain Atlas';
+export const brainAtlasAtom = atom(async () => {
+  const { data, error } = await tryCatch(
+    getBrainAtlases({
+      filters: { name: defaultAtlasName },
+    })
+  );
+  if (error) throw Error(`Unable to retrieve brain atlas data for ${defaultAtlasName}`);
+  return data.data.at(0);
+});
+
+async function resolveBrainRegionAtlasMesh({
   atlasRegionId,
   atlasId = env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID,
 }: {
   atlasRegionId: string;
   atlasId?: string;
 }) {
-  const { data: atlas, error: atlasError } = await tryCatch(
+  const { data: atlasRegions, error: atlasError } = await tryCatch(
     getBrainAtlasRegion({ atlasId, atlasRegionId })
   );
   if (atlasError)
     throw Error(
       `Unable to retrieve data for brain region id "${atlasRegionId}" in atlas "${atlasId}`
     );
-  const atlasAssetId = atlas.assets.at(0)?.id;
+  const atlasAssetId = atlasRegions.assets.at(0)?.id;
   if (isNil(atlasAssetId))
     throw Error(`No mesh data available for brain region ID "${atlasRegionId}`);
+
   const { data: asset, error: assetError } = await tryCatch(
     downloadAsset<ArrayBuffer>({
-      // @ts-expect-error
-      entityType: 'brain-atlas-region',
-      entityId: atlas.id,
       asRawResponse: false,
+      entityType: EntityTypeEnum.BrainAtlasRegion,
+      entityId: atlasRegions.id,
       id: atlasAssetId,
-    })
+    } as const)
   );
 
   if (assetError)
     throw Error(
       `Failed to download mesh asset (ID: "${atlasAssetId}") for brain region ID "${atlasRegionId}`
     );
-  const data = arrayBufferToString(asset);
-  return data;
+
+  return arrayBufferToString(asset);
 }
 
-export const brainRegionAtlasAtom = atom(async () => {
+export const brainRegionAtlasAtom = atom(async (get) => {
+  const brainAtlas = await get(brainAtlasAtom);
   return await tryCatch(
     getBrainAtlasRegions({
-      atlasId: env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID,
+      atlasId: brainAtlas?.id ?? env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID,
       filters: { page: 1, page_size: 1500 },
     })
   );
@@ -58,10 +72,11 @@ export const brainRegionAtlasAtom = atom(async () => {
 export const getAtlasMeshAsset = atomFamily((brainRegionId: string) => {
   const childAtom = atom(async (get) => {
     const fullAtlas = await get(brainRegionAtlasAtom);
+    const brainAtlas = await get(brainAtlasAtom);
     const atlasItem = fullAtlas.data?.data.find((o) => o.brain_region_id === brainRegionId);
     if (!atlasItem) throw new Error(`Atlas details for brain region ${brainRegionId} not found`);
     const { data, error } = await tryCatch(
-      resolveBrainRegionAtlasMesh({ atlasRegionId: atlasItem.id })
+      resolveBrainRegionAtlasMesh({ atlasId: brainAtlas?.id, atlasRegionId: atlasItem.id })
     );
     if (error || !data) throw error ?? new Error('Mesh is empty');
     return { data, error };

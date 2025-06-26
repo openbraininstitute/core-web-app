@@ -3,22 +3,52 @@ import { atomFamily } from 'jotai/utils';
 import { Atom, atom } from 'jotai';
 
 import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
-import { getCellCompositionSummary } from '@/api/entitycore/queries/general/cell-composition';
+import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
 import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
 import { brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { renameKeyDeep } from '@/components/tree/elements/helpers';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { log } from '@/utils/logger';
 
 import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
-import type { IAnnotation } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
+import type { IAnnotation } from '@/api/entitycore/types/shared/global';
+import { EntityTypeEnum } from '@/api/entitycore/types';
+
+export const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 
 export const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> => {
-  const { data: cellCompositionSummary, error } = await tryCatch(getCellCompositionSummary());
+  const { data: cellComposition, error } = await tryCatch(
+    getCellCompositions({
+      filters: { name: defaultCellCompositionName },
+    })
+  );
   if (error) throw error;
+  if (!cellComposition.data.length)
+    throw Error(`No cell composition found for ${defaultCellCompositionName}`);
+
+  const summaryAsset = getAssetElement({
+    assets: cellComposition.data.at(0)?.assets,
+    filter(i) {
+      return i.label === AssetLabel.cell_composition_summary;
+    },
+  });
+
+  if (!summaryAsset) throw Error(`No summary asset found for ${defaultCellCompositionName}`);
+
+  const { data: cellCompositionSummary, error: assetError } = await tryCatch(
+    downloadAsset<ICellCompositionRoot>({
+      entityType: EntityTypeEnum.CellComposition,
+      entityId: cellComposition.data.at(0)?.id!,
+      id: summaryAsset.id,
+    })
+  );
+  if (assetError) throw assetError;
   return cellCompositionSummary;
 });
 

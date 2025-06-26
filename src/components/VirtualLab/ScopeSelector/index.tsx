@@ -20,7 +20,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 export enum ModelTileType {
   IonChannel = 'ion-channel',
-  PairedNeuron = 'paired-neuron',
+  TinyCircuit = 'small-microcircuit',
   BrainRegions = 'brain-regions',
   SingleNeuron = 'single-neuron',
   Microcircuit = 'microcircuit',
@@ -84,12 +84,12 @@ type TTileConfig = {
   img: string;
   disabled: boolean;
   entities?: {
-    build: TEntityCoreConfigurationItem;
-    simulate: TEntityCoreConfigurationItem;
+    build?: TEntityCoreConfigurationItem;
+    simulate?: TEntityCoreConfigurationItem;
   };
   url: {
-    build: string;
-    explore: string;
+    build?: string;
+    explore?: string;
   } | null;
 };
 
@@ -104,14 +104,17 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     url: null,
   },
   {
-    id: 'paired-neuron',
-    title: 'Paired Neuron',
-    type: ModelTileType.PairedNeuron,
+    id: 'small-microcircuit',
+    title: 'Small Microcircuit',
+    type: ModelTileType.TinyCircuit,
     description:
-      'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
+      'Design and run virtual experiments using circuits with 3-20 Hodgkin-Huxley cell models. These small microcircuits are often extracted from larger circuit models.',
     img: imageUrl('pairedNeuron'),
-    disabled: true,
+    disabled: false,
     url: null,
+    entities: {
+      build: EntityCoreConfiguration.Circuit,
+    },
   },
   {
     id: 'brain-regions',
@@ -240,6 +243,14 @@ export function ScopeSelector() {
     const showImage = section !== 'build' || (section === 'build' && !highlight);
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
+
+    if (id === 'small-microcircuit' && section === 'build') {
+      // eslint-disable-next-line
+      disabled = true;
+    }
+
+    // eslint-disable-next-line
+    if (disabled) description = 'Coming soon';
 
     const onClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
       e.preventDefault();

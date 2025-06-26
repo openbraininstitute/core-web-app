@@ -65,6 +65,15 @@ export const pageNumberAtom = atomFamily((_key: string) => {
   return childAtom;
 });
 
+export const pageSizeAtom = atomFamily(
+  ({ key, defaultSize }: { key: string; defaultSize?: number }) => {
+    const childAtom = atom<number | undefined>(defaultSize);
+    childAtom.debugLabel = `page-size/${key}`;
+    return childAtom;
+  },
+  (a, b) => a.key === b.key
+);
+
 export const selectedRowsAtom = atomFamily(
   (_key: string) => atom<Array<any>>([]) // FIXME: get the right type
 );
@@ -245,7 +254,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           filters.push({
             constraint: 'id__in',
             field: EntityCoreFields.ID,
-            type: CoreFieldFilterTypeEnum.CheckList,
+            type: CoreFieldFilterTypeEnum.WithinList,
             value: IDs,
           });
         } else {

@@ -1,9 +1,10 @@
 import { Atom, atom } from 'jotai';
 
 import sessionAtom from '@/state/session';
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
+
+import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 
 export default function createMorphologyDataAtom(
   morphology: IReconstructionMorphology
@@ -19,7 +20,7 @@ export default function createMorphologyDataAtom(
 
     // TODO: extend downloadAsset so that return type can be parameterized
     // as: ArrayBuffer, String, JSON, Response, etc.
-    const arrayBuffer = await downloadAsset({
+    const arrayBuffer = await downloadAsset<ArrayBuffer>({
       entityType: EntityTypeEnum.ReconstructionMorphology,
       entityId: morphology.id,
       id: asset.id,

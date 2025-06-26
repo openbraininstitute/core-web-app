@@ -1,5 +1,6 @@
 import omit from 'lodash/omit';
 import isNumber from 'lodash/isNumber';
+import isEmpty from 'lodash/isEmpty';
 
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { BrainRegion } from '@/types/ontologies';
@@ -57,12 +58,16 @@ export function findTitleAndCollectParentBrainRegions(
  */
 export function filterHasValue(filter: CoreFilter) {
   switch (filter.type) {
+    case CoreFieldFilterTypeEnum.Text:
+      return !isEmpty(filter.value);
     case CoreFieldFilterTypeEnum.CheckList:
       return filter.value.length !== 0;
     case CoreFieldFilterTypeEnum.DateRange:
-      return filter.value.gte || filter.value.lte;
+      return !isEmpty(filter.value.gte) || !isEmpty(filter.value.lte);
     case CoreFieldFilterTypeEnum.ValueRange:
-      return filter.value.gte || filter.value.lte;
+      return !isEmpty(filter.value.gte) || !isEmpty(filter.value.lte);
+    case CoreFieldFilterTypeEnum.WithinList:
+      return false; // TODO: this is need to be discussed/fixed
     case CoreFieldFilterTypeEnum.ValueOrRange:
       if (!filter.value) {
         return false;

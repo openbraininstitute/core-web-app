@@ -38,7 +38,6 @@ function renderMessage(
 ): React.ReactNode {
   switch (value.role) {
     case 'user':
-      console.log('🚀 [message-item] rateLimit =', rateLimit); // @FIXME: Remove this line written on 2025-06-24 at 09:18
       return (
         <div className={styles.user}>
           <div className={styles.userContent}>

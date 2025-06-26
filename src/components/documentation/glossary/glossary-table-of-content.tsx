@@ -74,7 +74,7 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
               slug === 'm-type' ? 'font-bold text-white' : 'text-primary-1 font-normal'
             )}
           >
-            M-types
+            Morphological types (m-types)
           </Link>
           <Link
             href="/app/documentation/glossary/cell-type/e-type"
@@ -84,7 +84,7 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
               slug === 'e-type' ? 'font-bold text-white' : 'text-primary-1 font-normal'
             )}
           >
-            E-types
+            Electrical types (e-types)
           </Link>
         </div>
       </div>

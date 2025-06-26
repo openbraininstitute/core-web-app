@@ -6,6 +6,7 @@ import { ElectricalCellRecording } from './experimental/electrical-cell-recordin
 import { NeuronDensity } from './experimental/neuron-density';
 import { BoutonDensity } from './experimental/bouton-density';
 import { SynapsePerConnection } from './experimental/synapse-per-connection';
+import { Circuit } from '@/entity-configuration/domain/model';
 
 import {
   SingleNeuronSimulation,
@@ -37,6 +38,7 @@ export const EntityCoreConfiguration = {
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
   ...EntityCoreSimulationConfiguration,
+  Circuit,
 } as const;
 
 export type TEntityCoreConfigurationItem =

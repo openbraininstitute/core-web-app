@@ -15,6 +15,8 @@ import type {
   IReconstructionMorphology,
 } from '@/api/entitycore/types';
 import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { IEModel } from '@/api/entitycore/types/entities/e-model';
+import { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type {
   EntityCoreResource,
   ILicense,
@@ -64,7 +66,7 @@ export const renderDate = (isoDateString: string) => {
   return format(parseISO(isoDateString), 'dd.MM.yyyy');
 };
 
-export const renderTimestamp = (timestamp: string) => {
+export const renderTimestamp = (timestamp: Date) => {
   if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
 };
 
@@ -83,11 +85,12 @@ export function renderPreview<T extends EntityCoreResource>(
   );
 }
 
-export function renderImage<T extends EntityCoreResource>(
-  resource: T,
-  size?: { height: number; width: number } | string
+export function renderImage(
+  entity: IEModel | IMEModel,
+  size?: { height: number | string; width: number | string },
+  className?: string
 ) {
-  return <PreviewImage resource={resource} size={size} />;
+  return <PreviewImage size={size} className={className} />;
 }
 
 export default function getMeasurements(r: EntityCoreDensityObjectTypes) {

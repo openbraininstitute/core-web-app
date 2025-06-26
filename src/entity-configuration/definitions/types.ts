@@ -50,6 +50,10 @@ export interface ValueOrRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.ValueOrRange;
   value: number | GteLteValue | null; // "value" | "range" | "all"
 }
+export interface WithinListFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.WithinList;
+  value: Array<string>;
+}
 
 export type CoreFilter =
   | CheckListFilter
@@ -58,7 +62,8 @@ export type CoreFilter =
   | TextFilter
   | ValueFilter
   | ValueOrRangeFilter
-  | BaseFilter;
+  | BaseFilter
+  | WithinListFilter;
 
 export type CoreFilterType = CoreFieldFilterTypeEnum | null;
 
@@ -89,7 +94,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   unit?: ReactNode;
   group?: StructuralDomain;
   render?: (entity: T) => ReactNode;
-  vocabulary: {
+  vocabulary?: {
     plural: string;
     singular: string;
   };

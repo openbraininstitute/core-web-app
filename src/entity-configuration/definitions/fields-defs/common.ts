@@ -95,7 +95,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.UpdateDate]: {
     title: 'Update date',
     filter: CoreFieldFilterTypeEnum.DateRange,
-    render: (r) => renderTimestamp(r.update_date),
+    render: (r) => renderTimestamp(new Date(r.update_date)),
     vocabulary: {
       plural: 'Dates',
       singular: 'Date',

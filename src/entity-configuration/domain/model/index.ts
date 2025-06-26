@@ -2,6 +2,7 @@
 import { DataType } from '@/constants/explore-section/list-views';
 
 export * from '@/entity-configuration/domain/model/mesh';
+export * from '@/entity-configuration/domain/model/circuit';
 
 export const MODEL_DATATYPES = [
   DataType.CircuitEModel,
@@ -14,7 +15,6 @@ export enum ModelTypeNames {
   ME_MODEL = 'me-model',
   SINGLE_NEURON_SYNAPTOME = 'synaptome',
   CIRCUIT = 'circuit',
-  SINGLE_NEURON_SIMULATION = 'single-neuron-simulation',
 }
 
 export type TModelTypeNames = `${ModelTypeNames}`;

@@ -43,7 +43,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
     <div className="text-primary-7 flex flex-col">
       <div className="text font-thin">Name</div>
       <div className="flex items-start justify-between">
-        <div className="grid grid-cols-6 items-center gap-5">
+        <div className="flex items-center gap-5">
           <div className="col-span-3 text-2xl font-bold">{detail?.name}</div>
         </div>
         {session && (

@@ -49,12 +49,17 @@ export type IdFilter = Partial<{
   id__in: string[];
 }>;
 
-export type SharedFilter = {
+export type SearchFilter = {
+  search: string | null;
+};
+export type NameFilter = {
+  name: string | null;
   name__ilike: string | null;
   name__in: string | null;
   order_by: string;
-  search: string | null;
 };
+
+export interface SharedFilter extends SearchFilter, NameFilter {}
 
 export type EtypeFilter = {
   etype__id: string | null;
@@ -99,3 +104,15 @@ export interface IMorphologyFilter {
 }
 
 export interface CreatorFilter {}
+
+export interface OwnershipFilter {
+  created_by__id?: string | null;
+  created_by__pref_label?: string | null;
+  created_by__pref_label__in?: Array<string> | null;
+  created_by__order_by?: string | null;
+
+  updated_by__id?: string | null;
+  updated_by__pref_label?: string | null;
+  updated_by__pref_label__in?: Array<string> | null;
+  updated_by__order_by?: string | null;
+}

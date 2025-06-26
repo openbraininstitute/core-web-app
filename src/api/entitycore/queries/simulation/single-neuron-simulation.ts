@@ -1,9 +1,11 @@
+import startsWith from 'lodash/startsWith';
+import some from 'lodash/some';
+
 import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { compactRecord } from '@/utils/dictionary';
-import { arrayBufferToJson } from '@/utils/buffer';
 import { tryCatch } from '@/api/utils';
 
 import type {
@@ -13,6 +15,7 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
+import type { SimulationPayload } from '@/types/simulation/single-neuron';
 
 const baseUri = '/single-neuron-simulation';
 
@@ -104,26 +107,30 @@ export async function createSingleNeuronSimulation({
 export async function getSingleNeuronSimulationIOResult(
   source: ISingleNeuronSimulation,
   context?: WorkspaceContext
-) {
+): Promise<SimulationPayload | null> {
   const configAsset = getAssetElement({
     assets: source.assets,
-    filter: (i) => i.label === SingleNeuronSimulation.asset.configfile,
+    filter: (i) =>
+      i.label === SingleNeuronSimulation.asset.configfile ||
+      some(['simulation-config'], (prefix) => startsWith(i.path, prefix)),
   });
 
   if (configAsset) {
-    const { data: asset, error } = await tryCatch(
-      downloadAsset<ArrayBuffer>({
+    const { data, error } = await tryCatch(
+      downloadAsset({
         ctx: context,
         entityId: source.id,
-        entityType: EntityTypeEnum.SingleNeuronSynaptomeSimulation,
+        entityType: EntityTypeEnum.SingleNeuronSimulation,
         id: configAsset.id,
+        asRawResponse: true,
       })
     );
 
+    const asset = await data?.json();
     if (error) {
       return null;
     }
-    return arrayBufferToJson(asset);
+    return asset as SimulationPayload;
   }
   return null;
 }

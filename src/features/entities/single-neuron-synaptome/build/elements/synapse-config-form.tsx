@@ -12,8 +12,10 @@ import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/singl
 import SynapseSet from '@/features/entities/single-neuron-synaptome/build/elements/synapse-set';
 
 import { SingleNeuronSynaptomeConfigurationSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+import { activityAtomFamily } from '@/features/activity-view/context';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -43,7 +45,6 @@ import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 
 export const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
@@ -97,7 +98,18 @@ export default function SynaptomeConfigurationForm({
     projectId,
   });
   const refreshDataAtom = useRefreshDataAtom(dataKey);
-
+  const refreshActivityAtom = useSetAtom(
+    activityAtomFamily({
+      key: resolveDataKey({
+        projectId,
+        section: 'activity',
+        entity: SingleNeuronSynaptome,
+      }),
+      projectId,
+      virtualLabId,
+      type: 'single_neuron_synaptome',
+    })
+  );
   const addNewSynapse = useCallback(() => {
     const synapses = form.getFieldValue('synapses');
     const id = crypto.randomUUID();
@@ -214,6 +226,7 @@ export default function SynaptomeConfigurationForm({
               key: dataKey,
             });
             refreshDataAtom();
+            refreshActivityAtom();
             const urlParams = new URLSearchParams();
             urlParams.set(DEFAULT_BRAIN_REGION_QUERY_ID, entity.brain_region.id);
             urlParams.set(

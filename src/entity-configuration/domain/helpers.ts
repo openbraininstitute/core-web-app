@@ -15,11 +15,11 @@ import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 export type EntityCoreLegacyType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['legacyType'];
 
-export const getEntityByLegacyType = ({ legacyType }: { legacyType: EntityCoreLegacyType }) =>
+export const getEntityByLegacyType = ({ legacyType }: { legacyType?: EntityCoreLegacyType }) =>
   find(EntityCoreConfiguration, { legacyType });
 
 // TODO: fix type to be a list of available types in entitycore
-export const getEntityByCoreType = ({ type }: { type: EntityTypeValue }) =>
+export const getEntityByCoreType = ({ type }: { type?: EntityTypeValue }) =>
   find(EntityCoreConfiguration, { type });
 
 export const getEntityBySlug = ({ slug }: { slug: EntitySlugValue }) =>

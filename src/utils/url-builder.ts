@@ -55,7 +55,7 @@ export function resolveExperimentUrl({
   dataType,
 }: {
   ctx: Required<WorkspaceContext>;
-  dataType: EntityTypeValue;
+  dataType?: EntityTypeValue;
   entityId?: string;
 }) {
   const entityConfig = getEntityByCoreType({ type: dataType });
