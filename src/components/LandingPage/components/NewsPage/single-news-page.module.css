@@ -86,3 +86,9 @@
 .content > h4:has(+ h4)::after {
   content: none;
 }
+
+.content a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: #389e0d;
+}
