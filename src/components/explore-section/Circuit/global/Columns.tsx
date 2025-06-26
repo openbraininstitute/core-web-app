@@ -153,10 +153,14 @@ const columns = (
               'Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.',
           },
         ];
-        const scaleInfo = content.find((item) => item.value === record.scale.toLowerCase());
+        const scaleInfo = content.find(
+          (item) => item.value === (record.scale?.toLowerCase() || '')
+        );
         return (
           <Tooltip title={scaleInfo?.description || ''}>
-            <div className="font-normal whitespace-nowrap capitalize">{record.scale}</div>
+            <div className="font-normal whitespace-nowrap capitalize">
+              {record.scale || 'Unknown'}
+            </div>
           </Tooltip>
         );
       },

@@ -61,6 +61,87 @@ export default function CircuitFilters({
     localProperty === 'numberOfConnections' ||
     localProperty === 'numberOfSynapses';
 
+  // Named function to render the Select component for numeric properties
+  const renderNumericConditionSelect = (
+    property: NumericFilterOptions['property'] | undefined,
+    type: NumericFilterOptions['type'] | undefined,
+    onTypeChange: (type: NumericFilterOptions['type']) => void
+  ) => {
+    if (
+      property === 'numberOfNeurons' ||
+      property === 'numberOfConnections' ||
+      property === 'numberOfSynapses'
+    ) {
+      return (
+        <Select
+          className="mr-2 w-[150px]"
+          placeholder="Condition"
+          value={type}
+          onChange={onTypeChange}
+          disabled={!property}
+        >
+          <Option value="greaterThan">Greater than</Option>
+          <Option value="lessThan">Less than</Option>
+          <Option value="between">Between</Option>
+        </Select>
+      );
+    }
+    return null;
+  };
+
+  // Named function to render the condition Select component
+  const renderConditionSelect = (
+    property: NumericFilterOptions['property'] | undefined,
+    type: NumericFilterOptions['type'] | undefined,
+    onTypeChange: (type: NumericFilterOptions['type']) => void,
+    categoryList: string[],
+    loading: boolean,
+    localError: Error | null
+  ) => {
+    const numericSelect = renderNumericConditionSelect(property, type, onTypeChange);
+    if (numericSelect) return numericSelect;
+
+    if (property === 'scaleType') {
+      return (
+        <Select
+          className="mr-2 w-[150px]"
+          placeholder="Select scale"
+          value={type}
+          onChange={onTypeChange}
+          disabled={!property}
+        >
+          <Option value="smallMicrocircuit">Small microcircuit</Option>
+          <Option value="microcircuit">Microcircuit</Option>
+        </Select>
+      );
+    }
+    if (property === 'buildCategory') {
+      return (
+        <Select
+          className="mr-2 w-[150px]"
+          placeholder="Select category"
+          value={type}
+          onChange={onTypeChange}
+          disabled={!property || loading}
+          loading={loading}
+        >
+          {localError ? (
+            <Option value="" disabled>
+              Error loading categories
+            </Option>
+          ) : (
+            categoryList.map((category) => (
+              <Option key={category} value={category}>
+                {category}
+              </Option>
+            ))
+          )}
+        </Select>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="flex flex-row items-center">
       {filter && (
@@ -84,68 +165,24 @@ export default function CircuitFilters({
         <Option value="numberOfConnections"># of Connections</Option>
         <Option value="numberOfSynapses"># of Synapses</Option>
         <Option value="scaleType">Scale Type</Option>
-        <Option value="scaleType">Build Category</Option>
+        <Option value="buildCategory">Build Category</Option>
       </Select>
-      {(() => {
-        if (
-          localProperty === 'numberOfNeurons' ||
-          localProperty === 'numberOfConnections' ||
-          localProperty === 'numberOfSynapses'
-        ) {
-          return (
-            <Select
-              className="mr-2 w-[150px]"
-              placeholder="Condition"
-              value={localType}
-              onChange={handleTypeChange}
-              disabled={!localProperty}
-            >
-              <Option value="greaterThan">Greater than</Option>
-              <Option value="lessThan">Less than</Option>
-              <Option value="between">Between</Option>
-            </Select>
-          );
-        }
-        if (localProperty === 'scaleType') {
-          return (
-            <Select
-              className="mr-2 w-[150px]"
-              placeholder="Select scale"
-              value={localType}
-              onChange={handleTypeChange}
-              disabled={!localProperty}
-            >
-              <Option value="smallMicrocircuit">Small microcircuit</Option>
-              <Option value="microcircuit">Microcircuit</Option>
-            </Select>
-          );
-        }
-        if (localProperty === 'buildCategory') {
-          return (
-            <Select
-              className="mr-2 w-[150px]"
-              placeholder="Select category"
-              value={localType}
-              onChange={handleTypeChange}
-              disabled={!localProperty || isLoading}
-              loading={isLoading}
-            >
-              {error ? (
-                <Option value="" disabled>
-                  Error loading categories
-                </Option>
-              ) : (
-                categories.map((category) => (
-                  <Option key={category} value={category}>
-                    {category}
-                  </Option>
-                ))
-              )}
-            </Select>
-          );
-        }
-        return null;
-      })()}
+      {renderConditionSelect(
+        localProperty,
+        localType,
+        handleTypeChange,
+        categories,
+        isLoading,
+        (() => {
+          if (error) {
+            if (typeof error === 'string') {
+              return new Error(error);
+            }
+            return error;
+          }
+          return null;
+        })()
+      )}
 
       {(localType === 'greaterThan' || localType === 'between') && isNumericProperty && (
         <Input
