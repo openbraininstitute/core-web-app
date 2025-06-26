@@ -232,8 +232,8 @@ export function JSONSchemaForm({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-gray-500 text-lg uppercase">{schema.title}</div>
-      <div className="text-gray-500 mb-6">{schema.description}</div>
+      <div className="text-lg text-gray-500 uppercase">{schema.title}</div>
+      <div className="mb-6 text-gray-500">{schema.description}</div>
       <div className="flex flex-col gap-5">
         {schema.properties &&
           Object.entries(schema.properties)
@@ -244,7 +244,9 @@ export function JSONSchemaForm({
               return (
                 <div key={k}>
                   <div className="flex items-end gap-3">
-                    <div className="text-primary-9 text-base uppercase font-semibold">{v.title}</div>
+                    <div className="text-primary-9 text-base font-semibold uppercase">
+                      {v.title}
+                    </div>
                     {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
                   </div>
 
