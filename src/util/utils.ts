@@ -296,7 +296,3 @@ export function getRandomIntInclusive(min: number, max: number) {
   const maxFloored = Math.floor(max);
   return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
 }
-
-export function isPlainObject(value: unknown): value is Record<string, Object> {
-  return typeof value === 'object' && !Array.isArray(value) && value !== null;
-}

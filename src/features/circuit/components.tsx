@@ -3,7 +3,11 @@ import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { JSONSchema } from './types';
-import { isPlainObject, classNames } from '@/util/utils';
+import { classNames } from '@/util/utils';
+
+export function isPlainObject(value: unknown): value is Record<string, Object> {
+  return typeof value === 'object' && !Array.isArray(value) && value !== null;
+}
 
 type Primitive = null | boolean | number | string;
 export interface Object {
