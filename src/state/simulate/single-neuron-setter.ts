@@ -11,6 +11,7 @@ import isNil from 'lodash/isNil';
 import delay from 'lodash/delay';
 import pick from 'lodash/pick';
 
+import runGenericSingleNeuronSimulation from '@/api/bluenaas/run-single-neuron-simulation';
 import updateArray from '@/util/updateArray';
 
 import {
@@ -24,7 +25,6 @@ import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categorie
 import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
 import { simulationExperimentalSetupAtom } from '@/state/simulate/categories/simulation-conditions';
-import { runGenericSingleNeuronSimulation } from '@/api/bluenaas/run-single-neuron-simulation';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
 import {
   getMEModel,

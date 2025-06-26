@@ -28,9 +28,8 @@ export async function resolveSingleNeuronSimulation(
 ) {
   const source = await getSingleNeuronSimulation({ id, context });
   const memodel = await singleNeuronSimulationApiQueryExpand.memodel(source, context);
-  const config = await singleNeuronSimulationApiQueryExpand.config(source, context);
 
-  return { source, memodel, config };
+  return { source, memodel };
 }
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {

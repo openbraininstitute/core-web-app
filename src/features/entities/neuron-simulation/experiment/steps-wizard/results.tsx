@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
+import { useEffect } from 'react';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
 

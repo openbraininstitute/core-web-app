@@ -20,7 +20,7 @@ type SimulationConfiguration = {
   duration: number;
 };
 
-export const runGenericSingleNeuronSimulation = async ({
+export default async function runGenericSingleNeuronSimulation({
   ctx,
   modelId,
   config,
@@ -28,7 +28,7 @@ export const runGenericSingleNeuronSimulation = async ({
   ctx: { virtualLabId: string; projectId: string };
   modelId: string;
   config: SimulationConfiguration;
-}) => {
+}) {
   const api = await bluenaasApi();
   const url = `/entitycore/simulation/single-neuron/${ctx.virtualLabId}/${ctx.projectId}/run`;
   const formattedConfig = convertObjectKeysToSnakeCase(config);
@@ -48,4 +48,4 @@ export const runGenericSingleNeuronSimulation = async ({
     },
     { asRawResponse: true }
   );
-};
+}

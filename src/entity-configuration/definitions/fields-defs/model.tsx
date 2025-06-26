@@ -15,7 +15,7 @@ import type { FieldsDefinitionRegistry } from '@/entity-configuration/definition
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {

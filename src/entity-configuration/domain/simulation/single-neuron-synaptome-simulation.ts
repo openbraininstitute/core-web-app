@@ -41,9 +41,8 @@ export async function resolveSingleNeuronSynaptomeSimulation(
     context,
     synaptome
   );
-  const config = await singleNeuronSynaptomeSimulationApiQueryExpand.config(source, context);
 
-  return { source, synaptome, memodel, config };
+  return { source, synaptome, memodel };
 }
 
 export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuronSynaptomeSimulation> =
