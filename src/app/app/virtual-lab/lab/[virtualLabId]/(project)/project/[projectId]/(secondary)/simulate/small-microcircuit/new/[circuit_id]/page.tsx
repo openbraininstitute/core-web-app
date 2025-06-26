@@ -128,7 +128,7 @@ export default function TinyCircuitSimulation() {
   useEffect(() => {
     async function fetchSpec() {
       try {
-        const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
+        const res = await fetch('http://localhost:8100/openapi.json');
         const json = await res.json();
 
         const dereferenced = await $RefParser.dereference(json);
@@ -331,7 +331,7 @@ export default function TinyCircuitSimulation() {
 
                     if (v.properties)
                       Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                        if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                        if (subkey === 'type') initial[subkey] = subValue.default ?? null;
                         else initial[subkey] = subValue.default ?? null;
                       });
 
@@ -390,7 +390,6 @@ export default function TinyCircuitSimulation() {
         </div>
       </div>
 
-      {/* Horizontal Divider */}
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
