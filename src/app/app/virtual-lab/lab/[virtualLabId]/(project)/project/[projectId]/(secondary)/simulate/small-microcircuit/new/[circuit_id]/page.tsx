@@ -128,7 +128,7 @@ export default function TinyCircuitSimulation() {
   useEffect(() => {
     async function fetchSpec() {
       try {
-        const res = await fetch('http://localhost:8100/openapi.json');
+        const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
         const json = await res.json();
 
         const dereferenced = await $RefParser.dereference(json);
