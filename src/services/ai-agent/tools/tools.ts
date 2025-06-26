@@ -1,11 +1,17 @@
 /* eslint-disable no-param-reassign */
 import React from 'react';
-import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
+import {
+  AiAgentGetToolResponse,
+  serviceAiAgentGetTool,
+  serviceAiAgentListTools,
+} from '../api/tools';
 import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { logError } from '@/util/logger';
+import { useAppNotification } from '@/components/notification';
 
 let toolsListSingleton: Promise<AIAssistantTool[] | null> | null = null;
+const cacheToolsDescriptionsQueries = new Map<string, Promise<AiAgentGetToolResponse>>();
 
 /**
  *
@@ -14,40 +20,43 @@ let toolsListSingleton: Promise<AIAssistantTool[] | null> | null = null;
  * Or `null` if an error occured.
  */
 export function useAITools(): AIAssistantTool[] | undefined | null {
+  const { error } = useAppNotification();
   const accessToken = useAccessToken();
   const [tools, setTools] = React.useState<AIAssistantTool[] | undefined | null>(undefined);
   React.useEffect(() => {
     if (!accessToken || tools) return;
 
-    if (!toolsListSingleton) toolsListSingleton = loadTools(accessToken);
-    toolsListSingleton
-      ?.then((toolsWithoutDescription) => {
-        setTools(toolsWithoutDescription);
-        if (!toolsWithoutDescription) return;
+    const action = async () => {
+      if (!toolsListSingleton) toolsListSingleton = loadTools(accessToken);
+      const toolsWithoutDescription = await toolsListSingleton;
+      setTools(toolsWithoutDescription);
+      if (!toolsWithoutDescription) return;
 
-        const action = async () => {
-          for (const { id } of toolsWithoutDescription) {
-            const tool = await serviceAiAgentGetTool(accessToken, id);
-            if (!toolsWithoutDescription) continue;
+      try {
+        for (const { id } of toolsWithoutDescription) {
+          const toolResponse =
+            cacheToolsDescriptionsQueries.get(id) ?? serviceAiAgentGetTool(accessToken, id);
+          cacheToolsDescriptionsQueries.set(id, toolResponse);
+          const tool = await toolResponse;
+          if (!tool) continue;
 
-            const index = toolsWithoutDescription.findIndex((item) => item.id === tool.name);
-            if (index !== -1) {
-              toolsWithoutDescription[index] = new AIAssistantTool(
-                tool.name,
-                tool.name_frontend,
-                tool.description_frontend
-              );
-            }
-            setTools([...toolsWithoutDescription]);
+          const index = toolsWithoutDescription.findIndex((item) => item.id === tool.name);
+          if (index !== -1) {
+            toolsWithoutDescription[index] = new AIAssistantTool(
+              tool.name,
+              tool.name_frontend,
+              tool.description_frontend
+            );
           }
-        };
-        action();
-      })
-      .catch((ex) => {
-        logError('Unable to get list of AI Agent tools:', ex);
-        setTools(null);
-      });
-  }, [accessToken, tools]);
+          setTools([...toolsWithoutDescription]);
+        }
+      } catch (ex) {
+        logError('Unable to retrieve AI tools list!', ex);
+        error({ message: 'Unable to retrieve AI tools list!' });
+      }
+    };
+    action();
+  }, [accessToken, error, tools]);
   return tools;
 }
 
