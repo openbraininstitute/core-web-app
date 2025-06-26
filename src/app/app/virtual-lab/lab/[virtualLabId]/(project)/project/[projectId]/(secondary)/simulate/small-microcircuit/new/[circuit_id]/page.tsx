@@ -68,9 +68,9 @@ const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category)
 
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
-  const [configTab, setConfigTab] = useState<string>('');
+  const [configTab, setConfigTab] = useState<string>('info');
   const { circuit_id: circuitId, virtualLabId, projectId } = useParams<Params>();
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(true);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
@@ -83,8 +83,6 @@ export default function TinyCircuitSimulation() {
   const notification = useAppNotification();
 
   const [campaignId, setCampaignId] = useState('');
-
-  console.log(campaignId);
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -128,7 +126,7 @@ export default function TinyCircuitSimulation() {
   useEffect(() => {
     async function fetchSpec() {
       try {
-        const res = await fetch('https://staging.openbraininstitute.org/api/obi-one/openapi.json');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
         const json = await res.json();
 
         const dereferenced = await $RefParser.dereference(json);
