@@ -66,6 +66,7 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
         "id": _id,
         articleContent[] {
           ...,
+          "file": file.asset->url,
           "image": image.asset->url
         },
         title,

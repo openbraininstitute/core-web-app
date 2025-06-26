@@ -1,12 +1,12 @@
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { FullScreenImageValue } from '../NewsPage';
 
-export default function image({ value }: { value: FullScreenImageValue }) {
+export default function SimpleImage({ value }: { value: FullScreenImageValue }) {
   return (
     <div className="relative my-12 w-full">
-      <Image
+      <NextImage
         src={value.image}
-        alt={value.altText || 'Full Screen Image'}
+        alt={value.altText || 'Simple Image'}
         width={1920}
         height={1080}
         className="h-auto w-full"

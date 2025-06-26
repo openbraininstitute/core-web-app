@@ -9,7 +9,9 @@ import { EnumSection } from '../../sections/sections';
 
 import Menu from '../../layout/Menu';
 import HeaderNews from './HeaderNews';
+import ButtonComponent from './portable-text/button-component';
 import ImageFullScreen from './portable-text/image-full-screen';
+import SimpleImage from './portable-text/simple-image';
 
 import { classNames } from '@/util/utils';
 
@@ -26,12 +28,22 @@ export type FullScreenImageValue = {
   altText: string;
   [key: string]: any;
 };
+export type ButtonBlockValue = {
+  [key: string]: any;
+  label: string;
+  buttonType: string;
+  link: string;
+  file: string;
+  image: string;
+};
 
 const portableTextComponents = {
   types: {
     fullScreenImage: ({ value }: { value: FullScreenImageValue }) => (
       <ImageFullScreen value={value} />
     ),
+    image: ({ value }: { value: FullScreenImageValue }) => <SimpleImage value={value} />,
+    buttonComponent: ({ value }: { value: ButtonBlockValue }) => <ButtonComponent value={value} />,
   },
 };
 
