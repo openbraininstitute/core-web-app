@@ -40,27 +40,27 @@ function isAtom<T>(val: unknown): val is Atom<T> {
 const ORDERING: Record<string, { order: number; category: string }> = {
   info: {
     order: 0,
-    category: '',
+    category: 'Setup',
   },
   initialize: {
     order: 1,
-    category: '',
+    category: 'Setup',
   },
   stimuli: {
     order: 2,
-    category: '',
+    category: 'Stimuli & Recordings',
   },
   recordings: {
     order: 3,
-    category: '',
+    category: 'Stimuli & Recordings',
   },
   neuron_sets: {
     order: 4,
-    category: 'Auxiliary',
+    category: 'Circuit components',
   },
   timestamps: {
     order: 5,
-    category: 'Auxiliary',
+    category: 'Events',
   },
 };
 
@@ -200,7 +200,7 @@ export default function TinyCircuitSimulation() {
               setEditing(false);
             }
           }}
-          extraClass="w-full flex justify-between h-[50px] items-center drop-shadow"
+          extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
         >
           {schema.properties?.[k]?.title}
           <div className="flex gap-1">
@@ -224,7 +224,7 @@ export default function TinyCircuitSimulation() {
                   {/* eslint-disable-next-line */}
                   <div
                     className={classNames(
-                      'text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                      'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
                       isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
                     )}
                     onClick={() => {
@@ -369,7 +369,7 @@ export default function TinyCircuitSimulation() {
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
       <div className="flex">
-        <div className="inline-flex overflow-hidden rounded-full border border-gray-300">
+        <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
           <Tab
             tab="configuration"
             rounded="rounded-l-full"
@@ -389,9 +389,12 @@ export default function TinyCircuitSimulation() {
           </Tab>
         </div>
       </div>
+
+      <div className="w-full border-t border-gray-200" />
+
       {tab === 'configuration' && (
-        <div className="grid flex-1 grid-cols-[1fr_2fr_3fr] gap-10 overflow-auto">
-          <div className="flex flex-col items-center gap-5">
+        <div className="grid min-h-0 flex-grow grid-cols-[1fr_1fr_2fr] gap-5">
+          <div className="flex h-full flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5">
             {CATEGORIES.map((c) => {
               return (
                 <Fragment key={c}>
@@ -475,7 +478,7 @@ export default function TinyCircuitSimulation() {
               </div>
             </button>
           </div>
-          <div>
+          <div className="h-full overflow-y-auto border-r border-gray-200 pr-5">
             {schema.properties &&
               schema.properties?.[configTab]?.additionalProperties?.anyOf &&
               !selectedCategory &&
@@ -486,7 +489,7 @@ export default function TinyCircuitSimulation() {
                       <Fragment key={o.title}>
                         {/* eslint-disable-next-line */}
                         <div
-                          className="min-h-[100px] w-[70%] cursor-pointer rounded-xl bg-white p-5 shadow"
+                          className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                           onClick={() => {
                             setSelectedCategory(o.properties?.type.const ?? '');
                           }}
@@ -524,14 +527,13 @@ export default function TinyCircuitSimulation() {
                 />
               )}
           </div>
-
           <NextImage
             width={1000}
-            height={1000}
+            height={1130}
             alt="Circuit"
             // eslint-disable-next-line
             src={basePath + '/images' + '/circuit_test_image.png'}
-            className="w-full bg-red-300"
+            className="w-full rounded-xl border border-gray-200 bg-red-300"
           />
         </div>
       )}

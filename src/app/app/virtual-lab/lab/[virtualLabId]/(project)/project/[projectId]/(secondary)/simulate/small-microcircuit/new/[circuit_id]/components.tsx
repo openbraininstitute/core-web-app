@@ -75,7 +75,7 @@ export function JSONSchemaForm({
 
       return (
         <Select
-          className="min-w-[200px]"
+          className="w-full"
           disabled={disabled}
           onChange={(newV: string) => {
             if (!v.properties?.type.const || typeof v.properties.type.const !== 'string')
@@ -214,6 +214,7 @@ export function JSONSchemaForm({
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
+          className="w-full"
         />
       );
     if (obj.type === 'string')
@@ -231,8 +232,8 @@ export function JSONSchemaForm({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-primary-8 text-lg uppercase">{schema.title}</div>
-      <div className="text-gray-600">{schema.description}</div>
+      <div className="text-gray-500 text-lg uppercase">{schema.title}</div>
+      <div className="text-gray-500 mb-6">{schema.description}</div>
       <div className="flex flex-col gap-5">
         {schema.properties &&
           Object.entries(schema.properties)
@@ -243,7 +244,7 @@ export function JSONSchemaForm({
               return (
                 <div key={k}>
                   <div className="flex items-end gap-3">
-                    <div className="text-primary-8 text-lg uppercase">{v.title}</div>
+                    <div className="text-primary-9 text-base uppercase font-semibold">{v.title}</div>
                     {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
                   </div>
 
