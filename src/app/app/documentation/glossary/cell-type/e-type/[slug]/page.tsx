@@ -1,15 +1,19 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useCallback, useState } from 'react';
 
 import { useFetchSingleType } from '@/components/documentation/hooks/use-entitycore-fetch-single-type';
+import { CopyIcon } from '@/components/explore-section/Circuit/icon/ArticlesIcons';
+import { unslugify } from '@/components/explore-section/utils';
 
-export function unslugify(slug: string): string {
-  return slug.replace(/-/g, ' ');
-}
+export type CopyButtonProps = {
+  content: { pref_label?: string; definition?: string };
+};
 
 export default function Page() {
   const { slug } = useParams();
+  const [showNotification, setShowNotification] = useState<boolean>(false);
 
   let name = '';
   if (typeof slug === 'string') {
@@ -20,10 +24,22 @@ export default function Page() {
 
   const originalName = unslugify(name);
 
-  const { data, loading, error, refetch } = useFetchSingleType({
+  const { data, loading, error } = useFetchSingleType({
     name: originalName,
     cellType: 'e-type',
   });
+
+  const handleCopy = useCallback(async () => {
+    try {
+      const url = window.location.href;
+
+      await navigator.clipboard.writeText(url);
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 1500);
+    } catch (err) {
+      throw new Error(`Failed to copy URL to clipboard: ${err}`);
+    }
+  }, []);
 
   if (error) {
     throw new Error(`Error fetching data: ${error}`);
@@ -45,22 +61,6 @@ export default function Page() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="relative w-full text-white">
-        <p className="text-red-500">Error: {error}</p>
-        <button
-          onClick={refetch}
-          type="button"
-          aria-label="Retry fetching data"
-          className="mt-2 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   if (!data || !data.data || !data.data[0]) {
     return (
       <div className="relative w-full text-white">
@@ -73,16 +73,24 @@ export default function Page() {
 
   return (
     <div className="relative w-full text-white">
-      <h1>{content?.pref_label || 'Unnamed Type'}</h1>
-      <p>ID:</p>
-      <button
-        onClick={refetch}
-        type="button"
-        aria-label="Refetch data"
-        className="mt-2 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-      >
-        Refetch
-      </button>
+      <div className="flex w-full flex-row items-center justify-between">
+        <h1 className="text-4xl font-bold">{content?.pref_label || 'Unnamed Type'}</h1>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="border-primary-6 flex h-10 w-10 items-center justify-center border border-solid"
+          aria-label="Copy URL to clipboard"
+        >
+          <CopyIcon iconColor="white" />
+        </button>
+      </div>
+
+      {showNotification && (
+        <div className="fixed top-4 right-4 bg-green-700 px-4 py-2 text-lg text-white">
+          Url copied
+        </div>
+      )}
+      <p className="mt-6 text-lg leading-normal font-normal hyphens-auto">{content.definition}</p>
     </div>
   );
 }
