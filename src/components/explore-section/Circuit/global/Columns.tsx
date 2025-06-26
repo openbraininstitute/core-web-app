@@ -200,14 +200,6 @@ const columns = (
       ),
     },
     {
-      title: 'Build category',
-      key: 'buildCategory',
-      width: 120,
-      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal whitespace-nowrap">{record.buildCategory}</div>
-      ),
-    },
-    {
       title: 'Published In',
       key: 'publishedIn',
       width: 150,
@@ -221,6 +213,14 @@ const columns = (
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
         <div className="font-normal whitespace-nowrap">{record.metadata.registrationDate}</div>
+      ),
+    },
+    {
+      title: 'Build category',
+      key: 'buildCategory',
+      width: 120,
+      render: (_value: any, record: CircuitSchemaProps, _index: number) => (
+        <div className="font-normal whitespace-nowrap">{record.buildCategory}</div>
       ),
     },
   ];
