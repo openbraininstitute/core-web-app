@@ -90,7 +90,7 @@ export function renderImage(
   size?: { height: number | string; width: number | string },
   className?: string
 ) {
-  return <PreviewImage entity={entity} size={size} className={className} />;
+  return <PreviewImage size={size} className={className} />;
 }
 
 export default function getMeasurements(r: EntityCoreDensityObjectTypes) {

@@ -87,7 +87,7 @@ export function ViewerContainer({ validationResults }: Props) {
               bordered={false}
               className="bg-white"
               items={allValidationResultsMap?.map(([{ id, name }, resultItem]) => ({
-                key: `${id}`,
+                key: `result-item-cls/${id}/${resultItem.id}`,
                 label: (
                   <span className="text-primary-8">
                     {cleanTitle(name)}{' '}

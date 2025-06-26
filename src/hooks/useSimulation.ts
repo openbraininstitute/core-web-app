@@ -2,19 +2,27 @@ import { useEffect, useState } from 'react';
 import startsWith from 'lodash/startsWith';
 import some from 'lodash/some';
 
+import { useParams } from 'next/navigation';
 import { getSession } from '@/authFetch';
 
-import { SimulationPayload } from '@/types/simulation/single-neuron';
-
-import { SingleNeuronSynaptomeResource } from '@/types/synaptome';
-
-import useNotification from '@/hooks/notifications';
-
-import { IMEModel, ISingleNeuronSimulation } from '@/api/entitycore/types';
 import { getMEModel, getSingleNeuronSimulation } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
+import { useAppNotification } from '@/components/notification';
 import { getAssetElement } from '@/api/entitycore/utils';
+import {
+  SingleNeuronSimulation,
+  singleNeuronSimulationApiQueryExpand,
+  singleNeuronSynaptomeSimulationApiQueryExpand,
+} from '@/entity-configuration/domain/simulation';
+
+import type { SimulationPayload } from '@/types/simulation/single-neuron';
+import type { SingleNeuronSynaptomeResource } from '@/types/synaptome';
+import type { WorkspaceContext } from '@/types/common';
+import type {
+  IMEModel,
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
 
 export function useSimulation({
   id,
@@ -32,7 +40,7 @@ export function useSimulation({
   const [synaptomeModel] = useState<SingleNeuronSynaptomeResource | null>(null);
   const [meModel, setMeModel] = useState<IMEModel | null>(null);
 
-  const { error: notifyError } = useNotification();
+  const { error: notifyError } = useAppNotification();
 
   useEffect(() => {
     const context = { virtualLabId, projectId };
@@ -68,7 +76,7 @@ export function useSimulation({
 
         setSimulationConfig(fileAsJson);
       } catch (error) {
-        notifyError('Error while loading the resource details', undefined, 'topRight');
+        notifyError({ message: 'Error while loading the resource details', placement: 'topRight' });
       }
     })();
   }, [id, virtualLabId, projectId, notifyError, setMeModel, setSimulationConfig, type]);
@@ -78,5 +86,60 @@ export function useSimulation({
     simulationConfig,
     meModel,
     synaptomeModel,
+  };
+}
+
+export function useSimulationConfig({
+  source,
+}: {
+  source: ISingleNeuronSimulation | ISingleNeuronSynaptomeSimulation;
+}) {
+  const params = useParams<WorkspaceContext>();
+  const [simulationConfig, setSimulationConfig] = useState<SimulationPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function getConfig() {
+      setLoading(true);
+      try {
+        if (isMounted) {
+          let config: SimulationPayload | null = null;
+          if (source.type === 'single_neuron_simulation') {
+            config = await singleNeuronSimulationApiQueryExpand.config(
+              source as ISingleNeuronSimulation,
+              params
+            );
+          } else if (source.type === 'single_neuron_synaptome_simulation') {
+            config = await singleNeuronSynaptomeSimulationApiQueryExpand.config(
+              source as ISingleNeuronSynaptomeSimulation,
+              params
+            );
+          } else {
+            throw Error('Retrieving this simulation config/results not supported');
+          }
+          if (isMounted) setSimulationConfig(config);
+        }
+      } catch (err) {
+        if (isMounted && (err as { name: string }).name !== 'AbortError') {
+          setError('Error while loading the experiment configuration and results');
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    getConfig();
+    return () => {
+      isMounted = false;
+    };
+  }, [params, source]);
+
+  return {
+    loading,
+    error,
+    simulationConfig,
   };
 }

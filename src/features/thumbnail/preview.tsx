@@ -7,12 +7,13 @@ import { match, P } from 'ts-pattern';
 import isEmpty from 'lodash/isEmpty';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import type { WorkspaceContext } from '@/types/common';
 
 import { getPreviewBlob } from '@/api/thumbnail-svc';
+import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 
 interface T extends EntityCoreResource {}
 
@@ -57,6 +58,7 @@ export default function PreviewThumbnail({
           target
         )
       );
+
       if (data && data.type === 'image/png') {
         setState((prev) => ({
           ...prev,
@@ -104,18 +106,27 @@ export default function PreviewThumbnail({
         width={typeof width === 'number' ? width : 196}
       />
     ))
-    .with({ error: P.nonNullable }, () => (
-      <Empty
-        key={`thumbnail-error-${resource.id}`}
-        description="Error loading thumbnail"
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-        className="m-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!"
-        style={{
-          height: typeof height === 'number' ? height : undefined,
-          width: typeof width === 'number' ? width : undefined,
-        }}
-      />
-    ))
+    .with({ error: P.nonNullable }, ({ error }) => {
+      return (
+        <Empty
+          key={`thumbnail-error-${resource.id}`}
+          description={
+            (error as { cause?: { message: string; code: string } }).cause?.message ??
+            'No thumbnail available'
+          }
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          className={classNames(
+            'm-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!',
+            '[&_.ant-empty-description]:text-center [&_.ant-empty-description]:break-words [&_.ant-empty-description]:whitespace-normal',
+            '[&_.ant-empty-description]:text-red-300! [&_.ant-empty-image>svg>g_g]:stroke-red-300!'
+          )}
+          style={{
+            height: typeof height === 'number' ? height : undefined,
+            width: typeof width === 'number' ? width : undefined,
+          }}
+        />
+      );
+    })
     .otherwise(() => (
       <Empty
         key={`thumbnail-empty-${resource.id}`}

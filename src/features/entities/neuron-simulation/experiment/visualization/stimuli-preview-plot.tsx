@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { captureException } from '@sentry/nextjs';
 import { useAtom } from 'jotai';
+import dynamic from 'next/dynamic';
 
-import PlotRenderer from '@/features/entities/neuron-simulation/experiment/visualization/plot-renderer';
 import useNotification from '@/hooks/notifications';
 
 import { stimulusPreviewPlotDataAtom } from '@/state/simulate/single-neuron';
@@ -13,6 +13,13 @@ import { StimulusModule } from '@/types/simulation/single-neuron';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { getDirectCurrentGraph } from '@/api/bluenaas';
 import { getSession } from '@/authFetch';
+
+const PlotRenderer = dynamic(
+  () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
+  {
+    ssr: false,
+  }
+);
 
 type Props = {
   modelId: string;
@@ -79,13 +86,13 @@ export default function StimuliPreviewPlot({
       setStimuliPreviewPlotData(plotData);
     } catch (error) {
       if (!controller.signal.aborted) {
-        captureException(new Error('Preview plot could not be retrived for model'));
+        captureException(new Error('Preview plot could not be retrieved for model'));
         notifyError(
           'Error while loading stimulus plot data',
           undefined,
           'topRight',
           true,
-          'plor-error'
+          'plot-error'
         );
       }
     } finally {

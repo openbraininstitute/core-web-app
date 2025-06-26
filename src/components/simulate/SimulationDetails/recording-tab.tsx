@@ -1,9 +1,19 @@
-import { Fragment } from 'react';
+'use client';
 
-import PlotRenderer from '@/features/entities/neuron-simulation/experiment/visualization/plot-renderer';
+import { Fragment } from 'react';
+import dynamic from 'next/dynamic';
+
+// import PlotRenderer from '@/features/entities/neuron-simulation/experiment/visualization/plot-renderer';
 
 import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+
+const PlotRenderer = dynamic(
+  () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
+  {
+    ssr: false,
+  }
+);
 
 type Props = {
   recordings: Record<string, PlotData>;
