@@ -6,6 +6,7 @@ import {
 } from '../../type';
 
 import { DownloadIcon } from '@/components/icons';
+import { classNames } from '@/util/utils';
 
 export function DownloadChildrenItem({
   childrenItem,
@@ -38,14 +39,16 @@ export function DownloadChildrenItem({
 export default function DownloadItem({
   item,
   header,
+  className,
 }: {
   item: DownloadItemProps;
   header: FileTypeHeaderProps;
+  className?: string;
 }) {
   const itemNumber = item.children ? item.children.length : 0;
 
   return (
-    <div className="w-full">
+    <div className={classNames('w-full', className)}>
       <header className="mb-6 flex flex-row justify-between">
         <div className="flex flex-col">
           <div className="flex flex-row items-center text-xl font-bold tracking-wider text-white uppercase before:mr-2 before:block before:h-3 before:w-3 before:rounded-full before:bg-white before:content-['']">

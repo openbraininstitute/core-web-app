@@ -1,5 +1,6 @@
 'use client';
 
+import { Tooltip } from 'antd';
 import Link from 'next/link';
 import { CircuitSchemaProps, DownloadItemProps, FileTypeHeaderProps } from '../../type';
 import DownloadItem from './download-item';
@@ -92,7 +93,20 @@ export default function DownloadContainer({
               headerType = EDGE_DESCRIPTION;
             }
 
-            return (
+            return item.fileType === 'morphology' ? (
+              <Tooltip title="Coming soon" key={item.fileType}>
+                <DownloadItem
+                  key={item.fileType}
+                  item={item}
+                  header={headerType || { name: '', description: '', extension: '' }}
+                  className={
+                    content.scale === 'Small Circuit'
+                      ? 'pointer-events-none opacity-30'
+                      : 'pointer-events-auto opacity-100'
+                  }
+                />
+              </Tooltip>
+            ) : (
               <DownloadItem
                 key={item.fileType}
                 item={item}

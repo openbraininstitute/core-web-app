@@ -74,6 +74,7 @@ export type CircuitSchemaProps = {
   };
 
   literature: PaperLiteratureProps[];
+  buildCategory: string;
 };
 
 export type FullCircuitData = {
