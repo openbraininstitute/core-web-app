@@ -2,13 +2,21 @@
 
 import Link from 'next/link';
 
-import { ContentForTutorialItem } from '../type';
+// import { ContentForTutorialItem } from '../type';
+// import SingleTutorialCard from './single-tutorial-card';
+
+import { TutorialProps } from '../type';
 import SingleTutorialCard from './single-tutorial-card';
 
 import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
 
 export default function SliderTutorial() {
   const tutorials = useSanityContentForTutorialsList();
+
+  const content =
+    tutorials && !Array.isArray(tutorials) && 'tutorialOrder' in tutorials
+      ? tutorials.tutorialOrder
+      : [];
 
   return (
     <div className="w-full">
@@ -23,7 +31,7 @@ export default function SliderTutorial() {
       </div>
 
       <div className="grid grid-cols-3 gap-x-4">
-        {tutorials.slice(0, 3).map((tutorial: ContentForTutorialItem) => (
+        {content.map((tutorial: TutorialProps) => (
           <SingleTutorialCard key={tutorial.title} content={tutorial} />
         ))}
       </div>
