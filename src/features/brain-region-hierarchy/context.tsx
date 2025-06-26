@@ -3,6 +3,7 @@
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect } from 'react';
 import { atom } from 'jotai';
+import lowerCase from 'lodash/lowerCase';
 
 import {
   flattenTreeAsObject,
@@ -11,8 +12,10 @@ import {
 } from '@/components/tree/elements/helpers';
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
 import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
+import { brainAtlasAtom } from '@/features/brain-atlas-viewer/context';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
+import { useUnwrappedValue } from '@/hooks/hooks';
 import { tryCatch } from '@/api/utils';
 import { log } from '@/utils/logger';
 import { env } from '@/env';
@@ -25,6 +28,7 @@ type Props = {
 
 export const DEFAULT_BRAIN_ATLAS_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID;
 export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
+export const DEFAULT_SELECTED_BRAIN_REGION_NAME = 'Cerebrum'; // Awful but requested from entitycore for the moment
 export const DEFAULT_SELECTED_BRAIN_REGION_ID = env.NEXT_PUBLIC_DEFAULT_SELECTED_BRAIN_REGION_ID;
 export const ROOT_BRAIN_REGION_ANNOTATION_VALUE =
   env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE;
@@ -51,8 +55,14 @@ export type BrainRegionHierarchyAtomReturnType = {
 
 export const brainRegionSidebarAtom = atom(false);
 
-export const brainRegionRootHierarchyAtom = atom(async () => {
-  const { data: root, error } = await tryCatch(getBrainRegionHierarchy({}));
+export const brainRegionRootHierarchyAtom = atom(async (get) => {
+  const atlas = await get(brainAtlasAtom);
+
+  const { data: root, error } = await tryCatch(
+    getBrainRegionHierarchy({
+      id: atlas?.hierarchy_id ?? env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+    })
+  );
   if (error) {
     log('error', 'Failed to fetch brain regions:', error);
     throw error;
@@ -120,11 +130,16 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
  */
 export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   const key = getSectionFromDataKey(dataKey);
+  const brainRegions = useUnwrappedValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
+  const defaultSelectedBrainRegion = brainRegions?.options.find(
+    (o) => lowerCase(o.label).trim() === lowerCase(DEFAULT_SELECTED_BRAIN_REGION_NAME).trim()
+  );
+
   const [brainRegionHierarchyFamily, updateLocalStorage] = useLocalStorage<{
     id: string;
     annotation_value: number;
   } | null>(key, {
-    id: DEFAULT_SELECTED_BRAIN_REGION_ID,
+    id: defaultSelectedBrainRegion?.value!,
     annotation_value: DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
   });
 

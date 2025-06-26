@@ -3,6 +3,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import { useParams } from 'next/navigation';
+import startsWith from 'lodash/startsWith';
+import some from 'lodash/some';
 import get from 'lodash/get';
 
 import SimulationPlotAsImage from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-as-image';
@@ -12,7 +14,6 @@ import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { arrayBufferToJson } from '@/utils/buffer';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
@@ -57,22 +58,24 @@ export default function SimulationDetail<T extends GenericSimulation>({
       if (entity) {
         const asset = getAssetElement({
           assets: simulation.assets,
-          filter: (s) => s.label === entity?.asset.configfile,
+          filter: (s) =>
+            s.label === entity?.asset.configfile ||
+            some(['simulation-config'], (prefix) => startsWith(s.path, prefix)),
         });
         if (asset) {
-          const { data, error: returnedError } = await tryCatch(
-            downloadAsset<ArrayBuffer>({
+          const { data: assetResult, error: returnedError } = await tryCatch(
+            downloadAsset({
               ctx: { virtualLabId, projectId },
               entityId: simulation.id,
               entityType: entity?.type,
               id: asset?.id,
+              asRawResponse: true,
             })
           );
 
           if (returnedError) setError(returnedError);
-
-          if (data) {
-            const config = arrayBufferToJson<SimulationPayload>(data);
+          const config = (await assetResult?.json()) as SimulationPayload;
+          if (config) {
             setConfigAsset(config);
             setSimulationPlot(Object.keys(config.simulation).at(0));
           }
@@ -88,7 +91,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading experiment {index + 1}...</h2>
+        <h2 className="text-primary-9 font-light">Loading experiment results {index + 1}...</h2>
       </div>
     );
   }

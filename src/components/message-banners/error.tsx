@@ -8,6 +8,8 @@ type Props = {
   borderless?: boolean;
   cls?: {
     container?: string;
+    title?: string;
+    description?: string;
   };
 };
 export default function ErrorData({ title, description, cls, borderless = false }: Props) {
@@ -21,11 +23,13 @@ export default function ErrorData({ title, description, cls, borderless = false 
       )}
     >
       <div className="flex flex-col items-start justify-between gap-1">
-        <h2 className="text-2xl font-bold">
+        <h2 className={classNames('text-2xl font-bold', cls?.title)}>
           <CloseCircleFilled className="mr-2" />
           {title}
         </h2>
-        {description && <p className="ml-8 max-w-[70%]">{description}</p>}
+        {description && (
+          <p className={classNames('ml-8 max-w-[70%]', cls?.description)}>{description}</p>
+        )}
       </div>
     </div>
   );

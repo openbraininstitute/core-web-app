@@ -21,6 +21,8 @@ export interface ToolsSelectorProps {
   onClose(): void;
 }
 
+const SELECTABLE_TOOLS_IDS = ['web-search-tool', 'literature-search-tool'];
+
 export default function ToolsSelector({ className, tools, open, onClose }: ToolsSelectorProps) {
   const ref = React.useRef<HTMLDialogElement | null>(null);
   const [invertedSelection, setInvertedSelection] = useAIToolsInvertedSelection();
@@ -40,7 +42,8 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
   };
   const invertedSelectionCount = invertedSelection ? invertedSelection.length : 0;
   const toolsCount = tools?.length ?? -1;
-  const selectionCount = toolsCount - invertedSelectionCount;
+  const unselectableToolsCount = toolsCount - SELECTABLE_TOOLS_IDS.length;
+  const selectionCount = toolsCount - invertedSelectionCount - unselectableToolsCount;
   const allToolsSelected = selectionCount === toolsCount;
 
   return (
@@ -54,13 +57,14 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
         <header>
           <div>
             <div>
-              <strong>Tools</strong> {selectionCount}/{tools?.length > 0 ? tools.length : ''}
+              <strong>Tools</strong> {selectionCount}/{toolsCount - unselectableToolsCount}
             </div>
             <button type="button" onClick={handleClose} aria-label="Close">
               <IconClose />
             </button>
           </div>
-          <div>
+          {/* This selector has been hidden for now, but it will come back. */}
+          <div style={{ display: 'none' }}>
             {allToolsSelected ? (
               <button
                 type="button"
@@ -86,9 +90,11 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
         {tools && tools.length > 0 ? (
           <>
             <main>
-              {tools.map((tool) => (
-                <ToolCard key={tool.id} tool={tool} />
-              ))}
+              {tools
+                .filter(({ id }) => SELECTABLE_TOOLS_IDS.includes(id))
+                .map((tool) => (
+                  <ToolCard key={tool.id} tool={tool} />
+                ))}
             </main>
           </>
         ) : (

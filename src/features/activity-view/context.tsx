@@ -63,10 +63,19 @@ export const activityAtomFamily = atomFamily(
           })
         );
 
-        if (personError || !person.data.length) {
+        if (personError) {
           throw Error('Relative user agent not found');
         }
-
+        if (!person.data.length) {
+          return {
+            data: [],
+            pagination: {
+              page: 1,
+              page_size: 10,
+              total_items: 0,
+            },
+          };
+        }
         const { data, error } = await tryCatch(
           entity.api.query.list({
             withFacets: false,
