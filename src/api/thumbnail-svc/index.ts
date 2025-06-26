@@ -24,8 +24,10 @@ function buildAssetUrl(
     target: options?.target,
   });
   queryParams = queryParams ? `?${queryParams}` : '';
-  const type = kebabCase(resource.type);
-
+  let type = kebabCase(resource.type);
+  if (resource.type === 'emodel' || resource.type === 'memodel') {
+    type = 'model-trace';
+  }
   return `${thumbnailGenerationBaseUrl}/core/${type}/preview${queryParams}`;
 }
 
@@ -34,7 +36,6 @@ export async function getPreviewBlob(
   virtualLabId?: string,
   projectId?: string,
   target?: 'simulation' | 'stimulus',
-
   accept: string = 'image/png'
 ) {
   const url = buildAssetUrl(resource, { dpi: 400, target });
