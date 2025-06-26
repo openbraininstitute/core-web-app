@@ -84,6 +84,8 @@ export default function TinyCircuitSimulation() {
 
   const [campaignId, setCampaignId] = useState('');
 
+  console.log(campaignId);
+
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
     if (!schema) return;
@@ -443,6 +445,8 @@ export default function TinyCircuitSimulation() {
                   );
 
                   if (res.status !== 200) {
+                    console.log(res);
+
                     const errorRes = await res.json();
                     notification.error({
                       message: errorRes.message ?? errorRes?.detail ?? 'An error ocurred',
@@ -507,7 +511,7 @@ export default function TinyCircuitSimulation() {
               (!schema.properties?.[configTab]?.additionalProperties?.anyOf ||
                 selectedCatSchema) && (
                 <JSONSchemaForm
-                  disabled={!!campaignId}
+                  disabled={!!campaignId || loading}
                   config={config}
                   circuitId={circuitId}
                   schema={
@@ -531,7 +535,7 @@ export default function TinyCircuitSimulation() {
             alt="Circuit"
             // eslint-disable-next-line
             src={basePath + '/images' + '/circuit_test_image.png'}
-            className="w-full rounded-xl border border-gray-200 bg-red-300"
+            className="w-full rounded-xl border border-gray-200"
           />
         </div>
       )}
