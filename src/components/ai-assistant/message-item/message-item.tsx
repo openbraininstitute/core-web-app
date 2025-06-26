@@ -1,9 +1,7 @@
 'use client';
 
-import React, { AnchorHTMLAttributes } from 'react';
-import Link from 'next/link';
+import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
-import ReactMarkdown from 'react-markdown';
 
 import ToolArticles from '../../../services/ai-agent/tools/articles/tool-articles';
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
@@ -11,6 +9,7 @@ import { IconPrice } from '../icons/price';
 import ToolsProgress from './tools-progress';
 import { classNames } from '@/util/utils';
 import { AiAgentRateLimit } from '@/services/ai-agent';
+import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 
 import styles from './message-item.module.css';
 
@@ -51,7 +50,10 @@ function renderMessage(
                 <div>
                   {rateLimit.limit - rateLimit.remaining} credit
                   {rateLimit.limit - rateLimit.remaining > 1 ? 's' : ''}
-                  <em>{Math.max(0, rateLimit.remaining)} free left</em>
+                  <em>
+                    {Math.max(0, rateLimit.remaining)} free credit
+                    {rateLimit.limit - rateLimit.remaining > 1 ? 's' : ''} left
+                  </em>
                 </div>
               </div>
             )}
@@ -63,14 +65,7 @@ function renderMessage(
         <>
           <ToolsProgress message={value} />
           {value.content.trim().length > 0 && (
-            <ReactMarkdown
-              className={styles.markdown}
-              components={{
-                a: LinkWithExternalTarget,
-              }}
-            >
-              {value.content}
-            </ReactMarkdown>
+            <GithubFlavorMarkdown className={styles.markdown}>{value.content}</GithubFlavorMarkdown>
           )}
           {!hideTools && (
             <>
@@ -121,16 +116,6 @@ function useDebug(): boolean {
   const [debug, setDebug] = React.useState(false);
   React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
   return debug;
-}
-
-function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
-  if (!href) return null;
-
-  return (
-    <Link href={href} target="_blank">
-      {children}
-    </Link>
-  );
 }
 
 function formatDate(d: Date): string {
