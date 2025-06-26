@@ -3,7 +3,8 @@ import { useSession } from 'next-auth/react';
 import { useChat } from '@ai-sdk/react';
 
 import { serviceAiAgentUrl } from '../api';
-import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
+
+import { useAIActiveTools } from '@/components/ai-assistant/state';
 
 export interface AiAgentRateLimit {
   limit: number;
@@ -13,7 +14,7 @@ export interface AiAgentRateLimit {
 }
 
 export function useServiceAiAgentChat(threadId: string) {
-  const [toolsSelection] = useAIToolsInvertedSelection();
+  const activeTools = useAIActiveTools();
   const [rateLimit, setRateLimit] = React.useState<AiAgentRateLimit | null>(null);
   const session = useSession();
   const chat = useChat({
@@ -26,7 +27,7 @@ export function useServiceAiAgentChat(threadId: string) {
       const lastMessage = messages.at(-1);
       return {
         content: (lastMessage?.content ?? '').trim(),
-        tool_selection: toolsSelection,
+        tool_selection: activeTools,
       };
     },
     fetch: async (url, options) => {
