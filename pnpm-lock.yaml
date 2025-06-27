@@ -625,13 +625,10 @@ packages:
     resolution: {integrity: sha512-qLMA5ZQAal2w/qHTWE1K3Y2U/aF+uVEQqbkZ69xwVk68jkca7ASKwSZOqQNljFihXALLIYL7yaW+sSceU5jriw==}
     hasBin: true
 
-<<<<<<< 163-small-circuits-correction
-=======
   '@apidevtools/json-schema-ref-parser@13.0.1':
     resolution: {integrity: sha512-91uy6MGWqu7CjcV7tLPMuYh/Wj/RNPBXquSdEaCEpj2H/cFy0Yu+t1EdxExSyaryl1ykhDo30plq9tIm/HVZnw==}
     engines: {node: '>= 16'}
 
->>>>>>> entitycore-migration
   '@ark/schema@0.46.0':
     resolution: {integrity: sha512-c2UQdKgP2eqqDArfBqQIJppxJHvNNXuQPeuSPlDML4rjw+f1cu0qAlzOG4b8ujgm9ctIDWwhpyw6gjG5ledIVQ==}
 
@@ -1864,17 +1861,10 @@ packages:
 
   '@floating-ui/core@1.6.9':
     resolution: {integrity: sha512-uMXCuQ3BItDUbAMhIXw7UPXRfAlOAvZzdK9BWpE60MCn+Svt3aLn9jsPTi/WNGlRUu2uI0v5S7JiIUsbsvh3fw==}
-<<<<<<< 163-small-circuits-correction
 
   '@floating-ui/dom@1.6.13':
     resolution: {integrity: sha512-umqzocjDgNRGTuO7Q8CU32dkHkECqI8ZdMZ5Swb6QAM0t5rnlrN3lGo1hdpscRd3WS8T6DKYK4ephgIH9iRh3w==}
 
-=======
-
-  '@floating-ui/dom@1.6.13':
-    resolution: {integrity: sha512-umqzocjDgNRGTuO7Q8CU32dkHkECqI8ZdMZ5Swb6QAM0t5rnlrN3lGo1hdpscRd3WS8T6DKYK4ephgIH9iRh3w==}
-
->>>>>>> entitycore-migration
   '@floating-ui/react-dom@2.1.2':
     resolution: {integrity: sha512-06okr5cgPzMNBy+Ycse2A6udMi4bqwW/zgBF/rwjcNqWkyr82Mcg8b0vjX8OJpZFy/FKjJmw6wV7t44kK6kW7A==}
     peerDependencies:
@@ -4830,17 +4820,10 @@ packages:
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
-<<<<<<< 163-small-circuits-correction
 
   '@vitest/expect@3.1.1':
     resolution: {integrity: sha512-q/zjrW9lgynctNbwvFtQkGK9+vvHA5UzVi2V8APrp1C6fG6/MuYYkmlx4FubuqLycCeSdHD5aadWfua/Vr0EUA==}
 
-=======
-
-  '@vitest/expect@3.1.1':
-    resolution: {integrity: sha512-q/zjrW9lgynctNbwvFtQkGK9+vvHA5UzVi2V8APrp1C6fG6/MuYYkmlx4FubuqLycCeSdHD5aadWfua/Vr0EUA==}
-
->>>>>>> entitycore-migration
   '@vitest/mocker@3.1.1':
     resolution: {integrity: sha512-bmpJJm7Y7i9BBELlLuuM1J1Q6EQ6K5Ye4wcyOpOMXMcePYKSIYlpcrCm4l/O6ja4VJA5G2aMJiuZkZdnxlC3SA==}
     peerDependencies:
@@ -8085,13 +8068,10 @@ packages:
     engines: {node: '>=8.17.0'}
     hasBin: true
     bundledDependencies: []
-<<<<<<< 163-small-circuits-correction
-=======
 
   jsonpointer@5.0.1:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
->>>>>>> entitycore-migration
 
   jsx-ast-utils@3.3.5:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
@@ -12097,16 +12077,6 @@ snapshots:
     transitivePeerDependencies:
       - '@75lb/nature'
 
-<<<<<<< 163-small-circuits-correction
-  '@ark/schema@0.46.0':
-    dependencies:
-      '@ark/util': 0.46.0
-
-  '@ark/util@0.46.0': {}
-
-  '@asamuzakjp/css-color@3.1.1':
-    dependencies:
-=======
   '@apidevtools/json-schema-ref-parser@13.0.1':
     dependencies:
       '@types/json-schema': 7.0.15
@@ -12120,7 +12090,6 @@ snapshots:
 
   '@asamuzakjp/css-color@3.1.1':
     dependencies:
->>>>>>> entitycore-migration
       '@csstools/css-calc': 2.1.2(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-color-parser': 3.0.8(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
@@ -13581,7 +13550,6 @@ snapshots:
     dependencies:
       '@inquirer/core': 10.1.10(@types/node@22.14.0)
       '@inquirer/type': 3.0.6(@types/node@22.14.0)
-<<<<<<< 163-small-circuits-correction
     optionalDependencies:
       '@types/node': 22.14.0
 
@@ -13598,24 +13566,6 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.14.0
 
-=======
-    optionalDependencies:
-      '@types/node': 22.14.0
-
-  '@inquirer/core@10.1.10(@types/node@22.14.0)':
-    dependencies:
-      '@inquirer/figures': 1.0.11
-      '@inquirer/type': 3.0.6(@types/node@22.14.0)
-      ansi-escapes: 4.3.2
-      cli-width: 4.1.0
-      mute-stream: 2.0.0
-      signal-exit: 4.1.0
-      wrap-ansi: 6.2.0
-      yoctocolors-cjs: 2.1.2
-    optionalDependencies:
-      '@types/node': 22.14.0
-
->>>>>>> entitycore-migration
   '@inquirer/core@10.1.13(@types/node@22.14.0)':
     dependencies:
       '@inquirer/figures': 1.0.12
@@ -16274,7 +16224,6 @@ snapshots:
       jiti: 2.4.2
       lightningcss: 1.29.2
       tailwindcss: 4.1.3
-<<<<<<< 163-small-circuits-correction
 
   '@tailwindcss/oxide-android-arm64@4.1.3':
     optional: true
@@ -16309,42 +16258,6 @@ snapshots:
   '@tailwindcss/oxide-win32-x64-msvc@4.1.3':
     optional: true
 
-=======
-
-  '@tailwindcss/oxide-android-arm64@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-darwin-arm64@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-darwin-x64@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-freebsd-x64@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-linux-arm-gnueabihf@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-linux-arm64-gnu@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-linux-arm64-musl@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-linux-x64-gnu@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-linux-x64-musl@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-win32-arm64-msvc@4.1.3':
-    optional: true
-
-  '@tailwindcss/oxide-win32-x64-msvc@4.1.3':
-    optional: true
-
->>>>>>> entitycore-migration
   '@tailwindcss/oxide@4.1.3':
     optionalDependencies:
       '@tailwindcss/oxide-android-arm64': 4.1.3
@@ -20140,11 +20053,8 @@ snapshots:
       rxjs: 7.8.2
     optionalDependencies:
       '@types/node': 22.14.0
-<<<<<<< 163-small-circuits-correction
-=======
 
   install@0.13.0: {}
->>>>>>> entitycore-migration
 
   internal-slot@1.1.0:
     dependencies:

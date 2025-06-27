@@ -5,9 +5,7 @@ import { ColumnsType } from 'antd/es/table/interface';
 import { Key } from 'react';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitSchemaProps, NumericFilterOptions } from '../type';
-
 import { circuitMatchFilter } from '../utils/circuits-match-filter';
-
 import styles from './exploreCircuitTable.module.scss';
 
 export type SubcircuitsTableProps = {
@@ -19,7 +17,7 @@ export type SubcircuitsTableProps = {
   minValue: number | undefined;
   maxValue: number | undefined;
   searchQuery: string;
-  scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null;
+  scaleFilter: string | null;
   buildCategoryFilter: string | null;
 };
 

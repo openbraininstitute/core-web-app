@@ -32,13 +32,12 @@ export type CircuitSchemaProps = {
   parent?: string | null;
   derivedFrom: string[];
   hasSubcircuits: boolean;
-  brainRegion: string;
+  brainRegion: string | null;
   species: string;
   numberOfNeurons: number;
   numberOfConnections: number;
   numberOfSynapses: number;
-  scale: string;
-  buildCategory: string;
+  scale: string | null;
   metadata: {
     contributorSimple?: string;
     contributors?: ContributorsProps[];
