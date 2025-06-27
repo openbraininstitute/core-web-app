@@ -1,4 +1,4 @@
-import { CircuitSchemaProps, FilteredCircuit, NumericFilterOptions } from '../type';
+import { CircuitSchemaProps, NumericFilterOptions } from '../type';
 import { circuitMatchFilter } from './circuits-match-filter';
 
 export function filterCircuitsWithParents(
@@ -6,94 +6,43 @@ export function filterCircuitsWithParents(
   numericFilter: NumericFilterOptions | null,
   minValue: number | undefined,
   maxValue: number | undefined,
-  searchQuery: string | undefined,
-  scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null = null,
-  hideNonMatchingParents: boolean = false,
-  buildCategoryFilter: string | null = null
-): FilteredCircuit[] {
-  const filtered: FilteredCircuit[] = [];
+  searchQuery: string,
+  scaleFilter: string | null,
+  buildCategoryFilter: string | null
+) {
+  let count = 0;
 
-  // IF NO FILTERS OR SEARCH, RETURN ALL CIRCUITS
-  if (
-    !numericFilter &&
-    (!searchQuery || searchQuery.trim() === '') &&
-    !scaleFilter &&
-    !buildCategoryFilter
-  ) {
-    return circuits.map((circuit) => ({
-      ...circuit,
-      isNonMatchingParent: false,
-      subcircuits: circuit.subcircuits
-        ? filterCircuitsWithParents(
-            circuit.subcircuits,
-            numericFilter,
-            minValue,
-            maxValue,
-            searchQuery,
-            scaleFilter,
-            hideNonMatchingParents,
-            buildCategoryFilter
-          )
-        : [],
-    }));
-  }
-
-  function shouldIncludeCircuit(circuit: CircuitSchemaProps): {
-    include: boolean;
-    matches: boolean;
-    hasMatchingDescendant: boolean;
-  } {
-    const matches = circuitMatchFilter(
+  function shouldIncludeCircuit(circuit: CircuitSchemaProps): CircuitSchemaProps | null {
+    const circuitMatches = circuitMatchFilter(
       circuit,
       numericFilter,
       minValue,
       maxValue,
-      searchQuery || '',
+      searchQuery,
       scaleFilter,
       buildCategoryFilter
     );
 
-    let hasMatchingDescendant = false;
-    let filteredSubcircuits: {
-      include: boolean;
-      matches: boolean;
-      hasMatchingDescendant: boolean;
-    }[] = [];
+    // Recursively filter subcircuits
+    const filteredSubcircuits = (circuit.subcircuits || [])
+      .map(shouldIncludeCircuit)
+      .filter(Boolean) as CircuitSchemaProps[];
 
-    if (circuit.subcircuits && circuit.subcircuits.length > 0) {
-      filteredSubcircuits = circuit.subcircuits.map((sub) => shouldIncludeCircuit(sub));
-      hasMatchingDescendant = filteredSubcircuits.some(
-        (result) => result.matches || result.hasMatchingDescendant
-      );
-    }
-
-    const include = matches || (!hideNonMatchingParents && hasMatchingDescendant);
-
-    return { include, matches, hasMatchingDescendant };
-  }
-
-  for (const circuit of circuits) {
-    const { include, matches, hasMatchingDescendant } = shouldIncludeCircuit(circuit);
-    if (include) {
-      const filteredCircuit: FilteredCircuit = {
+    if (circuitMatches || filteredSubcircuits.length > 0) {
+      count += 1;
+      return {
         ...circuit,
-        isNonMatchingParent: !matches && hasMatchingDescendant,
-        subcircuits: circuit.subcircuits
-          ? filterCircuitsWithParents(
-              circuit.subcircuits,
-              numericFilter,
-              minValue,
-              maxValue,
-              searchQuery,
-              scaleFilter,
-              hideNonMatchingParents,
-              buildCategoryFilter
-            )
-          : [],
+        subcircuits: filteredSubcircuits,
       };
-      filtered.push(filteredCircuit);
     }
+
+    return null;
   }
 
-  return filtered;
+  const filteredTree = circuits.map(shouldIncludeCircuit).filter(Boolean) as CircuitSchemaProps[];
+
+  return {
+    filteredTree,
+    count,
+  };
 }

@@ -1,6 +1,7 @@
 import { Button, Input, Select } from 'antd';
 import { useState } from 'react';
 import { useBuildCategoryData } from '../hook/use-build-category-data';
+import { useCircuitScales } from '../hook/use-scale-type-data';
 import { NumericFilterOptions, NumericFilterProps } from '../type';
 
 const { Option } = Select;
@@ -22,10 +23,19 @@ export default function CircuitFilters({
   const [localMin, setLocalMin] = useState<number | undefined>(minValue);
   const [localMax, setLocalMax] = useState<number | undefined>(maxValue);
 
-  const { categories, isLoading, error } = useBuildCategoryData();
+  // BUILD CATEGORY DATA HOOK
+  const {
+    categories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useBuildCategoryData();
+
+  // CIRCUIT SCALES HOOK
+  const { scales, loading: scalesLoading, error: scalesError } = useCircuitScales();
 
   const handlePropertyChange = (property: NumericFilterOptions['property']) => {
     setLocalProperty(property);
+    setLocalType(undefined);
   };
 
   const handleTypeChange = (type: NumericFilterOptions['type']) => {
@@ -61,7 +71,6 @@ export default function CircuitFilters({
     localProperty === 'numberOfConnections' ||
     localProperty === 'numberOfSynapses';
 
-  // Named function to render the Select component for numeric properties
   const renderNumericConditionSelect = (
     property: NumericFilterOptions['property'] | undefined,
     type: NumericFilterOptions['type'] | undefined,
@@ -89,14 +98,16 @@ export default function CircuitFilters({
     return null;
   };
 
-  // Named function to render the condition Select component
   const renderConditionSelect = (
     property: NumericFilterOptions['property'] | undefined,
     type: NumericFilterOptions['type'] | undefined,
     onTypeChange: (type: NumericFilterOptions['type']) => void,
     categoryList: string[],
-    loading: boolean,
-    localError: Error | null
+    categoriesLoadingParam: boolean,
+    categoriesErrorParam: Error | null,
+    scalesList: string[],
+    scalesLoadingParam: boolean,
+    scalesErrorParam: string | null
   ) => {
     const numericSelect = renderNumericConditionSelect(property, type, onTypeChange);
     if (numericSelect) return numericSelect;
@@ -108,10 +119,20 @@ export default function CircuitFilters({
           placeholder="Select scale"
           value={type}
           onChange={onTypeChange}
-          disabled={!property}
+          disabled={!property || scalesLoadingParam}
+          loading={scalesLoadingParam}
         >
-          <Option value="smallMicrocircuit">Small microcircuit</Option>
-          <Option value="microcircuit">Microcircuit</Option>
+          {scalesErrorParam ? (
+            <Option value="" disabled>
+              Error loading scales
+            </Option>
+          ) : (
+            scalesList.map((scale) => (
+              <Option key={scale} value={scale}>
+                {scale}
+              </Option>
+            ))
+          )}
         </Select>
       );
     }
@@ -122,10 +143,10 @@ export default function CircuitFilters({
           placeholder="Select category"
           value={type}
           onChange={onTypeChange}
-          disabled={!property || loading}
-          loading={loading}
+          disabled={!property || categoriesLoadingParam}
+          loading={categoriesLoadingParam}
         >
-          {localError ? (
+          {categoriesErrorParam ? (
             <Option value="" disabled>
               Error loading categories
             </Option>
@@ -164,25 +185,27 @@ export default function CircuitFilters({
         <Option value="numberOfNeurons"># of Neurons</Option>
         <Option value="numberOfConnections"># of Connections</Option>
         <Option value="numberOfSynapses"># of Synapses</Option>
-        <Option value="scaleType">Scale Type</Option>
+        <Option value="scaleType">Scale</Option>
         <Option value="buildCategory">Build Category</Option>
       </Select>
-      {renderConditionSelect(
-        localProperty,
-        localType,
-        handleTypeChange,
-        categories,
-        isLoading,
-        (() => {
-          if (error) {
-            if (typeof error === 'string') {
-              return new Error(error);
-            }
-            return error;
-          }
-          return null;
-        })()
-      )}
+      {(() => {
+        let categoriesErrorParam: Error | null = null;
+        if (categoriesError) {
+          categoriesErrorParam =
+            typeof categoriesError === 'string' ? new Error(categoriesError) : categoriesError;
+        }
+        return renderConditionSelect(
+          localProperty,
+          localType,
+          handleTypeChange,
+          categories,
+          categoriesLoading,
+          categoriesErrorParam,
+          scales,
+          scalesLoading,
+          scalesError
+        );
+      })()}
 
       {(localType === 'greaterThan' || localType === 'between') && isNumericProperty && (
         <Input

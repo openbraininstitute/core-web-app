@@ -2,54 +2,78 @@ import { CircuitSchemaProps, NumericFilterOptions } from '../type';
 
 export function circuitMatchFilter(
   circuit: CircuitSchemaProps,
-  filter: NumericFilterOptions | null,
+  numericFilter: NumericFilterOptions | null,
   minValue: number | undefined,
   maxValue: number | undefined,
   searchQuery: string,
-  scaleFilter: 'smallMicrocircuit' | 'microcircuit' | null = null,
-  buildCategoryFilter: string | null = null
+  scaleFilter: string | null,
+  buildCategoryFilter: string | null
 ): boolean {
-  let numericMatch = true;
+  if (!numericFilter && !searchQuery && !scaleFilter && !buildCategoryFilter) {
+    return true;
+  }
 
-  if (filter && filter.property !== 'scaleType' && filter.property !== 'buildCategory') {
-    const { property, type } = filter;
-    const value = circuit[property];
+  let matchesFilter = true;
 
-    if (typeof value !== 'number' || Number.isNaN(value)) {
-      numericMatch = false;
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    const name = circuit.name ? circuit.name.toLowerCase() : '';
+    const brainRegion = circuit.brainRegion ? circuit.brainRegion.toLowerCase() : '';
+    matchesFilter = matchesFilter && (name.includes(query) || brainRegion.includes(query));
+  }
+
+  if (scaleFilter) {
+    if (!circuit.scale) {
+      matchesFilter = false;
     } else {
-      if (type === 'greaterThan' && minValue !== undefined) {
-        numericMatch = value > minValue;
+      matchesFilter = matchesFilter && circuit.scale.toLowerCase() === scaleFilter.toLowerCase();
+    }
+  }
+
+  if (buildCategoryFilter) {
+    matchesFilter = matchesFilter && circuit.buildCategory === buildCategoryFilter;
+  }
+
+  if (numericFilter) {
+    const { property, type } = numericFilter;
+    const min = minValue !== undefined ? minValue : numericFilter.min;
+    const max = maxValue !== undefined ? maxValue : numericFilter.max;
+
+    if (property === 'numberOfNeurons') {
+      const value = circuit.numberOfNeurons;
+      if (type === 'greaterThan' && min !== undefined) {
+        matchesFilter = matchesFilter && value > min;
+      } else if (type === 'lessThan' && max !== undefined) {
+        matchesFilter = matchesFilter && value < max;
+      } else if (type === 'between' && min !== undefined && max !== undefined) {
+        matchesFilter = matchesFilter && value >= min && value <= max;
+      } else {
+        matchesFilter = false;
       }
-      if (type === 'lessThan' && maxValue !== undefined) {
-        numericMatch = value < maxValue;
+    } else if (property === 'numberOfConnections') {
+      const value = circuit.numberOfConnections;
+      if (type === 'greaterThan' && min !== undefined) {
+        matchesFilter = matchesFilter && value > min;
+      } else if (type === 'lessThan' && max !== undefined) {
+        matchesFilter = matchesFilter && value < max;
+      } else if (type === 'between' && min !== undefined && max !== undefined) {
+        matchesFilter = matchesFilter && value >= min && value <= max;
+      } else {
+        matchesFilter = false;
       }
-      if (type === 'between' && minValue !== undefined && maxValue !== undefined) {
-        numericMatch = value >= minValue && value <= maxValue;
+    } else if (property === 'numberOfSynapses') {
+      const value = circuit.numberOfSynapses;
+      if (type === 'greaterThan' && min !== undefined) {
+        matchesFilter = matchesFilter && value > min;
+      } else if (type === 'lessThan' && max !== undefined) {
+        matchesFilter = matchesFilter && value < max;
+      } else if (type === 'between' && min !== undefined && max !== undefined) {
+        matchesFilter = matchesFilter && value >= min && value <= max;
+      } else {
+        matchesFilter = false;
       }
     }
   }
 
-  let scaleMatch = true;
-  if (scaleFilter) {
-    scaleMatch = circuit.scale.toLowerCase() === scaleFilter.toLowerCase();
-  }
-
-  let buildCategoryMatch = true;
-  if (buildCategoryFilter) {
-    buildCategoryMatch = circuit.buildCategory.toLowerCase() === buildCategoryFilter.toLowerCase();
-  }
-
-  let searchMatch = true;
-  if (searchQuery) {
-    const query = searchQuery.toLowerCase().trim();
-    searchMatch =
-      circuit.name?.toLowerCase().includes(query) ||
-      circuit.brainRegion?.toLowerCase().includes(query) ||
-      false;
-  }
-
-  const result = numericMatch && scaleMatch && buildCategoryMatch && searchMatch;
-
-  return result;
+  return matchesFilter;
 }

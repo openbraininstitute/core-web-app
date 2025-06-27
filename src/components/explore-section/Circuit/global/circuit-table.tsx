@@ -3,17 +3,15 @@ import { usePathname } from 'next/navigation';
 import { Key, useCallback, useEffect, useMemo, useState } from 'react';
 import { CircuitSchemaProps, FilteredCircuit, NumericFilterOptions } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
-import collectExpandableKeys from '../utils/collectExpandableKeys';
-import { flattenCircuits } from '../utils/flatten-circuits';
-
 import { circuitMatchFilter } from '../utils/circuits-match-filter';
+import collectExpandableKeys from '../utils/collectExpandableKeys';
 import { filterCircuitsWithParents } from '../utils/filter-circuits-with-parent';
+import { flattenCircuits } from '../utils/flatten-circuits';
+import CircuitFilters from './circuit-filter';
 import columns from './Columns';
 import DownloadContainer from './download/download-container';
-import SubcircuitTable from './subcircuit-table';
-
-import CircuitFilters from './circuit-filter';
 import SearchBar from './search-bar';
+import SubcircuitTable from './subcircuit-table';
 import ViewToggle from './ViewToggle';
 
 import { classNames } from '@/util/utils';
@@ -33,8 +31,6 @@ export default function CircuitTable({
   // FILTERING
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
-  const [scaleFilter, setScaleFilter] = useState<'smallMicrocircuit' | 'microcircuit' | null>(null);
-  const [buildCategoryFilter, setBuildCategoryFilter] = useState<string | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
   const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
 
@@ -68,8 +64,8 @@ export default function CircuitTable({
   const cleanedData = useMemo(() => {
     const result = data.map((circuit: CircuitSchemaProps) => {
       const { numberOfNeurons } = circuit;
-      if (numberOfNeurons === 0) {
-        throw new Error('Number of neurons is not a number or is NaN');
+      if (typeof numberOfNeurons !== 'number' || Number.isNaN(numberOfNeurons)) {
+        throw new Error(`Invalid numberOfNeurons for circuit ${circuit.key}`);
       }
 
       return {
@@ -78,7 +74,7 @@ export default function CircuitTable({
         numberOfNeurons,
         name: circuit.name || 'Unknown',
         brainRegion: circuit.brainRegion || 'Unknown',
-        scale: circuit.scale ? circuit.scale.toLowerCase() : 'unknown',
+        scale: circuit.scale || 'Unknown',
         subcircuits: Array.isArray(circuit.subcircuits)
           ? circuit.subcircuits.map((sub) => ({
               ...sub,
@@ -89,6 +85,7 @@ export default function CircuitTable({
                   : 0,
               name: sub.name || 'Unknown',
               brainRegion: sub.brainRegion || 'Unknown',
+              scale: sub.scale || 'Unknown',
               subcircuits: Array.isArray(sub.subcircuits) ? sub.subcircuits : [],
             }))
           : [],
@@ -109,11 +106,10 @@ export default function CircuitTable({
         minValue,
         maxValue,
         searchQuery,
-        scaleFilter,
-        false,
-        buildCategoryFilter
+        numericFilter?.property === 'scaleType' ? numericFilter.type : null,
+        numericFilter?.property === 'buildCategory' ? numericFilter.type : null
       );
-      return result;
+      return result.filteredTree;
     }
     const result = cleanedData.flattened.filter((circuit) =>
       circuitMatchFilter(
@@ -122,21 +118,12 @@ export default function CircuitTable({
         minValue,
         maxValue,
         searchQuery,
-        scaleFilter,
-        buildCategoryFilter
+        numericFilter?.property === 'scaleType' ? numericFilter.type : null,
+        numericFilter?.property === 'buildCategory' ? numericFilter.type : null
       )
     );
     return result;
-  }, [
-    cleanedData,
-    numericFilter,
-    minValue,
-    maxValue,
-    searchQuery,
-    scaleFilter,
-    toggle,
-    buildCategoryFilter,
-  ]);
+  }, [cleanedData, numericFilter, minValue, maxValue, searchQuery, toggle]);
 
   const flattenedData = useMemo(() => {
     if (toggle === 'hierarchical') {
@@ -178,7 +165,7 @@ export default function CircuitTable({
       minValue,
       maxValue,
       searchQuery,
-      buildCategoryFilter
+      numericFilter?.property === 'buildCategory' ? numericFilter.type : null
     );
     const result =
       toggle === 'flat' ? allColumns.filter((col) => col.key !== 'subcircuits') : allColumns;
@@ -193,29 +180,16 @@ export default function CircuitTable({
     minValue,
     maxValue,
     searchQuery,
-    buildCategoryFilter,
   ]);
 
   useEffect(() => {
-    if (
-      toggle === 'hierarchical' &&
-      (numericFilter || searchQuery || scaleFilter || buildCategoryFilter)
-    ) {
+    if (toggle === 'hierarchical' && (numericFilter || searchQuery)) {
       const expandableKeys = collectExpandableKeys(cleanedData.hierarchical);
       setExpandedRowKeys(expandableKeys);
     } else {
       setExpandedRowKeys([]);
     }
-  }, [
-    numericFilter,
-    minValue,
-    maxValue,
-    searchQuery,
-    scaleFilter,
-    cleanedData,
-    toggle,
-    buildCategoryFilter,
-  ]);
+  }, [numericFilter, minValue, maxValue, searchQuery, cleanedData, toggle]);
 
   // ROW EXPANSION & SUBCIRCUITS
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
@@ -237,8 +211,10 @@ export default function CircuitTable({
           minValue={minValue}
           maxValue={maxValue}
           searchQuery={searchQuery}
-          scaleFilter={scaleFilter}
-          buildCategoryFilter={buildCategoryFilter}
+          scaleFilter={numericFilter?.property === 'scaleType' ? numericFilter.type : null}
+          buildCategoryFilter={
+            numericFilter?.property === 'buildCategory' ? numericFilter.type : null
+          }
         />
       ) : null,
     [
@@ -248,8 +224,6 @@ export default function CircuitTable({
       minValue,
       maxValue,
       searchQuery,
-      scaleFilter,
-      buildCategoryFilter,
       filteredColumns,
     ]
   );
@@ -268,18 +242,6 @@ export default function CircuitTable({
               maxValue={maxValue}
               onFilterChange={(filter) => {
                 setNumericFilter(filter);
-                if (filter?.property === 'scaleType') {
-                  setScaleFilter(filter.type as 'smallMicrocircuit' | 'microcircuit');
-                  setNumericFilter(null);
-                  setBuildCategoryFilter(null);
-                } else if (filter?.property === 'buildCategory') {
-                  setBuildCategoryFilter(filter.type);
-                  setNumericFilter(null);
-                  setScaleFilter(null);
-                } else {
-                  setScaleFilter(null);
-                  setBuildCategoryFilter(null);
-                }
               }}
               onMinChange={setMinValue}
               onMaxChange={setMaxValue}
