@@ -157,7 +157,8 @@ export enum AssetLabel {
   cell_composition_volumes = 'cell_composition_volumes',
   single_cell_simulation = 'single_cell_simulation_data',
   single_neuron_synaptome_config = 'single_neuron_synaptome_config',
-  single_neuron_synaptome_simulation_io_result = 'single_neuron_synaptome_simulation_io_result',
+  single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
+  validation_result = 'validation_result_details',
 }
 
 type AssetBase = {
