@@ -62,6 +62,10 @@ const ORDERING: Record<string, { order: number; category: string }> = {
     order: 5,
     category: 'Events',
   },
+  synaptic_manipulations: {
+    order: 6,
+    category: 'Circuit Manipulations',
+  },
 };
 
 const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
