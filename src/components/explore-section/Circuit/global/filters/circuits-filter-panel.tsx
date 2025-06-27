@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DatePicker, Input, Select, Switch } from 'antd';
+import { Button, DatePicker, Input, Select, Switch, Tooltip } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
 import { useState } from 'react';
@@ -258,7 +258,7 @@ export function SingleFilterItem({
     <div className={classNames('w-full', index !== 0 && 'border-primary-6 border-t pt-6')}>
       <header className="flex w-full flex-row items-center justify-between">
         <div className="flex flex-row items-center">
-          {filterType !== null && (
+          <Tooltip title={`Toggle column visibility for ${title}`}>
             <button
               type="button"
               onClick={() => toggleColumn(id)}
@@ -268,7 +268,8 @@ export function SingleFilterItem({
                 className={classNames('h-5 w-5', isColumnActive ? 'opacity-100' : 'opacity-60')}
               />
             </button>
-          )}
+          </Tooltip>
+
           <div className="flex flex-row items-baseline gap-x-2">
             <div className="text-xl font-semibold whitespace-nowrap text-white">{title}</div>
           </div>

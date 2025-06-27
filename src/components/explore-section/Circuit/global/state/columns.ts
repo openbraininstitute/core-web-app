@@ -19,13 +19,13 @@ export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     title: 'Name',
     id: 'name',
     isActive: true,
-    filterType: 'text',
+    filterType: null,
   },
   {
     title: 'Subcircuits',
     id: 'subcircuits',
     isActive: true,
-    filterType: 'numeric',
+    filterType: null,
   },
   {
     title: 'Description',
@@ -67,19 +67,19 @@ export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     title: 'Species',
     id: 'specie',
     isActive: true,
-    filterType: 'select',
+    filterType: null,
   },
   {
     title: 'Published In',
     id: 'publishedIn',
     isActive: true,
-    filterType: 'text',
+    filterType: null,
   },
   {
     title: 'Registration date',
     id: 'registrationDate',
     isActive: true,
-    filterType: 'date',
+    filterType: null,
   },
   {
     title: 'Build category',
