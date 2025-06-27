@@ -445,12 +445,14 @@ export default function TinyCircuitSimulation() {
                   );
 
                   if (res.status !== 200) {
-                    console.log(res);
-
                     const errorRes = await res.json();
+
+                    const details =
+                      res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
+
                     notification.error({
-                      message: errorRes.message ?? errorRes?.detail ?? 'An error ocurred',
-                      description: errorRes?.details?.[0].msg ?? '',
+                      message: 'An error ocurred generating the simulation campaign',
+                      description: details,
                     });
                     return;
                   }
