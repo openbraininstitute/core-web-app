@@ -13,7 +13,7 @@ export default function FilterButton({
     <button
       type="button"
       aria-label="Open filters"
-      className="flex w-[250px] flex-row flex-nowrap items-center justify-between rounded-none border border-solid border-gray-200 bg-white p-4 transition-all duration-300 ease-in-out hover:rounded-lg hover:bg-black/3"
+      className="flex w-[250px] flex-row flex-nowrap items-center justify-between rounded-lg border border-solid border-gray-200 bg-white p-2 transition-all duration-300 ease-in-out hover:bg-black/3"
       onClick={() => setActive(true)}
     >
       <div className="flex flex-row items-center gap-x-2">

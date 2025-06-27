@@ -17,6 +17,7 @@ import {
 } from '../state/columns';
 
 import { ChevronRight, CloseIcon, EyeIcon } from '@/components/icons';
+import EyeSlashIcon from '@/components/icons/EyeSlashIcon';
 import { classNames } from '@/util/utils';
 
 const { Option } = Select;
@@ -264,9 +265,11 @@ export function SingleFilterItem({
               onClick={() => toggleColumn(id)}
               className="flex h-8 w-8 items-center justify-between text-white"
             >
-              <EyeIcon
-                className={classNames('h-5 w-5', isColumnActive ? 'opacity-100' : 'opacity-60')}
-              />
+              {isColumnActive ? (
+                <EyeIcon className="h-5 w-5" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5 opacity-70" />
+              )}
             </button>
           </Tooltip>
 

@@ -268,7 +268,7 @@ export default function CircuitTable({
           <div className="flex flex-row items-center gap-x-4">
             {Object.values(filters).some((f) => f !== null) && (
               <button
-                className="mr-8 text-sm text-gray-500 hover:text-gray-700"
+                className="mr-3 text-base text-gray-600 hover:text-gray-700"
                 onClick={handleResetFilter}
                 type="button"
                 id="reset-filter"
