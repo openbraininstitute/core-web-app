@@ -42,55 +42,92 @@ export default function SubcircuitTable({
   );
 
   const isRowMatching = (record: CircuitSchemaProps) => {
+    console.log(
+      'isRowMatching - Record:',
+      record.name,
+      'Filters:',
+      filters,
+      'SearchQuery:',
+      searchQuery
+    );
+
+    let matchesFilter = false;
+    let matchesSearch = false;
+
     // Check filtersAtom
     for (const [columnId, filter] of Object.entries(filters)) {
       if (!filter) continue;
 
       const filterType = columnState.find((col) => col.id === columnId)?.filterType;
-
       const value = record[columnId as keyof CircuitSchemaProps];
 
-      if (filterType === 'text' && typeof value === 'string' && filter.min) {
-        if (value.toLowerCase().includes((filter.min as string).toLowerCase())) return true;
-      }
+      console.log(`Checking filter - Column: ${columnId}, Value: ${value}, Filter:`, filter);
 
       if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
         const min = filter.min as number | undefined;
         const max = filter.max as number | undefined;
-        if (filter.type === 'greaterThan' && min !== undefined && value > min) return true;
-        if (filter.type === 'lessThan' && max !== undefined && value < max) return true;
-        if (
+        if (filter.type === 'greaterThan' && min !== undefined && value > min) {
+          matchesFilter = true;
+        } else if (filter.type === 'lessThan' && max !== undefined && value < max) {
+          matchesFilter = true;
+        } else if (
           filter.type === 'between' &&
           min !== undefined &&
           max !== undefined &&
           value >= min &&
           value <= max
-        )
-          return true;
+        ) {
+          matchesFilter = true;
+        }
       }
 
-      if (filterType === 'select' && filter.type && value === filter.type) return true;
+      if (filterType === 'text' && typeof value === 'string' && filter.min) {
+        if (value.toLowerCase().includes((filter.min as string).toLowerCase())) {
+          matchesFilter = true;
+        }
+      }
+
+      if (filterType === 'select' && filter.type && value === filter.type) {
+        matchesFilter = true;
+      }
 
       if (filterType === 'date' && typeof value === 'string' && filter.min) {
-        if (moment(value).isSame(moment(filter.min as string), 'day')) return true;
+        if (moment(value).isSame(moment(filter.min as string), 'day')) {
+          matchesFilter = true;
+        }
       }
 
-      if (filterType === 'boolean' && filter.min && value === (filter.min === 'true')) return true;
+      if (filterType === 'boolean' && filter.min && value === (filter.min === 'true')) {
+        matchesFilter = true;
+      }
+
+      if (matchesFilter) break; // Exit loop if any filter matches
     }
 
     // Check searchQuery
     if (searchQuery) {
-      return ['name', 'brainRegion', 'scale', 'specie', 'publishedIn', 'buildCategory'].some(
-        (field) => {
-          const value = record[field as keyof CircuitSchemaProps];
-          return (
-            typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-        }
-      );
+      matchesSearch = [
+        'name',
+        'brainRegion',
+        'scale',
+        'specie',
+        'publishedIn',
+        'buildCategory',
+      ].some((field) => {
+        const value = record[field as keyof CircuitSchemaProps];
+        const matches =
+          typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase());
+        console.log(`Search check - Field: ${field}, Value: ${value}, Matches: ${matches}`);
+        return matches;
+      });
+    } else {
+      matchesSearch = true; // No search query means search doesn't restrict
     }
 
-    return false;
+    const isMatching =
+      matchesFilter || (Object.values(filters).every((f) => f === null) && matchesSearch);
+    console.log('Final match result for', record.name, ':', isMatching);
+    return isMatching;
   };
 
   return (
@@ -113,9 +150,16 @@ export default function SubcircuitTable({
           expandIcon: () => null,
           rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
         }}
-        rowClassName={(record) =>
-          isRowMatching(record) ? styles.matchingRow : styles.nonMatchingRow
-        }
+        rowClassName={(record) => {
+          const isMatching = isRowMatching(record);
+          console.log(
+            'Row class for',
+            record.name,
+            ':',
+            isMatching ? 'matchingRow' : 'nonMatchingRow'
+          );
+          return isMatching ? styles.matchingRow : styles.nonMatchingRow;
+        }}
       />
     </div>
   );

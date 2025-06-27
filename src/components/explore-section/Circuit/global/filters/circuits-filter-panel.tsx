@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DatePicker, Input, Select, Switch } from 'antd';
+import { Button, DatePicker, Input, Select, Switch, Tooltip } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
 import { useState } from 'react';
@@ -17,6 +17,7 @@ import {
 } from '../state/columns';
 
 import { ChevronRight, CloseIcon, EyeIcon } from '@/components/icons';
+import EyeSlashIcon from '@/components/icons/EyeSlashIcon';
 import { classNames } from '@/util/utils';
 
 const { Option } = Select;
@@ -40,12 +41,10 @@ export function SingleFilterItem({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const isFilterActive = filters[id] !== null && filters[id] !== undefined;
 
-  // Local filter state
   const [localType, setLocalType] = useState<string | undefined>(filters[id]?.type);
   const [localMin, setLocalMin] = useState<number | string | undefined>(filters[id]?.min);
   const [localMax, setLocalMax] = useState<number | string | undefined>(filters[id]?.max);
 
-  // Hooks for select filters
   const {
     categories,
     isLoading: categoriesLoading,
@@ -55,13 +54,16 @@ export function SingleFilterItem({
   const { species, isLoading: speciesLoading, error: speciesError } = useCircuitSpecies();
 
   const handleApplyFilter = () => {
-    if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
+    if (filterType === 'numeric' && localType) {
+      const filter = {
+        property: id,
+        type: localType,
+        min: localType === 'greaterThan' || localType === 'between' ? localMin : undefined,
+        max: localType === 'lessThan' || localType === 'between' ? localMax : undefined,
+      };
+      setFilter({ columnId: id, filter });
+    } else if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
       setFilter({ columnId: id, filter: localMin ? { property: id, min: localMin } : null });
-    } else if (filterType === 'numeric' && localType) {
-      setFilter({
-        columnId: id,
-        filter: { property: id, type: localType, min: localMin, max: localMax },
-      });
     } else if (filterType === 'select' && localType) {
       setFilter({ columnId: id, filter: { property: id, type: localType } });
     }
@@ -78,6 +80,7 @@ export function SingleFilterItem({
     if (!filterType) return null;
 
     if (filterType === 'text') {
+      const isApplyDisabled = !localMin;
       return (
         <div className="mt-4 flex flex-col gap-y-2">
           <Input
@@ -87,7 +90,21 @@ export function SingleFilterItem({
             className="w-full"
           />
           <div className="flex gap-x-2">
-            <Button type="primary" onClick={handleApplyFilter} disabled={!localMin}>
+            <Button
+              type="primary"
+              onClick={handleApplyFilter}
+              disabled={isApplyDisabled}
+              className={classNames(
+                'custom-apply-button',
+                isApplyDisabled ? 'border-white text-white' : 'border-transparent',
+                isApplyDisabled ? 'opacity-30' : 'opacity-100'
+              )}
+              style={{
+                opacity: isApplyDisabled ? 0.3 : 1,
+                borderColor: isApplyDisabled ? '#fff' : undefined,
+                color: isApplyDisabled ? '#fff' : undefined,
+              }}
+            >
               Apply
             </Button>
             <Button onClick={handleResetFilter}>Reset</Button>
@@ -258,17 +275,20 @@ export function SingleFilterItem({
     <div className={classNames('w-full', index !== 0 && 'border-primary-6 border-t pt-6')}>
       <header className="flex w-full flex-row items-center justify-between">
         <div className="flex flex-row items-center">
-          {filterType !== null && (
+          <Tooltip title={`Toggle column visibility for ${title}`}>
             <button
               type="button"
               onClick={() => toggleColumn(id)}
               className="flex h-8 w-8 items-center justify-between text-white"
             >
-              <EyeIcon
-                className={classNames('h-5 w-5', isColumnActive ? 'opacity-100' : 'opacity-60')}
-              />
+              {isColumnActive ? (
+                <EyeIcon className="h-5 w-5" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5 opacity-70" />
+              )}
             </button>
-          )}
+          </Tooltip>
+
           <div className="flex flex-row items-baseline gap-x-2">
             <div className="text-xl font-semibold whitespace-nowrap text-white">{title}</div>
           </div>
