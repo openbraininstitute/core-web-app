@@ -45,7 +45,7 @@ export function JSONSchemaForm({
 
   useEffect(() => {
     setState((prev) => {
-      return { ...prev, type: schema.properties?.type.const ?? '' };
+      return { ...prev, type: schema.properties?.type.const ?? '' }; // Add default here
     });
   }, [stateAtom, setState, schema.properties?.type.const]);
 
