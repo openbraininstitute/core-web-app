@@ -37,7 +37,7 @@ export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     title: 'Brain region',
     id: 'brainRegion',
     isActive: true,
-    filterType: 'text',
+    filterType: null,
   },
   {
     title: 'Scale',
@@ -67,7 +67,7 @@ export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     title: 'Species',
     id: 'specie',
     isActive: true,
-    filterType: 'text',
+    filterType: 'select',
   },
   {
     title: 'Published In',

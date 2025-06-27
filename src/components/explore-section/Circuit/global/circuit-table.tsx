@@ -1,5 +1,6 @@
 import { Table } from 'antd';
 import { useAtomValue } from 'jotai';
+import moment from 'moment';
 import { usePathname } from 'next/navigation';
 import { Key, useCallback, useEffect, useMemo, useState } from 'react';
 import { CircuitSchemaProps, FilteredCircuit, NumericFilterOptions } from '../type';
@@ -13,7 +14,7 @@ import columns from './Columns';
 import DownloadContainer from './download/download-container';
 import CircuitsFilterPanel from './filters/circuits-filter-panel';
 import SearchBar from './search-bar';
-import { columnsAtom } from './state/columns';
+import { columnsAtom, filtersAtom } from './state/columns';
 import SubcircuitTable from './subcircuit-table';
 import ViewToggle from './ViewToggle';
 
@@ -41,8 +42,9 @@ export default function CircuitTable({
   // VIEWS
   const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
 
-  // COLUMN VISIBILITY FROM JOTAI
+  // COLUMN VISIBILITY AND FILTERS FROM JOTAI
   const columnState = useAtomValue(columnsAtom);
+  const filters = useAtomValue(filtersAtom);
 
   // DOWNLOAD MODAL
   const handleOpenDownloadModal = useCallback((record: CircuitSchemaProps) => {
@@ -106,9 +108,57 @@ export default function CircuitTable({
 
   // IF FILTERS ARE ACTIVE
   const filteredData = useMemo(() => {
+    let result: CircuitSchemaProps[] =
+      toggle === 'hierarchical' ? cleanedData.hierarchical : cleanedData.flattened;
+
+    // Apply filters from filtersAtom
+    Object.entries(filters).forEach(([columnId, filter]) => {
+      if (!filter) return;
+
+      const column = columnState.find((col) => col.id === columnId);
+      const filterType = column?.filterType;
+
+      result = result.filter((circuit) => {
+        const value = circuit[columnId as keyof CircuitSchemaProps];
+
+        if (filterType === 'text' && typeof value === 'string' && filter.min) {
+          return value.toLowerCase().includes((filter.min as string).toLowerCase());
+        }
+
+        if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
+          const min = filter.min as number | undefined;
+          const max = filter.max as number | undefined;
+          if (filter.type === 'greaterThan' && min !== undefined) {
+            return value > min;
+          }
+          if (filter.type === 'lessThan' && max !== undefined) {
+            return value < max;
+          }
+          if (filter.type === 'between' && min !== undefined && max !== undefined) {
+            return value >= min && value <= max;
+          }
+        }
+
+        if (filterType === 'select' && filter.type) {
+          return value === filter.type;
+        }
+
+        if (filterType === 'date' && typeof value === 'string' && filter.min) {
+          return moment(value).isSame(moment(filter.min as string), 'day');
+        }
+
+        if (filterType === 'boolean' && filter.min) {
+          return value === (filter.min === 'true');
+        }
+
+        return true;
+      });
+    });
+
+    // Apply existing numericFilter and searchQuery
     if (toggle === 'hierarchical') {
-      const result = filterCircuitsWithParents(
-        cleanedData.hierarchical,
+      const filtered = filterCircuitsWithParents(
+        result,
         numericFilter,
         minValue,
         maxValue,
@@ -116,9 +166,10 @@ export default function CircuitTable({
         numericFilter?.property === 'scaleType' ? numericFilter.type : null,
         numericFilter?.property === 'buildCategory' ? numericFilter.type : null
       );
-      return result.filteredTree;
+      return filtered.filteredTree;
     }
-    const result = cleanedData.flattened.filter((circuit) =>
+
+    return result.filter((circuit) =>
       circuitMatchFilter(
         circuit,
         numericFilter,
@@ -129,8 +180,7 @@ export default function CircuitTable({
         numericFilter?.property === 'buildCategory' ? numericFilter.type : null
       )
     );
-    return result;
-  }, [cleanedData, numericFilter, minValue, maxValue, searchQuery, toggle]);
+  }, [cleanedData, toggle, filters, numericFilter, minValue, maxValue, searchQuery, columnState]);
 
   const flattenedData = useMemo(() => {
     if (toggle === 'hierarchical') {

@@ -5,6 +5,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
 import { useState } from 'react';
 import { useBuildCategoryData } from '../../hook/use-build-category-data';
+import { useCircuitSpecies } from '../../hook/use-circuit-species';
 import { useCircuitScales } from '../../hook/use-scale-type-data';
 import {
   activeColumnsCountAtom,
@@ -51,6 +52,7 @@ export function SingleFilterItem({
     error: categoriesError,
   } = useBuildCategoryData();
   const { scales, loading: scalesLoading, error: scalesError } = useCircuitScales();
+  const { species, isLoading: speciesLoading, error: speciesError } = useCircuitSpecies();
 
   const handleApplyFilter = () => {
     if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
@@ -137,14 +139,55 @@ export function SingleFilterItem({
 
     if (filterType === 'select') {
       const isBuildCategory = id === 'buildCategory';
-      const options = isBuildCategory ? categories : scales;
-      const loading = isBuildCategory ? categoriesLoading : scalesLoading;
-      const error = isBuildCategory ? categoriesError : scalesError;
+      const isSpecies = id === 'specie';
+
+      // OPTIONS
+      let options;
+      if (isBuildCategory) {
+        options = categories;
+      } else if (isSpecies) {
+        options = species;
+      } else {
+        options = scales;
+      }
+      // LOADING
+      let loading;
+      if (isBuildCategory) {
+        loading = categoriesLoading;
+      } else if (isSpecies) {
+        loading = speciesLoading;
+      } else {
+        loading = scalesLoading;
+      }
+      let error;
+
+      // ERROR
+      if (isBuildCategory) {
+        error = categoriesError;
+      } else if (isSpecies) {
+        error = speciesError;
+      } else {
+        error = scalesError;
+      }
+
+      let errorLabel = 'scales';
+      if (isBuildCategory) {
+        errorLabel = 'categories';
+      } else if (isSpecies) {
+        errorLabel = 'species';
+      }
+
+      let selectPlaceholder = 'Select scale';
+      if (isBuildCategory) {
+        selectPlaceholder = 'Select category';
+      } else if (isSpecies) {
+        selectPlaceholder = 'Select species';
+      }
 
       return (
         <div className="mt-4 flex flex-col gap-y-2">
           <Select
-            placeholder={isBuildCategory ? 'Select category' : 'Select scale'}
+            placeholder={selectPlaceholder}
             value={localType}
             onChange={setLocalType}
             disabled={loading}
@@ -153,7 +196,7 @@ export function SingleFilterItem({
           >
             {error ? (
               <Option value="" disabled>
-                Error loading {isBuildCategory ? 'categories' : 'scales'}
+                Error loading {errorLabel}
               </Option>
             ) : (
               options.map((option) => (
@@ -215,36 +258,40 @@ export function SingleFilterItem({
     <div className={classNames('w-full', index !== 0 && 'border-primary-6 border-t pt-6')}>
       <header className="flex w-full flex-row items-center justify-between">
         <div className="flex flex-row items-center">
-          <button
-            type="button"
-            onClick={() => toggleColumn(id)}
-            className="flex h-8 w-8 items-center justify-between text-white"
-          >
-            <EyeIcon
-              className={classNames('h-5 w-5', isColumnActive ? 'opacity-100' : 'opacity-60')}
-            />
-          </button>
+          {filterType !== null && (
+            <button
+              type="button"
+              onClick={() => toggleColumn(id)}
+              className="flex h-8 w-8 items-center justify-between text-white"
+            >
+              <EyeIcon
+                className={classNames('h-5 w-5', isColumnActive ? 'opacity-100' : 'opacity-60')}
+              />
+            </button>
+          )}
           <div className="flex items-center gap-x-2">
             <div className="text-xl font-semibold whitespace-nowrap text-white">{title}</div>
+            {isFilterActive && (
+              <div className="text-primary-1 text-sm font-normal">Filter active</div>
+            )}
           </div>
         </div>
-        <button
-          type="button"
-          aria-label="Open filter options"
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex flex-row items-center"
-        >
-          {isFilterActive && (
-            <div className="text-primary-1 mr-3 text-sm font-normal">Filter active</div>
-          )}
-          <ChevronRight
-            className="h-4 w-auto transition-transform duration-300 ease-in-out"
-            style={{
-              transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-            }}
-            fill="white"
-          />
-        </button>
+        {filterType !== null && (
+          <button
+            type="button"
+            aria-label="Open filter options"
+            onClick={() => setIsOpen(!isOpen)}
+            className="h-6 w-6"
+          >
+            <ChevronRight
+              className="h-4 w-auto transition-transform duration-300 ease-in-out"
+              style={{
+                transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+              }}
+              fill="white"
+            />
+          </button>
+        )}
       </header>
       {isOpen && renderFilterControls()}
     </div>
@@ -264,7 +311,7 @@ export default function CircuitsFilterPanel({
   return (
     <div
       className={classNames(
-        'bg-primary-8 transition-right fixed top-0 z-100 flex h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto pt-6 pr-16 pl-8 duration-500 ease-in-out',
+        'bg-primary-8 transition-right fixed top-0 z-100 flex h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto p-8 duration-500 ease-in-out',
         isActive ? 'right-[40px]' : 'right-[-480px]'
       )}
     >
