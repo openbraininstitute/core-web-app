@@ -32,7 +32,7 @@ export default function EModelView({
   showTitle?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col gap-5">
       {showTitle && (
         <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
           <DefaultLoadingSuspense>

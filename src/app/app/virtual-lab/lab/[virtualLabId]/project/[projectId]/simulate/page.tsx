@@ -168,7 +168,7 @@ function NewSim() {
         ref={tableRef}
       >
         <ExploreSectionListingView
-          containerClass="grow bg-primary-9 flex flex-col"
+          containerClass="grow flex flex-col bg-white!"
           tableClass={classNames('grow', Styles.table)}
           tableScrollable={false}
           controlsVisible={false}
