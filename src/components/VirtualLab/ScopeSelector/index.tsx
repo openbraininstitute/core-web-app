@@ -1,5 +1,6 @@
 'use client';
 
+import { useSetAtom } from 'jotai';
 import { parseAsString, Parser, useQueryStates } from 'nuqs';
 import { DownOutlined } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
@@ -17,6 +18,8 @@ import {
   EntityCoreConfiguration,
 } from '@/entity-configuration/domain';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
+import { selectedSimulationScopeAtom } from '@/state/simulate';
+import { SimulationType } from '@/types/virtual-lab/lab';
 
 export enum ModelTileType {
   IonChannel = 'ion-channel',
@@ -237,6 +240,7 @@ export function SectionTabs() {
 
 export function ScopeSelector() {
   const { push: navigate } = useRouter();
+  const setScope = useSetAtom(selectedSimulationScopeAtom);
   const { selectedTab, section, type: modelType, updateScopeConfig } = useTileScopeQuery();
   const tileJSX = ({ id, title, type, description, disabled, img, url }: TTileConfig) => {
     const highlight = type === modelType;
@@ -269,7 +273,10 @@ export function ScopeSelector() {
           !disabled && 'cursor-pointer'
         )}
         onClick={() => {
-          if (!disabled) updateScopeConfig({ selectedTab, type });
+          if (!disabled) {
+            setScope(type as unknown as SimulationType);
+            updateScopeConfig({ selectedTab, type });
+          }
         }}
       >
         <div className="w-2/3 text-left">
