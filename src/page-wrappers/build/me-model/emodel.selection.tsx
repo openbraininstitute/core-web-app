@@ -10,10 +10,10 @@ import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { Btn } from '@/components/buttons/base/legacy-btn';
+import { resolveDataKey } from '@/utils/key-builder';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { WorkspaceContext } from '@/types/common';
-import { resolveDataKey } from '@/utils/key-builder';
 
 type Props = {
   params: WorkspaceContext;
@@ -74,6 +74,7 @@ export default function EmodelSelection({ params, searchParams }: Props) {
     <div className="h-full px-10" id="explore-table-container-for-observable">
       <ExploreSectionListingView<IEModel>
         dataKey={dataKey}
+        containerClass="h-full bg-white"
         dataType={DataType.CircuitEModel}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}

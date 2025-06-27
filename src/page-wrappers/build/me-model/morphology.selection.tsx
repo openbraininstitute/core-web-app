@@ -70,6 +70,7 @@ export default function MorphologySelection({ params, searchParams }: Props) {
   return (
     <div className="h-full" id="explore-table-container-for-observable">
       <ExploreSectionListingView<IReconstructionMorphology>
+        containerClass="h-full bg-white"
         dataKey={dataKey}
         dataType={DataType.ExperimentalNeuronMorphology}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}

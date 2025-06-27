@@ -53,7 +53,7 @@ function BrowseModelsTab() {
   const [expanded, setExpanded] = useState(false);
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const model = ModelTilesConfig.find((o) => o.id === type);
-  const dataType = model?.entities?.build.legacyType;
+  const dataType = model?.entities?.build?.legacyType;
 
   const entity = getEntityByLegacyType({
     legacyType: dataType!,
@@ -90,7 +90,7 @@ function BrowseModelsTab() {
               virtualLabInfo={{ virtualLabId, projectId }}
               selectionType="radio"
               style={{ background: 'bg-white' }}
-              containerClass="grow bg-primary-9 flex flex-col"
+              containerClass="grow  flex flex-col"
               tableClass={classNames('grow', Styles.table)}
               dataKey={dataKey}
               useBrainRegion={false}
