@@ -27,6 +27,7 @@ export type GraphDataImageProps = {
 
 export type CircuitSchemaProps = {
   key: string;
+  entityCoreID: string | null;
   name: string;
   description: string;
   parent?: string | null;
