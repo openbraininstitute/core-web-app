@@ -4,7 +4,11 @@ import { serviceAiAgentThreadCreate } from '../api/thread';
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
-export function useServiceAiAgentThread(): [string | undefined, () => void, Error | null] {
+export function useServiceAiAgentThread(): [
+  threadId: string | undefined,
+  createThread: () => void,
+  error: Error | null,
+] {
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const [error, setError] = useState<Error | null>(null);
