@@ -115,6 +115,7 @@ export default function BrowseSimulations() {
     </div>
   );
 }
+
 function customBookmarkButton({
   loading,
   onClick,

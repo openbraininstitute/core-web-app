@@ -1,9 +1,9 @@
 'use client';
 
 import { match } from 'ts-pattern';
-import { SectionTabs, useTileScopeQuery } from '@/components/VirtualLab/ScopeSelector';
 import BrowseSimulations from './simulation/browse';
 import StartNewSimulation from './simulation/new';
+import { SectionTabs, useTileScopeQuery } from '@/components/VirtualLab/ScopeSelector';
 
 export default function Page() {
   const { section, selectedTab } = useTileScopeQuery();
