@@ -1,0 +1,24 @@
+.custom-apply-button {
+  &.ant-btn-primary {
+    /* Base styles for the button */
+    border-width: 1px;
+    border-style: solid;
+
+    /* Disabled state */
+    &.ant-btn-disabled,
+    &[disabled] {
+      background: transparent !important;
+      border-color: #fff !important;
+      color: #fff !important;
+      opacity: 0.3 !important;
+    }
+
+    /* Enabled state */
+    &:not(.ant-btn-disabled):not([disabled]) {
+      background: #1890ff !important; /* AntD primary blue, adjust if needed */
+      border-color: transparent !important;
+      color: #fff !important;
+      opacity: 1 !important;
+    }
+  }
+}

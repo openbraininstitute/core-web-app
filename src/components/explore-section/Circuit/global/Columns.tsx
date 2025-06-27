@@ -115,9 +115,11 @@ const columns = (
       key: 'description',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal text-ellipsis whitespace-nowrap">
-          {truncateText(record.description, 46)}
-        </div>
+        <Tooltip title={record.description}>
+          <div className="font-normal text-ellipsis whitespace-nowrap">
+            {truncateText(record.description, 46)}
+          </div>
+        </Tooltip>
       ),
     },
     {

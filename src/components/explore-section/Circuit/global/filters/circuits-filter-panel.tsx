@@ -41,12 +41,10 @@ export function SingleFilterItem({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const isFilterActive = filters[id] !== null && filters[id] !== undefined;
 
-  // Local filter state
   const [localType, setLocalType] = useState<string | undefined>(filters[id]?.type);
   const [localMin, setLocalMin] = useState<number | string | undefined>(filters[id]?.min);
   const [localMax, setLocalMax] = useState<number | string | undefined>(filters[id]?.max);
 
-  // Hooks for select filters
   const {
     categories,
     isLoading: categoriesLoading,
@@ -56,13 +54,16 @@ export function SingleFilterItem({
   const { species, isLoading: speciesLoading, error: speciesError } = useCircuitSpecies();
 
   const handleApplyFilter = () => {
-    if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
+    if (filterType === 'numeric' && localType) {
+      const filter = {
+        property: id,
+        type: localType,
+        min: localType === 'greaterThan' || localType === 'between' ? localMin : undefined,
+        max: localType === 'lessThan' || localType === 'between' ? localMax : undefined,
+      };
+      setFilter({ columnId: id, filter });
+    } else if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
       setFilter({ columnId: id, filter: localMin ? { property: id, min: localMin } : null });
-    } else if (filterType === 'numeric' && localType) {
-      setFilter({
-        columnId: id,
-        filter: { property: id, type: localType, min: localMin, max: localMax },
-      });
     } else if (filterType === 'select' && localType) {
       setFilter({ columnId: id, filter: { property: id, type: localType } });
     }
@@ -79,6 +80,7 @@ export function SingleFilterItem({
     if (!filterType) return null;
 
     if (filterType === 'text') {
+      const isApplyDisabled = !localMin;
       return (
         <div className="mt-4 flex flex-col gap-y-2">
           <Input
@@ -88,7 +90,21 @@ export function SingleFilterItem({
             className="w-full"
           />
           <div className="flex gap-x-2">
-            <Button type="primary" onClick={handleApplyFilter} disabled={!localMin}>
+            <Button
+              type="primary"
+              onClick={handleApplyFilter}
+              disabled={isApplyDisabled}
+              className={classNames(
+                'custom-apply-button',
+                isApplyDisabled ? 'border-white text-white' : 'border-transparent',
+                isApplyDisabled ? 'opacity-30' : 'opacity-100'
+              )}
+              style={{
+                opacity: isApplyDisabled ? 0.3 : 1,
+                borderColor: isApplyDisabled ? '#fff' : undefined,
+                color: isApplyDisabled ? '#fff' : undefined,
+              }}
+            >
               Apply
             </Button>
             <Button onClick={handleResetFilter}>Reset</Button>

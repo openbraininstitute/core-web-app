@@ -81,6 +81,8 @@ export default function CircuitTable({
         throw new Error(`Invalid numberOfNeurons for circuit ${circuit.key}`);
       }
 
+      console.log(`Circuit: ${circuit.name}, numberOfNeurons: ${numberOfNeurons}`); // Debug: Log numberOfNeurons
+
       return {
         ...circuit,
         key: circuit.key || `circuit-${Math.random().toString(36).slice(2)}`,
@@ -112,6 +114,7 @@ export default function CircuitTable({
 
   // IF FILTERS ARE ACTIVE
   const filteredData = useMemo(() => {
+    console.log('Filters:', filters); // Debug: Log the filters object
     let result: CircuitSchemaProps[] =
       toggle === 'hierarchical' ? cleanedData.hierarchical : cleanedData.flattened;
 
@@ -122,40 +125,81 @@ export default function CircuitTable({
       const column = columnState.find((col) => col.id === columnId);
       const filterType = column?.filterType;
 
+      console.log(`Applying filter - Column: ${columnId}, Filter:`, filter); // Debug: Log each filter
+
       result = result.filter((circuit) => {
         const value = circuit[columnId as keyof CircuitSchemaProps];
 
-        if (filterType === 'text' && typeof value === 'string' && filter.min) {
-          return value.toLowerCase().includes((filter.min as string).toLowerCase());
-        }
-
+        // Check if circuit itself matches
+        let matches = false;
         if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
           const min = filter.min as number | undefined;
           const max = filter.max as number | undefined;
+          console.log(
+            `Numeric filter - Column: ${columnId}, Value: ${value}, Min: ${min}, Max: ${max}`
+          ); // Debug: Log numeric filter details
           if (filter.type === 'greaterThan' && min !== undefined) {
-            return value > min;
+            matches = value > min;
           }
           if (filter.type === 'lessThan' && max !== undefined) {
-            return value < max;
+            matches = value < max;
           }
           if (filter.type === 'between' && min !== undefined && max !== undefined) {
-            return value >= min && value <= max;
+            matches = value >= min && value <= max;
           }
+        }
+
+        if (filterType === 'text' && typeof value === 'string' && filter.min) {
+          matches = value.toLowerCase().includes((filter.min as string).toLowerCase());
         }
 
         if (filterType === 'select' && filter.type) {
-          return value === filter.type;
+          matches = value === filter.type;
         }
 
         if (filterType === 'date' && typeof value === 'string' && filter.min) {
-          return moment(value).isSame(moment(filter.min as string), 'day');
+          matches = moment(value).isSame(moment(filter.min as string), 'day');
         }
 
         if (filterType === 'boolean' && filter.min) {
-          return value === (filter.min === 'true');
+          matches = value === (filter.min === 'true');
         }
 
-        return true;
+        // Check if any subcircuits match (for hierarchical mode)
+        if (toggle === 'hierarchical' && !matches && circuit.subcircuits?.length) {
+          const hasMatchingSubcircuit = circuit.subcircuits.some((sub) => {
+            const subValue = sub[columnId as keyof CircuitSchemaProps];
+            if (filterType === 'numeric' && typeof subValue === 'number' && filter.type) {
+              const min = filter.min as number | undefined;
+              const max = filter.max as number | undefined;
+              if (filter.type === 'greaterThan' && min !== undefined) {
+                return subValue > min;
+              }
+              if (filter.type === 'lessThan' && max !== undefined) {
+                return subValue < max;
+              }
+              if (filter.type === 'between' && min !== undefined && max !== undefined) {
+                return subValue >= min && subValue <= max;
+              }
+            }
+            if (filterType === 'text' && typeof subValue === 'string' && filter.min) {
+              return subValue.toLowerCase().includes((filter.min as string).toLowerCase());
+            }
+            if (filterType === 'select' && filter.type) {
+              return subValue === filter.type;
+            }
+            if (filterType === 'date' && typeof subValue === 'string' && filter.min) {
+              return moment(subValue).isSame(moment(filter.min as string), 'day');
+            }
+            if (filterType === 'boolean' && filter.min) {
+              return subValue === (filter.min === 'true');
+            }
+            return false;
+          });
+          matches = matches || hasMatchingSubcircuit;
+        }
+
+        return matches;
       });
     });
 
@@ -171,6 +215,7 @@ export default function CircuitTable({
       );
     }
 
+    console.log('Filtered data:', result); // Debug: Log the filtered data
     return result;
   }, [cleanedData, toggle, filters, searchQuery, columnState]);
 
