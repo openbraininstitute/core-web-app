@@ -67,6 +67,7 @@
   order: 9;
   transform: rotate(180deg);
   writing-mode: vertical-lr;
+  white-space: nowrap;
 }
 
 .overlay {
