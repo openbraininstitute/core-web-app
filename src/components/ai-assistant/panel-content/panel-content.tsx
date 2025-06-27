@@ -42,12 +42,8 @@ export default function PanelContent({ threadId, onClearChat }: PanelContentProp
   React.useEffect(() => {
     if (status !== 'ready' || suggestions.length === 0) return;
 
-    console.log('Ready?');
     scroll();
-    globalThis.setTimeout(() => {
-      console.log('SCROLL');
-      scroll();
-    }, 2000);
+    globalThis.setTimeout(scroll, 2000);
   }, [suggestions, status]);
   const handleClearChat = () => {
     clear();
