@@ -122,15 +122,15 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
 
       <div
         className={classNames(
-          'out-expo bg-primary-9 transition-right fixed bottom-3 z-[999999] h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
-          downloadModalOpen ? 'right-0' : '-right-full'
+          'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
+          downloadModalOpen ? 'right-[40px]' : '-right-full'
         )}
       >
         <DownloadContainer content={content} handleCloseDownloadModal={handleCloseDownloadModal} />
       </div>
       <div
         className={classNames(
-          'ease-out-back fixed top-0 left-0 z-[999998] h-screen w-screen bg-black transition-opacity duration-500',
+          'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
           downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
         )}
       />
