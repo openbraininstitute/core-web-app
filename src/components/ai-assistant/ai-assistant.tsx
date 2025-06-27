@@ -3,6 +3,7 @@
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React, { CSSProperties } from 'react';
 
+import { Spinner } from './spinner';
 import { useCollapsedPanel } from './hooks';
 import PanelSplitter from './panel-splitter';
 import PanelContent from './panel-content';
@@ -32,21 +33,39 @@ export default function ArtificialIntelligenceAssistant({ className }: Literatur
   return (
     <div
       style={style}
-      className={classNames(className, styles.aiAssistant)}
+      className={classNames(className, styles.aiAssistant, panelWidth > 99 && styles.fullscreen)}
       data-collapsed={collapsedPanel}
     >
-      <button className={styles.header} type="button" onClick={handleToggleCollapse}>
-        <h1>AI Assistant</h1>
-        <div className={styles.icons}>
-          {collapsedPanel ? (
-            <PlusOutlined className="h-[1em] w-[1em]" />
-          ) : (
-            <MinusOutlined className="h-[1em] w-[1em]" />
-          )}
+      <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
+      {!collapsedPanel && threadId && (
+        <div className={classNames(styles.overlay, panelWidth > 25 && styles.shadow)}>
+          <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
+          <PanelContent threadId={threadId} onClearChat={recreateThreadId} />
+          <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
         </div>
-      </button>
-      {!collapsedPanel && <PanelContent threadId={threadId} onClearChat={recreateThreadId} />}
-      <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
+      )}
+      {!collapsedPanel && !threadId && <Spinner />}
     </div>
+  );
+}
+
+function Header({
+  collapsedPanel,
+  onToggleCollapse,
+}: {
+  collapsedPanel: boolean;
+  onToggleCollapse: () => void;
+}) {
+  return (
+    <button className={styles.header} type="button" onClick={onToggleCollapse}>
+      <h1>AI Assistant</h1>
+      <div className={styles.icons}>
+        {collapsedPanel ? (
+          <PlusOutlined className="h-[1em] w-[1em]" />
+        ) : (
+          <MinusOutlined className="h-[1em] w-[1em]" />
+        )}
+      </div>
+    </button>
   );
 }

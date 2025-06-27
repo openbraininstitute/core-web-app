@@ -26,12 +26,8 @@ export default function Footer({ status, threadId, onPrompt, messagesCount, stop
 
   return (
     <footer>
-      {status === 'ready' && (
-        <SuggestedQuestions
-          threadId={threadId}
-          messagesLength={messagesCount}
-          onClick={handlePrompt}
-        />
+      {status === 'ready' && messagesCount === 0 && (
+        <SuggestedQuestions threadId={threadId} messagesLength={0} onClick={handlePrompt} />
       )}
       {(status === 'ready' || status === 'error') && (
         <Prompt value={prompt} tools={tools ?? []} onChange={setPrompt} onClick={handlePrompt} />
@@ -40,9 +36,11 @@ export default function Footer({ status, threadId, onPrompt, messagesCount, stop
         <div className={styles.spinnerContainer}>
           <Spinner />
           {status === 'streaming' && (
-            <button className={styles.cancelButton} type="button" onClick={stop}>
-              Cancel
-            </button>
+            <div className={styles.cancelButton}>
+              <button type="button" onClick={stop}>
+                Cancel
+              </button>
+            </div>
           )}
         </div>
       )}
