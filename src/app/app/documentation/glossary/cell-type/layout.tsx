@@ -1,22 +1,34 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import React, { useCallback, useState } from 'react';
 
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
 import { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { slugifyForUrl } from '@/components/explore-section/utils';
 import { classNames } from '@/util/utils';
 
-export default function CellTypeLayout({ children }: { children: React.ReactNode }) {
+type CellTypeDefinitionsFullListProps = {
+  highlightedCellType: string | null;
+  setHighlightedCellType: (slug: string | null) => void;
+};
+
+type CellTypeLayoutProps = {
+  children: React.ReactNode;
+};
+
+export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [highlightedCellType, setHighlightedCellType] = useState<string | null>(null);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const currentCellType = searchParams.get('cell-type') || '';
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const cellTypeIndex = pathSegments.indexOf('cell-type') + 1;
   const cellType = pathSegments[cellTypeIndex] === 'm-type' ? 'm-type' : 'e-type';
-  const currentSlug = pathSegments[pathSegments.length - 1];
 
   const cellcontent = useFetchEntityTypes({
     cellType,
@@ -32,6 +44,30 @@ export default function CellTypeLayout({ children }: { children: React.ReactNode
 
   const filteredData = sortedData.filter((item) =>
     item.pref_label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Smooth scrolling function
+  const handleScrollTo = useCallback((slug: string) => {
+    const element = document.getElementById(slug);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  // Handle click to update URL, scroll, and highlight
+  const handleItemClick = useCallback(
+    (slug: string) => {
+      // Create new search params
+      const params = new URLSearchParams(searchParams);
+      params.set('cell-type', slug);
+      // Update URL without reloading
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      // Trigger smooth scrolling
+      handleScrollTo(slug);
+      // Set highlighted cell type
+      setHighlightedCellType(slug);
+    },
+    [pathname, searchParams, router, handleScrollTo]
   );
 
   return (
@@ -52,35 +88,36 @@ export default function CellTypeLayout({ children }: { children: React.ReactNode
             aria-label="Search cell types"
           />
         </div>
-        <Link
-          href={`/app/documentation/glossary/cell-type/${cellType}`}
-          className={classNames(
-            'text-lg text-white',
-            currentSlug === cellType ? 'font-bold' : 'font-normal'
-          )}
-          aria-label="Select all glossary item"
-        >
-          All
-        </Link>
 
         {filteredData?.map((item: CellTypeProps) => {
-          const isActive = slugifyForUrl(item.pref_label) === currentSlug;
-          const link = `/app/documentation/glossary/cell-type/${cellType}/${slugifyForUrl(item.pref_label)}`;
+          const slug = slugifyForUrl(item.pref_label);
+          const isActive = slug === currentCellType;
           return (
-            <Link
+            <button
+              type="button"
+              aria-label={`Go to ${item.pref_label} cell type`}
               key={item.pref_label}
-              href={link}
+              onClick={() => handleItemClick(slug)}
               className={classNames(
-                'text-lg',
+                'text-left text-lg',
                 isActive ? 'font-bold text-white' : 'text-primary-1 font-normal'
               )}
             >
               {item.pref_label}
-            </Link>
+            </button>
           );
         })}
       </div>
-      <div className="ml-[260px]">{children}</div>
+      <div className="ml-[260px]">
+        {React.Children.map(children, (child) =>
+          React.isValidElement<CellTypeDefinitionsFullListProps>(child)
+            ? React.cloneElement(child, {
+                highlightedCellType,
+                setHighlightedCellType,
+              } as CellTypeDefinitionsFullListProps)
+            : child
+        )}
+      </div>
     </div>
   );
 }

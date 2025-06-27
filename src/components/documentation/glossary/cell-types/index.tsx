@@ -1,7 +1,8 @@
 'use client';
 
 import { Metadata } from 'next';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import AllTypesBlock from './all-types-block';
 
 export const metadata: Metadata = {
@@ -11,15 +12,41 @@ export const metadata: Metadata = {
 
 export default function CellTypeDefinitionsFullList() {
   const { slug } = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [highlightedCellType, setHighlightedCellType] = useState<string | null>(null);
+  const [lastVisibleSection, setLastVisibleSection] = useState<string | null>(null);
 
-  const title = slug === 'm-type' ? 'Morphological types (m-types)' : 'Electrical types (e-types)';
+  const cellTypeParam = searchParams.get('cell-type');
+
+  useEffect(() => {
+    if (cellTypeParam) {
+      const element = document.getElementById(cellTypeParam);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setHighlightedCellType(cellTypeParam);
+      }
+    }
+  }, [cellTypeParam]);
+
+  const handleSectionInView = (sectionSlug: string) => {
+    if (sectionSlug !== lastVisibleSection) {
+      setLastVisibleSection(sectionSlug);
+      const params = new URLSearchParams(searchParams);
+      params.set('cell-type', sectionSlug);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  };
 
   return (
     <div className="relative flex w-full flex-col gap-4 text-white">
-      <header className="bg-primary-9 fixed top-0 z-50 flex w-[50vw] pt-7">
-        <h2 className="text-2xl font-bold capitalize">{title}</h2>
-      </header>
-      <AllTypesBlock />
+      <AllTypesBlock
+        cellType={slug as 'm-type' | 'e-type'}
+        highlightedCellType={highlightedCellType}
+        setHighlightedCellType={setHighlightedCellType}
+        onSectionInView={handleSectionInView}
+      />
     </div>
   );
 }
