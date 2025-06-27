@@ -12,7 +12,7 @@ import Link from '@/components/Link';
 
 import { resolveSingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
-import { resolveExperimentUrl, resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { resolveExperimentUrl, resolveProjectUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { useSimulationConfig } from '@/hooks/useSimulation';
@@ -45,7 +45,7 @@ export default function SimulationDetailPage({ payload }: Props) {
         extraLinks={[
           {
             key: LinkItemKey.Explore,
-            href: resolveExploreDetailsPageUrl({ ctx: { virtualLabId, projectId } }),
+            href: `${resolveProjectUrl({ virtualLabId, projectId })}/explore/interactive`,
             content: 'Explore',
             styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
           },
