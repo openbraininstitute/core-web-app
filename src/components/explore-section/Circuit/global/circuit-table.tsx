@@ -10,6 +10,7 @@ import { flattenCircuits } from '../utils/flatten-circuits';
 import CircuitFilters from './circuit-filter';
 import columns from './Columns';
 import DownloadContainer from './download/download-container';
+// import CircuitsFilterPanel from './filters/circuits-filter-panel';
 import SearchBar from './search-bar';
 import SubcircuitTable from './subcircuit-table';
 import ViewToggle from './ViewToggle';
@@ -29,6 +30,8 @@ export default function CircuitTable({
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
 
   // FILTERING
+  // const [activeColumns, setActiveColumns] = useState<string[]>([]);
+  // const [filterPanelActive, setFilterPanelActive] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
   const [minValue, setMinValue] = useState<number | undefined>(undefined);
@@ -280,6 +283,18 @@ export default function CircuitTable({
             />
           )}
         </div>
+        {/* <CircuitsFilterPanel
+          isActive={filterPanelActive}
+          toggle={() => setFilterPanelActive(!filterPanelActive)}
+          totalColumns={filteredColumns.length}
+          toggleColumnVisibility={(columnKey: string) => {
+            setActiveColumns((prev) =>
+              prev.includes(columnKey)
+                ? prev.filter((key) => key !== columnKey)
+                : [...prev, columnKey]
+            );
+          }}
+        /> */}
         <>
           <div
             className={classNames(

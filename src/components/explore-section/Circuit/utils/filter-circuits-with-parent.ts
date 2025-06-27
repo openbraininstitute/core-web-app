@@ -23,7 +23,6 @@ export function filterCircuitsWithParents(
       buildCategoryFilter
     );
 
-    // Recursively filter subcircuits
     const filteredSubcircuits = (circuit.subcircuits || [])
       .map(shouldIncludeCircuit)
       .filter(Boolean) as CircuitSchemaProps[];

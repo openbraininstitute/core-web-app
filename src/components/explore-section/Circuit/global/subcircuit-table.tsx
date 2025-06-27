@@ -17,7 +17,7 @@ export type SubcircuitsTableProps = {
   minValue: number | undefined;
   maxValue: number | undefined;
   searchQuery: string;
-  scaleFilter: string | null; // Updated to support dynamic scale types
+  scaleFilter: string | null;
   buildCategoryFilter: string | null;
 };
 
