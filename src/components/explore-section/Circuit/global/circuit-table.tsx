@@ -1,20 +1,18 @@
 import { Table } from 'antd';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
 import { usePathname } from 'next/navigation';
 import { Key, useCallback, useEffect, useMemo, useState } from 'react';
-import { CircuitSchemaProps, FilteredCircuit, NumericFilterOptions } from '../type';
+import { CircuitSchemaProps, FilteredCircuit } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
-import { circuitMatchFilter } from '../utils/circuits-match-filter';
 import collectExpandableKeys from '../utils/collectExpandableKeys';
-import { filterCircuitsWithParents } from '../utils/filter-circuits-with-parent';
 import { flattenCircuits } from '../utils/flatten-circuits';
-import CircuitFilters from './circuit-filter';
 import columns from './Columns';
 import DownloadContainer from './download/download-container';
 import CircuitsFilterPanel from './filters/circuits-filter-panel';
+import FilterButton from './filters/filter-button';
 import SearchBar from './search-bar';
-import { columnsAtom, filtersAtom } from './state/columns';
+import { columnsAtom, filtersAtom, setFilterAtom } from './state/columns';
 import SubcircuitTable from './subcircuit-table';
 import ViewToggle from './ViewToggle';
 
@@ -33,11 +31,9 @@ export default function CircuitTable({
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
 
   // FILTERING
-  const [filterPanelActive, setFilterPanelActive] = useState<boolean>(true);
+  const [filterPanelActive, setFilterPanelActive] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
-  const [minValue, setMinValue] = useState<number | undefined>(undefined);
-  const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
+  const [, setFilter] = useAtom(setFilterAtom);
 
   // VIEWS
   const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
@@ -45,6 +41,14 @@ export default function CircuitTable({
   // COLUMN VISIBILITY AND FILTERS FROM JOTAI
   const columnState = useAtomValue(columnsAtom);
   const filters = useAtomValue(filtersAtom);
+
+  // RESET FILTERS
+  const handleResetFilter = useCallback(() => {
+    Object.keys(filters).forEach((columnId) => {
+      setFilter({ columnId, filter: null });
+    });
+    setSearchQuery('');
+  }, [filters, setFilter, setSearchQuery]);
 
   // DOWNLOAD MODAL
   const handleOpenDownloadModal = useCallback((record: CircuitSchemaProps) => {
@@ -155,32 +159,20 @@ export default function CircuitTable({
       });
     });
 
-    // Apply existing numericFilter and searchQuery
-    if (toggle === 'hierarchical') {
-      const filtered = filterCircuitsWithParents(
-        result,
-        numericFilter,
-        minValue,
-        maxValue,
-        searchQuery,
-        numericFilter?.property === 'scaleType' ? numericFilter.type : null,
-        numericFilter?.property === 'buildCategory' ? numericFilter.type : null
+    // Apply searchQuery filter
+    if (searchQuery) {
+      result = result.filter((circuit) =>
+        ['name', 'brainRegion', 'scale', 'specie', 'publishedIn', 'buildCategory'].some((field) => {
+          const value = circuit[field as keyof CircuitSchemaProps];
+          return (
+            typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        })
       );
-      return filtered.filteredTree;
     }
 
-    return result.filter((circuit) =>
-      circuitMatchFilter(
-        circuit,
-        numericFilter,
-        minValue,
-        maxValue,
-        searchQuery,
-        numericFilter?.property === 'scaleType' ? numericFilter.type : null,
-        numericFilter?.property === 'buildCategory' ? numericFilter.type : null
-      )
-    );
-  }, [cleanedData, toggle, filters, numericFilter, minValue, maxValue, searchQuery, columnState]);
+    return result;
+  }, [cleanedData, toggle, filters, searchQuery, columnState]);
 
   const flattenedData = useMemo(() => {
     if (toggle === 'hierarchical') {
@@ -218,11 +210,8 @@ export default function CircuitTable({
       isCircuitDetailPage,
       handleOpenDownloadModal,
       toggle,
-      numericFilter,
-      minValue,
-      maxValue,
-      searchQuery,
-      numericFilter?.property === 'buildCategory' ? numericFilter.type : null
+      filters,
+      searchQuery
     );
     const activeColumnIds = columnState.filter((col) => col.isActive).map((col) => col.id);
     const result = allColumns.filter((col) => activeColumnIds.includes(col.key as string));
@@ -233,21 +222,19 @@ export default function CircuitTable({
     isCircuitDetailPage,
     handleOpenDownloadModal,
     handleRowExpandClick,
-    numericFilter,
-    minValue,
-    maxValue,
-    searchQuery,
     columnState,
+    filters,
+    searchQuery,
   ]);
 
   useEffect(() => {
-    if (toggle === 'hierarchical' && (numericFilter || searchQuery)) {
+    if (toggle === 'hierarchical' && searchQuery) {
       const expandableKeys = collectExpandableKeys(cleanedData.hierarchical);
       setExpandedRowKeys(expandableKeys);
     } else {
       setExpandedRowKeys([]);
     }
-  }, [numericFilter, minValue, maxValue, searchQuery, cleanedData, toggle]);
+  }, [searchQuery, cleanedData, toggle]);
 
   // ROW EXPANSION & SUBCIRCUITS
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
@@ -265,25 +252,12 @@ export default function CircuitTable({
           circuit={circuit}
           expandedRowKeys={expandedRowKeys}
           onExpand={handleExpandRow}
-          numericFilter={numericFilter}
-          minValue={minValue}
-          maxValue={maxValue}
+          filters={filters}
           searchQuery={searchQuery}
-          scaleFilter={numericFilter?.property === 'scaleType' ? numericFilter.type : null}
-          buildCategoryFilter={
-            numericFilter?.property === 'buildCategory' ? numericFilter.type : null
-          }
+          columnState={columnState}
         />
       ) : null,
-    [
-      expandedRowKeys,
-      handleExpandRow,
-      numericFilter,
-      minValue,
-      maxValue,
-      searchQuery,
-      filteredColumns,
-    ]
+    [expandedRowKeys, handleExpandRow, filteredColumns, filters, searchQuery, columnState]
   );
 
   return (
@@ -291,19 +265,24 @@ export default function CircuitTable({
       {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-
-          <div className="relative flex flex-row items-center gap-x-8">
-            <ViewToggle toggle={toggle} setToggle={setToggle} />
-            <CircuitFilters
-              filter={numericFilter}
-              minValue={minValue}
-              maxValue={maxValue}
-              onFilterChange={(filter) => {
-                setNumericFilter(filter);
-              }}
-              onMinChange={setMinValue}
-              onMaxChange={setMaxValue}
+          <div className="flex flex-row items-center gap-x-4">
+            {Object.values(filters).some((f) => f !== null) && (
+              <button
+                className="mr-8 text-sm text-gray-500 hover:text-gray-700"
+                onClick={handleResetFilter}
+                type="button"
+                id="reset-filter"
+                aria-label="Reset filter"
+              >
+                Reset filter
+              </button>
+            )}
+            <FilterButton
+              setActive={setFilterPanelActive}
+              numberOfFilters={Object.values(filters).filter((f) => f !== null).length}
+              numberOfActiveColumns={columnState.filter((col) => col.isActive).length}
             />
+            <ViewToggle toggle={toggle} setToggle={setToggle} />
           </div>
         </div>
       )}

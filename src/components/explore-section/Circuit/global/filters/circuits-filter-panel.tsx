@@ -269,28 +269,32 @@ export function SingleFilterItem({
               />
             </button>
           )}
-          <div className="flex items-center gap-x-2">
+          <div className="flex flex-row items-baseline gap-x-2">
             <div className="text-xl font-semibold whitespace-nowrap text-white">{title}</div>
-            {isFilterActive && (
-              <div className="text-primary-1 text-sm font-normal">Filter active</div>
-            )}
           </div>
         </div>
         {filterType !== null && (
-          <button
-            type="button"
-            aria-label="Open filter options"
-            onClick={() => setIsOpen(!isOpen)}
-            className="h-6 w-6"
-          >
-            <ChevronRight
-              className="h-4 w-auto transition-transform duration-300 ease-in-out"
-              style={{
-                transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-              }}
-              fill="white"
-            />
-          </button>
+          <div className="relative flex flex-row items-center gap-x-4">
+            {isFilterActive && (
+              <div className="text-primary-1 relative -top-px text-base font-normal">
+                Filter active
+              </div>
+            )}
+            <button
+              type="button"
+              aria-label="Open filter options"
+              onClick={() => setIsOpen(!isOpen)}
+              className="h-6 w-6"
+            >
+              <ChevronRight
+                className="h-4 w-auto transition-transform duration-300 ease-in-out"
+                style={{
+                  transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                }}
+                fill="white"
+              />
+            </button>
+          </div>
         )}
       </header>
       {isOpen && renderFilterControls()}
@@ -312,7 +316,7 @@ export default function CircuitsFilterPanel({
     <div
       className={classNames(
         'bg-primary-8 transition-right fixed top-0 z-100 flex h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto p-8 duration-500 ease-in-out',
-        isActive ? 'right-[40px]' : 'right-[-480px]'
+        isActive ? 'right-0' : 'right-[-480px]'
       )}
     >
       <header className="mb-8 flex w-full flex-row items-center justify-between">
