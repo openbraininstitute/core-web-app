@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
+
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
 import { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { slugifyForUrl } from '@/components/explore-section/utils';
@@ -29,7 +30,6 @@ function SectionItem({ item, index, highlightedCellType, onSectionInView }: Sect
       isInitialRender.current = false;
       return;
     }
-    console.log(`Section ${slug} inView: ${inView}`);
     if (inView) {
       onSectionInView(slug);
     }
