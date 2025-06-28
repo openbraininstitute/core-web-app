@@ -1,11 +1,11 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
 import { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { slugifyForUrl } from '@/components/explore-section/utils';
 import { classNames } from '@/util/utils';
-import { useEffect, useRef } from 'react';
-import { useInView } from 'react-intersection-observer';
 
 import styles from './all-types-block.module.css';
 

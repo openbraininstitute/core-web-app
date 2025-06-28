@@ -4,6 +4,7 @@ export type SingleColumnContent = {
   title: string;
   id: string;
   isActive: boolean;
+  columnCustomizable: boolean;
   filterType: 'text' | 'numeric' | 'select' | 'boolean' | 'date' | null;
 };
 
@@ -19,72 +20,84 @@ export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     title: 'Name',
     id: 'name',
     isActive: true,
+    columnCustomizable: true,
     filterType: null,
   },
   {
     title: 'Subcircuits',
     id: 'subcircuits',
     isActive: true,
+    columnCustomizable: false,
     filterType: null,
   },
   {
     title: 'Description',
     id: 'description',
     isActive: true,
+    columnCustomizable: true,
     filterType: null,
   },
   {
     title: 'Brain region',
     id: 'brainRegion',
     isActive: true,
+    columnCustomizable: true,
     filterType: null,
   },
   {
     title: 'Scale',
     id: 'scale',
     isActive: true,
+    columnCustomizable: true,
     filterType: 'select',
   },
   {
     title: '# Neurons',
     id: 'numberOfNeurons',
     isActive: true,
+    columnCustomizable: true,
     filterType: 'numeric',
   },
   {
     title: '# Connections',
     id: 'numberOfConnections',
     isActive: true,
+    columnCustomizable: true,
     filterType: 'numeric',
   },
   {
     title: '# Synapses',
     id: 'numberOfSynapses',
     isActive: true,
+    columnCustomizable: true,
     filterType: 'numeric',
   },
   {
     title: 'Species',
     id: 'specie',
     isActive: true,
+    columnCustomizable: true,
     filterType: null,
   },
   {
     title: 'Published In',
     id: 'publishedIn',
     isActive: true,
+    columnCustomizable: true,
     filterType: null,
   },
   {
     title: 'Registration date',
     id: 'registrationDate',
     isActive: true,
+    columnCustomizable: true,
     filterType: null,
   },
   {
     title: 'Build category',
     id: 'buildCategory',
     isActive: true,
+    columnCustomizable: true,
     filterType: 'select',
   },
 ];

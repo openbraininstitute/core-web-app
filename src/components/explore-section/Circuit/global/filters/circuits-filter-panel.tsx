@@ -27,11 +27,13 @@ export function SingleFilterItem({
   id,
   index,
   filterType,
+  columnCustomizable,
 }: {
   title: string;
   id: string;
   index: number;
   filterType: SingleColumnContent['filterType'];
+  columnCustomizable: SingleColumnContent['columnCustomizable'];
 }) {
   const [columns] = useAtom(columnsAtom);
   const [, toggleColumn] = useAtom(toggleColumnAtom);
@@ -279,7 +281,11 @@ export function SingleFilterItem({
             <button
               type="button"
               onClick={() => toggleColumn(id)}
-              className="flex h-8 w-8 items-center justify-between text-white"
+              className={classNames(
+                'flex h-8 w-8 items-center justify-between text-white',
+                columnCustomizable ? 'pointer-events-auto' : 'pointer-events-none hidden'
+              )}
+              disabled={!columnCustomizable}
             >
               {isColumnActive ? (
                 <EyeIcon className="h-5 w-5" />
@@ -364,6 +370,7 @@ export default function CircuitsFilterPanel({
             title={column.title}
             index={index}
             filterType={column.filterType}
+            columnCustomizable={column.columnCustomizable}
           />
         ))}
       </div>

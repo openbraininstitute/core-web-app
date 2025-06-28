@@ -81,8 +81,6 @@ export default function CircuitTable({
         throw new Error(`Invalid numberOfNeurons for circuit ${circuit.key}`);
       }
 
-      console.log(`Circuit: ${circuit.name}, numberOfNeurons: ${numberOfNeurons}`); // Debug: Log numberOfNeurons
-
       return {
         ...circuit,
         key: circuit.key || `circuit-${Math.random().toString(36).slice(2)}`,
@@ -114,30 +112,23 @@ export default function CircuitTable({
 
   // IF FILTERS ARE ACTIVE
   const filteredData = useMemo(() => {
-    console.log('Filters:', filters); // Debug: Log the filters object
     let result: CircuitSchemaProps[] =
       toggle === 'hierarchical' ? cleanedData.hierarchical : cleanedData.flattened;
 
-    // Apply filters from filtersAtom
     Object.entries(filters).forEach(([columnId, filter]) => {
       if (!filter) return;
 
       const column = columnState.find((col) => col.id === columnId);
       const filterType = column?.filterType;
 
-      console.log(`Applying filter - Column: ${columnId}, Filter:`, filter); // Debug: Log each filter
-
       result = result.filter((circuit) => {
         const value = circuit[columnId as keyof CircuitSchemaProps];
 
-        // Check if circuit itself matches
         let matches = false;
         if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
           const min = filter.min as number | undefined;
           const max = filter.max as number | undefined;
-          console.log(
-            `Numeric filter - Column: ${columnId}, Value: ${value}, Min: ${min}, Max: ${max}`
-          ); // Debug: Log numeric filter details
+
           if (filter.type === 'greaterThan' && min !== undefined) {
             matches = value > min;
           }
@@ -165,7 +156,6 @@ export default function CircuitTable({
           matches = value === (filter.min === 'true');
         }
 
-        // Check if any subcircuits match (for hierarchical mode)
         if (toggle === 'hierarchical' && !matches && circuit.subcircuits?.length) {
           const hasMatchingSubcircuit = circuit.subcircuits.some((sub) => {
             const subValue = sub[columnId as keyof CircuitSchemaProps];
@@ -203,7 +193,6 @@ export default function CircuitTable({
       });
     });
 
-    // Apply searchQuery filter
     if (searchQuery) {
       result = result.filter((circuit) =>
         ['name', 'brainRegion', 'scale', 'specie', 'publishedIn', 'buildCategory'].some((field) => {
@@ -215,7 +204,6 @@ export default function CircuitTable({
       );
     }
 
-    console.log('Filtered data:', result); // Debug: Log the filtered data
     return result;
   }, [cleanedData, toggle, filters, searchQuery, columnState]);
 
