@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useInView } from 'react-intersection-observer';
-
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
 import { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { slugifyForUrl } from '@/components/explore-section/utils';
 import { classNames } from '@/util/utils';
+import { useEffect, useRef } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 import styles from './all-types-block.module.css';
 
@@ -20,11 +19,17 @@ interface SectionItemProps {
 function SectionItem({ item, index, highlightedCellType, onSectionInView }: SectionItemProps) {
   const slug = slugifyForUrl(item.pref_label);
   const { ref, inView } = useInView({
-    rootMargin: '0px 0px 0px 0px',
-    threshold: 0,
+    rootMargin: '0px 0px -50% 0px',
+    threshold: 0.5,
   });
+  const isInitialRender = useRef(true);
 
   useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+    console.log(`Section ${slug} inView: ${inView}`);
     if (inView) {
       onSectionInView(slug);
     }
@@ -70,7 +75,6 @@ export default function AllTypesBlock({
 
   const sortedData = data.sort((a, b) => a.pref_label.localeCompare(b.pref_label));
 
-  // Clear highlight after animation (2 seconds)
   useEffect(() => {
     if (highlightedCellType) {
       const timer = setTimeout(() => {
