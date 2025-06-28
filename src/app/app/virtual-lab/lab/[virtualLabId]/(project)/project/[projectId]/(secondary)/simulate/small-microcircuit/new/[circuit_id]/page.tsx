@@ -70,11 +70,6 @@ const ORDERING: Record<string, { order: number; category: string }> = {
 
 const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
 
-function isRootCategory(key: string) {
-  const isRoot = ['initialize', 'info'];
-  return isRoot.includes(key);
-}
-
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
@@ -92,6 +87,10 @@ export default function TinyCircuitSimulation() {
   const notification = useAppNotification();
 
   const [campaignId, setCampaignId] = useState('');
+
+  function isRootCategory(key: string) {
+    return schema?.properties?.[key] && !schema.properties[key].additionalProperties;
+  }
 
   function resolveKey(tabKey: string, itemIdx: number | null) {
     if (typeof itemIdx === null) throw new Error('Invalid itemIdx');
@@ -526,8 +525,7 @@ export default function TinyCircuitSimulation() {
             {schema.properties &&
               schema.properties?.[configTab] &&
               editing &&
-              (!schema.properties?.[configTab]?.additionalProperties?.anyOf ||
-                selectedCatSchema) && (
+              (isRootCategory(configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
                   disabled={!!campaignId || loading}
                   config={config}
