@@ -345,34 +345,7 @@ export default function TinyCircuitSimulation() {
                 type="button"
                 onClick={() => {
                   setEditing(true);
-                  if (!isRootCategory(configTab)) {
-                    const initial: Record<string, ConfigValue> = {};
-
-                    if (v.properties)
-                      Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                        if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                        else initial[subkey] = subValue.default ?? null;
-                      });
-
-                    const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                      parseInt(subkey.split('_')[1], 10)
-                    );
-
-                    itemIndexes.sort((a, b) => a - b);
-
-                    const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-
-                    setSelectedItemIdx(itemIdx);
-                    setSelectedCategory('');
-                    setAtomsMap({
-                      ...atomsMap,
-                      [configTab]: {
-                        ...atomsMap[configTab],
-                        [resolveKey(configTab, itemIdx)]:
-                          atom<Record<string, ConfigValue>>(initial),
-                      },
-                    });
-                  }
+                  setSelectedCategory('');
                 }}
               >
                 Add {v.singular_name ?? v.title ?? 'item'}
@@ -516,7 +489,29 @@ export default function TinyCircuitSimulation() {
                         <div
                           className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                           onClick={() => {
+                            if (isRootCategory(configTab)) return;
                             setSelectedCategory(o.properties?.type.const ?? '');
+
+                            const initial: Record<string, ConfigValue> = {};
+                            if (o.properties)
+                              Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                                else initial[subkey] = subValue.default ?? null;
+                              });
+                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                              parseInt(subkey.split('_')[1], 10)
+                            );
+                            itemIndexes.sort((a, b) => a - b);
+                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                            setSelectedItemIdx(itemIdx);
+                            setAtomsMap({
+                              ...atomsMap,
+                              [configTab]: {
+                                ...atomsMap[configTab],
+                                [resolveKey(configTab, itemIdx)]:
+                                  atom<Record<string, ConfigValue>>(initial),
+                              },
+                            });
                           }}
                         >
                           <div className="text-primary-9 text-lg font-bold">{o.title}</div>
