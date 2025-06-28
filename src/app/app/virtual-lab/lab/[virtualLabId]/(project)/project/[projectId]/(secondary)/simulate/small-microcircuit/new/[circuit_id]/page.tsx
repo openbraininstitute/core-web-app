@@ -124,8 +124,6 @@ export default function TinyCircuitSimulation() {
 
   const [config] = useAtom(configAtom);
 
-  console.log(config);
-
   const errors = useMemo(() => {
     if (validate) validate(config);
     return validate?.errors;
@@ -140,6 +138,8 @@ export default function TinyCircuitSimulation() {
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
         const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+
+        console.log(theSchema);
 
         if (!theSchema.properties) return;
 
@@ -260,7 +260,7 @@ export default function TinyCircuitSimulation() {
 
                             const selectedTabAtoms = atomsMap[configTab];
                             if (!isAtom(selectedTabAtoms)) {
-                              const refereeKey = `${schema.properties?.[configTab].title}_${idx}`;
+                              const refereeKey = `${schema.properties?.[configTab].singular_name}_${idx}`;
                               delete selectedTabAtoms[refereeKey];
 
                               // Initialize case
@@ -355,14 +355,14 @@ export default function TinyCircuitSimulation() {
                       ...atomsMap,
                       [configTab]: {
                         ...atomsMap[configTab],
-                        [`${schema.properties?.[configTab].title}_${itemIdx}`]:
+                        [`${schema.properties?.[configTab].singular_name}_${itemIdx}`]:
                           atom<Record<string, ConfigValue>>(initial),
                       },
                     });
                   }
                 }}
               >
-                Add {v.title}
+                Add {v.singular_name ?? v.title ?? 'item'}
                 <PlusCircleOutlined />
               </button>
             )}
@@ -531,7 +531,7 @@ export default function TinyCircuitSimulation() {
                     isAtom(atomsMap[configTab])
                       ? atomsMap[configTab]
                       : atomsMap[configTab][
-                          `${schema.properties?.[configTab].title}_${selectedItemIdx}`
+                          `${schema.properties?.[configTab].singular_name}_${selectedItemIdx}`
                         ]
                   }
                 />

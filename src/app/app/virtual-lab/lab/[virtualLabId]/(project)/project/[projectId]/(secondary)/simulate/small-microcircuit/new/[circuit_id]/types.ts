@@ -20,4 +20,5 @@ export type JSONSchema = {
   default?: any;
   examples?: any[];
   [key: string]: any;
+  singular_name?: string;
 };
