@@ -229,7 +229,8 @@ export default function CircuitTable({
   const filteredColumns = useMemo(() => {
     const allColumns = columns(
       expandedRowKeys,
-      calculateSubcircuitsForParent,
+      (row: CircuitSchemaProps) =>
+        calculateSubcircuitsForParent(row, matchesFilters, hasMatchingSubcircuit),
       handleRowExpandClick,
       isCircuitDetailPage,
       handleOpenDownloadModal,
@@ -249,6 +250,8 @@ export default function CircuitTable({
     columnState,
     filters,
     searchQuery,
+    matchesFilters,
+    hasMatchingSubcircuit,
   ]);
 
   // EXPAND ALL WHEN FILTERS OR SEARCH ARE ACTIVE

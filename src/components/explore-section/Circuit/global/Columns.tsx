@@ -85,8 +85,7 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, index: number) => {
         const isExpanded = Array.isArray(expandedRowKeys) && expandedRowKeys.includes(record.key);
         const totalSubcircuitsForParent = calculateSubcircuitsForParent(record);
-        const subcircuitCount =
-          (record.subcircuits?.length ?? 0) > 0 ? totalSubcircuitsForParent : '–';
+        const subcircuitCount = totalSubcircuitsForParent > 0 ? totalSubcircuitsForParent : '–';
 
         return (
           <button
