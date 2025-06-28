@@ -14,9 +14,11 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
     ['Experimental Data ', 'Model Data '].includes(item.Name)
   );
 
-  const contentArtifactType = content.filter(
-    (item: ContentForGlossaryItem) => !['Experimental Data ', 'Model Data '].includes(item.Name)
-  );
+  const contentArtifactType = content
+    .filter(
+      (item: ContentForGlossaryItem) => !['Experimental Data ', 'Model Data '].includes(item.Name)
+    )
+    .sort((a, b) => a.Name.localeCompare(b.Name));
 
   return (
     <div className="fixed z-50 w-[255px]">
