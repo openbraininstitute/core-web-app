@@ -70,6 +70,11 @@ const ORDERING: Record<string, { order: number; category: string }> = {
 
 const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
 
+function isRootCategory(key: string) {
+  const isRoot = ['initialize', 'info'];
+  return isRoot.includes(key);
+}
+
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
@@ -332,7 +337,7 @@ export default function TinyCircuitSimulation() {
                 type="button"
                 onClick={() => {
                   setEditing(true);
-                  if (!isAtom(atomsMap[configTab])) {
+                  if (!isRootCategory(configTab)) {
                     const initial: Record<string, ConfigValue> = {};
 
                     if (v.properties)
