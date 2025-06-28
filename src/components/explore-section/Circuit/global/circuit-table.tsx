@@ -27,7 +27,7 @@ export default function CircuitTable({
   hasSearch?: boolean;
 }) {
   const [circuitToDownload, setCircuitToDownload] = useState<CircuitSchemaProps | null>(null);
-  const [downloadModalOpen, SetDownloadModalOpen] = useState<boolean>(false);
+  const [downloadModalOpen, setDownloadModalOpen] = useState<boolean>(false);
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
 
   // FILTERING
@@ -48,17 +48,17 @@ export default function CircuitTable({
       setFilter({ columnId, filter: null });
     });
     setSearchQuery('');
-  }, [filters, setFilter, setSearchQuery]);
+  }, [filters, setFilter]);
 
   // DOWNLOAD MODAL
   const handleOpenDownloadModal = useCallback((record: CircuitSchemaProps) => {
     setCircuitToDownload(record);
-    SetDownloadModalOpen(true);
+    setDownloadModalOpen(true);
   }, []);
 
   const handleCloseDownloadModal = useCallback(() => {
     setCircuitToDownload(null);
-    SetDownloadModalOpen(false);
+    setDownloadModalOpen(false);
   }, []);
 
   // PATHNAME
@@ -66,14 +66,14 @@ export default function CircuitTable({
   const isCircuitDetailPage = pathname.includes('/circuit/');
 
   // ROW EXPANSION
-  const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
+  const handleRowExpandClick = useCallback((row: CircuitSchemaProps) => {
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
       prev.includes(rowKey) ? prev.filter((key) => key !== rowKey) : [...prev, rowKey]
     );
   }, []);
 
-  // DATA
+  // DATA CLEANING
   const cleanedData = useMemo(() => {
     const result = data.map((circuit: CircuitSchemaProps) => {
       const { numberOfNeurons } = circuit;
@@ -110,102 +110,94 @@ export default function CircuitTable({
     return { hierarchical: result, flattened };
   }, [data]);
 
-  // IF FILTERS ARE ACTIVE
+  // HELPER FUNCTION TO CHECK IF A CIRCUIT MATCHES FILTERS
+  const matchesFilters = useCallback(
+    (circuit: CircuitSchemaProps) => {
+      let matches = true;
+
+      // Apply column filters
+      Object.entries(filters).forEach(([columnId, filter]) => {
+        if (!filter) return;
+
+        const column = columnState.find((col) => col.id === columnId);
+        const filterType = column?.filterType;
+        const value = circuit[columnId as keyof CircuitSchemaProps];
+
+        let currentMatch = false;
+        if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
+          const min = filter.min as number | undefined;
+          const max = filter.max as number | undefined;
+          if (filter.type === 'greaterThan' && min !== undefined) {
+            currentMatch = value > min;
+          } else if (filter.type === 'lessThan' && max !== undefined) {
+            currentMatch = value < max;
+          } else if (filter.type === 'between' && min !== undefined && max !== undefined) {
+            currentMatch = value >= min && value <= max;
+          }
+        } else if (filterType === 'text' && typeof value === 'string' && filter.min) {
+          currentMatch = value.toLowerCase().includes((filter.min as string).toLowerCase());
+        } else if (filterType === 'select' && filter.type) {
+          currentMatch = value === filter.type;
+        } else if (filterType === 'date' && typeof value === 'string' && filter.min) {
+          currentMatch = moment(value).isSame(moment(filter.min as string), 'day');
+        } else if (filterType === 'boolean' && filter.min) {
+          currentMatch = value === (filter.min === 'true');
+        }
+
+        matches = matches && currentMatch;
+      });
+
+      // Apply search query
+      if (searchQuery) {
+        matches =
+          matches &&
+          ['name', 'brainRegion', 'scale', 'specie', 'publishedIn', 'buildCategory'].some(
+            (field) => {
+              const value = circuit[field as keyof CircuitSchemaProps];
+              return (
+                typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+            }
+          );
+      }
+
+      return matches;
+    },
+    [filters, searchQuery, columnState]
+  );
+
+  // HELPER FUNCTION TO CHECK IF A CIRCUIT OR ITS SUBCIRCUITS MATCH
+  const hasMatchingSubcircuit = useCallback(
+    (circuit: CircuitSchemaProps): boolean => {
+      if (matchesFilters(circuit)) return true;
+      if (!circuit.subcircuits || circuit.subcircuits.length === 0) return false;
+      return circuit.subcircuits.some((sub) => hasMatchingSubcircuit(sub));
+    },
+    [matchesFilters]
+  );
+
+  // FILTERED DATA
   const filteredData = useMemo(() => {
     let result: CircuitSchemaProps[] =
       toggle === 'hierarchical' ? cleanedData.hierarchical : cleanedData.flattened;
 
-    Object.entries(filters).forEach(([columnId, filter]) => {
-      if (!filter) return;
-
-      const column = columnState.find((col) => col.id === columnId);
-      const filterType = column?.filterType;
-
-      result = result.filter((circuit) => {
-        const value = circuit[columnId as keyof CircuitSchemaProps];
-
-        let matches = false;
-        if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
-          const min = filter.min as number | undefined;
-          const max = filter.max as number | undefined;
-
-          if (filter.type === 'greaterThan' && min !== undefined) {
-            matches = value > min;
-          }
-          if (filter.type === 'lessThan' && max !== undefined) {
-            matches = value < max;
-          }
-          if (filter.type === 'between' && min !== undefined && max !== undefined) {
-            matches = value >= min && value <= max;
-          }
-        }
-
-        if (filterType === 'text' && typeof value === 'string' && filter.min) {
-          matches = value.toLowerCase().includes((filter.min as string).toLowerCase());
-        }
-
-        if (filterType === 'select' && filter.type) {
-          matches = value === filter.type;
-        }
-
-        if (filterType === 'date' && typeof value === 'string' && filter.min) {
-          matches = moment(value).isSame(moment(filter.min as string), 'day');
-        }
-
-        if (filterType === 'boolean' && filter.min) {
-          matches = value === (filter.min === 'true');
-        }
-
-        if (toggle === 'hierarchical' && !matches && circuit.subcircuits?.length) {
-          const hasMatchingSubcircuit = circuit.subcircuits.some((sub) => {
-            const subValue = sub[columnId as keyof CircuitSchemaProps];
-            if (filterType === 'numeric' && typeof subValue === 'number' && filter.type) {
-              const min = filter.min as number | undefined;
-              const max = filter.max as number | undefined;
-              if (filter.type === 'greaterThan' && min !== undefined) {
-                return subValue > min;
-              }
-              if (filter.type === 'lessThan' && max !== undefined) {
-                return subValue < max;
-              }
-              if (filter.type === 'between' && min !== undefined && max !== undefined) {
-                return subValue >= min && subValue <= max;
-              }
-            }
-            if (filterType === 'text' && typeof subValue === 'string' && filter.min) {
-              return subValue.toLowerCase().includes((filter.min as string).toLowerCase());
-            }
-            if (filterType === 'select' && filter.type) {
-              return subValue === filter.type;
-            }
-            if (filterType === 'date' && typeof subValue === 'string' && filter.min) {
-              return moment(subValue).isSame(moment(filter.min as string), 'day');
-            }
-            if (filterType === 'boolean' && filter.min) {
-              return subValue === (filter.min === 'true');
-            }
-            return false;
-          });
-          matches = matches || hasMatchingSubcircuit;
-        }
-
-        return matches;
-      });
+    // Filter circuits: include only those that match filters or have matching subcircuits
+    result = result.filter((circuit) => {
+      const circuitMatches = matchesFilters(circuit);
+      const hasMatchingSub = toggle === 'hierarchical' && hasMatchingSubcircuit(circuit);
+      return circuitMatches || hasMatchingSub;
     });
 
-    if (searchQuery) {
-      result = result.filter((circuit) =>
-        ['name', 'brainRegion', 'scale', 'specie', 'publishedIn', 'buildCategory'].some((field) => {
-          const value = circuit[field as keyof CircuitSchemaProps];
-          return (
-            typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-        })
-      );
+    // Mark non-matching parents with matching subcircuits
+    if (toggle === 'hierarchical') {
+      result = result.map((circuit) => ({
+        ...circuit,
+        isNonMatchingParent: !matchesFilters(circuit) && hasMatchingSubcircuit(circuit),
+      }));
     }
 
     return result;
-  }, [cleanedData, toggle, filters, searchQuery, columnState]);
+  }, [cleanedData, toggle, matchesFilters, hasMatchingSubcircuit]);
 
   const flattenedData = useMemo(() => {
     if (toggle === 'hierarchical') {
@@ -230,11 +222,10 @@ export default function CircuitTable({
   }, [filteredData, toggle]);
 
   const tableData = useMemo(() => {
-    const selectedData = toggle === 'hierarchical' ? filteredData : flattenedData;
-    return selectedData;
+    return toggle === 'hierarchical' ? filteredData : flattenedData;
   }, [toggle, filteredData, flattenedData]);
 
-  // COLUMN FILTERED
+  // COLUMNS
   const filteredColumns = useMemo(() => {
     const allColumns = columns(
       expandedRowKeys,
@@ -260,16 +251,19 @@ export default function CircuitTable({
     searchQuery,
   ]);
 
+  // EXPAND ALL WHEN FILTERS OR SEARCH ARE ACTIVE
   useEffect(() => {
-    if (toggle === 'hierarchical' && searchQuery) {
+    const isFilterActive =
+      Object.values(filters).some((f) => f !== null) || searchQuery.trim() !== '';
+    if (toggle === 'hierarchical' && isFilterActive) {
       const expandableKeys = collectExpandableKeys(cleanedData.hierarchical);
       setExpandedRowKeys(expandableKeys);
     } else {
       setExpandedRowKeys([]);
     }
-  }, [searchQuery, cleanedData, toggle]);
+  }, [filters, searchQuery, cleanedData, toggle]);
 
-  // ROW EXPANSION & SUBCIRCUITS
+  // ROW EXPANSION
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
@@ -277,6 +271,7 @@ export default function CircuitTable({
     );
   }, []);
 
+  // RENDER SUBCIRCUITS
   const renderSubcircuits = useCallback(
     (circuit: CircuitSchemaProps) =>
       circuit.subcircuits && circuit.subcircuits.length > 0 ? (
@@ -354,27 +349,25 @@ export default function CircuitTable({
           isActive={filterPanelActive}
           toggle={() => setFilterPanelActive(!filterPanelActive)}
         />
-        <>
-          <div
-            className={classNames(
-              'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
-              downloadModalOpen ? 'right-0' : '-right-full'
-            )}
-          >
-            {circuitToDownload !== null && (
-              <DownloadContainer
-                content={circuitToDownload}
-                handleCloseDownloadModal={handleCloseDownloadModal}
-              />
-            )}
-          </div>
-          <div
-            className={classNames(
-              'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
-              downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
-            )}
-          />
-        </>
+        <div
+          className={classNames(
+            'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
+            downloadModalOpen ? 'right-0' : '-right-full'
+          )}
+        >
+          {circuitToDownload !== null && (
+            <DownloadContainer
+              content={circuitToDownload}
+              handleCloseDownloadModal={handleCloseDownloadModal}
+            />
+          )}
+        </div>
+        <div
+          className={classNames(
+            'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
+            downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
+          )}
+        />
       </div>
     </div>
   );
