@@ -124,6 +124,8 @@ export default function TinyCircuitSimulation() {
 
   const [config] = useAtom(configAtom);
 
+  console.log(config);
+
   const errors = useMemo(() => {
     if (validate) validate(config);
     return validate?.errors;

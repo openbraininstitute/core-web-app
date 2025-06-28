@@ -45,9 +45,17 @@ export function JSONSchemaForm({
 
   useEffect(() => {
     setState((prev) => {
-      return { ...prev, type: schema.properties?.type.const ?? '' }; // Add default here
+      if (!schema.properties) return prev;
+
+      const newState: Config = { ...prev, type: schema.properties?.type.const ?? '' };
+
+      Object.entries(schema.properties).forEach(([key, v]) => {
+        if ('default' in v) newState[key] = v.default;
+      });
+
+      return newState;
     });
-  }, [stateAtom, setState, schema.properties?.type.const]);
+  }, [stateAtom, setState, schema.properties]);
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
