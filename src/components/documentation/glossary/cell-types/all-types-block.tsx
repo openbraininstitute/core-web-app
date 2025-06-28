@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useInView } from 'react-intersection-observer';
+import { useEffect } from 'react';
 
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
 import { CellTypeProps } from '@/components/explore-section/Circuit/type';
@@ -14,32 +13,15 @@ interface SectionItemProps {
   item: CellTypeProps;
   index: number;
   highlightedCellType: string | null;
-  onSectionInView: (slug: string) => void;
 }
 
-function SectionItem({ item, index, highlightedCellType, onSectionInView }: SectionItemProps) {
+function SectionItem({ item, index, highlightedCellType }: SectionItemProps) {
   const slug = slugifyForUrl(item.pref_label);
-  const { ref, inView } = useInView({
-    rootMargin: '0px 0px -50% 0px',
-    threshold: 0.5,
-  });
-  const isInitialRender = useRef(true);
-
-  useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      return;
-    }
-    if (inView) {
-      onSectionInView(slug);
-    }
-  }, [inView, slug, onSectionInView]);
 
   return (
     <section
       key={item.pref_label}
       id={slug}
-      ref={ref}
       className={classNames(
         'scroll-mt-4',
         index !== 0 && 'border-primary-7 border-t pt-4',
@@ -56,14 +38,12 @@ export type AllTypesBlockProps = {
   cellType: 'm-type' | 'e-type';
   highlightedCellType: string | null;
   setHighlightedCellType: (slug: string | null) => void;
-  onSectionInView: (slug: string) => void;
 };
 
 export default function AllTypesBlock({
   cellType,
   highlightedCellType,
   setHighlightedCellType,
-  onSectionInView,
 }: AllTypesBlockProps) {
   const cellcontent = useFetchEntityTypes({ cellType });
 
@@ -92,7 +72,6 @@ export default function AllTypesBlock({
           item={item}
           index={index}
           highlightedCellType={highlightedCellType}
-          onSectionInView={onSectionInView}
         />
       ))}
     </div>
