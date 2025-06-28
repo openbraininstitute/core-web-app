@@ -93,7 +93,14 @@ export default function TinyCircuitSimulation() {
 
   const [campaignId, setCampaignId] = useState('');
 
-  console.log(campaignId);
+  function resolveKey(tabKey: string, itemIdx: number | null) {
+    if (typeof itemIdx === null) throw new Error('Invalid itemIdx');
+    if (!schema?.properties?.[configTab]?.singular_name)
+      throw new Error(`Invalid schema for ${configTab}`);
+    if (isRootCategory(tabKey)) throw new Error("Shouldn't be a root category");
+
+    return `${schema.properties[configTab].singular_name.replaceAll(' ', '')}_${itemIdx}`;
+  }
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -265,7 +272,8 @@ export default function TinyCircuitSimulation() {
 
                             const selectedTabAtoms = atomsMap[configTab];
                             if (!isAtom(selectedTabAtoms)) {
-                              const refereeKey = `${schema.properties?.[configTab].singular_name}_${idx}`;
+                              const refereeKey = resolveKey(configTab, idx);
+
                               delete selectedTabAtoms[refereeKey];
 
                               // Initialize case
@@ -360,7 +368,7 @@ export default function TinyCircuitSimulation() {
                       ...atomsMap,
                       [configTab]: {
                         ...atomsMap[configTab],
-                        [`${schema.properties?.[configTab].singular_name}_${itemIdx}`]:
+                        [resolveKey(configTab, itemIdx)]:
                           atom<Record<string, ConfigValue>>(initial),
                       },
                     });
@@ -376,6 +384,8 @@ export default function TinyCircuitSimulation() {
       </Fragment>
     );
   }
+
+  console.log(config);
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
@@ -535,9 +545,7 @@ export default function TinyCircuitSimulation() {
                   stateAtom={
                     isAtom(atomsMap[configTab])
                       ? atomsMap[configTab]
-                      : atomsMap[configTab][
-                          `${schema.properties?.[configTab].singular_name}_${selectedItemIdx}`
-                        ]
+                      : atomsMap[configTab][resolveKey(configTab, selectedItemIdx)]
                   }
                 />
               )}
