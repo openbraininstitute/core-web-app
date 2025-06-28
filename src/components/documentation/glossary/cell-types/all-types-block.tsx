@@ -1,74 +1,100 @@
 'use client';
 
-import { Pagination, PaginationProps } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useInView } from 'react-intersection-observer';
 
-import { Metadata } from 'next';
-import { useParams } from 'next/navigation';
-import { useFetchEntityTypes } from '../../hooks/use-entitycore-cell_type-for-glossary';
+import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
+import { CellTypeProps } from '@/components/explore-section/Circuit/type';
+import { slugifyForUrl } from '@/components/explore-section/utils';
+import { classNames } from '@/util/utils';
 
-import GlossaryMTypeCard from '../glossary-m-type-card';
+import styles from './all-types-block.module.css';
 
-export const metadata: Metadata = {
-  title: 'Glossary cell types definitions',
-  description: 'Explore the glossary cell types definitions in our documentation.',
-};
+interface SectionItemProps {
+  item: CellTypeProps;
+  index: number;
+  highlightedCellType: string | null;
+  onSectionInView: (slug: string) => void;
+}
 
-export default function AllTypesBlock() {
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 20;
-  const { slug } = useParams();
-
-  const cellType = slug === 'm-type' ? 'm-type' : 'e-type';
-  const filter = useMemo(() => ({ order_by: 'pref_label' }), []);
-  const cellcontent = useFetchEntityTypes({
-    cellType,
-    filter,
+function SectionItem({ item, index, highlightedCellType, onSectionInView }: SectionItemProps) {
+  const slug = slugifyForUrl(item.pref_label);
+  const { ref, inView } = useInView({
+    rootMargin: '0px 0px -50% 0px',
+    threshold: 0.5,
   });
-  const { data: cellData } = cellcontent;
-  const data = cellData?.data;
-  const totalPages = data ? Math.ceil(data.length / itemsPerPage) : 0;
+  const isInitialRender = useRef(true);
 
-  const paginatedData = data?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const itemRender: PaginationProps['itemRender'] = (page, type, originalElement) => {
-    if (type === 'page' && (page === 1 || page === totalPages)) {
-      return null;
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
     }
-    return originalElement;
-  };
-
-  const title = slug === 'm-type' ? 'Morphological types (m-types)' : 'Electrical types (e-types)';
+    if (inView) {
+      onSectionInView(slug);
+    }
+  }, [inView, slug, onSectionInView]);
 
   return (
-    <div className="relative flex w-full flex-col gap-4 text-white">
-      <header className="bg-primary-9 fixed top-0 z-50 flex w-[550px] flex-row items-center justify-between pt-7 pb-3">
-        <h2 className="text-2xl font-bold capitalize">{title}</h2>
+    <section
+      key={item.pref_label}
+      id={slug}
+      ref={ref}
+      className={classNames(
+        'scroll-mt-4',
+        index !== 0 && 'border-primary-7 border-t pt-4',
+        highlightedCellType === slug && styles.highlight
+      )}
+    >
+      <h3 className="text-2xl font-bold text-white">{item.pref_label}</h3>
+      <p className="text-primary-1 mt-1">{item.definition || 'No description available.'}</p>
+    </section>
+  );
+}
 
-        <Pagination
-          current={currentPage}
-          total={data ? data.length : 0}
-          onChange={handlePageChange}
-          pageSize={itemsPerPage}
-          itemRender={itemRender}
-          showSizeChanger={false}
-          showLessItems
+export type AllTypesBlockProps = {
+  cellType: 'm-type' | 'e-type';
+  highlightedCellType: string | null;
+  setHighlightedCellType: (slug: string | null) => void;
+  onSectionInView: (slug: string) => void;
+};
+
+export default function AllTypesBlock({
+  cellType,
+  highlightedCellType,
+  setHighlightedCellType,
+  onSectionInView,
+}: AllTypesBlockProps) {
+  const cellcontent = useFetchEntityTypes({ cellType });
+
+  const data: CellTypeProps[] = (cellcontent.data?.data ?? []).map((item: any) => ({
+    ...item,
+    creation_date: item.creation_date ?? '',
+    update_date: item.update_date ?? '',
+  })) as CellTypeProps[];
+
+  const sortedData = data.sort((a, b) => a.pref_label.localeCompare(b.pref_label));
+
+  useEffect(() => {
+    if (highlightedCellType) {
+      const timer = setTimeout(() => {
+        setHighlightedCellType(null);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedCellType, setHighlightedCellType]);
+
+  return (
+    <div className="flex flex-col gap-8">
+      {sortedData.map((item, index) => (
+        <SectionItem
+          key={item.pref_label}
+          item={item}
+          index={index}
+          highlightedCellType={highlightedCellType}
+          onSectionInView={onSectionInView}
         />
-      </header>
-
-      <div className="flex flex-col gap-y-12 pt-16">
-        {(paginatedData?.length ?? 0) > 0 ? (
-          paginatedData!.map((item: any) => (
-            <GlossaryMTypeCard key={item.pref_label} content={item} />
-          ))
-        ) : (
-          <p>No items found</p>
-        )}
-      </div>
+      ))}
     </div>
   );
 }

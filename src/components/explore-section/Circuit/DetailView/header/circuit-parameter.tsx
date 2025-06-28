@@ -12,9 +12,9 @@ export default function CircuitParameters({ content }: { content: CircuitSchemaP
     <div className="relative grid grid-cols-3 gap-12">
       {/* COLUMN 1 */}
       <div className="relative flex flex-col gap-y-4">
-        <ParameterBox name="Brain Region" value={content.brainRegion} />
+        <ParameterBox name="Brain Region" value={content.brainRegion ?? '–'} />
         <ParameterBox name="Subcircuit of" value={content.parent ?? '–'} link={parentCircuitLink} />
-        <ParameterBox name="Scale" value={content.scale} />
+        <ParameterBox name="Scale" value={content.scale ?? '–'} />
         <ParameterBox
           name="License"
           value={content.metadata.license?.name ?? '–'}

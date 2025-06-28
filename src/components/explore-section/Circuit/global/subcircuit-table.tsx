@@ -3,7 +3,7 @@
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table/interface';
 import moment from 'moment';
-import { Key } from 'react';
+import { Key, useCallback, useMemo } from 'react';
 import { ArrowSmall } from '../icon/ArrowSubcircuitIcon';
 import { CircuitSchemaProps } from '../type';
 import { FilterConfig, SingleColumnContent } from './state/columns';
@@ -29,106 +29,98 @@ export default function SubcircuitTable({
   searchQuery,
   columnState,
 }: SubcircuitsTableProps) {
-  const renderSubcircuits = (subCircuit: CircuitSchemaProps) => (
-    <SubcircuitTable
-      circuit={subCircuit}
-      columns={columns}
-      expandedRowKeys={expandedRowKeys}
-      onExpand={onExpand}
-      filters={filters}
-      searchQuery={searchQuery}
-      columnState={columnState}
-    />
+  // HELPER FUNCTION TO CHECK IF A SUBCIRCUIT MATCHES FILTERS
+  const matchesFilters = useCallback(
+    (subCircuit: CircuitSchemaProps) => {
+      let matches = true;
+
+      // Apply column filters
+      Object.entries(filters).forEach(([columnId, filter]) => {
+        if (!filter) return;
+
+        const filterType = columnState.find((col) => col.id === columnId)?.filterType;
+        const value = subCircuit[columnId as keyof CircuitSchemaProps];
+
+        let currentMatch = false;
+        if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
+          const min = filter.min as number | undefined;
+          const max = filter.max as number | undefined;
+          if (filter.type === 'greaterThan' && min !== undefined) {
+            currentMatch = value > min;
+          } else if (filter.type === 'lessThan' && max !== undefined) {
+            currentMatch = value < max;
+          } else if (filter.type === 'between' && min !== undefined && max !== undefined) {
+            currentMatch = value >= min && value <= max;
+          }
+        } else if (filterType === 'text' && typeof value === 'string' && filter.min) {
+          currentMatch = value.toLowerCase().includes((filter.min as string).toLowerCase());
+        } else if (filterType === 'select' && filter.type) {
+          currentMatch = value === filter.type;
+        } else if (filterType === 'date' && typeof value === 'string' && filter.min) {
+          currentMatch = moment(value).isSame(moment(filter.min as string), 'day');
+        } else if (filterType === 'boolean' && filter.min) {
+          currentMatch = value === (filter.min === 'true');
+        }
+
+        matches = matches && currentMatch;
+      });
+
+      // Apply search query
+      if (searchQuery) {
+        matches =
+          matches &&
+          ['name', 'brainRegion', 'scale', 'specie', 'publishedIn', 'buildCategory'].some(
+            (field) => {
+              const value = subCircuit[field as keyof CircuitSchemaProps];
+              return (
+                typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+            }
+          );
+      }
+
+      return matches;
+    },
+    [filters, searchQuery, columnState]
   );
 
-  const isRowMatching = (record: CircuitSchemaProps) => {
-    console.log(
-      'isRowMatching - Record:',
-      record.name,
-      'Filters:',
-      filters,
-      'SearchQuery:',
-      searchQuery
-    );
+  // HELPER FUNCTION TO CHECK IF A SUBCIRCUIT OR ITS DESCENDANTS MATCH
+  const hasMatchingSubcircuit = useCallback(
+    (subCircuit: CircuitSchemaProps): boolean => {
+      if (matchesFilters(subCircuit)) return true;
+      if (!subCircuit.subcircuits || subCircuit.subcircuits.length === 0) return false;
+      return subCircuit.subcircuits.some((sub) => hasMatchingSubcircuit(sub));
+    },
+    [matchesFilters]
+  );
 
-    let matchesFilter = false;
-    let matchesSearch = false;
+  // FILTER SUBCIRCUITS
+  const filteredSubcircuits = useMemo(() => {
+    if (!circuit.subcircuits) return [];
+    return circuit.subcircuits
+      .filter((sub) => {
+        const subMatches = matchesFilters(sub);
+        const hasMatchingSub = hasMatchingSubcircuit(sub);
+        return subMatches || hasMatchingSub;
+      })
+      .map((sub) => ({
+        ...sub,
+        isNonMatchingParent: !matchesFilters(sub) && hasMatchingSubcircuit(sub),
+      }));
+  }, [circuit.subcircuits, matchesFilters, hasMatchingSubcircuit]);
 
-    // Check filtersAtom
-    for (const [columnId, filter] of Object.entries(filters)) {
-      if (!filter) continue;
-
-      const filterType = columnState.find((col) => col.id === columnId)?.filterType;
-      const value = record[columnId as keyof CircuitSchemaProps];
-
-      console.log(`Checking filter - Column: ${columnId}, Value: ${value}, Filter:`, filter);
-
-      if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
-        const min = filter.min as number | undefined;
-        const max = filter.max as number | undefined;
-        if (filter.type === 'greaterThan' && min !== undefined && value > min) {
-          matchesFilter = true;
-        } else if (filter.type === 'lessThan' && max !== undefined && value < max) {
-          matchesFilter = true;
-        } else if (
-          filter.type === 'between' &&
-          min !== undefined &&
-          max !== undefined &&
-          value >= min &&
-          value <= max
-        ) {
-          matchesFilter = true;
-        }
-      }
-
-      if (filterType === 'text' && typeof value === 'string' && filter.min) {
-        if (value.toLowerCase().includes((filter.min as string).toLowerCase())) {
-          matchesFilter = true;
-        }
-      }
-
-      if (filterType === 'select' && filter.type && value === filter.type) {
-        matchesFilter = true;
-      }
-
-      if (filterType === 'date' && typeof value === 'string' && filter.min) {
-        if (moment(value).isSame(moment(filter.min as string), 'day')) {
-          matchesFilter = true;
-        }
-      }
-
-      if (filterType === 'boolean' && filter.min && value === (filter.min === 'true')) {
-        matchesFilter = true;
-      }
-
-      if (matchesFilter) break; // Exit loop if any filter matches
-    }
-
-    // Check searchQuery
-    if (searchQuery) {
-      matchesSearch = [
-        'name',
-        'brainRegion',
-        'scale',
-        'specie',
-        'publishedIn',
-        'buildCategory',
-      ].some((field) => {
-        const value = record[field as keyof CircuitSchemaProps];
-        const matches =
-          typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase());
-        console.log(`Search check - Field: ${field}, Value: ${value}, Matches: ${matches}`);
-        return matches;
-      });
-    } else {
-      matchesSearch = true; // No search query means search doesn't restrict
-    }
-
-    const isMatching =
-      matchesFilter || (Object.values(filters).every((f) => f === null) && matchesSearch);
-    console.log('Final match result for', record.name, ':', isMatching);
-    return isMatching;
-  };
+  const renderSubcircuits = (subCircuit: CircuitSchemaProps) =>
+    subCircuit.subcircuits && subCircuit.subcircuits.length > 0 ? (
+      <SubcircuitTable
+        circuit={subCircuit}
+        columns={columns}
+        expandedRowKeys={expandedRowKeys}
+        onExpand={onExpand}
+        filters={filters}
+        searchQuery={searchQuery}
+        columnState={columnState}
+      />
+    ) : null;
 
   return (
     <div className="relative flex flex-col">
@@ -140,7 +132,7 @@ export default function SubcircuitTable({
       </div>
       <Table
         className={styles.circuitTable}
-        dataSource={circuit.subcircuits || []}
+        dataSource={filteredSubcircuits}
         columns={columns}
         pagination={false}
         expandable={{
@@ -150,16 +142,9 @@ export default function SubcircuitTable({
           expandIcon: () => null,
           rowExpandable: (record) => !!record.subcircuits && record.subcircuits.length > 0,
         }}
-        rowClassName={(record) => {
-          const isMatching = isRowMatching(record);
-          console.log(
-            'Row class for',
-            record.name,
-            ':',
-            isMatching ? 'matchingRow' : 'nonMatchingRow'
-          );
-          return isMatching ? styles.matchingRow : styles.nonMatchingRow;
-        }}
+        rowClassName={(record) =>
+          record.isNonMatchingParent ? styles.nonMatchingRow : styles.matchingRow
+        }
       />
     </div>
   );

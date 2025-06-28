@@ -31,6 +31,7 @@ export type CircuitSchemaProps = {
   name: string;
   description: string;
   parent?: string | null;
+  isNonMatchingParent?: boolean;
   derivedFrom: string[];
   hasSubcircuits: boolean;
   brainRegion: string | null;

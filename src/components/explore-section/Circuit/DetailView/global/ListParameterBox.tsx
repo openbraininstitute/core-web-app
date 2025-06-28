@@ -19,12 +19,45 @@ export default function ListParameterBox({
   slice = 5,
 }: {
   name: string;
-  value: ContributorsProps[] | string[];
+  value: ContributorsProps[] | string[] | string;
   slice?: number;
 }) {
   const [viewMore, setViewMore] = useState<boolean>(false);
 
-  const slicedContent = value.slice(0, slice);
+  // Normalize value to an array
+  let normalizedValue: ContributorsProps[] | string[];
+  if (typeof value === 'string') {
+    try {
+      normalizedValue = JSON.parse(value);
+      // Validate that parsed value is an array
+      if (!Array.isArray(normalizedValue)) {
+        return (
+          <div className="relative flex w-full flex-col items-start">
+            <div className="text-sm font-light tracking-wider text-gray-500 uppercase">{name}</div>
+            <div className="mt-2 text-red-500">Error: Invalid data format</div>
+          </div>
+        );
+      }
+    } catch (error) {
+      return (
+        <div className="relative flex w-full flex-col items-start">
+          <div className="text-sm font-light tracking-wider text-gray-500 uppercase">{name}</div>
+          <div className="mt-2 text-red-500">Error: Invalid data format</div>
+        </div>
+      );
+    }
+  } else if (Array.isArray(value)) {
+    normalizedValue = value;
+  } else {
+    return (
+      <div className="relative flex w-full flex-col items-start">
+        <div className="text-sm font-light tracking-wider text-gray-500 uppercase">{name}</div>
+        <div className="mt-2 text-red-500">Error: Invalid data provided</div>
+      </div>
+    );
+  }
+
+  const slicedContent = normalizedValue.slice(0, slice);
 
   return (
     <div className="relative flex w-full flex-col items-start">
@@ -52,7 +85,7 @@ export default function ListParameterBox({
         })}
       </div>
 
-      {value.length > slice && (
+      {normalizedValue.length > slice && (
         <button
           type="button"
           aria-label="View more"
@@ -64,7 +97,7 @@ export default function ListParameterBox({
       )}
 
       {viewMore && (
-        <div className="fixed top-0 left-0 z-[99999] flex h-screen w-screen items-center justify-center bg-black/60">
+        <div className="fixed top-0 left-0 z-100 flex h-screen w-screen items-center justify-center bg-black/60">
           <div className="text-primary-9 flex w-2/3 flex-col rounded-md bg-white p-10">
             <div className="mb-2 flex flex-row justify-between">
               <div className="text-xl font-bold">{name}</div>
@@ -77,7 +110,7 @@ export default function ListParameterBox({
               </button>
             </div>
             <div className="flex flex-row flex-wrap gap-2">
-              {value.map((item: ContributorsProps | string) => {
+              {normalizedValue.map((item: ContributorsProps | string) => {
                 if (typeof item === 'string') {
                   return (
                     <span
