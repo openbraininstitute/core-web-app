@@ -17,34 +17,6 @@ export type FilterConfig = {
 
 export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
   {
-    title: 'Name',
-    id: 'name',
-    isActive: true,
-    columnCustomizable: true,
-    filterType: null,
-  },
-  {
-    title: 'Subcircuits',
-    id: 'subcircuits',
-    isActive: true,
-    columnCustomizable: false,
-    filterType: null,
-  },
-  {
-    title: 'Description',
-    id: 'description',
-    isActive: true,
-    columnCustomizable: true,
-    filterType: null,
-  },
-  {
-    title: 'Brain region',
-    id: 'brainRegion',
-    isActive: true,
-    columnCustomizable: true,
-    filterType: null,
-  },
-  {
     title: 'Scale',
     id: 'scale',
     isActive: true,
@@ -73,8 +45,43 @@ export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     filterType: 'numeric',
   },
   {
+    title: 'Build category',
+    id: 'buildCategory',
+    isActive: true,
+    columnCustomizable: true,
+    filterType: 'select',
+  },
+  {
     title: 'Species',
     id: 'specie',
+    isActive: true,
+    columnCustomizable: true,
+    filterType: null,
+  },
+  {
+    title: 'Name',
+    id: 'name',
+    isActive: true,
+    columnCustomizable: true,
+    filterType: null,
+  },
+  {
+    title: 'Subcircuits',
+    id: 'subcircuits',
+    isActive: true,
+    columnCustomizable: false,
+    filterType: null,
+  },
+  {
+    title: 'Description',
+    id: 'description',
+    isActive: true,
+    columnCustomizable: true,
+    filterType: null,
+  },
+  {
+    title: 'Brain region',
+    id: 'brainRegion',
     isActive: true,
     columnCustomizable: true,
     filterType: null,
@@ -92,13 +99,6 @@ export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     isActive: true,
     columnCustomizable: true,
     filterType: null,
-  },
-  {
-    title: 'Build category',
-    id: 'buildCategory',
-    isActive: true,
-    columnCustomizable: true,
-    filterType: 'select',
   },
 ];
 
