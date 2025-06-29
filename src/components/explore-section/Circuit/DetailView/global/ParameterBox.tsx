@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import type { DetailedHTMLProps, HTMLAttributes } from 'react';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 import { CloseIcon } from '@/components/icons';
 
@@ -12,6 +14,13 @@ export function SingleContributorPill({ name, lastName }: { name: string; lastNa
       <div>{lastName}</div>
     </div>
   );
+}
+
+function MarkdownParagraph(
+  props: DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>
+) {
+  const { children, className } = props;
+  return <p className={`mb-4${className ? ` ${className}` : ''}`}>{children}</p>;
 }
 
 export default function ParameterBox({
@@ -51,7 +60,16 @@ export default function ParameterBox({
         </div>
       )}
       {!link && !hasViewMore && (
-        <div className="text-primary-9 text-xl leading-normal font-normal">{value}</div>
+        <div className="text-primary-9 text-xl leading-normal font-normal">
+          <ReactMarkdown
+            className="prose"
+            components={{
+              p: MarkdownParagraph,
+            }}
+          >
+            {String(value)}
+          </ReactMarkdown>
+        </div>
       )}
 
       {viewMore && (
