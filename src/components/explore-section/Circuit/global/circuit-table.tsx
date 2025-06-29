@@ -291,13 +291,22 @@ export default function CircuitTable({
     [expandedRowKeys, handleExpandRow, filteredColumns, filters, searchQuery, columnState]
   );
 
+  // FILTERS CHECKS
+  const isFilterActive = useMemo(() => {
+    return Object.values(filters).some((f) => f !== null);
+  }, [filters]);
+
+  const numberOfActiveFilters = useMemo(() => {
+    return Object.values(filters).filter((f) => f !== null).length;
+  }, [filters]);
+
   return (
     <div className="relative flex w-full flex-col">
       {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
           <div className="flex flex-row items-center gap-x-4">
-            {Object.values(filters).some((f) => f !== null) && (
+            {isFilterActive && (
               <button
                 className="mr-3 text-base text-gray-600 hover:text-gray-700"
                 onClick={handleResetFilter}
@@ -351,6 +360,9 @@ export default function CircuitTable({
         <CircuitsFilterPanel
           isActive={filterPanelActive}
           toggle={() => setFilterPanelActive(!filterPanelActive)}
+          handleResetFilter={handleResetFilter}
+          isFilterActive={isFilterActive}
+          numberOfActiveFilters={numberOfActiveFilters}
         />
         <div
           className={classNames(

@@ -331,9 +331,15 @@ export function SingleFilterItem({
 export default function CircuitsFilterPanel({
   isActive = true,
   toggle,
+  handleResetFilter,
+  isFilterActive,
+  numberOfActiveFilters,
 }: {
   isActive?: boolean;
   toggle?: () => void;
+  handleResetFilter?: () => void;
+  isFilterActive?: boolean;
+  numberOfActiveFilters?: number;
 }) {
   const columns = useAtomValue(columnsAtom);
   const totalColumns = useAtomValue(activeColumnsCountAtom);
@@ -341,43 +347,67 @@ export default function CircuitsFilterPanel({
   return (
     <div
       className={classNames(
-        'bg-primary-8 transition-right fixed top-0 z-100 flex h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto p-8 duration-500 ease-in-out',
+        'bg-primary-8 transition-right fixed top-0 z-100 flex h-screen w-[480px] shrink-0 flex-col justify-between space-y-4 overflow-y-auto p-8 duration-500 ease-in-out',
         isActive ? 'right-0' : 'right-[-480px]'
       )}
     >
-      <header className="mb-8 flex w-full flex-row items-center justify-between">
-        <div className="flex flex-row items-baseline">
-          <div className="mr-2 text-2xl font-bold text-white">Filters</div>
-          <div className="text-primary-1 text-lg font-normal">{totalColumns} active columns</div>
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={toggle}
-            className="flex h-4 w-4 items-center justify-center text-white"
-            aria-label="Close filters panel"
-          >
-            <CloseIcon iconColor="white" />
-          </button>
-        </div>
-      </header>
+      <div>
+        <header className="mb-8 flex w-full flex-row items-center justify-between">
+          <div className="flex flex-row items-baseline">
+            <div className="mr-2 text-2xl font-bold text-white">Filters</div>
+            <div className="text-primary-1 text-lg font-normal">{totalColumns} active columns</div>
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={toggle}
+              className="flex h-4 w-4 items-center justify-center text-white"
+              aria-label="Close filters panel"
+            >
+              <CloseIcon iconColor="white" />
+            </button>
+          </div>
+        </header>
 
-      <div className="flex flex-col gap-y-4">
-        {columns.map((column: SingleColumnContent, index: number) => {
-          return (
-            !!column.columnCustomizable && (
-              <SingleFilterItem
-                id={column.id}
-                key={column.id}
-                title={column.title}
-                index={index}
-                filterType={column.filterType}
-                columnCustomizable={column.columnCustomizable}
-              />
-            )
-          );
-        })}
+        <div className="flex flex-col gap-y-3">
+          {columns.map((column: SingleColumnContent, index: number) => {
+            return (
+              !!column.columnCustomizable && (
+                <SingleFilterItem
+                  id={column.id}
+                  key={column.id}
+                  title={column.title}
+                  index={index}
+                  filterType={column.filterType}
+                  columnCustomizable={column.columnCustomizable}
+                />
+              )
+            );
+          })}
+        </div>
       </div>
+
+      <footer className="flex w-full flex-row items-center gap-x-2">
+        <button
+          className={classNames(
+            'border-primary-4 mr-3 border border-solid px-4 py-2 text-base text-white',
+            isFilterActive ? 'opacity-100' : 'pointer-events-none opacity-70'
+          )}
+          onClick={handleResetFilter}
+          type="button"
+          id="reset-filter"
+          aria-label="Reset filter"
+        >
+          Reset filter
+        </button>
+        {!isFilterActive ? (
+          <div className="text-base font-normal text-white">No filter active</div>
+        ) : (
+          <div className="text-base font-normal text-white">
+            {numberOfActiveFilters} filter{numberOfActiveFilters !== 1 ? 's' : ''} active
+          </div>
+        )}
+      </footer>
     </div>
   );
 }
