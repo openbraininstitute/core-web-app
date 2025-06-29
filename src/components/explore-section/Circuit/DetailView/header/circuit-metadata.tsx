@@ -3,6 +3,8 @@ import ListParameterBox from '../global/ListParameterBox';
 import ParameterBox from '../global/ParameterBox';
 
 export default function CircuitMetadata({ content }: { content: CircuitSchemaProps }) {
+  console.log('CircuitMetadata content:', content);
+
   return (
     <div className="relative mr-24 flex w-[480px] flex-col gap-y-4">
       <div>
@@ -22,6 +24,9 @@ export default function CircuitMetadata({ content }: { content: CircuitSchemaPro
           slice={2}
         />
       </div>
+      {content.contact && (
+        <ParameterBox name="Contact" value={content.contact} link={`mailto:${content.contact}`} />
+      )}
     </div>
   );
 }
