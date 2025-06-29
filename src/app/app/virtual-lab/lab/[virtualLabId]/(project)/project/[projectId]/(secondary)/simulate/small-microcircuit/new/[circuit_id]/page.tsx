@@ -82,6 +82,8 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
+  const [collapsedHeader, setCollapsedHeader] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
   const notification = useAppNotification();
@@ -210,6 +212,15 @@ export default function TinyCircuitSimulation() {
           tab={k}
           selectedTab={configTab}
           onClick={() => {
+            if (configTab === k && !isRootCategory(k)) {
+              setEditing(false);
+              setSelectedCategory('');
+              setSelectedItemIdx(null);
+              setCollapsedHeader(!collapsedHeader);
+              return;
+            }
+
+            setCollapsedHeader(false);
             setConfigTab(k);
             setSelectedItemIdx(null);
             if (!v.additionalProperties) setEditing(true);
@@ -229,7 +240,7 @@ export default function TinyCircuitSimulation() {
             <Chevron rotate={v.additionalProperties ? 90 : 0} />
           </div>
         </Tab>
-        {v.additionalProperties && configTab === k && config[k] && (
+        {v.additionalProperties && configTab === k && config[k] && !collapsedHeader && (
           <>
             {Object.entries(config[k]).map(([subkey, subValue]) => {
               const idx = parseInt(subkey.split('_')[1], 10);
