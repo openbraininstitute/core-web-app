@@ -371,7 +371,7 @@ export default function TinyCircuitSimulation() {
   console.log(config);
 
   return (
-    <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
+    <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <div className="flex">
         <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
           <Tab
@@ -397,30 +397,31 @@ export default function TinyCircuitSimulation() {
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
-        <div className="grid min-h-0 flex-grow grid-cols-[1fr_1fr_2fr] gap-5">
-          <div className="flex h-full flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5">
-            {CATEGORIES.map((c) => {
-              return (
-                <Fragment key={c}>
-                  <div className="self-start text-gray-500 uppercase">{c}</div>
-                  {schema.properties &&
-                    Object.entries(schema.properties)
-                      .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                      .sort((a, b) => {
-                        const order = (k: string) => ORDERING[k]?.order ?? 999;
-                        return order(a[0]) - order(b[0]);
-                      })
-                      .map((entry) => {
-                        return renderSection(entry);
-                      })}
-                </Fragment>
-              );
-            })}
-
+        <div className="grid h-[calc(100%-100px)] grid-cols-[1fr_1fr_2fr] gap-5">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5 pb-5">
+              {CATEGORIES.map((c) => {
+                return (
+                  <Fragment key={c}>
+                    <div className="self-start text-gray-500 uppercase">{c}</div>
+                    {schema.properties &&
+                      Object.entries(schema.properties)
+                        .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                        .sort((a, b) => {
+                          const order = (k: string) => ORDERING[k]?.order ?? 999;
+                          return order(a[0]) - order(b[0]);
+                        })
+                        .map((entry) => {
+                          return renderSection(entry);
+                        })}
+                  </Fragment>
+                );
+              })}
+            </div>
             <button
               type="button"
               className={classNames(
-                'mt-5 flex h-[50px] w-[100%] items-center justify-center rounded-full px-5 py-2 text-lg drop-shadow',
+                'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
                 (errors && errors.length > 0) || loading
                   ? 'bg-gray-300 text-gray-500'
                   : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
