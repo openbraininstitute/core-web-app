@@ -73,7 +73,7 @@ export default function ParameterBox({
       )}
 
       {viewMore && (
-        <div className="fixed top-0 left-0 z-100 flex h-screen w-screen items-center justify-center bg-black/60">
+        <div className="fixed top-0 left-0 z-50 flex h-screen w-screen items-center justify-center bg-black/60">
           <div className="text-primary-9 flex w-2/3 flex-col rounded-md bg-white p-10">
             <div className="mb-2 flex flex-row justify-between">
               <div className="text-xl font-bold">{name}</div>

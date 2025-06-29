@@ -22,7 +22,7 @@ function MainDetailViewCore({
   derivedCircuits: CircuitSchemaProps[] | null;
 }) {
   return (
-    <div className="text-primary-9 relative z-0 w-full max-w-full py-10 pr-10 pl-20">
+    <div className="text-primary-9 relative z-0 ml-20 w-full max-w-full py-10 pr-10">
       <HeaderDetailView content={content} />
       <SectionMainContainer
         content={content}
