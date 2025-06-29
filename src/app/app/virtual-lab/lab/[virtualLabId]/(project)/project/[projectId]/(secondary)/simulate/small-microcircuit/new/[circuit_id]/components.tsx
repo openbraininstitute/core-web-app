@@ -44,16 +44,17 @@ export function JSONSchemaForm({
   };
 
   useEffect(() => {
+    if (!schema.properties) return;
+
+    const initial: Record<string, ConfigValue> = {};
+
+    Object.entries(schema.properties).forEach(([key, value]) => {
+      if (key === 'type') initial[key] = value.const ?? null;
+      else initial[key] = value.default ?? null;
+    });
+
     setState((prev) => {
-      if (!schema.properties) return prev;
-
-      const newState: Config = { ...prev, type: schema.properties?.type.const ?? '' };
-
-      Object.entries(schema.properties).forEach(([key, v]) => {
-        if ('default' in v) newState[key] = v.default;
-      });
-
-      return newState;
+      return { ...initial, ...prev };
     });
   }, [stateAtom, setState, schema.properties]);
 
