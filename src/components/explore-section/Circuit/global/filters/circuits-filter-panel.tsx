@@ -363,16 +363,20 @@ export default function CircuitsFilterPanel({
       </header>
 
       <div className="flex flex-col gap-y-4">
-        {columns.map((column: SingleColumnContent, index: number) => (
-          <SingleFilterItem
-            id={column.id}
-            key={column.id}
-            title={column.title}
-            index={index}
-            filterType={column.filterType}
-            columnCustomizable={column.columnCustomizable}
-          />
-        ))}
+        {columns.map((column: SingleColumnContent, index: number) => {
+          return (
+            !!column.columnCustomizable && (
+              <SingleFilterItem
+                id={column.id}
+                key={column.id}
+                title={column.title}
+                index={index}
+                filterType={column.filterType}
+                columnCustomizable={column.columnCustomizable}
+              />
+            )
+          );
+        })}
       </div>
     </div>
   );
