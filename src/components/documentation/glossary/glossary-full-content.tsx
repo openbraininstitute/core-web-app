@@ -21,12 +21,12 @@ export default function GlossaryFullContent() {
 
   const [filteredLetter, setFilteredLetter] = useState<FilterLetter>(null);
 
-  // Filter terms based on selected letter
   const filteredTerms: ContentForGlossaryItem[] = filteredLetter
     ? content.filter((term) => term.Name.toUpperCase().startsWith(filteredLetter))
     : content;
 
-  // Handle filter change from GlossaryFilterBar
+  const sortedTerms = [...filteredTerms].sort((a, b) => a.Name.localeCompare(b.Name));
+
   const handleFilterChange = (letter: FilterLetter) => {
     setFilteredLetter(letter);
   };
@@ -35,7 +35,7 @@ export default function GlossaryFullContent() {
     <div className="flex w-full flex-col gap-y-10 px-8">
       <GlossaryFilterBar onFilterChange={handleFilterChange} content={content} />
       <div className="flex flex-col gap-y-8">
-        {filteredTerms.map((item: ContentForGlossaryItem) => (
+        {sortedTerms.map((item: ContentForGlossaryItem) => (
           <GlossaryContent key={Slugify(item.Name)} content={item} />
         ))}
       </div>
