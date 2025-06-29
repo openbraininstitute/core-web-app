@@ -113,17 +113,16 @@ export function JSONSchemaForm({
     if (k === 'neuron_ids') {
       return (
         <div className="text-primary-8 mt-2 flex flex-col gap-2">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap gap-3">
             {isPlainObject(state[k]) &&
               isPlainObject(state[k]) &&
               Array.isArray(state[k].elements) &&
               state[k].elements.map((e, i) => (
                 // eslint-disable-next-line
-                <div key={i}>
+                <div key={i} className="flex gap-1">
                   {e}{' '}
                   {!disabled && (
                     <CloseCircleOutlined
-                      className="ml-2"
                       onClick={() => {
                         if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
 
