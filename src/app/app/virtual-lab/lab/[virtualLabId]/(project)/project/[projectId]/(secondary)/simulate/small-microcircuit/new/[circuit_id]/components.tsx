@@ -208,7 +208,7 @@ export function JSONSchemaForm({
           disabled={disabled}
           onChange={(newV) => setState({ ...state, [k]: newV })}
           value={state[k]}
-          className="w-[150px]"
+          className="w-full"
           options={obj.enum.map((subv: string) => {
             return { label: subv, value: subv };
           })}
@@ -231,7 +231,7 @@ export function JSONSchemaForm({
         <Input
           disabled={disabled}
           value={typeof state[k] === 'string' ? state[k] : ''}
-          className="max-w-[300px]"
+          className="w-full"
           onChange={(e) => {
             setState({ ...state, [k]: e.currentTarget.value });
           }}
