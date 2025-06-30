@@ -5,14 +5,16 @@ import { NotificationInstance } from 'antd/es/notification/interface';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 
 import { AtomsMap, JSONSchema } from '../../types';
-import { ConfigValue } from '../components';
+import { ConfigValue, Config } from '../components';
+import { isPlainObject } from '../utils';
 import { assertErrorMessage } from '@/util/utils';
 
 export function useObioneJsonSchema(
   circuitId: string,
   notification: NotificationInstance,
   setSchema: React.Dispatch<React.SetStateAction<JSONSchema | null>>,
-  setAtomsMap: (atomsMap: AtomsMap) => void
+  setAtomsMap: (atomsMap: AtomsMap) => void,
+  initialConfig?: Config
 ) {
   React.useEffect(() => {
     async function fetchSpec() {
@@ -31,6 +33,28 @@ export function useObioneJsonSchema(
             | ReturnType<typeof atom<Record<string, ConfigValue>>>
             | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
         } = {};
+
+        // if (initialConfig) {
+        //   Object.entries(initialConfig)
+        //     .filter(([k]) => {
+        //       return isRootCategory(theSchema, k);
+        //     })
+        //     .forEach(([k, v]) => {
+        //       if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
+        //     });
+
+        //   Object.entries(initialConfig)
+        //     .filter(([k]) => {
+        //       return !isRootCategory(theSchema, k);
+        //     })
+        //     .forEach(([k, v]) => {
+        //       map[k] = {};
+
+        //       Object.entries(v).forEach(([subK, subV]) => {
+        //         if (typeof sub) map[k][subK] = atom<Record<string, ConfigValue>>(subV);
+        //       });
+        //     });
+        // }
 
         // Setting up initial values and constants.
         Object.entries(theSchema.properties).forEach(([k, v]) => {
@@ -63,24 +87,17 @@ export function useObioneJsonSchema(
     }
 
     fetchSpec();
-  }, [circuitId, notification, setAtomsMap, setSchema]);
+  }, [circuitId, notification, setAtomsMap, setSchema, initialConfig]);
 }
 
-export function useSchemaUtils(schema: JSONSchema | null, configTab: string) {
-  return React.useMemo(() => {
-    function isRootCategory(key: string) {
-      return schema?.properties?.[key] && !schema.properties[key].additionalProperties;
-    }
+export function isRootCategory(schema: JSONSchema, key: string) {
+  return schema.properties?.[key] && !schema.properties[key].additionalProperties;
+}
 
-    function resolveKey(tabKey: string, itemIdx: number | null) {
-      if (typeof itemIdx === null) throw new Error('Invalid itemIdx');
-      if (!schema?.properties?.[configTab]?.singular_name)
-        throw new Error(`Invalid schema for ${configTab}`);
-      if (isRootCategory(tabKey)) throw new Error("Shouldn't be a root category");
+export function resolveKey(schema: JSONSchema, tabKey: string, itemIdx: number | null) {
+  if (typeof itemIdx === null) throw new Error('Invalid itemIdx');
+  if (!schema.properties?.[tabKey]?.singular_name) throw new Error(`Invalid schema for ${tabKey}`);
+  if (isRootCategory(schema, tabKey)) throw new Error("Shouldn't be a root category");
 
-      return `${schema.properties[configTab].singular_name.replaceAll(' ', '')}_${itemIdx}`;
-    }
-
-    return { isRootCategory, resolveKey };
-  }, [configTab, schema]);
+  return `${schema.properties[tabKey].singular_name.replaceAll(' ', '')}_${itemIdx}`;
 }

@@ -2,14 +2,14 @@
 
 import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
-import React, { Fragment, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { atom } from 'jotai';
 import NextImage from 'next/image';
 import { LoadingOutlined } from '@ant-design/icons';
 
-import { JSONSchemaForm, ConfigValue } from './_components/components';
+import { JSONSchemaForm, ConfigValue, Config } from './_components/components';
 import { Params, JSONSchema, AtomsMap, TabType } from './types';
-import { useObioneJsonSchema, useSchemaUtils } from './_components/hooks/schema';
+import { useObioneJsonSchema, isRootCategory, resolveKey } from './_components/hooks/schema';
 import TabsSelector from './_components/tabs-selector';
 import { useSectionRenderer } from './_components/section';
 import { useConfigAtom } from './_components/hooks/config-atom';
@@ -20,7 +20,11 @@ import { useAppNotification } from '@/components/notification';
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 
-export default function TinyCircuitSimulation() {
+export default function SimulationCampaignConfiguration({
+  initialConfig,
+}: {
+  initialConfig?: Config;
+}) {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const { circuit_id: circuitId, virtualLabId, projectId } = useParams<Params>();
@@ -36,7 +40,7 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  const { isRootCategory, resolveKey } = useSchemaUtils(schema, configTab);
+  const readOnly = initialConfig !== undefined;
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -47,12 +51,20 @@ export default function TinyCircuitSimulation() {
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const config = useConfigAtom(schema, atomsMap);
 
+  // Validate initial configuration
+  useEffect(() => {
+    if (!validate || !initialConfig) return;
+
+    validate(initialConfig);
+    if (validate?.errors) throw new Error('Invalid Simulation Campaign Configuration');
+  }, [validate, initialConfig]);
+
   const errors = useMemo(() => {
     if (validate) validate(config);
     return validate?.errors;
   }, [validate, config]);
 
-  useObioneJsonSchema(circuitId, notification, setSchema, setAtomsMap);
+  useObioneJsonSchema(circuitId, notification, setSchema, setAtomsMap, initialConfig);
   const renderSection = useSectionRenderer(
     schema,
     atomsMap,
@@ -68,7 +80,8 @@ export default function TinyCircuitSimulation() {
     selectedItemIdx,
     setSelectedItemIdx,
     setEditing,
-    setSelectedCategory
+    setSelectedCategory,
+    readOnly
   );
 
   if (!schema) {
@@ -111,7 +124,7 @@ export default function TinyCircuitSimulation() {
               type="button"
               className={classNames(
                 'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
-                (errors && errors.length > 0) || loading
+                (errors && errors.length > 0) || loading || readOnly
                   ? 'bg-gray-300 text-gray-500'
                   : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
               )}
@@ -168,7 +181,7 @@ export default function TinyCircuitSimulation() {
                   setLoading(false);
                 }
               }}
-              disabled={!!(errors && errors.length > 0) || loading}
+              disabled={!!(errors && errors.length > 0) || loading || readOnly}
             >
               <div className="flex justify-between gap-5">
                 {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
@@ -189,7 +202,7 @@ export default function TinyCircuitSimulation() {
                         <div
                           className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                           onClick={() => {
-                            if (isRootCategory(configTab)) return;
+                            if (isRootCategory(schema, configTab)) return;
 
                             setSelectedCategory(o.properties?.type.const ?? '');
                             const initial: Record<string, ConfigValue> = {};
@@ -208,7 +221,7 @@ export default function TinyCircuitSimulation() {
                               ...atomsMap,
                               [configTab]: {
                                 ...atomsMap[configTab],
-                                [resolveKey(configTab, itemIdx)]:
+                                [resolveKey(schema, configTab, itemIdx)]:
                                   atom<Record<string, ConfigValue>>(initial),
                               },
                             });
@@ -226,9 +239,9 @@ export default function TinyCircuitSimulation() {
             {schema.properties &&
               schema.properties?.[configTab] &&
               editing &&
-              (isRootCategory(configTab) || selectedCatSchema) && (
+              (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
-                  disabled={!!campaignId || loading}
+                  disabled={!!campaignId || loading || readOnly}
                   config={config}
                   circuitId={circuitId}
                   schema={
@@ -239,7 +252,7 @@ export default function TinyCircuitSimulation() {
                   stateAtom={
                     isAtom(atomsMap[configTab])
                       ? atomsMap[configTab]
-                      : atomsMap[configTab][resolveKey(configTab, selectedItemIdx)]
+                      : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
                   }
                 />
               )}
