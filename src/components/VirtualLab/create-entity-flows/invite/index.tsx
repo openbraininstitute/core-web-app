@@ -5,12 +5,13 @@ import isNull from 'lodash/isNull';
 
 import CreateEntityModal from '@/components/VirtualLab/create-entity-flows/common/modal';
 import MemberList from '@/components/VirtualLab/create-entity-flows/common/member-form';
-import useNotification from '@/hooks/notifications';
 
-import { Role } from '@/api/virtual-lab-svc/types';
+import { inviteToProject, inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
-import { inviteToProject, inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
+import { useAppNotification } from '@/components/notification';
+
+import type { Role } from '@/api/virtual-lab-svc/types';
 
 interface BaseProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ type InvitePayload = {
 };
 
 export default function InviteModal({ isOpen, onClose, type, title, context }: Props) {
-  const notify = useNotification();
+  const notify = useAppNotification();
   const [form] = Form.useForm<{ include_members: Array<InvitePayload> }>();
   const [pending, startTransition] = useTransition();
   const [isFormValid, setIsFormValid] = useState(false);
@@ -92,22 +93,18 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
           .filter((o) => o !== -1);
 
         if (failedInvites.length && items.length !== failedInvites.length) {
-          notify.warning(
-            `Some invitations were sent successfully, but a few may not have been delivered.
+          notify.warning({
+            message: `Some invitations were sent successfully, but a few may not have been delivered.
             ${failedInvites.map((o) => o?.email).join('\n')}.
             `,
-            undefined,
-            'topLeft',
-            undefined
-          );
+            placement: 'topRight',
+          });
         }
 
-        notify.success(
-          'All invitations have been sent successfully!',
-          undefined,
-          'topRight',
-          undefined
-        );
+        notify.success({
+          message: 'All invitations have been sent successfully!',
+          placement: 'topRight',
+        });
 
         if (type === 'vlab') refreshVirtualLabInvites();
         if (type === 'project') refreshProjectInvites();
@@ -115,12 +112,10 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
         resetForm();
         onClose();
       } catch (error) {
-        notify.error(
-          'We couldn’t send the invitations. Please try again shortly.',
-          undefined,
-          'topRight',
-          undefined
-        );
+        notify.error({
+          message: 'We couldn’t send the invitations. Please try again shortly.',
+          placement: 'topRight',
+        });
       }
     });
   };

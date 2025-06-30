@@ -12,7 +12,7 @@ import find from 'lodash/find';
 import get from 'lodash/get';
 
 import CreateEntityModal from '@/components/VirtualLab/create-entity-flows/common/modal';
-import useNotification from '@/hooks/notifications';
+import { useAppNotification } from '@/components/notification';
 
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { Select, Input } from '@/components/VirtualLab/create-entity-flows/common/inputs';
@@ -169,7 +169,7 @@ type Props = {
 
 export default function AddMembersModal({ context, isOpen, onClose }: Props) {
   const { data } = useSession();
-  const notify = useNotification();
+  const notify = useAppNotification();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchValue] = useState('');
   const [membersList, updateMembersList] = useState<Array<Member>>([]);
@@ -247,22 +247,18 @@ export default function AddMembersModal({ context, isOpen, onClose }: Props) {
     );
 
     if (error || !resultAttachment) {
-      notify.error(
-        'Failed to add users to the current project',
-        undefined,
-        'topRight',
-        undefined,
-        'attach-users'
-      );
+      notify.error({
+        message: 'Failed to add users to the current project',
+        placement: 'topRight',
+        key: 'attach-users',
+      });
       return;
     }
-    notify.success(
-      'Users added successfully to the current project',
-      undefined,
-      'topRight',
-      undefined,
-      'attach-users'
-    );
+    notify.success({
+      message: 'Users added successfully to the current project',
+      placement: 'topRight',
+      key: 'attach-users',
+    });
     updateMembersList([]);
     refreshAtom();
     onClose();

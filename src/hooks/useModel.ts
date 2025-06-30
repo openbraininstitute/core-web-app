@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+
+import { useAppNotification } from '@/components/notification';
 import { fetchResourceById } from '@/api/nexus';
 import { getSession } from '@/authFetch';
 import { nexus } from '@/config';
-import useNotification from '@/hooks/notifications';
 
 export function useModel<T>({
   modelId,
@@ -17,7 +18,8 @@ export function useModel<T>({
 }) {
   const [resource, setResource] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
-  const { error: notifyError } = useNotification();
+
+  const { error: notifyError } = useAppNotification();
   const callbackRef = useRef(callback);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function useModel<T>({
           callbackRef.current?.(resourceObject);
         }
       } catch (error) {
-        notifyError('Error while loading the resource details', undefined, 'topRight');
+        notifyError({ message: 'Error while loading the resource details', placement: 'topRight' });
       } finally {
         setLoading(false);
       }
