@@ -365,8 +365,8 @@ export default function CircuitsFilterPanel({
   return (
     <div
       className={classNames(
-        'bg-primary-8 transition-right fixed top-0 z-100 flex h-screen w-[480px] shrink-0 flex-col justify-between space-y-4 overflow-y-auto p-8 duration-500 ease-in-out',
-        isActive ? 'right-0' : 'right-[-480px]'
+        'bg-primary-8 transition-right fixed top-0 z-0 flex h-screen w-[480px] shrink-0 flex-col justify-between space-y-4 overflow-y-auto p-8 duration-500 ease-in-out',
+        isActive ? 'right-[40px]' : 'right-[-480px]'
       )}
     >
       <div>
