@@ -40,7 +40,10 @@ export default function ParameterBox({
     <div className="relative flex w-full flex-col">
       <div className="text-sm font-light tracking-wider text-gray-500 uppercase">{name}</div>
       {link && (
-        <Link href={link ?? ''} className="text-primary-9 text-xl leading-normal font-normal">
+        <Link
+          href={link ?? ''}
+          className="text-primary-9 text-xl leading-normal font-normal break-all"
+        >
           {value}
         </Link>
       )}

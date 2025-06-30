@@ -40,7 +40,11 @@ export default function CircuitParameters({ content }: { content: CircuitSchemaP
       <div className="relative flex flex-col gap-y-4">
         <ParameterBox name="Published in" value={content.metadata.publishedIn ?? '–'} />
         <ParameterBox name="Registration date" value={content.metadata.registrationDate ?? '–'} />
-        <ParameterBox name="Contact" value={content.metadata.contact ?? '–'} />
+        <ParameterBox
+          name="Contact"
+          value={content.contact ?? '–'}
+          link={`mailto:${content.contact}`}
+        />
       </div>
     </div>
   );
