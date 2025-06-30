@@ -112,7 +112,7 @@ function NotebookTable({
     );
     const path = encodeURIComponent(`lab/tree/${notebook.githubRepo}/${notebook.path}`);
     const environment = env.NEXT_PUBLIC_DEPLOYMENT_ENV;
-    const url = `https://${environment === 'staging' ? 'staging.' : ''}openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}`;
+    const url = `https://${environment === 'staging' ? 'staging.' : ''}openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=main`;
 
     window.open(url, '_blank');
   };
