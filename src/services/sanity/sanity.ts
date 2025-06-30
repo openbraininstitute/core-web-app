@@ -1,12 +1,15 @@
 /* eslint-disable no-console */
 import React from 'react';
+
 import { createClient } from 'next-sanity';
-import { isUndefined } from '@/util/type-guards';
+
 import { logError } from '@/util/logger';
+import { isUndefined } from '@/util/type-guards';
 
 export const client = createClient({
   projectId: 'fgi7eh1v',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  dataset: 'staging',
+  // dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   perspective: 'published',
   apiVersion: '2023-03-25',
   useCdn: process.env.NODE_ENV === 'production',
