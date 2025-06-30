@@ -102,6 +102,7 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
 
     if (nodes) {
       options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map((region) => ({
+        av: region.annotation_value,
         value: region.id,
         label: `${region.name}`,
         data: region,
