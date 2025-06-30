@@ -16,6 +16,11 @@ export type EntityCoreType = {
   type: EntityTypeValue;
 };
 
+export type ActivityType = {
+  // TODO: derive from activity type, same as done with EntityTypeValue
+  type: 'simulation_execution' | 'simulation_generation';
+};
+
 export type EntityCoreOwnership = {
   created_by: IPerson | null;
   updated_by: IPerson | null;

@@ -1,0 +1,47 @@
+import type {
+  EntityCoreIdentifiable,
+  EntityAuthorization,
+  Timestamps,
+  ActivityType,
+} from '@/api/entitycore/types/shared/global';
+import type {
+  ContributionFilter,
+  SharedFilter,
+  PaginationFilter,
+  OwnershipFilter,
+} from '@/api/entitycore/types/shared/request';
+
+export interface IActivityBase<
+  UsedEntityT extends EntityCoreIdentifiable,
+  GeneratedEntityT extends EntityCoreIdentifiable,
+> {
+  start_time: string;
+  end_time: string;
+  used: UsedEntityT[];
+  generated?: GeneratedEntityT[];
+}
+
+export interface IActivity<
+  UsedEntityT extends EntityCoreIdentifiable,
+  GeneratedEntityT extends EntityCoreIdentifiable,
+> extends EntityCoreIdentifiable,
+    IActivityBase<UsedEntityT, GeneratedEntityT>,
+    Timestamps,
+    EntityAuthorization,
+    ActivityType {}
+
+interface IActivityFilterBase {
+  used__id?: string | null;
+  used__id__in?: string[] | null;
+  used__type?: string | null;
+  generated__id?: string | null;
+  generated__id__in?: string[] | null;
+  generated__type?: string | null;
+}
+
+export interface IActivityFilter
+  extends IActivityFilterBase,
+    ContributionFilter,
+    SharedFilter,
+    PaginationFilter,
+    OwnershipFilter {}

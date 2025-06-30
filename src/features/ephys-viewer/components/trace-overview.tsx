@@ -137,17 +137,15 @@ function ImageSetComponent({
               </button>
             </div>
 
-            {[RecordingType.STIMULUS, RecordingType.RESPONSE].map(
-              (recordingType: RecordingType) => (
-                <TraceThumbnailContainer
-                  key={recordingType}
-                  trace={trace}
-                  protocol={protocol}
-                  repetition={repetition}
-                  recordingType={recordingType}
-                />
-              )
-            )}
+            {trace.recordingTypes.map((recordingType: RecordingType) => (
+              <TraceThumbnailContainer
+                key={recordingType}
+                trace={trace}
+                protocol={protocol}
+                repetition={repetition}
+                recordingType={recordingType}
+              />
+            ))}
           </div>
         ))}
       </div>
