@@ -357,7 +357,7 @@ export default function CircuitTable({
               </button>
             )}
             <FilterButton
-              setActive={setFilterPanelActive}
+              setActive={() => setFilterPanelActive(true)}
               numberOfFilters={Object.values(filters).filter((f) => f !== null).length}
               numberOfActiveColumns={columnState.filter((col) => col.isActive).length}
             />
@@ -405,7 +405,7 @@ export default function CircuitTable({
       />
       <CircuitsFilterPanel
         isActive={filterPanelActive}
-        toggle={() => setFilterPanelActive(!filterPanelActive)}
+        toggle={() => setFilterPanelActive(false)}
         handleResetFilter={handleResetFilter}
         isFilterActive={isFilterActive}
         numberOfActiveFilters={numberOfActiveFilters}

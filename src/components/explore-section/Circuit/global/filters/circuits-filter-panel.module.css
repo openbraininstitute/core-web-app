@@ -1,24 +1,40 @@
-.custom-apply-button {
-  &.ant-btn-primary {
-    /* Base styles for the button */
-    border-width: 1px;
-    border-style: solid;
+.filterPanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  z-index: 50;
+  margin: 0;
+  padding: 0;
+  transition: background-color duration 500ms;
+  background: rgba(0, 0, 0, 0);
+}
 
-    /* Disabled state */
-    &.ant-btn-disabled,
-    &[disabled] {
-      background: transparent !important;
-      border-color: #fff !important;
-      color: #fff !important;
-      opacity: 0.3 !important;
-    }
-
-    /* Enabled state */
-    &:not(.ant-btn-disabled):not([disabled]) {
-      background: #1890ff !important; /* AntD primary blue, adjust if needed */
-      border-color: transparent !important;
-      color: #fff !important;
-      opacity: 1 !important;
-    }
+.filterPanel > div {
+  @starting-style {
+    transform: translateX(100%);
   }
+}
+
+.filterBox {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 480px;
+  padding: 32px;
+  transition: transform duration 500ms ease-in-out;
+  background: var(--color-primary-9);
+}
+
+.isFilterOpen {
+  transform: translateX(0);
+}
+
+.ifFilterClosed {
+  transform: translateX(100%);
 }

@@ -1,9 +1,12 @@
 'use client';
 
-import { DatePicker, Input, Select, Switch, Tooltip } from 'antd';
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+
+import { DatePicker, Switch, Tooltip } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useBuildCategoryData } from '../../hook/use-build-category-data';
 import { useCircuitSpecies } from '../../hook/use-circuit-species';
 import { useCircuitScales } from '../../hook/use-scale-type-data';
@@ -20,7 +23,7 @@ import { ChevronRight, CloseIcon, EyeIcon } from '@/components/icons';
 import EyeSlashIcon from '@/components/icons/EyeSlashIcon';
 import { classNames } from '@/util/utils';
 
-const { Option } = Select;
+import styles from './circuits-filter-panel.module.css';
 
 export function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onClick: () => void }) {
   return isDisabled ? (
@@ -111,15 +114,20 @@ export function SingleFilterItem({
       const isApplyDisabled = !localMin;
       return (
         <div className="mt-4 flex flex-col gap-y-2">
-          <Input
+          <input
             placeholder="Search..."
             value={localMin as string}
             onChange={(e) => setLocalMin(e.target.value || undefined)}
-            className="w-full"
+            className="text-bas mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans focus:outline-none"
           />
           <div className="flex gap-x-2">
             <ApplyButton isDisabled={isApplyDisabled} onClick={handleApplyFilter} />
-            <button onClick={handleResetFilter} type="button" aria-label="Reset filter">
+            <button
+              onClick={handleResetFilter}
+              type="button"
+              aria-label="Reset filter"
+              className="text-primary-3 text-base font-normal"
+            >
               Reset
             </button>
           </div>
@@ -130,32 +138,34 @@ export function SingleFilterItem({
     if (filterType === 'numeric') {
       return (
         <div className="mt-4 flex flex-col gap-y-2">
-          <Select
-            placeholder="Condition"
+          <select
             value={localType}
-            onChange={setLocalType}
-            className="w-full"
+            onChange={(e) => setLocalType(e.target.value)}
+            className="mb-2 w-full px-6 py-2 font-sans text-base"
           >
-            <Option value="greaterThan">Greater than</Option>
-            <Option value="lessThan">Less than</Option>
-            <Option value="between">Between</Option>
-          </Select>
+            <option value="" disabled selected>
+              Condition
+            </option>
+            <option value="greaterThan">Greater than</option>
+            <option value="lessThan">Less than</option>
+            <option value="between">Between</option>
+          </select>
           {(localType === 'greaterThan' || localType === 'between') && (
-            <Input
+            <input
               type="number"
               placeholder="Min..."
               value={localMin as number | undefined}
               onChange={(e) => setLocalMin(e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full"
+              className="mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans text-base focus:outline-none"
             />
           )}
           {(localType === 'lessThan' || localType === 'between') && (
-            <Input
+            <input
               type="number"
               placeholder="Max..."
               value={localMax as number | undefined}
               onChange={(e) => setLocalMax(e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full"
+              className="mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans text-base focus:outline-none"
             />
           )}
           <div className="flex gap-x-2">
@@ -163,7 +173,11 @@ export function SingleFilterItem({
               isDisabled={!localType || (localType === 'between' && (!localMin || !localMax))}
               onClick={handleApplyFilter}
             />
-            <button type="button" onClick={handleResetFilter}>
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              className="text-primary-3 text-base font-normal"
+            >
               Reset
             </button>
           </div>
@@ -220,32 +234,37 @@ export function SingleFilterItem({
 
       return (
         <div className="mt-4 flex flex-col gap-y-2">
-          <Select
-            placeholder={selectPlaceholder}
+          <select
             value={localType}
-            onChange={setLocalType}
+            onChange={(e) => setLocalType(e.target.value)}
             disabled={loading}
-            loading={loading}
-            className="w-full"
+            className="mb-2 w-full px-6 py-2 font-sans text-base"
           >
+            <option value="" disabled selected>
+              {loading ? `Loading ${errorLabel}...` : selectPlaceholder}
+            </option>
             {error ? (
-              <Option value="" disabled>
+              <option value="" disabled>
                 Error loading {errorLabel}
-              </Option>
+              </option>
             ) : (
               options.map((option) => (
-                <Option key={option} value={option}>
+                <option key={option} value={option}>
                   {option}
-                </Option>
+                </option>
               ))
             )}
-          </Select>
+          </select>
           <div className="flex gap-x-2">
             <ApplyButton
               isDisabled={!localType || (localType === 'between' && (!localMin || !localMax))}
               onClick={handleApplyFilter}
             />
-            <button onClick={handleResetFilter} type="button">
+            <button
+              onClick={handleResetFilter}
+              type="button"
+              className="text-primary-3 text-base font-normal"
+            >
               Reset
             </button>
           </div>
@@ -262,7 +281,11 @@ export function SingleFilterItem({
           />
           <div className="flex gap-x-2">
             <ApplyButton isDisabled={!localMin} onClick={handleApplyFilter} />
-            <button type="button" onClick={handleResetFilter}>
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              className="text-primary-3 text-base font-normal"
+            >
               Reset
             </button>
           </div>
@@ -280,7 +303,12 @@ export function SingleFilterItem({
           />
           <div className="flex gap-x-2">
             <ApplyButton isDisabled={!localMin} onClick={handleApplyFilter} />
-            <button type="button" onClick={handleResetFilter} aria-label="Reset filter">
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              aria-label="Reset filter"
+              className="text-primary-3 text-base font-normal"
+            >
               Reset
             </button>
           </div>
@@ -359,73 +387,105 @@ export default function CircuitsFilterPanel({
   isFilterActive?: boolean;
   numberOfActiveFilters?: number;
 }) {
+  const ref = useRef<HTMLDialogElement | null>(null);
   const columns = useAtomValue(columnsAtom);
   const totalColumns = useAtomValue(activeColumnsCountAtom);
 
-  return (
-    <div
-      className={classNames(
-        'bg-primary-8 transition-right fixed top-0 z-0 flex h-screen w-[480px] shrink-0 flex-col justify-between space-y-4 overflow-y-auto p-8 duration-500 ease-in-out',
-        isActive ? 'right-[40px]' : 'right-[-480px]'
-      )}
-    >
-      <div>
-        <header className="mb-8 flex w-full flex-row items-center justify-between">
-          <div className="flex flex-row items-baseline">
-            <div className="mr-2 text-2xl font-bold text-white">Filters</div>
-            <div className="text-primary-1 text-lg font-normal">{totalColumns} active columns</div>
-          </div>
-          <div>
-            <button
-              type="button"
-              onClick={toggle}
-              className="flex h-4 w-4 items-center justify-center text-white"
-              aria-label="Close filters panel"
-            >
-              <CloseIcon iconColor="white" />
-            </button>
-          </div>
-        </header>
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
 
-        <div className="flex flex-col gap-y-3">
-          {columns.map((column: SingleColumnContent, index: number) => {
-            return (
-              !!column.columnCustomizable && (
-                <SingleFilterItem
-                  id={column.id}
-                  key={column.id}
-                  title={column.title}
-                  index={index}
-                  filterType={column.filterType}
-                  columnCustomizable={column.columnCustomizable}
-                />
-              )
-            );
-          })}
+    if (isActive) {
+      dialog.showModal();
+      dialog.style.transform = 'translateX(0)';
+    }
+  }, [isActive]);
+
+  const handleClose = () => {
+    const dialog = ref.current;
+    if (!dialog) return;
+
+    dialog.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+      dialog.close();
+      if (toggle) {
+        toggle();
+      }
+    }, 500);
+  };
+
+  return (
+    <dialog ref={ref} className={styles.filterPanel} onClick={handleClose}>
+      <div
+        role="alertdialog"
+        onClick={(evt) => evt.stopPropagation()}
+        className={classNames(
+          styles.filterBox,
+          isActive ? styles.isFilterOpen : styles.isFilterClosed
+        )}
+      >
+        <div className="flex h-full w-full flex-col justify-between space-y-4 overflow-y-auto">
+          <div>
+            <header className="mb-8 flex w-full flex-row items-center justify-between">
+              <div className="flex flex-row items-baseline">
+                <div className="mr-2 text-2xl font-bold text-white">Filters</div>
+                <div className="text-primary-1 text-lg font-normal">
+                  {totalColumns} active columns
+                </div>
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="flex h-4 w-4 items-center justify-center text-white"
+                  aria-label="Close filters panel"
+                >
+                  <CloseIcon iconColor="white" />
+                </button>
+              </div>
+            </header>
+
+            <div className="flex flex-col gap-y-3">
+              {columns.map((column: SingleColumnContent, index: number) => {
+                return (
+                  !!column.columnCustomizable && (
+                    <SingleFilterItem
+                      id={column.id}
+                      key={column.id}
+                      title={column.title}
+                      index={index}
+                      filterType={column.filterType}
+                      columnCustomizable={column.columnCustomizable}
+                    />
+                  )
+                );
+              })}
+            </div>
+          </div>
+
+          <footer className="flex w-full flex-row items-center gap-x-2">
+            <button
+              className={classNames(
+                'border-primary-4 mr-3 border border-solid px-4 py-2 text-base text-white',
+                isFilterActive ? 'opacity-100' : 'pointer-events-none opacity-70'
+              )}
+              onClick={handleResetFilter}
+              type="button"
+              id="reset-filter"
+              aria-label="Reset filter"
+            >
+              Reset filter
+            </button>
+            {!isFilterActive ? (
+              <div className="text-base font-normal text-white">No filter active</div>
+            ) : (
+              <div className="text-base font-normal text-white">
+                {numberOfActiveFilters} filter{numberOfActiveFilters !== 1 ? 's' : ''} active
+              </div>
+            )}
+          </footer>
         </div>
       </div>
-
-      <footer className="flex w-full flex-row items-center gap-x-2">
-        <button
-          className={classNames(
-            'border-primary-4 mr-3 border border-solid px-4 py-2 text-base text-white',
-            isFilterActive ? 'opacity-100' : 'pointer-events-none opacity-70'
-          )}
-          onClick={handleResetFilter}
-          type="button"
-          id="reset-filter"
-          aria-label="Reset filter"
-        >
-          Reset filter
-        </button>
-        {!isFilterActive ? (
-          <div className="text-base font-normal text-white">No filter active</div>
-        ) : (
-          <div className="text-base font-normal text-white">
-            {numberOfActiveFilters} filter{numberOfActiveFilters !== 1 ? 's' : ''} active
-          </div>
-        )}
-      </footer>
-    </div>
+    </dialog>
   );
 }
