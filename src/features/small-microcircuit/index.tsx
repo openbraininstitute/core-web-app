@@ -97,8 +97,6 @@ export default function SimulationCampaignConfiguration({
     );
   }
 
-  console.log(config);
-
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
