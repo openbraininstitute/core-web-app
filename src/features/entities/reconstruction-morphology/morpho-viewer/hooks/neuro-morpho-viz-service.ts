@@ -8,7 +8,7 @@ import {
   useEventValue,
 } from './neuro-morpho-viz-service-event';
 
-import useNotification from '@/hooks/notifications';
+import { useAppNotification } from '@/components/notification';
 import { thumbnailGenerationBaseUrl } from '@/config';
 import { logError } from '@/util/logger';
 import authFetch from '@/authFetch';
@@ -112,13 +112,13 @@ export function useEnhancedSomaService(
   morphoCanvasManager: MorphologyCanvas,
   contentUrl: string | undefined
 ) {
-  const notification = useNotification();
+  const notification = useAppNotification();
 
   useEventHandler(enhancedSomaService.eventErrorOccured, (err) => {
     if (!err) return;
 
     logError('Error while fetching enhanced soma!', err);
-    notification.error(err.message);
+    notification.error({ message: err.message, placement: 'topRight' });
   });
 
   useEventHandler(enhancedSomaService.eventSomaGlbReceived, (glb) => {

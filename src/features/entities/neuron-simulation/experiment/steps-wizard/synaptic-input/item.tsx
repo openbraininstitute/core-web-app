@@ -15,12 +15,12 @@ import {
 
 import ConfigInputList from '@/features/entities/neuron-simulation/experiment/steps-wizard/synaptic-input/config-input';
 import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import useNotification from '@/hooks/notifications';
 
 import {
   SECTION_TARGET_MAPPING,
   synapseTypeMapping,
 } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import { useAppNotification } from '@/components/notification';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import {
   sendDisplaySynapses3DEvent,
@@ -60,7 +60,7 @@ export default function SynapticInputItem({
   synapsesConfiguration,
   selectedSynapticInputPlacementConfig,
 }: Props) {
-  const { error: notifyError } = useNotification();
+  const { error: notifyError } = useAppNotification();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const [synapticInputOpened, setSynapticInputOpened] = useState(false);
   const [synapseDisplayed, setSynapseDisplayed] = useState(false);
@@ -75,11 +75,10 @@ export default function SynapticInputItem({
   const color = selectedSynapticInputPlacementConfig?.color;
 
   const onVisualizationError = () => {
-    notifyError(
-      `There was an error when visualizing synaptic input ${index + 1}.`,
-      undefined,
-      'topRight'
-    );
+    notifyError({
+      message: `There was an error when visualizing synaptic input ${index + 1}.`,
+      placement: 'topRight',
+    });
   };
 
   const options = synapsesConfiguration.synapses.map((op) => ({
