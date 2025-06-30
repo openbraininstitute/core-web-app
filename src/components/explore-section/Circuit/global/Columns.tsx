@@ -32,11 +32,12 @@ const columns = (
     {
       title: (
         <Tooltip title="Download files">
-          <DownloadIcon iconColor="#A2A2A2" />
+          <DownloadIcon iconColor="#002766" w-auto h-5 />
         </Tooltip>
       ),
       key: 'download',
       width: 80,
+      fixed: 'left', // Optional: fixes the column to the left for better visibility
       render: (_value: any, record: CircuitSchemaProps, _index: number) => {
         return (
           <button

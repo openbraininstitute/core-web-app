@@ -17,6 +17,13 @@ export type FilterConfig = {
 
 export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
   {
+    title: 'Download',
+    id: 'download',
+    isActive: true,
+    columnCustomizable: false,
+    filterType: null,
+  },
+  {
     title: 'Scale',
     id: 'scale',
     isActive: true,
