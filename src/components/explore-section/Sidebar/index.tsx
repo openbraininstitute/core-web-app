@@ -1,7 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
-
 import { useSession } from 'next-auth/react';
+
 import ApplicationSidebar, {
   NavigationItem,
   NavigationItemProps,
@@ -40,7 +40,7 @@ export function DetailsPageSideBackLink() {
 
   return prevPath ? (
     <Link
-      className="bg-neutral-1 text-primary-8 fixed z-50 flex h-full w-[40px] flex-col items-center pt-2 text-sm"
+      className="bg-neutral-1 text-primary-8 fixed flex h-full w-[40px] flex-col items-center pt-2 text-sm"
       href={prevPath}
     >
       <ArrowRightOutlined className="mt-1.5 mb-4 rotate-180" />

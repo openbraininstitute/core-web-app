@@ -25,7 +25,9 @@ function brainRegionFilter({
   let count = 0;
 
   function recurse(circuit: CircuitSchemaProps): CircuitSchemaProps | null {
-    const brainRegionMatches = regionSet.has(circuit.brainRegion.trim().toLowerCase());
+    const brainRegionMatches = circuit.brainRegion
+      ? regionSet.has(circuit.brainRegion.trim().toLowerCase())
+      : false;
 
     const filteredSubs = (circuit.subcircuits?.map(recurse).filter(Boolean) ??
       []) as CircuitSchemaProps[];

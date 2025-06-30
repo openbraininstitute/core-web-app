@@ -3,9 +3,9 @@ import { ColumnType } from 'antd/es/table';
 import Link from 'next/link';
 import { Key, SyntheticEvent } from 'react';
 import { ResizeCallbackData } from 'react-resizable';
-import { CircuitSchemaProps, NumericFilterOptions } from '../type';
-import { circuitMatchFilter } from '../utils/circuits-match-filter';
+import { CircuitSchemaProps } from '../type';
 import formatNumberWithComma from '../utils/format-number-with-comma';
+import { FilterConfig } from './state/columns';
 
 import { ChevronRight, DownloadIcon } from '@/components/icons';
 import truncateText from '@/util/truncate';
@@ -25,11 +25,8 @@ const columns = (
   isCircuitDetailPage: boolean,
   handleOpenDownloadModal: (record: CircuitSchemaProps) => void,
   toggle: 'hierarchical' | 'flat',
-  numericFilter: NumericFilterOptions | null,
-  minValue: number | undefined,
-  maxValue: number | undefined,
-  searchQuery: string,
-  buildCategoryFilter: string | null = null
+  filters: Record<string, FilterConfig | null>,
+  searchQuery: string
 ): ResizableColumnType[] => {
   return [
     {
@@ -58,18 +55,15 @@ const columns = (
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => {
         const isFilterActive =
-          numericFilter !== null || searchQuery.trim() !== '' || buildCategoryFilter !== null;
+          Object.values(filters).some((f) => f !== null) || searchQuery.trim() !== '';
         const isMatching =
           isFilterActive &&
-          circuitMatchFilter(
-            record,
-            numericFilter,
-            minValue,
-            maxValue,
-            searchQuery,
-            null,
-            buildCategoryFilter
-          );
+          ((filters.name?.min &&
+            typeof record.name === 'string' &&
+            record.name.toLowerCase().includes((filters.name?.min as string)?.toLowerCase())) ||
+            (searchQuery.trim() !== '' &&
+              typeof record.name === 'string' &&
+              record.name.toLowerCase().includes(searchQuery.toLowerCase())));
         const href = isCircuitDetailPage ? `./${record.key}` : `./circuit/${record.key}`;
         return (
           <Link
@@ -91,8 +85,7 @@ const columns = (
       render: (_value: any, record: CircuitSchemaProps, index: number) => {
         const isExpanded = Array.isArray(expandedRowKeys) && expandedRowKeys.includes(record.key);
         const totalSubcircuitsForParent = calculateSubcircuitsForParent(record);
-        const subcircuitCount =
-          (record.subcircuits?.length ?? 0) > 0 ? totalSubcircuitsForParent : '–';
+        const subcircuitCount = totalSubcircuitsForParent > 0 ? totalSubcircuitsForParent : '–';
 
         return (
           <button
@@ -121,9 +114,11 @@ const columns = (
       key: 'description',
       width: 150,
       render: (_value: any, record: CircuitSchemaProps, _index: number) => (
-        <div className="font-normal text-ellipsis whitespace-nowrap">
-          {truncateText(record.description, 46)}
-        </div>
+        <Tooltip title={record.description}>
+          <div className="font-normal text-ellipsis whitespace-nowrap">
+            {truncateText(record.description, 46)}
+          </div>
+        </Tooltip>
       ),
     },
     {

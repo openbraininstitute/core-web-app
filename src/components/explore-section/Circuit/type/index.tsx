@@ -27,18 +27,19 @@ export type GraphDataImageProps = {
 
 export type CircuitSchemaProps = {
   key: string;
+  entityCoreID: string | null;
   name: string;
   description: string;
   parent?: string | null;
+  isNonMatchingParent?: boolean;
   derivedFrom: string[];
   hasSubcircuits: boolean;
-  brainRegion: string;
+  brainRegion: string | null;
   species: string;
   numberOfNeurons: number;
   numberOfConnections: number;
   numberOfSynapses: number;
-  scale: string;
-  buildCategory: string;
+  scale: string | null;
   metadata: {
     contributorSimple?: string;
     contributors?: ContributorsProps[];
@@ -53,8 +54,8 @@ export type CircuitSchemaProps = {
       name: string;
       url: string;
     } | null;
-    contact: string | null;
   };
+  contact: string | null;
   files: DownloadItemProps[];
   subcircuits: CircuitSchemaProps[];
 

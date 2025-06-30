@@ -31,7 +31,7 @@ export type FullScreenImageValue = {
 export type ButtonBlockValue = {
   [key: string]: any;
   label: string;
-  buttonType: string;
+  buttonType: 'file' | 'link';
   link: string;
   file: string;
   image: string;

@@ -1,0 +1,18 @@
+@keyframes backgroundFade {
+  0% {
+    padding-left: 0;
+    background: rgba(255, 255, 255, 0);
+  }
+  50% {
+    padding-left: 32px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    padding-left: 0;
+    background: rgba(255, 255, 255, 0);
+  }
+}
+
+.highlight {
+  animation: backgroundFade 1000ms ease-in-out;
+}

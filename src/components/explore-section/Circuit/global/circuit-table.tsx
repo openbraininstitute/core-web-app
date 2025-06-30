@@ -1,19 +1,19 @@
 import { Table } from 'antd';
+import { useAtom, useAtomValue } from 'jotai';
+import moment from 'moment';
 import { usePathname } from 'next/navigation';
 import { Key, useCallback, useEffect, useMemo, useState } from 'react';
-import { CircuitSchemaProps, FilteredCircuit, NumericFilterOptions } from '../type';
+import { CircuitSchemaProps, FilteredCircuit } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
 import collectExpandableKeys from '../utils/collectExpandableKeys';
 import { flattenCircuits } from '../utils/flatten-circuits';
-
-import { circuitMatchFilter } from '../utils/circuits-match-filter';
-import { filterCircuitsWithParents } from '../utils/filter-circuits-with-parent';
 import columns from './Columns';
 import DownloadContainer from './download/download-container';
-import SubcircuitTable from './subcircuit-table';
-
-import CircuitFilters from './circuit-filter';
+import CircuitsFilterPanel from './filters/circuits-filter-panel';
+import FilterButton from './filters/filter-button';
 import SearchBar from './search-bar';
+import { columnsAtom, filtersAtom, setFilterAtom } from './state/columns';
+import SubcircuitTable from './subcircuit-table';
 import ViewToggle from './ViewToggle';
 
 import { classNames } from '@/util/utils';
@@ -27,29 +27,38 @@ export default function CircuitTable({
   hasSearch?: boolean;
 }) {
   const [circuitToDownload, setCircuitToDownload] = useState<CircuitSchemaProps | null>(null);
-  const [downloadModalOpen, SetDownloadModalOpen] = useState<boolean>(false);
+  const [downloadModalOpen, setDownloadModalOpen] = useState<boolean>(false);
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
 
   // FILTERING
+  const [filterPanelActive, setFilterPanelActive] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [numericFilter, setNumericFilter] = useState<NumericFilterOptions | null>(null);
-  const [scaleFilter, setScaleFilter] = useState<'smallMicrocircuit' | 'microcircuit' | null>(null);
-  const [buildCategoryFilter, setBuildCategoryFilter] = useState<string | null>(null);
-  const [minValue, setMinValue] = useState<number | undefined>(undefined);
-  const [maxValue, setMaxValue] = useState<number | undefined>(undefined);
+  const [, setFilter] = useAtom(setFilterAtom);
 
   // VIEWS
   const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
 
+  // COLUMN VISIBILITY AND FILTERS FROM JOTAI
+  const columnState = useAtomValue(columnsAtom);
+  const filters = useAtomValue(filtersAtom);
+
+  // RESET FILTERS
+  const handleResetFilter = useCallback(() => {
+    Object.keys(filters).forEach((columnId) => {
+      setFilter({ columnId, filter: null });
+    });
+    setSearchQuery('');
+  }, [filters, setFilter]);
+
   // DOWNLOAD MODAL
   const handleOpenDownloadModal = useCallback((record: CircuitSchemaProps) => {
     setCircuitToDownload(record);
-    SetDownloadModalOpen(true);
+    setDownloadModalOpen(true);
   }, []);
 
   const handleCloseDownloadModal = useCallback(() => {
     setCircuitToDownload(null);
-    SetDownloadModalOpen(false);
+    setDownloadModalOpen(false);
   }, []);
 
   // PATHNAME
@@ -57,19 +66,19 @@ export default function CircuitTable({
   const isCircuitDetailPage = pathname.includes('/circuit/');
 
   // ROW EXPANSION
-  const handleRowExpandClick = useCallback((row: CircuitSchemaProps, _index: number) => {
+  const handleRowExpandClick = useCallback((row: CircuitSchemaProps) => {
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
       prev.includes(rowKey) ? prev.filter((key) => key !== rowKey) : [...prev, rowKey]
     );
   }, []);
 
-  // DATA
+  // DATA CLEANING
   const cleanedData = useMemo(() => {
     const result = data.map((circuit: CircuitSchemaProps) => {
       const { numberOfNeurons } = circuit;
-      if (numberOfNeurons === 0) {
-        throw new Error('Number of neurons is not a number or is NaN');
+      if (typeof numberOfNeurons !== 'number' || Number.isNaN(numberOfNeurons)) {
+        throw new Error(`Invalid numberOfNeurons for circuit ${circuit.key}`);
       }
 
       return {
@@ -78,7 +87,7 @@ export default function CircuitTable({
         numberOfNeurons,
         name: circuit.name || 'Unknown',
         brainRegion: circuit.brainRegion || 'Unknown',
-        scale: circuit.scale ? circuit.scale.toLowerCase() : 'unknown',
+        scale: circuit.scale || 'Unknown',
         subcircuits: Array.isArray(circuit.subcircuits)
           ? circuit.subcircuits.map((sub) => ({
               ...sub,
@@ -89,6 +98,7 @@ export default function CircuitTable({
                   : 0,
               name: sub.name || 'Unknown',
               brainRegion: sub.brainRegion || 'Unknown',
+              scale: sub.scale || 'Unknown',
               subcircuits: Array.isArray(sub.subcircuits) ? sub.subcircuits : [],
             }))
           : [],
@@ -100,43 +110,94 @@ export default function CircuitTable({
     return { hierarchical: result, flattened };
   }, [data]);
 
-  // IF FILTERS ARE ACTIVE
+  // HELPER FUNCTION TO CHECK IF A CIRCUIT MATCHES FILTERS
+  const matchesFilters = useCallback(
+    (circuit: CircuitSchemaProps) => {
+      let matches = true;
+
+      // Apply column filters
+      Object.entries(filters).forEach(([columnId, filter]) => {
+        if (!filter) return;
+
+        const column = columnState.find((col) => col.id === columnId);
+        const filterType = column?.filterType;
+        const value = circuit[columnId as keyof CircuitSchemaProps];
+
+        let currentMatch = false;
+        if (filterType === 'numeric' && typeof value === 'number' && filter.type) {
+          const min = filter.min as number | undefined;
+          const max = filter.max as number | undefined;
+          if (filter.type === 'greaterThan' && min !== undefined) {
+            currentMatch = value > min;
+          } else if (filter.type === 'lessThan' && max !== undefined) {
+            currentMatch = value < max;
+          } else if (filter.type === 'between' && min !== undefined && max !== undefined) {
+            currentMatch = value >= min && value <= max;
+          }
+        } else if (filterType === 'text' && typeof value === 'string' && filter.min) {
+          currentMatch = value.toLowerCase().includes((filter.min as string).toLowerCase());
+        } else if (filterType === 'select' && filter.type) {
+          currentMatch = value === filter.type;
+        } else if (filterType === 'date' && typeof value === 'string' && filter.min) {
+          currentMatch = moment(value).isSame(moment(filter.min as string), 'day');
+        } else if (filterType === 'boolean' && filter.min) {
+          currentMatch = value === (filter.min === 'true');
+        }
+
+        matches = matches && currentMatch;
+      });
+
+      // Apply search query
+      if (searchQuery) {
+        matches =
+          matches &&
+          ['name', 'brainRegion', 'scale', 'specie', 'publishedIn', 'buildCategory'].some(
+            (field) => {
+              const value = circuit[field as keyof CircuitSchemaProps];
+              return (
+                typeof value === 'string' && value.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+            }
+          );
+      }
+
+      return matches;
+    },
+    [filters, searchQuery, columnState]
+  );
+
+  // HELPER FUNCTION TO CHECK IF A CIRCUIT OR ITS SUBCIRCUITS MATCH
+  const hasMatchingSubcircuit = useCallback(
+    (circuit: CircuitSchemaProps): boolean => {
+      if (matchesFilters(circuit)) return true;
+      if (!circuit.subcircuits || circuit.subcircuits.length === 0) return false;
+      return circuit.subcircuits.some((sub) => hasMatchingSubcircuit(sub));
+    },
+    [matchesFilters]
+  );
+
+  // FILTERED DATA
   const filteredData = useMemo(() => {
+    let result: CircuitSchemaProps[] =
+      toggle === 'hierarchical' ? cleanedData.hierarchical : cleanedData.flattened;
+
+    // Filter circuits: include only those that match filters or have matching subcircuits
+    result = result.filter((circuit) => {
+      const circuitMatches = matchesFilters(circuit);
+      const hasMatchingSub = toggle === 'hierarchical' && hasMatchingSubcircuit(circuit);
+      return circuitMatches || hasMatchingSub;
+    });
+
+    // Mark non-matching parents with matching subcircuits
     if (toggle === 'hierarchical') {
-      const result = filterCircuitsWithParents(
-        cleanedData.hierarchical,
-        numericFilter,
-        minValue,
-        maxValue,
-        searchQuery,
-        scaleFilter,
-        false,
-        buildCategoryFilter
-      );
-      return result;
+      result = result.map((circuit) => ({
+        ...circuit,
+        isNonMatchingParent: !matchesFilters(circuit) && hasMatchingSubcircuit(circuit),
+      }));
     }
-    const result = cleanedData.flattened.filter((circuit) =>
-      circuitMatchFilter(
-        circuit,
-        numericFilter,
-        minValue,
-        maxValue,
-        searchQuery,
-        scaleFilter,
-        buildCategoryFilter
-      )
-    );
+
     return result;
-  }, [
-    cleanedData,
-    numericFilter,
-    minValue,
-    maxValue,
-    searchQuery,
-    scaleFilter,
-    toggle,
-    buildCategoryFilter,
-  ]);
+  }, [cleanedData, toggle, matchesFilters, hasMatchingSubcircuit]);
 
   const flattenedData = useMemo(() => {
     if (toggle === 'hierarchical') {
@@ -161,63 +222,51 @@ export default function CircuitTable({
   }, [filteredData, toggle]);
 
   const tableData = useMemo(() => {
-    const selectedData = toggle === 'hierarchical' ? filteredData : flattenedData;
-    return selectedData;
+    return toggle === 'hierarchical' ? filteredData : flattenedData;
   }, [toggle, filteredData, flattenedData]);
 
-  // COLUMN FILTERED
+  // COLUMNS
   const filteredColumns = useMemo(() => {
     const allColumns = columns(
       expandedRowKeys,
-      calculateSubcircuitsForParent,
+      (row: CircuitSchemaProps) =>
+        calculateSubcircuitsForParent(row, matchesFilters, hasMatchingSubcircuit),
       handleRowExpandClick,
       isCircuitDetailPage,
       handleOpenDownloadModal,
       toggle,
-      numericFilter,
-      minValue,
-      maxValue,
-      searchQuery,
-      buildCategoryFilter
+      filters,
+      searchQuery
     );
-    const result =
-      toggle === 'flat' ? allColumns.filter((col) => col.key !== 'subcircuits') : allColumns;
-    return result;
+    const activeColumnIds = columnState.filter((col) => col.isActive).map((col) => col.id);
+    const result = allColumns.filter((col) => activeColumnIds.includes(col.key as string));
+    return toggle === 'flat' ? result.filter((col) => col.key !== 'subcircuits') : result;
   }, [
     toggle,
     expandedRowKeys,
     isCircuitDetailPage,
     handleOpenDownloadModal,
     handleRowExpandClick,
-    numericFilter,
-    minValue,
-    maxValue,
+    columnState,
+    filters,
     searchQuery,
-    buildCategoryFilter,
+    matchesFilters,
+    hasMatchingSubcircuit,
   ]);
 
+  // EXPAND ALL WHEN FILTERS OR SEARCH ARE ACTIVE
   useEffect(() => {
-    if (
-      toggle === 'hierarchical' &&
-      (numericFilter || searchQuery || scaleFilter || buildCategoryFilter)
-    ) {
+    const isFilterActive =
+      Object.values(filters).some((f) => f !== null) || searchQuery.trim() !== '';
+    if (toggle === 'hierarchical' && isFilterActive) {
       const expandableKeys = collectExpandableKeys(cleanedData.hierarchical);
       setExpandedRowKeys(expandableKeys);
     } else {
       setExpandedRowKeys([]);
     }
-  }, [
-    numericFilter,
-    minValue,
-    maxValue,
-    searchQuery,
-    scaleFilter,
-    cleanedData,
-    toggle,
-    buildCategoryFilter,
-  ]);
+  }, [filters, searchQuery, cleanedData, toggle]);
 
-  // ROW EXPANSION & SUBCIRCUITS
+  // ROW EXPANSION
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
@@ -225,6 +274,7 @@ export default function CircuitTable({
     );
   }, []);
 
+  // RENDER SUBCIRCUITS
   const renderSubcircuits = useCallback(
     (circuit: CircuitSchemaProps) =>
       circuit.subcircuits && circuit.subcircuits.length > 0 ? (
@@ -233,57 +283,46 @@ export default function CircuitTable({
           circuit={circuit}
           expandedRowKeys={expandedRowKeys}
           onExpand={handleExpandRow}
-          numericFilter={numericFilter}
-          minValue={minValue}
-          maxValue={maxValue}
+          filters={filters}
           searchQuery={searchQuery}
-          scaleFilter={scaleFilter}
-          buildCategoryFilter={buildCategoryFilter}
+          columnState={columnState}
         />
       ) : null,
-    [
-      expandedRowKeys,
-      handleExpandRow,
-      numericFilter,
-      minValue,
-      maxValue,
-      searchQuery,
-      scaleFilter,
-      buildCategoryFilter,
-      filteredColumns,
-    ]
+    [expandedRowKeys, handleExpandRow, filteredColumns, filters, searchQuery, columnState]
   );
+
+  // FILTERS CHECKS
+  const isFilterActive = useMemo(() => {
+    return Object.values(filters).some((f) => f !== null);
+  }, [filters]);
+
+  const numberOfActiveFilters = useMemo(() => {
+    return Object.values(filters).filter((f) => f !== null).length;
+  }, [filters]);
 
   return (
     <div className="relative flex w-full flex-col">
       {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-
-          <div className="relative flex flex-row items-center gap-x-8">
-            <ViewToggle toggle={toggle} setToggle={setToggle} />
-            <CircuitFilters
-              filter={numericFilter}
-              minValue={minValue}
-              maxValue={maxValue}
-              onFilterChange={(filter) => {
-                setNumericFilter(filter);
-                if (filter?.property === 'scaleType') {
-                  setScaleFilter(filter.type as 'smallMicrocircuit' | 'microcircuit');
-                  setNumericFilter(null);
-                  setBuildCategoryFilter(null);
-                } else if (filter?.property === 'buildCategory') {
-                  setBuildCategoryFilter(filter.type);
-                  setNumericFilter(null);
-                  setScaleFilter(null);
-                } else {
-                  setScaleFilter(null);
-                  setBuildCategoryFilter(null);
-                }
-              }}
-              onMinChange={setMinValue}
-              onMaxChange={setMaxValue}
+          <div className="flex flex-row items-center gap-x-4">
+            {isFilterActive && (
+              <button
+                className="mr-3 text-base text-gray-600 hover:text-gray-700"
+                onClick={handleResetFilter}
+                type="button"
+                id="reset-filter"
+                aria-label="Reset filter"
+              >
+                Reset filter
+              </button>
+            )}
+            <FilterButton
+              setActive={setFilterPanelActive}
+              numberOfFilters={Object.values(filters).filter((f) => f !== null).length}
+              numberOfActiveColumns={columnState.filter((col) => col.isActive).length}
             />
+            <ViewToggle toggle={toggle} setToggle={setToggle} />
           </div>
         </div>
       )}
@@ -318,27 +357,32 @@ export default function CircuitTable({
             />
           )}
         </div>
-        <>
-          <div
-            className={classNames(
-              'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
-              downloadModalOpen ? 'right-0' : '-right-full'
-            )}
-          >
-            {circuitToDownload !== null && (
-              <DownloadContainer
-                content={circuitToDownload}
-                handleCloseDownloadModal={handleCloseDownloadModal}
-              />
-            )}
-          </div>
-          <div
-            className={classNames(
-              'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
-              downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
-            )}
-          />
-        </>
+        <CircuitsFilterPanel
+          isActive={filterPanelActive}
+          toggle={() => setFilterPanelActive(!filterPanelActive)}
+          handleResetFilter={handleResetFilter}
+          isFilterActive={isFilterActive}
+          numberOfActiveFilters={numberOfActiveFilters}
+        />
+        <div
+          className={classNames(
+            'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
+            downloadModalOpen ? 'right-0' : '-right-full'
+          )}
+        >
+          {circuitToDownload !== null && (
+            <DownloadContainer
+              content={circuitToDownload}
+              handleCloseDownloadModal={handleCloseDownloadModal}
+            />
+          )}
+        </div>
+        <div
+          className={classNames(
+            'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
+            downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
+          )}
+        />
       </div>
     </div>
   );

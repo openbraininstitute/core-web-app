@@ -28,7 +28,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(content.key);
+      await navigator.clipboard.writeText(content.entityCoreID || content.key || '');
       setShowConfetti(true);
       setShowMessage(true);
       setTimeout(() => {
@@ -110,6 +110,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
               label="Copy ID"
               action={copyToClipboard}
               link={content.files[0]?.children?.[0]?.url}
+              disabled={content.entityCoreID === null || content.key === null}
             >
               <CloneIcon className="h-4 w-4 text-gray-400" />
             </ActionButton>
@@ -122,15 +123,15 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
 
       <div
         className={classNames(
-          'out-expo bg-primary-9 transition-right fixed bottom-3 z-[999999] h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
-          downloadModalOpen ? 'right-0' : '-right-full'
+          'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
+          downloadModalOpen ? 'right-[40px]' : '-right-full'
         )}
       >
         <DownloadContainer content={content} handleCloseDownloadModal={handleCloseDownloadModal} />
       </div>
       <div
         className={classNames(
-          'ease-out-back fixed top-0 left-0 z-[999998] h-screen w-screen bg-black transition-opacity duration-500',
+          'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
           downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
         )}
       />

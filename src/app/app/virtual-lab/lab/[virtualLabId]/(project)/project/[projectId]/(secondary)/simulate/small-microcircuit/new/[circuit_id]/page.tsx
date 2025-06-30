@@ -188,7 +188,8 @@ export default function TinyCircuitSimulation() {
 
         setAtomsMap(map);
       } catch (e) {
-        console.log(assertErrorMessage(e));
+        // eslint-disable-next-line no-console
+        console.error(assertErrorMessage(e));
         notification.error({ message: assertErrorMessage(e) });
       }
     }
