@@ -17,7 +17,6 @@ import { hasAssets } from '@/api/entitycore/guards';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type {
   EntityCoreObjectTypes,
-  EntityCoreSimulationObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 
@@ -40,7 +39,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Injection location',
     filter: null,
     render: (r) =>
-      renderEmptyOrValue(renderArray((r as EntityCoreSimulationObjectTypes).injection_location)),
+      renderEmptyOrValue(renderArray('injection_location' in r ? r.injection_location : [])),
     vocabulary: {
       plural: 'Injection locations',
       singular: 'Injection location',
@@ -54,7 +53,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Recording location',
     filter: null,
     render: (r) =>
-      renderEmptyOrValue(renderArray((r as EntityCoreSimulationObjectTypes).recording_location)),
+      renderEmptyOrValue(renderArray('recording_location' in r ? r.recording_location : [])),
     vocabulary: {
       plural: 'Recording locations',
       singular: 'Recording location',
@@ -169,6 +168,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isDisplayable: true,
   },
+  // TODO: this is not need for the mmt
   [EntityCoreFields.ScanParameters]: {
     title: 'Scan parameters',
     filter: null,
@@ -176,7 +176,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return renderEmptyOrValue(
         renderDictionaryKeys(
           get(r, 'simulations[0].scan_parameters', {}),
-          ({ field, value }) => (
+          ({ field }) => (
             <div className="border-neutral-1 text-primary-8 w-max rounded-full border px-2 py-1 shadow-sm">
               {field}
             </div>
@@ -186,11 +186,20 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       );
     },
     isDisplayable: true,
+    isFilterable: false,
   },
   [EntityCoreFields.SimulationCampaignStatus]: {
     title: 'Status',
     filter: null,
-    render: (r) => renderEmptyOrValue(get(r, 'simulations[0].generated_by[0].status', '')),
+    render: (r) => renderEmptyOrValue(get(r, 'simulations[0].used_by[0].status', '')),
     isDisplayable: true,
+    isFilterable: false,
+  },
+  [EntityCoreFields.CircuitName]: {
+    title: 'Circuit',
+    filter: null,
+    render: (r) => renderEmptyOrValue(get(r, 'circuit.name', '')),
+    isDisplayable: true,
+    isFilterable: false,
   },
 };

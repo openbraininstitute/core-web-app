@@ -1,5 +1,5 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { HTMLProps } from 'react';
+import { HTMLProps, ReactNode } from 'react';
 import { Spin } from 'antd';
 
 import { classNames } from '@/util/utils';
@@ -10,7 +10,12 @@ export function Btn({
   loading,
   onClick,
   ariaLabel,
-}: HTMLProps<HTMLButtonElement> & { loading?: boolean; ariaLabel?: string }) {
+  loadingIcon,
+}: HTMLProps<HTMLButtonElement> & {
+  loading?: boolean;
+  ariaLabel?: string;
+  loadingIcon?: ReactNode;
+}) {
   return (
     <button
       className={classNames(
@@ -22,9 +27,10 @@ export function Btn({
       aria-label={ariaLabel}
     >
       {children}
-      {loading && (
-        <Spin indicator={<LoadingOutlined style={{ color: '#fff', fontSize: 18 }} spin />} />
-      )}
+      {loading &&
+        (loadingIcon ?? (
+          <Spin indicator={<LoadingOutlined style={{ color: '#fff', fontSize: 18 }} spin />} />
+        ))}
     </button>
   );
 }

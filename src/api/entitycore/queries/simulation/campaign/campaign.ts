@@ -14,13 +14,15 @@ const baseUri = '/simulation-campaign';
 export async function getSimulationCampaigns({
   filters,
   context,
+  withFacets,
 }: {
   filters?: Partial<ISimulationCampaignFilter>;
   context?: WorkspaceContext | null;
+  withFacets?: boolean;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ISimulationCampaign>>(baseUri, {
-    queryParams: compactRecord({ ...filters }),
+    queryParams: compactRecord({ ...filters, with_facets: withFacets }),
     headers: { ...getEntityCoreContext(context).headers },
   });
 }

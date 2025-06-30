@@ -95,11 +95,9 @@ export const sortStateAtom = atomFamily(
 
 export const activeColumnsAtom = atomFamily(
   (scope: DataAtomBinding) =>
-    atomWithDefault<Promise<string[]> | string[]>(async (get) => {
-      const dimensionColumns = await get(dimensionColumnsAtom(scope));
+    atomWithDefault<Promise<string[]> | string[]>(async () => {
       const { columns } = { ...ViewsDefinitionRegistry[scope.dataType] };
-
-      return ['index', ...(dimensionColumns || []), ...(columns || [])];
+      return ['index', ...(columns || [])];
     }),
   isListAtomEqual
 );
@@ -123,11 +121,9 @@ export const dimensionColumnsAtom = atomFamily((scope: DataAtomBinding) =>
 );
 
 export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
-  const childAtom = atomWithDefault<Promise<Array<CoreFilter>>>(async (get) => {
+  const childAtom = atomWithDefault<Promise<Array<CoreFilter>>>(async () => {
     const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
     const fields = columns ? getFieldsDefinition(columns) : [];
-    const dimensionsColumns = await get(dimensionColumnsAtom(scope));
-
     return [
       ...(columns
         ?.filter(
@@ -136,14 +132,6 @@ export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
             _get(fields, o, { isDisplayable: false })?.isDisplayable === true
         )
         ?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
-      ...(dimensionsColumns || []).map(
-        (dimension) =>
-          ({
-            field: dimension,
-            type: CoreFieldFilterTypeEnum.ValueOrRange,
-            value: { gte: null, lte: null },
-          }) as CoreFilter
-      ),
     ];
   });
   childAtom.debugLabel = `filter-atom/${scope.key}`;
@@ -290,7 +278,6 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           },
           context: ctx.workspace,
         });
-
         return response as EntityCoreResponse<T>;
       }
 

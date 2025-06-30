@@ -74,8 +74,21 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     columns: [
       EntityCoreFields.Name,
       EntityCoreFields.Description,
-      EntityCoreFields.ScanParameters,
+      EntityCoreFields.CircuitName,
+      // EntityCoreFields.ScanParameters,
       EntityCoreFields.SimulationCampaignStatus,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    filterableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    displayableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.CreationDate,
     ],

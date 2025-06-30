@@ -1,7 +1,6 @@
-import { ICircuit } from '../../types/entities/circuit';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { ISingleNeuronSynaptomeFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -25,7 +24,7 @@ export async function getCircuits({
   context,
 }: {
   withFacets?: boolean;
-  filters?: Partial<ISingleNeuronSynaptomeFilter>;
+  filters?: Partial<ICircuitFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();

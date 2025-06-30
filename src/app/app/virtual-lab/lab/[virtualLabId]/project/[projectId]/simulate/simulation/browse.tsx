@@ -1,12 +1,13 @@
 'use client';
 
+import { CheckCircleFilled } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 import { HTMLProps, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 
-import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
+import useInfiniteScroll from '@/hooks/virtual-labs/infinite-scroll';
 import BookmarkButton from '@/features/bookmark/control';
 
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
@@ -14,6 +15,8 @@ import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
+import { DataType } from '@/constants/explore-section/list-views';
+import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { resolveDataKey } from '@/utils/key-builder';
 import { ensureArray } from '@/utils/array';
@@ -33,7 +36,7 @@ export default function BrowseSimulations() {
   const [expanded, setExpanded] = useState(false);
   const { type, selectedTab } = useTileScopeQuery();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-
+  const [, copyId, , copying] = useCopyToClipboard();
   const model = ModelTilesConfig.find((o) => o.id === type);
   const dataType =
     selectedTab === 'new'
@@ -86,6 +89,18 @@ export default function BrowseSimulations() {
           </div>
           {selectedRows.length > 0 && (
             <div className="fixed right-[60px] bottom-12 flex h-12 items-center justify-end gap-2">
+              {dataType === DataType.SimulationCampaign && (
+                <Btn
+                  className="bg-primary-8 h-12 px-8"
+                  onClick={() => {
+                    copyId(selectedRows.at(0)?.id!);
+                  }}
+                  loading={copying}
+                  loadingIcon={<CheckCircleFilled className="animate-fade-in text-white" />}
+                >
+                  Copy ID
+                </Btn>
+              )}
               <Link
                 className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
                 href={resolveExploreDetailsPageUrl({
