@@ -4,8 +4,8 @@ import { InputNumber, Input, Select } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { JSONSchema } from '../types';
 
-import { classNames } from '@/util/utils';
 import { isPlainObject } from './utils';
+import { classNames } from '@/util/utils';
 
 type Primitive = null | boolean | number | string;
 export interface Object {

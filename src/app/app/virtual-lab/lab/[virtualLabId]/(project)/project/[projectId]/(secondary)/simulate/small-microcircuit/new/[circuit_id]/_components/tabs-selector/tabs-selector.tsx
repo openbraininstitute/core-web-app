@@ -1,9 +1,8 @@
 import React from 'react';
 
-import { classNames } from '@/util/utils';
-
 import { Tab } from '../components';
 import { TabType } from '../../types';
+import { classNames } from '@/util/utils';
 
 export interface TabsSelectorProps {
   className?: string;

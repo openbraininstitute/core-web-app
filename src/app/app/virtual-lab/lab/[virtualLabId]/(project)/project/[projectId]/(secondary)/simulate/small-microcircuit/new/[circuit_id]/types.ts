@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 
-import { WorkspaceContext } from '@/types/common';
 import { ConfigValue } from './_components/components';
+import { WorkspaceContext } from '@/types/common';
 
 export type Params = WorkspaceContext & { circuit_id: string };
 
