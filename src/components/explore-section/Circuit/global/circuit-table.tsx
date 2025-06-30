@@ -2,7 +2,7 @@ import { Table } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
 import { usePathname } from 'next/navigation';
-import { Key, useCallback, useEffect, useMemo, useState } from 'react';
+import { Key, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CircuitSchemaProps, FilteredCircuit } from '../type';
 import calculateSubcircuitsForParent from '../utils/calculate-subcircuits-for-parent';
 import collectExpandableKeys from '../utils/collectExpandableKeys';
@@ -14,6 +14,7 @@ import FilterButton from './filters/filter-button';
 import SearchBar from './search-bar';
 import { columnsAtom, filtersAtom, setFilterAtom } from './state/columns';
 import SubcircuitTable from './subcircuit-table';
+import TableScrollButton from './table-scroll-button';
 import ViewToggle from './ViewToggle';
 
 import { classNames } from '@/util/utils';
@@ -37,6 +38,46 @@ export default function CircuitTable({
 
   // VIEWS
   const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
+
+  // SCROLL BEHAVIOR
+  const [isAtStart, setIsAtStart] = useState<boolean>(true);
+  const [isAtEnd, setIsAtEnd] = useState<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const updateScrollPosition = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setIsAtStart(scrollLeft === 0);
+      setIsAtEnd(scrollLeft + clientWidth >= scrollWidth - 1);
+    }
+  }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', updateScrollPosition);
+      updateScrollPosition(); // Initial check
+      return () => container.removeEventListener('scroll', updateScrollPosition);
+    }
+  }, [updateScrollPosition]);
+
+  const scrollToStart = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      updateScrollPosition();
+    }
+  }, [updateScrollPosition]);
+
+  const scrollToEnd = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const { scrollWidth, clientWidth } = scrollContainerRef.current;
+      scrollContainerRef.current.scrollTo({
+        left: scrollWidth - clientWidth,
+        behavior: 'smooth',
+      });
+      updateScrollPosition();
+    }
+  }, [updateScrollPosition]);
 
   // COLUMN VISIBILITY AND FILTERS FROM JOTAI
   const columnState = useAtomValue(columnsAtom);
@@ -181,14 +222,12 @@ export default function CircuitTable({
     let result: CircuitSchemaProps[] =
       toggle === 'hierarchical' ? cleanedData.hierarchical : cleanedData.flattened;
 
-    // Filter circuits: include only those that match filters or have matching subcircuits
     result = result.filter((circuit) => {
       const circuitMatches = matchesFilters(circuit);
       const hasMatchingSub = toggle === 'hierarchical' && hasMatchingSubcircuit(circuit);
       return circuitMatches || hasMatchingSub;
     });
 
-    // Mark non-matching parents with matching subcircuits
     if (toggle === 'hierarchical') {
       result = result.map((circuit) => ({
         ...circuit,
@@ -305,7 +344,7 @@ export default function CircuitTable({
       {hasSearch && (
         <div className="relative mb-8 flex w-full flex-row justify-between px-8">
           <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-          <div className="flex flex-row items-center gap-x-4">
+          <div className="flex flex-row items-center gap-x-8">
             {isFilterActive && (
               <button
                 className="mr-3 text-base text-gray-600 hover:text-gray-700"
@@ -326,7 +365,7 @@ export default function CircuitTable({
           </div>
         </div>
       )}
-      <div className="relative w-full overflow-x-scroll">
+      <div className="relative w-full overflow-x-scroll" ref={scrollContainerRef}>
         <div className="tableAndButton">
           {tableData.length === 0 ? (
             <div className="text-primary-9 text-center">No matching circuits found</div>
@@ -357,33 +396,39 @@ export default function CircuitTable({
             />
           )}
         </div>
-        <CircuitsFilterPanel
-          isActive={filterPanelActive}
-          toggle={() => setFilterPanelActive(!filterPanelActive)}
-          handleResetFilter={handleResetFilter}
-          isFilterActive={isFilterActive}
-          numberOfActiveFilters={numberOfActiveFilters}
-        />
-        <div
-          className={classNames(
-            'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
-            downloadModalOpen ? 'right-0' : '-right-full'
-          )}
-        >
-          {circuitToDownload !== null && (
-            <DownloadContainer
-              content={circuitToDownload}
-              handleCloseDownloadModal={handleCloseDownloadModal}
-            />
-          )}
-        </div>
-        <div
-          className={classNames(
-            'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
-            downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
-          )}
-        />
       </div>
+      <TableScrollButton
+        scrollToEnd={scrollToEnd}
+        isAtEnd={isAtEnd}
+        scrollToStart={scrollToStart}
+        isAtStart={isAtStart}
+      />
+      <CircuitsFilterPanel
+        isActive={filterPanelActive}
+        toggle={() => setFilterPanelActive(!filterPanelActive)}
+        handleResetFilter={handleResetFilter}
+        isFilterActive={isFilterActive}
+        numberOfActiveFilters={numberOfActiveFilters}
+      />
+      <div
+        className={classNames(
+          'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',
+          downloadModalOpen ? 'right-0' : '-right-full'
+        )}
+      >
+        {circuitToDownload !== null && (
+          <DownloadContainer
+            content={circuitToDownload}
+            handleCloseDownloadModal={handleCloseDownloadModal}
+          />
+        )}
+      </div>
+      <div
+        className={classNames(
+          'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
+          downloadModalOpen ? 'opacity-50' : 'pointer-events-none opacity-0'
+        )}
+      />
     </div>
   );
 }
