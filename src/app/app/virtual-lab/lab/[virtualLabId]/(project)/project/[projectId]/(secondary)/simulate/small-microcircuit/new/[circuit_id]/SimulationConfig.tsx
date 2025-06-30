@@ -21,10 +21,15 @@ import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 
 export default function SimulationCampaignConfiguration({
+  initialCampaignId,
   initialConfig,
 }: {
+  initialCampaignId?: string;
   initialConfig?: Config;
 }) {
+  if (!!initialCampaignId !== !!initialConfig)
+    throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
+
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const { circuit_id: circuitId, virtualLabId, projectId } = useParams<Params>();
@@ -34,7 +39,7 @@ export default function SimulationCampaignConfiguration({
   const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
-  const [campaignId, setCampaignId] = useState('');
+  const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
     (s) => s.properties?.type.const === selectedCategory
@@ -91,6 +96,8 @@ export default function SimulationCampaignConfiguration({
       </div>
     );
   }
+
+  console.log(config);
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">

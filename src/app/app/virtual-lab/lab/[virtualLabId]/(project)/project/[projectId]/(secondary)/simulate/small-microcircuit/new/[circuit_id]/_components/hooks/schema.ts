@@ -6,7 +6,7 @@ import $RefParser from '@apidevtools/json-schema-ref-parser';
 
 import { AtomsMap, JSONSchema } from '../../types';
 import { ConfigValue, Config } from '../components';
-import { isPlainObject } from '../utils';
+import { isPlainObject, isAtom } from '../utils';
 import { assertErrorMessage } from '@/util/utils';
 
 export function useObioneJsonSchema(
@@ -34,49 +34,50 @@ export function useObioneJsonSchema(
             | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
         } = {};
 
-        // if (initialConfig) {
-        //   Object.entries(initialConfig)
-        //     .filter(([k]) => {
-        //       return isRootCategory(theSchema, k);
-        //     })
-        //     .forEach(([k, v]) => {
-        //       if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
-        //     });
+        if (initialConfig) {
+          Object.entries(initialConfig)
+            .filter(([k]) => {
+              return isRootCategory(theSchema, k);
+            })
+            .forEach(([k, v]) => {
+              if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
+            });
 
-        //   Object.entries(initialConfig)
-        //     .filter(([k]) => {
-        //       return !isRootCategory(theSchema, k);
-        //     })
-        //     .forEach(([k, v]) => {
-        //       map[k] = {};
+          Object.entries(initialConfig)
+            .filter(([k]) => {
+              return !isRootCategory(theSchema, k);
+            })
+            .forEach(([k, v]) => {
+              map[k] = {};
 
-        //       Object.entries(v).forEach(([subK, subV]) => {
-        //         if (typeof sub) map[k][subK] = atom<Record<string, ConfigValue>>(subV);
-        //       });
-        //     });
-        // }
-
-        // Setting up initial values and constants.
-        Object.entries(theSchema.properties).forEach(([k, v]) => {
-          if (!v.additionalProperties) {
-            const initial: Record<string, ConfigValue> = {};
-
-            if (v.properties)
-              Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                else initial[subkey] = subValue.default ?? null;
+              Object.entries(v).forEach(([subK, subV]) => {
+                if (!isPlainObject(subV) || isAtom(map[k])) return;
+                map[k][subK] = atom<Record<string, ConfigValue>>(subV);
               });
+            });
+        } else {
+          // Setting up initial values and constants.
+          Object.entries(theSchema.properties).forEach(([k, v]) => {
+            if (!v.additionalProperties) {
+              const initial: Record<string, ConfigValue> = {};
 
-            if (k === 'initialize') {
-              initial.circuit = {
-                type: 'CircuitFromID',
-                id_str: circuitId,
-              };
-            }
+              if (v.properties)
+                Object.entries(v.properties).forEach(([subkey, subValue]) => {
+                  if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                  else initial[subkey] = subValue.default ?? null;
+                });
 
-            map[k] = atom<Record<string, ConfigValue>>(initial);
-          } else map[k] = {};
-        });
+              if (k === 'initialize') {
+                initial.circuit = {
+                  type: 'CircuitFromID',
+                  id_str: circuitId,
+                };
+              }
+
+              map[k] = atom<Record<string, ConfigValue>>(initial);
+            } else map[k] = {};
+          });
+        }
 
         setAtomsMap(map);
       } catch (e) {
