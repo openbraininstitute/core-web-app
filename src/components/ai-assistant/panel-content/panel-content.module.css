@@ -48,23 +48,6 @@ button.actionButton {
   flex: 1 1 auto;
 }
 
-button.cancelButton {
-  flex: 0 0 auto;
-  border: none;
-  background-color: var(--color-primary-5);
-  color: #fffe;
-  padding: 0.5em 1em;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-button.cancelButton:hover,
-button.cancelButton:active {
-  border: none;
-  background-color: var(--color-primary-4);
-  color: #fffe;
-}
-
 .icons {
   display: flex;
   flex-wrap: nowrap;

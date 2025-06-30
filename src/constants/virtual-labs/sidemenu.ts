@@ -8,7 +8,7 @@ export enum Content {
   Literature = 'literature',
   Explore = 'explore',
   Build = 'build',
-  Simulate = 'simulate',
+  Simulate = 'experiment',
 }
 
 export enum LinkItemKey {
@@ -24,7 +24,7 @@ export enum LinkItemKey {
   Projects = 'projects',
   Scale = 'scale',
   ScaleBuild = 'scalebuild',
-  Simulate = 'simulate',
+  Simulate = 'experiment',
   Team = 'team',
   VirtualLab = 'virtualLab',
   Activity = 'activity',

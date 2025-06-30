@@ -70,7 +70,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
     },
     asset: {
       extension: 'application/json',
-      configfile: AssetLabel.single_neuron_synaptome_simulation_io_result,
+      configfile: AssetLabel.single_neuron_synaptome_simulation_data,
     },
     isBookmarkable: true,
   } as const;

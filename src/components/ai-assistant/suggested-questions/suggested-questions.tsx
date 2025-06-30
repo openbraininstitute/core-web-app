@@ -34,8 +34,11 @@ export default function SuggestedQuestions({
     messagesLength === 0 ? 1 : 3
   );
   const hardcodedSuggestions = useHardcodedSuggestions(messagesLength === 0 ? 2 : 0);
+  const allSuggestions = [...hardcodedSuggestions, ...suggestions]
+    .filter((prompt) => Boolean(prompt))
+    .slice(0, 3);
 
-  if (!threadId) return null;
+  if (!threadId || allSuggestions.length === 0) return null;
 
   return (
     <div className={classNames(className, styles.suggestedQuestions)}>
@@ -43,22 +46,19 @@ export default function SuggestedQuestions({
         {messagesLength === 0 ? 'Based on the content you have been browsing' : 'Related'}
       </div>
       <div className={styles.suggestions}>
-        {[...hardcodedSuggestions, ...suggestions]
-          .filter((prompt) => Boolean(prompt))
-          .slice(0, 3)
-          .map((prompt) => (
-            <button
-              key={prompt}
-              type="button"
-              onClick={() => {
-                onClick(prompt ?? '');
-                clearSuggestions();
-              }}
-            >
-              <IconIdea />
-              <div>{prompt}</div>
-            </button>
-          ))}
+        {allSuggestions.map((prompt) => (
+          <button
+            key={prompt}
+            type="button"
+            onClick={() => {
+              onClick(prompt ?? '');
+              clearSuggestions();
+            }}
+          >
+            <IconIdea />
+            <div>{prompt}</div>
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -84,8 +84,6 @@ export default function TinyCircuitSimulation() {
 
   const [campaignId, setCampaignId] = useState('');
 
-  console.log(campaignId);
-
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
     if (!schema) return;
@@ -169,7 +167,8 @@ export default function TinyCircuitSimulation() {
 
         setAtomsMap(map);
       } catch (e) {
-        console.log(assertErrorMessage(e));
+        // eslint-disable-next-line no-console
+        console.error(assertErrorMessage(e));
         notification.error({ message: assertErrorMessage(e) });
       }
     }
