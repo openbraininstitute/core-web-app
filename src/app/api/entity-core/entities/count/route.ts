@@ -1,6 +1,7 @@
 import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { DataType } from '@/constants/explore-section/list-views';
+import { compactRecord } from '@/utils/dictionary';
 import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -17,18 +18,18 @@ export async function getBulkEntityCoreResult({
   context?: WorkspaceContext;
 }) {
   const api = await entityCoreApi();
-  const queryParams = {
+  const queryParams = compactRecord({
     page: 1,
     page_size: 1,
     within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
     within_brain_region_brain_region_id: brainRegionId,
     within_brain_region_ascendants: false,
-  };
-  const headers = {
+  });
+  const headers = compactRecord({
     accept: 'application/json',
     'content-type': 'application/json',
     ...getEntityCoreContext(context).headers,
-  };
+  });
 
   const [emodelsCount, memodelsCount, singleNeuronSynaptomesCount] = await Promise.allSettled([
     api.get<EntityCoreResponse<any>>('/emodel', {
@@ -128,10 +129,12 @@ export const GET = async (
   const brainRegionId = searchParams.get('brainRegionId');
 
   const { data, error } = await tryCatch(
-    getBulkEntityCoreResult({
-      context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-      brainRegionId,
-    })
+    getBulkEntityCoreResult(
+      compactRecord({
+        context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
+        brainRegionId,
+      })
+    )
   );
   if (error) throw error;
   const response = Response.json({ ...data });
