@@ -268,7 +268,6 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           } as EntityCoreResponse<T>;
         }
       }
-
       const queryParameters = compactRecord({
         page_size: PAGE_SIZE,
         page: pageNumber,
