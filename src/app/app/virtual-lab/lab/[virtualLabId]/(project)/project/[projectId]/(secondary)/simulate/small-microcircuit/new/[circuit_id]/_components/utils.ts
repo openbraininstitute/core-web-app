@@ -1,7 +1,12 @@
 import { Atom } from 'jotai';
 import uniq from 'lodash/uniq';
 
-export function isPlainObject(value: unknown): value is Record<string, Object> {
+export type Primitive = null | boolean | number | string;
+export interface ConfigObject {
+  [key: string]: Primitive | Primitive[] | ConfigObject;
+}
+
+export function isPlainObject(value: unknown): value is Record<string, ConfigObject> {
   return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
 
