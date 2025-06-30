@@ -2,13 +2,10 @@ import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { JSONSchema } from './types';
+import { JSONSchema } from '../types';
 
 import { classNames } from '@/util/utils';
-
-export function isPlainObject(value: unknown): value is Record<string, Object> {
-  return typeof value === 'object' && !Array.isArray(value) && value !== null;
-}
+import { isPlainObject } from './utils';
 
 type Primitive = null | boolean | number | string;
 export interface Object {
