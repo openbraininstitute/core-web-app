@@ -4,17 +4,12 @@ import { InputNumber, Input, Select } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { JSONSchema } from '../types';
 
-import { isPlainObject } from './utils';
+import { isPlainObject, Primitive, ConfigObject } from './utils';
 import { classNames } from '@/util/utils';
 
-type Primitive = null | boolean | number | string;
-export interface Object {
-  [key: string]: Primitive | Primitive[] | Object;
-}
+export type ConfigValue = Primitive | Primitive[] | ConfigObject;
 
-export type ConfigValue = Primitive | Primitive[] | Object;
-
-export type Config = Record<string, Object | string>;
+export type Config = Record<string, ConfigObject | string>;
 
 export function JSONSchemaForm({
   disabled,
