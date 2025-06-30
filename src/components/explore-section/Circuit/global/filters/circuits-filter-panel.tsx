@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DatePicker, Input, Select, Switch, Tooltip } from 'antd';
+import { DatePicker, Input, Select, Switch, Tooltip } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
 import { useState } from 'react';
@@ -21,6 +21,32 @@ import EyeSlashIcon from '@/components/icons/EyeSlashIcon';
 import { classNames } from '@/util/utils';
 
 const { Option } = Select;
+
+export function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onClick: () => void }) {
+  return isDisabled ? (
+    <Tooltip title="Please fill in the required fields to apply the filter">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={isDisabled}
+        className="flex h-10 w-20 items-center justify-center text-base font-normal text-white opacity-50"
+        aria-label="Apply filter"
+      >
+        Apply
+      </button>
+    </Tooltip>
+  ) : (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isDisabled}
+      className="border-primary-4 flex h-10 w-20 items-center justify-center border border-solid text-base font-normal text-white opacity-100"
+      aria-label="Apply filter"
+    >
+      Apply
+    </button>
+  );
+}
 
 export function SingleFilterItem({
   title,
@@ -92,24 +118,10 @@ export function SingleFilterItem({
             className="w-full"
           />
           <div className="flex gap-x-2">
-            <Button
-              type="primary"
-              onClick={handleApplyFilter}
-              disabled={isApplyDisabled}
-              className={classNames(
-                'custom-apply-button',
-                isApplyDisabled ? 'border-white text-white' : 'border-transparent',
-                isApplyDisabled ? 'opacity-30' : 'opacity-100'
-              )}
-              style={{
-                opacity: isApplyDisabled ? 0.3 : 1,
-                borderColor: isApplyDisabled ? '#fff' : undefined,
-                color: isApplyDisabled ? '#fff' : undefined,
-              }}
-            >
-              Apply
-            </Button>
-            <Button onClick={handleResetFilter}>Reset</Button>
+            <ApplyButton isDisabled={isApplyDisabled} onClick={handleApplyFilter} />
+            <button onClick={handleResetFilter} type="button" aria-label="Reset filter">
+              Reset
+            </button>
           </div>
         </div>
       );
@@ -147,10 +159,13 @@ export function SingleFilterItem({
             />
           )}
           <div className="flex gap-x-2">
-            <Button type="primary" onClick={handleApplyFilter} disabled={!localType}>
-              Apply
-            </Button>
-            <Button onClick={handleResetFilter}>Reset</Button>
+            <ApplyButton
+              isDisabled={!localType || (localType === 'between' && (!localMin || !localMax))}
+              onClick={handleApplyFilter}
+            />
+            <button type="button" onClick={handleResetFilter}>
+              Reset
+            </button>
           </div>
         </div>
       );
@@ -226,10 +241,13 @@ export function SingleFilterItem({
             )}
           </Select>
           <div className="flex gap-x-2">
-            <Button type="primary" onClick={handleApplyFilter} disabled={!localType}>
-              Apply
-            </Button>
-            <Button onClick={handleResetFilter}>Reset</Button>
+            <ApplyButton
+              isDisabled={!localType || (localType === 'between' && (!localMin || !localMax))}
+              onClick={handleApplyFilter}
+            />
+            <button onClick={handleResetFilter} type="button">
+              Reset
+            </button>
           </div>
         </div>
       );
@@ -243,10 +261,10 @@ export function SingleFilterItem({
             onChange={(checked) => setLocalMin(checked ? 'true' : undefined)}
           />
           <div className="flex gap-x-2">
-            <Button type="primary" onClick={handleApplyFilter} disabled={!localMin}>
-              Apply
-            </Button>
-            <Button onClick={handleResetFilter}>Reset</Button>
+            <ApplyButton isDisabled={!localMin} onClick={handleApplyFilter} />
+            <button type="button" onClick={handleResetFilter}>
+              Reset
+            </button>
           </div>
         </div>
       );
@@ -261,10 +279,10 @@ export function SingleFilterItem({
             className="w-full"
           />
           <div className="flex gap-x-2">
-            <Button type="primary" onClick={handleApplyFilter} disabled={!localMin}>
-              Apply
-            </Button>
-            <Button onClick={handleResetFilter}>Reset</Button>
+            <ApplyButton isDisabled={!localMin} onClick={handleApplyFilter} />
+            <button type="button" onClick={handleResetFilter} aria-label="Reset filter">
+              Reset
+            </button>
           </div>
         </div>
       );
