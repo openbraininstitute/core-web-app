@@ -2,73 +2,23 @@
 
 import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
-import uniq from 'lodash/uniq';
-import { atom, useAtom, Atom } from 'jotai';
-
-import {
-  CheckCircleFilled,
-  DeleteOutlined,
-  LoadingOutlined,
-  PlusCircleOutlined,
-  WarningFilled,
-} from '@ant-design/icons';
-
-import $RefParser from '@apidevtools/json-schema-ref-parser';
-
+import React, { Fragment, useMemo, useState } from 'react';
+import { atom } from 'jotai';
 import NextImage from 'next/image';
-import {
-  JSONSchemaForm,
-  Chevron,
-  Tab,
-  type Config,
-  isPlainObject,
-  ConfigValue,
-} from './components';
-import { Params, JSONSchema } from './types';
+import { LoadingOutlined } from '@ant-design/icons';
+
+import { JSONSchemaForm, ConfigValue } from './_components/components';
+import { Params, JSONSchema, AtomsMap, TabType } from './types';
+import { useObioneJsonSchema, useSchemaUtils } from './_components/hooks/schema';
+import TabsSelector from './_components/tabs-selector';
+import { useSectionRenderer } from './_components/section';
+import { useConfigAtom } from './_components/hooks/config-atom';
+import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
+
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { useAppNotification } from '@/components/notification';
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
-
-type TabType = 'configuration' | 'simulations';
-
-function isAtom<T>(val: unknown): val is Atom<T> {
-  return typeof val === 'object' && val !== null && 'read' in val;
-}
-
-const ORDERING: Record<string, { order: number; category: string }> = {
-  info: {
-    order: 0,
-    category: 'Setup',
-  },
-  initialize: {
-    order: 1,
-    category: 'Setup',
-  },
-  stimuli: {
-    order: 2,
-    category: 'Stimuli & Recordings',
-  },
-  recordings: {
-    order: 3,
-    category: 'Stimuli & Recordings',
-  },
-  neuron_sets: {
-    order: 4,
-    category: 'Circuit components',
-  },
-  timestamps: {
-    order: 5,
-    category: 'Events',
-  },
-  synaptic_manipulations: {
-    order: 6,
-    category: 'Circuit Manipulations',
-  },
-};
-
-const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
 
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
@@ -78,30 +28,15 @@ export default function TinyCircuitSimulation() {
   const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const notification = useAppNotification();
+  const [campaignId, setCampaignId] = useState('');
+
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  const [collapsedHeader, setCollapsedHeader] = useState(false);
-
-  const [loading, setLoading] = useState(false);
-
-  const notification = useAppNotification();
-
-  const [campaignId, setCampaignId] = useState('');
-
-  function isRootCategory(key: string) {
-    return schema?.properties?.[key] && !schema.properties[key].additionalProperties;
-  }
-
-  function resolveKey(tabKey: string, itemIdx: number | null) {
-    if (typeof itemIdx === null) throw new Error('Invalid itemIdx');
-    if (!schema?.properties?.[configTab]?.singular_name)
-      throw new Error(`Invalid schema for ${configTab}`);
-    if (isRootCategory(tabKey)) throw new Error("Shouldn't be a root category");
-
-    return `${schema.properties[configTab].singular_name.replaceAll(' ', '')}_${itemIdx}`;
-  }
+  const { isRootCategory, resolveKey } = useSchemaUtils(schema, configTab);
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -109,93 +44,32 @@ export default function TinyCircuitSimulation() {
     return ajv.compile(schema as AnySchema);
   }, [schema]);
 
-  const [atomsMap, setAtomsMap] = useState<{
-    [key: string]:
-      | ReturnType<typeof atom<Record<string, ConfigValue>>>
-      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
-  }>({});
-
-  const configAtom = useMemo(() => {
-    return atom((get) => {
-      const result: Config = {};
-      Object.keys(atomsMap).forEach((key) => {
-        if (isAtom(atomsMap[key])) result[key] = get(atomsMap[key]);
-        else {
-          result[key] = {};
-          Object.entries(atomsMap[key]).forEach(([subkey, v]) => {
-            if (typeof result[key] === 'string') return;
-            result[key][subkey] = get(v);
-          });
-        }
-      });
-
-      result.type = schema?.properties?.type.const ?? '';
-
-      return result;
-    });
-  }, [atomsMap, schema]);
-
-  const [config] = useAtom(configAtom);
+  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
+  const config = useConfigAtom(schema, atomsMap);
 
   const errors = useMemo(() => {
     if (validate) validate(config);
     return validate?.errors;
   }, [validate, config]);
 
-  useEffect(() => {
-    async function fetchSpec() {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
-        const json = await res.json();
-
-        const dereferenced = await $RefParser.dereference(json);
-        // @ts-ignore
-        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
-
-        console.log(theSchema);
-
-        if (!theSchema.properties) return;
-
-        setSchema(theSchema);
-
-        const map: {
-          [key: string]:
-            | ReturnType<typeof atom<Record<string, ConfigValue>>>
-            | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
-        } = {};
-
-        // Setting up initial values and constants.
-        Object.entries(theSchema.properties).forEach(([k, v]) => {
-          if (!v.additionalProperties) {
-            const initial: Record<string, ConfigValue> = {};
-
-            if (v.properties)
-              Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                else initial[subkey] = subValue.default ?? null;
-              });
-
-            if (k === 'initialize') {
-              initial.circuit = {
-                type: 'CircuitFromID',
-                id_str: circuitId,
-              };
-            }
-
-            map[k] = atom<Record<string, ConfigValue>>(initial);
-          } else map[k] = {};
-        });
-
-        setAtomsMap(map);
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(assertErrorMessage(e));
-        notification.error({ message: assertErrorMessage(e) });
-      }
-    }
-
-    fetchSpec();
-  }, [circuitId, notification]);
+  useObioneJsonSchema(circuitId, notification, setSchema, setAtomsMap);
+  const renderSection = useSectionRenderer(
+    schema,
+    atomsMap,
+    setAtomsMap,
+    configTab,
+    setConfigTab,
+    isRootCategory,
+    resolveKey,
+    config,
+    campaignId,
+    loading,
+    errors,
+    selectedItemIdx,
+    setSelectedItemIdx,
+    setEditing,
+    setSelectedCategory
+  );
 
   if (!schema) {
     return (
@@ -205,195 +79,9 @@ export default function TinyCircuitSimulation() {
     );
   }
 
-  function renderSection([k, v]: [string, JSONSchema]) {
-    if (!schema?.properties) return;
-    return (
-      <Fragment key={k}>
-        <Tab
-          tab={k}
-          selectedTab={configTab}
-          onClick={() => {
-            if (configTab === k && !isRootCategory(k)) {
-              setEditing(false);
-              setSelectedCategory('');
-              setSelectedItemIdx(null);
-              setCollapsedHeader(!collapsedHeader);
-              return;
-            }
-
-            setCollapsedHeader(false);
-            setConfigTab(k);
-            setSelectedItemIdx(null);
-            if (!v.additionalProperties) setEditing(true);
-            else {
-              setEditing(false);
-            }
-          }}
-          extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
-        >
-          {schema.properties?.[k]?.title}
-          <div className="flex gap-1">
-            {errors?.find((error) => error.instancePath.startsWith('/' + k)) ? (
-              <WarningFilled className="text-yellow-400" />
-            ) : (
-              <CheckCircleFilled className="text-green-600" />
-            )}
-            <Chevron rotate={v.additionalProperties ? 90 : 0} />
-          </div>
-        </Tab>
-        {v.additionalProperties && configTab === k && config[k] && !collapsedHeader && (
-          <>
-            {Object.entries(config[k]).map(([subkey, subValue]) => {
-              const idx = parseInt(subkey.split('_')[1], 10);
-
-              const isSelected = configTab === k && idx === selectedItemIdx;
-
-              return (
-                <Fragment key={subkey}>
-                  {/* eslint-disable-next-line */}
-                  <div
-                    className={classNames(
-                      'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-                      isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
-                    )}
-                    onClick={() => {
-                      if (isPlainObject(subValue)) {
-                        setSelectedCategory(typeof subValue.type === 'string' ? subValue.type : '');
-                        setSelectedItemIdx(parseInt(subkey.split('_')[1], 10));
-                      }
-                      setEditing(true);
-                    }}
-                  >
-                    {subkey}
-                    <div className="flex gap-2">
-                      {errors?.find((error) => error.instancePath.startsWith(`/${k}/${subkey}`)) ? (
-                        <WarningFilled className="text-yellow-400" />
-                      ) : (
-                        <CheckCircleFilled className="text-green-600" />
-                      )}
-
-                      {!campaignId && !loading && (
-                        <DeleteOutlined
-                          className="cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-
-                            setSelectedCategory('');
-                            setEditing(false);
-
-                            const selectedTabAtoms = atomsMap[configTab];
-                            if (!isAtom(selectedTabAtoms)) {
-                              const refereeKey = resolveKey(configTab, idx);
-
-                              delete selectedTabAtoms[refereeKey];
-
-                              // Initialize case
-
-                              if (
-                                isPlainObject(config.initialize) &&
-                                isPlainObject(config.initialize.node_set) &&
-                                typeof config.initialize.node_set.block_name === 'string' &&
-                                config.initialize.node_set.block_name === refereeKey
-                              ) {
-                                atomsMap.initialize = atom<Record<string, ConfigValue>>({
-                                  ...config.initialize,
-                                  node_set: null,
-                                });
-                              }
-
-                              // Check all keys in the config
-                              Object.entries(config)
-                                .filter(([configK]) => configK !== 'initialize')
-                                .forEach(([configK, configV]) => {
-                                  if (typeof configV !== 'object') return;
-
-                                  // Check all keys in a section (e.g stimuli, recordings)
-                                  Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                    if (!isPlainObject(entryV)) return;
-
-                                    // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                    Object.entries(entryV).forEach(([fieldK, field]) => {
-                                      if (
-                                        !isPlainObject(entryV) ||
-                                        !isPlainObject(field) ||
-                                        typeof field.block_name !== 'string' ||
-                                        isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-                                        field.block_name !== refereeKey
-                                      )
-                                        return;
-
-                                      // Deleting the reference to current object
-
-                                      delete entryV[fieldK]; //eslint-disable-line
-
-                                      // The atom that has a reference to current object
-                                      atomsMap[configK][entryKey] =
-                                        atom<Record<string, ConfigValue>>(entryV);
-                                    });
-                                  });
-                                });
-
-                              setAtomsMap({
-                                ...atomsMap,
-                                [configTab]: {
-                                  ...selectedTabAtoms,
-                                },
-                              });
-                            }
-
-                            setSelectedItemIdx(null);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </Fragment>
-              );
-            })}
-            {!campaignId && !loading && (
-              <button
-                className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
-                type="button"
-                onClick={() => {
-                  setEditing(true);
-                  setSelectedCategory('');
-                }}
-              >
-                Add {v.singular_name ?? v.title ?? 'item'}
-                <PlusCircleOutlined />
-              </button>
-            )}
-          </>
-        )}
-      </Fragment>
-    );
-  }
-
-  console.log(config);
-
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
-      <div className="flex">
-        <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
-          <Tab
-            tab="configuration"
-            rounded="rounded-l-full"
-            selectedTab={tab}
-            onClick={() => setTab('configuration')}
-          >
-            Configuration
-          </Tab>
-          <Tab
-            tab="simulations"
-            rounded="rounded-r-full"
-            selectedTab={tab}
-            onClick={() => setTab('simulations')}
-            disabled={!campaignId || loading}
-          >
-            Simulations
-          </Tab>
-        </div>
-      </div>
+      <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
 
       <div className="w-full border-t border-gray-200" />
 
@@ -502,8 +190,8 @@ export default function TinyCircuitSimulation() {
                           className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                           onClick={() => {
                             if (isRootCategory(configTab)) return;
-                            setSelectedCategory(o.properties?.type.const ?? '');
 
+                            setSelectedCategory(o.properties?.type.const ?? '');
                             const initial: Record<string, ConfigValue> = {};
                             if (o.properties)
                               Object.entries(o.properties).forEach(([subkey, subValue]) => {
