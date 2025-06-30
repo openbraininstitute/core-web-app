@@ -5,7 +5,10 @@ import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@a
 import { JSONSchema } from '../types';
 
 import { isPlainObject } from './utils';
+
 import { classNames } from '@/util/utils';
+
+import styles from './components.module.css';
 
 type Primitive = null | boolean | number | string;
 export interface Object {
@@ -58,7 +61,9 @@ export function JSONSchemaForm({
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
 
-    if (k === 'circuit') return <Input value={circuitId} disabled />;
+    if (k === 'circuit') {
+      return <Input value={circuitId} disabled />;
+    }
 
     if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
       const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
@@ -212,15 +217,17 @@ export function JSONSchemaForm({
       );
     if (obj.type === 'number' || obj.type === 'integer')
       return (
-        <InputNumber
-          min={obj.minimum ?? null}
-          disabled={disabled}
-          value={typeof state[k] === 'number' ? state[k] : null}
-          onChange={(value) => {
-            setState({ ...state, [k]: value });
-          }}
-          className="w-full"
-        />
+        <>
+          <InputNumber
+            min={obj.minimum ?? null}
+            disabled={disabled}
+            value={typeof state[k] === 'number' ? state[k] : null}
+            onChange={(value) => {
+              setState({ ...state, [k]: value });
+            }}
+            className="w-full"
+          />
+        </>
       );
     if (obj.type === 'string')
       return (
@@ -247,15 +254,18 @@ export function JSONSchemaForm({
             })
             .map(([k, v]) => {
               return (
-                <div key={k}>
+                <div key={k} className={styles.input}>
                   <div className="flex items-end gap-3">
-                    <div className="text-primary-9 text-base font-semibold uppercase">
+                    <div
+                      className="text-primary-9 text-base font-semibold uppercase"
+                      title={v.description}
+                    >
                       {v.title}
                     </div>
                     {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
                   </div>
-
                   {renderInput(k, v)}
+                  {v.description && <div className={styles.tooltip}>{v.description}</div>}
                 </div>
               );
             })}

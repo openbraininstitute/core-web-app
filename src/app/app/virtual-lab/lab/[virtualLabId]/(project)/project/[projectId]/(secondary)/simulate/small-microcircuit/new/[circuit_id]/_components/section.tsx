@@ -180,6 +180,7 @@ export function useSectionRenderer(
                 </Fragment>
               );
             })}
+            {/* Grey buttons with (+) icon. */}
             {!campaignId && !loading && (
               <button
                 className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
