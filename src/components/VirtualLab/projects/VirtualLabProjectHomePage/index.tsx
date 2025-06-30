@@ -4,14 +4,15 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import sortBy from 'lodash/sortBy';
 
-import { ProjectDetailBanner } from '@/components/VirtualLab/VirtualLabBanner';
 import WelcomeUserBanner from '@/components/VirtualLab/VirtualLabHomePage/WelcomeUserBanner';
+import MemberAvatar from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { ProjectDetailBanner } from '@/components/VirtualLab/VirtualLabBanner';
+
 import {
   virtualLabProjectDetailsAtomFamily,
   virtualLabProjectUsersAtomFamily,
 } from '@/state/virtual-lab/projects';
-import useNotification from '@/hooks/notifications';
-import MemberAvatar from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useAppNotification } from '@/components/notification';
 import { useLoadableValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
 import { extractInitials } from '@/util/slugify';
@@ -22,7 +23,7 @@ export type UsersHorizontalListProps = {
 };
 
 export function UsersHorizontalList({ virtualLabId, projectId }: UsersHorizontalListProps) {
-  const notification = useNotification();
+  const notification = useAppNotification();
 
   const users = useLoadableValue(
     projectId
@@ -60,7 +61,10 @@ export function UsersHorizontalList({ virtualLabId, projectId }: UsersHorizontal
     );
   }
   if (users.state === 'hasError') {
-    notification.error('Something went wrong when fetching users');
+    notification.error({
+      message: 'Something went wrong when fetching users',
+      placement: 'topRight',
+    });
   }
 
   return null;

@@ -9,13 +9,13 @@ import isObject from 'lodash/isObject';
 import delay from 'lodash/delay';
 
 import getStripe from '@/components/VirtualLab/Billing/utils';
-import useNotification from '@/hooks/notifications';
 import sessionAtom from '@/state/session';
 
 import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/checkout/price-card';
 import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { SetupIntentResponse } from '@/services/virtual-lab/billing';
+import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
@@ -56,7 +56,7 @@ export function Form({ onPrevious, successRedirectUrl }: Props) {
   const { interval, tier } = useAtomValue(flowAtom);
   const { push: navigate } = useRouter();
   const [stripeElementsReady, setElementsReady] = useState(false);
-  const { success: successNotify, error: errorNotify } = useNotification();
+  const { success: successNotify, error: errorNotify } = useAppNotification();
   const [formLoading, startTransition] = useTransition();
 
   const formLoaded = stripe && elements;
@@ -80,14 +80,13 @@ export function Form({ onPrevious, successRedirectUrl }: Props) {
         },
       });
       if (error) {
-        errorNotify(
-          error.message ||
+        errorNotify({
+          message:
+            error.message ||
             "We couldn't process your payment. Please check your card details and try again.",
-          undefined,
-          'topRight',
-          true,
-          'subscription-payment-error'
-        );
+          placement: 'topRight',
+          key: 'subscription-payment-error',
+        });
       }
       if (setupIntent?.status === 'succeeded' && setupIntent.payment_method && tier?.app_id) {
         return await createSubscription({
@@ -121,16 +120,14 @@ export function Form({ onPrevious, successRedirectUrl }: Props) {
               "We couldn't find your subscription details. Please try again or contact support if the issue persists.";
           }
         }
-        errorNotify(message, undefined, 'topRight', true, 'subscription-payment-error');
+        errorNotify({ message, placement: 'topRight', key: 'subscription-payment-error' });
       }
       if (data && data.subscription.status === SubscriptionStatus.ACTIVE) {
-        successNotify(
-          'Subscription created successfully',
-          undefined,
-          'topRight',
-          true,
-          'subscription-payment-success'
-        );
+        successNotify({
+          message: 'Subscription created successfully',
+          placement: 'topRight',
+          key: 'subscription-payment-success',
+        });
         delay(() => navigate(successRedirectUrl ?? '/app/virtual-lab/account/invoices'), 2000);
       }
     });
@@ -193,7 +190,7 @@ export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
   const stripeRef = useRef(false);
   const session = useAtomValue(sessionAtom);
   const { step } = useAtomValue(flowAtom);
-  const { error: errorNotify } = useNotification();
+  const { error: errorNotify } = useAppNotification();
   const [stripePromise, setStripePromise] = useState<Stripe | null>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
 
@@ -214,13 +211,12 @@ export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
           setLoadingStripe(false);
         }
       } catch (error) {
-        errorNotify(
-          "We're having some trouble setting up your payment options at the moment. Please try again in a little while.",
-          undefined,
-          'topRight',
-          true,
-          'setup-payment-options'
-        );
+        errorNotify({
+          message:
+            "We're having some trouble setting up your payment options at the moment. Please try again in a little while.",
+          placement: 'topRight',
+          key: 'setup-payment-options',
+        });
         setLoadingStripe(false);
       }
     }

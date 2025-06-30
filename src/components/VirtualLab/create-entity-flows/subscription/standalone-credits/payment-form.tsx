@@ -9,7 +9,6 @@ import isObject from 'lodash/isObject';
 import delay from 'lodash/delay';
 
 import getStripe from '@/components/VirtualLab/Billing/utils';
-import useNotification from '@/hooks/notifications';
 import sessionAtom from '@/state/session';
 
 import {
@@ -21,6 +20,7 @@ import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
 
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { SetupIntentResponse } from '@/services/virtual-lab/billing';
+import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
@@ -57,7 +57,7 @@ function Form({ onClose }: { onClose: () => void }) {
   const elements = useElements();
   const stripe = useStripe();
   const [stripeElementsReady, setElementsReady] = useState(false);
-  const { success: successNotify, error: errorNotify } = useNotification();
+  const { success: successNotify, error: errorNotify } = useAppNotification();
   const [formLoading, startTransition] = useTransition();
   const { credits } = useAtomValue(creditAtom);
   const { virtualLabId } = useParams<{ virtualLabId: string }>();
@@ -80,14 +80,14 @@ function Form({ onClose }: { onClose: () => void }) {
         },
       });
       if (error) {
-        errorNotify(
-          error.message ||
+        errorNotify({
+          message:
+            error.message ||
             "We couldn't process your payment. Please check your card details and try again.",
-          undefined,
-          'topRight',
-          true,
-          'subscription-payment-error'
-        );
+          placement: 'topRight',
+          key: 'subscription-payment-error',
+        });
+
         throw new Error(error.message);
       }
       if (setupIntent?.status === 'succeeded' && setupIntent.payment_method && credits > 0) {
@@ -102,13 +102,12 @@ function Form({ onClose }: { onClose: () => void }) {
               : setupIntent.payment_method?.id,
         });
       }
-      errorNotify(
-        "Your payment couldn't be completed. Please try again or use a different payment method.",
-        undefined,
-        'topRight',
-        true,
-        'subscription-payment-error'
-      );
+      errorNotify({
+        message:
+          "Your payment couldn't be completed. Please try again or use a different payment method.",
+        placement: 'topRight',
+        key: 'subscription-payment-error',
+      });
       throw new Error('Payment setup was not completed successfully');
     };
 
@@ -118,13 +117,11 @@ function Form({ onClose }: { onClose: () => void }) {
       });
 
       if (data) {
-        successNotify(
-          `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
-          undefined,
-          'topRight',
-          true,
-          'credits-purchase-success'
-        );
+        successNotify({
+          message: `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
+          placement: 'topRight',
+          key: 'credits-purchase-success',
+        });
         refresh();
         onClose();
         delay(() => window.location.reload(), 2000);
@@ -146,7 +143,11 @@ function Form({ onClose }: { onClose: () => void }) {
               "We couldn't find your payment details. Please try again or contact support if the issue persists.";
           }
         }
-        errorNotify(message, undefined, 'topRight', true, 'subscription-payment-error');
+        errorNotify({
+          message,
+          placement: 'topRight',
+          key: 'subscription-payment-error',
+        });
       }
     });
   };
@@ -205,7 +206,7 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
   const stripeRef = useRef(false);
   const session = useAtomValue(sessionAtom);
   const [{ step }, updateCreditState] = useAtom(creditAtom);
-  const { error: errorNotify } = useNotification();
+  const { error: errorNotify } = useAppNotification();
   const [stripePromise, setStripePromise] = useState<Stripe | null>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
 
@@ -226,12 +227,11 @@ export default function PaymentForm({ isOpen, onClose }: Props) {
           setLoadingStripe(false);
         }
       } catch (error) {
-        errorNotify(
-          "We're having some trouble setting up your payment options at the moment. Please try again in a little while.",
-          undefined,
-          'topRight',
-          true
-        );
+        errorNotify({
+          message:
+            "We're having some trouble setting up your payment options at the moment. Please try again in a little while.",
+          placement: 'topRight',
+        });
         setLoadingStripe(false);
       }
     }

@@ -1,11 +1,11 @@
+import { NotificationInstance } from 'antd/es/notification/interface';
 import { useCallback } from 'react';
 import omit from 'lodash/omit';
 import get from 'lodash/get';
 
+import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { tryCatch } from '@/api/utils';
-import { Placement } from '@/types/notifications';
-import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 
 interface FieldInfo {
   errors?: string[];
@@ -23,22 +23,8 @@ export function useFieldsChangeHandler(setValid: (value: boolean) => void) {
 
 export function useSubmitCallback(
   startTransition: React.TransitionStartFunction,
-  errorNotify: (
-    message: string,
-    duration?: number,
-    placement?: Placement,
-    closeIcon?: boolean,
-    key?: React.Key,
-    description?: string
-  ) => void,
-  successNotify: (
-    message: string,
-    duration?: number,
-    placement?: Placement,
-    closeIcon?: boolean,
-    key?: React.Key,
-    description?: string
-  ) => void
+  errorNotify: NotificationInstance['error'],
+  successNotify: NotificationInstance['success']
 ) {
   return useCallback(
     (values: UserProfileResponse) => {
@@ -53,30 +39,25 @@ export function useSubmitCallback(
         );
         if (error) {
           if (get(error, 'cause.error_code') === 'ENTITY_UPDATE__ERROR') {
-            errorNotify(
-              `We couldn’t update your information. Please check your input and try again.`,
-              undefined,
-              'topRight',
-              true,
-              'profile-update-error'
-            );
+            errorNotify({
+              message: `We couldn’t update your information. Please check your input and try again.`,
+              placement: 'topRight',
+              key: 'profile-update-error',
+            });
             return;
           }
-          errorNotify(
-            'Unable to save your profile changes due to a server error.\nPlease verify your information and try submitting again.',
-            undefined,
-            'topRight',
-            true,
-            'profile-update-error'
-          );
+          errorNotify({
+            message:
+              'Unable to save your profile changes due to a server error.\nPlease verify your information and try submitting again.',
+            placement: 'topRight',
+            key: 'profile-update-error',
+          });
         } else {
-          successNotify(
-            'Your profile information has been successfully updated',
-            undefined,
-            'topRight',
-            true,
-            'profile-update-success'
-          );
+          successNotify({
+            message: 'Your profile information has been successfully updated',
+            placement: 'topRight',
+            key: 'profile-update-success',
+          });
         }
       });
     },

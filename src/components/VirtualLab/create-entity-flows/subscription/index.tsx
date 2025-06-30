@@ -6,12 +6,12 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import isObject from 'lodash/isObject';
 
-import useNotification from '@/hooks/notifications';
 import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
 
 import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import { cancelSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { TextArea } from '@/components/VirtualLab/create-entity-flows/common/inputs';
+import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
@@ -80,7 +80,7 @@ export async function FreeSubscriptionFlow() {
 
 export function PaidSubscriptionFlow({ data }: { data: UserActiveSubscriptionResponse }) {
   const [open, setOpen] = useState(false);
-  const { error: errorNotify, success: successNotify } = useNotification();
+  const { error: errorNotify, success: successNotify } = useAppNotification();
   const [cancelling, startTransition] = useTransition();
   const onDowngradeClick = () => setOpen(true);
   const onDowngradeClose = () => setOpen(false);
@@ -105,18 +105,14 @@ export function PaidSubscriptionFlow({ data }: { data: UserActiveSubscriptionRes
             message = 'This subscription has already been cancelled and cannot be cancelled again';
           }
         }
-        errorNotify(message, undefined, 'topRight', true);
+        errorNotify({ message, placement: 'topRight' });
       }
       if (result?.subscription.current_period_end) {
-        successNotify(
-          `
-                    Subscription cancelled. Your subscription will remain active until 
-                    ${format(new Date(result.subscription.current_period_end), 'MMM dd, yyyy')}
-                `,
-          undefined,
-          'topRight',
-          true
-        );
+        successNotify({
+          message: `Subscription cancelled. Your subscription will remain active until 
+                    ${format(new Date(result.subscription.current_period_end), 'MMM dd, yyyy')}`,
+          placement: 'topRight',
+        });
       }
       onDowngradeClose();
     });
