@@ -14,7 +14,7 @@ export interface Object {
 
 export type ConfigValue = Primitive | Primitive[] | Object;
 
-export type Config = Record<string, Object | string>;
+export type Config = Record<string, Object >;
 
 export function JSONSchemaForm({
   disabled,
