@@ -128,11 +128,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Contributors',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>
-      renderEmptyOrValue(
-        transformAgentToNames(
-          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
-            .contributions
-        )
+      transformAgentToNames(
+        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
+        false
       ),
     vocabulary: {
       plural: 'Contributors',
@@ -150,7 +148,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.BrainRegion]: {
     title: 'Brain Region',
     filter: null,
-    render: (r) => renderEmptyOrValue(r.brain_region.name),
+    render: (r) => ('brain_region' in r ? renderEmptyOrValue(r.brain_region.name) : EmptyValue),
     vocabulary: {
       plural: 'Brain Regions',
       singular: 'Brain Region',

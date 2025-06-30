@@ -58,7 +58,11 @@ export const renderAsString = (value: any) => {
 };
 
 export const renderArray = (array: string[]) => {
-  return array.map((item) => <div key={item}>{item}</div>);
+  return array.map((item) => (
+    <div key={item} className="line-clamp-1 text-ellipsis" title={item}>
+      {item}
+    </div>
+  ));
 };
 
 export const renderDate = (isoDateString: string) => {

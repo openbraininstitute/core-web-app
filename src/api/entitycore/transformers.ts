@@ -130,8 +130,9 @@ export function transformFiltersToQuery(
 }
 
 export function transformAgentToNames(
-  agentsWithRoles: Array<IContributor> | undefined | null
-): string {
+  agentsWithRoles: Array<IContributor> | undefined | null,
+  asArray: boolean = false
+): string | Array<string> {
   if (!agentsWithRoles) {
     return '';
   }
@@ -142,7 +143,9 @@ export function transformAgentToNames(
     type: agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
   }));
 
-  return map(sortBy(processedAgents, ['type', 'name']), 'name').join('\n');
+  return asArray
+    ? map(sortBy(processedAgents, ['type', 'name']), 'name')
+    : map(sortBy(processedAgents, ['type', 'name']), 'name').join(',\n');
 }
 
 function resolveAgentName(agent: Agent) {
