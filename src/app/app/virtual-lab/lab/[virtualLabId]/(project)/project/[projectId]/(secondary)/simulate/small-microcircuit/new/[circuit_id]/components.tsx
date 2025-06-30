@@ -44,10 +44,19 @@ export function JSONSchemaForm({
   };
 
   useEffect(() => {
-    setState((prev) => {
-      return { ...prev, type: schema.properties?.type.const ?? '' };
+    if (!schema.properties) return;
+
+    const initial: Record<string, ConfigValue> = {};
+
+    Object.entries(schema.properties).forEach(([key, value]) => {
+      if (key === 'type') initial[key] = value.const ?? null;
+      else initial[key] = value.default ?? null;
     });
-  }, [stateAtom, setState, schema.properties?.type.const]);
+
+    setState((prev) => {
+      return { ...initial, ...prev };
+    });
+  }, [stateAtom, setState, schema.properties]);
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
@@ -104,17 +113,16 @@ export function JSONSchemaForm({
     if (k === 'neuron_ids') {
       return (
         <div className="text-primary-8 mt-2 flex flex-col gap-2">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap gap-3">
             {isPlainObject(state[k]) &&
               isPlainObject(state[k]) &&
               Array.isArray(state[k].elements) &&
               state[k].elements.map((e, i) => (
                 // eslint-disable-next-line
-                <div key={i}>
+                <div key={i} className="flex gap-1">
                   {e}{' '}
                   {!disabled && (
                     <CloseCircleOutlined
-                      className="ml-2"
                       onClick={() => {
                         if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
 
@@ -199,7 +207,7 @@ export function JSONSchemaForm({
           disabled={disabled}
           onChange={(newV) => setState({ ...state, [k]: newV })}
           value={state[k]}
-          className="w-[150px]"
+          className="w-full"
           options={obj.enum.map((subv: string) => {
             return { label: subv, value: subv };
           })}
@@ -222,7 +230,7 @@ export function JSONSchemaForm({
         <Input
           disabled={disabled}
           value={typeof state[k] === 'string' ? state[k] : ''}
-          className="max-w-[300px]"
+          className="w-full"
           onChange={(e) => {
             setState({ ...state, [k]: e.currentTarget.value });
           }}

@@ -62,6 +62,10 @@ const ORDERING: Record<string, { order: number; category: string }> = {
     order: 5,
     category: 'Events',
   },
+  synaptic_manipulations: {
+    order: 6,
+    category: 'Circuit Manipulations',
+  },
 };
 
 const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
@@ -78,11 +82,26 @@ export default function TinyCircuitSimulation() {
     (s) => s.properties?.type.const === selectedCategory
   );
 
+  const [collapsedHeader, setCollapsedHeader] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
   const notification = useAppNotification();
 
   const [campaignId, setCampaignId] = useState('');
+
+  function isRootCategory(key: string) {
+    return schema?.properties?.[key] && !schema.properties[key].additionalProperties;
+  }
+
+  function resolveKey(tabKey: string, itemIdx: number | null) {
+    if (typeof itemIdx === null) throw new Error('Invalid itemIdx');
+    if (!schema?.properties?.[configTab]?.singular_name)
+      throw new Error(`Invalid schema for ${configTab}`);
+    if (isRootCategory(tabKey)) throw new Error("Shouldn't be a root category");
+
+    return `${schema.properties[configTab].singular_name.replaceAll(' ', '')}_${itemIdx}`;
+  }
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -132,6 +151,8 @@ export default function TinyCircuitSimulation() {
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
         const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+
+        console.log(theSchema);
 
         if (!theSchema.properties) return;
 
@@ -192,6 +213,15 @@ export default function TinyCircuitSimulation() {
           tab={k}
           selectedTab={configTab}
           onClick={() => {
+            if (configTab === k && !isRootCategory(k)) {
+              setEditing(false);
+              setSelectedCategory('');
+              setSelectedItemIdx(null);
+              setCollapsedHeader(!collapsedHeader);
+              return;
+            }
+
+            setCollapsedHeader(false);
             setConfigTab(k);
             setSelectedItemIdx(null);
             if (!v.additionalProperties) setEditing(true);
@@ -211,7 +241,7 @@ export default function TinyCircuitSimulation() {
             <Chevron rotate={v.additionalProperties ? 90 : 0} />
           </div>
         </Tab>
-        {v.additionalProperties && configTab === k && config[k] && (
+        {v.additionalProperties && configTab === k && config[k] && !collapsedHeader && (
           <>
             {Object.entries(config[k]).map(([subkey, subValue]) => {
               const idx = parseInt(subkey.split('_')[1], 10);
@@ -253,7 +283,8 @@ export default function TinyCircuitSimulation() {
 
                             const selectedTabAtoms = atomsMap[configTab];
                             if (!isAtom(selectedTabAtoms)) {
-                              const refereeKey = `${schema.properties?.[configTab].title}_${idx}`;
+                              const refereeKey = resolveKey(configTab, idx);
+
                               delete selectedTabAtoms[refereeKey];
 
                               // Initialize case
@@ -321,41 +352,14 @@ export default function TinyCircuitSimulation() {
             })}
             {!campaignId && !loading && (
               <button
-                className="text-primary-8 flex h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                 type="button"
                 onClick={() => {
                   setEditing(true);
-                  if (!isAtom(atomsMap[configTab])) {
-                    const initial: Record<string, ConfigValue> = {};
-
-                    if (v.properties)
-                      Object.entries(v.properties).forEach(([subkey, subValue]) => {
-                        if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                        else initial[subkey] = subValue.default ?? null;
-                      });
-
-                    const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                      parseInt(subkey.split('_')[1], 10)
-                    );
-
-                    itemIndexes.sort((a, b) => a - b);
-
-                    const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-
-                    setSelectedItemIdx(itemIdx);
-                    setSelectedCategory('');
-                    setAtomsMap({
-                      ...atomsMap,
-                      [configTab]: {
-                        ...atomsMap[configTab],
-                        [`${schema.properties?.[configTab].title}_${itemIdx}`]:
-                          atom<Record<string, ConfigValue>>(initial),
-                      },
-                    });
-                  }
+                  setSelectedCategory('');
                 }}
               >
-                Add {v.title}
+                Add {v.singular_name ?? v.title ?? 'item'}
                 <PlusCircleOutlined />
               </button>
             )}
@@ -365,8 +369,10 @@ export default function TinyCircuitSimulation() {
     );
   }
 
+  console.log(config);
+
   return (
-    <div className="flex h-screen flex-col space-y-5 bg-gray-100 p-10">
+    <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <div className="flex">
         <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
           <Tab
@@ -392,30 +398,31 @@ export default function TinyCircuitSimulation() {
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
-        <div className="grid min-h-0 flex-grow grid-cols-[1fr_1fr_2fr] gap-5">
-          <div className="flex h-full flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5">
-            {CATEGORIES.map((c) => {
-              return (
-                <Fragment key={c}>
-                  <div className="self-start text-gray-500 uppercase">{c}</div>
-                  {schema.properties &&
-                    Object.entries(schema.properties)
-                      .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                      .sort((a, b) => {
-                        const order = (k: string) => ORDERING[k]?.order ?? 999;
-                        return order(a[0]) - order(b[0]);
-                      })
-                      .map((entry) => {
-                        return renderSection(entry);
-                      })}
-                </Fragment>
-              );
-            })}
-
+        <div className="grid h-[calc(100%-100px)] grid-cols-[1fr_1fr_2fr] gap-5">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5 pb-5">
+              {CATEGORIES.map((c) => {
+                return (
+                  <Fragment key={c}>
+                    <div className="self-start text-gray-500 uppercase">{c}</div>
+                    {schema.properties &&
+                      Object.entries(schema.properties)
+                        .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                        .sort((a, b) => {
+                          const order = (k: string) => ORDERING[k]?.order ?? 999;
+                          return order(a[0]) - order(b[0]);
+                        })
+                        .map((entry) => {
+                          return renderSection(entry);
+                        })}
+                  </Fragment>
+                );
+              })}
+            </div>
             <button
               type="button"
               className={classNames(
-                'mt-5 flex h-[50px] w-[100%] items-center justify-center rounded-full px-5 py-2 text-lg drop-shadow',
+                'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
                 (errors && errors.length > 0) || loading
                   ? 'bg-gray-300 text-gray-500'
                   : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
@@ -494,7 +501,29 @@ export default function TinyCircuitSimulation() {
                         <div
                           className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                           onClick={() => {
+                            if (isRootCategory(configTab)) return;
                             setSelectedCategory(o.properties?.type.const ?? '');
+
+                            const initial: Record<string, ConfigValue> = {};
+                            if (o.properties)
+                              Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                                else initial[subkey] = subValue.default ?? null;
+                              });
+                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                              parseInt(subkey.split('_')[1], 10)
+                            );
+                            itemIndexes.sort((a, b) => a - b);
+                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                            setSelectedItemIdx(itemIdx);
+                            setAtomsMap({
+                              ...atomsMap,
+                              [configTab]: {
+                                ...atomsMap[configTab],
+                                [resolveKey(configTab, itemIdx)]:
+                                  atom<Record<string, ConfigValue>>(initial),
+                              },
+                            });
                           }}
                         >
                           <div className="text-primary-9 text-lg font-bold">{o.title}</div>
@@ -509,8 +538,7 @@ export default function TinyCircuitSimulation() {
             {schema.properties &&
               schema.properties?.[configTab] &&
               editing &&
-              (!schema.properties?.[configTab]?.additionalProperties?.anyOf ||
-                selectedCatSchema) && (
+              (isRootCategory(configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
                   disabled={!!campaignId || loading}
                   config={config}
@@ -523,9 +551,7 @@ export default function TinyCircuitSimulation() {
                   stateAtom={
                     isAtom(atomsMap[configTab])
                       ? atomsMap[configTab]
-                      : atomsMap[configTab][
-                          `${schema.properties?.[configTab].title}_${selectedItemIdx}`
-                        ]
+                      : atomsMap[configTab][resolveKey(configTab, selectedItemIdx)]
                   }
                 />
               )}
