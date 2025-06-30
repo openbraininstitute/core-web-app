@@ -16,7 +16,7 @@ export default function ViewToggle({
   };
 
   return (
-    <div className="relative flex flex-row items-center gap-x-4">
+    <div className="relative flex flex-row items-center gap-x-2">
       <div className="text-primary-9 text-base font-medium">View:</div>
       <div className="relative flex flex-row items-center gap-x-2">
         <Tooltip title="Hierarchical view">

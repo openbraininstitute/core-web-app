@@ -22,9 +22,6 @@ export default function CircuitMetadata({ content }: { content: CircuitSchemaPro
           slice={2}
         />
       </div>
-      {content.contact && (
-        <ParameterBox name="Contact" value={content.contact} link={`mailto:${content.contact}`} />
-      )}
     </div>
   );
 }
