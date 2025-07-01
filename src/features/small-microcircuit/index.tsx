@@ -15,6 +15,7 @@ import TabsSelector from './_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
 import { AtomsMap, JSONSchema, TabType } from './types';
 
+import CircuitName from './_components/circuit-name';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
@@ -121,8 +122,10 @@ export default function SimulationCampaignConfiguration({
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
-      <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
-
+      <header className={styles.header}>
+        <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
+        <CircuitName circuitId={circuitId} />
+      </header>
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
