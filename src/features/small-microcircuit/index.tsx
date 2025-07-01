@@ -15,6 +15,7 @@ import TabsSelector from './_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
 import { AtomsMap, JSONSchema, TabType } from './types';
 
+import CircuitName from './_components/circuit-name';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
@@ -30,7 +31,6 @@ import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import styles from './small-microcircuit.module.css';
-import CircuitName from './_components/circuit-name';
 
 export default function SimulationCampaignConfiguration({
   circuitId,

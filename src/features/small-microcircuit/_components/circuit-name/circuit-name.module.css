@@ -16,6 +16,7 @@
 
 .description {
   margin-top: 16px;
+  white-space: pre-wrap;
   position: absolute;
   background: #0050b3ee;
   color: #fff;
