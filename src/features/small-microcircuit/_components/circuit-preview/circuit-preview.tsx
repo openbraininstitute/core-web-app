@@ -3,16 +3,17 @@ import React from 'react';
 
 import { useCircuitImageURL } from '../hooks/circuit';
 import { classNames } from '@/util/utils';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 import styles from './circuit-preview.module.css';
 
 export interface CircuitPreviewProps {
   className?: string;
-  circuitId: string;
+  circuit: ICircuit | undefined | null;
 }
 
-export default function CircuitPreview({ className, circuitId }: CircuitPreviewProps) {
-  const url = useCircuitImageURL(circuitId);
+export default function CircuitPreview({ className, circuit }: CircuitPreviewProps) {
+  const url = useCircuitImageURL(circuit?.id);
 
   return (
     <div className={classNames(className, styles.circuitPreview, url && styles.show)}>

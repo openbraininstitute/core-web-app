@@ -13,6 +13,7 @@ import { useSectionRenderer } from './_components/section';
 import TabsSelector from './_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
 import { AtomsMap, JSONSchema, TabType } from './types';
+import { useCircuit } from './_components/hooks/circuit';
 import CircuitName from './_components/circuit-name';
 import CircuitPreview from './_components/circuit-preview';
 
@@ -47,6 +48,7 @@ export default function SimulationCampaignConfiguration({
   if (!!initialCampaignId !== !!initialConfig)
     throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
 
+  const circuit = useCircuit(circuitId);
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -125,7 +127,7 @@ export default function SimulationCampaignConfiguration({
         <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
-          <CircuitName circuitId={circuitId} />
+          <CircuitName circuit={circuit} />
         </div>
       </header>
       <div className="w-full border-t border-gray-200" />
@@ -288,10 +290,11 @@ export default function SimulationCampaignConfiguration({
                       ? atomsMap[configTab]
                       : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
                   }
+                  circuit={circuit}
                 />
               )}
           </div>
-          <CircuitPreview circuitId={circuitId} />
+          <CircuitPreview circuit={circuit} />
         </div>
       )}
 
