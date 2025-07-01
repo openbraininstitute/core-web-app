@@ -4,7 +4,6 @@ import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue } from 'jotai';
 import isEqual from 'lodash/isEqual';
-import NextImage from 'next/image';
 import { Fragment, Suspense, useEffect, useMemo, useState } from 'react';
 
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
@@ -31,6 +30,7 @@ import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import styles from './small-microcircuit.module.css';
+import CircuitPreview from './_components/circuit-preview';
 
 export default function SimulationCampaignConfiguration({
   circuitId,
@@ -289,16 +289,7 @@ export default function SimulationCampaignConfiguration({
                 />
               )}
           </div>
-          <div>
-            <NextImage
-              width={1000}
-              height={1130}
-              alt="Circuit"
-              // eslint-disable-next-line
-              src={basePath + '/images' + '/circuit_test_image.png'}
-              className="w-full rounded-xl border border-gray-200"
-            />
-          </div>
+          <CircuitPreview circuitId={circuitId} />
         </div>
       )}
 

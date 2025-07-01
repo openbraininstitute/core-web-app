@@ -1,6 +1,6 @@
 div.threeColumns {
   display: grid;
-  grid-template-columns: 300px 360px 1fr;
+  grid-template-columns: 1fr 1fr 2fr;
   gap: 5px;
   height: calc(100% - 100px);
 }
