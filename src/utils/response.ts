@@ -1,3 +1,5 @@
+import { log } from '@/utils/logger';
+
 /**
  * Reads and processes NDJSON (newline-delimited JSON) data from a streaming HTTP response.
  *
@@ -57,6 +59,7 @@ export async function readNdjsonResponse<T>(response: Response, onMessage?: (dat
 
   const reader = stream.getReader();
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
@@ -65,7 +68,7 @@ export async function readNdjsonResponse<T>(response: Response, onMessage?: (dat
       const message = JSON.parse(value) as T;
       onMessage?.(message);
     } catch (e) {
-      console.warn('Invalid JSON line:', value, e);
+      log('warn', 'Invalid JSON line:', value, e);
     }
   }
 }

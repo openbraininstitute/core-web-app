@@ -8,7 +8,7 @@ export const SIMULATION_DATATYPES = [
 ];
 
 export const SIMULATION_DATA_TYPE_CONFIG: { [key: string]: DataTypeConfig } = {
-  [DataType.SimulationCampaigns]: {
+  [DataType.SimulationCampaign]: {
     title: 'Simulation campaigns',
     group: DataTypeGroup.SimulationData,
     name: 'simulation-campaigns',

@@ -1,8 +1,9 @@
 import find from 'lodash/find';
-import { EntityCoreBaseAsset, IAsset } from './types/shared/global';
-import authApiClient from '@/api/apiClient';
 
 import { entityCorePublicProjectId, entityCorePublicVirtualLabId, entityCoreUrl } from '@/config';
+import authApiClient from '@/api/apiClient';
+
+import type { EntityCoreBaseAsset, IAsset } from '@/api/entitycore/types/shared/global';
 
 export const getEntityCorePublicContext = () => ({
   headers: {
@@ -44,6 +45,5 @@ export function getAssetElement(
   if ('filter' in config) {
     return find(config.assets, config.filter);
   }
-  // eslint-disable-next-line lodash/matches-shorthand
-  return find(config.assets, (v) => v.path === config.path && v.content_type === config.type);
+  return find(config.assets, { path: config.path, content_type: config.type });
 }

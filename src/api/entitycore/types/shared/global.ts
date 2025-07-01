@@ -165,6 +165,8 @@ export enum AssetLabel {
   single_neuron_synaptome_config = 'single_neuron_synaptome_config',
   single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
   validation_result = 'validation_result_details',
+  simulation_generation_config = 'simulation_generation_config',
+  campaign_generation_config = 'campaign_generation_config',
 }
 
 type AssetBase = {

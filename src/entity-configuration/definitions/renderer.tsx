@@ -65,6 +65,20 @@ export const renderArray = (array: string[]) => {
   ));
 };
 
+export const renderDictionaryKeys = (
+  dictionary: Record<string, string>,
+  Component: React.ComponentType<{ field: string; value: string }>,
+  containerClassName?: string
+) => {
+  return (
+    <div className={containerClassName}>
+      {Object.entries(dictionary).map(([field, value]) => (
+        <Component key={field} field={field} value={value} />
+      ))}
+    </div>
+  );
+};
+
 export const renderDate = (isoDateString: string) => {
   if (!isoDateString) return EmptyValue;
   return format(parseISO(isoDateString), 'dd.MM.yyyy');
