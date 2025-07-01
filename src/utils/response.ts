@@ -1,3 +1,24 @@
+/**
+ * Reads and processes NDJSON (newline-delimited JSON) data from a streaming HTTP response.
+ * 
+ * This function handles streaming responses containing multiple JSON objects separated by newlines.
+ * Each line is parsed as JSON and passed to the optional callback function as it becomes available.
+ * 
+ * @template T The type of the JSON objects expected in each line
+ * @param response The HTTP Response object to read from
+ * @param onMessage Optional callback function called for each parsed JSON object
+ * 
+ * @throws {Error} When the HTTP response status is not ok (status >= 400)
+ * @throws {Error} When the response body is empty or null
+ * 
+ * @example
+ * ```typescript
+ * const response = await fetch('/api/stream');
+ * await readNdjsonResponse<{id: string, message: string}>(response, (data) => {
+ *   console.log('Received:', data.message);
+ * });
+ * ```
+ */
 export async function readNdjsonResponse<T>(response: Response, onMessage?: (data: T) => void) {
   if (!response.ok) {
     throw new Error(`HTTP error ${response.status}`);
