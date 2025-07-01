@@ -1,6 +1,5 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { atom } from 'jotai';
@@ -8,7 +7,7 @@ import NextImage from 'next/image';
 import { LoadingOutlined } from '@ant-design/icons';
 
 import { JSONSchemaForm, ConfigValue, Config } from './_components/components';
-import { Params, JSONSchema, AtomsMap, TabType } from './types';
+import { JSONSchema, AtomsMap, TabType } from './types';
 import { useObioneJsonSchema, isRootCategory, resolveKey } from './_components/hooks/schema';
 import TabsSelector from './_components/tabs-selector';
 import { useSectionRenderer } from './_components/section';
@@ -21,9 +20,15 @@ import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 
 export default function SimulationCampaignConfiguration({
+  circuitId,
+  virtualLabId,
+  projectId,
   initialCampaignId,
   initialConfig,
 }: {
+  circuitId: string;
+  virtualLabId: string;
+  projectId: string;
   initialCampaignId?: string;
   initialConfig?: Config;
 }) {
@@ -32,7 +37,6 @@ export default function SimulationCampaignConfiguration({
 
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
-  const { circuit_id: circuitId, virtualLabId, projectId } = useParams<Params>();
   const [editing, setEditing] = useState(true);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
