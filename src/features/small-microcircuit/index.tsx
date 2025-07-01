@@ -68,7 +68,7 @@ export default function SimulationCampaignConfiguration({
     setSelectedCategory('');
   };
 
-  const readOnly = true;
+  const readOnly = initialConfig !== undefined;
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
