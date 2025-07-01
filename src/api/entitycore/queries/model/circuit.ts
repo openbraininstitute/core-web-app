@@ -64,7 +64,7 @@ export async function getCircuit({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<ISingleNeuronSynaptome>(`${baseUri}/${id}`, {
+  return await api.get<ICircuit>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
