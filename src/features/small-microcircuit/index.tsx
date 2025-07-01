@@ -4,7 +4,6 @@ import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue } from 'jotai';
 import isEqual from 'lodash/isEqual';
-import NextImage from 'next/image';
 import { Fragment, Suspense, useRef, useMemo, useState } from 'react';
 
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
@@ -16,6 +15,7 @@ import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
 import { AtomsMap, JSONSchema, TabType } from './types';
 
 import CircuitName from './_components/circuit-name';
+import CircuitPreview from './_components/circuit-preview';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
@@ -23,7 +23,6 @@ import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simu
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
-import { basePath } from '@/config';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 import EphysViewer from '@/features/ephys-viewer';
 import { runCircuitSimulation } from '@/services/small-scale-simulator/circuit';
@@ -289,16 +288,7 @@ export default function SimulationCampaignConfiguration({
                 />
               )}
           </div>
-          <div>
-            <NextImage
-              width={1000}
-              height={1130}
-              alt="Circuit"
-              // eslint-disable-next-line
-              src={basePath + '/images' + '/circuit_test_image.png'}
-              className="w-full rounded-xl border border-gray-200"
-            />
-          </div>
+          <CircuitPreview circuitId={circuitId} />
         </div>
       )}
 
