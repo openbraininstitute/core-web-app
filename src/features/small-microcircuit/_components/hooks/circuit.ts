@@ -14,11 +14,16 @@ const pendingQueries = new Map<string, Promise<ICircuit | undefined | null>>();
  * @param circuitId
  * @returns `undefined` if the query is pending, `null` if an error occured and the circuit in case of success.
  */
-export function useCircuit(circuitId: string): ICircuit | undefined | null {
+export function useCircuit(circuitId: string | undefined): ICircuit | undefined | null {
   const { error } = useAppNotification();
   const [circuit, setCircuit] = React.useState<ICircuit | undefined | null>(undefined);
 
   React.useEffect(() => {
+    if (!circuitId) {
+      setCircuit(undefined);
+      return;
+    }
+
     getQuery(circuitId)
       .then(setCircuit)
       .catch((ex) => {
@@ -32,7 +37,7 @@ export function useCircuit(circuitId: string): ICircuit | undefined | null {
   return circuit;
 }
 
-export function useCircuitImageURL(circuitId: string) {
+export function useCircuitImageURL(circuitId: string | undefined) {
   const { error } = useAppNotification();
   const [url, setUrl] = React.useState<string | undefined>(undefined);
   const circuit = useCircuit(circuitId);
