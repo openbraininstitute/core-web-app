@@ -18,3 +18,12 @@ div.threeColumns > div:first-child {
   gap: 1em;
   overflow: unset;
 }
+
+header.header {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+}
