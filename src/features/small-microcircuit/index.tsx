@@ -5,7 +5,7 @@ import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue } from 'jotai';
 import isEqual from 'lodash/isEqual';
 import NextImage from 'next/image';
-import { Fragment, Suspense, useEffect, useMemo, useState } from 'react';
+import { Fragment, Suspense, useRef, useMemo, useState } from 'react';
 
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
 import { useConfigAtom } from './_components/hooks/config-atom';
@@ -57,6 +57,7 @@ export default function SimulationCampaignConfiguration({
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
+  const initialConfigValidated = useRef(false);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
     (s) => s.properties?.type.const === selectedCategory
@@ -79,13 +80,12 @@ export default function SimulationCampaignConfiguration({
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const config = useConfigAtom(schema, atomsMap);
 
-  // Validate initial configuration
-  useEffect(() => {
-    if (!validate || !initialConfig) return;
-
+  // Validate initial config
+  if (validate && initialConfig && !initialConfigValidated.current) {
+    initialConfigValidated.current = true;
     validate(initialConfig);
-    if (validate?.errors) throw new Error('Invalid Simulation Campaign Configuration');
-  }, [validate, initialConfig]);
+    if (validate.errors) throw new Error('Invalid Simulation Campaign Configuration');
+  }
 
   const errors = useMemo(() => {
     if (validate) validate(config);
