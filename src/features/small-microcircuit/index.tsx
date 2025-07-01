@@ -246,6 +246,7 @@ export default function SimulationCampaignConfiguration({
               editing &&
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
+                  setConfigTab={setConfigTab}
                   disabled={!!campaignId || loading || readOnly}
                   config={config}
                   circuitId={circuitId}

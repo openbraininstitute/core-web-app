@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai';
-import { InputNumber, Input, Select } from 'antd';
+import { InputNumber, Input, Select, Button } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { JSONSchema } from '../types';
 
@@ -17,12 +17,14 @@ export function JSONSchemaForm({
   stateAtom,
   circuitId,
   config,
+  setConfigTab,
 }: {
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   circuitId: string;
+  setConfigTab: (key: string) => void;
 }) {
   const skip = ['type'];
 
@@ -33,6 +35,11 @@ export function JSONSchemaForm({
   const referenceTypesToConfigKeys: Record<string, string> = {
     NeuronSetReference: 'neuron_sets',
     TimestampsReference: 'timestamps',
+  };
+
+  const referenceTypesToTitles: Record<string, string> = {
+    NeuronSetReference: 'Neuron Set',
+    TimestampsReference: 'Timestamps',
   };
 
   useEffect(() => {
@@ -57,6 +64,7 @@ export function JSONSchemaForm({
 
     if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
       const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
+      const referenceTitle = referenceTypesToTitles[v.properties.type.const];
       if (!referenceKey) return null;
       const referenceConfig = config[referenceKey];
       if (!isPlainObject(referenceConfig)) return null;
@@ -66,7 +74,7 @@ export function JSONSchemaForm({
       });
 
       if (referees.length === 0) {
-        return <span className="text-red-500">No valid {referenceKey} found</span>;
+        return <Button onClick={() => setConfigTab(referenceKey)}>Add {referenceTitle}</Button>;
       }
 
       const defaultV =
@@ -243,7 +251,7 @@ export function JSONSchemaForm({
             })
             .map(([k, v]) => {
               return (
-                <div key={k} className='flex flex-col gap-2'>
+                <div key={k} className="flex flex-col gap-2">
                   <div className="flex items-end gap-3">
                     <div className="text-primary-9 text-base font-semibold uppercase">
                       {v.title}
