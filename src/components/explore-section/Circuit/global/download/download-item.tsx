@@ -8,11 +8,19 @@ import {
 import { DownloadIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
+import styles from './download-item.module.css';
+
 export function DownloadChildrenItem({
   childrenItem,
 }: {
   childrenItem: SingleSelectedDownloadableItemProps;
 }) {
+  const disabled = childrenItem.extension === 'directory';
+
+  if (disabled) {
+    return <div className={styles.comingSoon}>Coming soon...</div>;
+  }
+
   return (
     <div className="flex w-full flex-row justify-between">
       <div className="w-3/4 hyphens-auto">
