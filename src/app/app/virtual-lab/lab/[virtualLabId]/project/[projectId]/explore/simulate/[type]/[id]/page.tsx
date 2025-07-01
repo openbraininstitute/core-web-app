@@ -49,6 +49,7 @@ export default async function Page({
       id,
       { virtualLabId, projectId }
     );
+
     return (
       <SingleNeuronSynaptomeSimulationView
         key="synaptome-simulation"

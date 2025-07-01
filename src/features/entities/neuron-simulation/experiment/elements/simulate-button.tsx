@@ -30,6 +30,7 @@ type Props = WorkspaceContext & {
   modelId: string;
   meModelId: string;
   simulationType: SimulationType;
+  disable: boolean;
 };
 
 export default function ActionButton({
@@ -38,6 +39,7 @@ export default function ActionButton({
   virtualLabId,
   projectId,
   simulationType,
+  disable,
 }: Props) {
   const form = Form.useFormInstance();
   const [downloading, setDownloading] = useState(false);
@@ -129,7 +131,7 @@ export default function ActionButton({
         type="button"
         className="bg-primary-8 px-7 py-3 text-lg text-white disabled:bg-gray-300"
         onClick={runSimulation}
-        disabled={simulationStatus?.status === 'launched'}
+        disabled={simulationStatus?.status === 'launched' || disable}
       >
         {simulationStatus?.status === 'finished' ? 'Re-run Simulation' : 'Simulate'}
       </button>
