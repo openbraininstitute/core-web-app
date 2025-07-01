@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -22,6 +22,7 @@ import { conditionalAtom } from '@/hooks/use-conditional-atom';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { DetailViewUrlParams } from '@/types/explore-section/application';
+import { downloadArchive } from '@/services/entity-download';
 
 export default function Summary<T extends EntityCoreIdentifiableNamed>({
   payload,
@@ -51,6 +52,8 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   }, [payload, id, virtualLabId, projectId, dataType, JSON.stringify(params)]);
 
   const detail = useAtomValue(memoizedDetailAtom);
+
+  const onDownload = useCallback((entity: T) => downloadArchive(entity.type, [entity.id]), []);
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);
@@ -99,6 +102,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
               detail={data}
               url={path}
               extraHeaderAction={extraHeaderAction}
+              onDownload={onDownload}
             />
             {children && data && children(data)}
           </div>
