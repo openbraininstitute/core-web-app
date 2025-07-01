@@ -11,3 +11,10 @@ div.threeColumns > div {
   overflow-y: auto;
   overflow-x: visible;
 }
+
+div.threeColumns > div:first-child {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 1em;
+  overflow: unset;
+}

@@ -200,7 +200,7 @@ export default function SimulationCampaignConfiguration({
               </div>
             </button>
           </div>
-          <div className="h-full overflow-y-auto border-r border-gray-200 pr-5">
+          <div className="h-full overflow-y-auto border-r border-gray-200 px-5">
             {schema.properties &&
               schema.properties?.[configTab]?.additionalProperties?.anyOf &&
               !selectedCategory &&
