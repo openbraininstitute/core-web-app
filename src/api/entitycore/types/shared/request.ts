@@ -46,7 +46,7 @@ export type StainFilter = {
 
 export type IdFilter = Partial<{
   id: string;
-  id__in: string[];
+  id__in: string; // this should be comma separated
 }>;
 
 export type SearchFilter = {
@@ -116,3 +116,9 @@ export interface OwnershipFilter {
   updated_by__pref_label__in?: Array<string> | null;
   updated_by__order_by?: string | null;
 }
+
+export interface IEntityFilter
+  extends IDFilter,
+    OwnershipFilter,
+    TimestampsFilter,
+    ContributionFilter {}

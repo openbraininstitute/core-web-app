@@ -1,5 +1,6 @@
 import get from 'lodash/get';
 
+import { ReactNode } from 'react';
 import PreviewThumbnail from '@/features/thumbnail/preview';
 
 import {
@@ -19,6 +20,7 @@ import type {
   EntityCoreObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import { TCircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.SimulationSeed]: {
@@ -191,7 +193,45 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SimulationCampaignStatus]: {
     title: 'Status',
     filter: null,
-    render: (r) => renderEmptyOrValue(get(r, 'simulations[0].used_by[0].status', '')),
+    render: (r) => {
+      const status = get(
+        r,
+        'simulations[0].executions[0].status',
+        ''
+      ) as TCircuitSimulationExecutionStatus;
+      const statusMap: Record<TCircuitSimulationExecutionStatus, ReactNode> = {
+        created: (
+          <div className="text-primary-8 w-max rounded-full px-2 py-1 text-sm font-bold shadow-sm">
+            Created
+          </div>
+        ),
+        pending: (
+          <div className="w-max rounded-full px-2 py-1 text-sm font-bold text-gray-500 shadow-sm">
+            Pending
+          </div>
+        ),
+        running: (
+          <div className="text-primary-6 w-max rounded-full px-2 py-1 text-sm font-bold shadow-sm">
+            Running
+          </div>
+        ),
+        done: (
+          <div className="w-max rounded-full px-2 py-1 text-sm font-bold text-green-500 shadow-sm">
+            Completed
+          </div>
+        ),
+        error: (
+          <div className="w-max rounded-full px-2 py-1 text-sm font-bold text-red-500 shadow-sm">
+            Error
+          </div>
+        ),
+      };
+      const component = get(statusMap, status, null);
+      if (component) {
+        return <div className="flex w-full items-center justify-center">{component}</div>;
+      }
+      return null;
+    },
     isDisplayable: true,
     isFilterable: false,
   },

@@ -18,6 +18,7 @@ export enum EntityTypeEnum {
   BrainAtlas = 'brain_atlas',
   BrainAtlasRegion = 'brain_atlas_region',
   SimulationCampaign = 'simulation_campaign',
+  Simulation = 'simulation',
 }
 
 export type EntityTypeUnion = keyof typeof EntityTypeEnum;

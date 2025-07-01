@@ -1,58 +1,77 @@
+import flatMap from 'lodash/flatMap';
 import keyBy from 'lodash/keyBy';
 
+import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
+import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
+import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DataType } from '@/constants/explore-section/list-views';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { getAssetElement } from '@/api/entitycore/utils';
 
 import {
   createSimulationCampaign,
-  getSimulationCampaign,
-  getSimulationCampaigns,
-} from '@/api/entitycore/queries/simulation/campaign';
+  getCircuitSimulationCampaign,
+  getCircuitSimulationCampaigns,
+} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
-  ISimulationCampaign,
-  ISimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/simulation';
+  ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
-import { getCircuits } from '@/api/entitycore/queries/model/circuit';
-import {
-  transformFiltersToQuery,
-  transformQueryParamsArrayToString,
-} from '@/api/entitycore/transformers';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
 
-export async function resolveSimulationCampaign({
+// NOTE: this is due entitycore do not support yet
+export async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<ISimulationCampaignFilter>;
+  filters?: Partial<ICircuitSimulationCampaignFilter>;
 }) {
-  const source = await getSimulationCampaigns({ context, withFacets, filters });
+  const source = await getCircuitSimulationCampaigns({ context, withFacets, filters });
+  // extract all simulation IDs
+  const allSimIds = flatMap(
+    source.data,
+    (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
+  );
+  // fetch executions related to those simulation IDs
+  const executionsResponse = await getCircuitSimulationExecutions({
+    context,
+    withFacets: false,
+    filters: { used__id__in: allSimIds.join(',') },
+  });
+  const executions = executionsResponse.data;
+
+  // map simulationId -> array of executions that use it
+  const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
+    exec.used.forEach((usedSim) => {
+      if (!acc[usedSim.id]) acc[usedSim.id] = [];
+      acc[usedSim.id].push(exec);
+    });
+    return acc;
+  }, {});
+
+  // attach executions to each simulation (choose to add all executions as array)
+  const enrichedData = source.data.map((campaign) => ({
+    ...campaign,
+    simulations: campaign.simulations?.map((sim) => ({
+      ...sim,
+      executions: executionsBySimId[sim.id] ?? [],
+    })),
+  }));
+
   const circuits = await getCircuits({
     context,
-    filters: {
-      ...transformQueryParamsArrayToString(
-        transformFiltersToQuery([
-          {
-            constraint: 'id__in',
-            field: EntityCoreFields.ID,
-            type: CoreFieldFilterTypeEnum.WithinList,
-            value: source.data.map((l) => l.entity_id),
-          },
-        ])
-      ),
-    },
+    filters: { id__in: source.data.map((l) => l.entity_id).join(',') },
   });
   const circuitMap = keyBy(circuits.data, 'id');
-  const result = source.data.map((entity) => ({
+  const result = enrichedData.map((entity) => ({
     ...entity,
     circuit: circuitMap[entity.entity_id] || null,
   }));
@@ -64,7 +83,42 @@ export async function resolveSimulationCampaign({
   };
 }
 
-export const SimulationCampaign: EntityCoreTypeConfig<ISimulationCampaign> = {
+export async function resolveSimulationByCampaignId({
+  id,
+  context,
+}: {
+  id: string;
+  context: WorkspaceContext | undefined;
+}) {
+  const campaign = await getCircuitSimulationCampaign({ id, context });
+  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
+
+  const simulation = source.data.at(0);
+  const assets = campaign?.assets ?? [];
+  const configAsset = getAssetElement({
+    assets,
+    filter: (asset) => asset.label === AssetLabel.campaign_generation_config,
+  });
+
+  if (!configAsset) throw Error('No campaign config asset found');
+
+  const rawConfig = await downloadAsset({
+    entityId: campaign?.id!,
+    entityType: EntityTypeEnum.SimulationCampaign,
+    id: configAsset?.id,
+    ctx: context,
+    asRawResponse: true,
+  });
+  const config = await rawConfig.json();
+
+  return {
+    campaign,
+    simulation,
+    config,
+  };
+}
+
+export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: 'simulations',
   title: 'Simulation Campaign',
   legacyType: DataType.SimulationCampaign,
@@ -77,8 +131,8 @@ export const SimulationCampaign: EntityCoreTypeConfig<ISimulationCampaign> = {
       allowedParams: 'all',
     },
     query: {
-      list: resolveSimulationCampaign,
-      one: getSimulationCampaign,
+      list: resolveSimulationCampaigns,
+      one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
   },
