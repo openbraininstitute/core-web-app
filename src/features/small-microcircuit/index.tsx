@@ -287,7 +287,7 @@ export default function SimulationCampaignConfiguration({
         </div>
       )}
 
-      {tab === 'configuration' && (
+      {tab === 'simulations' && (
         <SimulationsTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
       )}
     </div>
