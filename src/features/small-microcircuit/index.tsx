@@ -124,7 +124,10 @@ export default function SimulationCampaignConfiguration({
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <header className={styles.header}>
         <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
-        <CircuitName circuitId={circuitId} />
+        <div className="flex items-center justify-center gap-8">
+          {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
+          <CircuitName circuitId={circuitId} />
+        </div>
       </header>
       <div className="w-full border-t border-gray-200" />
 
