@@ -31,9 +31,9 @@ type Props = {
 
 export default function NavigationMenu({ activePath, items, onClick }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const { node } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: 'explore', projectId }),
-  });
+  const dataKey = resolveDataKey({ section: 'explore', projectId });
+  const { node } = useBrainRegionHierarchy({ dataKey });
+
   const { data, error } = useAtomValue(
     entitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id })
   );
