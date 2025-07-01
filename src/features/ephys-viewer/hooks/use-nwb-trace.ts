@@ -1,19 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
 import { Session } from 'next-auth';
+import { useEffect, useRef, useState } from 'react';
 
-import NWBTrace from '@/features/ephys-viewer/nwb-trace';
-import { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import NWBTrace from '@/features/ephys-viewer/nwb-trace';
+import { WorkspaceContext } from '@/types/common';
 
-export default function useTrace(
-  resource: IElectricalCellRecording,
-  session: Session | null
-): [NWBTrace | null, Error | null] {
+type UseTraceArgs = {
+  resource: IElectricalCellRecording | ICircuitSimulationResult;
+  session: Session | null;
+  ctx?: WorkspaceContext;
+};
+
+export default function useTrace({
+  resource,
+  session,
+  ctx,
+}: UseTraceArgs): [NWBTrace | null, Error | null] {
   const [nwbArrayBuffer, setNwbArrayBuffer] = useState<ArrayBuffer | null>(null);
   const [trace, setTrace] = useState<NWBTrace | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const initialized = useRef<boolean>(false);
+  const traceRef = useRef<NWBTrace | null>(null);
 
   useEffect(() => {
     if (!session) {
@@ -28,13 +37,14 @@ export default function useTrace(
     }
 
     downloadAsset<ArrayBuffer | null>({
-      entityType: EntityTypeEnum.ElectricalCellRecording,
+      entityType: resource.type,
       entityId: resource.id,
       id: asset.id,
+      ctx,
     })
       .then(setNwbArrayBuffer)
       .catch((e) => setError(e));
-  }, [resource.assets, resource.id, session]);
+  }, [ctx, resource, session]);
 
   useEffect(() => {
     if (initialized.current || !nwbArrayBuffer) {
@@ -44,14 +54,17 @@ export default function useTrace(
     initialized.current = true;
 
     NWBTrace.create(resource.id, nwbArrayBuffer)
-      .then((t) => setTrace(t))
+      .then((t) => {
+        traceRef.current = t;
+        setTrace(t);
+      })
       .catch((e) => setError(e));
 
     return () => {
-      trace?.destroy();
+      traceRef.current?.destroy();
       initialized.current = false;
     };
-  }, [nwbArrayBuffer, resource.id, trace]);
+  }, [nwbArrayBuffer, resource]);
 
   return [trace, error];
 }

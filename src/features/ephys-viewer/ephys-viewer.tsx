@@ -9,16 +9,24 @@ import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-v
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import './styles/ephys-plugin-styles.css';
+import { WorkspaceContext } from '@/types/common';
 
 enum VIEW {
   OVERVIEW = 'overview',
   DETAILED = 'detailed',
 }
 
-export default function EphysViewer({ resource }: { resource: IElectricalCellRecording }) {
+export default function EphysViewer({
+  resource,
+  ctx,
+}: {
+  resource: IElectricalCellRecording | ICircuitSimulationResult;
+  ctx: WorkspaceContext;
+}) {
   const session = useAtomValue(sessionAtom);
-  const [trace, error] = useTrace(resource, session);
+  const [trace, error] = useTrace({ resource, session, ctx });
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [repetition, setRepetition] = useState<string>();

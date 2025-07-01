@@ -135,18 +135,23 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
         )}
       </div>
       <div ref={plotContainerRef} className="flex flex-col gap-10 2xl:flex-row">
-        <InteractivePlot
-          recordingType={RecordingType.STIMULUS}
-          reset={reset}
-          setSelectedSweeps={setSelectedSweeps}
-          sweeps={sweepObject}
-        />
-        <InteractivePlot
-          recordingType={RecordingType.RESPONSE}
-          reset={reset}
-          setSelectedSweeps={setSelectedSweeps}
-          sweeps={sweepObject}
-        />
+        {trace.recordingTypes.includes(RecordingType.STIMULUS) && (
+          <InteractivePlot
+            recordingType={RecordingType.STIMULUS}
+            reset={reset}
+            setSelectedSweeps={setSelectedSweeps}
+            sweeps={sweepObject}
+          />
+        )}
+
+        {trace.recordingTypes.includes(RecordingType.RESPONSE) && (
+          <InteractivePlot
+            recordingType={RecordingType.RESPONSE}
+            reset={reset}
+            setSelectedSweeps={setSelectedSweeps}
+            sweeps={sweepObject}
+          />
+        )}
       </div>
     </div>
   );

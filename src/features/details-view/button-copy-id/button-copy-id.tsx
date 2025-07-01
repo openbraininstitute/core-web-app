@@ -8,11 +8,17 @@ import styles from './button-copy-id.module.css';
 
 export interface ButtonCopyIdProps {
   className?: string;
-  value: string;
+  label?: string;
   tooltip?: string;
+  value: string;
 }
 
-export function ButtonCopyId({ className, value, tooltip = 'Database ID' }: ButtonCopyIdProps) {
+export function ButtonCopyId({
+  className,
+  value,
+  tooltip = 'Database ID',
+  label = 'Copy ID',
+}: ButtonCopyIdProps) {
   const [copied, setCopied] = React.useState(false);
   const handleClick = () => {
     setCopied(true);
@@ -31,7 +37,7 @@ export function ButtonCopyId({ className, value, tooltip = 'Database ID' }: Butt
         )}
         onClick={handleClick}
       >
-        Copy ID
+        {label}
         <CopyOutlined className="border-neutral-2 border px-4 py-3" />
       </Button>
       <div className={styles.tooltip}>{tooltip}</div>
