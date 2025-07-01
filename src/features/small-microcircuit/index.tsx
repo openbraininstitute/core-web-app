@@ -19,6 +19,8 @@ import { useAppNotification } from '@/components/notification';
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 
+import styles from './small-microcircuit.module.css';
+
 export default function SimulationCampaignConfiguration({
   circuitId,
   virtualLabId,
@@ -101,8 +103,6 @@ export default function SimulationCampaignConfiguration({
     );
   }
 
-  console.log(config);
-
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
@@ -110,8 +110,8 @@ export default function SimulationCampaignConfiguration({
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
-        <div className="grid h-[calc(100%-100px)] grid-cols-[1fr_1fr_2fr] gap-5">
-          <div className="flex h-full min-h-0 flex-col">
+        <div className={styles.threeColumns}>
+          <div>
             <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5 pb-5">
               {CATEGORIES.map((c) => {
                 return (
@@ -200,7 +200,7 @@ export default function SimulationCampaignConfiguration({
               </div>
             </button>
           </div>
-          <div className="h-full overflow-y-auto border-r border-gray-200 pr-5">
+          <div className="h-full overflow-y-auto border-r border-gray-200 px-5">
             {schema.properties &&
               schema.properties?.[configTab]?.additionalProperties?.anyOf &&
               !selectedCategory &&
@@ -268,14 +268,16 @@ export default function SimulationCampaignConfiguration({
                 />
               )}
           </div>
-          <NextImage
-            width={1000}
-            height={1130}
-            alt="Circuit"
-            // eslint-disable-next-line
-            src={basePath + '/images' + '/circuit_test_image.png'}
-            className="w-full rounded-xl border border-gray-200"
-          />
+          <div>
+            <NextImage
+              width={1000}
+              height={1130}
+              alt="Circuit"
+              // eslint-disable-next-line
+              src={basePath + '/images' + '/circuit_test_image.png'}
+              className="w-full rounded-xl border border-gray-200"
+            />
+          </div>
         </div>
       )}
     </div>
