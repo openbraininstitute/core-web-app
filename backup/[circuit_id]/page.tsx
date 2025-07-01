@@ -1,14 +1,15 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import Ajv, { AnySchema } from 'ajv';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 import { atom } from 'jotai';
 import NextImage from 'next/image';
 import { LoadingOutlined } from '@ant-design/icons';
 
-import { JSONSchemaForm, ConfigValue, Config } from './_components/components';
-import { JSONSchema, AtomsMap, TabType } from './types';
-import { useObioneJsonSchema, isRootCategory, resolveKey } from './_components/hooks/schema';
+import { JSONSchemaForm, ConfigValue } from './_components/components';
+import { Params, JSONSchema, AtomsMap, TabType } from './types';
+import { useObioneJsonSchema, useSchemaUtils } from './_components/hooks/schema';
 import TabsSelector from './_components/tabs-selector';
 import { useSectionRenderer } from './_components/section';
 import { useConfigAtom } from './_components/hooks/config-atom';
@@ -19,39 +20,25 @@ import { useAppNotification } from '@/components/notification';
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 
-import styles from './small-microcircuit.module.css';
+import styles from './page.module.css';
 
-export default function SimulationCampaignConfiguration({
-  circuitId,
-  virtualLabId,
-  projectId,
-  initialCampaignId,
-  initialConfig,
-}: {
-  circuitId: string;
-  virtualLabId: string;
-  projectId: string;
-  initialCampaignId?: string;
-  initialConfig?: Config;
-}) {
-  if (!!initialCampaignId !== !!initialConfig)
-    throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
-
+export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
+  const { circuit_id: circuitId, virtualLabId, projectId } = useParams<Params>();
   const [editing, setEditing] = useState(true);
   const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
-  const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
+  const [campaignId, setCampaignId] = useState('');
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  const readOnly = initialConfig !== undefined;
+  const { isRootCategory, resolveKey } = useSchemaUtils(schema, configTab);
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -62,20 +49,12 @@ export default function SimulationCampaignConfiguration({
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const config = useConfigAtom(schema, atomsMap);
 
-  // Validate initial configuration
-  useEffect(() => {
-    if (!validate || !initialConfig) return;
-
-    validate(initialConfig);
-    if (validate?.errors) throw new Error('Invalid Simulation Campaign Configuration');
-  }, [validate, initialConfig]);
-
   const errors = useMemo(() => {
     if (validate) validate(config);
     return validate?.errors;
   }, [validate, config]);
 
-  useObioneJsonSchema(circuitId, notification, setSchema, setAtomsMap, initialConfig);
+  useObioneJsonSchema(circuitId, notification, setSchema, setAtomsMap);
   const renderSection = useSectionRenderer(
     schema,
     atomsMap,
@@ -91,8 +70,7 @@ export default function SimulationCampaignConfiguration({
     selectedItemIdx,
     setSelectedItemIdx,
     setEditing,
-    setSelectedCategory,
-    readOnly
+    setSelectedCategory
   );
 
   if (!schema) {
@@ -106,11 +84,10 @@ export default function SimulationCampaignConfiguration({
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
-
       <div className="w-full border-t border-gray-200" />
-
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>
+          {/* "grid h-[calc(100%-100px)] grid-cols-[1fr_1fr_2fr] gap-5"> */}
           <div>
             <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5 pb-5">
               {CATEGORIES.map((c) => {
@@ -135,7 +112,7 @@ export default function SimulationCampaignConfiguration({
               type="button"
               className={classNames(
                 'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
-                (errors && errors.length > 0) || loading || readOnly
+                (errors && errors.length > 0) || loading
                   ? 'bg-gray-300 text-gray-500'
                   : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
               )}
@@ -192,7 +169,7 @@ export default function SimulationCampaignConfiguration({
                   setLoading(false);
                 }
               }}
-              disabled={!!(errors && errors.length > 0) || loading || readOnly}
+              disabled={!!(errors && errors.length > 0) || loading}
             >
               <div className="flex justify-between gap-5">
                 {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
@@ -200,12 +177,12 @@ export default function SimulationCampaignConfiguration({
               </div>
             </button>
           </div>
-          <div className="h-full overflow-y-auto border-r border-gray-200 pr-5">
+          <div>
             {schema.properties &&
               schema.properties?.[configTab]?.additionalProperties?.anyOf &&
               !selectedCategory &&
               editing && (
-                <div className="flex flex-col items-center gap-5">
+                <div>
                   {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
                     return (
                       <Fragment key={o.title}>
@@ -213,7 +190,7 @@ export default function SimulationCampaignConfiguration({
                         <div
                           className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                           onClick={() => {
-                            if (isRootCategory(schema, configTab)) return;
+                            if (isRootCategory(configTab)) return;
 
                             setSelectedCategory(o.properties?.type.const ?? '');
                             const initial: Record<string, ConfigValue> = {};
@@ -232,7 +209,7 @@ export default function SimulationCampaignConfiguration({
                               ...atomsMap,
                               [configTab]: {
                                 ...atomsMap[configTab],
-                                [resolveKey(schema, configTab, itemIdx)]:
+                                [resolveKey(configTab, itemIdx)]:
                                   atom<Record<string, ConfigValue>>(initial),
                               },
                             });
@@ -250,9 +227,9 @@ export default function SimulationCampaignConfiguration({
             {schema.properties &&
               schema.properties?.[configTab] &&
               editing &&
-              (isRootCategory(schema, configTab) || selectedCatSchema) && (
+              (isRootCategory(configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
-                  disabled={!!campaignId || loading || readOnly}
+                  disabled={!!campaignId || loading}
                   config={config}
                   circuitId={circuitId}
                   schema={
@@ -263,7 +240,7 @@ export default function SimulationCampaignConfiguration({
                   stateAtom={
                     isAtom(atomsMap[configTab])
                       ? atomsMap[configTab]
-                      : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
+                      : atomsMap[configTab][resolveKey(configTab, selectedItemIdx)]
                   }
                 />
               )}
@@ -273,8 +250,7 @@ export default function SimulationCampaignConfiguration({
               width={1000}
               height={1130}
               alt="Circuit"
-              // eslint-disable-next-line
-              src={basePath + '/images' + '/circuit_test_image.png'}
+              src={`${basePath}/images/circuit_test_image.png`}
               className="w-full rounded-xl border border-gray-200"
             />
           </div>
