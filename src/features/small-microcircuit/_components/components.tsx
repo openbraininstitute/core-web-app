@@ -85,7 +85,9 @@ export function JSONSchemaForm({
 
       if (referees.length === 0) {
         return (
-          <Button onClick={() => onAddReferenceClick(referenceKey)}>Add {referenceTitle}</Button>
+          <Button className="w-full" onClick={() => onAddReferenceClick(referenceKey)}>
+            Add {referenceTitle}
+          </Button>
         );
       }
 
@@ -276,10 +278,11 @@ export function JSONSchemaForm({
                     {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
                   </div>
                   {renderInput(k, v)}
+                  {v.description && <div className={styles.tooltip}>{v.description}</div>}
+
                   {((schema.required?.includes(k) && !state[k]) ||
                     state[k] === null ||
                     state[k] === undefined) && <span className="text-red-500">Required</span>}
-                  {v.description && <div className={styles.tooltip}>{v.description}</div>}
                 </div>
               );
             })}
