@@ -1,6 +1,6 @@
 import { DownloadOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, useCallback } from 'react';
 import { Button } from 'antd';
 import { useAtomValue } from 'jotai';
 
@@ -23,7 +23,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
 }: {
   detail: T;
   extraHeaderAction?: ReactNode;
-  onDownload?: () => void;
+  onDownload?: (entity: T) => void;
 }) {
   const path = usePathname();
   const simCampMatch = path?.match(/\/explore\/simulation-campaigns\/[a-zA-Z0-9=]*/g);
@@ -38,6 +38,8 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
   }>();
 
   const entity = getEntityBySlug({ slug: type });
+
+  const handleDownload = useCallback(() => onDownload?.(detail), [detail, onDownload]);
 
   return (
     <div className="text-primary-7 flex flex-col">
@@ -64,7 +66,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
               className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
               // disabling download button if currently fetching or if resource does not have a distribution
               disabled={!onDownload}
-              onClick={onDownload}
+              onClick={handleDownload}
             >
               Download
               <DownloadOutlined className="border-neutral-2 border px-4 py-3" />
