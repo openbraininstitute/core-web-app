@@ -271,7 +271,6 @@ export default function SimulationCampaignConfiguration({
                   onAddReferenceClick={handleAddReferenceClick}
                   disabled={!!campaignId || loading || readOnly}
                   config={config}
-                  circuitId={circuitId}
                   schema={
                     selectedCatSchema ??
                     schema.properties[configTab]?.additionalProperties ??

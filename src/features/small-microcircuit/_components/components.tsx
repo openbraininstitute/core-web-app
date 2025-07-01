@@ -23,7 +23,6 @@ export function JSONSchemaForm({
   disabled,
   schema,
   stateAtom,
-  circuitId,
   config,
   onAddReferenceClick,
 }: {
@@ -31,10 +30,9 @@ export function JSONSchemaForm({
   config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
-  circuitId: string;
   onAddReferenceClick: (reference: string) => void;
 }) {
-  const skip = ['type'];
+  const skip = ['type', 'circuit'];
 
   const [state, setState] = useAtom(stateAtom);
   const [addingElement, setAddingElement] = useState(false);
@@ -67,10 +65,6 @@ export function JSONSchemaForm({
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
-
-    if (k === 'circuit') {
-      return <Input value={circuitId} disabled />;
-    }
 
     if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
       const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
