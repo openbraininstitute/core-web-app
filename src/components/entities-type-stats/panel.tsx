@@ -139,6 +139,7 @@ export function EntityTypeStats(props: StatsPanelProps) {
 function EntityTypeStatsPanelContainer({ children, dataKey }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const { node } = useBrainRegionHierarchy({ dataKey });
+
   const { data, error } = useAtomValue(
     useMemo(
       () => entitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id }),
