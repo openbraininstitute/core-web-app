@@ -29,6 +29,7 @@ import type {
 } from '@/api/entitycore/types';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import { DataType } from '@/constants/explore-section/list-views';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.License]: {
@@ -61,7 +62,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Species',
       singular: 'Species',
     },
-    constraint: 'species__name__in',
+    defaultConstraint: 'species__name__in',
+    perTypeConstraint: {
+      [DataType.ExperimentalElectroPhysiology]: 'subject__species__name__in',
+    },
     order: {
       property: 'species__order_by',
       value: 'name',
@@ -90,7 +94,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
-            (m) => m.pref_label
+            (m: IMType) => m.pref_label
           ) || []
         )
       );
@@ -99,7 +103,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'M-Types',
       singular: 'M-Type',
     },
-    constraint: 'mtype__pref_label__in',
+    defaultConstraint: 'mtype__pref_label__in',
     order: {
       property: 'mtype__order_by',
       value: 'pref_label',
@@ -128,7 +132,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
-            (e) => e.pref_label
+            (e: IEType) => e.pref_label
           ) || []
         )
       );
@@ -137,7 +141,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'E-Types',
       singular: 'E-Type',
     },
-    constraint: 'etype__pref_label__in',
+    defaultConstraint: 'etype__pref_label__in',
     order: {
       property: 'etype__order_by',
       value: 'pref_label',
@@ -162,7 +166,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isSortable: false,
     isFilterable: false,
-    isDisplayable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.SubjectAge]: {
     title: 'Age',
@@ -173,7 +177,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Age',
     },
     isFilterable: false,
-    isDisplayable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.MeanSTD]: {
     title: 'Mean ± STD',
@@ -209,7 +213,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isSortable: false,
     isFilterable: false,
-    isDisplayable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.PreSynapticBrainRegion]: {
     title: 'Brain Region [From]',
@@ -221,7 +225,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Brain Region [From]',
     },
     filter: CoreFieldFilterTypeEnum.CheckList,
-    constraint: 'pre_region__name__in',
+    defaultConstraint: 'pre_region__name__in',
     isFilterable: true,
     isDisplayable: true,
   },
@@ -235,7 +239,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Brain Region [To]',
     },
     filter: CoreFieldFilterTypeEnum.CheckList,
-    constraint: 'post_region__name_in',
+    defaultConstraint: 'post_region__name_in',
     isFilterable: true,
     isDisplayable: true,
   },
@@ -249,7 +253,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Cell Type [From]',
       singular: 'Cell Type [From]',
     },
-    constraint: 'pre_mtype__pref_label__in',
+    defaultConstraint: 'pre_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
   },
@@ -263,7 +267,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Cell Type [To]',
       singular: 'Cell Type [To]',
     },
-    constraint: 'post_mtype__pref_label__in',
+    defaultConstraint: 'post_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
   },
@@ -296,7 +300,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isSortable: false,
     isFilterable: false,
-    isDisplayable: false,
+    isDisplayable: true,
   },
   [EntityCoreFields.AxonTotalLength]: {
     group: StructuralDomain.Axon,
