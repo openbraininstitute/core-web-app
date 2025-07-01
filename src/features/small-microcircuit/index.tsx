@@ -62,6 +62,12 @@ export default function SimulationCampaignConfiguration({
     (s) => s.properties?.type.const === selectedCategory
   );
 
+  const handleAddReferenceClick = (referenceTab: string) => {
+    setConfigTab(referenceTab);
+    setEditing(true);
+    setSelectedCategory('');
+  };
+
   const readOnly = initialConfig !== undefined;
 
   const validate = useMemo(() => {
@@ -265,9 +271,9 @@ export default function SimulationCampaignConfiguration({
               editing &&
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
+                  onAddReferenceClick={handleAddReferenceClick}
                   disabled={!!campaignId || loading || readOnly}
                   config={config}
-                  circuitId={circuitId}
                   schema={
                     selectedCatSchema ??
                     schema.properties[configTab]?.additionalProperties ??

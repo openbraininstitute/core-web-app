@@ -1,1 +1,1 @@
-export { default } from "./circuit-name"
+export { default } from './circuit-name';
