@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select, Button } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+
 import { JSONSchema } from '../types';
-
 import { isPlainObject } from './utils';
+import CircuitDetails from './circuit-details';
+import Tooltip from './tooltip';
 
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
-
-import styles from './components.module.css';
 
 type Primitive = null | boolean | number | string;
 export interface Object {
@@ -24,15 +25,17 @@ export function JSONSchemaForm({
   schema,
   stateAtom,
   config,
+  circuit,
   onAddReferenceClick,
 }: {
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
+  circuit: ICircuit | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   onAddReferenceClick: (reference: string) => void;
 }) {
-  const skip = ['type', 'circuit'];
+  const skip = ['type']; // , 'circuit'];
 
   const [state, setState] = useAtom(stateAtom);
   const [addingElement, setAddingElement] = useState(false);
@@ -65,6 +68,8 @@ export function JSONSchemaForm({
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
+
+    if (k === 'circuit' && circuit) return <CircuitDetails circuit={circuit} />;
 
     if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
       const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
@@ -261,7 +266,7 @@ export function JSONSchemaForm({
             })
             .map(([k, v]) => {
               return (
-                <div key={k} className={styles.input}>
+                <div key={k}>
                   <div className="flex items-end gap-3">
                     <div
                       className="text-primary-9 text-base font-semibold uppercase"
@@ -271,8 +276,7 @@ export function JSONSchemaForm({
                     </div>
                     {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
                   </div>
-                  {renderInput(k, v)}
-                  {v.description && <div className={styles.tooltip}>{v.description}</div>}
+                  <Tooltip value={v.description}>{renderInput(k, v)}</Tooltip>
 
                   {((schema.required?.includes(k) && !state[k]) ||
                     state[k] === null ||

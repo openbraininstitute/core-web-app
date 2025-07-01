@@ -1,19 +1,18 @@
 import React from 'react';
 import { InfoCircleFilled } from '@ant-design/icons';
 
-import { useCircuit } from '../hooks/circuit';
-
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
 
 import styles from './circuit-name.module.css';
 
 export interface CircuitNameProps {
   className?: string;
-  circuitId: string;
+  circuit: ICircuit | undefined | null;
 }
 
-export default function CircuitName({ className, circuitId }: CircuitNameProps) {
-  const { name, description } = useCircuitNameAndDescription(circuitId);
+export default function CircuitName({ className, circuit }: CircuitNameProps) {
+  const { name, description } = useCircuitNameAndDescription(circuit);
 
   return (
     <div className={classNames(className, styles.circuitName)}>
@@ -25,11 +24,12 @@ export default function CircuitName({ className, circuitId }: CircuitNameProps) 
   );
 }
 
-function useCircuitNameAndDescription(circuitId: string) {
-  const [name, setName] = React.useState(circuitId);
+function useCircuitNameAndDescription(circuit: ICircuit | undefined | null) {
+  const [name, setName] = React.useState(circuit?.id ?? '');
   const [description, setDescription] = React.useState('');
-  const circuit = useCircuit(circuitId);
   React.useEffect(() => {
+    if (!circuit) return;
+
     const action = async () => {
       if (circuit) {
         setName(circuit.name);
