@@ -19,7 +19,6 @@
   transform: translateY(calc(100% + 16px));
   transition: all 0.2s;
   opacity: 0;
-  transform: translateY(calc(100% + 8px));
 }
 
 .tooltipContainer:hover .tooltip {
