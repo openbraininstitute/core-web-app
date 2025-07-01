@@ -15,6 +15,7 @@ import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
 import { AtomsMap, JSONSchema, TabType } from './types';
 
 import CircuitName from './_components/circuit-name';
+import CircuitPreview from './_components/circuit-preview';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
@@ -22,7 +23,6 @@ import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simu
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
-import { basePath } from '@/config';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 import EphysViewer from '@/features/ephys-viewer';
 import { runCircuitSimulation } from '@/services/small-scale-simulator/circuit';
@@ -30,7 +30,6 @@ import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import styles from './small-microcircuit.module.css';
-import CircuitPreview from './_components/circuit-preview';
 
 export default function SimulationCampaignConfiguration({
   circuitId,
