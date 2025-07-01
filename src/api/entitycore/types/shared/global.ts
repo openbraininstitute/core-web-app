@@ -160,6 +160,7 @@ enum AssetStatus {
 export enum AssetLabel {
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
+  simulation_designer_image = 'simulation_designer_image',
   single_cell_simulation = 'single_cell_simulation_data',
   single_neuron_synaptome_config = 'single_neuron_synaptome_config',
   single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
