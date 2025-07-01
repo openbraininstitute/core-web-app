@@ -1,5 +1,4 @@
-import isEmpty from 'lodash/isEmpty';
-import isNil from 'lodash/isNil';
+import { isNil } from 'lodash';
 
 export function compactRecord<T>(
   values: Record<string, any> | undefined
@@ -11,7 +10,7 @@ export function compactRecord<T>(
   const out: Record<string, T> = {};
 
   for (const [k, v] of Object.entries(values)) {
-    if (!isNil(v) && !isEmpty(v)) {
+    if (!isNil(v) && (typeof v !== 'string' || v.trim() !== '')) {
       out[k] = v;
     }
   }
