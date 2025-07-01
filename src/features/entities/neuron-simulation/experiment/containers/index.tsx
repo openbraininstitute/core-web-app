@@ -140,10 +140,9 @@ export default function Container({ type, payload }: Props) {
           }}
           onValuesChange={onValuesChange}
           requiredMark={false}
-          disabled={disableForm}
         >
-          {type === 'single-neuron-simulation' && <SingleNeuron />}
-          {type === 'synaptome-simulation' && <Synaptome payload={payload} />}
+          {type === 'single-neuron-simulation' && <SingleNeuron disable={disableForm} />}
+          {type === 'synaptome-simulation' && <Synaptome disable={disableForm} payload={payload} />}
         </Form>
       </ConfigProvider>
     </div>

@@ -22,7 +22,13 @@ export type SingleNeuronSynaptomePayload = Prettify<{
 
 const type = EntitySlug.SingleNeuronSynaptomeSimulation;
 
-export default function Synaptome({ payload }: { payload: SingleNeuronSynaptomePayload }) {
+export default function Synaptome({
+  payload,
+  disable,
+}: {
+  payload: SingleNeuronSynaptomePayload;
+  disable: boolean;
+}) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext & { id: string }>();
   const { newConfig } = useSynaptomeSimulationConfig();
   const ref = useRef<boolean | null>(null);
@@ -44,6 +50,7 @@ export default function Synaptome({ payload }: { payload: SingleNeuronSynaptomeP
           virtualLabId={virtualLabId}
           projectId={projectId}
           simulationType={type}
+          disable={disable}
         />
       </div>
     </>
