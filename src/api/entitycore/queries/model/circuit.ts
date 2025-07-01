@@ -1,9 +1,7 @@
 import { ICircuit } from '../../types/entities/circuit';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type {
-  ISingleNeuronSynaptomeFilter,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { ISingleNeuronSynaptomeFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
