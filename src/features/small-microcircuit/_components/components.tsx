@@ -17,14 +17,14 @@ export function JSONSchemaForm({
   stateAtom,
   circuitId,
   config,
-  setConfigTab,
+  onAddReferenceClick,
 }: {
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   circuitId: string;
-  setConfigTab: (key: string) => void;
+  onAddReferenceClick: (reference: string) => void;
 }) {
   const skip = ['type'];
 
@@ -74,7 +74,9 @@ export function JSONSchemaForm({
       });
 
       if (referees.length === 0) {
-        return <Button onClick={() => setConfigTab(referenceKey)}>Add {referenceTitle}</Button>;
+        return (
+          <Button onClick={() => onAddReferenceClick(referenceKey)}>Add {referenceTitle}</Button>
+        );
       }
 
       const defaultV =
