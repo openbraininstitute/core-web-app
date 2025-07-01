@@ -10,5 +10,5 @@ const SimulationCampaignListView = dynamic(
 );
 
 export default function SimulationCampaignPage() {
-  return <SimulationCampaignListView dataType={DataType.SimulationCampaigns} />;
+  return <SimulationCampaignListView dataType={DataType.SimulationCampaign} />;
 }

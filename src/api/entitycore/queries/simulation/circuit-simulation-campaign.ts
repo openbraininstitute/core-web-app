@@ -1,11 +1,13 @@
-import {
-  ICircuitSimulationCampaign,
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { compactRecord } from '@/utils/dictionary';
+
+import type {
   ICircuitSimulationCampaignFilter,
+  ICircuitSimulationCampaign,
+  TCreateCircuitSimulation,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
-import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/simulation-campaign';
 
@@ -62,6 +64,24 @@ export async function getCircuitSimulationCampaigns({
       accept: 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
+export async function createSimulationCampaign({
+  data,
+  context,
+}: {
+  data: TCreateCircuitSimulation;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<ICircuitSimulationCampaign>(baseUri, {
+    body: data,
+    headers: {
+      ...getEntityCoreContext(context).headers,
+      'content-type': 'application/json',
+      accept: 'application/json',
     },
   });
 }

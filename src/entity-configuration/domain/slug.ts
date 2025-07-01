@@ -17,6 +17,7 @@ export const ModelEntitySlug = {
 export const SimulationEntitySlug = {
   SingleNeuronSimulation: 'single-neuron-simulation',
   SingleNeuronSynaptomeSimulation: 'synaptome-simulation',
+  SimulationCampaign: 'simulation-campaign',
 } as const;
 
 export const EntitySlug = {

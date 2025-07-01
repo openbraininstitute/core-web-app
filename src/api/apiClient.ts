@@ -429,24 +429,20 @@ class ApiClient {
   post<T>(
     endpoint: string,
     options?: RequestOptions,
-    config?: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean }
+    config?: RequestConfiguration & { asRawResponse?: boolean }
   ) {
     return this._request<T>('post', endpoint, options, config);
   }
 
-  put<T>(
-    endpoint: string,
-    options?: RequestOptions,
-    config?: RequestConfiguration & { cache?: CacheConfiguration }
-  ) {
+  put<T>(endpoint: string, options?: RequestOptions, config?: RequestConfiguration) {
     return this._request<T>('put', endpoint, options, config);
   }
 
-  delete<T>(
-    endpoint: string,
-    options?: RequestOptions,
-    config?: RequestConfiguration & { cache?: CacheConfiguration }
-  ) {
+  patch<T>(endpoint: string, options?: RequestOptions, config?: RequestConfiguration) {
+    return this._request<T>('PATCH', endpoint, options, config);
+  }
+
+  delete<T>(endpoint: string, options?: RequestOptions, config?: RequestConfiguration) {
     return this._request<T>('delete', endpoint, options, config);
   }
 }

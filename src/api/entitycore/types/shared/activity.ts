@@ -32,7 +32,7 @@ export interface IActivity<
 
 interface IActivityFilterBase {
   used__id?: string | null;
-  used__id__in?: string[] | null;
+  used__id__in?: string | null; // this should be comma separated
   used__type?: string | null;
   generated__id?: string | null;
   generated__id__in?: string[] | null;
