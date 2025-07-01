@@ -1,6 +1,6 @@
 import z from 'zod';
 
-import { type ICircuitSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
+import type { ICircuitSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
   EntityCoreIdentifiable,
   EntityAuthorization,

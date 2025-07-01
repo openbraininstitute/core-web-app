@@ -20,7 +20,6 @@ export default function SmallMicroCircuitConfiguration() {
 
 type SimulationTabProps = {
   campaignId: string;
-  // context: WorkspaceContext;
   virtualLabId: string;
   projectId: string;
 };
@@ -156,7 +155,7 @@ const statusColorMap: Record<Status, string> = {
 };
 
 function SimulationStatusBadge({ status }: { status: Status }) {
-  const color = statusColorMap[status] ?? 'pink';
+  const color = statusColorMap[status];
 
   return (
     <span style={{ borderColor: color, color }} className="rounded-xl border-1 px-2">
@@ -214,7 +213,7 @@ function SimulationDetails({
   virtualLabId,
   projectId,
 }: SimulationDetailsProps) {
-  const color = statusColorMap[execStatus] ?? 'pink';
+  const color = statusColorMap[execStatus];
 
   return (
     <div className="bg-white p-4">
