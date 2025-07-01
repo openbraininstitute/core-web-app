@@ -20,6 +20,8 @@ import { useAppNotification } from '@/components/notification';
 import authFetch from '@/authFetch';
 import { basePath } from '@/config';
 
+import styles from './page.module.css';
+
 export default function TinyCircuitSimulation() {
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
@@ -84,8 +86,9 @@ export default function TinyCircuitSimulation() {
       <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
       <div className="w-full border-t border-gray-200" />
       {tab === 'configuration' && (
-        <div className="grid h-[calc(100%-100px)] grid-cols-[1fr_1fr_2fr] gap-5">
-          <div className="flex h-full min-h-0 flex-col">
+        <div className={styles.threeColumns}>
+          {/* "grid h-[calc(100%-100px)] grid-cols-[1fr_1fr_2fr] gap-5"> */}
+          <div>
             <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5 pb-5">
               {CATEGORIES.map((c) => {
                 return (
@@ -174,84 +177,83 @@ export default function TinyCircuitSimulation() {
               </div>
             </button>
           </div>
-          <div className="h-full overflow-y-auto border-r border-gray-200 pr-5">
-            <div className="overflow-y-initial h-full overflow-x-visible border-r border-gray-200 pr-5">
-              {schema.properties &&
-                schema.properties?.[configTab]?.additionalProperties?.anyOf &&
-                !selectedCategory &&
-                editing && (
-                  <div className="flex flex-col items-center gap-5">
-                    {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
-                      return (
-                        <Fragment key={o.title}>
-                          {/* eslint-disable-next-line */}
-                          <div
-                            className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
-                            onClick={() => {
-                              if (isRootCategory(configTab)) return;
+          <div>
+            {schema.properties &&
+              schema.properties?.[configTab]?.additionalProperties?.anyOf &&
+              !selectedCategory &&
+              editing && (
+                <div>
+                  {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
+                    return (
+                      <Fragment key={o.title}>
+                        {/* eslint-disable-next-line */}
+                        <div
+                          className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
+                          onClick={() => {
+                            if (isRootCategory(configTab)) return;
 
-                              setSelectedCategory(o.properties?.type.const ?? '');
-                              const initial: Record<string, ConfigValue> = {};
-                              if (o.properties)
-                                Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                                  if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                                  else initial[subkey] = subValue.default ?? null;
-                                });
-                              const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                                parseInt(subkey.split('_')[1], 10)
-                              );
-                              itemIndexes.sort((a, b) => a - b);
-                              const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                              setSelectedItemIdx(itemIdx);
-                              setAtomsMap({
-                                ...atomsMap,
-                                [configTab]: {
-                                  ...atomsMap[configTab],
-                                  [resolveKey(configTab, itemIdx)]:
-                                    atom<Record<string, ConfigValue>>(initial),
-                                },
+                            setSelectedCategory(o.properties?.type.const ?? '');
+                            const initial: Record<string, ConfigValue> = {};
+                            if (o.properties)
+                              Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                                else initial[subkey] = subValue.default ?? null;
                               });
-                            }}
-                          >
-                            <div className="text-primary-9 text-lg font-bold">{o.title}</div>
-                            <div className="mt-3">{o.description}</div>
-                          </div>
-                        </Fragment>
-                      );
-                    })}
-                  </div>
-                )}
+                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                              parseInt(subkey.split('_')[1], 10)
+                            );
+                            itemIndexes.sort((a, b) => a - b);
+                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                            setSelectedItemIdx(itemIdx);
+                            setAtomsMap({
+                              ...atomsMap,
+                              [configTab]: {
+                                ...atomsMap[configTab],
+                                [resolveKey(configTab, itemIdx)]:
+                                  atom<Record<string, ConfigValue>>(initial),
+                              },
+                            });
+                          }}
+                        >
+                          <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                          <div className="mt-3">{o.description}</div>
+                        </div>
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              )}
 
-              {schema.properties &&
-                schema.properties?.[configTab] &&
-                editing &&
-                (isRootCategory(configTab) || selectedCatSchema) && (
-                  <JSONSchemaForm
-                    disabled={!!campaignId || loading}
-                    config={config}
-                    circuitId={circuitId}
-                    schema={
-                      selectedCatSchema ??
-                      schema.properties[configTab]?.additionalProperties ??
-                      schema.properties[configTab]
-                    }
-                    stateAtom={
-                      isAtom(atomsMap[configTab])
-                        ? atomsMap[configTab]
-                        : atomsMap[configTab][resolveKey(configTab, selectedItemIdx)]
-                    }
-                  />
-                )}
-            </div>
+            {schema.properties &&
+              schema.properties?.[configTab] &&
+              editing &&
+              (isRootCategory(configTab) || selectedCatSchema) && (
+                <JSONSchemaForm
+                  disabled={!!campaignId || loading}
+                  config={config}
+                  circuitId={circuitId}
+                  schema={
+                    selectedCatSchema ??
+                    schema.properties[configTab]?.additionalProperties ??
+                    schema.properties[configTab]
+                  }
+                  stateAtom={
+                    isAtom(atomsMap[configTab])
+                      ? atomsMap[configTab]
+                      : atomsMap[configTab][resolveKey(configTab, selectedItemIdx)]
+                  }
+                />
+              )}
           </div>
-          <NextImage
-            width={1000}
-            height={1130}
-            alt="Circuit"
-            // eslint-disable-next-line
-            src={basePath + '/images' + '/circuit_test_image.png'}
-            className="w-full rounded-xl border border-gray-200"
-          />
+          <div>
+            <NextImage
+              width={1000}
+              height={1130}
+              alt="Circuit"
+              src={`${basePath}/images/circuit_test_image.png`}
+              className="w-full rounded-xl border border-gray-200"
+            />
+          </div>
         </div>
       )}
     </div>
