@@ -8,7 +8,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 const type = EntitySlug.SingleNeuronSimulation;
 
-function SingleNeuron() {
+function SingleNeuron({ disable }: { disable: boolean }) {
   const {
     virtualLabId,
     projectId,
@@ -24,6 +24,7 @@ function SingleNeuron() {
           virtualLabId={virtualLabId}
           projectId={projectId}
           simulationType={type}
+          disable={disable}
         />
       </div>
     </>

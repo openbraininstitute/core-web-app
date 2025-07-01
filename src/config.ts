@@ -20,6 +20,7 @@ export const entityCorePublicProjectId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJ
 
 export const notebookSvcBaseUrl = env.NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL;
 export const blueNaasUrl = env.NEXT_PUBLIC_BLUE_NAAS_URL;
+export const smallScaleSimulatorUrl = env.NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL;
 
 export const meModelAnalysisSvc = {
   wsUrl: env.NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL,
