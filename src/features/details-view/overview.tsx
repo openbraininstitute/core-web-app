@@ -47,7 +47,7 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   extraHeaderAction?: ReactNode;
   commonFieldsClassName?: string;
   fieldsClassName?: string;
-  onDownload?: () => void;
+  onDownload?: (entity: T) => void;
 }) {
   return (
     <div className="flex w-full flex-col gap-10">
