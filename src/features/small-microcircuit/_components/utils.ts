@@ -41,7 +41,7 @@ export const ORDERING: Record<string, { order: number; category: string }> = {
   },
   synaptic_manipulations: {
     order: 6,
-    category: 'Circuit Manipulations',
+    category: 'Circuit components',
   },
 };
 
