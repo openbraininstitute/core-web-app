@@ -201,32 +201,38 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       ) as TCircuitSimulationExecutionStatus;
       const statusMap: Record<TCircuitSimulationExecutionStatus, ReactNode> = {
         created: (
-          <div className="text-primary-8 w-max rounded-full px-2 py-1 text-sm font-bold shadow-sm">
+          <div className="text-primary-8 w-max rounded-full px-3 py-1 text-sm font-bold shadow-sm">
             Created
           </div>
         ),
         pending: (
-          <div className="w-max rounded-full px-2 py-1 text-sm font-bold text-gray-500 shadow-sm">
+          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-gray-500 shadow-sm">
             Pending
           </div>
         ),
         running: (
-          <div className="text-primary-6 w-max rounded-full px-2 py-1 text-sm font-bold shadow-sm">
+          <div className="text-primary-6 w-max rounded-full px-3 py-1 text-sm font-bold shadow-sm">
             Running
           </div>
         ),
         done: (
-          <div className="w-max rounded-full px-2 py-1 text-sm font-bold text-green-500 shadow-sm">
+          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-green-500 shadow-sm">
             Completed
           </div>
         ),
         error: (
-          <div className="w-max rounded-full px-2 py-1 text-sm font-bold text-red-500 shadow-sm">
+          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-red-500 shadow-sm">
             Error
           </div>
         ),
       };
-      const component = get(statusMap, status, null);
+      const component = get(
+        statusMap,
+        status,
+        <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-gray-800 shadow-sm">
+          Generated
+        </div>
+      );
       if (component) {
         return <div className="flex w-full items-center justify-center">{component}</div>;
       }

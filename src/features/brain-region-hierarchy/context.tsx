@@ -136,7 +136,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     (o) => lowerCase(o.label).trim() === lowerCase(DEFAULT_SELECTED_BRAIN_REGION_NAME).trim()
   );
 
-  const [, updateLocalStorage] = useLocalStorage<{
+  const [stored, updateLocalStorage] = useLocalStorage<{
     id: string;
     annotation_value: number;
   } | null>(key, null);
@@ -157,26 +157,29 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     }
   );
 
-  // Set URL parameters to defaults when they're missing and async data is available
+  // eet hierarchy config from uri → localStorage → default
   useEffect(() => {
-    if (!defaultSelectedBrainRegion) return;
+    if (!brainRegions) return;
 
-    const url = new URL(window.location.href);
-    const hasIdParam = url.searchParams.has(DEFAULT_BRAIN_REGION_QUERY_ID);
-    const hasAnnotationValueParam = url.searchParams.has(
-      DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE
-    );
+    const hasURLParams = !!id && !!annotation_value;
 
-    // Force set URL params if they're missing
-    if (!hasIdParam || !hasAnnotationValueParam) {
+    if (hasURLParams) {
+      // already synced from uri, don't override
+      return;
+    }
+
+    if (stored?.id && stored?.annotation_value) {
+      setHierarchyConfig(stored);
+      return;
+    }
+
+    if (defaultSelectedBrainRegion) {
       setHierarchyConfig({
-        id: hasIdParam ? id : defaultSelectedBrainRegion.value,
-        annotation_value: hasAnnotationValueParam
-          ? annotation_value
-          : defaultSelectedBrainRegion.data.annotation_value,
+        id: defaultSelectedBrainRegion.value,
+        annotation_value: defaultSelectedBrainRegion.data.annotation_value,
       });
     }
-  }, [defaultSelectedBrainRegion, id, annotation_value, setHierarchyConfig]);
+  }, [brainRegions, id, annotation_value, stored, setHierarchyConfig, defaultSelectedBrainRegion]);
 
   // Sync localStorage when URL params change
   useEffect(() => {
