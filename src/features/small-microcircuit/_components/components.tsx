@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai';
-import { InputNumber, Input, Select } from 'antd';
+import { InputNumber, Input, Select, Button } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { JSONSchema } from '../types';
 
@@ -23,16 +23,16 @@ export function JSONSchemaForm({
   disabled,
   schema,
   stateAtom,
-  circuitId,
   config,
+  onAddReferenceClick,
 }: {
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
-  circuitId: string;
+  onAddReferenceClick: (reference: string) => void;
 }) {
-  const skip = ['type'];
+  const skip = ['type', 'circuit'];
 
   const [state, setState] = useAtom(stateAtom);
   const [addingElement, setAddingElement] = useState(false);
@@ -41,6 +41,11 @@ export function JSONSchemaForm({
   const referenceTypesToConfigKeys: Record<string, string> = {
     NeuronSetReference: 'neuron_sets',
     TimestampsReference: 'timestamps',
+  };
+
+  const referenceTypesToTitles: Record<string, string> = {
+    NeuronSetReference: 'Neuron Set',
+    TimestampsReference: 'Timestamps',
   };
 
   useEffect(() => {
@@ -61,12 +66,9 @@ export function JSONSchemaForm({
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
 
-    if (k === 'circuit') {
-      return <Input value={circuitId} disabled />;
-    }
-
     if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
       const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
+      const referenceTitle = referenceTypesToTitles[v.properties.type.const];
       if (!referenceKey) return null;
       const referenceConfig = config[referenceKey];
       if (!isPlainObject(referenceConfig)) return null;
@@ -76,7 +78,11 @@ export function JSONSchemaForm({
       });
 
       if (referees.length === 0) {
-        return <span className="text-red-500">No valid {referenceKey} found</span>;
+        return (
+          <Button className="w-full" onClick={() => onAddReferenceClick(referenceKey)}>
+            Add {referenceTitle}
+          </Button>
+        );
       }
 
       const defaultV =
@@ -246,6 +252,7 @@ export function JSONSchemaForm({
     <div className="flex flex-col gap-2">
       <div className="text-lg text-gray-500 uppercase">{schema.title}</div>
       <div className="mb-6 text-gray-500">{schema.description}</div>
+
       <div className="flex flex-col gap-5">
         {schema.properties &&
           Object.entries(schema.properties)
@@ -266,6 +273,10 @@ export function JSONSchemaForm({
                   </div>
                   {renderInput(k, v)}
                   {v.description && <div className={styles.tooltip}>{v.description}</div>}
+
+                  {((schema.required?.includes(k) && !state[k]) ||
+                    state[k] === null ||
+                    state[k] === undefined) && <span className="text-red-500">Required</span>}
                 </div>
               );
             })}
