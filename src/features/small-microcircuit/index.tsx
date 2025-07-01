@@ -30,6 +30,7 @@ import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import styles from './small-microcircuit.module.css';
+import CircuitName from './_components/circuit-name';
 
 export default function SimulationCampaignConfiguration({
   circuitId,
@@ -115,8 +116,10 @@ export default function SimulationCampaignConfiguration({
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
-      <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
-
+      <header className={styles.header}>
+        <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
+        <CircuitName circuitId={circuitId} />
+      </header>
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
