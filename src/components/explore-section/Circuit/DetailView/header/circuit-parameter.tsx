@@ -42,8 +42,8 @@ export default function CircuitParameters({ content }: { content: CircuitSchemaP
         <ParameterBox name="Registration date" value={content.metadata.registrationDate ?? '–'} />
         <ParameterBox
           name="Contact"
-          value={content.contact ?? '–'}
-          link={`mailto:${content.contact}`}
+          value={content.metadata.contact ?? '–'}
+          link={`mailto:${content.metadata.contact}`}
         />
       </div>
     </div>
