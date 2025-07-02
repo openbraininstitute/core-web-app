@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Plotly from 'plotly.js-dist-min';
-import { Select } from 'antd';
-import { useInView } from 'react-intersection-observer';
 import { LineChartOutlined } from '@ant-design/icons';
+import { Select } from 'antd';
 import startCase from 'lodash/startCase';
+import Plotly from 'plotly.js-dist-min';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
-import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
 import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
@@ -16,16 +16,31 @@ const Plot = createPlotlyComponent(Plotly);
 
 const { Option } = Select;
 
+const GRID_CLASS_NAME =
+  'grid gap-7 pt-5 @max-xs:grid-cols-1 @lg:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6';
+
 interface ImageSetComponentProps {
   trace: NWBTrace;
+  cellId: string;
   protocol: string;
   repetitionMap: Map<string, string[]>;
+  singleRecMultiCellMode: boolean;
+  onRepetitionClick: (stimulusType: string, rep: string) => () => void;
+}
+
+interface CellComponentProps {
+  trace: NWBTrace;
+  cellId: string;
+  protocols: string[];
+  singleRecMultiCellMode: boolean;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
 }
 
 interface TraceOverviewComponentProps {
   trace: NWBTrace;
+  cellId: string;
   protocol: string;
+  onCellIdChange: (cellId: string) => void;
   onProtocolChange: (value: string) => void;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
 }
@@ -37,19 +52,28 @@ const colorMap = {
 
 function TraceThumbnail({
   trace,
+  cellId,
   protocol,
   repetition,
   recordingType,
   plotRevision,
 }: {
   trace: NWBTrace;
+  cellId: string;
   protocol: string;
   repetition: string;
   recordingType: RecordingType;
   plotRevision: number;
 }) {
-  const sweeps = trace.getSweeps(protocol, repetition);
-  const [rawData, dataUnit] = useDataWithUnit(protocol, recordingType, repetition, sweeps, trace);
+  const sweeps = trace.getSweeps(cellId, protocol, repetition);
+  const [rawData, dataUnit] = useDataWithUnit(
+    cellId,
+    protocol,
+    recordingType,
+    repetition,
+    sweeps,
+    trace
+  );
   const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
@@ -62,11 +86,13 @@ function TraceThumbnail({
 
 function TraceThumbnailContainer({
   trace,
+  cellId,
   protocol,
   repetition,
   recordingType,
 }: {
   trace: NWBTrace;
+  cellId: string;
   protocol: string;
   repetition: string;
   recordingType: RecordingType;
@@ -94,6 +120,7 @@ function TraceThumbnailContainer({
         <TraceThumbnail
           plotRevision={plotRevision}
           trace={trace}
+          cellId={cellId}
           protocol={protocol}
           repetition={repetition}
           recordingType={recordingType}
@@ -105,14 +132,47 @@ function TraceThumbnailContainer({
 
 function ImageSetComponent({
   trace,
+  cellId,
   protocol,
   repetitionMap,
+  singleRecMultiCellMode,
   onRepetitionClick,
 }: ImageSetComponentProps) {
   const repetitions = repetitionMap.get(protocol) ?? [];
 
+  const content = repetitions.map((repetition) => (
+    <div className="flex flex-col gap-2" key={repetition}>
+      <div className="flex items-center justify-between">
+        <span className="text-dark indent-3 text-lg font-light capitalize">
+          {singleRecMultiCellMode ? cellId : repetition}
+        </span>
+        <button
+          className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
+          onClick={onRepetitionClick(protocol, repetition)}
+          type="button"
+          aria-label="Toggle selection"
+        >
+          <LineChartOutlined className="stroke-primary-8" />
+        </button>
+      </div>
+
+      {trace.recordingTypes.map((recordingType: RecordingType) => (
+        <TraceThumbnailContainer
+          key={recordingType}
+          trace={trace}
+          cellId={cellId}
+          protocol={protocol}
+          repetition={repetition}
+          recordingType={recordingType}
+        />
+      ))}
+    </div>
+  ));
+
+  if (singleRecMultiCellMode) return content;
+
   return (
-    <div className="divide-neutral-2 @container flex flex-col gap-3 divide-y">
+    <div className="divide-neutral-2 flex flex-col gap-3 divide-y">
       <div className="text-primary-9 flex items-baseline gap-2 text-lg font-bold">
         {protocol}
         <small className="font-light">{`${repetitions.length} ${
@@ -120,66 +180,115 @@ function ImageSetComponent({
         }`}</small>
       </div>
 
-      <div className="grid gap-7 pt-5 @max-xs:grid-cols-1 @xs:grid-cols-2 @2xl:grid-cols-3 @4xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6">
-        {repetitions.map((repetition) => (
-          <div className="flex flex-col gap-2" key={repetition}>
-            <div className="flex items-center justify-between">
-              <span className="text-dark indent-10 text-lg font-light capitalize">
-                {repetition}
-              </span>
-              <button
-                className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
-                onClick={onRepetitionClick(protocol, repetition)}
-                type="button"
-                aria-label="Toggle selection"
-              >
-                <LineChartOutlined className="stroke-primary-8" />
-              </button>
-            </div>
+      <div className={GRID_CLASS_NAME}>{content}</div>
+    </div>
+  );
+}
 
-            {trace.recordingTypes.map((recordingType: RecordingType) => (
-              <TraceThumbnailContainer
-                key={recordingType}
-                trace={trace}
-                protocol={protocol}
-                repetition={repetition}
-                recordingType={recordingType}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
+function CellComponent({
+  trace,
+  cellId,
+  protocols,
+  onRepetitionClick,
+  singleRecMultiCellMode,
+}: CellComponentProps) {
+  const repetitionMap = useMemo(
+    () =>
+      protocols.reduce(
+        (map, protocolItem) => map.set(protocolItem, trace.getRepetitions(cellId, protocolItem)),
+        new Map<string, string[]>()
+      ),
+    [protocols, trace, cellId]
+  );
+
+  const content = protocols.map((protocolItem) => (
+    <ImageSetComponent
+      key={protocolItem}
+      trace={trace}
+      cellId={cellId}
+      protocol={protocolItem}
+      repetitionMap={repetitionMap}
+      onRepetitionClick={onRepetitionClick}
+      singleRecMultiCellMode={singleRecMultiCellMode}
+    />
+  ));
+
+  if (singleRecMultiCellMode) return content;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="text-primary-9 text-xl font-bold">{cellId}</div>
+      {content}
     </div>
   );
 }
 
 export default function TraceOverview({
   trace,
+  cellId,
   protocol,
+  onCellIdChange,
   onProtocolChange,
   onRepetitionClick,
 }: TraceOverviewComponentProps) {
-  const protocols = useMemo(() => trace.getProtocols(), [trace]);
+  const cellIds = useMemo(() => trace.getCellIds(), [trace]);
 
-  const repetitionMap = useMemo(
-    () =>
-      protocols.reduce(
-        (map, protocolItem) => map.set(protocolItem, trace.getRepetitions(protocolItem)),
-        new Map<string, string[]>()
-      ),
-    [protocols, trace]
-  );
+  const allProtocols = useMemo(() => {
+    const protocolSet = new Set<string>();
+    cellIds.forEach((cId) => {
+      trace.getProtocols(cId).forEach((p) => protocolSet.add(p));
+    });
+    return Array.from(protocolSet).sort();
+  }, [cellIds, trace]);
 
   const filteredProtocols = useMemo(
-    () => protocols.filter((p) => p === protocol || protocol === 'All'),
-    [protocols, protocol]
+    () => allProtocols.filter((p) => p === protocol || protocol === 'All'),
+    [allProtocols, protocol]
   );
+
+  const selectedCellIds = useMemo(
+    () => cellIds.filter((cId) => cId === cellId || cellId === 'All'),
+    [cellIds, cellId]
+  );
+
+  // When there are multiple cells each having only one repetition and one sweep
+  // For better readability this is displayed in a single (flat) grid without nested structure
+  // This switch is also used to disable rendering protocol/sweep labels
+  const singleRecMultiCellMode = useMemo(() => {
+    // Check if each cell has only one protocol and one repetition
+    return selectedCellIds.every((cId) => {
+      const cellProtocols = trace.getProtocols(cId);
+      if (cellProtocols.length !== 1) return false;
+
+      const repetitions = trace.getRepetitions(cId, cellProtocols[0]);
+      return repetitions.length === 1;
+    });
+  }, [selectedCellIds, trace]);
 
   return (
     <div className="flex flex-col gap-10">
-      {protocols.length > 1 && (
+      {cellIds.length > 1 && (
         <div className="flex flex-col gap-2">
-          Select Stimulus ({protocols.length} available)
+          Select Cell ({cellIds.length} available)
+          <Select
+            className="cell-select"
+            placeholder="Select a cell"
+            value={cellId}
+            onChange={onCellIdChange}
+          >
+            <Option value="All">All Cells</Option>
+            {cellIds.map((cId) => (
+              <Option value={cId} key={cId}>
+                {cId}
+              </Option>
+            ))}
+          </Select>
+        </div>
+      )}
+
+      {allProtocols.length > 1 && (
+        <div className="flex flex-col gap-2">
+          Select Stimulus ({allProtocols.length} available)
           <Select
             className="stimulus-select"
             placeholder="Select a stimulus"
@@ -187,22 +296,24 @@ export default function TraceOverview({
             onChange={onProtocolChange}
           >
             <Option value="All">All</Option>
-            {Array.from(repetitionMap.entries()).map(([protocolItem, repetitions]) => (
+            {allProtocols.map((protocolItem) => (
               <Option value={protocolItem} key={protocolItem}>
-                {protocolItem} {repetitions.length > 1 && `(${repetitions.length})`}
+                {protocolItem}
               </Option>
             ))}
           </Select>
         </div>
       )}
-      <div className="flex flex-col gap-5">
-        {filteredProtocols.map((protocolItem) => (
-          <ImageSetComponent
-            key={protocolItem}
+
+      <div className={singleRecMultiCellMode ? GRID_CLASS_NAME : 'flex flex-col gap-10'}>
+        {selectedCellIds.map((cId) => (
+          <CellComponent
+            key={cId}
             trace={trace}
-            protocol={protocolItem}
-            repetitionMap={repetitionMap}
+            cellId={cId}
+            protocols={filteredProtocols}
             onRepetitionClick={onRepetitionClick}
+            singleRecMultiCellMode={singleRecMultiCellMode}
           />
         ))}
       </div>
@@ -211,6 +322,7 @@ export default function TraceOverview({
 }
 
 function useDataWithUnit(
+  cellId: string,
   protocol: string,
   recordingType: RecordingType,
   repetition: string,
@@ -226,7 +338,13 @@ function useDataWithUnit(
     let conversionFactor = 1;
 
     const plotData = sweeps.map((sweep, idx) => {
-      const recordingData = trace.getSweepRecordingData(protocol, repetition, sweep, recordingType);
+      const recordingData = trace.getSweepRecordingData(
+        cellId,
+        protocol,
+        repetition,
+        sweep,
+        recordingType
+      );
 
       if (idx === 0) {
         const { timeUnit, timeRate } = recordingData;
@@ -269,5 +387,5 @@ function useDataWithUnit(
     });
 
     return [optimizedPlotData, dataUnit];
-  }, [protocol, recordingType, repetition, sweeps, trace]);
+  }, [cellId, protocol, recordingType, repetition, sweeps, trace]);
 }

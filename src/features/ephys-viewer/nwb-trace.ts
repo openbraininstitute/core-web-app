@@ -2,12 +2,16 @@
 import { File, Group, Dataset, ready } from 'h5wasm';
 import range from 'lodash/range';
 
+const SMALL_SCALE_SIMULATOR_ID = 'obi_small_scale_simulator_v1';
+
 enum NWBKey {
   DATA_ORGANIZATION = 'data_organization',
   ACQUISITION = 'acquisition',
   STIMULUS_PRESENTATIONON = 'stimulus/presentation',
   DATA = 'data',
   STARTING_TIME = 'starting_time',
+  GENERAL = 'general',
+  WAS_GENERATED_BY = 'was_generated_by',
 }
 
 export enum RecordingType {
@@ -71,23 +75,49 @@ export default abstract class NWBTrace {
 
     const file = new File(`${id}.nwb`, 'r');
 
+    // LNMC complient
     const dataOrganizationGroup = file.get(NWBKey.DATA_ORGANIZATION);
     const hasDataOrganization = dataOrganizationGroup instanceof Group;
 
-    const Cls = hasDataOrganization ? NWBLNMCTrace : NWBGenericTrace;
+    if (hasDataOrganization) return new NWBLNMCTrace(file);
 
-    return new Cls(file);
+    // TODO: move format detection logic outside
+    // Small scale circuit simulation complient
+    try {
+      const generalGroup = file.get(NWBKey.GENERAL);
+      if (!(generalGroup instanceof Group)) {
+        throw new Error('General group not found');
+      }
+
+      const wasGeneratedByDataset = generalGroup.get(NWBKey.WAS_GENERATED_BY);
+      if (!(wasGeneratedByDataset instanceof Dataset)) {
+        throw new Error('Can not find was_generated_by dataset');
+      }
+
+      const wasGeneratedBy = wasGeneratedByDataset.to_array() as string[];
+      if (!wasGeneratedBy.includes(SMALL_SCALE_SIMULATOR_ID)) {
+        throw new Error('The file does not seem to be produced by OBI small scale simulator');
+      }
+
+      return new NWBCircuitSimulationTrace(file);
+    } catch (error) {
+      // Defaulting to Generic NWB Trace
+      return new NWBGenericTrace(file);
+    }
   }
 
   abstract init(): void;
 
-  abstract getProtocols(): string[];
+  abstract getCellIds(): string[];
 
-  abstract getRepetitions(protocol: string): string[];
+  abstract getProtocols(cellId: string): string[];
 
-  abstract getSweeps(protocol: string, repetition: string): string[];
+  abstract getRepetitions(cellId: string, protocol: string): string[];
+
+  abstract getSweeps(cellId: string, protocol: string, repetition: string): string[];
 
   abstract getSweepRecordingData(
+    cellId: string,
     protocol: string,
     repetition: string,
     sweep: string,
@@ -110,19 +140,25 @@ export default abstract class NWBTrace {
     return dataset;
   }
 
-  public getSweepData(protocol: string, repetition: string, sweep: string): SweepData {
+  public getSweepData(
+    cellId: string,
+    protocol: string,
+    repetition: string,
+    sweep: string
+  ): SweepData {
     return this.recordingTypes.reduce(
       (acc, recordingType) => ({
         ...acc,
-        [recordingType]: this.getSweepRecordingData(protocol, repetition, sweep, recordingType),
+        [recordingType]: this.getSweepRecordingData(
+          cellId,
+          protocol,
+          repetition,
+          sweep,
+          recordingType
+        ),
       }),
       {}
     );
-
-    // return {
-    //   stimulus: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.STIMULUS),
-    //   response: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.RESPONSE),
-    // };
   }
 
   public destroy() {
@@ -151,8 +187,6 @@ export default abstract class NWBTrace {
  * @extends NWBTrace
  */
 class NWBLNMCTrace extends NWBTrace {
-  private cellId: string | null = null;
-
   recordingTypes: RecordingType[] = [RecordingType.STIMULUS, RecordingType.RESPONSE];
 
   constructor(nwbFile: File) {
@@ -160,22 +194,16 @@ class NWBLNMCTrace extends NWBTrace {
     this.init();
   }
 
-  public init() {
+  public init() {}
+
+  public getCellIds(): string[] {
     const dataOrganizationGroup = this.getGroup(NWBKey.DATA_ORGANIZATION);
     const cellIds = dataOrganizationGroup.keys();
-
-    if (cellIds.length === 0) {
-      throw new Error('No cell IDs found');
-    } else if (cellIds.length > 1) {
-      throw new Error('Multiple cell IDs found');
-    }
-
-    const [cellId] = cellIds;
-    this.cellId = cellId;
+    return cellIds;
   }
 
-  public getProtocols(): string[] {
-    const protocolGroup = this.getGroup(`${NWBKey.DATA_ORGANIZATION}/${this.cellId}`);
+  public getProtocols(cellId: string): string[] {
+    const protocolGroup = this.getGroup(`${NWBKey.DATA_ORGANIZATION}/${cellId}`);
 
     const protocols = protocolGroup.keys().sort();
     if (protocols.length === 0) {
@@ -185,8 +213,8 @@ class NWBLNMCTrace extends NWBTrace {
     return protocols;
   }
 
-  public getRepetitions(protocol: string): string[] {
-    const repetitionGroupKey = `${NWBKey.DATA_ORGANIZATION}/${this.cellId}/${protocol}`;
+  public getRepetitions(cellId: string, protocol: string): string[] {
+    const repetitionGroupKey = `${NWBKey.DATA_ORGANIZATION}/${cellId}/${protocol}`;
     const repetitionGroup = this.getGroup(repetitionGroupKey);
 
     const repetitions = repetitionGroup.keys().sort();
@@ -197,8 +225,8 @@ class NWBLNMCTrace extends NWBTrace {
     return repetitions;
   }
 
-  public getSweeps(protocol: string, repetition: string): string[] {
-    const sweepGroupKey = `${NWBKey.DATA_ORGANIZATION}/${this.cellId}/${protocol}/${repetition}`;
+  public getSweeps(cellId: string, protocol: string, repetition: string): string[] {
+    const sweepGroupKey = `${NWBKey.DATA_ORGANIZATION}/${cellId}/${protocol}/${repetition}`;
     const sweepGroup = this.getGroup(sweepGroupKey);
     if (!(sweepGroup instanceof Group)) {
       throw new Error(`Sweep group for ${repetition} not found`);
@@ -213,12 +241,13 @@ class NWBLNMCTrace extends NWBTrace {
   }
 
   public getSweepRecordingData(
+    cellId: string,
     protocol: string,
     repetition: string,
     sweep: string,
     recordingType: RecordingType
   ): RecordingData {
-    const sweepGroupKey = `${NWBKey.DATA_ORGANIZATION}/${this.cellId}/${protocol}/${repetition}/${sweep}`;
+    const sweepGroupKey = `${NWBKey.DATA_ORGANIZATION}/${cellId}/${protocol}/${repetition}/${sweep}`;
     const sweepGroup = this.getGroup(sweepGroupKey);
 
     const recIds = sweepGroup.keys();
@@ -288,31 +317,28 @@ class NWBLNMCTrace extends NWBTrace {
  * retrieve protocols, repetitions, and sweep recording data from the NWB file.
  */
 class NWBGenericTrace extends NWBTrace {
-  recordingTypes: RecordingType[];
+  recordingTypes: RecordingType[] = [RecordingType.STIMULUS, RecordingType.RESPONSE];
 
   constructor(nwbFile: File) {
     super(nwbFile);
-
-    const stimulusPresentationGroup = this.file.get(NWBKey.STIMULUS_PRESENTATIONON);
-    const hasStimulus =
-      !(stimulusPresentationGroup instanceof Group) || stimulusPresentationGroup.keys().length > 0;
-
-    this.recordingTypes = hasStimulus
-      ? [RecordingType.STIMULUS, RecordingType.RESPONSE]
-      : [RecordingType.RESPONSE];
+    this.init();
   }
 
   public init() {}
+
+  public getCellIds(): string[] {
+    return ['Default'];
+  }
 
   public getProtocols(): string[] {
     return ['Custom'];
   }
 
-  public getRepetitions(_protocol: string): string[] {
+  public getRepetitions(_cellId: string, _protocol: string): string[] {
     return ['Custom'];
   }
 
-  public getSweeps(_protocol: string, _repetition: string): string[] {
+  public getSweeps(_cellId: string, _protocol: string, _repetition: string): string[] {
     const acquisitionGroup = this.getGroup(NWBKey.ACQUISITION);
     return range(acquisitionGroup.keys().length).map((idx) => idx.toString());
   }
@@ -328,37 +354,8 @@ class NWBGenericTrace extends NWBTrace {
     return recordingGroup.keys()[parseInt(sweep, 10)];
   }
 
-  private getTimeData(
-    recId: string,
-    recordingType: RecordingType
-  ): { timeUnit: string; timeRate: number } {
-    const timeDatasetKey =
-      recordingType === RecordingType.STIMULUS
-        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.STARTING_TIME}`
-        : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.STARTING_TIME}`;
-
-    let timeDataset;
-
-    try {
-      timeDataset = this.getDataset(timeDatasetKey);
-    } catch {
-      return { timeUnit: 's', timeRate: 1 };
-    }
-
-    const timeUnit = timeDataset.get_attribute('unit', true);
-    if (typeof timeUnit !== 'string') {
-      throw new Error(`Incompatible ${recordingType} time unit: ${timeUnit}, expected string`);
-    }
-
-    const timeRate = timeDataset.get_attribute('rate', true);
-    if (typeof timeRate !== 'number') {
-      throw new Error(`Incompatible ${recordingType} time rate: ${timeRate}, expected number`);
-    }
-
-    return { timeUnit, timeRate };
-  }
-
   public getSweepRecordingData(
+    _cellId: string,
     _protocol: string,
     _repetition: string,
     sweep: string,
@@ -381,7 +378,114 @@ class NWBGenericTrace extends NWBTrace {
     const conversionFactorRaw = dataset.get_attribute('conversion', true);
     const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
-    const { timeUnit, timeRate } = this.getTimeData(recId, recordingType);
+    const timeDatasetKey =
+      recordingType === RecordingType.STIMULUS
+        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.STARTING_TIME}`
+        : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.STARTING_TIME}`;
+
+    const timeDataset = this.getDataset(timeDatasetKey);
+
+    const timeUnit = timeDataset.get_attribute('unit', true);
+    if (typeof timeUnit !== 'string') {
+      throw new Error(`Incompatible ${recordingType} time unit: ${timeUnit}, expected string`);
+    }
+
+    const timeRate = timeDataset.get_attribute('rate', true);
+    if (typeof timeRate !== 'number') {
+      throw new Error(`Incompatible ${recordingType} time rate: ${timeRate}, expected number`);
+    }
+
+    const data = dataset.to_array() as number[];
+
+    return {
+      data,
+      unit,
+      conversionFactor,
+      timeUnit,
+      timeRate,
+    };
+  }
+}
+
+/**
+ * NWBCircuitSimulationTrace represents a voltage report generated by
+ * a small scale circuit simulation.
+ *
+ * This class handles NWB files in a way that all recordings are represented as separate cells
+ * each having a single repetition and a single custom protocol. It provides methods to
+ * retrieve protocols, repetitions, and sweep recording data from the NWB file.
+ */
+class NWBCircuitSimulationTrace extends NWBTrace {
+  recordingTypes: RecordingType[] = [RecordingType.RESPONSE];
+
+  constructor(nwbFile: File) {
+    super(nwbFile);
+    this.init();
+  }
+
+  public init() {}
+
+  public getCellIds(): string[] {
+    const acquisitionGroup = this.getGroup(NWBKey.ACQUISITION);
+    return acquisitionGroup.keys().sort();
+  }
+
+  public getProtocols(): string[] {
+    return ['Custom'];
+  }
+
+  public getRepetitions(_cellId: string, _protocol: string): string[] {
+    return ['Default'];
+  }
+
+  public getSweeps(_cellId: string, _protocol: string, _repetition: string): string[] {
+    return ['Default'];
+  }
+
+  private getTimeData(cellId: string): { timeUnit: string; timeRate: number } {
+    const timeDatasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.STARTING_TIME}`;
+
+    let timeDataset;
+
+    try {
+      timeDataset = this.getDataset(timeDatasetKey);
+    } catch {
+      return { timeUnit: 's', timeRate: 1 };
+    }
+
+    const timeUnit = timeDataset.get_attribute('unit', true);
+    if (typeof timeUnit !== 'string') {
+      throw new Error(`Incompatible time unit: ${timeUnit}, expected string`);
+    }
+
+    const timeRate = timeDataset.get_attribute('rate', true);
+    if (typeof timeRate !== 'number') {
+      throw new Error(`Incompatible time rate: ${timeRate}, expected number`);
+    }
+
+    return { timeUnit, timeRate };
+  }
+
+  public getSweepRecordingData(
+    cellId: string,
+    _protocol: string,
+    _repetition: string,
+    _sweep: string,
+    recordingType: RecordingType
+  ): RecordingData {
+    const datasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.DATA}`;
+
+    const dataset = this.getDataset(datasetKey);
+
+    const unit = dataset.get_attribute('unit', true);
+    if (typeof unit !== 'string') {
+      throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
+    }
+
+    const conversionFactorRaw = dataset.get_attribute('conversion', true);
+    const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
+
+    const { timeUnit, timeRate } = this.getTimeData(cellId);
 
     const data = dataset.to_array() as number[];
 
