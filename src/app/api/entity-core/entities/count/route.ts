@@ -25,6 +25,7 @@ export async function getBulkEntityCoreResult({
     within_brain_region_brain_region_id: brainRegionId,
     within_brain_region_ascendants: false,
   });
+
   const headers = compactRecord({
     accept: 'application/json',
     'content-type': 'application/json',

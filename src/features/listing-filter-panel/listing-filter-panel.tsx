@@ -30,15 +30,16 @@ import {
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
 import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
 import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { Facets } from '@/api/entitycore/types/shared/response';
 import { fieldTitleSentenceCase } from '@/util/utils';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -217,6 +218,7 @@ export default function ListingFilterPanel({
       [dataType, dataScope, brainRegionId, dataKey]
     )
   );
+
   // TODO: to be deleted when confirm filtering works
   // const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
 
@@ -234,6 +236,7 @@ export default function ListingFilterPanel({
         ]);
       }
     },
+
     [activeColumns, setActiveColumns]
   );
 
@@ -254,6 +257,7 @@ export default function ListingFilterPanel({
     setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 
+  const Entity = getViewDefinitionByLegacyType(dataType);
   const filterItems = useMemo(
     () =>
       filters
@@ -262,7 +266,9 @@ export default function ListingFilterPanel({
           const item = getFieldDefinition(filter.field);
           return {
             content:
-              filter.type && item?.isFilterable
+              filter.type &&
+              item?.isFilterable &&
+              (Entity?.filterableFields ? Entity?.filterableFields.includes(filter.field) : true)
                 ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
                 : undefined,
             display: item?.isDisplayable && activeColumns?.includes(filter.field),
@@ -282,6 +288,7 @@ export default function ListingFilterPanel({
       activeColumns,
       showDisplayTrigger,
       onToggleActive,
+      Entity,
     ]
   );
 

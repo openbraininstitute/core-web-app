@@ -11,6 +11,7 @@ import { Circuit } from '@/entity-configuration/domain/model';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
+  SimulationCampaign,
 } from '@/entity-configuration/domain/simulation';
 
 // NOTE: order is important (it's used in stats panel in explore)
@@ -32,6 +33,7 @@ export const EntityCoreModelConfiguration = {
 export const EntityCoreSimulationConfiguration = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
+  SimulationCampaign,
 };
 
 export const EntityCoreConfiguration = {

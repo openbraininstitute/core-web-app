@@ -21,8 +21,8 @@ export function useSectionRenderer(
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>,
   configTab: string,
   setConfigTab: (configTab: string) => void,
-  isRootCategory: (key: string) => boolean | undefined,
-  resolveKey: (tabKey: string, itemIdx: number | null) => string,
+  isRootCategory: (schema: JSONSchema, key: string) => boolean | undefined,
+  resolveKey: (schema: JSONSchema, tabKey: string, itemIdx: number | null) => string,
   config: Config,
   campaignId: string,
   loading: boolean,
@@ -30,20 +30,29 @@ export function useSectionRenderer(
   selectedItemIdx: number | null,
   setSelectedItemIdx: (selectedItemIdx: number | null) => void,
   setEditing: React.Dispatch<React.SetStateAction<boolean>>,
-  setSelectedCategory: React.Dispatch<React.SetStateAction<string>>
+  setSelectedCategory: React.Dispatch<React.SetStateAction<string>>,
+  readOnly?: boolean
 ) {
   const [collapsedHeader, setCollapsedHeader] = React.useState(false);
 
   const renderSection = ([k, v]: [string, JSONSchema]) => {
     if (!schema || !schema?.properties) return;
 
+    const handleHeaderClick = (subkey: string, subValue: unknown) => {
+      if (isPlainObject(subValue)) {
+        setSelectedCategory(typeof subValue.type === 'string' ? subValue.type : '');
+        setSelectedItemIdx(parseInt(subkey.split('_')[1], 10));
+      }
+      setEditing(true);
+    };
+
     return (
       <Fragment key={k}>
         <Tab
           tab={k}
-          selectedTab={configTab}
+          selectedTab={!v.additionalProperties ? configTab : 'NO SELECTION FOR THIS SECTION'}
           onClick={() => {
-            if (configTab === k && !isRootCategory(k)) {
+            if (configTab === k && !isRootCategory(schema, k)) {
               setEditing(false);
               setSelectedCategory('');
               setSelectedItemIdx(null);
@@ -80,18 +89,18 @@ export function useSectionRenderer(
 
               return (
                 <Fragment key={subkey}>
-                  {/* eslint-disable-next-line */}
                   <div
                     className={classNames(
                       'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
                       isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
                     )}
-                    onClick={() => {
-                      if (isPlainObject(subValue)) {
-                        setSelectedCategory(typeof subValue.type === 'string' ? subValue.type : '');
-                        setSelectedItemIdx(parseInt(subkey.split('_')[1], 10));
+                    tabIndex={0}
+                    role="button"
+                    onClick={() => handleHeaderClick(subkey, subValue)}
+                    onKeyDown={(evt) => {
+                      if (evt.key === ' ' || evt.key === 'Enter') {
+                        handleHeaderClick(subkey, subValue);
                       }
-                      setEditing(true);
                     }}
                   >
                     {subkey}
@@ -102,7 +111,7 @@ export function useSectionRenderer(
                         <CheckCircleFilled className="text-green-600" />
                       )}
 
-                      {!campaignId && !loading && (
+                      {!campaignId && !loading && !readOnly && (
                         <DeleteOutlined
                           className="cursor-pointer"
                           onClick={(e) => {
@@ -113,7 +122,7 @@ export function useSectionRenderer(
 
                             const selectedTabAtoms = atomsMap[configTab];
                             if (!isAtom(selectedTabAtoms)) {
-                              const refereeKey = resolveKey(configTab, idx);
+                              const refereeKey = resolveKey(schema, configTab, idx);
 
                               delete selectedTabAtoms[refereeKey];
 
@@ -180,7 +189,7 @@ export function useSectionRenderer(
                 </Fragment>
               );
             })}
-            {!campaignId && !loading && (
+            {!campaignId && !loading && !readOnly && (
               <button
                 className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                 type="button"

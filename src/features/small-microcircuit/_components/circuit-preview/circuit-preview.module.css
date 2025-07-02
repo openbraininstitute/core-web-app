@@ -1,0 +1,8 @@
+.circuitPreview img {
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+.circuitPreview.show img {
+  opacity: 1;
+}

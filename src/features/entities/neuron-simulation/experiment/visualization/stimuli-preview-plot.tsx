@@ -5,12 +5,11 @@ import { captureException } from '@sentry/nextjs';
 import { useAtom } from 'jotai';
 import dynamic from 'next/dynamic';
 
-import useNotification from '@/hooks/notifications';
-
 import { stimulusPreviewPlotDataAtom } from '@/state/simulate/single-neuron';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { StimulusModule } from '@/types/simulation/single-neuron';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
+import { useAppNotification } from '@/components/notification';
 import { getDirectCurrentGraph } from '@/api/bluenaas';
 import { getSession } from '@/authFetch';
 
@@ -40,7 +39,7 @@ export default function StimuliPreviewPlot({
   const [loading, setLoading] = useState(false);
   const previousFetchController = useRef<AbortController>(undefined);
 
-  const { error: notifyError } = useNotification();
+  const { error: notifyError } = useAppNotification();
 
   const cancelPreviousRequest = () => {
     if (previousFetchController.current) {
@@ -87,13 +86,11 @@ export default function StimuliPreviewPlot({
     } catch (error) {
       if (!controller.signal.aborted) {
         captureException(new Error('Preview plot could not be retrieved for model'));
-        notifyError(
-          'Error while loading stimulus plot data',
-          undefined,
-          'topRight',
-          true,
-          'plot-error'
-        );
+        notifyError({
+          message: 'Error while loading stimulus plot data',
+          placement: 'topRight',
+          key: 'plot-error',
+        });
       }
     } finally {
       if (!controller.signal.aborted) {

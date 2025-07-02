@@ -148,7 +148,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.BrainRegion]: {
     title: 'Brain Region',
     filter: null,
-    render: (r) => ('brain_region' in r ? renderEmptyOrValue(r.brain_region.name) : EmptyValue),
+    render: (r) => renderEmptyOrValue('brain_region' in r ? r.brain_region.name : ''),
     vocabulary: {
       plural: 'Brain Regions',
       singular: 'Brain Region',

@@ -5,11 +5,11 @@ import { Button } from 'antd';
 import { format } from 'date-fns';
 import isObject from 'lodash/isObject';
 
-import useNotification from '@/hooks/notifications';
 import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
 
 import { TextArea } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { cancelSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
@@ -19,7 +19,7 @@ type Props = {
 };
 
 export default function DowngradeFree({ isOpen, onClose }: Props) {
-  const { error: errorNotify, success: successNotify } = useNotification();
+  const { error: errorNotify, success: successNotify } = useAppNotification();
   const [cancelling, startTransition] = useTransition();
 
   const onDowngradeSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -42,18 +42,15 @@ export default function DowngradeFree({ isOpen, onClose }: Props) {
             message = 'This subscription has already been cancelled and cannot be cancelled again';
           }
         }
-        errorNotify(message, undefined, 'topRight', true);
+        errorNotify({ message, placement: 'topRight' });
       }
       if (result?.subscription.current_period_end) {
-        successNotify(
-          `
-                      Subscription cancelled. Your subscription will remain active until 
-                      ${format(new Date(result.subscription.current_period_end), 'MMM dd, yyyy')}
-                  `,
-          undefined,
-          'topRight',
-          true
-        );
+        successNotify({
+          message: ` Subscription cancelled. Your subscription will remain active until 
+          ${format(new Date(result.subscription.current_period_end), 'MMM dd, yyyy')}
+          `,
+          placement: 'topRight',
+        });
       }
       onClose();
     });

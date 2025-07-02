@@ -23,10 +23,10 @@ type RecordingData = {
   timeRate: number;
 };
 
-export type SweepData = {
+export type SweepData = Partial<{
   stimulus: RecordingData;
   response: RecordingData;
-};
+}>;
 
 /**
  * Abstract base class representing a trace from a Neurodata Without Borders (NWB) file.
@@ -48,6 +48,8 @@ export type SweepData = {
  */
 export default abstract class NWBTrace {
   file: File;
+
+  abstract readonly recordingTypes: RecordingType[];
 
   constructor(nwbFile: File) {
     this.file = nwbFile;
@@ -109,10 +111,18 @@ export default abstract class NWBTrace {
   }
 
   public getSweepData(protocol: string, repetition: string, sweep: string): SweepData {
-    return {
-      stimulus: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.STIMULUS),
-      response: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.RESPONSE),
-    };
+    return this.recordingTypes.reduce(
+      (acc, recordingType) => ({
+        ...acc,
+        [recordingType]: this.getSweepRecordingData(protocol, repetition, sweep, recordingType),
+      }),
+      {}
+    );
+
+    // return {
+    //   stimulus: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.STIMULUS),
+    //   response: this.getSweepRecordingData(protocol, repetition, sweep, RecordingType.RESPONSE),
+    // };
   }
 
   public destroy() {
@@ -142,6 +152,8 @@ export default abstract class NWBTrace {
  */
 class NWBLNMCTrace extends NWBTrace {
   private cellId: string | null = null;
+
+  recordingTypes: RecordingType[] = [RecordingType.STIMULUS, RecordingType.RESPONSE];
 
   constructor(nwbFile: File) {
     super(nwbFile);
@@ -276,6 +288,20 @@ class NWBLNMCTrace extends NWBTrace {
  * retrieve protocols, repetitions, and sweep recording data from the NWB file.
  */
 class NWBGenericTrace extends NWBTrace {
+  recordingTypes: RecordingType[];
+
+  constructor(nwbFile: File) {
+    super(nwbFile);
+
+    const stimulusPresentationGroup = this.file.get(NWBKey.STIMULUS_PRESENTATIONON);
+    const hasStimulus =
+      !(stimulusPresentationGroup instanceof Group) || stimulusPresentationGroup.keys().length > 0;
+
+    this.recordingTypes = hasStimulus
+      ? [RecordingType.STIMULUS, RecordingType.RESPONSE]
+      : [RecordingType.RESPONSE];
+  }
+
   public init() {}
 
   public getProtocols(): string[] {
@@ -302,6 +328,36 @@ class NWBGenericTrace extends NWBTrace {
     return recordingGroup.keys()[parseInt(sweep, 10)];
   }
 
+  private getTimeData(
+    recId: string,
+    recordingType: RecordingType
+  ): { timeUnit: string; timeRate: number } {
+    const timeDatasetKey =
+      recordingType === RecordingType.STIMULUS
+        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.STARTING_TIME}`
+        : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.STARTING_TIME}`;
+
+    let timeDataset;
+
+    try {
+      timeDataset = this.getDataset(timeDatasetKey);
+    } catch {
+      return { timeUnit: 's', timeRate: 1 };
+    }
+
+    const timeUnit = timeDataset.get_attribute('unit', true);
+    if (typeof timeUnit !== 'string') {
+      throw new Error(`Incompatible ${recordingType} time unit: ${timeUnit}, expected string`);
+    }
+
+    const timeRate = timeDataset.get_attribute('rate', true);
+    if (typeof timeRate !== 'number') {
+      throw new Error(`Incompatible ${recordingType} time rate: ${timeRate}, expected number`);
+    }
+
+    return { timeUnit, timeRate };
+  }
+
   public getSweepRecordingData(
     _protocol: string,
     _repetition: string,
@@ -325,22 +381,7 @@ class NWBGenericTrace extends NWBTrace {
     const conversionFactorRaw = dataset.get_attribute('conversion', true);
     const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
-    const timeDatasetKey =
-      recordingType === RecordingType.STIMULUS
-        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.STARTING_TIME}`
-        : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.STARTING_TIME}`;
-
-    const timeDataset = this.getDataset(timeDatasetKey);
-
-    const timeUnit = timeDataset.get_attribute('unit', true);
-    if (typeof timeUnit !== 'string') {
-      throw new Error(`Incompatible ${recordingType} time unit: ${timeUnit}, expected string`);
-    }
-
-    const timeRate = timeDataset.get_attribute('rate', true);
-    if (typeof timeRate !== 'number') {
-      throw new Error(`Incompatible ${recordingType} time rate: ${timeRate}, expected number`);
-    }
+    const { timeUnit, timeRate } = this.getTimeData(recId, recordingType);
 
     const data = dataset.to_array() as number[];
 

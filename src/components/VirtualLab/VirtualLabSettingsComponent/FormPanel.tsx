@@ -7,7 +7,7 @@ import type { InputProps } from 'antd/lib/input/Input';
 import type { TextAreaProps } from 'antd/lib/input/TextArea';
 import capitalize from 'lodash/capitalize';
 
-import useNotification from '@/hooks/notifications';
+import { useAppNotification } from '@/components/notification';
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
@@ -217,7 +217,7 @@ export default function FormPanel({
 
   const [form] = Form.useForm<InformationForm>();
 
-  const notification = useNotification();
+  const notification = useAppNotification();
 
   const formItems = items.map(({ name: formItemName, ...formItemProps }) => (
     <SettingsFormItem
@@ -241,7 +241,7 @@ export default function FormPanel({
           const entries = Object.entries(values);
 
           entries.forEach(([k, v]) =>
-            notification.success(`${capitalize(k)} was updated to ${v}.`)
+            notification.success({ message: `${capitalize(k)} was updated to ${v}.` })
           );
 
           setServerError(null); // Remove error

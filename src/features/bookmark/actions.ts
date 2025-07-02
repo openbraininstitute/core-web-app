@@ -20,6 +20,7 @@ export async function addBookmarksToProjectLibrary({
 }) {
   const result = await addBookmark({ virtualLabId, projectId }, { ...bookmark });
   revalidateTag('list-bookmarks');
+
   revalidatePath(
     resolveLibraryUrl({
       ctx: { virtualLabId, projectId },

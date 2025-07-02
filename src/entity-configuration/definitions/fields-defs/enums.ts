@@ -65,6 +65,9 @@ export enum EntityCoreFields {
   NumberNeurons = 'number_neurons',
   NumberSynapses = 'number_synapses',
   NumberConnections = 'number_connections',
+  ScanParameters = 'scan_parameters',
+  SimulationCampaignStatus = 'status',
+  CircuitName = 'circuit_name',
 }
 
 export type EntityCoreFieldsUnion = keyof typeof EntityCoreFields;

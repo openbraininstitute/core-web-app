@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai';
-import { InputNumber, Input, Select } from 'antd';
+import { InputNumber, Input, Select, Button } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { JSONSchema } from '../types';
 
+import { JSONSchema } from '../types';
 import { isPlainObject } from './utils';
+import CircuitDetails from './circuit-details';
+import Tooltip from './tooltip';
+
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
 
 type Primitive = null | boolean | number | string;
@@ -20,16 +24,18 @@ export function JSONSchemaForm({
   disabled,
   schema,
   stateAtom,
-  circuitId,
   config,
+  circuit,
+  onAddReferenceClick,
 }: {
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
+  circuit: ICircuit | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
-  circuitId: string;
+  onAddReferenceClick: (reference: string) => void;
 }) {
-  const skip = ['type'];
+  const skip = ['type']; // , 'circuit'];
 
   const [state, setState] = useAtom(stateAtom);
   const [addingElement, setAddingElement] = useState(false);
@@ -38,6 +44,11 @@ export function JSONSchemaForm({
   const referenceTypesToConfigKeys: Record<string, string> = {
     NeuronSetReference: 'neuron_sets',
     TimestampsReference: 'timestamps',
+  };
+
+  const referenceTypesToTitles: Record<string, string> = {
+    NeuronSetReference: 'Neuron Set',
+    TimestampsReference: 'Timestamps',
   };
 
   useEffect(() => {
@@ -58,10 +69,11 @@ export function JSONSchemaForm({
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
 
-    if (k === 'circuit') return <Input value={circuitId} disabled />;
+    if (k === 'circuit' && circuit) return <CircuitDetails circuit={circuit} />;
 
     if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
       const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
+      const referenceTitle = referenceTypesToTitles[v.properties.type.const];
       if (!referenceKey) return null;
       const referenceConfig = config[referenceKey];
       if (!isPlainObject(referenceConfig)) return null;
@@ -71,7 +83,11 @@ export function JSONSchemaForm({
       });
 
       if (referees.length === 0) {
-        return <span className="text-red-500">No valid {referenceKey} found</span>;
+        return (
+          <Button className="w-full" onClick={() => onAddReferenceClick(referenceKey)}>
+            Add {referenceTitle}
+          </Button>
+        );
       }
 
       const defaultV =
@@ -212,15 +228,17 @@ export function JSONSchemaForm({
       );
     if (obj.type === 'number' || obj.type === 'integer')
       return (
-        <InputNumber
-          min={obj.minimum ?? null}
-          disabled={disabled}
-          value={typeof state[k] === 'number' ? state[k] : null}
-          onChange={(value) => {
-            setState({ ...state, [k]: value });
-          }}
-          className="w-full"
-        />
+        <>
+          <InputNumber
+            min={obj.minimum ?? null}
+            disabled={disabled}
+            value={typeof state[k] === 'number' ? state[k] : null}
+            onChange={(value) => {
+              setState({ ...state, [k]: value });
+            }}
+            className="w-full"
+          />
+        </>
       );
     if (obj.type === 'string')
       return (
@@ -239,6 +257,7 @@ export function JSONSchemaForm({
     <div className="flex flex-col gap-2">
       <div className="text-lg text-gray-500 uppercase">{schema.title}</div>
       <div className="mb-6 text-gray-500">{schema.description}</div>
+
       <div className="flex flex-col gap-5">
         {schema.properties &&
           Object.entries(schema.properties)
@@ -249,13 +268,19 @@ export function JSONSchemaForm({
               return (
                 <div key={k}>
                   <div className="flex items-end gap-3">
-                    <div className="text-primary-9 text-base font-semibold uppercase">
+                    <div
+                      className="text-primary-9 text-base font-semibold uppercase"
+                      title={v.description}
+                    >
                       {v.title}
                     </div>
                     {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
                   </div>
+                  <Tooltip value={v.description}>{renderInput(k, v)}</Tooltip>
 
-                  {renderInput(k, v)}
+                  {((schema.required?.includes(k) && !state[k]) ||
+                    state[k] === null ||
+                    state[k] === undefined) && <span className="text-red-500">Required</span>}
                 </div>
               );
             })}

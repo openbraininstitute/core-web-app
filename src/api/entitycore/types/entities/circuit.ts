@@ -10,6 +10,7 @@ import type {
   BrainRegionFilter,
   SharedFilter,
   PaginationFilter,
+  IdFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface CircuitBase {
@@ -29,4 +30,8 @@ export interface ICircuit
     EntityCoreType,
     EntityCoreBaseAsset {}
 
-export interface ICircuitFilter extends BrainRegionFilter, SharedFilter, PaginationFilter {}
+export interface ICircuitFilter
+  extends IdFilter,
+    BrainRegionFilter,
+    SharedFilter,
+    PaginationFilter {}

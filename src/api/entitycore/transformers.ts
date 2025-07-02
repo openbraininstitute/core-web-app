@@ -2,9 +2,8 @@ import map from 'lodash/map';
 import sortBy from 'lodash/sortBy';
 import isEmpty from 'lodash/isEmpty';
 
-import { Filter } from '@/features/listing-filter-panel/types';
-
 import type { Agent, IContributor } from '@/api/entitycore/types/shared/global';
+import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
@@ -63,11 +62,11 @@ export function transformQueryParamsArrayToString(
  * transforms an array of filters into a query object for API requests.
  * Uses the constraint field to determine the query parameter names.
  *
- * @param {Array<Filter>} filters - The filters to transform
+ * @param {Array<CoreFilter>} filters - The filters to transform
  * @returns {TransformFiltersToQueryReturnValue} The transformed query object
  */
 export function transformFiltersToQuery(
-  filters: Array<Filter>
+  filters: Array<CoreFilter>
 ): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
     // Skip filters with null values

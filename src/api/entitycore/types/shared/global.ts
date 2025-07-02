@@ -16,6 +16,11 @@ export type EntityCoreType = {
   type: EntityTypeValue;
 };
 
+export type ActivityType = {
+  // TODO: derive from activity type, same as done with EntityTypeValue
+  type: 'simulation_execution' | 'simulation_generation';
+};
+
 export type EntityCoreOwnership = {
   created_by: IPerson | null;
   updated_by: IPerson | null;
@@ -155,10 +160,13 @@ enum AssetStatus {
 export enum AssetLabel {
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
+  simulation_designer_image = 'simulation_designer_image',
   single_cell_simulation = 'single_cell_simulation_data',
   single_neuron_synaptome_config = 'single_neuron_synaptome_config',
   single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
   validation_result = 'validation_result_details',
+  simulation_generation_config = 'simulation_generation_config',
+  campaign_generation_config = 'campaign_generation_config',
 }
 
 type AssetBase = {

@@ -9,13 +9,13 @@ import kebabCase from 'lodash/kebabCase';
 
 import useSimulationModal from '@/features/entities/neuron-simulation/experiment/hooks/useSimulationModal';
 import SaveSimulation from '@/features/entities/neuron-simulation/experiment/elements/save-simulation';
-import useNotification from '@/hooks/notifications';
 
 import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
 import { simulationExperimentalSetupAtom } from '@/state/simulate/categories/simulation-conditions';
 import { exportSimulationResultsAsZip } from '@/util/simulation-plotly-to-csv';
 import { launchSimulationAtom } from '@/state/simulate/single-neuron-setter';
 import { PROTOCOL_DETAILS } from '@/constants/simulate/single-neuron';
+import { useAppNotification } from '@/components/notification';
 import { messages } from '@/i18n/en/simulation';
 import {
   genericSingleNeuronSimulationPlotDataAtom,
@@ -30,6 +30,7 @@ type Props = WorkspaceContext & {
   modelId: string;
   meModelId: string;
   simulationType: SimulationType;
+  disable: boolean;
 };
 
 export default function ActionButton({
@@ -38,10 +39,11 @@ export default function ActionButton({
   virtualLabId,
   projectId,
   simulationType,
+  disable,
 }: Props) {
   const form = Form.useFormInstance();
   const [downloading, setDownloading] = useState(false);
-  const { error: notifyError, success: notifySuccess } = useNotification();
+  const { error: notifyError, success: notifySuccess } = useAppNotification();
 
   const simulationResults = useAtomValue(genericSingleNeuronSimulationPlotDataAtom);
   const currentInjectionConfig = useAtomValue(currentInjectionSimulationConfigAtom);
@@ -86,21 +88,17 @@ export default function ActionButton({
           name: kebabCase(form.getFieldValue('name')) ?? 'simulation_plots',
           result: simulationResults,
         });
-        notifySuccess(
-          messages.DownloadSuccessful,
-          undefined,
-          'topRight',
-          true,
-          'download-simulation-zip'
-        );
+        notifySuccess({
+          message: messages.DownloadSuccessful,
+          placement: 'topRight',
+          key: 'download-simulation-zip',
+        });
       } catch (error) {
-        notifyError(
-          messages.DownloadFailed,
-          undefined,
-          'topRight',
-          true,
-          'download-simulation-zip'
-        );
+        notifyError({
+          message: messages.DownloadFailed,
+          placement: 'topRight',
+          key: 'download-simulation-zip',
+        });
       } finally {
         setDownloading(false);
       }
@@ -109,13 +107,11 @@ export default function ActionButton({
 
   useEffect(() => {
     if (simulationStatus?.status === 'error') {
-      notifyError(
-        simulationStatus.description ?? messages.SimulationFailed,
-        5,
-        'topRight',
-        true,
-        'simulation'
-      );
+      notifyError({
+        message: simulationStatus.description ?? messages.SimulationFailed,
+        placement: 'topRight',
+        key: 'download-simulation-zip',
+      });
     }
   }, [simulationStatus, notifyError]);
 
@@ -135,7 +131,7 @@ export default function ActionButton({
         type="button"
         className="bg-primary-8 px-7 py-3 text-lg text-white disabled:bg-gray-300"
         onClick={runSimulation}
-        disabled={simulationStatus?.status === 'launched'}
+        disabled={simulationStatus?.status === 'launched' || disable}
       >
         {simulationStatus?.status === 'finished' ? 'Re-run Simulation' : 'Simulate'}
       </button>

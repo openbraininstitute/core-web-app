@@ -117,6 +117,7 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     url: null,
     entities: {
       build: EntityCoreConfiguration.Circuit,
+      simulate: EntityCoreConfiguration.SimulationCampaign,
     },
   },
   {

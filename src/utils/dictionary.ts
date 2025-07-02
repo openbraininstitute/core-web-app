@@ -10,7 +10,7 @@ export function compactRecord<T>(
   const out: Record<string, T> = {};
 
   for (const [k, v] of Object.entries(values)) {
-    if (!isNil(v)) {
+    if (!isNil(v) && (typeof v !== 'string' || v.trim() !== '')) {
       out[k] = v;
     }
   }

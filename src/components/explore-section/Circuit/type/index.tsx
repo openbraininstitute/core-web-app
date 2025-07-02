@@ -54,8 +54,8 @@ export type CircuitSchemaProps = {
       name: string;
       url: string;
     } | null;
+    contact: string | null;
   };
-  contact: string | null;
   files: DownloadItemProps[];
   subcircuits: CircuitSchemaProps[];
 
