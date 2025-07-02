@@ -16,7 +16,7 @@ export default function CircuitPreview({ className, circuit }: CircuitPreviewPro
   const url = useCircuitImageURL(circuit?.id);
 
   return (
-    <div className={classNames(className, styles.circuitPreview, url && styles.show)}>
+    <div className={classNames('px-5', className, styles.circuitPreview, url && styles.show)}>
       <img alt="Circuit preview" src={url} className="w-full rounded-xl border border-gray-200" />
     </div>
   );
