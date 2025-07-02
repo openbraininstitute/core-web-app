@@ -98,7 +98,7 @@ export default function BrowseSimulations() {
                   loading={copying}
                   loadingIcon={<CheckCircleFilled className="animate-fade-in text-white" />}
                 >
-                  Copy ID
+                  Copy Simulation Campaign ID
                 </Btn>
               )}
               <Link
