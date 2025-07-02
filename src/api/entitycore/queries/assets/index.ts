@@ -107,9 +107,10 @@ export async function downloadAsset<T>({
 }): Promise<T | Response> {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<T>(
-    `/${kebabCase(entityType)}/${entityId}/assets/${id}/download?asset_path=${assetPath}`,
+    `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,
     {
       ...getEntityCoreContext(ctx),
+      queryParams: { asset_path: assetPath },
     },
     { asRawResponse, retryOnError }
   );
