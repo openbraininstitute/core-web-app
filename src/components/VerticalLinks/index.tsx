@@ -36,6 +36,8 @@ export default function VerticalLinks({ virtualLabId, projectId, currentPage, li
     push(`/app/virtual-lab/lab/${virtualLabId}/project/${projectId}/${href}`);
   const selectedLayout = useSelectedLayoutSegment();
   if (!links || !links.length) return null;
+
+  console.log('🚀 [index] currentPage, links =', currentPage, links); // @FIXME: Remove this line written on 2025-07-02 at 15:36
   return (
     <div className="border-primary-7 flex h-fit w-full flex-col border">
       {links.map((link, idx) => {
