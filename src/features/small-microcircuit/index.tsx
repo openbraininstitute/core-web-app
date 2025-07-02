@@ -14,7 +14,8 @@ import TabsSelector from './_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
 import { AtomsMap, JSONSchema, TabType } from './types';
 import { useCircuit } from './_components/hooks/circuit';
-import CircuitName from './_components/circuit-name';
+// James asked to only comment it out for now.
+// import CircuitName from './_components/circuit-name';
 import CircuitPreview from './_components/circuit-preview';
 
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
@@ -125,17 +126,18 @@ export default function SimulationCampaignConfiguration({
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <header className={styles.header}>
         <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
-        <div className="flex items-center justify-center gap-8">
+        {/* Temporarly commented out (James request) */}
+        {/* <div className="flex items-center justify-center gap-8">
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
           <CircuitName circuit={circuit} />
-        </div>
+        </div> */}
       </header>
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>
           <div>
-            <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto border-r border-gray-200 pr-5 pb-5">
+            <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
               {CATEGORIES.map((c) => {
                 return (
                   <Fragment key={c}>
@@ -225,7 +227,7 @@ export default function SimulationCampaignConfiguration({
               </button>
             )}
           </div>
-          <div className="h-full overflow-y-auto border-r border-gray-200 px-5">
+          <div className="h-full overflow-y-auto border-r border-l border-gray-200 px-5">
             {schema.properties &&
               schema.properties?.[configTab]?.additionalProperties?.anyOf &&
               !selectedCategory &&

@@ -5,4 +5,5 @@
 
 .circuitPreview.show img {
   opacity: 1;
+  width: 100%;
 }
