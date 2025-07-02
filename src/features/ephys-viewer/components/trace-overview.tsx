@@ -120,7 +120,7 @@ function ImageSetComponent({
         }`}</small>
       </div>
 
-      <div className="grid gap-7 pt-5 @max-xs:grid-cols-1 @sm:grid-cols-2 @xl:grid-cols-3 @3xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6">
+      <div className="grid gap-7 pt-5 @max-xs:grid-cols-1 @xs:grid-cols-2 @2xl:grid-cols-3 @4xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6">
         {repetitions.map((repetition) => (
           <div className="flex flex-col gap-2" key={repetition}>
             <div className="flex items-center justify-between">
