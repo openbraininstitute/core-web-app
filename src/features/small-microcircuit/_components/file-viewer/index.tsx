@@ -5,8 +5,10 @@ import { useAtomValue } from 'jotai';
 import { File } from '../simulation-files';
 import { fileAtomFamily } from '../atoms';
 
+import EphysViewer from '@/features/ephys-viewer';
 import { classNames } from '@/util/utils';
 import { WorkspaceContext } from '@/types/common';
+import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 
 export type FileViewerProps = {
   file?: File;
@@ -19,18 +21,16 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
   const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
 
   const viewerContent = match(fileExt)
-    .with(undefined, () => <p className="text-primary-3 text-lg">Select a file for preview</p>)
+    .with(undefined, () => <p className="text-primary-8 text-lg">Select a file for preview</p>)
     .with('json', () => <JsonFileViewer file={file!} context={context} />)
+    .with('nwb', () => <NwbFileViewer file={file!} context={context} />)
     .otherwise(() => <PlaceholderFileViewer file={file!} />);
 
   return (
-    <div
-      className={classNames(
-        'overflow-scroll rounded-2xl bg-[linear-gradient(338.27deg,_#002766_58.71%,_#004ECC_128.93%)] p-12 text-white',
-        className
-      )}
-    >
-      <Suspense fallback={<div>Loading...</div>}>{viewerContent}</Suspense>
+    <div className={classNames('text-primary-9 relative rounded-2xl bg-white p-12', className)}>
+      <div className="h-full overflow-auto">
+        <Suspense fallback={<div>Loading...</div>}>{viewerContent}</Suspense>
+      </div>
     </div>
   );
 }
@@ -52,6 +52,15 @@ export function JsonFileViewer({ file, context }: JsonFileViewerProps) {
   );
 
   return <pre>{JSON.stringify(parsedJson, null, 2)}</pre>;
+}
+
+export type NwbFileViewerProps = {
+  file: File;
+  context: WorkspaceContext;
+};
+
+export function NwbFileViewer({ file, context }: NwbFileViewerProps) {
+  return <EphysViewer resource={file.entity as ICircuitSimulationResult} ctx={context} />;
 }
 
 export type PlaceholderFileViewerProps = {
