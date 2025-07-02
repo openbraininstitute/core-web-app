@@ -52,7 +52,7 @@ function renderMessage(
                   {rateLimit.limit - rateLimit.remaining > 1 ? 's' : ''}
                   <em>
                     {Math.max(0, rateLimit.remaining)} free credit
-                    {rateLimit.limit - rateLimit.remaining > 1 ? 's' : ''} left
+                    {rateLimit.remaining > 1 ? 's' : ''} left
                   </em>
                 </div>
               </div>
