@@ -1,7 +1,7 @@
 'use client';
 
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { atom } from 'jotai';
 import lowerCase from 'lodash/lowerCase';
 
@@ -157,28 +157,40 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     }
   );
 
-  // eet hierarchy config from uri → localStorage → default
+  // track if config was already initialized to avoid infinite loop
+  const isInitializedRef = useRef(false);
+
   useEffect(() => {
-    if (!brainRegions) return;
+    if (isInitializedRef.current || !brainRegions) return;
 
     const hasURLParams = !!id && !!annotation_value;
 
     if (hasURLParams) {
-      // already synced from uri, don't override
+      isInitializedRef.current = true;
       return;
     }
 
     if (stored?.id && stored?.annotation_value) {
-      setHierarchyConfig(stored);
+      if (id !== stored.id || annotation_value !== stored.annotation_value) {
+        setHierarchyConfig(stored);
+      }
+      isInitializedRef.current = true;
       return;
     }
 
     if (defaultSelectedBrainRegion) {
-      setHierarchyConfig({
-        id: defaultSelectedBrainRegion.value,
-        annotation_value: defaultSelectedBrainRegion.data.annotation_value,
-      });
+      if (
+        id !== defaultSelectedBrainRegion.value ||
+        annotation_value !== defaultSelectedBrainRegion.data.annotation_value
+      ) {
+        setHierarchyConfig({
+          id: defaultSelectedBrainRegion.value,
+          annotation_value: defaultSelectedBrainRegion.data.annotation_value,
+        });
+      }
     }
+
+    isInitializedRef.current = true;
   }, [brainRegions, id, annotation_value, stored, setHierarchyConfig, defaultSelectedBrainRegion]);
 
   // Sync localStorage when URL params change
