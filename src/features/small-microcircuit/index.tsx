@@ -387,7 +387,12 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
         await runCircuitSimulation({
           ctx: { virtualLabId, projectId },
           simulationId: simulations[0].id,
-          onMessage: (msg) => setExecStatus(simId, msg.status),
+          onMessage: (msg) => {
+            setExecStatus(simId, msg.status);
+            if (msg.status !== 'done') return;
+
+            notification.success({ message: `Simulation ${simulations[0].name} done` });
+          },
         });
       }
     } catch (error) {

@@ -1,11 +1,18 @@
-import { classNames } from '@/util/utils';
 import { Suspense } from 'react';
 import { match } from 'ts-pattern';
-import { WorkspaceContext } from '@/types/common';
-import { File } from '../simulation-files';
 import { useAtomValue } from 'jotai';
-import { JsonFileViewerProps, PlaceholderFileViewerProps } from '.';
+
+import { File } from '../simulation-files';
 import { fileAtomFamily } from '../atoms';
+
+import { classNames } from '@/util/utils';
+import { WorkspaceContext } from '@/types/common';
+
+export type FileViewerProps = {
+  file?: File;
+  context: WorkspaceContext;
+  className?: string;
+};
 
 export function FileViewer({ file, context, className = '' }: FileViewerProps) {
   const fileName = file?.assetPath?.split('/').at(-1) ?? file?.asset.path.split('/').at(-1);
@@ -27,15 +34,12 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
     </div>
   );
 }
-export type FileViewerProps = {
-  file?: File;
-  context: WorkspaceContext;
-  className?: string;
-};
+
 export type JsonFileViewerProps = {
   file: File;
   context: WorkspaceContext;
 };
+
 export function JsonFileViewer({ file, context }: JsonFileViewerProps) {
   const parsedJson = useAtomValue(
     fileAtomFamily({
@@ -49,9 +53,11 @@ export function JsonFileViewer({ file, context }: JsonFileViewerProps) {
 
   return <pre>{JSON.stringify(parsedJson, null, 2)}</pre>;
 }
+
 export type PlaceholderFileViewerProps = {
   file: File;
 };
+
 export function PlaceholderFileViewer({ file }: PlaceholderFileViewerProps) {
   const fileName = file?.assetPath?.split('/').at(-1) ?? file?.asset.path.split('/').at(-1);
   const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
