@@ -24,6 +24,8 @@
 }
 
 .menuContainer .logo {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-L);
   flex: 0 0 auto;
   max-width: 8em;
 }

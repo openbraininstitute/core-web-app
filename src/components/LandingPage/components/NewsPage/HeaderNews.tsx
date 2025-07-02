@@ -2,7 +2,7 @@ import { ContentForNewsItem } from '@/components/LandingPage/content/news';
 
 export default function HeaderNews({ content }: { content: ContentForNewsItem }) {
   return (
-    <header className="bg-primary-9 text-primary-2 relative w-screen px-[18vw] py-[20vh] text-lg">
+    <header className="bg-primary-9 text-primary-2 relative w-screen px-[18vw] pt-[26vh] pb-[20vh] text-lg">
       <div className="flex flex-row items-center">
         <div className="font-semibold tracking-wider uppercase">News</div>
         <div className="border-primary-7 mx-2 rounded-3xl border border-solid px-3 py-1 tracking-wider uppercase">
