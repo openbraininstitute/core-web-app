@@ -35,7 +35,7 @@ export function Section({
   readOnly,
 }: {
   schema: JSONSchema | null; // The global schema
-  k: string // secition key
+  k: string; // secition key
   sectionSchema: JSONSchema; // The schema for this section
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
