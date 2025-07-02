@@ -1,14 +1,17 @@
-name: Create entitycore-migration image for Azure deployment
+name: Create image for Azure deployment
 
 permissions:
   id-token: write # Required for OIDC authentication
   contents: read # Standard permission for GitHub Actions
 
 on:
+  push:
+    branches:
+      - update_azure_deployment
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-Azure
   cancel-in-progress: true
 
 jobs:
