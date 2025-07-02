@@ -1,4 +1,4 @@
-import { isNil } from 'lodash';
+import isNil from 'lodash/isNil';
 
 export function compactRecord<T>(
   values: Record<string, any> | undefined
