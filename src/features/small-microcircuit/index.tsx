@@ -9,7 +9,7 @@ import { Fragment, Suspense, useRef, useMemo, useState } from 'react';
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
 import { useConfigAtom } from './_components/hooks/config-atom';
 import { isRootCategory, resolveKey, useObioneJsonSchema } from './_components/hooks/schema';
-import { useSectionRenderer } from './_components/section';
+import { Section } from './_components/section';
 import TabsSelector from './_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
 import { AtomsMap, JSONSchema, TabType } from './types';
@@ -95,24 +95,6 @@ export default function SimulationCampaignConfiguration({
   }, [validate, config]);
 
   useObioneJsonSchema(circuitId, notification, setSchema, setAtomsMap, initialConfig);
-  const renderSection = useSectionRenderer(
-    schema,
-    atomsMap,
-    setAtomsMap,
-    configTab,
-    setConfigTab,
-    isRootCategory,
-    resolveKey,
-    config,
-    campaignId,
-    loading,
-    errors,
-    selectedItemIdx,
-    setSelectedItemIdx,
-    setEditing,
-    setSelectedCategory,
-    readOnly
-  );
 
   if (!schema) {
     return (
@@ -149,8 +131,28 @@ export default function SimulationCampaignConfiguration({
                           const order = (k: string) => ORDERING[k]?.order ?? 999;
                           return order(a[0]) - order(b[0]);
                         })
-                        .map((entry) => {
-                          return renderSection(entry);
+                        .map(([k, v]) => {
+                          return (
+                            <Section
+                              key={k}
+                              k={k}
+                              schema={schema}
+                              sectionSchema={v}
+                              atomsMap={atomsMap}
+                              setAtomsMap={setAtomsMap}
+                              configTab={configTab}
+                              setConfigTab={setConfigTab}
+                              config={config}
+                              campaignId={campaignId}
+                              loading={loading}
+                              errors={errors}
+                              selectedItemIdx={selectedItemIdx}
+                              setSelectedItemIdx={setSelectedItemIdx}
+                              setEditing={setEditing}
+                              setSelectedCategory={setSelectedCategory}
+                              readOnly={readOnly}
+                            />
+                          );
                         })}
                   </Fragment>
                 );
