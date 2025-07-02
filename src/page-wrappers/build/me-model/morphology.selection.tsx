@@ -22,6 +22,7 @@ type Props = {
 
 export default function MorphologySelection({ params, searchParams }: Props) {
   const id = useId();
+
   const pathname = usePathname();
   const { push: navigate } = useRouter();
 

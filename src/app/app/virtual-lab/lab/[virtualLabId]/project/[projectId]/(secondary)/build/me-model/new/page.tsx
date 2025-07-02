@@ -46,9 +46,10 @@ export default function NewMEModelPage({ params: promisedParams }: Params) {
   );
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
+  const dataKey = resolveDataKey({ projectId, section: 'build' });
 
-  const { node } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ projectId, section: 'build' }),
+  const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
+    dataKey,
   });
 
   const onValuesChange = () => {
@@ -147,6 +148,9 @@ export default function NewMEModelPage({ params: promisedParams }: Params) {
                   optionFilterProp="label"
                   allowClear
                   showSearch
+                  onSelect={(_, option) => {
+                    updateHierarchyConfig(option.data);
+                  }}
                   size="large"
                   options={brainRegionHierarchy?.options}
                   className="border-neutral-2! text-primary-8! rounded-sm! [&_.ant-select-selector]:!rounded-sm"
