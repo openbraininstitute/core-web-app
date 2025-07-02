@@ -1,8 +1,8 @@
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 
 export type EntityCoreDataType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['type'];
@@ -158,15 +158,16 @@ enum AssetStatus {
 }
 
 export enum AssetLabel {
+  campaign_generation_config = 'campaign_generation_config',
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
   simulation_designer_image = 'simulation_designer_image',
+  simulation_generation_config = 'simulation_generation_config',
   single_cell_simulation = 'single_cell_simulation_data',
   single_neuron_synaptome_config = 'single_neuron_synaptome_config',
   single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
+  sonata_circuit = 'sonata_circuit',
   validation_result = 'validation_result_details',
-  simulation_generation_config = 'simulation_generation_config',
-  campaign_generation_config = 'campaign_generation_config',
 }
 
 type AssetBase = {

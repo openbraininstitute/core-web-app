@@ -63,6 +63,7 @@ export async function downloadAsset(params: {
   ctx?: WorkspaceContext;
   entityType: EntityTypeValue;
   entityId: string;
+  assetPath?: string;
   id: string;
   asRawResponse: true;
   retryOnError?: boolean;
@@ -72,6 +73,7 @@ export async function downloadAsset<T>(params: {
   ctx?: WorkspaceContext;
   entityType: EntityTypeValue;
   entityId: string;
+  assetPath?: string;
   id: string;
   asRawResponse?: false;
   retryOnError?: boolean;
@@ -93,17 +95,19 @@ export async function downloadAsset<T>({
   id,
   asRawResponse = false,
   retryOnError = false,
+  assetPath = '',
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityTypeValue;
   entityId: string;
+  assetPath?: string;
   id: string;
   asRawResponse?: boolean;
   retryOnError?: boolean;
 }): Promise<T | Response> {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<T>(
-    `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,
+    `/${kebabCase(entityType)}/${entityId}/assets/${id}/download?asset_path=${assetPath}`,
     {
       ...getEntityCoreContext(ctx),
     },
