@@ -8,6 +8,9 @@ div.threeColumns {
 div.threeColumns > div {
   min-height: 0;
   height: 100%;
+}
+
+div.threeColumns > div.scrollable {
   overflow-y: auto;
   overflow-x: visible;
 }

@@ -108,17 +108,17 @@ export default function SimulationCampaignConfiguration({
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <header className={styles.header}>
         <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
-        {/* Temporarly commented out (James request) */}
-        {/* <div className="flex items-center justify-center gap-8">
+        <div className="flex items-center justify-center gap-8">
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
-          <CircuitName circuit={circuit} />
-        </div> */}
+          {/* Temporarly commented out (James request) */}
+          {/* <CircuitName circuit={circuit} /> */}
+        </div>
       </header>
       <div className="w-full border-t border-gray-200" />
 
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>
-          <div>
+          <div className={styles.scrollable}>
             <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
               {CATEGORIES.map((c) => {
                 return (
@@ -229,7 +229,12 @@ export default function SimulationCampaignConfiguration({
               </button>
             )}
           </div>
-          <div className="h-full overflow-y-auto border-r border-l border-gray-200 px-5">
+          <div
+            className={classNames(
+              styles.scrollable,
+              'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+            )}
+          >
             {schema.properties &&
               schema.properties?.[configTab]?.additionalProperties?.anyOf &&
               !selectedCategory &&
