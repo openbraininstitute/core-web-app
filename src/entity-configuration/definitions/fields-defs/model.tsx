@@ -26,7 +26,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Morphologies',
       singular: 'Morphology',
     },
-    constraint: 'exemplar_morphology__label__in',
+    defaultConstraint: 'exemplar_morphology__label__in',
     isFilterable: false,
     isDisplayable: true,
   },

@@ -1,5 +1,8 @@
 import { ReactNode } from 'react';
 
+import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
+import { DataType } from '@/constants/explore-section/list-views';
+
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -7,7 +10,6 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 
 export interface GteLteValue {
   gte: Date | number | null;
@@ -83,7 +85,8 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   title: string;
   description?: string;
   filter: CoreFilterType;
-  constraint?: string | Record<string, string>;
+  defaultConstraint?: string | Record<string, string>;
+  perTypeConstraint?: Partial<Record<DataType, string>>;
   isSortable?: boolean;
   isFilterable?: boolean;
   isDisplayable?: boolean;
