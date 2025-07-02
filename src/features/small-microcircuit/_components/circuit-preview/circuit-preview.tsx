@@ -4,6 +4,7 @@ import React from 'react';
 import { useCircuitImageURL } from '../hooks/circuit';
 import { classNames } from '@/util/utils';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import ZoomableImage from '@/components/zoomable-image';
 
 import styles from './circuit-preview.module.css';
 
@@ -17,7 +18,8 @@ export default function CircuitPreview({ className, circuit }: CircuitPreviewPro
 
   return (
     <div className={classNames('px-5', className, styles.circuitPreview, url && styles.show)}>
-      <img alt="Circuit preview" src={url} className="w-full rounded-xl border border-gray-200" />
+      {/* <img alt="Circuit preview" src={url} className="w-full rounded-xl border border-gray-200" /> */}
+      <ZoomableImage src={url} className={styles.image} />
     </div>
   );
 }
