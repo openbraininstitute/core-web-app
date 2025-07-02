@@ -3,6 +3,7 @@ import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DataTypeConfig, DataTypeGroup } from '@/types/explore-section/data-types';
 
 export const SIMULATION_DATATYPES = [
+  DataType.SimulationCampaign,
   DataType.SingleNeuronSimulation,
   DataType.SingleNeuronSynaptomeSimulation,
 ];
