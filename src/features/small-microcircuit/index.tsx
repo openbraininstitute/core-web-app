@@ -5,11 +5,7 @@ import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue } from 'jotai';
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  simExecStatusMapAtomFamily,
-  simResultBySimIdAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-} from './_components/atoms';
+import { simExecStatusMapAtomFamily, simulationsByCampaignIdAtomFamily } from './_components/atoms';
 import CircuitPreview from './_components/circuit-preview';
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
 import { FileViewer } from './_components/file-viewer';
@@ -30,13 +26,11 @@ import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simu
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
-import EphysViewer from '@/features/ephys-viewer';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { runCircuitSimulation } from '@/services/small-scale-simulator/circuit';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import { WorkspaceContext } from '@/types/common';
 
 import styles from './small-microcircuit.module.css';
 
@@ -422,7 +416,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
         ))}
         <button
           className={classNames(
-            'w-full cursor-pointer rounded-3xl p-2 text-white',
+            'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
             'bg-[linear-gradient(94.93deg,_#389E0D_18.84%,_#143805_116.7%)]',
             'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
           )}
@@ -436,7 +430,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
       {/* List of input/output files for selected simulation */}
       <div className="border-r border-gray-200 px-4">
-        {!!selectedSimulation && activeSimulationExecStatus && (
+        {!!selectedSimulation && (
           <Suspense fallback={<div className="text-neutral-5 mt-4 font-semibold">Loading...</div>}>
             <SimulationFiles
               simulation={selectedSimulation}
@@ -450,7 +444,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       </div>
 
       {/* Preview for selected file */}
-      <div className="pl-4">
+      <div className="relative pl-4">
         <FileViewer file={selectedFile} className="h-full" context={context} />
       </div>
     </div>
@@ -480,22 +474,4 @@ function SimulationListItem({ simulation, execStatus, onSelect }: SimulationBloc
       </div>
     </button>
   );
-}
-
-type SimulationResultTraceViewerProps = {
-  simulationId: string;
-  context: WorkspaceContext;
-};
-
-// TODO add this as a part of NWB viewer
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function SimulationResultTraceViewer({ simulationId, context }: SimulationResultTraceViewerProps) {
-  const simulationResultAtom = simResultBySimIdAtomFamily({
-    simulationId,
-    context,
-  });
-
-  const simulationResult = useAtomValue(simulationResultAtom);
-
-  return <EphysViewer resource={simulationResult} ctx={context} />;
 }

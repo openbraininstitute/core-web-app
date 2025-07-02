@@ -20,7 +20,7 @@ export type File = {
 
 export type SimulationFilesProps = {
   simulation: ICircuitSimulation;
-  execStatus: CircuitSimulationExecutionStatus;
+  execStatus?: CircuitSimulationExecutionStatus | null;
   selectedFile?: File;
   onSelect: (file: File) => void;
   context: WorkspaceContext;
@@ -33,10 +33,11 @@ export function SimulationFiles({
   onSelect,
   context,
 }: SimulationFilesProps) {
-  const outputAvailable = [
-    CircuitSimulationExecutionStatus.ERROR,
-    CircuitSimulationExecutionStatus.DONE,
-  ].includes(execStatus);
+  const outputAvailable =
+    execStatus &&
+    [CircuitSimulationExecutionStatus.ERROR, CircuitSimulationExecutionStatus.DONE].includes(
+      execStatus
+    );
 
   return (
     <>
