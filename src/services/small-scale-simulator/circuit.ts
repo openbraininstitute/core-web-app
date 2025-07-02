@@ -1,9 +1,10 @@
+import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { runCircuitSimulation as runCircuitSimulationApi } from '@/api/small-scale-simulator';
 import { WorkspaceContext } from '@/types/common';
 import { readNdjsonResponse } from '@/utils/response';
 
 type Message = {
-  status: string;
+  status: CircuitSimulationExecutionStatus;
   extra?: string;
 };
 
