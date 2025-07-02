@@ -33,8 +33,6 @@ export function useSectionRenderer(
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>,
   readOnly?: boolean
 ) {
-  const [collapsedHeader, setCollapsedHeader] = React.useState(false);
-
   const renderSection = ([k, v]: [string, JSONSchema]) => {
     if (!schema || !schema?.properties) return;
 
@@ -50,23 +48,20 @@ export function useSectionRenderer(
       <Fragment key={k}>
         <Tab
           tab={k}
-          selectedTab={!v.additionalProperties ? configTab : 'NO SELECTION FOR THIS SECTION'}
+          selectedTab={configTab}
           onClick={() => {
             if (configTab === k && !isRootCategory(schema, k)) {
               setEditing(false);
               setSelectedCategory('');
               setSelectedItemIdx(null);
-              setCollapsedHeader(!collapsedHeader);
+              setConfigTab('');
               return;
             }
 
-            setCollapsedHeader(false);
             setConfigTab(k);
             setSelectedItemIdx(null);
             if (!v.additionalProperties) setEditing(true);
-            else {
-              setEditing(false);
-            }
+            else setEditing(false);
           }}
           extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
         >
@@ -80,7 +75,7 @@ export function useSectionRenderer(
             <Chevron rotate={v.additionalProperties ? 90 : 0} />
           </div>
         </Tab>
-        {v.additionalProperties && configTab === k && config[k] && !collapsedHeader && (
+        {v.additionalProperties && configTab === k && config[k] && (
           <>
             {Object.entries(config[k]).map(([subkey, subValue]) => {
               const idx = parseInt(subkey.split('_')[1], 10);
