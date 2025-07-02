@@ -112,7 +112,7 @@ function ImageSetComponent({
   const repetitions = repetitionMap.get(protocol) ?? [];
 
   return (
-    <div className="divide-neutral-2 flex flex-col gap-3 divide-y">
+    <div className="divide-neutral-2 @container flex flex-col gap-3 divide-y">
       <div className="text-primary-9 flex items-baseline gap-2 text-lg font-bold">
         {protocol}
         <small className="font-light">{`${repetitions.length} ${
@@ -120,7 +120,7 @@ function ImageSetComponent({
         }`}</small>
       </div>
 
-      <div className="grid gap-7 pt-5 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+      <div className="grid gap-7 pt-5 @max-xs:grid-cols-1 @sm:grid-cols-2 @xl:grid-cols-3 @3xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6">
         {repetitions.map((repetition) => (
           <div className="flex flex-col gap-2" key={repetition}>
             <div className="flex items-center justify-between">
