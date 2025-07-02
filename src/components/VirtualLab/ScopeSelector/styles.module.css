@@ -2,3 +2,15 @@
   clip-path: circle();
   shape-outside: circle();
 }
+
+.thumbnail {
+  width: 7em;
+  height: 7em;
+  float: right;
+  margin: 1em;
+  margin-right: 0;
+}
+
+.buildButton {
+  float: right;
+}
