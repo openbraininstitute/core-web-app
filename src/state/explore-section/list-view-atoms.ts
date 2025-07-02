@@ -278,7 +278,6 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           },
           context: ctx.workspace,
         });
-
         return response as EntityCoreResponse<T>;
       }
 

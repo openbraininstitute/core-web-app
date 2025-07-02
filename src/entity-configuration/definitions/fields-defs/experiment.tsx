@@ -153,6 +153,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return 'number_neurons' in r ? r.number_neurons : '-';
     },
     isDisplayable: true,
+    style: { width: 70 },
   },
   [EntityCoreFields.NumberSynapses]: {
     title: 'Number of synapses',
@@ -161,6 +162,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return 'number_synapses' in r ? r.number_synapses : '-';
     },
     isDisplayable: true,
+    style: { width: 70 },
   },
   [EntityCoreFields.NumberConnections]: {
     title: 'Number of connections',
@@ -169,6 +171,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return 'number_connections' in r ? r.number_connections : '-';
     },
     isDisplayable: true,
+    style: { width: 70 },
   },
   // TODO: this is not need for the mmt
   [EntityCoreFields.ScanParameters]: {

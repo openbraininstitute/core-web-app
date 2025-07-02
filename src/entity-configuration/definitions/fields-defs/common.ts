@@ -51,6 +51,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isFilterable: true,
     isDisplayable: true,
+    style: { width: 180 },
   },
   [EntityCoreFields.CreationDate]: {
     title: 'Creation date',
