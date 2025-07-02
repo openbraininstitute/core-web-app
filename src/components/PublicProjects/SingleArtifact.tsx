@@ -10,6 +10,7 @@ export default function SingleArtifact({ content }: { content: LinkAndDownloadAr
             href={content.file}
             className="border-primary-9 hover:bg-primary-9 border border-solid bg-white px-6 py-3 text-lg transition-colors duration-300 hover:text-white"
             download
+            target="_blank"
           >
             Download
           </a>
