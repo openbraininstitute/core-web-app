@@ -1,0 +1,189 @@
+import { useAtomValue } from 'jotai';
+import { Suspense, useMemo } from 'react';
+
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
+import { IAsset } from '@/api/entitycore/types/shared/global';
+import {
+  circuitAtomFamily,
+  simResultBySimIdAtomFamily,
+} from '@/features/small-microcircuit/_components/atoms';
+import { WorkspaceContext } from '@/types/common';
+import { classNames } from '@/util/utils';
+
+export type File = {
+  asset: IAsset;
+  entity: IEntity;
+  assetPath?: string;
+};
+
+export type SimulationFilesProps = {
+  simulation: ICircuitSimulation;
+  execStatus: CircuitSimulationExecutionStatus;
+  selectedFile?: File;
+  onSelect: (file: File) => void;
+  context: WorkspaceContext;
+};
+
+export function SimulationFiles({
+  simulation,
+  execStatus,
+  selectedFile,
+  onSelect,
+  context,
+}: SimulationFilesProps) {
+  const outputAvailable = [
+    CircuitSimulationExecutionStatus.ERROR,
+    CircuitSimulationExecutionStatus.DONE,
+  ].includes(execStatus);
+
+  return (
+    <>
+      <h4 className="uppercase">Input files</h4>
+      <SimulationInputFiles
+        className="mt-4 mb-8"
+        simulation={simulation}
+        context={context}
+        selectedFile={selectedFile}
+        onSelect={onSelect}
+      />
+      <h4 className="uppercase">Output files</h4>
+      <Suspense fallback={<div>Loading...</div>}>
+        {outputAvailable && (
+          <SimulationOutputFiles
+            className="mt-4"
+            simulation={simulation}
+            context={context}
+            selectedFile={selectedFile}
+            onSelect={onSelect}
+          />
+        )}
+      </Suspense>
+    </>
+  );
+}
+
+export type SimulationInputFilesProps = {
+  simulation: ICircuitSimulation;
+  context: WorkspaceContext;
+  selectedFile?: File;
+  onSelect: (file: File) => void;
+  className?: string;
+};
+
+export function SimulationInputFiles({
+  simulation,
+  context,
+  selectedFile,
+  onSelect,
+  className = '',
+}: SimulationInputFilesProps) {
+  const circuit = useAtomValue(circuitAtomFamily({ circuitId: simulation.entity_id, context }));
+  // TODO: fetch circuitConfig
+  const sonataCircuitAsset = circuit.assets.find((asset) => asset.label === 'sonata_circuit');
+  const circuitConfigFile: File = useMemo(
+    () => ({
+      entity: circuit,
+      asset: sonataCircuitAsset!,
+      assetPath: 'circuit_config.json',
+    }),
+    [circuit, sonataCircuitAsset]
+  );
+
+  const files: File[] = useMemo(
+    () => [circuitConfigFile, ...simulation.assets.map((asset) => ({ asset, entity: simulation }))],
+    [simulation, circuitConfigFile]
+  );
+
+  return (
+    <div className={classNames('flex flex-col gap-4', className)}>
+      {files.map((file) => (
+        <SimulationFile
+          selected={file === selectedFile}
+          key={file.asset.id}
+          file={file}
+          onSelect={onSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+export type SimulationOutputFilesProps = {
+  simulation: ICircuitSimulation;
+  context: WorkspaceContext;
+  selectedFile?: File;
+  onSelect: (file: File) => void;
+  className?: string;
+};
+
+export function SimulationOutputFiles({
+  simulation,
+  onSelect,
+  selectedFile,
+  context,
+  className = '',
+}: SimulationOutputFilesProps) {
+  const simResult = useAtomValue(
+    simResultBySimIdAtomFamily({ simulationId: simulation.id, context })
+  );
+
+  const files: File[] = useMemo(
+    () => simResult.assets.map((asset) => ({ asset, entity: simResult })),
+    [simResult]
+  );
+
+  return (
+    <div className={classNames('flex flex-col gap-4', className)}>
+      {files.map((file) => (
+        <SimulationFile
+          key={file.asset.id}
+          file={file}
+          selected={selectedFile === file}
+          onSelect={onSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+export type SimulationFileProps = {
+  file: File;
+  selected?: boolean;
+  onSelect: (file: File) => void;
+};
+
+export function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
+  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
+  const fileExt = fileName?.split('.').at(-1);
+
+  return (
+    <button
+      type="button"
+      title={fileName}
+      className={classNames(
+        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
+        selected ? 'bg-[linear-gradient(95.07deg,_#003A8C_42.23%,_#001026_109.71%)]' : 'bg-white'
+      )}
+      onClick={() => onSelect(file)}
+    >
+      <span
+        className={classNames(
+          'truncate overflow-hidden font-semibold whitespace-nowrap',
+          selected ? 'text-white' : 'text-primary-9'
+        )}
+      >
+        {fileName}
+      </span>
+      <span
+        className={classNames(
+          'ml-4 flex-shrink-0 rounded-2xl border-1 px-4 uppercase',
+          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+        )}
+      >
+        {fileExt}
+      </span>
+    </button>
+  );
+}
