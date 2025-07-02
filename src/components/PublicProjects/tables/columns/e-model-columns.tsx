@@ -4,6 +4,15 @@ import { EModelsProps } from '../../type/artifactsType';
 
 import truncateText from '@/util/truncate';
 
+export function formatDate(isoDateString: string | null) {
+  if (!isoDateString) return '';
+  const date = new Date(isoDateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+}
+
 const columns = () => {
   return [
     {
@@ -70,9 +79,11 @@ const columns = () => {
       title: 'Creation date',
       key: 'creationDate',
       width: '150px',
-      render: (_value: any, record: EModelsProps, _index: number) => (
-        <div className="font-normal">{record.creationDate}</div>
-      ),
+      render: (_value: any, record: EModelsProps, _index: number) => {
+        const dateFormatted = formatDate(record.creationDate);
+
+        return <div className="font-normal">{dateFormatted}</div>;
+      },
     },
   ];
 };
