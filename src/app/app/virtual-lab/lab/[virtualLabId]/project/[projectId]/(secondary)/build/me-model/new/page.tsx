@@ -6,12 +6,14 @@ import { useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
+import omit from 'lodash/omit';
 
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
   DEFAULT_BRAIN_REGION_QUERY_ID,
   useBrainRegionHierarchy,
+  useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
@@ -31,7 +33,7 @@ type Params = {
 export default function NewMEModelPage({ params: promisedParams }: Params) {
   const [isFormValid, setIsFormValid] = useState(false);
   const { projectId, virtualLabId } = use(promisedParams);
-
+  const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { push: navigate } = useRouter();
   const [form] = Form.useForm();
 
@@ -144,12 +146,13 @@ export default function NewMEModelPage({ params: promisedParams }: Params) {
               </Form.Item>
               <Form.Item hasFeedback label={label('brain region', 'main')} name="brainRegion">
                 <Select
-                  placeholder="Select brain region"
-                  optionFilterProp="label"
                   allowClear
                   showSearch
+                  placeholder="Select brain region"
+                  optionFilterProp="label"
                   onSelect={(_, option) => {
                     updateHierarchyConfig(option.data);
+                    updateSelectedBrainRegion(omit(option.data, 'children'));
                   }}
                   size="large"
                   options={brainRegionHierarchy?.options}
