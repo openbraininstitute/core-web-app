@@ -40,16 +40,6 @@ export default function Page({ params, payload }: Props) {
         ]}
       />
       <div className="flex h-screen w-full">
-        <Link
-          className="bg-neutral-1 text-primary-8 flex h-full w-[40px] flex-col items-center pt-2 text-sm"
-          href={`${resolveExperimentUrl({
-            ctx: { ...params },
-            dataType: 'simulation_campaign',
-          })}?s=browse&t=small-microcircuit`}
-        >
-          <ArrowRightOutlined className="mt-1.5 mb-4 rotate-180" />
-          <div style={{ writingMode: 'vertical-rl', rotate: '180deg' }}>Back to list</div>
-        </Link>
         <div className="secondary-scrollbar flex h-full w-full flex-col gap-7 overflow-y-scroll bg-gray-100 p-7 pr-12">
           <SmallCircuitSimulation
             virtualLabId={params.virtualLabId}
