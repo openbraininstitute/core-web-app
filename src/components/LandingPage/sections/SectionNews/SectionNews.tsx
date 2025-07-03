@@ -144,6 +144,7 @@ async function fetchNewsPage(start: number): Promise<ContentForNewsList> {
   "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
   "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
   "date": customDate,
+  "isExternalLink": isExternalLink
 }`;
   const data = await fetchSanity(query, isContentForNewsList);
   return data ?? [];

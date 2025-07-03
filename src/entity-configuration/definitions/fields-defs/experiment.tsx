@@ -153,6 +153,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return 'number_neurons' in r ? r.number_neurons : '-';
     },
     isDisplayable: true,
+    style: { width: 70 },
   },
   [EntityCoreFields.NumberSynapses]: {
     title: 'Number of synapses',
@@ -161,6 +162,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return 'number_synapses' in r ? r.number_synapses : '-';
     },
     isDisplayable: true,
+    style: { width: 70 },
   },
   [EntityCoreFields.NumberConnections]: {
     title: 'Number of connections',
@@ -169,6 +171,85 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return 'number_connections' in r ? r.number_connections : '-';
     },
     isDisplayable: true,
+    style: { width: 70 },
+  },
+  // TODO: this is not need for the mmt
+  [EntityCoreFields.ScanParameters]: {
+    title: 'Scan parameters',
+    filter: null,
+    render: (r) => {
+      return renderEmptyOrValue(
+        renderDictionaryKeys(
+          get(r, 'simulations[0].scan_parameters', {}),
+          ({ field }) => (
+            <div className="border-neutral-1 text-primary-8 w-max rounded-full border px-2 py-1 shadow-sm">
+              {field}
+            </div>
+          ),
+          'flex flex-wrap gap-2 items-center justify-start text-sm'
+        )
+      );
+    },
+    isDisplayable: true,
+    isFilterable: false,
+  },
+  [EntityCoreFields.SimulationCampaignStatus]: {
+    title: 'Status',
+    filter: null,
+    render: (r) => {
+      const status = get(
+        r,
+        'simulations[0].executions[0].status',
+        ''
+      ) as TCircuitSimulationExecutionStatus;
+      const statusMap: Record<TCircuitSimulationExecutionStatus, ReactNode> = {
+        created: (
+          <div className="text-primary-8 w-max rounded-full px-3 py-1 text-sm font-bold shadow-sm">
+            Created
+          </div>
+        ),
+        pending: (
+          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-gray-500 shadow-sm">
+            Pending
+          </div>
+        ),
+        running: (
+          <div className="text-primary-6 w-max rounded-full px-3 py-1 text-sm font-bold shadow-sm">
+            Running
+          </div>
+        ),
+        done: (
+          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-green-500 shadow-sm">
+            Completed
+          </div>
+        ),
+        error: (
+          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-red-500 shadow-sm">
+            Error
+          </div>
+        ),
+      };
+      const component = get(
+        statusMap,
+        status,
+        <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-gray-800 shadow-sm">
+          Generated
+        </div>
+      );
+      if (component) {
+        return <div className="flex w-full items-center justify-center">{component}</div>;
+      }
+      return null;
+    },
+    isDisplayable: true,
+    isFilterable: false,
+  },
+  [EntityCoreFields.CircuitName]: {
+    title: 'Circuit',
+    filter: null,
+    render: (r) => renderEmptyOrValue(get(r, 'circuit.name', '')),
+    isDisplayable: true,
+    isFilterable: false,
   },
   // TODO: this is not need for the mmt
   [EntityCoreFields.ScanParameters]: {

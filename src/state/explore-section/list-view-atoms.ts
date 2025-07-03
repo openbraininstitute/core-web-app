@@ -124,6 +124,7 @@ export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
   const childAtom = atomWithDefault<Promise<Array<CoreFilter>>>(async () => {
     const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
     const fields = columns ? getFieldsDefinition(columns) : [];
+
     return [
       ...(columns
         ?.filter(
@@ -131,7 +132,7 @@ export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
             _get(fields, o, { isFilterable: false })?.isFilterable === true ||
             _get(fields, o, { isDisplayable: false })?.isDisplayable === true
         )
-        ?.map((colKey) => columnKeyToFilter(colKey)) ?? []),
+        ?.map((colKey) => columnKeyToFilter(colKey, scope.dataType)) ?? []),
     ];
   });
   childAtom.debugLabel = `filter-atom/${scope.key}`;
@@ -278,7 +279,6 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
           },
           context: ctx.workspace,
         });
-
         return response as EntityCoreResponse<T>;
       }
 

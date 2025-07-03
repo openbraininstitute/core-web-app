@@ -43,7 +43,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Names',
       singular: 'Name',
     },
-    constraint: 'name__ilike',
+    defaultConstraint: 'name__ilike',
     isSortable: true,
     order: {
       property: 'order_by',
@@ -51,6 +51,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isFilterable: true,
     isDisplayable: true,
+    style: { width: 180 },
   },
   [EntityCoreFields.CreationDate]: {
     title: 'Creation date',
@@ -60,7 +61,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Dates',
       singular: 'Date',
     },
-    constraint: {
+    defaultConstraint: {
       gte: 'creation_date__gte',
       lte: 'creation_date__lte',
     },
@@ -80,7 +81,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Dates',
       singular: 'Date',
     },
-    constraint: {
+    defaultConstraint: {
       gte: 'creation_date__gte',
       lte: 'creation_date__lte',
     },
@@ -100,7 +101,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Dates',
       singular: 'Date',
     },
-    constraint: {
+    defaultConstraint: {
       gte: 'update_date__gte',
       lte: 'update_date__lte',
     },
@@ -120,7 +121,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Descriptions',
       singular: 'Description',
     },
-    constraint: 'search',
+    defaultConstraint: 'search',
     isFilterable: true,
     isDisplayable: true,
   },
@@ -136,7 +137,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Contributors',
       singular: 'Contributor',
     },
-    constraint: 'contribution__pref_label__in',
+    defaultConstraint: 'contribution__pref_label__in',
     order: {
       property: 'contribution__order_by',
       value: 'pref_label',
@@ -153,7 +154,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Brain Regions',
       singular: 'Brain Region',
     },
-    constraint: 'brain_region_id',
+    defaultConstraint: 'brain_region_id',
     isFilterable: false,
     isDisplayable: true,
     isSortable: false,
@@ -173,7 +174,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Users',
       singular: 'User',
     },
-    constraint: 'created_by__pref_label__in',
+    defaultConstraint: 'created_by__pref_label__in',
     isDisplayable: true,
     isFilterable: true,
   },
@@ -188,7 +189,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Users',
       singular: 'User',
     },
-    constraint: 'updated_by__pref_label__in',
+    defaultConstraint: 'updated_by__pref_label__in',
     isDisplayable: true,
   },
 };

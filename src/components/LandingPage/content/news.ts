@@ -109,7 +109,8 @@ export function useSanityContentForNewsList(length = 0, start = 0): ContentForNe
         "imageWidth": thumbnailImage.asset->metadata.dimensions.width,
         "imageHeight": thumbnailImage.asset->metadata.dimensions.height,
         "date": customDate,
-        isExternalLink
+        "isExternalLink": isExternalLink
+
 }`,
       isContentForNewsList
     ) ?? []
