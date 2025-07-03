@@ -173,7 +173,3 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     url: null,
   },
 ];
-
-function imageUrl(img: string) {
-  return `${basePath}/images/scales/` + img + '.jpg';
-}
