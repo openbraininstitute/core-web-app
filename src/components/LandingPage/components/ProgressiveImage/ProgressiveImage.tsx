@@ -3,8 +3,6 @@ import React from 'react';
 import Image from 'next/image';
 import { classNames } from '@/util/utils';
 
-import { classNames } from '@/util/utils';
-
 import styles from './ProgressiveImage.module.css';
 
 export interface ProgressiveImageProps {

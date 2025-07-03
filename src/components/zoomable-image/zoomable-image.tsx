@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { classNames } from '@/util/utils';
+import { log } from '@/utils/logger';
 
 import styles from './zoomable-image.module.css';
 
@@ -11,7 +12,7 @@ export interface ZoomableImageProps {
 
 export default function ZoomableImage({ className, src }: ZoomableImageProps) {
   const refImageSize = React.useRef([1, 1]);
-  const [width, height] = refImageSize.current;
+  // const [width, height] = refImageSize.current;
   const [x, setX] = React.useState(0.5);
   const [y, setY] = React.useState(0.5);
   const [zoom, setZoom] = React.useState(1);
@@ -38,7 +39,8 @@ export default function ZoomableImage({ className, src }: ZoomableImageProps) {
       setZoom(1);
     } else {
       const { clientX, clientY } = evt;
-      console.log('🚀 [zoomable-image] clientX, clientY =', clientX, clientY); // @FIXME: Remove this line written on 2025-07-02 at 09:48
+      log('warn', '[zoomable-image] clientX, clientY =', clientX, clientY);
+      // console.log('🚀 [zoomable-image] clientX, clientY =', clientX, clientY); // @FIXME: Remove this line written on 2025-07-02 at 09:48
       setZoom(2);
     }
   };
