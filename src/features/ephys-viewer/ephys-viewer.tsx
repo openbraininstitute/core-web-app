@@ -1,17 +1,18 @@
-import { useState } from 'react';
-import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
+import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
 import { useAtomValue } from 'jotai';
+import { useState } from 'react';
 
-import sessionAtom from '@/state/session';
-import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
 import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
+import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
+import sessionAtom from '@/state/session';
 
-import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import './styles/ephys-plugin-styles.css';
+import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { WorkspaceContext } from '@/types/common';
+
+import './styles/ephys-plugin-styles.css';
 
 enum VIEW {
   OVERVIEW = 'overview',
@@ -30,6 +31,7 @@ export default function EphysViewer({
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [repetition, setRepetition] = useState<string>();
+  const [cellId, setCellId] = useState<string>('All');
   const [protocol, setProtocol] = useState<string>('All');
 
   const handleViewChange = (e: RadioChangeEvent) => {
@@ -53,7 +55,7 @@ export default function EphysViewer({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="@container flex flex-col gap-6">
       <Radio.Group onChange={handleViewChange} value={view}>
         <Radio.Button value={VIEW.OVERVIEW}>
           <FileImageOutlined /> Overview
@@ -67,6 +69,8 @@ export default function EphysViewer({
       {view === VIEW.OVERVIEW && (
         <TraceOverview
           trace={trace}
+          cellId={cellId}
+          onCellIdChange={setCellId}
           protocol={protocol}
           onRepetitionClick={showRepetitionDetails}
           onProtocolChange={setProtocol}

@@ -27,8 +27,8 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
     .otherwise(() => <PlaceholderFileViewer file={file!} />);
 
   return (
-    <div className={classNames('text-primary-9 relative rounded-2xl bg-white p-12', className)}>
-      <div className="h-full overflow-auto">
+    <div className={classNames('text-primary-9 relative rounded-2xl bg-white p-6', className)}>
+      <div className="h-full overflow-auto p-6">
         <Suspense fallback={<div>Loading...</div>}>{viewerContent}</Suspense>
       </div>
     </div>
