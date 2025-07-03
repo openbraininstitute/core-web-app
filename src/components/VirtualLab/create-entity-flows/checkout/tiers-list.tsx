@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAtom } from 'jotai';
-import { Button, Tooltip } from 'antd';
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+import { useAtom } from 'jotai';
 import kebabCase from 'lodash/kebabCase';
-import toUpper from 'lodash/toUpper';
 import noop from 'lodash/noop';
+import toUpper from 'lodash/toUpper';
+import { useEffect, useState } from 'react';
 
+import { tryCatch } from '@/api/utils';
+import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
 import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import {
@@ -20,8 +22,6 @@ import {
 } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
 import { classNames } from '@/util/utils';
-import { tryCatch } from '@/api/utils';
-import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
@@ -336,6 +336,8 @@ function TiersComparison({
           if (isFree) controller = onSelectFree;
           if (isPro) controller = onTierClick(t);
           if (isPremium) controller = onSelectPremiumTier;
+
+          console.log('Tiers id: ', t.id);
 
           return (
             <div

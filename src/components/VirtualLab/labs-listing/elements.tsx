@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
+import { ExclamationCircleFilled } from '@ant-design/icons';
 import { Empty } from 'antd';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import { ExclamationCircleFilled } from '@ant-design/icons';
+import Link from 'next/link';
 
 import { classNames } from '@/util/utils';
 
@@ -74,8 +74,8 @@ export function GetProPlanCard() {
     <Link
       href="/app/virtual-lab/account/subscription"
       className={classNames(
-        'relative',
-        'mx-auto h-32 w-full rounded-lg p-6',
+        'relative flex flex-col justify-center',
+        'mx-auto h-32 w-full rounded-lg px-9 py-6',
         'z-0 bg-[rgb(39,111,201)]',
         'bg-gradient-to-r from-[rgba(39,111,201,1)] to-[rgba(0,34,77,1)]'
       )}
@@ -87,9 +87,9 @@ export function GetProPlanCard() {
           backgroundPosition: 'right',
         }}
       />
-      <h2 className="z-10 text-2xl font-semibold">Get your Pro plan</h2>
+      <h2 className="z-10 text-2xl font-bold">Get your Pro plan</h2>
       <p className="z-10 text-gray-200">
-        In order to join other labs or invite teammates in your lab...
+        Discover more features, build models, launch experiments...
       </p>
     </Link>
   );

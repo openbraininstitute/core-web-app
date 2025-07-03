@@ -1,7 +1,6 @@
-import { basePath } from '@/config';
 import {
-  TEntityCoreConfigurationItem,
   EntityCoreConfiguration,
+  TEntityCoreConfigurationItem,
 } from '@/entity-configuration/domain';
 
 export enum ModelTileType {
@@ -173,7 +172,3 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     url: null,
   },
 ];
-
-function imageUrl(img: string) {
-  return `${basePath}/images/scales/` + img + '.jpg';
-}
