@@ -10,9 +10,9 @@ export const options = {
     Accept: 'application/vnd.github.v3+json',
   },
 
-  next: {
-    revalidate: 3600 * 24,
-  },
+  // next: {
+  //   revalidate: 3600 * 24,
+  // },
 };
 
 export interface Notebook {
