@@ -1,4 +1,3 @@
-import { basePath } from '@/config';
 import {
   TEntityCoreConfigurationItem,
   EntityCoreConfiguration,
