@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { Suspense, useMemo } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
@@ -52,13 +53,20 @@ export function SimulationFiles({
       <h4 className="uppercase">Output files</h4>
       <Suspense fallback={<div>Loading...</div>}>
         {outputAvailable && (
-          <SimulationOutputFiles
-            className="mt-4"
-            simulation={simulation}
-            context={context}
-            selectedFile={selectedFile}
-            onSelect={onSelect}
-          />
+          <ErrorBoundary
+            fallback={
+              <small className="text-error pl-4">There was an issue loading output files</small>
+            }
+            resetKeys={[simulation]}
+          >
+            <SimulationOutputFiles
+              className="mt-4"
+              simulation={simulation}
+              context={context}
+              selectedFile={selectedFile}
+              onSelect={onSelect}
+            />
+          </ErrorBoundary>
         )}
       </Suspense>
     </>
