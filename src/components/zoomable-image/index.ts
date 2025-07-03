@@ -1,1 +1,1 @@
-export { default } from "./zoomable-image"
+export { default } from './zoomable-image';

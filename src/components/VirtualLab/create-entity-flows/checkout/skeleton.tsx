@@ -35,10 +35,10 @@ export default function TiersComparisonSkeleton() {
 
           {skeletonFeatures.map((feature) => (
             <div key={feature} className="grid grid-cols-4 gap-6 py-2">
-              <Placeholder className="h-5 w-full" /> {/* Feature name */}
+              <Placeholder className="h-5 w-full" />
               {skeletonTiers.map((tier) => (
                 <div key={`${tier}-${feature}`} className="flex justify-center">
-                  <Placeholder className="h-6 w-6 rounded-full" /> {/* Feature availability */}
+                  <Placeholder className="h-6 w-6 rounded-full" />
                 </div>
               ))}
             </div>
