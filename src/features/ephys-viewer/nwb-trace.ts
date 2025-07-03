@@ -12,6 +12,7 @@ enum NWBKey {
   STARTING_TIME = 'starting_time',
   GENERAL = 'general',
   WAS_GENERATED_BY = 'was_generated_by',
+  TIMESTAMPS = 'timestamps',
 }
 
 export enum RecordingType {
@@ -450,6 +451,7 @@ class NWBCircuitSimulationTrace extends NWBTrace {
     try {
       timeDataset = this.getDataset(timeDatasetKey);
     } catch {
+      // TODO: consider attempting to read from the "timestamps" dataset as a fallback.
       return { timeUnit: 's', timeRate: 1 };
     }
 
