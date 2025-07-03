@@ -11,28 +11,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRef } from 'react';
 import { Button } from 'antd';
 
+import { ModelTilesConfig, ModelTileType, SectionTypeValue, TTileConfig } from './tiles';
+
 import { classNames } from '@/util/utils';
-import { basePath } from '@/config';
-import {
-  TEntityCoreConfigurationItem,
-  EntityCoreConfiguration,
-} from '@/entity-configuration/domain';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { SimulationType } from '@/types/virtual-lab/lab';
 
-export enum ModelTileType {
-  IonChannel = 'ion-channel',
-  TinyCircuit = 'small-microcircuit',
-  BrainRegions = 'brain-regions',
-  SingleNeuron = 'single-neuron',
-  Microcircuit = 'microcircuit',
-  BrainSystems = 'brain-systems',
-  Synaptome = 'synaptome',
-  NeuroGliaVasculature = 'neuro-glia-vasculature',
-  WholeBrain = 'whole-brain',
-}
-type SectionTypeValue = `${ModelTileType}`;
+import styles from './index.module.css';
+
+export { ModelTilesConfig } from './tiles';
 
 export const useTileScopeQuery = () => {
   const pathname = usePathname();
@@ -74,132 +62,7 @@ function makeTitle(...words: string[]): string {
   return words.map((word) => capitalize(word.replace('simulation', 'experiment'))).join(' ');
 }
 
-function imageUrl(img: string) {
-  return `${basePath}/images/scales/` + img + '.jpg';
-}
 const header = (label: string) => <div className="font-semibold text-gray-400">{label}</div>;
-
-type TTileConfig = {
-  id: string;
-  title: string;
-  type: ModelTileType;
-  description: string;
-  img: string;
-  disabled: boolean;
-  entities?: {
-    build?: TEntityCoreConfigurationItem;
-    simulate?: TEntityCoreConfigurationItem;
-  };
-  url: {
-    build?: string;
-    explore?: string;
-  } | null;
-};
-
-export const ModelTilesConfig: Array<TTileConfig> = [
-  {
-    id: 'ion-channel',
-    title: 'Ion Channel',
-    type: ModelTileType.IonChannel,
-    description: 'Coming soon.',
-    img: imageUrl('ionChannel'),
-    disabled: true,
-    url: null,
-  },
-  {
-    id: 'small-microcircuit',
-    title: 'Small Microcircuit',
-    type: ModelTileType.TinyCircuit,
-    description:
-      'Design and run virtual experiments using circuits with 3-20 Hodgkin-Huxley cell models. These small microcircuits are often extracted from larger circuit models.',
-    img: imageUrl('pairedNeuron'),
-    disabled: false,
-    url: null,
-    entities: {
-      build: EntityCoreConfiguration.Circuit,
-      simulate: EntityCoreConfiguration.SimulationCampaign,
-    },
-  },
-  {
-    id: 'brain-regions',
-    title: 'Brain Regions',
-    type: ModelTileType.BrainRegions,
-    description: 'Coming soon.',
-    img: imageUrl('brainRegion'),
-    disabled: true,
-    url: null,
-  },
-  {
-    id: 'single-neuron',
-    title: 'Single Neuron',
-    type: ModelTileType.SingleNeuron,
-    description:
-      'Load Hodgkin-Huxley single cell models, perform current clamp experiments with different levels of input current, and observe the resulting changes in membrane potential.',
-    img: imageUrl('singleNeuron'),
-    disabled: false,
-    url: {
-      build: 'build/me-model/new',
-      explore: 'explore/interactive/model/me-model',
-    },
-    entities: {
-      build: EntityCoreConfiguration.MEmodel,
-      simulate: EntityCoreConfiguration.SingleNeuronSimulation,
-    },
-  },
-  {
-    id: 'microcircuit',
-    title: 'Microcircuit',
-    type: ModelTileType.Microcircuit,
-    description: 'Coming soon.',
-    img: imageUrl('microcircuit'),
-    disabled: true,
-    url: null,
-  },
-  {
-    id: 'brain-systems',
-    title: 'Brain Systems',
-    type: ModelTileType.BrainSystems,
-    description: 'Coming soon.',
-    img: imageUrl('brainSystem'),
-    disabled: true,
-    url: null,
-  },
-  {
-    id: 'synaptome',
-    title: 'Synaptome',
-    type: ModelTileType.Synaptome,
-    description:
-      'Introduce spikes into the synapses of Hodgkin-Huxley cell models and carry out a virtual experiment by setting up a stimulation and reporting protocol.',
-    img: imageUrl('synaptome'),
-    disabled: false,
-    url: {
-      build: 'build/synaptome/new',
-      explore: 'explore/interactive/model/synaptome',
-    },
-    entities: {
-      build: EntityCoreConfiguration.SingleNeuronSynaptome,
-      simulate: EntityCoreConfiguration.SingleNeuronSynaptomeSimulation,
-    },
-  },
-  {
-    id: 'neuro-glia-vasculature',
-    title: 'Neuro Glia Vasculature',
-    type: ModelTileType.NeuroGliaVasculature,
-    description: 'Coming soon.',
-    img: imageUrl('ngv'),
-    disabled: true,
-    url: null,
-  },
-  {
-    id: 'whole-brain',
-    title: 'Whole Brain',
-    type: ModelTileType.WholeBrain,
-    description: 'Coming soon.',
-    img: imageUrl('wholeBrain'),
-    disabled: true,
-    url: null,
-  },
-];
 
 export function SectionTabs() {
   const { selectedTab, section, type, updateScopeConfig } = useTileScopeQuery();
@@ -269,7 +132,8 @@ export function ScopeSelector() {
         key={`tile-${section}/${selectedTab}/${type}`}
         aria-hidden
         className={classNames(
-          'border-primary-4 box-border flex h-[200px] items-start justify-between gap-5 overflow-hidden rounded-sm border p-6',
+          styles.tabCell,
+          'border-primary-4 box-border flex items-start justify-between gap-5 overflow-hidden rounded-sm border p-6',
           tileStyle,
           !disabled && 'cursor-pointer'
         )}
@@ -280,53 +144,30 @@ export function ScopeSelector() {
           }
         }}
       >
-        <div className="w-2/3 text-left">
-          <div className="mb-2 text-3xl font-semibold">{title}</div>
-          <div className={classNames('text-sm text-balance', descStyle)}>{description}</div>
-        </div>
-        <div className="flex h-full w-1/3 flex-col items-center justify-center gap-3">
-          {showImage && (
-            <motion.div
-              className="flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Image
-                src={img}
-                width={100}
-                height={100}
-                alt={title}
-                style={{
-                  clipPath: 'circle()',
-                  shapeOutside: 'circle()',
-                  height: 'auto',
-                  width: 'auto',
-                }}
-              />
-            </motion.div>
-          )}
-          {url?.build ? (
-            <motion.div
-              className="flex items-center justify-center"
-              initial={{ opacity: 0, y: 0 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Button
-                onClick={onClick}
-                className={classNames(
-                  'bg-primary-9 h-[55px] min-w-[100px] text-xl font-bold text-white',
-                  'items-center justify-center rounded-none hover:text-white',
-                  highlight && section === 'build' ? 'flex' : 'hidden'
-                )}
-              >
-                Build
-              </Button>
-            </motion.div>
-          ) : null}
+        <div className="w-full text-left">
+          <div className={styles.title}>{title}</div>
+          <div className={classNames('text-sm text-balance', descStyle)}>
+            {showImage && (
+              <div className={styles.thumbnail}>
+                <Image src={img} width={100} height={100} alt={title} />
+              </div>
+            )}
+            {url?.build && (
+              <div className={styles.buildButton}>
+                <Button
+                  onClick={onClick}
+                  className={classNames(
+                    'bg-primary-9 h-[55px] min-w-[100px] text-xl font-bold text-white',
+                    'items-center justify-center rounded-none hover:text-white',
+                    highlight && section === 'build' ? 'flex' : 'hidden'
+                  )}
+                >
+                  Build
+                </Button>
+              </div>
+            )}
+            <p>{description}</p>
+          </div>
         </div>
       </div>
     );
@@ -339,7 +180,8 @@ export function ScopeSelector() {
         {section === 'simulate' && 'Select a scale to choose models and experiments'}
       </div>
 
-      <div className="mt-8 mb-5 grid grid-cols-3 gap-5">
+      <div className="mt-8 mb-5 grid grid-cols-4 gap-5">
+        <div className="text-primary-4 text-4xl">SUBCELLULAR</div>
         <div className="text-primary-4 text-4xl">CELLULAR</div>
         <div className="text-primary-4 text-4xl">CIRCUIT</div>
         <div className="text-primary-4 text-4xl">SYSTEM</div>

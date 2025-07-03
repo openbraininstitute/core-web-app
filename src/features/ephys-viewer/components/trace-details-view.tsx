@@ -1,20 +1,28 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Select } from 'antd';
 import DistinctColors from 'distinct-colors';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
-import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
 import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
+import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
 
-interface EphysPlotProps {
+interface TraceDetailsViewProps {
   trace: NWBTrace;
+  defaultCellId?: string;
   defaultProtocol?: string;
   defaultRepetition?: string;
 }
 
-function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPlotProps) {
+interface CellDetailsProps {
+  trace: NWBTrace;
+  cellId: string;
+  defaultProtocol?: string;
+  defaultRepetition?: string;
+}
+
+function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: CellDetailsProps) {
   const [reset, setReset] = useState<boolean>(false);
 
   const plotContainerRef = useRef<HTMLDivElement>(null);
@@ -23,11 +31,11 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
   useResizeObserver(plotContainerRef, updatePlots);
 
   const [selectedProtocol, setSelectedDataSet] = useState<string>(
-    defaultProtocol || trace.getProtocols()[0]
+    defaultProtocol || trace.getProtocols(cellId)[0]
   );
 
   const [selectedRepetition, setSelectedRepetition] = useState<string>(
-    defaultRepetition || trace.getRepetitions(selectedProtocol)[0]
+    defaultRepetition || trace.getRepetitions(cellId, selectedProtocol)[0]
   );
 
   const [selectedSweeps, setSelectedSweeps] = useState<string[]>([]);
@@ -35,14 +43,19 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
   const [previewItem, setPreviewItem] = useState<string>();
 
   const repetitions: string[] = useMemo(
-    () => trace.getRepetitions(selectedProtocol),
-    [selectedProtocol, trace]
+    () => trace.getRepetitions(cellId, selectedProtocol),
+    [cellId, selectedProtocol, trace]
   );
 
-  const { sweeps, sweepDataMap, colorMap } = useSweeps(trace, selectedProtocol, selectedRepetition);
+  const { sweeps, sweepDataMap, colorMap } = useSweeps(
+    trace,
+    cellId,
+    selectedProtocol,
+    selectedRepetition
+  );
 
-  const dataSetOptions = trace.getProtocols().map((protocol) => {
-    const repetitionNum = trace.getRepetitions(protocol).length;
+  const dataSetOptions = trace.getProtocols(cellId).map((protocol) => {
+    const repetitionNum = trace.getRepetitions(cellId, protocol).length;
 
     return (
       <Select.Option key={protocol} value={protocol}>
@@ -61,7 +74,7 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
 
   const handleProtocolChange = (protocol: string) => {
     setSelectedDataSet(protocol);
-    setSelectedRepetition(trace.getRepetitions(protocol)[0]);
+    setSelectedRepetition(trace.getRepetitions(cellId, protocol)[0]);
     setSelectedSweeps([]);
     setReset(!reset);
   };
@@ -99,9 +112,10 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
 
   return (
     <div className="flex flex-col gap-10">
+      <div className="text-primary-9 text-xl font-bold">{cellId}</div>
       <div className="flex flex-wrap gap-8">
         <OptionSelect
-          label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols().length }}
+          label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
           options={dataSetOptions}
           value={selectedProtocol}
           handleChange={handleProtocolChange}
@@ -157,15 +171,68 @@ function TraceDetailsView({ trace, defaultProtocol, defaultRepetition }: EphysPl
   );
 }
 
+function TraceDetailsView({
+  trace,
+  defaultCellId,
+  defaultProtocol,
+  defaultRepetition,
+}: TraceDetailsViewProps) {
+  const cellIds = useMemo(() => trace.getCellIds(), [trace]);
+  const [selectedCellId, setSelectedCellId] = useState<string>(
+    defaultCellId || cellIds[0] || 'All'
+  );
+
+  const selectedCellIds = useMemo(
+    () => cellIds.filter((cId: string) => cId === selectedCellId || selectedCellId === 'All'),
+    [cellIds, selectedCellId]
+  );
+
+  return (
+    <div className="flex flex-col gap-10">
+      {cellIds.length > 1 && (
+        <div className="flex flex-col gap-2">
+          <div className="text-sm font-medium">Select Cell ({cellIds.length} available)</div>
+          <Select
+            className="cell-select w-48"
+            placeholder="Select a cell"
+            value={selectedCellId}
+            onChange={setSelectedCellId}
+          >
+            <Select.Option value="All">All Cells</Select.Option>
+            {cellIds.map((cId: string) => (
+              <Select.Option value={cId} key={cId}>
+                {cId}
+              </Select.Option>
+            ))}
+          </Select>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-16">
+        {selectedCellIds.map((cellId: string) => (
+          <CellDetails
+            key={cellId}
+            trace={trace}
+            cellId={cellId}
+            defaultProtocol={defaultProtocol}
+            defaultRepetition={defaultRepetition}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default TraceDetailsView;
 
 function useSweeps(
   trace: NWBTrace,
+  cellId: string,
   selectedProtocol: string,
   selectedRepetition: string
 ): { sweeps: string[]; sweepDataMap: Map<string, SweepData>; colorMap: Map<string, string> } {
   return useMemo(() => {
-    const sweeps: string[] = trace.getSweeps(selectedProtocol, selectedRepetition);
+    const sweeps: string[] = trace.getSweeps(cellId, selectedProtocol, selectedRepetition);
     const colors = DistinctColors({ count: sweeps.length });
 
     const colorMap = sweeps.reduce(
@@ -175,10 +242,10 @@ function useSweeps(
 
     const sweepDataMap = sweeps.reduce(
       (map, sweep) =>
-        map.set(sweep, trace.getSweepData(selectedProtocol, selectedRepetition, sweep)),
+        map.set(sweep, trace.getSweepData(cellId, selectedProtocol, selectedRepetition, sweep)),
       new Map<string, SweepData>()
     );
 
     return { sweeps, sweepDataMap, colorMap };
-  }, [selectedProtocol, selectedRepetition, trace]);
+  }, [cellId, selectedProtocol, selectedRepetition, trace]);
 }

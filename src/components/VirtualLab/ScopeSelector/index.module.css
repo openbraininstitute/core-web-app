@@ -1,0 +1,56 @@
+.thumbnail {
+  width: 5vw;
+  height: 5vw;
+  float: right;
+  margin: 0.5em;
+  margin-right: 0;
+  clip-path: circle();
+  shape-outside: circle();
+}
+
+.buildButton {
+  float: right;
+}
+
+.title {
+  font-weight: bold;
+  font-size: 1.5vw;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tabCell {
+  height: 200px;
+  position: relative;
+}
+
+@media (max-width: 1250px) {
+  .tabCell {
+    height: 240px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .tabCell .thumbnail {
+    position: absolute;
+    top: auto;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    clip-path: none;
+    shape-outside: none;
+    opacity: 0.1;
+  }
+
+  .tabCell .thumbnail > img {
+    clip-path: none;
+    shape-outside: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+}

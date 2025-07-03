@@ -1,50 +1,37 @@
-import { Session } from 'next-auth';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { loadable } from 'jotai/utils';
 
-import { downloadAsset } from '@/api/entitycore/queries/assets';
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import NWBTrace from '@/features/ephys-viewer/nwb-trace';
 import { WorkspaceContext } from '@/types/common';
+import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
 
 type UseTraceArgs = {
   resource: IElectricalCellRecording | ICircuitSimulationResult;
-  session: Session | null;
   ctx?: WorkspaceContext;
 };
 
-export default function useTrace({
-  resource,
-  session,
-  ctx,
-}: UseTraceArgs): [NWBTrace | null, Error | null] {
-  const [nwbArrayBuffer, setNwbArrayBuffer] = useState<ArrayBuffer | null>(null);
+export default function useTrace({ resource, ctx }: UseTraceArgs): [NWBTrace | null, Error | null] {
+  const nwbAtom = useMemo(
+    () => loadable(nwbArrayBufferAtomFamily({ entity: resource, ctx })),
+    [ctx, resource]
+  );
+  const nwb = useAtomValue(nwbAtom);
+
   const [trace, setTrace] = useState<NWBTrace | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const initialized = useRef<boolean>(false);
   const traceRef = useRef<NWBTrace | null>(null);
 
+  const nwbArrayBuffer = nwb.state === 'hasData' ? nwb.data : null;
+
   useEffect(() => {
-    if (!session) {
-      return;
+    if (nwb.state === 'hasError') {
+      setError(nwb.error as Error);
     }
-
-    const asset = resource.assets?.find((a) => a.content_type === 'application/nwb');
-
-    if (!asset) {
-      setError(new Error('No NWB file found'));
-      return;
-    }
-
-    downloadAsset<ArrayBuffer | null>({
-      entityType: resource.type,
-      entityId: resource.id,
-      id: asset.id,
-      ctx,
-    })
-      .then(setNwbArrayBuffer)
-      .catch((e) => setError(e));
-  }, [ctx, resource, session]);
+  }, [nwb]);
 
   useEffect(() => {
     if (initialized.current || !nwbArrayBuffer) {

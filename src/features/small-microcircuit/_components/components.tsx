@@ -226,11 +226,12 @@ export function JSONSchemaForm({
           })}
         />
       );
-    if (obj.type === 'number' || obj.type === 'integer')
+    if (obj.type === 'number' || obj.type === 'integer') {
       return (
         <>
           <InputNumber
             min={obj.minimum ?? null}
+            max={obj.maximum ?? null}
             disabled={disabled}
             value={typeof state[k] === 'number' ? state[k] : null}
             onChange={(value) => {
@@ -240,6 +241,7 @@ export function JSONSchemaForm({
           />
         </>
       );
+    }
     if (obj.type === 'string')
       return (
         <Input
