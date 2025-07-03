@@ -336,9 +336,6 @@ function TiersComparison({
           if (isFree) controller = onSelectFree;
           if (isPro) controller = onTierClick(t);
           if (isPremium) controller = onSelectPremiumTier;
-
-          console.log('Tiers id: ', t.id);
-
           return (
             <div
               key={`button-${t.app_id}`}
