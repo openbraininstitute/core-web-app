@@ -1,8 +1,7 @@
-'use server';
-
 import capitalize from 'lodash/capitalize';
-import { assertErrorMessage } from '../utils';
+import get from 'lodash/get';
 
+import { assertErrorMessage } from '../utils';
 import {
   assertGithubApiResponse,
   extractUserAndRepo,
@@ -14,21 +13,13 @@ import {
   getFileCreationDate,
 } from './github';
 
-export default async function fetchNotebooks(repoUrl: string, withDate = false) {
+export default async function fetchNotebooksRaw(repoUrl: string, withDate = false) {
   try {
     const repoDetails = extractUserAndRepo(repoUrl);
 
     const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
 
-    const repoRes = await fetch(apiBaseUrl, options);
-
-    if (!repoRes.ok) {
-      assertGithubApiResponse(repoRes);
-      throw new Error(`Cannot fetch the repository ${repoUrl}, please ensure it's public.`);
-    }
-    const repository = await repoRes.json();
-
-    const defaultBranch = repository.default_branch;
+    const defaultBranch = 'main';
 
     if (!defaultBranch)
       throw new Error(`Failed to fetch the repository ${repoUrl}, please ensure it's public.`);
@@ -56,7 +47,9 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
     for (const item of Object.values(items)) {
       if (item.path.endsWith('analysis_notebook.ipynb')) {
         if (withDate)
-          datePromises.push(getFileCreationDate(repoDetails.user, repoDetails.repo, item.path));
+          datePromises.push(
+            getCachedFileCreationDate(repoDetails.user, repoDetails.repo, item.path)
+          );
 
         try {
           const metadataUrl =
@@ -106,20 +99,12 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
   }
 }
 
-export async function fetchNotebookCount(repoUrl: string) {
+export async function fetchNotebookCountRaw(repoUrl: string) {
   const repoDetails = extractUserAndRepo(repoUrl);
 
   const apiBaseUrl = `https://api.github.com/repos/${repoDetails.user}/${repoDetails.repo}`;
 
-  const repoRes = await fetch(apiBaseUrl, options);
-
-  if (!repoRes.ok) {
-    assertGithubApiResponse(repoRes);
-    throw new Error(`Cannot fetch the repository ${repoUrl}`);
-  }
-  const repository = await repoRes.json();
-
-  const defaultBranch = repository.default_branch;
+  const defaultBranch = 'main';
 
   if (!defaultBranch) throw new Error(`Failed to fetch the repository ${repoUrl}`);
 
@@ -134,4 +119,78 @@ export async function fetchNotebookCount(repoUrl: string) {
   if (!tree.tree) throw new Error(`Cannot fetch the repository ${repoUrl}`);
 
   return tree.tree.filter((i) => i.path.endsWith('ipynb')).length;
+}
+
+type CacheEntry<T> = {
+  data: T;
+  expiresAt: number;
+};
+
+const cacheStore: Record<string, CacheEntry<any>> = {};
+
+function isCacheValid(entry: CacheEntry<any>) {
+  return entry && entry.expiresAt > Date.now();
+}
+
+export async function fetchNotebooks(repoUrl: string, withDate = false, ttlSeconds = 3600) {
+  const cacheKey = `fetchNotebooks-${repoUrl}-${withDate ? 'withDate' : 'noDate'}`;
+  const cached = get(cacheStore, cacheKey, null);
+
+  if (cached && isCacheValid(cached)) {
+    console.debug('notebooks cached');
+    return cached.data;
+  }
+
+  const data = await fetchNotebooksRaw(repoUrl, withDate);
+
+  cacheStore[cacheKey] = {
+    data,
+    expiresAt: Date.now() + ttlSeconds * 1000,
+  };
+
+  return data;
+}
+
+export async function fetchNotebookCount(repoUrl: string, ttlSeconds = 3600) {
+  const cacheKey = `fetchNotebookCount-${repoUrl}`;
+  const cached = get(cacheStore, cacheKey, null);
+
+  if (cached && isCacheValid(cached)) {
+    console.debug('notebook count cached');
+    return cached.data;
+  }
+
+  const data = await fetchNotebookCountRaw(repoUrl);
+
+  cacheStore[cacheKey] = {
+    data,
+    expiresAt: Date.now() + ttlSeconds * 1000,
+  };
+
+  return data;
+}
+
+async function getCachedFileCreationDate(
+  user: string,
+  repo: string,
+  filePath: string,
+  ttlSeconds = 3600
+): Promise<string | null> {
+  const cacheKey = `${user}/${repo}/${filePath}`;
+  const cached = get(cacheStore, cacheKey, null);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    console.debug('creation date cached');
+    return (cached as unknown as { data: string | null }).data;
+  }
+
+  const date = await getFileCreationDate(user, repo, filePath);
+
+  // Cache the result
+  cacheStore[cacheKey] = {
+    data: date,
+    expiresAt: Date.now() + ttlSeconds * 1000,
+  };
+
+  return date;
 }

@@ -28,11 +28,11 @@ import useSearch from '@/components/VirtualLab/Search';
 
 import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
 
-import { notification } from '@/api/notifications';
 import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import FilterControls from '@/components/FilterControls/FilterControls';
 import { env } from '@/env';
+import { useAppNotification } from '@/components/notification';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 const { Option } = Select;
@@ -54,12 +54,17 @@ function NotebookTable({
   serverError?: string;
   enableRunNotebook?: boolean;
 }) {
+  const notification = useAppNotification();
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
 
   if (serverError)
-    notification.error(serverError, undefined, undefined, undefined, 'notebooks-server-error');
+    notification.error({
+      message: serverError,
+      key: 'notebooks-server-error',
+      placement: 'topRight',
+    });
 
   const resetModal = () => {
     setCurrentNotebook(null);
@@ -67,13 +72,12 @@ function NotebookTable({
   };
 
   if (failed && failed.length)
-    notification.warning(
-      "Failed to fetch some repositories, ensure they're public and contain valid metadate for each notebook",
-      undefined,
-      undefined,
-      undefined,
-      'failed-repo-warning'
-    );
+    notification.warning({
+      message:
+        "Failed to fetch some repositories, ensure they're public and contain valid metadate for each notebook",
+      placement: 'topRight',
+      key: "'failed-repo-warning'",
+    });
 
   const { search, Search } = useSearch({
     placeholder: 'Search for notebooks',
@@ -126,7 +130,10 @@ function NotebookTable({
       saveAs(blob, `${notebook.name}.zip`);
       setLoadingZip(false);
     } catch {
-      notification.error('Failed to download the contents, ensure the repo is public');
+      notification.error({
+        message: 'Failed to download the contents, ensure the repo is public',
+        placement: 'bottomRight',
+      });
     }
   };
 
