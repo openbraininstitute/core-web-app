@@ -22,6 +22,9 @@ function getVersion() {
 }
 
 const nextConfig: NextConfig = {
+  experimental: {
+    dynamicIO: true,
+  },
   turbopack: {
     rules: {
       '*.groq': {
