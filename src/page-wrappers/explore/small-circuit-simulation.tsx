@@ -1,12 +1,9 @@
 'use client';
 
-import { ArrowRightOutlined } from '@ant-design/icons';
-import Link from 'next/link';
-
 import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 import SmallCircuitSimulation from '@/features/small-microcircuit';
 
-import { resolveExperimentUrl, resolveProjectUrl } from '@/utils/url-builder';
+import { resolveProjectUrl } from '@/utils/url-builder';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';

@@ -18,7 +18,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { SimulationType } from '@/types/virtual-lab/lab';
 
-import styles from './styles.module.css';
+import styles from './index.module.css';
 
 export { ModelTilesConfig } from './tiles';
 
@@ -132,7 +132,8 @@ export function ScopeSelector() {
         key={`tile-${section}/${selectedTab}/${type}`}
         aria-hidden
         className={classNames(
-          'border-primary-4 box-border flex h-[200px] items-start justify-between gap-5 overflow-hidden rounded-sm border p-6',
+          styles.tabCell,
+          'border-primary-4 box-border flex items-start justify-between gap-5 overflow-hidden rounded-sm border p-6',
           tileStyle,
           !disabled && 'cursor-pointer'
         )}
@@ -144,22 +145,11 @@ export function ScopeSelector() {
         }}
       >
         <div className="w-full text-left">
-          <div className="mb-2 text-3xl font-semibold">{title}</div>
+          <div className={styles.title}>{title}</div>
           <div className={classNames('text-sm text-balance', descStyle)}>
             {showImage && (
               <div className={styles.thumbnail}>
-                <Image
-                  src={img}
-                  width={100}
-                  height={100}
-                  alt={title}
-                  style={{
-                    clipPath: 'circle()',
-                    shapeOutside: 'circle()',
-                    height: 'auto',
-                    width: 'auto',
-                  }}
-                />
+                <Image src={img} width={100} height={100} alt={title} />
               </div>
             )}
             {url?.build && (

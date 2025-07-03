@@ -16,7 +16,7 @@ export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): strin
       .slice(0, maxNumberOfQuestions)
       .map((question) =>
         question
-          .replace('{brain_region}', snapshot.regionTitle ?? 'Midbrain')
+          .replace('{brain_region}', snapshot.regionTitle || 'Midbrain')
           .replace('{human}', 'human')
           .replace('{humans}', 'humans')
           .replace('{rodent}', 'rodent')
@@ -26,6 +26,7 @@ export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): strin
       );
     setSuggestions(questions);
   }, [maxNumberOfQuestions, snapshot]);
+
   return suggestions;
 }
 

@@ -1,5 +1,5 @@
 export const SuggestionsListPerRegion: Record<string, string[]> = {
-  'Synaptome ': [
+  Synaptome: [
     'Show me recent studies that published a comprehensive single-cell resolution connectome datasets for {brain_region} in {rodent/human} brains.',
     'Show me publications that report quantitative synaptic connectivity matrices at single-cell resolution in the{rodent/human} {brain_region}.',
     'Show me publications that used electron microscopy to map synaptic connections between neurons in {brain_region} in {rodent/human}.',
@@ -37,7 +37,7 @@ export const SuggestionsListPerRegion: Record<string, string[]> = {
     'Show me publications reporting how the average number of synapses per connection vary across regions in {rodents/humans}.',
     'Tell me about techniques are used to quantify the number of synapses per axonal-dendritic connection in {rodents/humans}.',
   ],
-  'For bouton density ': [
+  'For bouton density': [
     'Show me publications reporting bouton densities in {brain_region} in {rodents/humans}.',
     'Show me publications reporting differences in bouton density between excitatory and inhibitory synapses in {brain_region} in {rodents/humans}.',
     'Show me publications reporting bouton densities across cortical layers in {rodents/humans}.',
@@ -47,7 +47,7 @@ export const SuggestionsListPerRegion: Record<string, string[]> = {
 };
 
 export const SuggestionsListFullBrain: Record<string, string[]> = {
-  'Synaptome ': [
+  Synaptome: [
     'Show me recent studies that published a comprehensive single-cell resolution connectome datasets in {rodent/human} brains.',
     'Show me publications that report quantitative synaptic connectivity matrices at single-cell resolution in the {rodent/human} brain.',
     'Show me publications that used electron microscopy to map synaptic connections between neurons in {rodents/human}.',
@@ -81,7 +81,7 @@ export const SuggestionsListFullBrain: Record<string, string[]> = {
     'Show me publications reporting how the average number of synapses per connection vary across regions in {rodents/humans}.',
     'Tell me about techniques are used to quantify the number of synapses per axonal-dendritic connection in {rodents/humans}.',
   ],
-  'For bouton density ': [
+  'For bouton density': [
     'Show me publications reporting bouton densities in {rodents/humans}.',
     'Show me publications reporting differences in bouton density between excitatory and inhibitory synapses in {rodents/humans}.',
     'Show me publications reporting bouton densities across cortical layers in {rodents/humans}.',
