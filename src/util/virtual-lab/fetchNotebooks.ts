@@ -1,15 +1,21 @@
+'use server';
+
 import capitalize from 'lodash/capitalize';
+import { env } from '@/env';
 
 import { assertErrorMessage } from '../utils';
-import {
-  extractUserAndRepo,
-  Notebook,
-  Item,
-  validateMetadata,
-  fetchGithubFile,
-  options,
-  getFileCreationDate,
-} from './github';
+import { fetchGithubFile, getFileCreationDate } from './github';
+import { extractUserAndRepo, Item, Notebook, validateMetadata } from './types';
+
+const options = {
+  headers: {
+    Accept: 'application/vnd.github.v3+json',
+    ...(env.GITHUB_TOKEN ? { Authorization: `Bearer ${env.GITHUB_TOKEN}` } : {}),
+  },
+  next: {
+    revalidate: 3600 * 24,
+  },
+};
 
 export default async function fetchNotebooks(repoUrl: string, withDate = false) {
   try {
@@ -22,7 +28,13 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
     if (!defaultBranch)
       throw new Error(`Failed to fetch the repository ${repoUrl}, please ensure it's public.`);
 
-    const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
+    const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, {
+      headers: options.headers,
+      next: {
+        revalidate: 3600 * 24,
+        tags: ['tree'],
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Cannot fetch the repository ${repoUrl}, ensure the repository is public.`);
@@ -51,7 +63,9 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
           const metadataUrl =
             items[item.path.substring(0, item.path.lastIndexOf('/')) + '/analysis_info.json'].url;
 
-          const metadata = validateMetadata(await fetchGithubFile(metadataUrl));
+          const metadata1 = await fetchGithubFile(metadataUrl);
+
+          const metadata = validateMetadata(metadata1);
 
           notebooks.push({
             id: '', // OBI notebooks have no id in the database

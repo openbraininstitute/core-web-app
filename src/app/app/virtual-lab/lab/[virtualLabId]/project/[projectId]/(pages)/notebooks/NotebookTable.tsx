@@ -26,13 +26,14 @@ import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import useSearch from '@/components/VirtualLab/Search';
 
-import { downloadZippedNotebook, Notebook } from '@/util/virtual-lab/github';
+import { downloadZippedNotebook } from '@/util/virtual-lab/github';
 
 import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import FilterControls from '@/components/FilterControls/FilterControls';
 import { env } from '@/env';
 import { useAppNotification } from '@/components/notification';
+import { Notebook } from '@/util/virtual-lab/types';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 const { Option } = Select;
@@ -76,7 +77,7 @@ function NotebookTable({
       message:
         "Failed to fetch some repositories, ensure they're public and contain valid metadata for each notebook",
       placement: 'topRight',
-      key: "'failed-repo-warning'",
+      key: 'failed-repo-warning',
     });
 
   const { search, Search } = useSearch({

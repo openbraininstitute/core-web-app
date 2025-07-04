@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'antd/lib';
 import ReactMarkdown from 'react-markdown';
-import { IpynbRenderer } from 'react-ipynb-renderer';
-import { Notebook } from '@/util/virtual-lab/github';
+import dynamic from 'next/dynamic';
+
 import { basePath } from '@/config';
 
 import 'react-ipynb-renderer/dist/styles/monokai.css';
 
 import 'github-markdown-css';
-import { notification } from '@/api/notifications';
+import { Notebook } from '@/util/virtual-lab/types';
+import { useAppNotification } from '@/components/notification';
+
+const IpynbRenderer = dynamic(
+  () => import('react-ipynb-renderer').then((mod) => mod.IpynbRenderer),
+  { ssr: false }
+);
 
 export default function ContentModal({
   notebook,
@@ -20,7 +26,7 @@ export default function ContentModal({
   onCancel: () => void;
 }) {
   const [content, setContent] = useState<string | null>(null);
-
+  const notification = useAppNotification();
   useEffect(() => {
     const controller = new AbortController();
 
@@ -34,13 +40,19 @@ export default function ContentModal({
         );
 
         if (!res.ok) {
-          notification.error('Cannot display the contents, ensure the repository is public');
+          notification.error({
+            message: 'Cannot display the contents, ensure the repository is public',
+            placement: 'topRight',
+          });
         } else {
           setContent(await res.text());
         }
       } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
-          notification.error('An error occurred while fetching the file');
+          notification.error({
+            message: 'An error occurred while fetching the file',
+            placement: 'topRight',
+          });
         }
       }
     }
