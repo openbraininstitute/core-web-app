@@ -47,7 +47,7 @@ export function pathToResource(
  * @param revision
  *
  */
-export function parseOrgProjectToResourceInfo(
+function parseOrgProjectToResourceInfo(
   id: string,
   orgProject: Project,
   revision?: string | null

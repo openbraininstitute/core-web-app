@@ -17,7 +17,7 @@ export type StimulusTypeOption = {
   value: StimulusType;
 };
 
-export type FunctionParameterNumber = {
+type FunctionParameterNumber = {
   defaultValue: number;
   min: number;
   max: number;
@@ -25,9 +25,9 @@ export type FunctionParameterNumber = {
   unit: string;
 };
 
-export type StimulusParameter = Record<'params', FunctionParameterNumber>;
+type StimulusParameter = Record<'params', FunctionParameterNumber>;
 
-export type ConditionalStimulusParamsTypes = Record<StimulusModule, StimulusParameter>;
+type ConditionalStimulusParamsTypes = Record<StimulusModule, StimulusParameter>;
 
 export type StimulusDropdownInfo = {
   name: string;
@@ -73,12 +73,12 @@ export type SynapseConfig = {
   color: string;
 };
 
-export type SingleModelSimConfig = SimulationConfiguration & {
+type SingleModelSimConfig = SimulationConfiguration & {
   direct_stimulation: CurrentInjectionSimulationConfig[];
   synapses: null;
 };
 
-export type SynapseModelSimConfig = SimulationConfiguration & {
+type SynapseModelSimConfig = SimulationConfiguration & {
   synapses: SynaptomeConfig;
 };
 
@@ -107,13 +107,13 @@ export type SelectedSingleNeuronModel = {
   source: ExploreResource;
 };
 
-export type SelectedSynaptomeModel = SelectedSingleNeuronModel & {
+type SelectedSynaptomeModel = SelectedSingleNeuronModel & {
   source: MEModelSynaptome;
 };
 
-export type ModelResource = MEModelResource | SynaptomeModelResource;
+type ModelResource = MEModelResource | SynaptomeModelResource;
 
-export const isSynaptomModel = (model: ModelResource | null): model is SynaptomeModelResource => {
+const isSynaptomModel = (model: ModelResource | null): model is SynaptomeModelResource => {
   if (!model) {
     return false;
   }
@@ -128,7 +128,7 @@ export type UpdateSynapseSimulationProperty = {
   newValue: number | string | number[] | null;
 };
 
-export type UpdateSynapseSimulationProperties = {
+type UpdateSynapseSimulationProperties = {
   id: number;
   entries: Array<{
     key: keyof SynapseConfig;
@@ -177,7 +177,7 @@ export type SimulationStreamData = {
   y: Array<number>;
 };
 
-export type StreamSimulationResponse = {
+type StreamSimulationResponse = {
   task_id: string;
   description: string;
   event: StreamSimulationEvent;
@@ -189,4 +189,4 @@ export const isBluenaasError = (obj: Object): obj is BluenaasError => {
   return 'details' in obj && 'message' in obj && 'error_code' in obj;
 };
 
-export const isBluenaasSimulationError = (obj: StreamSimulationResponse) => obj.event === 'error';
+const isBluenaasSimulationError = (obj: StreamSimulationResponse) => obj.event === 'error';

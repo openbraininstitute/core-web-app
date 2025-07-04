@@ -24,7 +24,7 @@ import SanityContentVideo from './sanity-content-video';
 import { SanityContentMultipleButton } from './sanity-content-multiple-button';
 import { logError } from '@/util/logger';
 
-export interface SanityContentRTFProps {
+interface SanityContentRTFProps {
   className?: string;
   value: ContentForRichText;
 }

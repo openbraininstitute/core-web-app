@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './FeatureLine.module.css';
 
-export interface FeatureLineProps {
+interface FeatureLineProps {
   feature: ContentForPricingFeatureItem;
   plan: ContentForPricingPlan;
   available: boolean;

@@ -2,7 +2,7 @@ import { Select } from 'antd';
 
 import { HemisphereDirection } from '@/types/connectome';
 
-export const DIRECTION_LABEL: Record<HemisphereDirection, string> = {
+const DIRECTION_LABEL: Record<HemisphereDirection, string> = {
   LL: 'Left to left',
   LR: 'Left to right',
   RL: 'Right to left',

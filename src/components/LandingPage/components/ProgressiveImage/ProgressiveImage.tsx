@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './ProgressiveImage.module.css';
 
-export interface ProgressiveImageProps {
+interface ProgressiveImageProps {
   className?: string;
   src: string;
   width: number;

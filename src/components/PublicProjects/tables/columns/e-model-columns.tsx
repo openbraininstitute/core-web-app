@@ -4,7 +4,7 @@ import { EModelsProps } from '../../type/artifactsType';
 
 import truncateText from '@/util/truncate';
 
-export function formatDate(isoDateString: string | null) {
+function formatDate(isoDateString: string | null) {
   if (!isoDateString) return '';
   const date = new Date(isoDateString);
   const day = String(date.getDate()).padStart(2, '0');

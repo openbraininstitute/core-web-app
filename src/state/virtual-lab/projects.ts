@@ -78,7 +78,7 @@ export const userProjectsAtom = atomWithRefresh<Promise<VirtualLabAPIListData<Pr
   }
 );
 
-export const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (get) => {
+const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (get) => {
   const projects = await get(userProjectsAtom);
   return projects?.total || 0;
 });

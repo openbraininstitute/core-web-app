@@ -360,8 +360,7 @@ export const featureDescriptionsMap = {
   },
 };
 
-export const eCodesDocumentationUrl =
-  'https://bbpteam.epfl.ch/project/spaces/display/DBPROTOCOL/Ecode';
+const eCodesDocumentationUrl = 'https://bbpteam.epfl.ch/project/spaces/display/DBPROTOCOL/Ecode';
 
 export const presetNames = ['firing_pattern', 'ap_waveform', 'iv', 'validation'] as const;
 
@@ -466,7 +465,7 @@ export const eCodesMetadata = {
   IDhyperpol: { ljp: 14.0, ton: 100, tmid: 700, tmid2: 2700, toff: 2900 },
 };
 
-export const DEFAULT_E_MODEL = {
+const DEFAULT_E_MODEL = {
   value: {
     name: 'EM__66aaeea__bNAC__6',
     id: 'https://bbp.epfl.ch/data/bbp/mmb-point-neuron-framework-model/82632ef0-a084-4fce-a1fc-cb6874a67731',

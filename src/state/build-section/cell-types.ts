@@ -16,7 +16,7 @@ type ClassESResponse = {
 };
 
 // Returns cell types metadata
-export const cellTypesAtom = selectAtom<Session | null, Promise<any> | null>(
+const cellTypesAtom = selectAtom<Session | null, Promise<any> | null>(
   unwrap(sessionAtom),
   (session) => {
     if (!session) return null;
@@ -56,7 +56,7 @@ export const cellTypesByIdAtom = selectAtom<
 });
 
 // Returns cell types metadata in key => value format where key = label of cell type
-export const cellTypesByLabelAtom = selectAtom<
+const cellTypesByLabelAtom = selectAtom<
   Promise<any> | null,
   Promise<Record<string, ClassNexus> | undefined> | null
 >(unwrap(cellTypesAtom), (cellTypes) => {

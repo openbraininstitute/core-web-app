@@ -6,6 +6,6 @@ export function generateBrainRegionMTypeMapKey(brainRegionId: string, mTypeId: s
   return generateMapKey(brainRegionId, mTypeId);
 }
 
-export function generateMapKey(str1: string, str2: string) {
+function generateMapKey(str1: string, str2: string) {
   return `${str1}<>${str2}`;
 }

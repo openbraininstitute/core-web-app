@@ -48,14 +48,14 @@ export type BrainRegionOntology = {
   volumes: { [key: string]: number };
 };
 
-export type BrainRegionAnnotationIndex = {
+type BrainRegionAnnotationIndex = {
   [key: string]: {
     items?: BrainRegion[];
     parts: string[] | undefined;
   };
 };
 
-export type AnnotationLookup = {
+type AnnotationLookup = {
   hasPart: string[];
   hasLayerPart: string[];
 };

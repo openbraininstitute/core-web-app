@@ -46,7 +46,7 @@ export function ArticlePreview({
   );
 }
 
-export function ArticleAction({
+function ArticleAction({
   title,
   icon,
   onClick,

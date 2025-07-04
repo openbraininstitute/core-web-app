@@ -5,7 +5,7 @@ import authApiClient from '@/api/apiClient';
 
 import type { EntityCoreBaseAsset, IAsset } from '@/api/entitycore/types/shared/global';
 
-export const getEntityCorePublicContext = () => ({
+const getEntityCorePublicContext = () => ({
   headers: {
     'virtual-lab-id': entityCorePublicVirtualLabId,
     'project-id': entityCorePublicProjectId,

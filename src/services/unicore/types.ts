@@ -1,11 +1,11 @@
-export interface RequestProps {
+interface RequestProps {
   url: string;
   method?: string;
   body?: BodyInit;
   headers?: HeadersInit;
 }
 
-export interface UrlToComputerAndIdInterface {
+interface UrlToComputerAndIdInterface {
   computer: string | null;
   id: string | null;
 }

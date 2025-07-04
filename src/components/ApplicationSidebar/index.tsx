@@ -68,7 +68,7 @@ export function NavigationItem({ url, name, description, bgcolor }: NavigationIt
   );
 }
 
-export function AppNavigationItem({
+function AppNavigationItem({
   expanded,
   title,
   bgcolor,
@@ -98,7 +98,7 @@ export function AppNavigationItem({
   );
 }
 
-export function AppNavigation({ expanded }: { expanded: boolean }) {
+function AppNavigation({ expanded }: { expanded: boolean }) {
   return (
     <div
       className={classNames(

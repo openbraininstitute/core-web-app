@@ -27,7 +27,7 @@ import {
   FormatH4,
 } from '@/components/icons/EditorIcons';
 
-export const rootTypeToRootName = {
+const rootTypeToRootName = {
   root: 'Root',
   table: 'Table',
 };

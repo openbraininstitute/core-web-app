@@ -23,10 +23,7 @@ export type UploaderGeneratorResponse =
     }
   | null;
 
-export type OnUploadCallback = (
-  payload: Array<Distribution>,
-  files: Array<UploadFileMetadata>
-) => void;
+type OnUploadCallback = (payload: Array<Distribution>, files: Array<UploadFileMetadata>) => void;
 
 export type OnUploadInput = {
   accessToken: string;

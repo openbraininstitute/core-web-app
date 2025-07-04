@@ -8,7 +8,7 @@ import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
 // TODO: to delete when confirm the LiteratureForExperimentType is not needed
-export default function StatItem({
+function StatItem({
   href,
   title,
   subtitle,
@@ -40,14 +40,14 @@ export default function StatItem({
   );
 }
 
-export function EntityTypeCountSkeleton() {
+function EntityTypeCountSkeleton() {
   return (
     <div className="bg-neutral-7 flex h-[50px] w-full animate-pulse justify-between rounded-xs px-3 py-4 opacity-85" />
   );
 }
 
 // TODO: to delete
-export function StatError({ text }: { text: string }) {
+function StatError({ text }: { text: string }) {
   return (
     <div
       className={classNames(

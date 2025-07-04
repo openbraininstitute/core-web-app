@@ -26,9 +26,7 @@ import {
 } from '@/state/literature';
 import useNotification from '@/hooks/notifications';
 
-export type DistributiveOmit<TObj, Tkey extends PropertyKey> = TObj extends any
-  ? Omit<TObj, Tkey>
-  : never;
+type DistributiveOmit<TObj, Tkey extends PropertyKey> = TObj extends any ? Omit<TObj, Tkey> : never;
 export type ResultWithoutId = DistributiveOmit<GenerativeQA, 'id'>;
 
 type WithStream = (

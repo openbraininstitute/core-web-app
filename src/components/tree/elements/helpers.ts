@@ -14,7 +14,7 @@ import type { TTreeNode } from '@/components/tree/types';
  * @param parentId - The ID of the parent node, or `null` if the node is a root. Defaults to `null`.
  * @returns An array of nodes where each node includes a `parentId` property indicating its parent.
  */
-export function flattenTree<TNode extends TTreeNode>(
+function flattenTree<TNode extends TTreeNode>(
   nodes: TNode[],
   parentId: string | null = null
 ): (TNode & { parentId: string | null })[] {
@@ -155,7 +155,7 @@ export function scrollToNode<TNode extends TTreeNode>(
  * Returns a list of matching node IDs.
  * Assumes TNode might have an optional 'name' property.
  */
-export function searchNodes<TNode extends TTreeNode & { name?: string }>(
+function searchNodes<TNode extends TTreeNode & { name?: string }>(
   query: string,
   rootNode: TNode
 ): string[] {

@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-export interface NodeSetsPalette {
+interface NodeSetsPalette {
   [key: string]: string;
 }
 

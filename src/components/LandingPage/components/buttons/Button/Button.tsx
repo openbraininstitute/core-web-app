@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './Button.module.css';
 
-export interface ButtonProps {
+interface ButtonProps {
   className?: string;
   subTitle: string;
   title: string;

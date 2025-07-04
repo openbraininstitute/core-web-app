@@ -3,7 +3,7 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
 
-export function ExpandIcon({ isActive }: { isActive?: boolean }) {
+function ExpandIcon({ isActive }: { isActive?: boolean }) {
   return isActive ? (
     <MinusOutlined style={{ fontSize: '14px' }} />
   ) : (

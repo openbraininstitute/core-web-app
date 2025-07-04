@@ -50,7 +50,7 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
   },
 });
 
-export function Form({ onPrevious, successRedirectUrl }: Props) {
+function Form({ onPrevious, successRedirectUrl }: Props) {
   const elements = useElements();
   const stripe = useStripe();
   const { interval, tier } = useAtomValue(flowAtom);

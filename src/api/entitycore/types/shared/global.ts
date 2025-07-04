@@ -31,7 +31,7 @@ export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
   type: EntityCoreDataType;
 }
 
-export type EntityCoreBaseType = {
+type EntityCoreBaseType = {
   type: EntityCoreDataType;
 };
 
@@ -56,7 +56,7 @@ type BrainRegion = {
   children: Array<number>;
 };
 
-export interface IBrainRegion extends BrainRegion, Timestamps {}
+interface IBrainRegion extends BrainRegion, Timestamps {}
 
 type Strain = {
   name: string;
@@ -96,18 +96,18 @@ export type MeasurementBase = {
   value: number;
 };
 
-export interface IMtypeFilter extends PaginationFilter {
+interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
   pref_label__in: string | null;
   order_by: string | null;
 }
-export type MorphologyMeasurementSerie = {
+type MorphologyMeasurementSerie = {
   name: string;
   value: number;
 };
 
-export type Measurement = {
+type Measurement = {
   measurement_of: string;
   measurement_serie: MorphologyMeasurementSerie[];
 };
@@ -127,7 +127,7 @@ type RoleBase = {
   role_id: string;
 };
 
-export interface IRole extends RoleBase, Timestamps, EntityCoreIdentifiable {}
+interface IRole extends RoleBase, Timestamps, EntityCoreIdentifiable {}
 
 type OrganizationBase = {
   type: 'organization';
@@ -135,7 +135,7 @@ type OrganizationBase = {
   alternative_name?: string | null;
 };
 
-export interface IOrganization extends OrganizationBase, Timestamps, EntityCoreIdentifiable {}
+interface IOrganization extends OrganizationBase, Timestamps, EntityCoreIdentifiable {}
 
 type PersonBase = {
   type: 'person';
@@ -186,10 +186,10 @@ export interface IAsset extends AssetBase, AssetLegacyMeta {
   status: AssetStatus;
 }
 
-export type Sex = 'male' | 'female' | 'unknown';
-export type AgePeriod = 'prenatal' | 'postnatal' | 'unknown';
+type Sex = 'male' | 'female' | 'unknown';
+type AgePeriod = 'prenatal' | 'postnatal' | 'unknown';
 
-export type SubjectBase = {
+type SubjectBase = {
   name: string;
   description: string;
   sex: Sex;

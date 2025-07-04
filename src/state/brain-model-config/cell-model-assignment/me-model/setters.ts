@@ -26,7 +26,7 @@ import { DefaultMEModelType } from '@/types/me-model';
 import { EModelMenuItem } from '@/types/e-model';
 import { setInitializationValue } from '@/util/utils';
 
-export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
+const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 
 export const setMEConfigPayloadAtom = atom<null, [], void>(null, async (get, set) => {
   const selectedEModel = get(selectedEModelAtom);
@@ -158,7 +158,7 @@ export const setDefaultEModelForMETypeAtom = atom<null, [], void>(null, async (g
   set(selectedEModelAtom, eModelToSet);
 });
 
-export const updateConfigPayloadAtom = atom<null, [MEModelConfigPayload], Promise<void>>(
+const updateConfigPayloadAtom = atom<null, [MEModelConfigPayload], Promise<void>>(
   null,
   async (get, set, configPayload) => {
     const session = get(sessionAtom);

@@ -2,7 +2,7 @@ import Hierarchy from './hierarchy.json';
 import { assertType } from '@/util/type-guards';
 import { logError } from '@/util/logger';
 
-export interface Region {
+interface Region {
   acronym: string;
   color: string;
 }

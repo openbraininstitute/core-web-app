@@ -3,7 +3,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './coord-label.module.css';
 
-export interface CoordLabelProps {
+interface CoordLabelProps {
   className?: string;
   value: SimulationCoord;
 }

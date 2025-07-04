@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
 import { SelectedBrainRegion } from '@/state/brain-regions/types';
 
-export type HighlightHit = {
+type HighlightHit = {
   start: number;
   end: number;
 };
@@ -25,7 +25,7 @@ export type GArticle = {
   impactFactor?: number;
 };
 
-export type GenerativeQAMetadata = {
+type GenerativeQAMetadata = {
   article_id: string;
   article_title: string;
   article_authors: string[];
@@ -41,14 +41,14 @@ export type GenerativeQAMetadata = {
   impact_factor?: number;
   abstract?: string;
 };
-export type GenerativeQAWithDataResponse = {
+type GenerativeQAWithDataResponse = {
   answer: string;
   raw_answer: string;
   paragraphs: string[];
   metadata: GenerativeQAMetadata[];
 };
 
-export type GenerativeQAWithoutDataResponse = {
+type GenerativeQAWithoutDataResponse = {
   code: number;
   detail: string;
   raw_answer?: string;
@@ -58,13 +58,13 @@ export type GenerativeQAResponse =
   | GenerativeQAWithDataResponse
   | { Error: GenerativeQAWithoutDataResponse };
 export type SelectedBrainRegionPerQuestion = Pick<SelectedBrainRegion, 'id' | 'title'>;
-export type BuildStepPath =
+type BuildStepPath =
   | 'cell-composition'
   | 'cell-model-assignment'
   | 'connectome-definition'
   | 'connectome-model-assignment';
 
-export interface BaseGenerativeQA {
+interface BaseGenerativeQA {
   id: string;
   chatId?: string;
   askedAt: Date;
@@ -103,7 +103,7 @@ export type GenerativeQADTO = { question: string; questionId: string; askedAt: D
     }
 );
 
-export type GetGenerativeQAInput = {
+type GetGenerativeQAInput = {
   question: string;
   size?: number;
   brainRegions?: string[];
@@ -115,7 +115,7 @@ export type GetGenerativeQAInput = {
   signal?: AbortSignal;
 };
 
-export type GenerativeQAServerResponse =
+type GenerativeQAServerResponse =
   | {
       success: true;
       question: string;
@@ -146,7 +146,7 @@ export type ArticleTypeSuggestionResponse = {
   docs_in_db: number;
 }[];
 
-export type ArticleTypeSuggestion = {
+type ArticleTypeSuggestion = {
   articleType: string;
   docCount: number;
 };
@@ -176,7 +176,7 @@ export type MLFilter = Filter & {
 };
 
 export type QuestionAbout = 'EType' | 'MType' | 'gsyn' | 'nrrp' | 'f' | 'u' | 'd' | 'dtc';
-export type ContextQAItem = {
+type ContextQAItem = {
   key: string;
   value: JSX.Element;
   gqa?: GenerativeQA;

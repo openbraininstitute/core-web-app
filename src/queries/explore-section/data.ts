@@ -34,7 +34,7 @@ export default function fetchDataQuery(
   };
 }
 
-export const esQueryById = (resourceIds: string[]): object => {
+const esQueryById = (resourceIds: string[]): object => {
   const filtersQuery = new esb.BoolQuery();
   filtersQuery.must(esb.termsQuery('@id.keyword', resourceIds));
   return { query: filtersQuery.toJSON() };

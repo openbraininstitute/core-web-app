@@ -4,7 +4,7 @@ import { ContentForGlossaryItem } from '@/components/documentation/hooks/use-san
 import { classNames } from '@/util/utils';
 
 // Define props type
-export type GlossaryFilterBarProps = {
+type GlossaryFilterBarProps = {
   onFilterChange: (letter: string | null) => void;
   content: ContentForGlossaryItem[];
 };

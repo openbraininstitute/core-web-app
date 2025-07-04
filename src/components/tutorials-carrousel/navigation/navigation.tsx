@@ -6,7 +6,7 @@ import { IconChevronRight } from '@/components/LandingPage/icons/IconChevronRigh
 
 import styles from './navigation.module.css';
 
-export interface NavigationProps {
+interface NavigationProps {
   className?: string;
   count: number;
   value: number;

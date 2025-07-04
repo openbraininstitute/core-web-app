@@ -15,7 +15,7 @@ import { classNames } from '@/util/utils';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { DataType } from '@/constants/explore-section/list-views';
 
-export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
+type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
 export function useOnCellRouteHandler<T extends EntityCoreIdentifiable>({
   dataType,
@@ -80,7 +80,7 @@ function useTheme(children: ReactNode): ReactNode {
  * @param {HTMLDivElement} node - The HTMLDivElement to check for rightward scrollability.
  * @returns {boolean} - True if scrollable to the right, false otherwise.
  */
-export const isRightScrollable = (node: HTMLElement): boolean =>
+const isRightScrollable = (node: HTMLElement): boolean =>
   (node?.scrollLeft ?? 0) + (node?.offsetWidth ?? 0) < (node?.scrollWidth ?? 0);
 
 /**
@@ -89,7 +89,7 @@ export const isRightScrollable = (node: HTMLElement): boolean =>
  * @param {HTMLDivElement} node - The HTMLDivElement to check for leftward scrollability.
  * @returns {number | boolean} - Number of pixels scrolled to the left or false if not scrollable.
  */
-export const isLeftScrollable = (node: HTMLElement): number | boolean =>
+const isLeftScrollable = (node: HTMLElement): number | boolean =>
   node?.scrollLeft > 0 ? node.getBoundingClientRect().left : false;
 
 export function useScrollNav(element?: HTMLDivElement): Record<'left' | 'right', ReactNode> {

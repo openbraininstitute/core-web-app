@@ -7,7 +7,7 @@ import CustomSelect from './CustomSelect';
 import { SynapticAssignmentRule } from '@/types/connectome-model-assignment';
 import styles from './add-rule-modal.module.css';
 
-export interface AddRuleModalProps {
+interface AddRuleModalProps {
   open: boolean;
   onValidate(rule: SynapticAssignmentRule): void;
   onCancel(): void;

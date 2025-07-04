@@ -55,7 +55,7 @@ export function EyeIconOutline(props: SVGProps<SVGSVGElement>) {
 }
 
 /** White eye icon on a transparant background */
-export function EyeIconWhite(props: SVGProps<SVGSVGElement>) {
+function EyeIconWhite(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

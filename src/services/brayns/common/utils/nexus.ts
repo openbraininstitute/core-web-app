@@ -3,7 +3,7 @@ import { LimitedStringCacheMap } from './cache-map';
 import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
 
-export interface NexusMetadata {
+interface NexusMetadata {
   '@id': string;
   '@type': string;
   _location: string;
@@ -43,7 +43,7 @@ export async function loadMeshFromNexus(url: string, token: string): Promise<str
   }
 }
 
-export async function loadNexusMetadata(url: string, token: string): Promise<NexusMetadata | null> {
+async function loadNexusMetadata(url: string, token: string): Promise<NexusMetadata | null> {
   try {
     const response = await fetch(url, {
       headers: {

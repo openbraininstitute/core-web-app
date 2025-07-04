@@ -22,7 +22,7 @@ import sessionAtom from '@/state/session';
 import { createDistribution } from '@/util/nexus';
 import { updateJsonFileByUrl, updateResource } from '@/api/nexus';
 
-export const writingConfigAtom = atom(false);
+const writingConfigAtom = atom(false);
 
 export const persistConfigAtom = atom<null, [], Promise<void>>(null, async (get, set) => {
   const session = get(sessionAtom);
@@ -70,31 +70,28 @@ export const persistConfigAtom = atom<null, [], Promise<void>>(null, async (get,
   set(writingConfigAtom, false);
 });
 
-export const setEditsAtom = atom<null, [EditEntry[]], Promise<void>>(
-  null,
-  async (get, set, edits) => {
-    const remoteConfigPayload = await get(remoteConfigPayloadAtom);
-    const configPayload = await get(configPayloadAtom);
+const setEditsAtom = atom<null, [EditEntry[]], Promise<void>>(null, async (get, set, edits) => {
+  const remoteConfigPayload = await get(remoteConfigPayloadAtom);
+  const configPayload = await get(configPayloadAtom);
 
-    if (!configPayload || !remoteConfigPayload) {
-      throw new Error('Trying to set edits while the state has not been initialized');
-    }
-
-    const serialisibleEditEntries: SerialisibleEditEntry[] = edits.map((edit) =>
-      toSerialisibleEdit(edit)
-    );
-
-    const updatedConfigPayload: MicroConnectomeConfigPayload = {
-      ...configPayload,
-      _ui_data: {
-        ...configPayload._ui_data,
-        editHistory: serialisibleEditEntries,
-      },
-    };
-
-    set(localConfigPayloadAtom, new WeakMap().set(remoteConfigPayload, updatedConfigPayload));
+  if (!configPayload || !remoteConfigPayload) {
+    throw new Error('Trying to set edits while the state has not been initialized');
   }
-);
+
+  const serialisibleEditEntries: SerialisibleEditEntry[] = edits.map((edit) =>
+    toSerialisibleEdit(edit)
+  );
+
+  const updatedConfigPayload: MicroConnectomeConfigPayload = {
+    ...configPayload,
+    _ui_data: {
+      ...configPayload._ui_data,
+      editHistory: serialisibleEditEntries,
+    },
+  };
+
+  set(localConfigPayloadAtom, new WeakMap().set(remoteConfigPayload, updatedConfigPayload));
+});
 
 export const addEditAtom = atom<null, [EditEntry], Promise<void>>(null, async (get, set, edit) => {
   const edits = await get(editsAtom);

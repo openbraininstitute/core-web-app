@@ -14,7 +14,7 @@ export const COMMON_FIELDS = [
   },
 ] as DetailProps[];
 
-export const NEURON_MORPHOLOGY_FIELDS = [
+const NEURON_MORPHOLOGY_FIELDS = [
   {
     field: EntityCoreFields.BrainRegion,
   },
@@ -29,7 +29,7 @@ export const NEURON_MORPHOLOGY_FIELDS = [
   },
 ] as DetailProps[];
 
-export const BOUTON_DENSITY_FIELDS = [
+const BOUTON_DENSITY_FIELDS = [
   {
     field: Field.BrainRegion,
   },
@@ -63,7 +63,7 @@ export const BOUTON_DENSITY_FIELDS = [
   },
 ] as DetailProps[];
 
-export const ELECTRO_PHYSIOLOGY_FIELDS = [
+const ELECTRO_PHYSIOLOGY_FIELDS = [
   {
     field: Field.BrainRegion,
   },
@@ -81,7 +81,7 @@ export const ELECTRO_PHYSIOLOGY_FIELDS = [
   },
 ] as DetailProps[];
 
-export const NEURON_DENSITY_FIELDS = [
+const NEURON_DENSITY_FIELDS = [
   {
     field: Field.BrainRegion,
   },
@@ -112,7 +112,7 @@ export const NEURON_DENSITY_FIELDS = [
   },
 ] as DetailProps[];
 
-export const SYNAPSE_PER_CONNECTION_FIELDS = [
+const SYNAPSE_PER_CONNECTION_FIELDS = [
   {
     field: Field.PreSynapticBrainRegion,
   },
@@ -153,7 +153,7 @@ export const SYNAPSE_PER_CONNECTION_FIELDS = [
   },
 ] as DetailProps[];
 
-export const E_MODEL_FIELDS = [
+const E_MODEL_FIELDS = [
   {
     field: Field.BrainRegion,
   },
@@ -169,7 +169,7 @@ export const E_MODEL_FIELDS = [
   },
 ] as DetailProps[];
 
-export const ME_MODEL_FIELDS = [
+const ME_MODEL_FIELDS = [
   {
     field: Field.BrainRegion,
     className: 'col-span-2',
@@ -188,7 +188,7 @@ export const ME_MODEL_FIELDS = [
   },
 ] as DetailProps[];
 
-export const MODEL_DATA_COMMON_FIELDS = [
+const MODEL_DATA_COMMON_FIELDS = [
   {
     field: Field.Description,
     className: 'col-span-3',
@@ -201,7 +201,7 @@ export const MODEL_DATA_COMMON_FIELDS = [
   },
 ] as DetailProps[];
 
-export const SYNAPTOME_MODEL_FIELDS = [
+const SYNAPTOME_MODEL_FIELDS = [
   {
     field: Field.BrainRegion,
     className: 'col-span-1',

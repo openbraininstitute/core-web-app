@@ -13,7 +13,7 @@ function MainSidebarHeader({ expanded }: { expanded: boolean }) {
   return expanded ? <span>BBOP</span> : <span>Menu</span>;
 }
 
-export const MAIN_NAVIGATION_LIST: Array<NavigationItemProps> = [
+const MAIN_NAVIGATION_LIST: Array<NavigationItemProps> = [
   {
     name: 'About',
     description: 'Explore the literature and query publications using a chatbot.',
@@ -37,7 +37,7 @@ export function MainNavigation({ expanded }: { expanded: boolean }) {
   );
 }
 
-export default function Main() {
+function Main() {
   return (
     <div className={classNames('bg-primary-9 relative h-full')}>
       <div

@@ -14,9 +14,9 @@ import {
 } from '@/types/literature';
 import { Filter, GteLteValue } from '@/features/listing-filter-panel/types';
 
-export type BrainRegion = { id: string; title: string };
+type BrainRegion = { id: string; title: string };
 
-export type LiteratureAtom = {
+type LiteratureAtom = {
   id: string | null;
   query: string;
   answer: string;
@@ -30,7 +30,7 @@ export type LiteratureAtom = {
   controller?: AbortController;
 };
 
-export type LiteratureOptions = keyof LiteratureAtom;
+type LiteratureOptions = keyof LiteratureAtom;
 
 type PromptResponseNode = {
   id?: string;
@@ -89,7 +89,7 @@ export function useLiteratureFilter() {
     }));
 }
 
-export function useLiteratureResultsAtom() {
+function useLiteratureResultsAtom() {
   const [QAs, updateResult] = useAtom(literatureResultAtom);
 
   // accept batch update

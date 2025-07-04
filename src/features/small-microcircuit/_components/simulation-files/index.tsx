@@ -19,7 +19,7 @@ export type File = {
   assetPath?: string;
 };
 
-export type SimulationFilesProps = {
+type SimulationFilesProps = {
   simulation: ICircuitSimulation;
   execStatus?: CircuitSimulationExecutionStatus | null;
   selectedFile?: File;
@@ -73,7 +73,7 @@ export function SimulationFiles({
   );
 }
 
-export type SimulationInputFilesProps = {
+type SimulationInputFilesProps = {
   simulation: ICircuitSimulation;
   context: WorkspaceContext;
   selectedFile?: File;
@@ -81,7 +81,7 @@ export type SimulationInputFilesProps = {
   className?: string;
 };
 
-export function SimulationInputFiles({
+function SimulationInputFiles({
   simulation,
   context,
   selectedFile,
@@ -119,7 +119,7 @@ export function SimulationInputFiles({
   );
 }
 
-export type SimulationOutputFilesProps = {
+type SimulationOutputFilesProps = {
   simulation: ICircuitSimulation;
   context: WorkspaceContext;
   selectedFile?: File;
@@ -127,7 +127,7 @@ export type SimulationOutputFilesProps = {
   className?: string;
 };
 
-export function SimulationOutputFiles({
+function SimulationOutputFiles({
   simulation,
   onSelect,
   selectedFile,
@@ -157,13 +157,13 @@ export function SimulationOutputFiles({
   );
 }
 
-export type SimulationFileProps = {
+type SimulationFileProps = {
   file: File;
   selected?: boolean;
   onSelect: (file: File) => void;
 };
 
-export function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
+function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
   const fileExt = fileName?.split('.').at(-1);
 

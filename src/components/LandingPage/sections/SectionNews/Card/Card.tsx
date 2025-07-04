@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 import { sanitizeURL } from '@/components/LandingPage/utils';
 import styles from './Card.module.css';
 
-export interface CardsProps {
+interface CardsProps {
   className?: string;
   news: ContentForNewsItem;
 }

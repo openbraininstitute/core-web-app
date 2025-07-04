@@ -5,7 +5,7 @@ import { useCurrency } from '@/components/LandingPage/atoms';
 
 import styles from './general-list.module.css';
 
-export interface GeneralListProps {
+interface GeneralListProps {
   value: ContentForPriceList2GeneralItem[];
   plans: Array<{ title: string; id: string }>;
 }

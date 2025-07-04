@@ -74,20 +74,20 @@ export const configPayloadAtom = atom<Promise<MacroConnectomeConfigPayload | nul
   return localConfigPayload ?? remoteConfigPayload;
 });
 
-export const initialConnectivityStrengthEntityAtom = atom<
-  Promise<BrainConnectomeStrengthResource | null>
->(async (get) => {
-  const session = get(sessionAtom);
-  const remoteConfigPayload = await get(remoteConfigPayloadAtom);
+const initialConnectivityStrengthEntityAtom = atom<Promise<BrainConnectomeStrengthResource | null>>(
+  async (get) => {
+    const session = get(sessionAtom);
+    const remoteConfigPayload = await get(remoteConfigPayloadAtom);
 
-  if (!session || !remoteConfigPayload) return null;
+    if (!session || !remoteConfigPayload) return null;
 
-  const { id, rev } = remoteConfigPayload.initial.connection_strength;
+    const { id, rev } = remoteConfigPayload.initial.connection_strength;
 
-  return fetchResourceById(id, session, { rev });
-});
+    return fetchResourceById(id, session, { rev });
+  }
+);
 
-export const initialConnectivityStrengthTableAtom = atom<Promise<Table | null>>(async (get) => {
+const initialConnectivityStrengthTableAtom = atom<Promise<Table | null>>(async (get) => {
   const session = get(sessionAtom);
   const initialConnectivityStrengthEntity = await get(initialConnectivityStrengthEntityAtom);
 

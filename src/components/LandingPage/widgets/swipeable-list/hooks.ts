@@ -6,7 +6,7 @@ export function useSanityContentForSwipeableList() {
   return useSanity(query, isContentForSwipeableList);
 }
 
-export interface ContentForSwipeableList {
+interface ContentForSwipeableList {
   title: string;
   button: string;
   link: string;

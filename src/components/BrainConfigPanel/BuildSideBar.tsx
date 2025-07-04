@@ -30,7 +30,7 @@ type ConfigListProps = {
   baseHref: string;
 };
 
-export const CURATED_MODELS = [
+const CURATED_MODELS = [
   {
     id: 'https://bbp.epfl.ch/neurosciencegraph/data/modelconfigurations/1921aaae-69c4-4366-ae9d-7aa1453f2158',
     name: 'Release 23.01',

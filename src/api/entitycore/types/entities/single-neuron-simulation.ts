@@ -50,7 +50,7 @@ export interface MeTypeFilter {
   me_type__order_by?: string | null;
 }
 
-export interface MeModelFilter {
+interface MeModelFilter {
   me_model__creation_date__lte?: string | null;
   me_model__creation_date__gte?: string | null;
   me_model__update_date__lte?: string | null;
@@ -75,7 +75,7 @@ export interface ISingleNeuronSimulationFilter
     PaginationFilter,
     OwnershipFilter {}
 
-export const CreateSingleNeuronSimulationSchema = z.object({
+const CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
   status: z.nativeEnum(SingleNeuronSimulationStatus),

@@ -67,7 +67,7 @@ export type Dimension = {
   value: DimensionValue | DimensionRange;
 };
 
-export interface AnalysisReportLink {
+interface AnalysisReportLink {
   '@id': string;
   '@type': 'AnalysisReport';
 }

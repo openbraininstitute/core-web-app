@@ -3,7 +3,7 @@ import RightHemisphere from '@/components/icons/RightHemisphere';
 import LeftHemisphere from '@/components/icons/LeftHemisphere';
 import styles from './editable-hemisphere-cell.module.css';
 
-export interface HemiSphereButtonProps {
+interface HemiSphereButtonProps {
   value: string | null;
   type: 'left' | 'right';
   onClick: (type: 'left' | 'right') => void;

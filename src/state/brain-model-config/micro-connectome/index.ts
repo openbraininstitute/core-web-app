@@ -34,7 +34,7 @@ import { MicroConnectomeEditEntry } from '@/types/connectome';
 import { fromSerialisibleSelection } from '@/util/connectome';
 import { supportedUIConfigVersion } from '@/constants/configs';
 
-export const refetchCounterAtom = atom<number>(0);
+const refetchCounterAtom = atom<number>(0);
 export const triggerRefetchAtom = atom(null, (get, set) =>
   set(refetchCounterAtom, (counter) => counter + 1)
 );
@@ -134,7 +134,7 @@ export const hasUnsavedEditsAtom = atom<Promise<boolean>>(async (get) => {
   );
 });
 
-export const initialVariantMatrix = atom<Promise<ArrayBuffer | null>>(async (get) => {
+const initialVariantMatrix = atom<Promise<ArrayBuffer | null>>(async (get) => {
   const session = get(sessionAtom);
   const configPayload = await get(configPayloadAtom);
 
@@ -156,7 +156,7 @@ export const initialVariantMatrix = atom<Promise<ArrayBuffer | null>>(async (get
   return variantMatrixArrayBuffer;
 });
 
-export const overridesVariantMatrix = atom<Promise<ArrayBuffer | null>>(async (get) => {
+const overridesVariantMatrix = atom<Promise<ArrayBuffer | null>>(async (get) => {
   const session = get(sessionAtom);
   const configPayload = await get(configPayloadAtom);
 
@@ -181,7 +181,7 @@ type ParamMatrices = {
   [variantName: string]: ArrayBuffer;
 };
 
-export const initialParamMatrices = atom<Promise<ParamMatrices | null>>(async (get) => {
+const initialParamMatrices = atom<Promise<ParamMatrices | null>>(async (get) => {
   const session = get(sessionAtom);
   const configPayload = await get(configPayloadAtom);
 
@@ -210,7 +210,7 @@ export const initialParamMatrices = atom<Promise<ParamMatrices | null>>(async (g
   );
 });
 
-export const overridesParamMatrices = atom<Promise<ParamMatrices | null>>(async (get) => {
+const overridesParamMatrices = atom<Promise<ParamMatrices | null>>(async (get) => {
   const session = get(sessionAtom);
   const configPayload = await get(configPayloadAtom);
 

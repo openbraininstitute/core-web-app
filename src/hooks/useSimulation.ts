@@ -24,7 +24,7 @@ import type {
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 
-export function useSimulation({
+function useSimulation({
   id,
   virtualLabId,
   projectId,

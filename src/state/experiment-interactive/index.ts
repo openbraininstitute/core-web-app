@@ -21,7 +21,7 @@ export const displayedSimulationParamsConfigAtom = atom<ParameterKeyConfig[]>([
   ...mockSimulationParams,
 ]);
 
-export const playbackStepSizeAtom = atom<number>(20);
+const playbackStepSizeAtom = atom<number>(20);
 
 export const playbackActiveStepAtom = atom<number>(0);
 

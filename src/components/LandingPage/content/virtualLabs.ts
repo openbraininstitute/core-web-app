@@ -2,7 +2,7 @@ import { tryType } from './_common';
 import { useSanity } from '@/services/sanity';
 import { isString } from '@/util/type-guards';
 
-export function useSanityContentForVirtualLabsTitle() {
+function useSanityContentForVirtualLabsTitle() {
   return (
     useSanity(
       `*[_type=="pages" && slug.current=="home"][0]
@@ -12,7 +12,7 @@ export function useSanityContentForVirtualLabsTitle() {
   );
 }
 
-export interface ContentForVirtualLabsBlock {
+interface ContentForVirtualLabsBlock {
   title: string;
   description: string;
   videoURL: string;

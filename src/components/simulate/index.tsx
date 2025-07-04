@@ -4,13 +4,6 @@ import SimCampUIConfigTemplateGrid from './SimCampUIConfigTemplateGrid';
 import SimCampaignList from './SimCampaignList';
 import LaunchedSimCampaignList from './LaunchedSimCampaignList';
 
-export {
-  BrainConfigSelector,
-  ConfirmBtn,
-  SimCampUIConfigTemplateGrid,
-  SimCampaignList,
-  LaunchedSimCampaignList,
-};
+export { BrainConfigSelector, ConfirmBtn };
 
 // eslint-disable-next-line import/no-anonymous-default-export
-export default {};

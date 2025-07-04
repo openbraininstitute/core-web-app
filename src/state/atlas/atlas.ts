@@ -12,7 +12,7 @@ interface AtlasItemType {
   hasError: boolean;
 }
 
-export interface MeshType extends AtlasItemType {
+interface MeshType extends AtlasItemType {
   type: 'mesh';
   contentURL: string;
 }
@@ -32,7 +32,7 @@ export interface CellType extends AtlasItemType {
   regionID: string;
 }
 
-export type AtlasVisualizationType = {
+type AtlasVisualizationType = {
   visibleMeshes: MeshType[];
   visiblePointClouds: PointCloudType[];
   visibleNodeSets: NodeSetType[];
@@ -89,7 +89,7 @@ export const initializeRootMeshAtom = atom(null, async (get, set) => {
 
 export const atlasVisualizationAtom = atomWithReset(defaultCollection);
 
-export const resetAtlasVisualizationAtom = atom(null, (get, set) =>
+const resetAtlasVisualizationAtom = atom(null, (get, set) =>
   set(atlasVisualizationAtom, defaultCollection)
 );
 

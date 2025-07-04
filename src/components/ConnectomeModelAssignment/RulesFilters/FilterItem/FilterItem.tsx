@@ -7,7 +7,7 @@ import { useFieldsOptionsProvider } from '@/components/ConnectomeModelAssignment
 
 import styles from './filter-item.module.css';
 
-export interface FilterItemProps {
+interface FilterItemProps {
   item: FilterItemType;
   onChange(item: FilterItemType): void;
   onDelete(): void;

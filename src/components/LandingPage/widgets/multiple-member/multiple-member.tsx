@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './multiple-member.module.css';
 
-export interface WidgetMultipleMemberProps {
+interface WidgetMultipleMemberProps {
   className?: string;
 }
 

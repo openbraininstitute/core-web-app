@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: 'Single AI Chat Tool',
   description: 'Explore the AI chat tools available in our application.',
 };

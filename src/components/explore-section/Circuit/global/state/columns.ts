@@ -15,7 +15,7 @@ export type FilterConfig = {
   max?: number | string;
 };
 
-export const CIRCUITS_COLUMNS: SingleColumnContent[] = [
+const CIRCUITS_COLUMNS: SingleColumnContent[] = [
   {
     title: 'Download',
     id: 'download',

@@ -1,7 +1,7 @@
 export type RequiredParamRawNames = 'randomness' | 'step_size' | 'orientation';
-export type RequiredParamDisplayNames = 'Randomness' | 'Step size' | 'Orientation';
+type RequiredParamDisplayNames = 'Randomness' | 'Step size' | 'Orientation';
 
-export type ParamsRawNames =
+type ParamsRawNames =
   | RequiredParamRawNames
   | 'metric'
   | 'growth_method'
@@ -23,7 +23,7 @@ type BaseParamsType = Record<
   number | string | null | OrientationInterface[] | StepSizeInterface
 >;
 
-export interface BasicParams extends BaseParamsType {
+interface BasicParams extends BaseParamsType {
   metric: string;
   randomness: number;
   radius: number;
@@ -73,7 +73,7 @@ export interface ParamInfo {
   step: number;
 }
 
-export interface OrientationToDisplay {
+interface OrientationToDisplay {
   displayName: RequiredParamDisplayNames;
 }
 

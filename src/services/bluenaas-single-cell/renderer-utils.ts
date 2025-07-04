@@ -100,7 +100,7 @@ export function createSegMarkerMesh(sec: any, segIdx: number, material: Material
   return mesh;
 }
 
-export function createBubble(position: Vector3, color: ColorRepresentation = 0xffffff) {
+function createBubble(position: Vector3, color: ColorRepresentation = 0xffffff) {
   // Create a sphere geometry
   const geometry = new SphereGeometry(1, 8, 8); // Radius, widthSegments, heightSegments
 

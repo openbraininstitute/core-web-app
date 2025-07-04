@@ -18,16 +18,16 @@ import {
   SynapseConfigType,
 } from '@/types/nexus';
 
-export type SearchType = 'public' | 'personal' | 'archive' | 'recent';
+type SearchType = 'public' | 'personal' | 'archive' | 'recent';
 
-export const searchConfigListTypeAtom = atom<SearchType>('public');
+const searchConfigListTypeAtom = atom<SearchType>('public');
 
 export const searchConfigListStringAtom = atom<string>('');
 
-export const refetchTriggerAtom = atom<{}>({});
-export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
+const refetchTriggerAtom = atom<{}>({});
+const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 
-export const configListAtom = atom<Promise<BrainModelConfigResource[]>>(async (get) => {
+const configListAtom = atom<Promise<BrainModelConfigResource[]>>(async (get) => {
   const session = get(sessionAtom);
   const searchType = get(searchConfigListTypeAtom);
   const searchString = get(searchConfigListStringAtom);

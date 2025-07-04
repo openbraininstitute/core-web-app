@@ -1,7 +1,7 @@
 import { classNames } from '@/util/utils';
 import styles from './how-to-use.module.css';
 
-export interface HowToUseProps {
+interface HowToUseProps {
   className?: string;
   onClick(): void;
 }

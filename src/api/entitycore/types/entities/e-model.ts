@@ -32,7 +32,7 @@ interface ExemplarMorphology extends Timestamps, EntityCoreIdentifiable {
   legacy_id: Array<string> | null;
 }
 
-export interface IEModelBase extends EntityCoreIdentifiable, EntityCoreOwnership {
+interface IEModelBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
   description: string;
   iteration: string;

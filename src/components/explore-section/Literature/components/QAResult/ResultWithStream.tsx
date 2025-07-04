@@ -20,7 +20,7 @@ function ResultOnStreamAnswer() {
 }
 
 // Component used to receive the stream result
-export function ResultOnStream({
+function ResultOnStream({
   id,
   scoped = false,
   onAfterStream,

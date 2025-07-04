@@ -9,7 +9,7 @@ import {
 
 export const DATA_SEPERATOR = '<bbs_json_data>';
 export const ERROR_SEPERATOR = '<bbs_json_error>';
-export const SOURCES_SEPERATOR = '<bbs_sources>';
+const SOURCES_SEPERATOR = '<bbs_sources>';
 export const STREAM_JSON_DATA_SEPARATOR_REGEX = /(<bbs_json_data>|<bbs_json_error>)/g;
 
 const generativeQADTO = ({

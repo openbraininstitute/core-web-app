@@ -26,7 +26,7 @@ export default class BackendService {
   }
 }
 
-export interface CircuitPopulation {
+interface CircuitPopulation {
   name: string;
   type: string;
   size: number;

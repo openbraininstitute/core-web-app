@@ -9,7 +9,7 @@ import styles from './axis-gizmo.module.css';
 
 const GIZMO_SIZE = 128;
 
-export interface AxisGizmoViewProps {
+interface AxisGizmoViewProps {
   className?: string;
   camera: CameraTransformInteface;
 }

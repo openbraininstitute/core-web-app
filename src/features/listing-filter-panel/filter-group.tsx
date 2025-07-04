@@ -13,7 +13,7 @@ type ContentProps = {
   setFilters: (filters: Array<CoreFilter>) => void;
 };
 
-export type FilterGroupProps = {
+type FilterGroupProps = {
   items: {
     content?: (contentProps: ContentProps) => null | ReactElement<any>;
     display?: boolean;

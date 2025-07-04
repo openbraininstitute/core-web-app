@@ -1,6 +1,6 @@
 import { VlmResponse } from './common';
 
-export type MockProject = {
+type MockProject = {
   id: number;
   title: string;
   latestUpdate: string;

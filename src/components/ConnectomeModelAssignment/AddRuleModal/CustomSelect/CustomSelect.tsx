@@ -7,7 +7,7 @@ import {
 import { SynapticAssignmentRule } from '@/types/connectome-model-assignment';
 import styles from './custom-select.module.css';
 
-export interface CustomSelectProps {
+interface CustomSelectProps {
   rule: SynapticAssignmentRule;
   onChange(rule: SynapticAssignmentRule): void;
   field: keyof SynapticAssignmentRule;

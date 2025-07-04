@@ -17,5 +17,3 @@ const client = new SanityClient({
 });
 
 export const getSanityTiers = client.createApiUtil<ContentForPricing | undefined | null>('tiers');
-
-export default client;

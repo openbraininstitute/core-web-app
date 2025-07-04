@@ -20,7 +20,7 @@ import { BASIC_CELL_GROUPS_AND_REGIONS_ID } from '@/constants/brain-hierarchy';
  * A hook to create a map which provides a list of available in the cell composition m-types
  * by a brain region notation (only for leaf nodes that are defined in cell composition config).
  */
-export function useLeafBrainRegionMtypeMap(): Map<string, string[]> {
+function useLeafBrainRegionMtypeMap(): Map<string, string[]> {
   const brainRegionNotationByIdMap = useAtomValue(brainRegionNotationByIdMapAtom);
   const cellComposition = useAtomValue(compositionAtom);
 
@@ -76,7 +76,7 @@ export function useBrainRegionMtypeMap(): Map<string, Set<string>> {
 /**
  * A hook to sort a list of brain region notations according their initial ordering in the brain hierarchy.
  */
-export function useBrainRegionNotationSorterFn() {
+function useBrainRegionNotationSorterFn() {
   const brainRegionIdxByNotationMap = useAtomValue(brainRegionIdxByNotationMapAtom);
 
   const sorterFn = useCallback(

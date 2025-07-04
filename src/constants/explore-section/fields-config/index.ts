@@ -30,6 +30,4 @@ const ENTITY_CORE_FIELDS_CONFIG: ExploreFieldsConfigProps<EntityCore> = {
   ...ENTITY_CORE_EXPERIMENTAL_DATA_FIELDS_CONFIG,
 };
 
-export default EXPLORE_FIELDS_CONFIG;
-
 export { ENTITY_CORE_FIELDS_CONFIG };

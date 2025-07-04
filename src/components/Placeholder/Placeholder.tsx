@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react';
 import styles from './placeholder.module.css';
 
-export type PlaceholderProps = {
+type PlaceholderProps = {
   className?: string;
   children: React.ReactNode;
 };

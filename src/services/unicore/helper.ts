@@ -149,5 +149,3 @@ export async function submitJob(
     throw new Error(`[Submit job] ${err}`);
   }
 }
-
-export default submitJob;

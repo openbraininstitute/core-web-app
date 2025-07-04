@@ -2,7 +2,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './coord-value.module.css';
 
-export interface CoordValueProps {
+interface CoordValueProps {
   className?: string;
   name: string;
   color: string;

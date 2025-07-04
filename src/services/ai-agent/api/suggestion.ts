@@ -37,7 +37,7 @@ interface SuggestionFromUserJourneyResponse {
   }>;
 }
 
-export function isSuggestionFromUserJourneyResponse(
+function isSuggestionFromUserJourneyResponse(
   data: unknown
 ): data is SuggestionFromUserJourneyResponse {
   return isType(data, {

@@ -28,11 +28,11 @@ import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/meas
 import { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
 import { Filter } from '@/features/listing-filter-panel/types';
 
-export const inferredResourcesAtom = atomFamily(() => atom(new Array<InferredResource>()));
-export const expandedRowKeysAtom = atomFamily(() => atom<readonly Key[]>([]));
-export const limitQueryParameterAtom = atomFamily(() => atom(DEFAULT_CARDS_NUMBER));
+const inferredResourcesAtom = atomFamily(() => atom(new Array<InferredResource>()));
+const expandedRowKeysAtom = atomFamily(() => atom<readonly Key[]>([]));
+const limitQueryParameterAtom = atomFamily(() => atom(DEFAULT_CARDS_NUMBER));
 
-export const rulesResponseAtom = atomFamily((resourceId: string) =>
+const rulesResponseAtom = atomFamily((resourceId: string) =>
   atom<Promise<RulesOutput | null>>(async (get) => {
     const session = get(sessionAtom);
 
@@ -82,7 +82,7 @@ function flattenRules(formattedRules: Rule[], { rules }: RulesOutput[0]): Rule[]
 }
 
 // Reduce the rules response into a (flat) array of ResourceBasedRule objects.
-export const rulesAtom = atomFamily((resourceId: string) =>
+const rulesAtom = atomFamily((resourceId: string) =>
   atom<Promise<Rule[] | undefined>>(async (get) => {
     const rulesResponse = await get(rulesResponseAtom(resourceId));
 
@@ -90,7 +90,7 @@ export const rulesAtom = atomFamily((resourceId: string) =>
   })
 );
 
-export const selectedRulesAtom = atomFamily((resourceId: string) =>
+const selectedRulesAtom = atomFamily((resourceId: string) =>
   atomWithDefault<Promise<string[]> | string[]>(async (get) => {
     const rules = await get(rulesAtom(resourceId));
 
@@ -100,7 +100,7 @@ export const selectedRulesAtom = atomFamily((resourceId: string) =>
   })
 );
 
-export const resourceBasedRequestAtom = atomFamily((resourceId: string) =>
+const resourceBasedRequestAtom = atomFamily((resourceId: string) =>
   atom<Promise<ResourceBasedInferenceRequest | null>>(async (get) => {
     const rules = await get(rulesAtom(resourceId));
 
@@ -139,7 +139,7 @@ export const resourceBasedRequestAtom = atomFamily((resourceId: string) =>
   })
 );
 
-export const resourceBasedResponseAtom = atomFamily((resourceId: string) =>
+const resourceBasedResponseAtom = atomFamily((resourceId: string) =>
   atom<Promise<ResourceBasedInferenceResponse | null>>(async (get) => {
     const session = get(sessionAtom);
 
@@ -157,7 +157,7 @@ export const resourceBasedResponseAtom = atomFamily((resourceId: string) =>
   })
 );
 
-export const resourceBasedResponseResultsAtom = atomFamily((resourceId: string) =>
+const resourceBasedResponseResultsAtom = atomFamily((resourceId: string) =>
   atom<Promise<ResourceBasedInference[] | null>>(async (get) => {
     const resourceBasedResponse = await get(resourceBasedResponseAtom(resourceId));
 
@@ -167,7 +167,7 @@ export const resourceBasedResponseResultsAtom = atomFamily((resourceId: string) 
   })
 );
 
-export const resourceBasedResponseRawAtom = atomFamily<
+const resourceBasedResponseRawAtom = atomFamily<
   GenFamilyType,
   Atom<Promise<FlattenedExploreESResponse<ExploreSectionResource> | null>>
 >(
@@ -201,7 +201,7 @@ export const resourceBasedResponseRawAtom = atomFamily<
   isEqual
 );
 
-export const resourceBasedResponseHitsAtom = atomFamily<
+const resourceBasedResponseHitsAtom = atomFamily<
   GenFamilyType,
   Atom<Promise<FlattenedExploreESResponse<ExploreSectionResource>['hits'] | undefined>>
 >(
@@ -213,7 +213,7 @@ export const resourceBasedResponseHitsAtom = atomFamily<
   isEqual
 );
 
-export const resourceBasedResponseAggregationsAtom = atomFamily(
+const resourceBasedResponseAggregationsAtom = atomFamily(
   ({ resourceId, dataType }: GenFamilyType) =>
     atom<Promise<FlattenedExploreESResponse<ExploreSectionResource>['aggs'] | undefined>>(
       async (get) => {
@@ -224,7 +224,7 @@ export const resourceBasedResponseAggregationsAtom = atomFamily(
   isEqual
 );
 
-export const resourceBasedResponseHitsCountAtom = atomFamily(
+const resourceBasedResponseHitsCountAtom = atomFamily(
   ({ resourceId, dataType }: GenFamilyType) =>
     atom<Promise<number | undefined>>(async (get) => {
       const response = await get(resourceBasedResponseRawAtom({ resourceId, dataType }));
@@ -233,7 +233,7 @@ export const resourceBasedResponseHitsCountAtom = atomFamily(
   isEqual
 );
 
-export const resourceBasedResponseMorphoMetricsAtom = atomFamily<
+const resourceBasedResponseMorphoMetricsAtom = atomFamily<
   GenFamilyType,
   Atom<Promise<FlattenedExploreESResponse<ExploreSectionResource> | null>>
 >(

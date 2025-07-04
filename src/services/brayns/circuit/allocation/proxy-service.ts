@@ -5,12 +5,12 @@ import { assertType } from '@/util/type-guards';
 
 const HTTP_CREATED_CODE = 201;
 
-export interface ProxyServiceOptions {
+interface ProxyServiceOptions {
   token: string;
   url: string;
 }
 
-export interface JobOptions {
+interface JobOptions {
   // "SBO1", ...
   usecase: string;
 }
@@ -108,7 +108,7 @@ export default class ProxyService implements JobAllocatorServiceInterface {
   }
 }
 
-export function joinPath(...paths: string[]): string {
+function joinPath(...paths: string[]): string {
   const end = paths.length - 1;
   return paths
     .map((originalPath, index) => {

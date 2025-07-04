@@ -11,7 +11,7 @@ import { useCurrency } from '@/components/LandingPage/atoms';
 
 import styles from './plan-header.module.css';
 
-export interface PlanHeaderProps {
+interface PlanHeaderProps {
   className?: string;
   plan: ContentForPricingPlan;
 }

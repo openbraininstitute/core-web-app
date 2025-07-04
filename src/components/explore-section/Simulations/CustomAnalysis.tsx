@@ -102,7 +102,7 @@ export default function CustomAnalysis({
   );
 }
 
-export function useCumulativeAnalysisReports(
+function useCumulativeAnalysisReports(
   incoming: string | undefined,
   analysisId: string | undefined
 ): [ExtendedCumAnalysisReport | undefined, boolean] {
@@ -220,7 +220,7 @@ async function launchAnalysis(
   });
 }
 
-export function RunningAnalysis({ createdAt }: { createdAt: ISODateString }) {
+function RunningAnalysis({ createdAt }: { createdAt: ISODateString }) {
   const [executionTime, setExecutionTime] = useState('');
 
   useEffect(() => {

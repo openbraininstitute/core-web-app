@@ -17,7 +17,7 @@ export const featureWithEModel: MEFeatureWithEModel = {
   },
 };
 
-export const DEFAULT_ME_MODEL: DefaultMEModelType = {
+const DEFAULT_ME_MODEL: DefaultMEModelType = {
   mePairValue: ['L1_DAC', 'bNAC'],
   eModelValue: {
     name: 'EM__66aaeea__bNAC__6',

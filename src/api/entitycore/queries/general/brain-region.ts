@@ -33,7 +33,7 @@ export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
  * @param {string} params.id - The unique identifier of the brain region to retrieve
  * @returns {Promise<BrainRegion>} A promise that resolves to the requested brain region
  */
-export async function getTemporaryBrainRegionById({ id }: { id: string }) {
+async function getTemporaryBrainRegionById({ id }: { id: string }) {
   const api = await entityCoreApi();
   return await api.get<IBrainRegionHierarchy>(`/brain-region/${id}`);
 }

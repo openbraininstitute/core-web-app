@@ -16,7 +16,7 @@ const baseUri = '/simulation-execution';
  *
  *
  */
-export async function getCircuitSimulationExecution({
+async function getCircuitSimulationExecution({
   id,
   context,
 }: {
@@ -68,7 +68,7 @@ export async function getCircuitSimulationExecutions({
   });
 }
 
-export async function createSimulationExecution({
+async function createSimulationExecution({
   data,
   context,
 }: {
@@ -86,7 +86,7 @@ export async function createSimulationExecution({
   });
 }
 
-export async function updateSimulationExecution({
+async function updateSimulationExecution({
   id,
   data,
   context,
@@ -106,7 +106,7 @@ export async function updateSimulationExecution({
   });
 }
 
-export async function deleteSimulationExecution({
+async function deleteSimulationExecution({
   id,
   context,
 }: {

@@ -4,7 +4,7 @@ import { CellType } from '@/state/atlas/atlas';
 export type BraynsColorOpaque = [red: number, green: number, blue: number];
 export type BraynsColorTransparent = [red: number, green: number, blue: number, alpha: number];
 
-export type BraynsObjects = Array<BraynsMeshOptions>;
+type BraynsObjects = Array<BraynsMeshOptions>;
 
 export interface BraynsMeshOptions {
   url: string;
@@ -38,7 +38,7 @@ export interface BraynsServiceInterface {
   showCellsForRegions(circuitPath: string, regions: CellType[]): void;
 }
 
-export interface BusyEventParams {
+interface BusyEventParams {
   type: 'mesh';
   id: string;
   isLoading: boolean;

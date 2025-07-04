@@ -3,7 +3,7 @@ import React from 'react';
 import { styleLayout } from '../../styles';
 import { classNames } from '@/util/utils';
 
-export interface PaddedBlockProps {
+interface PaddedBlockProps {
   className?: string;
   children: React.ReactNode;
 }

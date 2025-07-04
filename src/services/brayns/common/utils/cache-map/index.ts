@@ -1,1 +1,1 @@
-export { LimitedCacheMap, LimitedStringCacheMap } from './cache-map';
+export { LimitedStringCacheMap } from './cache-map';

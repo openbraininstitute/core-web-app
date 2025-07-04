@@ -92,7 +92,7 @@ export const configAtom = atom<Promise<MorphologyAssignmentConfigResource | null
   return fetchResourceById<MorphologyAssignmentConfigResource>(id, session);
 });
 
-export const configPayloadUrlAtom = atom<Promise<string | null>>(async (get) => {
+const configPayloadUrlAtom = atom<Promise<string | null>>(async (get) => {
   const config = await get(configAtom);
   if (!config) return null;
 
@@ -156,7 +156,7 @@ export const selectedCanonicalMapAtom = atom<Promise<Map<string, boolean>>>(asyn
 // serves as 'cache' so we don't have to re-fetch params
 export const cachedDefaultParamsMapAtom = atom<Map<string, ParamConfig>>(new Map());
 
-export const canonicalMorphologyModelConfigIdAtom = atom<Promise<string | null>>(async (get) => {
+const canonicalMorphologyModelConfigIdAtom = atom<Promise<string | null>>(async (get) => {
   const remoteConfigPayload = await get(remoteConfigPayloadAtom);
 
   if (!remoteConfigPayload) return null;
@@ -176,7 +176,7 @@ export const remoteParamsAtom = atom<Promise<ParamConfig | {}>>(async (get) => {
   return brainMTypeParams || {};
 });
 
-export const remoteCanonicalMorphologyModelConfigAtom = atom<
+const remoteCanonicalMorphologyModelConfigAtom = atom<
   Promise<CanonicalMorphologyModelConfig | null>
 >(async (get) => {
   const session = get(sessionAtom);
@@ -190,7 +190,7 @@ export const remoteCanonicalMorphologyModelConfigAtom = atom<
   );
 });
 
-export const canonicalBrainRegionIdsAtom = atom<Promise<string[]>>(async (get) => {
+const canonicalBrainRegionIdsAtom = atom<Promise<string[]>>(async (get) => {
   const canonicalMorphologyModelConfig = await get(canonicalMorphologyModelConfigPayloadAtom);
 
   if (!canonicalMorphologyModelConfig) return [];
@@ -268,7 +268,7 @@ export const canonicalModelParametersAtom = atom<Promise<ParamConfig | null>>(as
   return fetchJsonFileByUrl<ParamConfig>(distributionUrl, session);
 });
 
-export const canonicalMorphologyModelConfigPayloadAtom = atom<
+const canonicalMorphologyModelConfigPayloadAtom = atom<
   Promise<CanonicalMorphologyModelConfigPayload | null>
 >(async (get) => {
   const session = get(sessionAtom);

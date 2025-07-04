@@ -8,7 +8,7 @@ import { styleButtonHoverable } from '@/components/LandingPage/styles';
 
 import styles from './member.module.css';
 
-export interface MemberProps {
+interface MemberProps {
   className?: string;
   value: ContentForMultipleMemberItem;
 }

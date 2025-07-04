@@ -161,7 +161,7 @@ export async function launchUnicoreWorkflowSetup(token: string): Promise<true | 
   return true;
 }
 
-export type WorkflowRunProps = {
+type WorkflowRunProps = {
   loginInfo: Session;
   workflowName: string;
   workflowFiles: WorkflowFile[];
@@ -183,5 +183,3 @@ export async function launchWorkflowTask({
 
   return nexusUrl;
 }
-
-export default launchWorkflowTask;

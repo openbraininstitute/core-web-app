@@ -21,9 +21,9 @@ export const simulateStepTrackerAtom = atomWithReset<SimulationStepsTracker>({
 
 export const secNamesAtom = atomWithReset<string[]>([]);
 
-export const singleNeuronAtom = atom<SelectedSingleNeuronModel | null>(null);
+const singleNeuronAtom = atom<SelectedSingleNeuronModel | null>(null);
 
-export const singleNeuronIdAtom = atom<string | null>((get) => {
+const singleNeuronIdAtom = atom<string | null>((get) => {
   const singleNeuronSelfUrl = get(singleNeuronAtom);
   return getIdFromSelfUrl(singleNeuronSelfUrl?.self ?? null);
 });

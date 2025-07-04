@@ -18,13 +18,13 @@ export const paramsToDisplay: ParamsToDisplay = {
   },
 };
 
-export const neuriteTypes: Record<NeuriteType, NeuriteType> = {
+const neuriteTypes: Record<NeuriteType, NeuriteType> = {
   basal_dendrite: 'basal_dendrite',
   apical_dendrite: 'apical_dendrite',
   axon: 'axon',
 };
 
-export const DEFAULT_M_MODEL: DefaultMModelType = {
+const DEFAULT_M_MODEL: DefaultMModelType = {
   value: {
     id: 'http://uri.interlex.org/base/ilx_0383192',
     name: 'L1_DAC',

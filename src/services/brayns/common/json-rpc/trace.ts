@@ -1,6 +1,6 @@
 import { isBoolean, isString } from '@/util/type-guards';
 
-export function isTracable(
+function isTracable(
   method: string,
   criteria: boolean | string | string[] | RegExp | ((method: string) => boolean)
 ) {

@@ -11,12 +11,12 @@ export interface CircuitLoaderOptions {
   color: Vector4;
 }
 
-export interface BraynsBounds {
+interface BraynsBounds {
   min: [Number, Number, number];
   max: [Number, Number, number];
 }
 
-export interface BraynsModel {
+interface BraynsModel {
   bounds: BraynsBounds;
   is_visible: boolean;
   model_id: number;

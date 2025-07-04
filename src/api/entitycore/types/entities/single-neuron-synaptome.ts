@@ -53,7 +53,7 @@ export interface ISingleNeuronSynaptomeFilter
     PaginationFilter,
     OwnershipFilter {}
 
-export const CreateSingleNeuronSynaptomeSchema = z.object({
+const CreateSingleNeuronSynaptomeSchema = z.object({
   name: z.string(),
   description: z.string(),
   brain_region_id: z.number(),
@@ -63,7 +63,7 @@ export const CreateSingleNeuronSynaptomeSchema = z.object({
 
 export type TCreateSingleNeuronSynaptome = z.infer<typeof CreateSingleNeuronSynaptomeSchema>;
 
-export const SingleNeuronSynaptomeExclusionRuleSchema = z
+const SingleNeuronSynaptomeExclusionRuleSchema = z
   .object({
     id: z.string().uuid(),
     distance_soma_gte: z.number().nullish(),
@@ -80,9 +80,7 @@ export const SingleNeuronSynaptomeExclusionRuleSchema = z
     }
   );
 
-export type TSingleNeuronSynaptomeExclusionRule = z.infer<
-  typeof SingleNeuronSynaptomeExclusionRuleSchema
->;
+type TSingleNeuronSynaptomeExclusionRule = z.infer<typeof SingleNeuronSynaptomeExclusionRuleSchema>;
 
 export const SingleNeuronSynaptomeConfigurationSchema = z
   .object({

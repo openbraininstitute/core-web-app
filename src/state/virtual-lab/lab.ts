@@ -41,7 +41,7 @@ export const virtualLabMembersAtomFamily = atomFamily((virtualLabId?: string) =>
   })
 );
 
-export const transactionFormStateAtom = atomWithReset<{
+const transactionFormStateAtom = atomWithReset<{
   credit: string;
   selectedPaymentMethodId?: string;
   loading: boolean;
@@ -57,7 +57,7 @@ export const transactionFormStateAtom = atomWithReset<{
   selectedPaymentMethodId: undefined,
 });
 
-export const virtualLabPaymentMethodsAtomFamily = atomFamily((virtualLabId: string) =>
+const virtualLabPaymentMethodsAtomFamily = atomFamily((virtualLabId: string) =>
   atomWithRefresh<Promise<Array<PaymentMethod> | undefined>>(async (get) => {
     const session = get(sessionAtom);
     if (!session) {
@@ -89,7 +89,7 @@ export const virtualLabsOfUserAtom = atomWithRefresh<
 
 export const projectTopMenuRefAtom = atom<RefObject<HTMLDivElement | null> | null>(null);
 
-export const userVirtualLabTotalsAtom = atom<Promise<number | undefined>>(async (get) => {
+const userVirtualLabTotalsAtom = atom<Promise<number | undefined>>(async (get) => {
   const session = get(sessionAtom);
   if (!session) {
     return;

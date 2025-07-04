@@ -5,7 +5,7 @@ import ProgressiveImage from '@/components/LandingPage/components/ProgressiveIma
 
 import styles from './PortalCard.module.css';
 
-export type PortalCardProps = {
+type PortalCardProps = {
   value: ContentForPortalsListItem;
 };
 

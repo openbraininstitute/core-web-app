@@ -21,7 +21,7 @@ export function findParentIds(root: IBrainRegionHierarchy, targetId: string): st
   return dfs(root, []) ?? [];
 }
 
-export interface IBrainRegionLeaves {
+interface IBrainRegionLeaves {
   id: string;
   leaves: IBrainRegionHierarchy[];
 }
@@ -92,7 +92,7 @@ export function buildHierarchyMap(
 /**
  * Returns descendants and ancestors for a list of brain region ids
  */
-export function getBrainRegionDescendantsAndAncestors(
+function getBrainRegionDescendantsAndAncestors(
   brainRegionIds: string[],
   root: IBrainRegionHierarchy
 ): IBrainRegionHierarchy[] {

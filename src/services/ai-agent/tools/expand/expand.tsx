@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './expand.module.css';
 
-export interface ExpandProps {
+interface ExpandProps {
   className?: string;
   title: React.ReactNode;
   children: React.ReactNode;

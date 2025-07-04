@@ -8,12 +8,12 @@ import { assertType } from '@/util/type-guards';
 
 const MAX_COUNT = 3;
 
-export type UserJourneyItem = {
+type UserJourneyItem = {
   timestamp: number;
   region: string;
   artifact: string | null;
 };
-export type UserJourney = UserJourneyItem[];
+type UserJourney = UserJourneyItem[];
 
 function assertUserJourney(data: unknown): asserts data is UserJourney {
   assertType(data, [

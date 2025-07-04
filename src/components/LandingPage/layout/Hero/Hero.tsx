@@ -11,7 +11,7 @@ import useFullHeight from '@/hooks/useFullHeight';
 
 import styles from './Hero.module.css';
 
-export interface HeroProps {
+interface HeroProps {
   className?: string;
   section: EnumSection;
 }

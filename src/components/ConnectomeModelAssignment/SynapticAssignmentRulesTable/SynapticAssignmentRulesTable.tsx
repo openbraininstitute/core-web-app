@@ -20,7 +20,7 @@ import { useFieldsOptionsProvider } from '@/components/ConnectomeModelAssignment
 import { assertString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
-export interface SynapticAssignmentRulesTableProps {
+interface SynapticAssignmentRulesTableProps {
   className?: string;
   editable?: boolean;
   rules: SynapticAssignmentRule[];

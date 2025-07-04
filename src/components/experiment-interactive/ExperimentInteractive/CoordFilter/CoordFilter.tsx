@@ -5,7 +5,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './coord-filter.module.css';
 
-export interface CoordLabelProps {
+interface CoordLabelProps {
   className?: string;
   coord: SimulationCoord;
   value: string;

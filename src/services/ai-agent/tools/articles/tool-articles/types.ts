@@ -9,14 +9,14 @@ export interface ScientificArticle {
   tool: string;
 }
 
-export interface LiteratureSearchToolItem {
+interface LiteratureSearchToolItem {
   article_title: string;
   article_doi: string;
   article_authors: string[];
   abstract: string | null;
 }
 
-export interface LiteratureSearchToolResult {
+interface LiteratureSearchToolResult {
   articles: LiteratureSearchToolItem[];
   error: unknown;
 }
@@ -46,14 +46,14 @@ export function isLiteratureSearchToolResult(data: unknown): data is LiteratureS
   }
 }
 
-export interface WebSearchToolItem {
+interface WebSearchToolItem {
   title: string;
   content: string;
   url: string;
   score: number;
 }
 
-export interface WebSearchToolResult {
+interface WebSearchToolResult {
   results: WebSearchToolItem[];
 }
 

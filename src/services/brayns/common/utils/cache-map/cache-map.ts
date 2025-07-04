@@ -13,7 +13,7 @@
  * )
  * ```
  */
-export class LimitedCacheMap<KeyType, ValueType> {
+class LimitedCacheMap<KeyType, ValueType> {
   private readonly cache = new Map<KeyType, ValueType>();
 
   private readonly keysCircle: KeyType[] = [];

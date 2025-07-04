@@ -47,8 +47,8 @@ const CLICK_DELAY_TOLERANCE = 500; // ms
 const CLICK_POS_TOLERANCE = 5; // px
 
 const TEXTURE_BASE_URL = `${basePath}/images/e-model-interactive`;
-export type SynapseBubble = Mesh<SphereGeometry, MeshPhongMaterial>;
-export type SynapseBubblesMesh = Mesh<InstancedBufferGeometry, MeshPhongMaterial>;
+type SynapseBubble = Mesh<SphereGeometry, MeshPhongMaterial>;
+type SynapseBubblesMesh = Mesh<InstancedBufferGeometry, MeshPhongMaterial>;
 
 export type NeuronViewerClickData = {
   type: string;

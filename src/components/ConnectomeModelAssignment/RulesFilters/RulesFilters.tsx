@@ -8,7 +8,7 @@ import { SynapticAssignmentRule } from '@/types/connectome-model-assignment';
 import { SettingsIcon } from '@/components/icons';
 import styles from './rules-filters.module.css';
 
-export interface RulesFiltersProps {
+interface RulesFiltersProps {
   rules: SynapticAssignmentRule[];
   onFilterChange(filter: Filter): void;
 }

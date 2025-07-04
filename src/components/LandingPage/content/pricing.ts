@@ -57,7 +57,7 @@ export interface ContentForPricingFeatureItem {
   plans: ContentForPricingFeaturePlan[];
 }
 
-export interface ContentForPricingFeaturePlan {
+interface ContentForPricingFeaturePlan {
   id: string;
   label?: string | null;
   tooltip?: string | null;

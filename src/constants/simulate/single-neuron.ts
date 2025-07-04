@@ -153,7 +153,7 @@ export const DEFAULT_CURRENT_INJECTION_CONFIG: CurrentInjectionSimulationConfig 
   stimulus: DEFAULT_STIMULUS_CONFIG,
 };
 
-export const DEFAULT_SIM_CONFIG: SimulationConfiguration = {
+const DEFAULT_SIM_CONFIG: SimulationConfiguration = {
   conditions: DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
   record_from: [{ ...DEFAULT_RECORDING_LOCATION }],
   current_injection: [DEFAULT_CURRENT_INJECTION_CONFIG],

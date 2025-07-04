@@ -1,6 +1,6 @@
 import styles from './icon.module.css';
 
-export type IconProps = {
+type IconProps = {
   className?: string;
 };
 

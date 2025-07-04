@@ -8,15 +8,15 @@ export interface BucketAggregation {
   excludeOwnFilter: { buckets: Bucket[] };
 }
 
-export interface NestedBucketAggregation {
+interface NestedBucketAggregation {
   [key: string]: { [key: string]: BucketAggregation };
 }
 
-export interface NestedStatsAggregation {
+interface NestedStatsAggregation {
   [key: string]: { [key: string]: Statistics };
 }
 
-export interface Statistics {
+interface Statistics {
   avg?: number;
   count: number;
   max?: number;

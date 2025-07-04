@@ -14,7 +14,7 @@ const idExistsFilter = {
 
 // This expects a name.ngramtext and description.ngramtext field(s) to be defined in the ES index,
 // which is a custom configuration for the KG `dataset` index.
-export function createSearchStringQuery(searchString: string) {
+function createSearchStringQuery(searchString: string) {
   if (!searchString) return undefined;
 
   return {
@@ -518,7 +518,7 @@ export const getPaperListQuery = (searchString: string = '') => ({
   sort: searchString ? undefined : [defaultCreationDateSort],
 });
 
-export const getNotValidatedMEModelQuery = (username: string) => ({
+const getNotValidatedMEModelQuery = (username: string) => ({
   size: DEFAULT_SIZE,
   query: {
     bool: {
@@ -559,7 +559,7 @@ export const getPaperCountQuery = () => ({
   },
 });
 
-export const getSimulationsPerModelQuery = ({
+const getSimulationsPerModelQuery = ({
   modelId,
   type,
 }: {

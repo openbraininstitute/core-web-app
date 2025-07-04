@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './card.module.css';
 
-export interface CardProps {
+interface CardProps {
   className?: string;
   contributor: ContentForSpecialContributor;
 }

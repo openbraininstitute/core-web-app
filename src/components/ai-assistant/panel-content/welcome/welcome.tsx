@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './welcome.module.css';
 
-export interface WelcomeProps {
+interface WelcomeProps {
   className?: string;
 }
 

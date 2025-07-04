@@ -17,7 +17,7 @@ export function isExploreAiSuggestionsQuery(data: unknown): data is ExploreAiSug
   }
 }
 
-export interface ExploreAiSuggestionsResponse {
+interface ExploreAiSuggestionsResponse {
   suggestions: Array<{
     question: string;
   }>;

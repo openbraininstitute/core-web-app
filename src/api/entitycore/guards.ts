@@ -19,31 +19,31 @@ export function hasAssets(
   return 'assets' in obj && (obj.assets === null || Array.isArray(obj.assets));
 }
 
-export function isReconstructionMorphology(
+function isReconstructionMorphology(
   entity: EntityCoreObjectTypes
 ): entity is IReconstructionMorphology {
   return entity.type === EntityTypeEnum.ReconstructionMorphology;
 }
 
-export function isElectricalCellRecording(
+function isElectricalCellRecording(
   entity: EntityCoreObjectTypes
 ): entity is IElectricalCellRecording {
   return entity.type === EntityTypeEnum.ElectricalCellRecording;
 }
 
-export function isExperimentalNeuronDensity(
+function isExperimentalNeuronDensity(
   entity: EntityCoreObjectTypes
 ): entity is IExperimentalNeuronDensity {
   return entity.type === EntityTypeEnum.ExperimentalNeuronDensity;
 }
 
-export function isExperimentalBoutonDensity(
+function isExperimentalBoutonDensity(
   entity: EntityCoreObjectTypes
 ): entity is IExperimentalBoutonDensity {
   return entity.type === EntityTypeEnum.ExperimentalBoutonDensity;
 }
 
-export function isExperimentalSynapsesPerConnection(
+function isExperimentalSynapsesPerConnection(
   entity: EntityCoreObjectTypes
 ): entity is IExperimentalSynapsesPerConnection {
   return entity.type === EntityTypeEnum.ExperimentalSynapsesPerConnection;
@@ -59,6 +59,6 @@ export function isMemodel(entity: EntityCoreObjectTypes): entity is IMEModel {
   return entity.type === EntityTypeEnum.Memodel;
 }
 
-export function isEmodel(entity: EntityCoreObjectTypes): entity is IEModel {
+function isEmodel(entity: EntityCoreObjectTypes): entity is IEModel {
   return entity.type === EntityTypeEnum.Emodel;
 }

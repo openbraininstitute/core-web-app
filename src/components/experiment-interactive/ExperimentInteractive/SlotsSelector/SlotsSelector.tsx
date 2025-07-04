@@ -15,7 +15,7 @@ import Spinner from '@/components/Spinner';
 
 import styles from './slots-selector.module.css';
 
-export interface SlotsSelectorProps {
+interface SlotsSelectorProps {
   className?: string;
 }
 

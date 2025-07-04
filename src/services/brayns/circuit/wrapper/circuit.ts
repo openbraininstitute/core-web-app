@@ -4,7 +4,7 @@ import Settings from '../../common/settings';
 import { BraynsWrapperInterface, CircuitLoaderOptions } from './types';
 import { assertType } from '@/util/type-guards';
 
-export interface Region {
+interface Region {
   acronym: string;
   color: Vector4;
 }

@@ -30,7 +30,7 @@ type TabDetails = {
   urlParam: string;
 };
 
-export const SupportedTypeToTabDetails: Record<string, TabDetails> = {
+const SupportedTypeToTabDetails: Record<string, TabDetails> = {
   [DataType.SingleNeuronSimulation]: {
     title: 'Single neuron simulation',
     urlParam: 'single-neuron-simulation',

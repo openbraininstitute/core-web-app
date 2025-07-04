@@ -8,7 +8,7 @@ export type Label = {
   label: string;
 };
 
-export type Name = {
+type Name = {
   name: string;
 };
 

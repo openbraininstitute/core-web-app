@@ -103,7 +103,7 @@ export function renderPreview<T extends EntityCoreResource>(
   );
 }
 
-export function renderImage(
+function renderImage(
   entity: IEModel | IMEModel,
   size?: { height: number | string; width: number | string },
   className?: string

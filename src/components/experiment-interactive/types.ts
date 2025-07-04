@@ -1,4 +1,4 @@
-export type SimulationParameterKey =
+type SimulationParameterKey =
   | 'desired_connected_proportion_of_invivo_frs'
   | 'depol_stdev_mean_ratio'
   | 'vpm_pct'
@@ -43,7 +43,7 @@ export interface ExperimentInteractiveContextType {
   hideViewSettingsPanel: () => void;
 }
 
-export interface SimulationPreviewContextType {
+interface SimulationPreviewContextType {
   index: number;
   simulationPreview: SimulationPreviewElement;
   applyChanges: () => void;

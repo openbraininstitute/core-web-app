@@ -1,8 +1,8 @@
 import { atom, useAtom } from 'jotai';
 
-export type PlaybackSpeedId = 'very-slow' | 'slow' | 'default' | 'fast' | 'very-fast';
+type PlaybackSpeedId = 'very-slow' | 'slow' | 'default' | 'fast' | 'very-fast';
 
-export interface PlaybackSpeedItem {
+interface PlaybackSpeedItem {
   id: PlaybackSpeedId;
   label: string;
   factor: number;

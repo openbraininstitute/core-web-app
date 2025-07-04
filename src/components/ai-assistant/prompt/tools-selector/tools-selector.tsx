@@ -14,7 +14,7 @@ import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-selector.module.css';
 
-export interface ToolsSelectorProps {
+interface ToolsSelectorProps {
   className?: string;
   open: boolean;
   tools: AIAssistantTool[];

@@ -30,7 +30,7 @@ export const EntityCoreModelConfiguration = {
   SingleNeuronSynaptome,
 };
 
-export const EntityCoreSimulationConfiguration = {
+const EntityCoreSimulationConfiguration = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
   SimulationCampaign,

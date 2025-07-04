@@ -1,6 +1,6 @@
 import { isType } from '@/util/type-guards';
 
-export interface ExploreAiThreadCreateQuery {
+interface ExploreAiThreadCreateQuery {
   type: 'thread-create';
   title: string;
 }
@@ -9,7 +9,7 @@ export function isExploreAiThreadCreateQuery(data: unknown): data is ExploreAiTh
   return isType(data, { type: ['literal', 'thread-create'] });
 }
 
-export interface ExploreAiThreadCreateResponse {
+interface ExploreAiThreadCreateResponse {
   thread_id: string;
 }
 
@@ -19,7 +19,7 @@ export function isExploreAiThreadCreateResponse(
   return isType(data, { thread_id: 'string' });
 }
 
-export interface ExploreAiThreadDeleteQuery {
+interface ExploreAiThreadDeleteQuery {
   type: 'thread-delete';
   threadId: string;
 }
@@ -28,7 +28,7 @@ export function isExploreAiThreadDeleteQuery(data: unknown): data is ExploreAiTh
   return isType(data, { type: ['literal', 'thread-delete'], threadId: 'string' });
 }
 
-export interface ExploreAiThreadDeleteResponse {}
+interface ExploreAiThreadDeleteResponse {}
 
 export function isExploreAiThreadDeleteResponse(
   data: unknown

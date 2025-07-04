@@ -13,7 +13,7 @@ import type {
   TTreeNode,
 } from '@/components/tree/types';
 
-export interface Props<TNode extends TTreeNode> {
+interface Props<TNode extends TTreeNode> {
   dataKey: string;
   data: TNode | TNode[];
   height?: string | number;

@@ -1,4 +1,4 @@
-export type FileTypeHeaderProps = {
+type FileTypeHeaderProps = {
   name: string;
   description: React.ReactNode;
   extension: string;

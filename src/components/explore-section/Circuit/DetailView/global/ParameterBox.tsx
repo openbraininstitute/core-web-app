@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 
 import { CloseIcon } from '@/components/icons';
 
-export function SingleContributorPill({ name, lastName }: { name: string; lastName: string }) {
+function SingleContributorPill({ name, lastName }: { name: string; lastName: string }) {
   return (
     <div className="text-primary-9 border border-solid border-gray-200 text-sm font-normal">
       <div>{name}</div>

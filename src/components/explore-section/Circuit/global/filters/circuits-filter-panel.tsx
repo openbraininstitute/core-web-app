@@ -25,7 +25,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './circuits-filter-panel.module.css';
 
-export function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onClick: () => void }) {
+function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onClick: () => void }) {
   return isDisabled ? (
     <Tooltip title="Please fill in the required fields to apply the filter">
       <button
@@ -51,7 +51,7 @@ export function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onCl
   );
 }
 
-export function SingleFilterItem({
+function SingleFilterItem({
   title,
   id,
   index,

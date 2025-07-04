@@ -4,7 +4,7 @@ import round from 'lodash/round';
 import ceil from 'lodash/ceil';
 import range from 'lodash/range';
 
-export function restrictToBoundingRect(
+function restrictToBoundingRect(
   transform: Transform,
   rect: ClientRect,
   boundingRect: ClientRect,
@@ -23,11 +23,7 @@ export function restrictToBoundingRect(
   return value;
 }
 
-export const restrictToParentElement: Modifier = ({
-  containerNodeRect,
-  draggingNodeRect,
-  transform,
-}) => {
+const restrictToParentElement: Modifier = ({ containerNodeRect, draggingNodeRect, transform }) => {
   if (!draggingNodeRect || !containerNodeRect) {
     return transform;
   }
@@ -35,7 +31,7 @@ export const restrictToParentElement: Modifier = ({
   return restrictToBoundingRect(transform, draggingNodeRect, containerNodeRect, 15);
 };
 
-export const adjustIndicatorPosition: Modifier = ({ transform }) => ({
+const adjustIndicatorPosition: Modifier = ({ transform }) => ({
   ...transform,
   x: transform.x - 8,
 });
@@ -44,7 +40,7 @@ export function calculatePercentX(step: number, stepCount: number): number {
   return round((100 * step) / stepCount, 5);
 }
 
-export function calculateStepsPerTick(stepCount: number, maxTicks: number): number {
+function calculateStepsPerTick(stepCount: number, maxTicks: number): number {
   let stepsPerTick = -1;
   let order = 10;
   const rawStepsPerTick = stepCount / maxTicks;
@@ -60,7 +56,7 @@ export function calculateStepsPerTick(stepCount: number, maxTicks: number): numb
   return stepsPerTick;
 }
 
-export function calculateTickCount(stepCount: number, stepsPerTick: number): number {
+function calculateTickCount(stepCount: number, stepsPerTick: number): number {
   return ceil(stepCount / stepsPerTick);
 }
 

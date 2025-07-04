@@ -162,7 +162,7 @@ const fetchParagraphCountForBrainRegionAndExperiment = (
     }));
 };
 
-export const ML_DATE_FORMAT = 'yyyy-MM-dd';
+const ML_DATE_FORMAT = 'yyyy-MM-dd';
 
 export type ArticleListFilters = {
   publicationDate: GteLteValue | null;
@@ -171,7 +171,7 @@ export type ArticleListFilters = {
   articleTypes: string[];
 };
 
-export const ML_MAX_ARTICLES_PER_PAGE = 100;
+const ML_MAX_ARTICLES_PER_PAGE = 100;
 
 const fetchArticlesForBrainRegionAndExperiment = (
   experimentName: string,
@@ -292,7 +292,6 @@ export {
   getGenerativeQA,
   fetchArticleTypes,
   fetchAuthorSuggestions,
-  fetchParagraphCountForBrainRegionAndExperiment,
   fetchArticlesForBrainRegionAndExperiment,
   getAuthorOptions,
   getJournalOptions,

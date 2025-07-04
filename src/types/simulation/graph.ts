@@ -12,7 +12,7 @@ export type CurrentInjectionGraphResponse = {
   amplitude: number;
 };
 
-export type SimulationPlotResponse = {
+type SimulationPlotResponse = {
   t: number[];
   v: number[];
   stimulus_name: string;

@@ -6,7 +6,7 @@ import { isConfigEditableAtom } from '@/state/brain-model-config';
 import { loadingAtom } from '@/components/ConnectomeModelAssignment/state';
 import style from './actions.module.css';
 
-export interface ActionsProps {
+interface ActionsProps {
   ruleKey: string;
   editingRuleKey: string | undefined;
   onCancel(): void;

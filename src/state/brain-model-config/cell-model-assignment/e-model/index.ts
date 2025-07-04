@@ -82,9 +82,9 @@ export const simulationParametersAtom = atom<Promise<SimulationParameter | null>
   }
 });
 
-export const featureSelectedPresetAtom = atom<FeaturePresetName>('firing_pattern');
+const featureSelectedPresetAtom = atom<FeaturePresetName>('firing_pattern');
 
-export const featureParametersAtom = atom<Promise<FeatureParameterGroup | null>>(async (get) => {
+const featureParametersAtom = atom<Promise<FeatureParameterGroup | null>>(async (get) => {
   const featureSelectedPreset = get(featureSelectedPresetAtom) || presetNames[0];
   if (!featureSelectedPreset) return null;
 
@@ -93,53 +93,47 @@ export const featureParametersAtom = atom<Promise<FeatureParameterGroup | null>>
   return convertFeaturesForUI(featuresPerPreset);
 });
 
-export const exemplarMorphologyAtom = atom<Promise<ExemplarMorphologyDataType | null>>(
-  async (get) => {
-    const isOptimizationConfig = get(selectedEModelAtom)?.isOptimizationConfig;
+const exemplarMorphologyAtom = atom<Promise<ExemplarMorphologyDataType | null>>(async (get) => {
+  const isOptimizationConfig = get(selectedEModelAtom)?.isOptimizationConfig;
 
-    if (isOptimizationConfig) {
-      const payload = await get(eModelOptimizationPayloadAtom);
-      return payload?.morphologies[0] || null;
-    }
-
-    const morphology = await get(eModelMorphologyAtom);
-
-    if (!morphology) return null;
-    try {
-      return convertDeltaMorphologyForUI(morphology);
-    } catch (e) {
-      return null;
-    }
+  if (isOptimizationConfig) {
+    const payload = await get(eModelOptimizationPayloadAtom);
+    return payload?.morphologies[0] || null;
   }
-);
 
-export const experimentalTracesAtom = atom<Promise<ExperimentalTracesDataType[] | null>>(
-  async (get) => {
-    const isOptimizationConfig = get(selectedEModelAtom)?.isOptimizationConfig;
+  const morphology = await get(eModelMorphologyAtom);
 
-    if (isOptimizationConfig) {
-      const payload = await get(eModelOptimizationPayloadAtom);
-      return payload?.traces || null;
-    }
-
-    const session = get(sessionAtom);
-    const eModelExtractionTargetsConfiguration = await get(
-      eModelExtractionTargetsConfigurationAtom
-    );
-
-    if (!eModelExtractionTargetsConfiguration || !session) return null;
-
-    const traceIds = ensureArray(eModelExtractionTargetsConfiguration.uses).map(
-      (trace) => trace['@id']
-    );
-
-    const tracesQuery = getEntityListByIdsQuery('Trace', traceIds);
-
-    const traces = await queryES<Trace>(tracesQuery, session, eModelTracesProjConfig);
-
-    return traces.map((trace) => convertTraceForUI(trace));
+  if (!morphology) return null;
+  try {
+    return convertDeltaMorphologyForUI(morphology);
+  } catch (e) {
+    return null;
   }
-);
+});
+
+const experimentalTracesAtom = atom<Promise<ExperimentalTracesDataType[] | null>>(async (get) => {
+  const isOptimizationConfig = get(selectedEModelAtom)?.isOptimizationConfig;
+
+  if (isOptimizationConfig) {
+    const payload = await get(eModelOptimizationPayloadAtom);
+    return payload?.traces || null;
+  }
+
+  const session = get(sessionAtom);
+  const eModelExtractionTargetsConfiguration = await get(eModelExtractionTargetsConfigurationAtom);
+
+  if (!eModelExtractionTargetsConfiguration || !session) return null;
+
+  const traceIds = ensureArray(eModelExtractionTargetsConfiguration.uses).map(
+    (trace) => trace['@id']
+  );
+
+  const tracesQuery = getEntityListByIdsQuery('Trace', traceIds);
+
+  const traces = await queryES<Trace>(tracesQuery, session, eModelTracesProjConfig);
+
+  return traces.map((trace) => convertTraceForUI(trace));
+});
 
 const eModelTracesProjConfig = {
   project: 'lnmce',
@@ -147,7 +141,7 @@ const eModelTracesProjConfig = {
 
 /* --------------------------------- EModel --------------------------------- */
 
-export const eModelAtom = atom<Promise<EModel | null>>(async (get) => {
+const eModelAtom = atom<Promise<EModel | null>>(async (get) => {
   const selectedEModel = get(selectedEModelAtom);
   if (!selectedEModel) return null;
 
@@ -186,7 +180,7 @@ export const eModelOptimizationAtom = atom<Promise<EModelOptimizationConfigResou
 
 export const refetchOptimizationRevAtom = atom<{}>({});
 
-export const eModelOptimizationRemoteAtom = atom<Promise<EModelOptimizationConfigResource | null>>(
+const eModelOptimizationRemoteAtom = atom<Promise<EModelOptimizationConfigResource | null>>(
   async (get) => {
     // fetches info after an update to avoid reloading the initial eModelOptimizationAtom
     get(refetchOptimizationRevAtom);
@@ -255,7 +249,7 @@ const eModelConfigurationIdAtom = atom<Promise<string | null>>(async (get) => {
   return modelConfiguration['@id'];
 });
 
-export const eModelConfigurationAtom = atom<Promise<EModelConfiguration | null>>(async (get) => {
+const eModelConfigurationAtom = atom<Promise<EModelConfiguration | null>>(async (get) => {
   const session = get(sessionAtom);
   const eModelConfigurationId = await get(eModelConfigurationIdAtom);
 
@@ -268,7 +262,7 @@ export const eModelConfigurationAtom = atom<Promise<EModelConfiguration | null>>
   return eModelConfiguration;
 });
 
-export const eModelConfigurationPayloadAtom = atom<Promise<EModelConfigurationPayload | null>>(
+const eModelConfigurationPayloadAtom = atom<Promise<EModelConfigurationPayload | null>>(
   async (get) => {
     const session = get(sessionAtom);
     const eModelConfiguration = await get(eModelConfigurationAtom);
@@ -280,35 +274,31 @@ export const eModelConfigurationPayloadAtom = atom<Promise<EModelConfigurationPa
   }
 );
 
-export const eModelParameterAtom = atom<Promise<EModelConfigurationParameter[] | null>>(
-  async (get) => {
-    const session = get(sessionAtom);
-    const eModelConfigurationPayload = await get(eModelConfigurationPayloadAtom);
+const eModelParameterAtom = atom<Promise<EModelConfigurationParameter[] | null>>(async (get) => {
+  const session = get(sessionAtom);
+  const eModelConfigurationPayload = await get(eModelConfigurationPayloadAtom);
 
-    if (!session || !eModelConfigurationPayload) return null;
+  if (!session || !eModelConfigurationPayload) return null;
 
-    return eModelConfigurationPayload.parameters;
-  }
-);
+  return eModelConfigurationPayload.parameters;
+});
 
-export const eModelMorphologyAtom = atom<Promise<ReconstructedNeuronMorphology | null>>(
-  async (get) => {
-    const session = get(sessionAtom);
-    const eModelConfiguration = await get(eModelConfigurationAtom);
+const eModelMorphologyAtom = atom<Promise<ReconstructedNeuronMorphology | null>>(async (get) => {
+  const session = get(sessionAtom);
+  const eModelConfiguration = await get(eModelConfigurationAtom);
 
-    if (!session || !eModelConfiguration) return null;
+  if (!session || !eModelConfiguration) return null;
 
-    const morphologyId = eModelConfiguration.uses.find(
-      (usage) => usage['@type'] === 'NeuronMorphology'
-    )?.['@id'];
+  const morphologyId = eModelConfiguration.uses.find(
+    (usage) => usage['@type'] === 'NeuronMorphology'
+  )?.['@id'];
 
-    if (!morphologyId) return null;
+  if (!morphologyId) return null;
 
-    return fetchResourceById<ReconstructedNeuronMorphology>(morphologyId, session);
-  }
-);
+  return fetchResourceById<ReconstructedNeuronMorphology>(morphologyId, session);
+});
 
-export const eModelMechanismsAtom = atom<Promise<MechanismForUI | null>>(async (get) => {
+const eModelMechanismsAtom = atom<Promise<MechanismForUI | null>>(async (get) => {
   const session = get(sessionAtom);
 
   if (!session) return null;
@@ -388,7 +378,7 @@ const eModelScriptIdAtom = atom<Promise<string | null>>(async (get) => {
   return eModelScriptGenerated['@id'];
 });
 
-export const eModelScriptAtom = atom<Promise<EModelScript | null>>(async (get) => {
+const eModelScriptAtom = atom<Promise<EModelScript | null>>(async (get) => {
   const session = get(sessionAtom);
   const eModelScriptId = await get(eModelScriptIdAtom);
 

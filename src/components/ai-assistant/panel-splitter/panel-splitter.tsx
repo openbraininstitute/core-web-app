@@ -6,7 +6,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './panel-splitter.module.css';
 
-export interface PanelSplitterProps {
+interface PanelSplitterProps {
   className?: string;
   panelWidth: number;
   setPanelWidth(panelWidth: number): void;

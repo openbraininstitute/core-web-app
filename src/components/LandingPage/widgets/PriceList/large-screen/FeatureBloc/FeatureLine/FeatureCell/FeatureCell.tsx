@@ -8,7 +8,7 @@ import {
 
 import styles from './FeatureCell.module.css';
 
-export interface FeatureCellProps {
+interface FeatureCellProps {
   feature: ContentForPricingFeatureItem;
   plan: ContentForPricingPlan;
   available: boolean;

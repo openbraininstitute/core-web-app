@@ -1,6 +1,6 @@
 import { logError } from '@/util/logger';
 
-export type Vector2 = [number, number];
+type Vector2 = [number, number];
 export type Vector3 = [number, number, number];
 export type Vector4 = [number, number, number, number];
 export type Vector = Vector2 | Vector3 | Vector4;
@@ -26,7 +26,7 @@ export interface Size {
   width: number;
   height: number;
 }
-export interface Position {
+interface Position {
   x: number;
   y: number;
 }
@@ -38,7 +38,7 @@ export interface SizeAndPos extends Size, Position {}
  * * Y: up/down
  * * Z: forward/backward
  */
-export interface EulerAngles {
+interface EulerAngles {
   /** Roll (X) radians (left/right) */
   roll: number;
   /** Yaw (Y) radians (up/down) */
@@ -47,7 +47,7 @@ export interface EulerAngles {
   pitch: number;
 }
 
-export function ensureCalcInterface(data: unknown): CalcInterface {
+function ensureCalcInterface(data: unknown): CalcInterface {
   if (data instanceof CalcInterface) return data;
 
   logError('Expected SceneManagerInterface but got:', data);

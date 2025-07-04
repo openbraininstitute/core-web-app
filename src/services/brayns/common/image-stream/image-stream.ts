@@ -11,12 +11,12 @@ interface Frame {
   sizeInBytes: number;
 }
 
-export interface RendererResult {
+interface RendererResult {
   frame?: HTMLImageElement;
   progress: number;
 }
 
-export interface RendererResultOption {
+interface RendererResultOption {
   renderEvenIfNothingHasChanged: boolean;
   prepareImageWithoutSendingIt: boolean;
 }

@@ -6,7 +6,7 @@ import Expand from '../../expand';
 import { useMorphologies } from './hooks';
 import MorphologyCard from './morphology-card';
 
-export interface ToolArticlesProps {
+interface ToolArticlesProps {
   className?: string;
   message: UIMessage;
 }

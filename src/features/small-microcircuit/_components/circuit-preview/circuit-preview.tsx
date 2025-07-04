@@ -8,7 +8,7 @@ import ZoomableImage from '@/components/zoomable-image';
 
 import styles from './circuit-preview.module.css';
 
-export interface CircuitPreviewProps {
+interface CircuitPreviewProps {
   className?: string;
   circuit: ICircuit | undefined | null;
 }

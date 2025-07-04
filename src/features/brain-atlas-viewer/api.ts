@@ -7,7 +7,7 @@ import { nexus } from '@/config';
  * @param accessToken
  * @param distributionID
  */
-export const fetchMesh = (accessToken: string, distributionID: string) =>
+const fetchMesh = (accessToken: string, distributionID: string) =>
   fetch(distributionID, {
     method: 'get',
     headers: createHeaders(accessToken),

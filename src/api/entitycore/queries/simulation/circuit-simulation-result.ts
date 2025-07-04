@@ -44,7 +44,7 @@ export async function getCircuitSimulationResult({
  *
  * @throws Will throw an error if the API request fails.
  */
-export async function getCircuitSimulationResults({
+async function getCircuitSimulationResults({
   withFacets,
   filters,
   context,

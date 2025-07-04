@@ -34,7 +34,7 @@ function SectionItem({ item, index, highlightedCellType }: SectionItemProps) {
   );
 }
 
-export type AllTypesBlockProps = {
+type AllTypesBlockProps = {
   cellType: 'm-type' | 'e-type';
   highlightedCellType: string | null;
   setHighlightedCellType: (slug: string | null) => void;

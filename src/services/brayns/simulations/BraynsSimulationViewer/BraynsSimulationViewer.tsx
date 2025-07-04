@@ -14,7 +14,7 @@ import { SimulationSlot } from '@/components/experiment-interactive/ExperimentIn
 
 import styles from './brayns-simulation-viewer.module.css';
 
-export interface BraynsSimulationViewerProps {
+interface BraynsSimulationViewerProps {
   className?: string;
   slot: SimulationSlot;
 }

@@ -1,4 +1,4 @@
-export function LinkIcon({ iconColor, className }: { iconColor: string; className?: string }) {
+function LinkIcon({ iconColor, className }: { iconColor: string; className?: string }) {
   return (
     <svg
       width="12"
@@ -24,7 +24,7 @@ export function LinkIcon({ iconColor, className }: { iconColor: string; classNam
   );
 }
 
-export function ShareIcon({ iconColor, className }: { iconColor: string; className?: string }) {
+function ShareIcon({ iconColor, className }: { iconColor: string; className?: string }) {
   return (
     <svg
       width="17"

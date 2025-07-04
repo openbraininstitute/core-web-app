@@ -201,7 +201,7 @@ export function useAnalysisIds(resource: SimulationCampaign): [string[], boolean
   return [customAnalysisIds, fetching];
 }
 
-export function getEModelAnalysisWorkflowConfig(
+function getEModelAnalysisWorkflowConfig(
   emodelURL: string,
   analysis: Analysis[],
   session: Session

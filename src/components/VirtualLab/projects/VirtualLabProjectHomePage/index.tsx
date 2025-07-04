@@ -17,7 +17,7 @@ import { useLoadableValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabMembersAtomFamily } from '@/state/virtual-lab/lab';
 import { extractInitials } from '@/util/slugify';
 
-export type UsersHorizontalListProps = {
+type UsersHorizontalListProps = {
   virtualLabId: string;
   projectId?: string;
 };

@@ -119,7 +119,7 @@ export default class ProxyService implements JobAllocatorServiceInterface {
   }
 }
 
-export function joinPath(...paths: string[]): string {
+function joinPath(...paths: string[]): string {
   const end = paths.length - 1;
   return paths
     .map((originalPath, index) => {

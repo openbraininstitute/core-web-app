@@ -10,7 +10,7 @@ import { literatureResultAtom, persistedLiteratureResultAtom } from '@/state/lit
 import { FailedGenerativeQA } from '@/types/literature';
 import { classNames } from '@/util/utils';
 
-export type ResultErrorProps = Omit<FailedGenerativeQA, 'isNotFound'>;
+type ResultErrorProps = Omit<FailedGenerativeQA, 'isNotFound'>;
 
 const GENERATIVE_QA_ERRORS_MAP: { [key: string]: string } = {
   '1': 'Unfortunately, no relevant information could be found in our database.\n Please modify your request.',

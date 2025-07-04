@@ -7,7 +7,7 @@ import React from 'react';
 import { getLocalStorage, getSessionStorage } from './storage';
 import { logError } from '@/util/logger';
 
-export interface AtomicStateStorageOptions<T> {
+interface AtomicStateStorageOptions<T> {
   id: string;
   guard: (data: unknown) => data is T;
 }

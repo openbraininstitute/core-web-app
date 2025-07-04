@@ -7,7 +7,7 @@ import { styleBlockMedium } from '@/components/LandingPage/styles';
 
 import styles from './sanity-content-image.module.css';
 
-export interface SanityContentImageProps {
+interface SanityContentImageProps {
   className?: string;
   value: ContentForRichTextImage;
 }

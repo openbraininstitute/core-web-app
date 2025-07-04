@@ -1,7 +1,7 @@
 import { classNames } from '@/util/utils';
 import styles from './reset-camera-button.module.css';
 
-export interface ResetCameraButtonProps {
+interface ResetCameraButtonProps {
   className?: string;
   onClick(): void;
 }

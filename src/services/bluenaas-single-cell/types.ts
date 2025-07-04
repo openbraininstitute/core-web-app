@@ -51,7 +51,7 @@ type SegTrace = {
   v: number[];
 };
 
-export type TraceData = SegTrace[];
+type TraceData = SegTrace[];
 
 export type PlotDataEntry = {
   x: number[];

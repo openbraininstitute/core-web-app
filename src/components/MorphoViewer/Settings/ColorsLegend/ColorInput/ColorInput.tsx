@@ -6,7 +6,7 @@ import EyeSlashIcon from '@/components/icons/EyeSlashIcon';
 
 import styles from './color-input.module.css';
 
-export interface ColorInputProps {
+interface ColorInputProps {
   className?: string;
   label: string;
   canBeHidden: boolean;

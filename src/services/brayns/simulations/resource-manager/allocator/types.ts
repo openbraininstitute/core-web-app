@@ -20,7 +20,7 @@ export interface ProxyServiceOptions {
   url: string;
 }
 
-export interface JobOptions {
+interface JobOptions {
   // "SBO1", ...
   usecase: string;
 }

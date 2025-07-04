@@ -20,7 +20,7 @@ import { EntityCreation } from '@/types/nexus';
 import { createDistribution } from '@/util/nexus';
 import { autoSaveDebounceInterval } from '@/config';
 
-export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
+const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 
 const createOptimizationConfigAtom = atom(null, async (get) => {
   const session = get(sessionAtom);

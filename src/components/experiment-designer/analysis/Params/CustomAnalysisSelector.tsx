@@ -147,7 +147,7 @@ function AnalysisSelector({
   );
 }
 
-export function useSetCustomAnalysis(focusedAtom: PrimitiveAtom<ExpDesignerParam[]>) {
+function useSetCustomAnalysis(focusedAtom: PrimitiveAtom<ExpDesignerParam[]>) {
   const [analysisConfig, setAnalysisConfig] = useAtom(focusedAtom);
   return (customAnalysis: ExpDesignerCustomAnalysisParameter) =>
     setAnalysisConfig([...analysisConfig.filter((c) => c.id !== 'custom'), customAnalysis]);

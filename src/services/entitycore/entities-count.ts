@@ -22,7 +22,7 @@ type Params = {
   brainRegionId?: string | null;
 };
 
-export const getBulkEntityCoreCount = async ({
+const getBulkEntityCoreCount = async ({
   virtualLabId,
   projectId,
   brainRegionId,

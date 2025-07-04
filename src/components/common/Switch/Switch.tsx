@@ -5,7 +5,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './switch.module.css';
 
-export interface SwitchProps {
+interface SwitchProps {
   className?: string;
   value: boolean;
   onChange(value: boolean): void;

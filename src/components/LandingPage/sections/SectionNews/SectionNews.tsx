@@ -14,7 +14,7 @@ import { fetchSanity } from '@/services/sanity';
 import { classNames } from '@/util/utils';
 import styles from './SectionNews.module.css';
 
-export interface SectionNewsProps {
+interface SectionNewsProps {
   className?: string;
   showHeader?: boolean;
 }

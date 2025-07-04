@@ -16,7 +16,7 @@ import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-
 import { EntityTypeEnum, EntityTypeValue } from '@/api/entitycore/types';
 import { WorkspaceContext } from '@/types/common';
 
-export const ASSETS_BASE_PATH = 'data';
+const ASSETS_BASE_PATH = 'data';
 
 type FileEntry = {
   path: string;

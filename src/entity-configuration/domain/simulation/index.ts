@@ -5,18 +5,18 @@ export * from '@/entity-configuration/domain/simulation/single-neuron-synaptome-
 export * from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 export * from '@/entity-configuration/domain/simulation/simulation-campaign';
 
-export const SIMULATIONS_DATATYPES = [
+const SIMULATIONS_DATATYPES = [
   DataType.SingleNeuronSimulation,
   DataType.SingleNeuronSynaptomeSimulation,
   DataType.SimulationCampaign,
 ] as const;
 
-export enum SimulationTypeNames {
+enum SimulationTypeNames {
   SINGLE_NEURON_SIMULATION = 'single-neuron-simulation',
   SYNAPTOME_SIMULATION = 'synaptome-simulation',
   SIMULATION_CAMPAIGN = 'simulation-campaign',
 }
 
-export type TModelTypeNames = `${SimulationTypeNames}`;
+type TModelTypeNames = `${SimulationTypeNames}`;
 
-export type ModelDataType = (typeof SIMULATIONS_DATATYPES)[number];
+type ModelDataType = (typeof SIMULATIONS_DATATYPES)[number];

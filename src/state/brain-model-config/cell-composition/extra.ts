@@ -16,7 +16,7 @@ import { OriginalComposition } from '@/types/composition/original';
 import openNotification from '@/api/notifications';
 import schema from '@/app/app/build/(main)/cell-composition/configuration/schema.json';
 
-export const updateConfigPayloadAtom = atom<null, [CellCompositionConfigPayload], Promise<void>>(
+const updateConfigPayloadAtom = atom<null, [CellCompositionConfigPayload], Promise<void>>(
   null,
   async (get, set, configPayload) => {
     const session = get(sessionAtom);

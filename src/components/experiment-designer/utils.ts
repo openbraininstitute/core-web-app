@@ -29,7 +29,7 @@ export function getSubGroupFocusedAtom(groupParamAtom: PrimitiveAtom<ExpDesigner
   return focusAtom(groupParamAtom, (optic) => optic.prop('value'));
 }
 
-export function cloneLastAndAdd(setSectionConfig: any) {
+function cloneLastAndAdd(setSectionConfig: any) {
   setSectionConfig((sectionConfig: ExpDesignerGroupParameter[]) => {
     if (!sectionConfig.length) return [];
 
@@ -224,5 +224,3 @@ export function replaceCustomBbpWorkflowPlaceholders(text: string) {
   const replaced = text.replace(templateReplaceRegexp, '$1');
   return replaced;
 }
-
-export default getFocusedAtom;

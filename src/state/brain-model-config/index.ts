@@ -24,7 +24,7 @@ export const addRecentlyUsedConfigIdAtom = atom(null, (get, set, id: string) => 
   set(recentlyUsedConfigIdsAtom, updatedList);
 });
 
-export const refetchTriggerAtom = atom<{}>({});
+const refetchTriggerAtom = atom<{}>({});
 export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 
 export const configAtom = atom<Promise<BrainModelConfigResource | null>>(async (get) => {
@@ -38,7 +38,7 @@ export const configAtom = atom<Promise<BrainModelConfigResource | null>>(async (
   return fetchResourceById<BrainModelConfigResource>(id, session);
 });
 
-export const updateConfigAtom = atom(null, async (get, set, config: BrainModelConfigResource) => {
+const updateConfigAtom = atom(null, async (get, set, config: BrainModelConfigResource) => {
   const session = get(sessionAtom);
 
   if (!session) {
@@ -50,11 +50,11 @@ export const updateConfigAtom = atom(null, async (get, set, config: BrainModelCo
   set(triggerRefetchAtom);
 });
 
-export const getNameAtom = selectAtom(unwrap(configAtom), (config) => config?.name);
+const getNameAtom = selectAtom(unwrap(configAtom), (config) => config?.name);
 
-export const getCreatedByAtom = selectAtom(unwrap(configAtom), (config) => config?._createdBy);
+const getCreatedByAtom = selectAtom(unwrap(configAtom), (config) => config?._createdBy);
 
-export const updateNameAtom = atom(null, async (get, set, name: string) => {
+const updateNameAtom = atom(null, async (get, set, name: string) => {
   const config = await get(configAtom);
 
   if (!config) return;
@@ -64,9 +64,9 @@ export const updateNameAtom = atom(null, async (get, set, name: string) => {
   set(updateConfigAtom, updatedConfig);
 });
 
-export const getDescriptionAtom = selectAtom(unwrap(configAtom), (config) => config?.description);
+const getDescriptionAtom = selectAtom(unwrap(configAtom), (config) => config?.description);
 
-export const updateDescriptionAtom = atom(null, async (get, set, description: string) => {
+const updateDescriptionAtom = atom(null, async (get, set, description: string) => {
   const config = await get(configAtom);
 
   if (!config) return;

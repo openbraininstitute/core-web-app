@@ -13,15 +13,15 @@ import {
 } from '@/constants/brain-hierarchy';
 import { getAncestors } from '@/features/brain-region-tree/util';
 
-export const BRAIN_REGION_URI_BASE = 'http://api.brain-map.org/api/v2/data/Structure';
+const BRAIN_REGION_URI_BASE = 'http://api.brain-map.org/api/v2/data/Structure';
 
-export type RegionFullPathType = {
+type RegionFullPathType = {
   id: string;
   name: string;
 };
 
 // This function returns either the hasPart or hasLayerPart array of brain region IDs, depending on the currently selected "view" (think: default or layer-based).
-export function getDescendentsFromView(
+function getDescendentsFromView(
   hasPart?: string[],
   hasLayerPart?: string[],
   view?: string
@@ -41,7 +41,7 @@ export function getDescendentsFromView(
 }
 
 // This function looks for the descendents of a brain region to recursively check whether at least one of the descendents is represented in the annotation volume.
-export function checkRepresentationOfDescendents(
+function checkRepresentationOfDescendents(
   acc: { brainRegions: BrainRegion[]; representedInAnnotation: boolean },
   brainRegionId: string
 ): { brainRegions: BrainRegion[]; representedInAnnotation: boolean } {
@@ -134,7 +134,7 @@ export function getInAnnotationBrainRegionsReducer(
  *
  * @returns {RegionFullPathType[]} path - List of path.
  */
-export function getBottomUpPath(hierarchy: TreeItem[], nodeId: string): RegionFullPathType[] {
+function getBottomUpPath(hierarchy: TreeItem[], nodeId: string): RegionFullPathType[] {
   // credit https://gist.github.com/sachinpatel88/649f7643010dd9707a2b840a824dc06d
   function getPaths(nestedObj: TreeItem[], isObjectSelectedCB: any) {
     if (!nestedObj) return;
@@ -170,7 +170,7 @@ export function getBottomUpPath(hierarchy: TreeItem[], nodeId: string): RegionFu
   if (!paths?.length) return [];
   return paths[0];
 }
-export function extendLeafNodeWithOverrideProps(
+function extendLeafNodeWithOverrideProps(
   node: CompositionOverrideLeafNode
 ): CompositionOverrideLeafNode {
   if (node.hasPart) {
@@ -200,11 +200,7 @@ export function extendCompositionWithOverrideProps(
  * @param result
  * @param ancestors
  */
-export const treeToArray = (
-  brainRegion: BrainRegion,
-  result: BrainRegion[],
-  ancestors: Ancestor[]
-) => {
+const treeToArray = (brainRegion: BrainRegion, result: BrainRegion[], ancestors: Ancestor[]) => {
   brainRegion.items?.forEach((br) => {
     const newRegion = { ...br };
 

@@ -17,7 +17,7 @@ import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 
-export const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
+const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
     atom<Promise<ICircuitSimulationExecution>>(async () => {
       const simulationExecutionFilters = { used__id: simulationId };

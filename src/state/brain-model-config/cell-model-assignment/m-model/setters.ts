@@ -35,41 +35,40 @@ import {
   generateBrainRegionMTypeArray,
 } from '@/util/cell-model-assignment';
 
-export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
+const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 
-export const updateConfigPayloadAtom = atom<
+const updateConfigPayloadAtom = atom<null, [MorphologyAssignmentConfigPayload], Promise<void>>(
   null,
-  [MorphologyAssignmentConfigPayload],
-  Promise<void>
->(null, async (get, set, configPayload) => {
-  const session = get(sessionAtom);
-  const config = await get(configAtom);
+  async (get, set, configPayload) => {
+    const session = get(sessionAtom);
+    const config = await get(configAtom);
 
-  const url = config?.distribution.contentUrl;
+    const url = config?.distribution.contentUrl;
 
-  if (!session) {
-    throw new Error('No auth session found in the state');
+    if (!session) {
+      throw new Error('No auth session found in the state');
+    }
+
+    if (!url) {
+      throw new Error('No id found for morphologyAssigmentConfig');
+    }
+
+    if (!config) return;
+
+    const updatedFile = await updateJsonFileByUrl(
+      url,
+      configPayload,
+      'morphology-assignment-config.json',
+      session
+    );
+
+    config.distribution = createDistribution(updatedFile);
+
+    await updateResource(config, session);
+    await set(invalidateConfigAtom, 'morphologyAssignment');
+    set(triggerRefetchAtom);
   }
-
-  if (!url) {
-    throw new Error('No id found for morphologyAssigmentConfig');
-  }
-
-  if (!config) return;
-
-  const updatedFile = await updateJsonFileByUrl(
-    url,
-    configPayload,
-    'morphology-assignment-config.json',
-    session
-  );
-
-  config.distribution = createDistribution(updatedFile);
-
-  await updateResource(config, session);
-  await set(invalidateConfigAtom, 'morphologyAssignment');
-  set(triggerRefetchAtom);
-});
+);
 
 const triggerUpdateDebouncedAtom = atom<null, [MorphologyAssignmentConfigPayload], Promise<void>>(
   null,
@@ -125,7 +124,7 @@ export const fetchMModelRemoteParamsAtom = atom<null, [], Promise<ParamConfig | 
   }
 );
 
-export const setMModelLocalTopologicalSynthesisParamsAtom = atom<null, [], void>(
+const setMModelLocalTopologicalSynthesisParamsAtom = atom<null, [], void>(
   null,
   async (get, set) => {
     const brainRegionMTypeArray = get(brainRegionMTypeArrayAtom);
@@ -211,27 +210,24 @@ export const bulkApplyAllAtom = atom<null, [string, string[], ChangeModelAction]
   }
 );
 
-export const setMorphologyAssignmentConfigPayloadAtom = atom<null, [], void>(
-  null,
-  async (get, set) => {
-    const remoteConfigPayload = await get(remoteConfigPayloadAtom);
-    const topologicalSynthesisParams = await get(mModelWorkflowOverridesAtom);
+const setMorphologyAssignmentConfigPayloadAtom = atom<null, [], void>(null, async (get, set) => {
+  const remoteConfigPayload = await get(remoteConfigPayloadAtom);
+  const topologicalSynthesisParams = await get(mModelWorkflowOverridesAtom);
 
-    if (!remoteConfigPayload || !topologicalSynthesisParams) return;
+  if (!remoteConfigPayload || !topologicalSynthesisParams) return;
 
-    const updatedConfigPayload: MorphologyAssignmentConfigPayload = {
-      ...remoteConfigPayload,
-    };
+  const updatedConfigPayload: MorphologyAssignmentConfigPayload = {
+    ...remoteConfigPayload,
+  };
 
-    updatedConfigPayload.configuration.topological_synthesis = {
-      ...topologicalSynthesisParams,
-    };
+  updatedConfigPayload.configuration.topological_synthesis = {
+    ...topologicalSynthesisParams,
+  };
 
-    await set(setConfigPayloadAtom, updatedConfigPayload);
-  }
-);
+  await set(setConfigPayloadAtom, updatedConfigPayload);
+});
 
-export const setCanonicalAndDistributionsAtom = atom<null, [], void>(null, async (get, set) => {
+const setCanonicalAndDistributionsAtom = atom<null, [], void>(null, async (get, set) => {
   const session = get(sessionAtom);
   const canonicalMorphologyModel = await get(canonicalMorphologyModelAtom);
 

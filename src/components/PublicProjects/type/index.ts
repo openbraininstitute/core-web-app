@@ -1,9 +1,9 @@
 import { PortableTextBlock } from 'next-sanity';
 import { EModelsProps, MEModelsProps, SynaptomeProps } from './artifactsType';
 
-export type { EModelsProps, MEModelsProps, SynaptomeProps } from './artifactsType';
+export type { MEModelsProps } from './artifactsType';
 
-export type TimestampProps = {
+type TimestampProps = {
   timestamp: number;
   label: string;
   description: string;
@@ -21,7 +21,7 @@ export type PresentationVideoProps = {
   captionTrack: string;
 };
 
-export type AuthorListProps = {
+type AuthorListProps = {
   firstName: string;
   lastName: string;
   email: string;
@@ -36,12 +36,12 @@ export type LinkAndDownloadArtifactProps = {
   _type: string;
 };
 
-export type ArticfactTypeProps = {
+type ArticfactTypeProps = {
   id: string;
   name: string;
 };
 
-export type MinimalMeModelProps = {
+type MinimalMeModelProps = {
   name: string;
   brainRegion: string;
   mType: string;

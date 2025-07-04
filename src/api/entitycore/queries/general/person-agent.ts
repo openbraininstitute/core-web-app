@@ -24,7 +24,7 @@ export async function getPersons({ filters }: { filters: Partial<IPersonFilter> 
 
  * @returns {Promise<IPerson>} A promise that resolves to the single person
  */
-export async function getPerson({ id }: { id: string }) {
+async function getPerson({ id }: { id: string }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<IPerson>(`${baseUri}/${id}`);
 }

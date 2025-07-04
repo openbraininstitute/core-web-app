@@ -29,8 +29,8 @@ import { DataType } from '@/constants/explore-section/list-views';
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 
-export const BOOKMARK_CATEGORY = ['experimental', 'models', 'simulations'] as const;
-export type BookmarkCategoryType = (typeof BOOKMARK_CATEGORY)[number];
+const BOOKMARK_CATEGORY = ['experimental', 'models', 'simulations'] as const;
+type BookmarkCategoryType = (typeof BOOKMARK_CATEGORY)[number];
 
 type ExperimentalDataMap = Partial<
   Record<(typeof EXPERIMENTAL_DATATYPES)[number], Array<LibraryBookmark>>
@@ -48,7 +48,7 @@ export type GroupedLibraryBookmarks = {
   simulations?: SimulationDataMap;
 };
 
-export const DATA_CATEGORY_TABS = [
+const DATA_CATEGORY_TABS = [
   {
     key: 'experimental',
     routePrefix: 'interactive/experimental',
@@ -69,14 +69,14 @@ export const DATA_CATEGORY_TABS = [
   },
 ];
 
-export const MESSAGES = {
+const MESSAGES = {
   ENTITY_NOT_FOUND: "We couldn't find what you're looking for. It may have been deleted.",
   ENTITY_ALREADY_EXISTS: 'This item already exists. Please check and try again.',
   DATABASE_ERROR: "We're experiencing some issues retrieving data. Please try again later.",
   SERVER_ERROR: 'Something went wrong on our end. Please refresh the page or try again shortly.',
 };
 
-export const isSimulation = (t: string | null): t is SimulationTypeNames => {
+const isSimulation = (t: string | null): t is SimulationTypeNames => {
   return t ? Object.values(SimulationTypeNames).includes(t as SimulationTypeNames) : false;
 };
 

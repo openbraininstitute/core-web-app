@@ -11,7 +11,7 @@ import styles from './PopupMenu.module.css';
 
 const MENU_LINKS = [...MENU_ITEMS];
 
-export interface PopupMenuProps {
+interface PopupMenuProps {
   className?: string;
   visible: boolean;
   onChange(visible: boolean): void;

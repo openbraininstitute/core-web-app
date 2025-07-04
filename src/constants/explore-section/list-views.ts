@@ -29,13 +29,13 @@ export const DataTypeToNexusType = {
   [DataType.SingleNeuronSynaptomeSimulation]: `${ontologyBaseUrl}/SynaptomeSimulation`,
 };
 
-export const DataTypeToNewSimulationPage: Record<string, string> = {
+const DataTypeToNewSimulationPage: Record<string, string> = {
   [DataTypeToNexusType.SingleNeuronSynaptome]: 'synaptome',
   [DataTypeToNexusType.CircuitEModel]: 'single-neuron',
   [DataTypeToNexusType.CircuitMEModel]: 'single-neuron',
 };
 
-export const DataTypeToViewModelPage: Record<string, string> = {
+const DataTypeToViewModelPage: Record<string, string> = {
   [DataType.SingleNeuronSynaptome]: 'explore/interactive/model/synaptome',
   [DataType.CircuitMEModel]: 'explore/interactive/model/me-model',
 };

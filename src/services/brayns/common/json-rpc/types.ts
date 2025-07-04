@@ -72,7 +72,7 @@ export interface JsonRpcServiceAddress {
   rendererHost: string;
 }
 
-export function assertJsonRpcServiceAddress(data: unknown): asserts data is JsonRpcServiceAddress {
+function assertJsonRpcServiceAddress(data: unknown): asserts data is JsonRpcServiceAddress {
   assertType(data, { host: 'string', backendPort: 'number', rendererPort: 'number' });
 }
 

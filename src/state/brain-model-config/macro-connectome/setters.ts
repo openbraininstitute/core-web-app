@@ -35,7 +35,7 @@ import { MacroConnectomeConfigPayload } from '@/types/nexus';
 
 export const writingConfigAtom = atom(false);
 
-export const triggerRefetchAtom = atom(null, (get, set) =>
+const triggerRefetchAtom = atom(null, (get, set) =>
   set(refetchCounterAtom, (counter) => counter + 1)
 );
 

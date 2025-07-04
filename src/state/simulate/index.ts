@@ -16,18 +16,18 @@ import {
 import { getCurrentDate } from '@/util/utils';
 import { SimulationType } from '@/types/virtual-lab/lab';
 
-export const refetchTriggerAtom = atom<{}>({});
-export const triggerRefetchAtom = atom(null, (_get, set) => set(refetchTriggerAtom, {}));
+const refetchTriggerAtom = atom<{}>({});
+const triggerRefetchAtom = atom(null, (_get, set) => set(refetchTriggerAtom, {}));
 
 const defaultTitle = `Simulation experiment ${getCurrentDate('/', true)}`;
 export const campaignNameAtom = atom(defaultTitle);
 export const campaignDescriptionAtom = atom(defaultTitle);
 
-export const searchSimCampUIConfigListStringAtom = atom<string>('');
+const searchSimCampUIConfigListStringAtom = atom<string>('');
 
 type SearchType = 'public' | 'personal';
 
-export const searchConfigListTypeAtom = atom<SearchType>('personal');
+const searchConfigListTypeAtom = atom<SearchType>('personal');
 
 export const simCampaignListAtom = atom<Promise<SimulationCampaignUIConfigResource[]>>(
   async (get) => {
@@ -53,9 +53,9 @@ export const simCampaignListAtom = atom<Promise<SimulationCampaignUIConfigResour
   }
 );
 
-export const searchLaunchedSimCampStringAtom = atom<string>('');
-export const refetchLaunchedSimCampTriggerAtom = atom<{}>({});
-export const triggerLaunchedSimCampRefetchAtom = atom(null, (_get, set) =>
+const searchLaunchedSimCampStringAtom = atom<string>('');
+const refetchLaunchedSimCampTriggerAtom = atom<{}>({});
+const triggerLaunchedSimCampRefetchAtom = atom(null, (_get, set) =>
   set(refetchLaunchedSimCampTriggerAtom, {})
 );
 

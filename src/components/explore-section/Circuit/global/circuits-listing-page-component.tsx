@@ -9,7 +9,7 @@ import { resolveDataKey } from '@/utils/key-builder';
 
 import type { WorkspaceContext } from '@/types/common';
 
-export type ColumnType = {
+type ColumnType = {
   name: string;
   description: string;
   brainRegion: string;

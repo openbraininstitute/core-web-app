@@ -20,9 +20,9 @@ import type { WorkspaceContext } from '@/types/common';
 import type { IAnnotation } from '@/api/entitycore/types/shared/global';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
-export const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
+const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 
-export const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> => {
+const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> => {
   const { data: cellComposition, error } = await tryCatch(
     getCellCompositions({
       filters: { name: defaultCellCompositionName },

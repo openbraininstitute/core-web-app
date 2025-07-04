@@ -25,7 +25,7 @@ type TransformFiltersToQueryReturnValue = Record<
  * transformToIlikePattern("foo*bar") // "foo%bar"
  * transformToIlikePattern("%special%") // "\\%special\\%"
  */
-export function transformToIlikePattern(str: string) {
+function transformToIlikePattern(str: string) {
   if (isEmpty(str)) return null;
   return str
     .replace(/%/g, '\\%') // Escape existing `%`

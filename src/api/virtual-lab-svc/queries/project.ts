@@ -81,7 +81,7 @@ export async function createProject(
  * @returns {Promise<ProjectUsersCountResponse>} - Returns the count of users in the project.
  * @throws {Error} - Throws an error if the API request fails.
  */
-export async function getProjectUsersCount(
+async function getProjectUsersCount(
   virtualLabId: string,
   projectId: string
 ): Promise<ProjectUsersCountResponse> {

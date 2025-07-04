@@ -15,7 +15,7 @@ import GalleryNode from '../GalleryPlugin/Node';
 import InlineImageNode from './InlineImage/Node';
 import { Position } from '@/components/papers/uploader/types';
 
-export interface ImagePayload {
+interface ImagePayload {
   key?: NodeKey;
   alt: string;
   src: string;
@@ -23,7 +23,7 @@ export interface ImagePayload {
   height?: number;
   maxWidth?: number;
 }
-export type InsertImagePayload = Readonly<ImagePayload>;
+type InsertImagePayload = Readonly<ImagePayload>;
 
 export type SerializedInlineImageNode = Spread<
   {
@@ -36,7 +36,7 @@ export type SerializedInlineImageNode = Spread<
   SerializedLexicalNode
 >;
 
-export type GalleryPayload = {
+type GalleryPayload = {
   title: string;
   description: string;
   images: Array<string>;
@@ -46,7 +46,7 @@ export type InsertGalleryPayload = Readonly<GalleryPayload>;
 
 export type SerializedGalleryNode = Spread<GalleryPayload, SerializedLexicalNode>;
 
-export interface InlineImagePayload {
+interface InlineImagePayload {
   key?: NodeKey;
   alt: string;
   src: string;
@@ -59,7 +59,7 @@ export interface UpdateInlineImagePayload {
   alt?: string;
   position?: Position;
 }
-export type ImageType = 'image' | 'inline-image';
+type ImageType = 'image' | 'inline-image';
 
 export const INSERT_INLINE_IMAGE_COMMAND: LexicalCommand<InlineImagePayload> = createCommand(
   'INSERT_INLINE_IMAGE_COMMAND'
@@ -68,7 +68,7 @@ export const INSERT_INLINE_IMAGE_COMMAND: LexicalCommand<InlineImagePayload> = c
 export const INSERT_GALLERY_COMMAND: LexicalCommand<GalleryPayload> =
   createCommand('INSERT_GALLERY_COMMAND');
 
-export const RIGHT_CLICK_IMAGE_COMMAND: LexicalCommand<MouseEvent> = createCommand(
+const RIGHT_CLICK_IMAGE_COMMAND: LexicalCommand<MouseEvent> = createCommand(
   'RIGHT_CLICK_IMAGE_COMMAND'
 );
 
@@ -85,7 +85,7 @@ export function $isInlineImageNode(node: LexicalNode | null | undefined): node i
   return node instanceof InlineImageNode;
 }
 
-export function $isGalleryNode(node: LexicalNode | null | undefined): node is GalleryNode {
+function $isGalleryNode(node: LexicalNode | null | undefined): node is GalleryNode {
   return node instanceof GalleryNode;
 }
 

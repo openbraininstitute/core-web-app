@@ -6,7 +6,7 @@ import tar from 'tar-stream';
 import { getEntityFilesHandlerMap } from '@/features/entity-download/file-handlers';
 import { EntityTypeValue } from '@/api/entitycore/types';
 
-export type CreateDownloadStreamParams = {
+type CreateDownloadStreamParams = {
   entityIds: string[];
   entityType: EntityTypeValue;
   projectId?: string | null;
@@ -66,4 +66,4 @@ export async function createDownloadStream({
 
   return downloadStream;
 }
-export const streamPipeline = promisify(pipeline);
+const streamPipeline = promisify(pipeline);

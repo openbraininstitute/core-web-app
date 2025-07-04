@@ -38,7 +38,7 @@ export type TierFeature = {
   tooltip?: Array<string>;
 };
 
-export type FeatureCategory = {
+type FeatureCategory = {
   title: string;
   available: boolean;
   featuresList: Array<TierFeature>;
@@ -66,7 +66,7 @@ export type ExtendedTier = Tier & {
   metadata: Record<string, string>;
 };
 
-export type TiersData = {
+type TiersData = {
   tiers: Tier[];
 };
 

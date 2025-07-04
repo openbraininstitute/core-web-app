@@ -12,7 +12,7 @@ import { classNames } from '@/util/utils';
 import '../../styles.module.css';
 import styles from './milestones.module.css';
 
-export interface MilestonesProps {
+interface MilestonesProps {
   className?: string;
 }
 

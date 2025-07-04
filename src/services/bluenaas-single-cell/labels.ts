@@ -19,7 +19,7 @@ interface LabelToDraw {
   object: Object3D;
 }
 
-export interface LabelsOptions {
+interface LabelsOptions {
   margin: number;
   padding: number;
   backColor: string;

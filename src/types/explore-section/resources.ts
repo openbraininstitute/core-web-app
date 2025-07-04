@@ -10,9 +10,9 @@ export type ExploreSectionResource = ExploreResource;
 
 // TODO: See comment in ./src/constants/explore-section/fields-config/literature.tsx
 // (regarding what to do about this "any" type below)
-export type ExploreSectionResponse = ExploreESResponse<any>;
+type ExploreSectionResponse = ExploreESResponse<any>;
 
-export interface ESResponseRaw {
+interface ESResponseRaw {
   sort?: number[] | null;
   _id: string;
   _index: string;
@@ -20,7 +20,7 @@ export interface ESResponseRaw {
   _type: string;
 }
 
-export type Source = ExploreResource;
+type Source = ExploreResource;
 
 // Below is the delta response interface definitions
 export type DeltaResource = (DeltaExperiment | DeltaSimulationResource | DeltaModel) & {
@@ -29,15 +29,15 @@ export type DeltaResource = (DeltaExperiment | DeltaSimulationResource | DeltaMo
 
 export type Subject = DeltaSubject;
 
-export type SerializedDeltaResource = DeltaExperiment & {
+type SerializedDeltaResource = DeltaExperiment & {
   neuriteFeature?: NeuriteFeature[];
 };
 
-export type EPhysImageItem = Image;
+type EPhysImageItem = Image;
 
 export type Contributor = DeltaContributor;
 
-export type ModelUsed = {
+type ModelUsed = {
   '@id': string;
   '@type': string | Array<string>;
 };

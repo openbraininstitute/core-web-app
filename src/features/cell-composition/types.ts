@@ -28,7 +28,7 @@ export interface TreeNode {
   relatedNodes: string[];
 }
 
-export type Density = {
+type Density = {
   density: number;
   count: number;
 };

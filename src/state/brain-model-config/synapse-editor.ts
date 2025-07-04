@@ -11,7 +11,7 @@ import {
   GeneratorTaskActivityResource,
 } from '@/types/nexus';
 
-export const refetchCounterAtom = atom<number>(0);
+const refetchCounterAtom = atom<number>(0);
 
 export const configAtom = atom<Promise<SynapseConfigResource | null>>(async (get) => {
   const session = get(sessionAtom);

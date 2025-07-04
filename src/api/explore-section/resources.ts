@@ -25,7 +25,7 @@ export type DataQuery = {
   query: {};
 };
 
-export function buildSearchUrl(virtualLabInfo?: VirtualLabInfo) {
+function buildSearchUrl(virtualLabInfo?: VirtualLabInfo) {
   return virtualLabInfo
     ? `${API_SEARCH}?addProject=${virtualLabInfo.virtualLabId}/${virtualLabInfo.projectId}`
     : API_SEARCH;
@@ -142,7 +142,7 @@ export async function fetchDimensionAggs(virtualLabInfo?: VirtualLabInfo) {
  * @param {string} params.linkedProperty - Property name to attach the linked model data.
  * @returns {Promise<Array<ExploreESHit<ExploreResource>>>} - The modified results with linked model data.
  */
-export async function fetchLinkedModel({
+async function fetchLinkedModel({
   results,
   path,
   linkedProperty,
@@ -230,7 +230,7 @@ export async function fetchLinkedModel({
   return results;
 }
 
-export async function fetchLinkedMandEModels({
+async function fetchLinkedMandEModels({
   org,
   project,
   meModel,

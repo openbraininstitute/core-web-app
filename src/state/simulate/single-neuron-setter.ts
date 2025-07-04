@@ -54,8 +54,8 @@ import type {
 } from '@/types/simulation/single-neuron';
 
 export const SIMULATION_CONFIG_FILE_NAME_BASE = 'simulation-config';
-export const STIMULUS_PLOT_NAME = 'stimulus-plot';
-export const SIMULATION_PLOT_NAME = 'simulation-plot';
+const STIMULUS_PLOT_NAME = 'stimulus-plot';
+const SIMULATION_PLOT_NAME = 'simulation-plot';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 

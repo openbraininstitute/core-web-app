@@ -19,8 +19,6 @@ const USE_MATERIAL_CASE = {
   WIREFRAME: 4,
 };
 
-export { USE_MATERIAL_CASE };
-
 export default class AtlasMesh extends ThreeObject3D {
   static generateGhostMateral(options = {}) {
     const halfOpacityDistance =

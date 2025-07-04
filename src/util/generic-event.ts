@@ -33,7 +33,7 @@ export default class GenericEvent<T> implements GenericEventInterface<T> {
   }
 }
 
-export function useGenericEventValue<T>(event: GenericEvent<T>, initialValue: T): T {
+function useGenericEventValue<T>(event: GenericEvent<T>, initialValue: T): T {
   const [value, setValue] = React.useState(initialValue);
   React.useEffect(() => {
     event.addListener(setValue);
