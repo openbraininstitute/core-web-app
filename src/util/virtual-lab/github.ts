@@ -1,18 +1,19 @@
 import path from 'path';
-
-import JSZip from 'jszip';
 import capitalize from 'lodash/capitalize';
-
+import JSZip from 'jszip';
 import { z } from 'zod';
+
+import { env } from '@/env';
 
 export const options = {
   headers: {
     Accept: 'application/vnd.github.v3+json',
+    ...(env.GITHUB_TOKEN ? { Authorization: `Bearer ${env.GITHUB_TOKEN}` } : {}),
   },
 
-  // next: {
-  //   revalidate: 3600 * 24,
-  // },
+  next: {
+    revalidate: 3600 * 24,
+  },
 };
 
 export interface Notebook {
@@ -40,7 +41,9 @@ export type Item = {
 
 export function assertGithubApiResponse(res: Response) {
   if (res.headers.get('x-ratelimit-remaining') === '0') {
-    throw new Error('GitHub API Rate limit reached');
+    throw new Error(
+      'We’ve temporarily hit GitHub’s API rate limit. You can retry in about an hour,'
+    );
   }
 }
 

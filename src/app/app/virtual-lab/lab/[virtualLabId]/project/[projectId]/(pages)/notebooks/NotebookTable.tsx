@@ -74,7 +74,7 @@ function NotebookTable({
   if (failed && failed.length)
     notification.warning({
       message:
-        "Failed to fetch some repositories, ensure they're public and contain valid metadate for each notebook",
+        "Failed to fetch some repositories, ensure they're public and contain valid metadata for each notebook",
       placement: 'topRight',
       key: "'failed-repo-warning'",
     });
