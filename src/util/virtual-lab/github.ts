@@ -1,4 +1,5 @@
 'use server';
+
 import path from 'path';
 import capitalize from 'lodash/capitalize';
 import JSZip from 'jszip';
@@ -110,14 +111,15 @@ export async function downloadZippedNotebook(notebook: Notebook) {
       for (let j = 0; j < decodedContent.length; j++) {
         arrayBuffer[j] = decodedContent.charCodeAt(j);
       }
+
       zip.file(names[i], arrayBuffer);
     });
 
     await Promise.all(promises);
 
-    const zipContent = await zip.generateAsync({ type: 'blob' });
+    const zipContent = await zip.generateAsync({ type: 'nodebuffer' });
     return zipContent;
-  } catch {
+  } catch (e) {
     throw new Error(`Failed to fetch the contents`);
   }
 }

@@ -1,11 +1,11 @@
 'use server';
 
 import capitalize from 'lodash/capitalize';
-import { env } from '@/env';
 
 import { assertErrorMessage } from '../utils';
 import { fetchGithubFile, getFileCreationDate } from './github';
 import { extractUserAndRepo, Item, Notebook, validateMetadata } from './types';
+import { env } from '@/env';
 
 const options = {
   headers: {

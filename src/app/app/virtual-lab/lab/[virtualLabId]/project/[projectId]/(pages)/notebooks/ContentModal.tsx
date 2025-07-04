@@ -60,7 +60,7 @@ export default function ContentModal({
     fetchFile();
 
     return () => controller.abort();
-  }, [notebook, display]);
+  }, [notebook, display]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Modal

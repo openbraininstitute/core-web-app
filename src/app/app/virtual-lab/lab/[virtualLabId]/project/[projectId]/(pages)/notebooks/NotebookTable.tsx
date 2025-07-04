@@ -126,8 +126,8 @@ function NotebookTable({
     setLoadingZip(true);
 
     try {
-      const blob = await downloadZippedNotebook(notebook);
-
+      const buffer = await downloadZippedNotebook(notebook);
+      const blob = new Blob([buffer], { type: 'application/zip' });
       saveAs(blob, `${notebook.name}.zip`);
       setLoadingZip(false);
     } catch {
@@ -135,6 +135,7 @@ function NotebookTable({
         message: 'Failed to download the contents, ensure the repo is public',
         placement: 'bottomRight',
       });
+      setLoadingZip(false);
     }
   };
 
