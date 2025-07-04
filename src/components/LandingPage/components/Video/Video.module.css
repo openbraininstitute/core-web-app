@@ -6,6 +6,7 @@ div.video {
 
 div.video > video {
   position: absolute;
+  z-index: 10;
   left: 0;
   top: 0;
   width: 100%;
@@ -15,4 +16,18 @@ div.video > video {
 
 .pointer {
   cursor: pointer;
+}
+
+.playButton {
+  position: absolute;
+  z-index: 40;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: white;
+  transition: opacity 0.2s ease-in-out;
 }
