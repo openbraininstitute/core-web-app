@@ -2,10 +2,14 @@
 
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
-import { atom, useAtomValue } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
-import { simExecStatusMapAtomFamily, simulationsByCampaignIdAtomFamily } from './_components/atoms';
+import {
+  simExecRemoteStatusMapAtomFamily,
+  simExecStatusMapAtomFamily,
+  simulationsByCampaignIdAtomFamily,
+} from './_components/atoms';
 import CircuitPreview from './_components/circuit-preview';
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
 import { FileViewer } from './_components/file-viewer';
@@ -335,44 +339,59 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
   const simulations = useAtomValue(simulationsAtom);
 
-  const initialStatusMap = useLastTruthyValue(
-    simExecStatusMapAtomFamily({ context, simulationIds: simulations.map((s) => s.id) })
+  const simulationIds = simulations.map((s) => s.id);
+
+  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, simulationIds });
+  const fetchRemoteSimExecStatuseMap = useSetAtom(
+    simExecRemoteStatusMapAtomFamily({ simulationIds, context })
   );
 
+  const statusMap = useLastTruthyValue(simExecStatusMapAtom);
+  const updateStatusMap = useSetAtom(simExecStatusMapAtom);
+
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
-  const [statusMap, setStatusMap] = useState<Map<string, CircuitSimulationExecutionStatus>>(
-    new Map(initialStatusMap)
-  );
   const [simExecSelectedSimulationIds, setSimExecSelectedSimulationIds] = useState<string[]>([]);
   const [selectedSimulation, setSelectedSimulation] = useState<null | ICircuitSimulation>(null);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
 
   const activeSimulationExecStatus = selectedSimulation && statusMap?.get(selectedSimulation.id);
 
-  const setExecStatus = (simulationId: string, status: CircuitSimulationExecutionStatus) =>
-    setStatusMap(new Map(statusMap).set(simulationId, status));
-
-  useEffect(() => {
-    // TODO: check if this is usefull.
-    // Reset all exec status updates from streaming if initialStatusMap is getting reloaded.
-    setStatusMap(new Map(initialStatusMap));
-  }, [initialStatusMap]);
-
   useEffect(() => {
     // Auto select all simulations with status "created" on page load.
-    if (initialStatusMap) {
+    if (statusMap) {
       setSimExecSelectedSimulationIds(
         simulations
           .filter((s) => ['created', undefined].includes(statusMap.get(s.id)))
           .map((s) => s.id)
       );
     }
-  }, [simulations, statusMap, initialStatusMap]);
+  }, [simulations, statusMap]);
 
   useEffect(() => {
     // If there is only one simulation in the campaign - make it active on page load.
     if (simulations.length === 1) setSelectedSimulation(simulations[0]);
   }, [simulations]);
+
+  useEffect(() => {
+    // Poll simulation statuses if there are active (running/pending) simulations
+    // and no active simulation request with the status streaming
+    if (simRequestInProgress) return;
+
+    const hasActiveSimulations = statusMap
+      ?.values()
+      .some((status) =>
+        [
+          CircuitSimulationExecutionStatus.PENDING,
+          CircuitSimulationExecutionStatus.RUNNING,
+        ].includes(status)
+      );
+
+    if (!hasActiveSimulations) return;
+
+    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 15_000);
+
+    return () => clearInterval(intervalId);
+  }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
   const run = async () => {
     setSimRequestInProgress(true);
@@ -382,7 +401,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
           ctx: { virtualLabId, projectId },
           simulationId: simulations[0].id,
           onMessage: (msg) => {
-            setExecStatus(simId, msg.status);
+            updateStatusMap(statusMap!.set(simId, msg.status));
             if (msg.status !== 'done') return;
 
             notification.success({ message: `Simulation ${simulations[0].name} done` });
