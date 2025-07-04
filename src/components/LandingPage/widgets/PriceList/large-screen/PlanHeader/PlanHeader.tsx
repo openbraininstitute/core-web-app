@@ -50,7 +50,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
                     checked={interval === 'year'}
                     name="interval"
                     thumbCls="bg-primary-9"
-                    className="border-primary-9 w-[37px]! rounded-3xl! border! p-1!"
+                    className="border-primary-9 w-[37px]! rounded-3xl! border! border-solid p-1!"
                     onCheckedChange={(checked) => setInterval(checked ? 'year' : 'month')}
                   />
                   <span
