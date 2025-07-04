@@ -1,48 +1,21 @@
+'use server';
+
 import path from 'path';
-
-import JSZip from 'jszip';
 import capitalize from 'lodash/capitalize';
+import JSZip from 'jszip';
+import { assertGithubApiResponse, Notebook, validateMetadata } from './types';
+import { env } from '@/env';
 
-import { z } from 'zod';
-
-export const options = {
+const options = {
   headers: {
     Accept: 'application/vnd.github.v3+json',
+    ...(env.GITHUB_TOKEN ? { Authorization: `Bearer ${env.GITHUB_TOKEN}` } : {}),
   },
 
   next: {
     revalidate: 3600 * 24,
   },
 };
-
-export interface Notebook {
-  id: string;
-  key: string;
-  name: string;
-  description: string;
-  scale: string;
-  path: string;
-  notebookUrl: string;
-  metadataUrl: string;
-  readmeUrl: string;
-  authors: string;
-  githubUser: string;
-  githubRepo: string;
-  creationDate: string | null;
-  defaultBranch: string;
-  objectOfInterest: string;
-}
-
-export type Item = {
-  url: string;
-  path: string;
-};
-
-export function assertGithubApiResponse(res: Response) {
-  if (res.headers.get('x-ratelimit-remaining') === '0') {
-    throw new Error('GitHub API Rate limit reached');
-  }
-}
 
 export async function getFileCreationDate(
   user: string,
@@ -128,7 +101,8 @@ export async function downloadZippedNotebook(notebook: Notebook) {
     const names = ['analysis_info.json', 'analysis_notebook.ipynb', 'readme.md'];
 
     const promises = files.map(async (f, i) => {
-      const response = await fetch(f);
+      const response = await fetch(f, options);
+
       const data = await response.json();
 
       const decodedContent = atob(data.content);
@@ -137,69 +111,17 @@ export async function downloadZippedNotebook(notebook: Notebook) {
       for (let j = 0; j < decodedContent.length; j++) {
         arrayBuffer[j] = decodedContent.charCodeAt(j);
       }
+
       zip.file(names[i], arrayBuffer);
     });
 
     await Promise.all(promises);
 
-    const zipContent = await zip.generateAsync({ type: 'blob' });
+    const zipContent = await zip.generateAsync({ type: 'nodebuffer' });
     return zipContent;
-  } catch {
+  } catch (e) {
     throw new Error(`Failed to fetch the contents`);
   }
-}
-
-export function extractUserAndRepo(githubUrl: string): { user: string; repo: string } {
-  const url = new URL(githubUrl);
-
-  if (url.hostname !== 'github.com') {
-    throw new Error('Not a GitHub URL');
-  }
-
-  const pathParts = url.pathname.split('/').filter((part) => part.length > 0);
-
-  if (pathParts.length < 2) {
-    throw new Error('Invalid GitHub URL: Missing user or repository');
-  }
-
-  const user = pathParts[0];
-  const repo = pathParts[1];
-
-  return { user, repo };
-}
-
-export function validateMetadata(input: string) {
-  const json = JSON.parse(input);
-
-  const dataTypeSchema = z
-    .object({
-      artefact: z.union([z.string().transform((val) => [val]), z.array(z.string())]),
-      required_properties: z.array(z.string()),
-    })
-    .strip();
-
-  const inputItemSchema = z
-    .object({
-      data_type: dataTypeSchema,
-      class: z.string(),
-    })
-    .strip();
-
-  const inputSchema = z
-    .object({
-      name: z.string(),
-      description: z.string(),
-      authors: z.array(z.string()),
-      scale: z
-        .string()
-        .transform((val) => val.toLowerCase())
-        .pipe(z.enum(['cellular', 'system', 'circuit', 'metabolism']))
-        .default('cellular'),
-      input: z.array(inputItemSchema),
-    })
-    .strip();
-
-  return inputSchema.parse(json);
 }
 
 export async function fetchNotebook(

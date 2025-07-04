@@ -1,21 +1,21 @@
 import { atom } from 'jotai';
+import { atomWithRefresh } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
 
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import { readAtomFamilyWithExpiration } from '@/util/atoms';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeValue } from '@/api/entitycore/types';
-import {
-  CircuitSimulationExecutionStatus,
-  ICircuitSimulationExecution,
-} from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
+import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
+import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 
 export const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -34,9 +34,9 @@ export const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-export const simExecStatusMapAtomFamily = readAtomFamilyWithExpiration(
+export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: { simulationIds: string[]; context: WorkspaceContext }) =>
-    atom<Promise<Map<string, CircuitSimulationExecutionStatus>>>(async () => {
+    atomWithRefresh<Promise<SimExecStatusMap>>(async () => {
       const simulationExecutionFilters = { used__id__in: simulationIds.join(',') };
       const res = await getCircuitSimulationExecutions({
         filters: simulationExecutionFilters,
@@ -48,6 +48,47 @@ export const simExecStatusMapAtomFamily = readAtomFamilyWithExpiration(
         new Map()
       );
     }),
+  {
+    ttl: 120000, // 2 minutes
+    areEqual: isEqual,
+  }
+);
+
+type SimExecStatusMapAtomFamilyArg = { simulationIds: string[]; context: WorkspaceContext };
+
+export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
+  ({ simulationIds, context }: SimExecStatusMapAtomFamilyArg) => {
+    const simExecRemoteStatusMapAtom = simExecRemoteStatusMapAtomFamily({
+      simulationIds,
+      context,
+    });
+
+    const localStatusMapAtom = atom<SimExecStatusMap>(new Map());
+
+    return atom<Promise<SimExecStatusMap>, [SimExecStatusMap], void>(
+      async (get) => {
+        const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
+        const localStatusMap = get(localStatusMapAtom);
+
+        const simIds = Array.from(new Set([...remoteStatusMap.keys(), ...localStatusMap.keys()]));
+        const statusMap = simIds.reduce((map, simId) => {
+          const remoteStatus = remoteStatusMap.get(simId);
+          const localStatus = localStatusMap.get(simId);
+          // If both are set we take the latest possible one,
+          // because the status change in a particular sequence.
+          // See definition of getLatestSimExecStatus
+          const status =
+            remoteStatus && localStatus
+              ? getLatestSimExecStatus(remoteStatus, localStatus)
+              : (localStatus ?? remoteStatus);
+          return map.set(simId, status);
+        }, new Map());
+
+        return statusMap;
+      },
+      (get, set, newStatusMap) => set(localStatusMapAtom, new Map(newStatusMap))
+    );
+  },
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,

@@ -10,7 +10,7 @@ import { sectionAtom } from '@/state/application';
 
 import styles from './layout.module.css';
 
-const AIAssistant = dynamic(() => import('@/components/ai-assistant'));
+const AiAssistant = dynamic(() => import('@/components/ai-assistant'));
 
 type GenericLayoutProps = {
   children: ReactNode;
@@ -27,7 +27,7 @@ export default function ExploreLayout({ children }: GenericLayoutProps) {
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
       <div className={styles.main}>
         <div className={styles.content}>{children}</div>
-        <AIAssistant />
+        <AiAssistant section="explore" />
       </div>
     </ErrorBoundary>
   );
