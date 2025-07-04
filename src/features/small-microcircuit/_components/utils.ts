@@ -1,3 +1,4 @@
+import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { Atom } from 'jotai';
 import uniq from 'lodash/uniq';
 
@@ -46,3 +47,23 @@ export const ORDERING: Record<string, { order: number; category: string }> = {
 };
 
 export const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
+
+const simExecStatusListordered = [
+  CircuitSimulationExecutionStatus.CREATED,
+  CircuitSimulationExecutionStatus.PENDING,
+  CircuitSimulationExecutionStatus.RUNNING,
+  CircuitSimulationExecutionStatus.DONE,
+  CircuitSimulationExecutionStatus.ERROR,
+];
+
+export function getLatestSimExecStatus(
+  remoteStatus: CircuitSimulationExecutionStatus,
+  localStatus: CircuitSimulationExecutionStatus
+) {
+  const remoteStatusIdx = simExecStatusListordered.indexOf(remoteStatus);
+  const localStatusIdx = simExecStatusListordered.indexOf(localStatus);
+
+  const latestStatus = Math.max(remoteStatusIdx, localStatusIdx);
+
+  return simExecStatusListordered[latestStatus];
+}

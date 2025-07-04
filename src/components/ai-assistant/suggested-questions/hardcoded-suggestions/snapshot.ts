@@ -3,6 +3,8 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useParams } from 'next/navigation';
 
+import { useAiContext } from '../../hooks';
+
 import { useCurrentExplorerArtifactValue } from '@/state/explore-section/artifact';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
@@ -24,7 +26,8 @@ export function useSnapshot(): Snapshot {
   });
   const params = useParams<{ projectId: string }>();
   const { projectId } = params;
-  const dataKey = resolveDataKey({ projectId, section: 'build' });
+  const { section } = useAiContext();
+  const dataKey = resolveDataKey({ projectId, section });
   const { node: selectedBrainRegion } = useBrainRegionHierarchy({ dataKey });
   const result = useAtomValue(
     React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])

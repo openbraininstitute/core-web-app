@@ -4,7 +4,7 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React, { CSSProperties } from 'react';
 
 import { Spinner } from './spinner';
-import { useCollapsedPanel } from './hooks';
+import { AiContextProvider, useCollapsedPanel } from './hooks';
 import PanelSplitter from './panel-splitter';
 import PanelContent from './panel-content';
 import { classNames } from '@/util/utils';
@@ -14,11 +14,12 @@ import { isNumber } from '@/util/type-guards';
 
 import styles from './ai-assistant.module.css';
 
-export interface LiteratureSuggestionsProps {
+export interface AiAssistantProps {
   className?: string;
+  section: 'explore' | 'build' | 'simulate' | 'bookmark' | 'activity';
 }
 
-export default function ArtificialIntelligenceAssistant({ className }: LiteratureSuggestionsProps) {
+export default function AiAssistant({ className, section }: AiAssistantProps) {
   const [panelWidth, setPanelWidth] = useLocalStorage('ai-assistant/panel-width', 25, isNumber);
   const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
   const [threadId, recreateThreadId] = useServiceAiAgentThread();
@@ -31,21 +32,23 @@ export default function ArtificialIntelligenceAssistant({ className }: Literatur
   };
 
   return (
-    <div
-      style={style}
-      className={classNames(className, styles.aiAssistant, panelWidth > 99 && styles.fullscreen)}
-      data-collapsed={collapsedPanel}
-    >
-      <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
-      {!collapsedPanel && threadId && (
-        <div className={classNames(styles.overlay, panelWidth > 25 && styles.shadow)}>
-          <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
-          <PanelContent threadId={threadId} onClearChat={recreateThreadId} />
-          <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
-        </div>
-      )}
-      {!collapsedPanel && !threadId && <Spinner />}
-    </div>
+    <AiContextProvider value={{ section }}>
+      <div
+        style={style}
+        className={classNames(className, styles.aiAssistant, panelWidth > 99 && styles.fullscreen)}
+        data-collapsed={collapsedPanel}
+      >
+        <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
+        {!collapsedPanel && threadId && (
+          <div className={classNames(styles.overlay, panelWidth > 25 && styles.shadow)}>
+            <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
+            <PanelContent threadId={threadId} onClearChat={recreateThreadId} />
+            <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
+          </div>
+        )}
+        {!collapsedPanel && !threadId && <Spinner />}
+      </div>
+    </AiContextProvider>
   );
 }
 

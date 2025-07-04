@@ -13,7 +13,6 @@ import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/e
 import { WorkspaceContext } from '@/types/common';
 
 import './styles/ephys-plugin-styles.css';
-import { WorkspaceContext } from '@/types/common';
 
 enum VIEW {
   OVERVIEW = 'overview',
