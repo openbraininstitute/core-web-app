@@ -4,7 +4,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 export * from '@/entity-configuration/domain/model/mesh';
 export * from '@/entity-configuration/domain/model/circuit';
 
-const MODEL_DATATYPES = [
+export const MODEL_DATATYPES = [
   DataType.CircuitEModel,
   DataType.CircuitMEModel,
   DataType.SingleNeuronSynaptome,

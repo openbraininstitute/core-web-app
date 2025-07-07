@@ -7,7 +7,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 // export * from '@/entity-configuration/domain/experimental/bouton-density';
 // export * from '@/entity-configuration/domain/experimental/neuron-density';
 
-const EXPERIMENTAL_DATATYPES = [
+export const EXPERIMENTAL_DATATYPES = [
   DataType.ExperimentalBoutonDensity,
   DataType.ExperimentalNeuronDensity,
   DataType.ExperimentalElectroPhysiology,
