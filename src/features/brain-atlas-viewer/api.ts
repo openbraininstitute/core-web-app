@@ -1,6 +1,5 @@
 import { createHeaders } from '@/util/utils';
 import { BRAIN_REGION_DOES_NOT_EXIST } from '@/constants/errors';
-import { nexus } from '@/config';
 
 /**
  * Fetches the mesh data from nexus

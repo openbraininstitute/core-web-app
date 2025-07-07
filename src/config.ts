@@ -21,13 +21,6 @@ export const meModelAnalysisSvc = {
   wsUrl: env.NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL,
 };
 
-export const cellCompositionFile = {
-  org: env.NEXT_PUBLIC_CELL_COMPOSITION_ORG,
-  project: env.NEXT_PUBLIC_CELL_COMPOSITION_PROJECT,
-  id: env.NEXT_PUBLIC_CELL_COMPOSITION_ID,
-  tag: env.NEXT_PUBLIC_CELL_COMPOSITION_TAG,
-};
-
 export const autoSaveDebounceInterval = 10000;
 
 export const virtualLabApi = {
