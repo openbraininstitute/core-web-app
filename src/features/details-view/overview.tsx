@@ -2,13 +2,13 @@ import { ReactNode } from 'react';
 
 import Header from '@/features/details-view/header';
 
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CommonSummaryViewFields } from '@/entity-configuration/definitions/view-defs';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { classNames } from '@/util/utils';
 
-import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 type FieldProps = {
   field: EntityCoreFields;
@@ -16,15 +16,22 @@ type FieldProps = {
   data: any;
 };
 
-function Field({ field, className, data }: FieldProps) {
+export function Field({ field, className, data }: FieldProps) {
   const fieldObj = getFieldDefinition(field);
 
+  let renderedContent: ReactNode = null;
+  if (fieldObj) {
+    if (fieldObj.renderForDetailView) {
+      renderedContent = fieldObj.renderForDetailView(data);
+    } else if (fieldObj.render) {
+      renderedContent = fieldObj.render(data);
+    }
+  }
+
   return (
-    <div className={classNames('text-primary-7 mr-10', className)}>
+    <div className={classNames('text-primary-7', className)}>
       <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>
-      <div className={classNames('mt-2 break-words', fieldObj?.className)}>
-        {fieldObj?.render && fieldObj.render(data)}
-      </div>
+      <div className={classNames('mt-2 break-words', fieldObj?.className)}>{renderedContent}</div>
     </div>
   );
 }
@@ -56,7 +63,7 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
         {commonFields.length > 0 && (
           <div
             className={
-              commonFieldsClassName ?? 'grid w-1/2 auto-rows-max grid-cols-3 gap-x-8 gap-y-6'
+              commonFieldsClassName ?? 'grid w-1/2 auto-rows-max grid-cols-2 gap-x-8 gap-y-6'
             }
           >
             {commonFields.map(({ className, field }) => (

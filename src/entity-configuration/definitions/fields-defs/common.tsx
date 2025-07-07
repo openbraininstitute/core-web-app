@@ -1,21 +1,27 @@
+import { hasAssets } from '@/api/entitycore/guards';
+import { transformAgentToNames } from '@/api/entitycore/transformers';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   EmptyPreview,
   EmptyValue,
+  renderContributorsModal,
   renderDate,
   renderEmptyOrValue,
   renderPreview,
   renderTimestamp,
 } from '@/entity-configuration/definitions/renderer';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
-import { transformAgentToNames } from '@/api/entitycore/transformers';
-import { hasAssets } from '@/api/entitycore/guards';
 
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { IContributor } from '@/api/entitycore/types/shared/global';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+
+export type ProcessedContributor = {
+  name: string;
+  type: number; // 0 for Org, 1 for Person
+};
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.Preview]: {
@@ -133,6 +139,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
+    renderForDetailView: (r) => {
+      const { contributions } = r as EntityCoreObjectTypes & {
+        contributions?: Array<IContributor> | null;
+      };
+      return renderContributorsModal(contributions, false, () => {}, 'inline');
+    },
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
