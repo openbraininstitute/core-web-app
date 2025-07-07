@@ -4,11 +4,10 @@ import uniqBy from 'lodash/uniqBy';
 import sessionAtom from '@/state/session';
 
 import { LoadingState, MeshVisibility, VisibilityType } from '@/features/brain-atlas-viewer/types';
-import { partialCircuitAtom } from '@/state/brain-model-config/cell-position';
 import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
-import { CIRCUIT_NOT_BUILT_ERROR } from '@/constants/errors';
 import { ApplicationSection } from '@/types/common';
 import { cellSvcBaseUrl } from '@/config';
+import { env } from '@/env';
 
 export const meshVisibilityAtom = atomFamily(() => atomWithReset<MeshVisibility[]>([]));
 
@@ -42,21 +41,15 @@ export const addMeshVisibilityAtom = atom(
  */
 export const getPointCloudAtom = (brainRegionAnnotationValue: number) =>
   atom(async (get) => {
-    const partialCircuit = await get(partialCircuitAtom);
-
     const session = await get(sessionAtom);
     if (!session) {
       return null;
     }
-    if (!partialCircuit) {
-      throw new Error(CIRCUIT_NOT_BUILT_ERROR);
-    }
-    // bucket is the last 2 elements of the project URL
-    const bucket = partialCircuit._project.split('/').slice(-2).join('/');
+
     const url = `${cellSvcBaseUrl}/circuit?circuit_id=${encodeURIComponent(
-      partialCircuit['@id']
+      env.NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID || ''
     )}&region=${brainRegionAnnotationValue}&how=arrow`;
-    return await fetchPointCloud(url, session.accessToken, bucket);
+    return await fetchPointCloud(url, session.accessToken);
   });
 
 export const loadingAtom = atom<Record<ApplicationSection, LoadingState[]>>({
