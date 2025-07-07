@@ -1,9 +1,7 @@
 import { atom } from 'jotai';
 import { atomWithReset } from 'jotai/utils';
 
-import { SelectedSingleNeuronModel } from '@/types/simulation/single-neuron';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
-import { getIdFromSelfUrl } from '@/util/nexus';
 import { SimulationStep, SimulationStepsTracker } from '@/types/simulation/common';
 
 export const defaultSteps: Array<SimulationStep> = [
@@ -20,13 +18,6 @@ export const simulateStepTrackerAtom = atomWithReset<SimulationStepsTracker>({
 });
 
 export const secNamesAtom = atomWithReset<string[]>([]);
-
-const singleNeuronAtom = atom<SelectedSingleNeuronModel | null>(null);
-
-const singleNeuronIdAtom = atom<string | null>((get) => {
-  const singleNeuronSelfUrl = get(singleNeuronAtom);
-  return getIdFromSelfUrl(singleNeuronSelfUrl?.self ?? null);
-});
 
 export const simulationStatusAtom = atomWithReset<{
   status: null | 'launched' | 'finished' | 'error';

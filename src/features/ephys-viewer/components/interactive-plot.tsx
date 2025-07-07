@@ -15,8 +15,7 @@ import {
 } from '@/util/explore-section/plotHelpers';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import { PlotProps } from '@/features/ephys-viewer/types';
-import { ZoomRanges } from '@/types/explore-section/misc';
+import { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 
 const Plot = createPlotlyComponent(Plotly);
 

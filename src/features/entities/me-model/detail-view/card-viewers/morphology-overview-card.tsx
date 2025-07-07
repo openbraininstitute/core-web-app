@@ -8,8 +8,8 @@ import {
   renderArray,
   renderEmptyOrValue,
   renderLicense,
+  renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { renderPreview } from '@/constants/explore-section/fields-config/renderer';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';

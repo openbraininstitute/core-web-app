@@ -115,6 +115,7 @@ export const env = createEnv({
       .string()
       .transform((val) => val === 'true')
       .default('false'),
+    NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: z.string().url().optional(),
   },
 
   experimental__runtimeEnv: {
@@ -213,5 +214,6 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE,
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ID: process.env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ID,
     NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK: process.env.NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK,
+    NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: process.env.NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID,
   },
 });

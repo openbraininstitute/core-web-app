@@ -12,7 +12,6 @@ import {
   getUsersProjects,
   getVirtualLabProjectDetails,
 } from '@/services/virtual-lab/projects';
-import { retrievePapersListCount } from '@/services/paper-ai/retrievePapersList';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import {
@@ -49,24 +48,6 @@ export const virtualLabProjectUsersAtomFamily = atomFamily(
       if (!virtualLabId || !projectId) return null;
       const response = await listProjectMembers({ virtualLabId, projectId });
       return response;
-    }),
-  isEqual
-);
-
-export const virtualLabProjectPapersCountAtomFamily = atomFamily(
-  ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-    atomWithRefresh<Promise<number | undefined>>(async (get) => {
-      const session = get(sessionAtom);
-      if (!session) {
-        return;
-      }
-      const response = await retrievePapersListCount({
-        virtualLabId,
-        projectId,
-        accessToken: session.accessToken,
-      });
-
-      return response.total;
     }),
   isEqual
 );

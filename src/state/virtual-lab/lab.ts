@@ -7,8 +7,6 @@ import isNil from 'lodash/isNil';
 import sessionAtom from '@/state/session';
 import { getVirtualLabsOfUser, getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
-import { getVirtualLabPaymentMethods } from '@/services/virtual-lab/billing';
-import { PaymentMethod } from '@/types/virtual-lab/billing';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import {
@@ -56,17 +54,6 @@ const transactionFormStateAtom = atomWithReset<{
   errors: undefined,
   selectedPaymentMethodId: undefined,
 });
-
-const virtualLabPaymentMethodsAtomFamily = atomFamily((virtualLabId: string) =>
-  atomWithRefresh<Promise<Array<PaymentMethod> | undefined>>(async (get) => {
-    const session = get(sessionAtom);
-    if (!session) {
-      return;
-    }
-    const response = await getVirtualLabPaymentMethods(virtualLabId, session.accessToken);
-    return response.data.payment_methods;
-  })
-);
 
 // TODO: cleanup
 // export const virtualLabBalanceAtomFamily = atomFamily((virtualLabId: string) =>

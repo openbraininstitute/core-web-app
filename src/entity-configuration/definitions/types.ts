@@ -11,6 +11,9 @@ import {
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
+export type CoreFilterValues = {
+  [field: string]: string | number | string[] | GteLteValue | null;
+};
 export interface GteLteValue {
   gte: Date | number | null;
   lte: Date | number | null;

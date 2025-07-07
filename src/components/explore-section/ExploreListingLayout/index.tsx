@@ -22,9 +22,9 @@ import {
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { DataTypeGroup } from '@/types/explore-section/data-types';
 import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,

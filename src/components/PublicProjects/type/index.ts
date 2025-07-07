@@ -84,3 +84,5 @@ export type HeaderPublicProjectProps = {
   title: string;
   headerImage: string;
 };
+
+export type Sections = 'description' | 'notebooks' | 'artifacts';

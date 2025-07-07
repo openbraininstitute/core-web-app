@@ -13,9 +13,8 @@ import Tree from '@/components/tree';
 
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
 import { cellCompositionAtom, annotationTypesAtom } from '@/features/cell-composition/context';
+import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { getMetric } from '@/components/build-section/BrainRegionSelector/util';
-import { metricToUnit } from '@/components/common/METypeHierarchy/MetricToUnit';
 import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
 import { resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';

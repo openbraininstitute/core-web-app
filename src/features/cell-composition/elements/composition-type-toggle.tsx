@@ -1,7 +1,8 @@
 import * as Switch from '@radix-ui/react-switch';
 
-import { DensityOrCount } from '@/components/common/METypeHierarchy/METypeTreeItem/types';
 import { classNames } from '@/util/utils';
+
+import type { DensityOrCount } from '@/features/cell-composition/types';
 
 export function DensityOrCountToggle({
   densityOrCount,

@@ -8,7 +8,7 @@ import { useSetAtom } from 'jotai';
 import ChevronLast from '@/components/icons/ChevronLast';
 import usePathname from '@/hooks/pathname';
 
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { classNames } from '@/util/utils';
 
@@ -30,7 +30,7 @@ export function useOnCellRouteHandler<T extends EntityCoreIdentifiable>({
   const onCellRouteHandler = (col: ColumnGroupType<T> | ColumnType<T>) => {
     return {
       onCell: (record: T) =>
-        col.key !== Field.Preview
+        col.key !== EntityCoreFields.Preview
           ? {
               onClick: (e: MouseEvent<HTMLInputElement>) => {
                 e.preventDefault();

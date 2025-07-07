@@ -4,13 +4,13 @@ import { DataType } from '@/constants/explore-section/list-views';
 export * from '@/entity-configuration/domain/model/mesh';
 export * from '@/entity-configuration/domain/model/circuit';
 
-const MODEL_DATATYPES = [
+export const MODEL_DATATYPES = [
   DataType.CircuitEModel,
   DataType.CircuitMEModel,
   DataType.SingleNeuronSynaptome,
 ] as const;
 
-enum ModelTypeNames {
+export enum ModelTypeNames {
   E_MODEL = 'e-model',
   ME_MODEL = 'me-model',
   SINGLE_NEURON_SYNAPTOME = 'synaptome',

@@ -12,8 +12,10 @@ import {
   getViewDefinitionByLegacyType,
 } from '@/entity-configuration/definitions/view-defs';
 import { DetailsPageSideBackLink } from '@/components/explore-section/Sidebar';
-import { detailFamily } from '@/state/explore-section/detail-view-atoms';
-import { brainRegionSidebarIsCollapsedAtom } from '@/state/brain-regions';
+import {
+  brainRegionSidebarIsCollapsedAtom,
+  detailFamily,
+} from '@/state/explore-section/detail-view-atoms';
 import { ErrorLink, withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';

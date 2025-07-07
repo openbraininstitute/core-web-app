@@ -9,22 +9,12 @@ import pick from 'lodash/pick';
 import get from 'lodash/get';
 import map from 'lodash/map';
 
-import {
-  EXPERIMENT_DATA_TYPE_CONFIG,
-  EXPERIMENTAL_DATATYPES,
-} from '@/constants/explore-section/data-types/experiment-data-types';
-import {
-  SIMULATION_DATA_TYPE_CONFIG,
-  SIMULATION_DATATYPES,
-} from '@/constants/explore-section/data-types/simulation-data-types';
-import {
-  MODEL_DATA_TYPE_CONFIG,
-  MODEL_DATATYPES,
-} from '@/constants/explore-section/data-types/model-data-types';
+import { EXPERIMENTAL_DATATYPES } from '@/entity-configuration/domain/experimental';
+import { SIMULATIONS_DATATYPES } from '@/entity-configuration/domain/simulation';
+import { MODEL_DATATYPES } from '@/entity-configuration/domain/model';
 import { getEntitiesByGroup, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { getViewDefinitionsByLegacyType } from '@/entity-configuration/definitions/view-defs';
-import { SimulationTypeNames } from '@/types/simulation/single-neuron';
-import { DataType } from '@/constants/explore-section/list-views';
+import { DataType, TDataType } from '@/constants/explore-section/list-views';
 
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
@@ -39,7 +29,7 @@ type ExperimentalDataMap = Partial<
 type ModelDataMap = Partial<Record<(typeof MODEL_DATATYPES)[number], Array<LibraryBookmark>>>;
 
 type SimulationDataMap = Partial<
-  Record<(typeof SIMULATION_DATATYPES)[number], Array<LibraryBookmark>>
+  Record<(typeof SIMULATIONS_DATATYPES)[number], Array<LibraryBookmark>>
 >;
 
 export type GroupedLibraryBookmarks = {
@@ -48,42 +38,12 @@ export type GroupedLibraryBookmarks = {
   simulations?: SimulationDataMap;
 };
 
-const DATA_CATEGORY_TABS = [
-  {
-    key: 'experimental',
-    routePrefix: 'interactive/experimental',
-    label: 'Experimental data',
-    items: EXPERIMENT_DATA_TYPE_CONFIG,
-  },
-  {
-    key: 'models',
-    routePrefix: 'model',
-    label: 'Models',
-    items: MODEL_DATA_TYPE_CONFIG,
-  },
-  {
-    key: 'simulations',
-    routePrefix: 'simulate',
-    label: 'Simulations',
-    items: SIMULATION_DATA_TYPE_CONFIG,
-  },
-];
-
-const MESSAGES = {
-  ENTITY_NOT_FOUND: "We couldn't find what you're looking for. It may have been deleted.",
-  ENTITY_ALREADY_EXISTS: 'This item already exists. Please check and try again.',
-  DATABASE_ERROR: "We're experiencing some issues retrieving data. Please try again later.",
-  SERVER_ERROR: 'Something went wrong on our end. Please refresh the page or try again shortly.',
-};
-
-const isSimulation = (t: string | null): t is SimulationTypeNames => {
-  return t ? Object.values(SimulationTypeNames).includes(t as SimulationTypeNames) : false;
-};
-
 const getCategory = (key: DataType): string => {
-  if (EXPERIMENTAL_DATATYPES.includes(key)) return 'experimental';
-  if (MODEL_DATATYPES.includes(key)) return 'models';
-  if (SIMULATION_DATATYPES.includes(key)) return 'simulations';
+  if (EXPERIMENTAL_DATATYPES.includes(key as (typeof EXPERIMENTAL_DATATYPES)[number]))
+    return 'experimental';
+  if (MODEL_DATATYPES.includes(key as (typeof MODEL_DATATYPES)[number])) return 'models';
+  if (SIMULATIONS_DATATYPES.includes(key as (typeof SIMULATIONS_DATATYPES)[number]))
+    return 'simulations';
   return 'unknown';
 };
 

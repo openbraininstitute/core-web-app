@@ -1,13 +1,26 @@
 import { Divider } from 'antd';
 import startCase from 'lodash/startCase';
 
-import { measurementAnnotationsAtomFamily } from '@/state/explore-section/generalization';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import {
   IReconstructionMorphology,
   IReconstructionMorphologyExpanded,
 } from '@/api/entitycore/types';
+import { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
+import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
+
+const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
+  atom<Promise<MeasurementKind[]>>(async () => {
+    const measurementAnnotationsRes = await getMeasurementAnnotations({
+      filters: { entity_id: entityId },
+    });
+
+    return measurementAnnotationsRes.data.flatMap((annotation) => annotation.measurement_kinds);
+  })
+);
 
 export default function Morphometrics({ morphology }: { morphology: IReconstructionMorphology }) {
   const measurementKinds = useUnwrappedValue(measurementAnnotationsAtomFamily(morphology.id));

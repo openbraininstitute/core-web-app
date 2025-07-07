@@ -1,12 +1,13 @@
 import groupBy from 'lodash/groupBy';
 import omit from 'lodash/omit';
 
-import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { DisplayMessages } from '@/constants/display-messages';
-import { DataType } from '@/constants/explore-section/list-views';
+import fieldsDefinitionRegistry, { getFieldDefinition } from '@/entity-configuration/definitions';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
-import { DetailProps } from '@/types/explore-section/application';
-import fieldsDefinitionRegistry from '@/entity-configuration/definitions';
+import { EmptyValue } from '@/entity-configuration/definitions/renderer';
+import { DataType } from '@/constants/explore-section/list-views';
+
+import type { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export const useMorphometrics = (
   morphology: IReconstructionMorphologyExpanded,
@@ -19,17 +20,17 @@ export const useMorphometrics = (
 
   const filteredGroupedCardFields = omit(groupedCardFields, 'Metadata');
 
-  const renderMetric = (field: DetailProps) => {
+  const renderMetric = (field: TypeSummaryProps) => {
     if (!morphology) return null;
 
-    const fieldObj = fieldsDefinitionRegistry[field.field];
+    const fieldObj = getFieldDefinition(field.field);
 
     return (
       <div className="text-primary-8 mr-10" key={field.field}>
         {showLabel && <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>}
         <div className={`${showLabel ? 'mt-2' : 'mt-0 ml-6'}`}>
           <div className={`mb-2 h-6 truncate ${field.className}`}>
-            {morphology ? fieldObj?.render?.(morphology) : DisplayMessages.NO_DATA_STRING}
+            {morphology ? fieldObj?.render?.(morphology) : EmptyValue}
           </div>
         </div>
       </div>
