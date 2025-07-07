@@ -342,7 +342,14 @@ export function SingleFilterItem({
           </Tooltip>
 
           <div className="flex flex-row items-baseline gap-x-2">
-            <div className="text-xl font-semibold whitespace-nowrap text-white">{title}</div>
+            <button
+              type="button"
+              aria-label="Open filter options"
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-xl font-semibold whitespace-nowrap text-white"
+            >
+              {title}
+            </button>
           </div>
         </div>
         {filterType !== null && (
