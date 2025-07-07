@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { HTMLProps, ReactNode, useCallback, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Button, Spin, App } from 'antd';
 import { loadable } from 'jotai/utils';
 
@@ -27,6 +27,7 @@ import { tryCatch } from '@/api/utils';
 
 import type { EntityTypeValue } from '@/api/entitycore/types';
 import type { ErrorCause } from '@/api/apiClient';
+import { useAppMessage, useAppNotification } from '@/components/notification';
 
 type Props = {
   virtualLabId: string;
@@ -46,7 +47,8 @@ export default function BookmarkButton({
   customButton,
 }: Props) {
   const pathname = usePathname();
-  const { notification } = App.useApp();
+  const message = useAppMessage();
+  const notification = useAppNotification();
 
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingRemove, setLoadingRemove] = useState(false);
@@ -59,7 +61,14 @@ export default function BookmarkButton({
   const dataType = entity?.legacyType;
   const category = entity?.group;
 
-  const bookmarks = useAtomValue(
+  const refreshAllBookmarks = useSetAtom(
+    bookmarksForProjectAtomFamily({
+      virtualLabId,
+      projectId,
+    })
+  );
+
+  const [bookmarks] = useAtom(
     loadable(
       bookmarksForProjectAtomFamily({
         virtualLabId,
@@ -82,35 +91,28 @@ export default function BookmarkButton({
   const notifySuccess = useCallback(
     (action: 'add' | 'remove') => {
       if (action === 'add') {
-        return notification.open({
-          message: (
-            <div className="flex items-stretch justify-center">
-              <div className="px-4 py-4 text-white select-none">Added to the library</div>
-              <div className="w-px bg-white" />
+        message.info({
+          key: 'bookmark-success',
+          icon: <></>,
+          duration: 6000000,
+          className: classNames(
+            '[&_.ant-message-notice-content]:bg-accent-dark! [&_.ant-message-notice-content]:rounded-none!'
+          ),
+          content: (
+            <div className="flex flex-col items-center justify-center gap-4 text-white">
+              <div className="self-start text-white">
+                This entity has been added to library successfully
+              </div>
               <Link
                 href={libraryPage}
-                prefetch={false}
-                className={classNames(
-                  'bg-secondary-2 flex items-center justify-center gap-1.5 px-4 py-4',
-                  'font-normal text-white hover:bg-teal-400/40 hover:text-white'
-                )}
+                className="hover:text-primary-8 w-max rounded-none border border-white px-3 py-2 text-center hover:bg-white"
               >
-                <span>View in Library</span>
-                <EyeFilled className="text-white" />
+                See in library
               </Link>
             </div>
           ),
-          description: null,
-          className: classNames(
-            '[&_.ant-notification-notice-message]:!mb-0 [&_.ant-notification-notice-message]:flex',
-            '[&_.ant-notification-notice-message]:items-center',
-            'bg-secondary-2 !w-max flex items-center !p-0'
-          ),
-          duration: 5,
-          closeIcon: null,
-          placement: 'bottom',
-          key: `view-bookmark/${virtualLabId}/${projectId}`,
         });
+        return;
       }
       if (action === 'remove') {
         return notification.success({
@@ -131,14 +133,14 @@ export default function BookmarkButton({
       }>;
       if (action === 'add') {
         notification.error({
-          message: 'Resource could not be added to the library',
+          message: 'Entity could not be added to the library',
           description: get(serverMessages, get(cause, 'data.error_code'), ''),
           duration: 3,
           placement: 'topRight',
         });
       } else {
         notification.error({
-          message: 'Resource could not be removed from the library',
+          message: 'Entity could not be removed from the library',
           description: get(serverMessages, get(cause, 'data.error_code'), ''),
           duration: 3,
           placement: 'topRight',
@@ -160,7 +162,10 @@ export default function BookmarkButton({
           resource_id: resourceId,
         },
       }),
-      endSaving,
+      () => {
+        endSaving();
+        refreshAllBookmarks();
+      },
       {
         feature: 'bookmark-to-project',
         section: pathname,
@@ -199,7 +204,10 @@ export default function BookmarkButton({
         projectId,
         bookmarks: [{ category: dataType!, entity_id: entityId, resource_id: resourceId }],
       }),
-      () => setLoadingRemove(false),
+      () => {
+        setLoadingRemove(false);
+        refreshAllBookmarks();
+      },
       {
         feature: 'remove-bookmark-from-project',
         section: pathname,
