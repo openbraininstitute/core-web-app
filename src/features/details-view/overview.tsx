@@ -12,27 +12,26 @@ import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-d
 
 type FieldProps = {
   field: EntityCoreFields;
-  isDetailView?: boolean;
   className?: string;
   data: any;
 };
 
-export function Field({ field, className, data, isDetailView = false }: FieldProps) {
+export function Field({ field, className, data }: FieldProps) {
   const fieldObj = getFieldDefinition(field);
 
-  let content: ReactNode = null;
+  let renderedContent: ReactNode = null;
   if (fieldObj) {
-    if (isDetailView && typeof fieldObj.renderForDetailView === 'function') {
-      content = fieldObj.renderForDetailView(data);
-    } else if (typeof fieldObj.render === 'function') {
-      content = fieldObj.render(data);
+    if (fieldObj.renderForDetailView) {
+      renderedContent = fieldObj.renderForDetailView(data);
+    } else if (fieldObj.render) {
+      renderedContent = fieldObj.render(data);
     }
   }
 
   return (
     <div className={classNames('text-primary-7', className)}>
       <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>
-      <div className={classNames('mt-2 break-words', fieldObj?.className)}>{content}</div>
+      <div className={classNames('mt-2 break-words', fieldObj?.className)}>{renderedContent}</div>
     </div>
   );
 }
@@ -68,13 +67,13 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
             }
           >
             {commonFields.map(({ className, field }) => (
-              <Field key={field} className={className} field={field} data={detail} isDetailView />
+              <Field key={field} className={className} field={field} data={detail} />
             ))}
           </div>
         )}
         <div className={fieldsClassName ?? 'grid w-1/2 auto-rows-min grid-cols-3 gap-x-8 gap-y-6'}>
           {fields.map(({ className, field }) => (
-            <Field key={field} className={className} field={field} data={detail} isDetailView />
+            <Field key={field} className={className} field={field} data={detail} />
           ))}
         </div>
       </div>

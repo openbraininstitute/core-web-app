@@ -1,7 +1,3 @@
-import React from 'react';
-
-import { Button } from 'antd';
-
 import { hasAssets } from '@/api/entitycore/guards';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import {
@@ -23,26 +19,7 @@ import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 export type ProcessedContributor = {
-  name:
-    | string
-    | number
-    | bigint
-    | boolean
-    | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
-    | Iterable<React.ReactNode>
-    | Promise<
-        | string
-        | number
-        | bigint
-        | boolean
-        | React.ReactPortal
-        | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
-        | Iterable<React.ReactNode>
-        | null
-        | undefined
-      >
-    | null
-    | undefined;
+  name: string;
   type: number; // 0 for Org, 1 for Person
 };
 
@@ -166,60 +143,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       const { contributions } = r as EntityCoreObjectTypes & {
         contributions?: Array<IContributor> | null;
       };
-      if (!contributions || contributions.length === 0) return EmptyValue;
-
-      const processedContributors: ProcessedContributor[] = contributions.map(
-        (contributor: IContributor) => ({
-          name: contributor.agent.pref_label,
-          type: contributor.agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
-        })
-      );
-      const sortedContributors = processedContributors.sort((a, b) =>
-        a.type === b.type
-          ? String(a.name ?? '').localeCompare(String(b.name ?? ''))
-          : a.type - b.type
-      );
-
-      // DISPLAY 6 CONTRIBUTORS
-      // If there are more than 6 contributors, show a button to view all contributors in a modal
-      if (sortedContributors.length === 0) return EmptyValue;
-      const displayContributors = sortedContributors.slice(0, 6);
-      const hasMoreContributors = sortedContributors.length > 6;
-
-      function ContributorsModalTrigger(): React.ReactElement {
-        const [isOpen, setIsOpen] = React.useState(false);
-        return (
-          <>
-            <Button
-              type="link"
-              onClick={() => setIsOpen(true)}
-              className="mt-2 h-auto p-0 text-gray-600!"
-            >
-              View {sortedContributors.length} Contributor{sortedContributors.length > 1 ? 's' : ''}
-            </Button>
-            {renderContributorsModal(contributions, isOpen, () => setIsOpen(false))}
-          </>
-        );
-      }
-
-      return (
-        <div>
-          <span>
-            {displayContributors.map((contributor: ProcessedContributor, index: number) => (
-              <span key={contributor.name + '-' + contributor.type}>
-                {contributor.name}
-                {index < displayContributors.length - 1 ? ', ' : ''}
-              </span>
-            ))}
-          </span>
-          {hasMoreContributors && (
-            <>
-              {displayContributors.length > 0 && ' '}
-              <ContributorsModalTrigger />
-            </>
-          )}
-        </div>
-      );
+      return renderContributorsModal(contributions, false, () => {}, 'inline');
     },
     vocabulary: {
       plural: 'Contributors',

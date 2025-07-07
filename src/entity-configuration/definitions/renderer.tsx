@@ -1,11 +1,12 @@
 'use client';
 
-import { Empty, Modal } from 'antd';
+import { Button, Empty, Modal } from 'antd';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import isNil from 'lodash/isNil';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { ProcessedContributor } from './fields-defs/common';
 
 import PreviewImage from '@/features/thumbnail/image';
 import PreviewThumbnail from '@/features/thumbnail/preview';
@@ -183,21 +184,69 @@ export const renderMorphologyMeasurement = (
   return `${renderFloatNumber(value)}${unitSuffix}`;
 };
 
+// CONTRIBUTOR MODAL
+
+function ContributorsModalTrigger({
+  sortedContributors,
+  contributors,
+}: {
+  sortedContributors: ProcessedContributor[];
+  contributors: Array<{ agent: { pref_label: string; type: string } }> | null | undefined;
+}): React.ReactElement {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <>
+      <Button type="link" onClick={() => setIsOpen(true)} className="mt-2 h-auto p-0 text-gray-600">
+        View {sortedContributors.length} Contributor{sortedContributors.length > 1 ? 's' : ''}
+      </Button>
+      {renderContributorsModal(contributors, isOpen, () => setIsOpen(false), 'modal')}
+    </>
+  );
+}
+
 export const renderContributorsModal = (
   contributors: Array<{ agent: { pref_label: string; type: string } }> | null | undefined,
   open: boolean,
-  onClose: () => void
+  onClose: () => void,
+  mode: 'modal' | 'inline' = 'modal'
 ): ReactNode => {
   if (!contributors || contributors.length === 0) return EmptyValue;
 
-  const processedContributors = contributors.map((contributor) => ({
+  const processedContributors: ProcessedContributor[] = contributors.map((contributor) => ({
     name: contributor.agent.pref_label,
     type: contributor.agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
   }));
 
   const sortedContributors = processedContributors.sort((a, b) =>
-    a.type === b.type ? a.name.localeCompare(b.name) : a.type - b.type
+    a.type === b.type ? String(a.name ?? '').localeCompare(String(b.name ?? '')) : a.type - b.type
   );
+
+  if (mode === 'inline') {
+    const displayContributors = sortedContributors.slice(0, 6);
+    const hasMoreContributors = sortedContributors.length > 6;
+
+    return (
+      <div>
+        <span>
+          {displayContributors.map((contributor, index) => (
+            <span key={`${contributor.name}-${contributor.type}`}>
+              {contributor.name}
+              {index < displayContributors.length - 1 ? ', ' : ''}
+            </span>
+          ))}
+        </span>
+        {hasMoreContributors && (
+          <>
+            {displayContributors.length > 0 && ' '}
+            <ContributorsModalTrigger
+              sortedContributors={sortedContributors}
+              contributors={contributors}
+            />
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Modal
