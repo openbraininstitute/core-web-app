@@ -12,7 +12,7 @@ import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/meas
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 
-export const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
+const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
   atom<Promise<MeasurementKind[]>>(async () => {
     const measurementAnnotationsRes = await getMeasurementAnnotations({
       filters: { entity_id: entityId },

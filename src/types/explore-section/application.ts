@@ -1,5 +1,5 @@
-import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
-import { ModelTypeNames } from '@/constants/explore-section/data-types/model-data-types';
+import { ExperimentTypeNames } from '@/entity-configuration/domain/experimental';
+import { ModelTypeNames } from '@/entity-configuration/domain/model';
 import { Prettify } from '@/utils/type';
 
 // defines the source from where the explore data will be retrieved
