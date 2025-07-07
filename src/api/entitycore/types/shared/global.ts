@@ -158,16 +158,31 @@ enum AssetStatus {
 }
 
 export enum AssetLabel {
+  brain_atlas_annotation = 'brain_atlas_annotation',
+  brain_atlas_region_mesh = 'brain_atlas_region_mesh',
   campaign_generation_config = 'campaign_generation_config',
+  campaign_summary = 'campaign_summary',
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
+  custom_node_sets = 'custom_node_sets',
+  emodel_optimization_output = 'emodel_optimization_output',
+  morphology = 'morphology',
+  neuron_hoc = 'neuron_hoc',
+  neuron_mechanisms = 'neuron_mechanisms',
+  nwb = 'nwb',
+  replay_spikes = 'replay_spikes',
   simulation_designer_image = 'simulation_designer_image',
   simulation_generation_config = 'simulation_generation_config',
-  single_cell_simulation = 'single_cell_simulation_data',
+  single_neuron_simulation_data = 'single_neuron_simulation_data',
   single_neuron_synaptome_config = 'single_neuron_synaptome_config',
   single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
   sonata_circuit = 'sonata_circuit',
-  validation_result = 'validation_result_details',
+  sonata_simulation_config = 'sonata_simulation_config',
+  spike_report = 'spike_report',
+  validation_result_details = 'validation_result_details',
+  validation_result_figure = 'validation_result_figure',
+  voltage_report = 'voltage_report',
+  voxel_densities = 'voxel_densities',
 }
 
 type AssetBase = {

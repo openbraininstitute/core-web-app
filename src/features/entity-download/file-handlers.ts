@@ -1,28 +1,23 @@
-import { Readable } from 'stream';
-import kebabCase from 'lodash/kebabCase';
-
-import { Metadata } from './metadata';
+/* eslint-disable no-empty */
 import {
-  getReconstructionMorphology,
   getElectricalCellRecording,
-  getExperimentalNeuronDensity,
-  getExperimentalBoutonDensity,
-  getExperimentalSynapsesPerConnection,
   getEModel,
+  getExperimentalBoutonDensity,
+  getExperimentalNeuronDensity,
+  getExperimentalSynapsesPerConnection,
   getMEModel,
+  getReconstructionMorphology,
 } from '@/api/entitycore/queries';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { EntityTypeEnum, EntityTypeValue } from '@/api/entitycore/types';
+import { Metadata } from '@/features/entity-download/metadata';
+import { FileEntry } from '@/features/entity-download/types';
+import { createAssetFileEntry, createTemplateFileEntry } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
 const ASSETS_BASE_PATH = 'data';
 
-type FileEntry = {
-  path: string;
-  stream: Readable;
-  size: number;
-};
+// TODO: Add error reporting to Sentry.
 
 type GetEntityFilesHandler = (
   entityIds: string[],
@@ -32,6 +27,10 @@ type GetEntityFilesHandler = (
 
 async function* getReconstructionMorphologyFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
+
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.ReconstructionMorphology);
+  } catch {}
 
   for (const entityId of entityIds) {
     const morphology = await getReconstructionMorphology({
@@ -44,28 +43,11 @@ async function* getReconstructionMorphologyFiles(entityIds: string[], ctx?: Work
     const dataPath = `${ASSETS_BASE_PATH}/${idx}`;
     metadata.add({ idx, data_path: dataPath, ...morphology });
 
-    for await (const asset of morphology.assets ?? []) {
-      const fileName = asset.full_path.split('/').at(-1);
+    for await (const asset of morphology.assets) {
+      const path = `${ASSETS_BASE_PATH}/${idx}/${asset.path}`;
       try {
-        const response = await downloadAsset<Response>({
-          ctx,
-          entityType: kebabCase(EntityTypeEnum.ReconstructionMorphology) as EntityTypeValue,
-          entityId,
-          id: asset.id,
-          asRawResponse: true,
-          retryOnError: false,
-        });
-        yield {
-          path: `${ASSETS_BASE_PATH}/${idx}/${fileName}`,
-          stream: Readable.fromWeb(response.body),
-          size: Number(response.headers.get('content-length')),
-        };
-      } catch (error) {
-        /*
-          TODO: report to Sentry once we have data in S3.
-          ? Create an error.log in the root of the tar file listing the errors to notify the user.
-        */
-      }
+        yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
+      } catch (error) {}
     }
   }
 
@@ -76,6 +58,10 @@ async function* getReconstructionMorphologyFiles(entityIds: string[], ctx?: Work
 
 async function* getElectricalCellRecordingFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
+
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.ElectricalCellRecording);
+  } catch {}
 
   for (const entityId of entityIds) {
     const trace = await getElectricalCellRecording({
@@ -88,28 +74,11 @@ async function* getElectricalCellRecordingFiles(entityIds: string[], ctx?: Works
     const dataPath = `${ASSETS_BASE_PATH}/${idx}`;
     metadata.add({ idx, data_path: dataPath, ...trace });
 
-    for await (const asset of trace.assets ?? []) {
-      const fileName = asset.full_path.split('/').at(-1);
+    for await (const asset of trace.assets) {
+      const path = `${ASSETS_BASE_PATH}/${idx}/${asset.path}`;
       try {
-        const response = await downloadAsset<Response>({
-          ctx,
-          entityType: kebabCase(EntityTypeEnum.ElectricalCellRecording) as EntityTypeValue,
-          entityId,
-          id: asset.id,
-          asRawResponse: true,
-          retryOnError: false,
-        });
-        yield {
-          path: `${ASSETS_BASE_PATH}/${idx}/${fileName}`,
-          stream: Readable.fromWeb(response.body),
-          size: Number(response.headers.get('content-length')),
-        };
-      } catch (error) {
-        /*
-          TODO: report to Sentry once we have data in S3.
-          ? Create an error.log in the root of the tar file listing the errors to notify the user.
-        */
-      }
+        yield await createAssetFileEntry({ entity: trace, asset, path, ctx });
+      } catch (error) {}
     }
   }
 
@@ -120,6 +89,10 @@ async function* getElectricalCellRecordingFiles(entityIds: string[], ctx?: Works
 
 async function* getExperimentalNeuronDensityFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
+
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.ExperimentalNeuronDensity);
+  } catch {}
 
   for (const entityId of entityIds) {
     const idx = metadata.entriesCount;
@@ -134,6 +107,10 @@ async function* getExperimentalNeuronDensityFiles(entityIds: string[], ctx?: Wor
 
 async function* getExperimentalBoutonDensityFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
+
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.ExperimentalBoutonDensity);
+  } catch {}
 
   for (const entityId of entityIds) {
     const idx = metadata.entriesCount;
@@ -151,6 +128,10 @@ async function* getExperimentalSynapsesPerConnectionFiles(
   ctx?: WorkspaceContext
 ) {
   const metadata = new Metadata();
+
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.ExperimentalSynapsesPerConnection);
+  } catch {}
 
   for (const entityId of entityIds) {
     const idx = metadata.entriesCount;
@@ -170,7 +151,10 @@ async function* getExperimentalSynapsesPerConnectionFiles(
 async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
 
-  // TODO: add emodel assets when supported by the API
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.Emodel);
+  } catch {}
+
   for (const entityId of entityIds) {
     const idx = metadata.entriesCount;
     const emodel = await getEModel({
@@ -179,6 +163,38 @@ async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
     });
 
     metadata.add({ idx, ...emodel });
+
+    // HOC file
+    const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc')!;
+
+    try {
+      const path = `${ASSETS_BASE_PATH}/${idx}/hoc/${hocFileAsset.path}`;
+      yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
+    } catch (error) {}
+
+    // Morphologies
+    const exemplarMorphology = await getReconstructionMorphology({
+      id: emodel.exemplar_morphology.id,
+      context: ctx,
+    });
+
+    const morphAssets = exemplarMorphology.assets.filter((asset) => asset.label === 'morphology');
+
+    for await (const asset of morphAssets) {
+      const path = `${ASSETS_BASE_PATH}/${idx}/morphology/${asset.path}`;
+      try {
+        yield await createAssetFileEntry({ entity: exemplarMorphology, asset, path, ctx });
+      } catch (error) {}
+    }
+
+    // MOD files
+    for await (const icEntity of emodel.ion_channel_models) {
+      const modAsset = icEntity.assets.find((asset) => asset.label === 'neuron_mechanisms')!;
+      const path = `${ASSETS_BASE_PATH}/${idx}/mechanisms/${modAsset.path}`;
+      try {
+        yield await createAssetFileEntry({ entity: icEntity, asset: modAsset, path, ctx });
+      } catch (error) {}
+    }
   }
 
   for await (const metadataFileEntry of metadata.getFileEntries()) {
@@ -189,15 +205,54 @@ async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
 async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
 
-  // TODO: add emodel assets when supported by the API
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.Memodel);
+  } catch {}
+
   for (const entityId of entityIds) {
     const idx = metadata.entriesCount;
-    const emodel = await getMEModel({
+    const memodel = await getMEModel({
       id: entityId,
       context: ctx,
     });
 
-    metadata.add({ idx, ...emodel });
+    metadata.add({ idx, ...memodel });
+
+    const emodel = await getEModel({
+      id: memodel.emodel.id,
+      context: ctx,
+    });
+
+    // HOC file
+    const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc')!;
+    try {
+      const path = `${ASSETS_BASE_PATH}/${idx}/hoc/${hocFileAsset.path}`;
+      yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
+    } catch (error) {}
+
+    // Morphologies
+    const morphology = await getReconstructionMorphology({
+      id: memodel.morphology.id,
+      context: ctx,
+    });
+
+    const morphAssets = morphology.assets.filter((asset) => asset.label === 'morphology');
+
+    for await (const asset of morphAssets) {
+      const path = `${ASSETS_BASE_PATH}/${idx}/morphology/${asset.path}`;
+      try {
+        yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
+      } catch (error) {}
+    }
+
+    // MOD files
+    for await (const icEntity of emodel.ion_channel_models) {
+      const asset = icEntity.assets.find((a) => a.label === 'neuron_mechanisms')!;
+      const path = `${ASSETS_BASE_PATH}/${idx}/mechanisms/${asset.path}`;
+      try {
+        yield await createAssetFileEntry({ entity: icEntity, asset, path, ctx });
+      } catch (error) {}
+    }
   }
 
   for await (const metadataFileEntry of metadata.getFileEntries()) {
@@ -208,15 +263,75 @@ async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
 async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
 
+  try {
+    yield await createTemplateFileEntry(EntityTypeEnum.SingleNeuronSynaptome);
+  } catch {}
+
   // TODO: add emodel assets when supported by the API
   for (const entityId of entityIds) {
     const idx = metadata.entriesCount;
-    const emodel = await getSingleNeuronSynaptome({
+    const singleNeuronSynaptomeModel = await getSingleNeuronSynaptome({
       id: entityId,
       context: ctx,
     });
 
-    metadata.add({ idx, ...emodel });
+    metadata.add({ idx, ...singleNeuronSynaptomeModel });
+
+    // Synaptome config
+    const synaptomeConfigAsset = singleNeuronSynaptomeModel.assets.find(
+      (asset) => asset.label === 'single_neuron_synaptome_config'
+    )!;
+    try {
+      const path = `${ASSETS_BASE_PATH}/${idx}/${synaptomeConfigAsset.path}`;
+      yield await createAssetFileEntry({
+        entity: singleNeuronSynaptomeModel,
+        asset: synaptomeConfigAsset,
+        path,
+        ctx,
+      });
+    } catch (error) {}
+
+    const memodel = await getMEModel({
+      id: singleNeuronSynaptomeModel.me_model.id,
+      context: ctx,
+    });
+
+    const emodel = await getEModel({
+      id: memodel.emodel.id,
+      context: ctx,
+    });
+
+    // HOC file
+    const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc')!;
+    try {
+      const fileName = hocFileAsset.full_path.split('/').at(-1);
+      const path = `${ASSETS_BASE_PATH}/${idx}/hoc/${fileName}`;
+      yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
+    } catch (error) {}
+
+    // Morphologies
+    const morphology = await getReconstructionMorphology({
+      id: memodel.morphology.id,
+      context: ctx,
+    });
+
+    const morphAssets = morphology.assets.filter((asset) => asset.label === 'morphology');
+
+    for await (const asset of morphAssets) {
+      const path = `${ASSETS_BASE_PATH}/${idx}/morphology/${asset.path}`;
+      try {
+        yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
+      } catch (error) {}
+    }
+
+    // MOD files
+    for await (const icEntity of emodel.ion_channel_models) {
+      const asset = icEntity.assets.find((a) => a.label === 'neuron_mechanisms')!;
+      const path = `${ASSETS_BASE_PATH}/${idx}/mechanisms/${asset.path}`;
+      try {
+        yield await createAssetFileEntry({ entity: icEntity, asset, path, ctx });
+      } catch (error) {}
+    }
   }
 
   for await (const metadataFileEntry of metadata.getFileEntries()) {

@@ -1,8 +1,9 @@
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type {
   EntityAuthorization,
+  EntityCoreBaseAsset,
   EntityCoreIdentifiable,
-  IAsset,
+  EntityCoreType,
   IContributor,
   ISpecies,
   IStrain,
@@ -40,7 +41,8 @@ export interface IonChannelModel
     Timestamps,
     EntityCoreIdentifiable,
     EntityAuthorization,
-    IAsset {
+    EntityCoreType,
+    EntityCoreBaseAsset {
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: IBrainRegionHierarchy;
