@@ -146,27 +146,34 @@ export function ScopeSelector() {
       >
         <div className="w-full text-left">
           <div className={styles.title}>{title}</div>
-          <div className={classNames('text-sm text-balance', descStyle)}>
-            {showImage && (
-              <div className={styles.thumbnail}>
-                <Image src={img} width={100} height={100} alt={title} />
-              </div>
-            )}
-            {url?.build && (
-              <div className={styles.buildButton}>
-                <Button
-                  onClick={onClick}
+          <div className={classNames('text-sm text-balance', descStyle, styles.floatContainer)}>
+            <div>
+              {showImage && (
+                <div className={styles.thumbnail}>
+                  <Image src={img} width={100} height={100} alt={title} />
+                </div>
+              )}
+              {url?.build && (
+                <div
                   className={classNames(
-                    'bg-primary-9 h-[55px] min-w-[100px] text-xl font-bold text-white',
-                    'items-center justify-center rounded-none hover:text-white',
-                    highlight && section === 'build' ? 'flex' : 'hidden'
+                    styles.buildButtonContainer,
+                    highlight && section === 'build' ? styles.show : styles.hide
                   )}
                 >
-                  Build
-                </Button>
-              </div>
-            )}
-            <p>{description}</p>
+                  <Button
+                    onClick={onClick}
+                    className={classNames(
+                      styles.buildButton,
+                      'bg-primary-9',
+                      'rounded-none hover:text-white'
+                    )}
+                  >
+                    Build
+                  </Button>
+                </div>
+              )}
+              <p>{description}</p>
+            </div>
           </div>
         </div>
       </div>
