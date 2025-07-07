@@ -240,7 +240,7 @@ export function SingleFilterItem({
             disabled={loading}
             className="mb-2 w-full px-6 py-2 font-sans text-base"
           >
-            <option value="" disabled selected>
+            <option value="" disabled>
               {loading ? `Loading ${errorLabel}...` : selectPlaceholder}
             </option>
             {error ? (
@@ -249,7 +249,7 @@ export function SingleFilterItem({
               </option>
             ) : (
               options.map((option) => (
-                <option key={option} value={option}>
+                <option key={option} value={option} className="capitalize">
                   {option}
                 </option>
               ))
