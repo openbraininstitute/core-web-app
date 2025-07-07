@@ -1,6 +1,6 @@
 'use client';
 
-import { defaultExploreRegion } from '@/constants/explore-section/default-brain-region';
+import { defaultExploreRegion } from '@/features/brain-region-hierarchy/context';
 import GenericEvent from '@/util/generic-event';
 import { logError } from '@/util/logger';
 import { getLocalStorageHelper } from '@/util/storage';

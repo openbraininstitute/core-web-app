@@ -19,10 +19,10 @@ import {
 import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
 
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { SetupIntentResponse } from '@/services/virtual-lab/billing';
 import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+import { SetupIntentResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   isOpen: boolean;

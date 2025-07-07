@@ -14,12 +14,11 @@ import sessionAtom from '@/state/session';
 import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/checkout/price-card';
 import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { SetupIntentResponse } from '@/services/virtual-lab/billing';
 import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
+import { SetupIntentResponse, SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   onPrevious: () => void;

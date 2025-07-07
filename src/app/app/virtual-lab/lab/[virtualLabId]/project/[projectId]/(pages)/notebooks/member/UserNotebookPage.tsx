@@ -8,7 +8,6 @@ import { NotebooksArraySchema } from '../schemas';
 import { Notebook } from '@/util/virtual-lab/github';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import authFetch from '@/authFetch';
-import { notification } from '@/api/notifications';
 import { assertErrorMessage, assertApiResponse } from '@/util/utils';
 import { virtualLabApi } from '@/config';
 

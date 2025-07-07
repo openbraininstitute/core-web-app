@@ -1,5 +1,6 @@
 import { formatDistanceToNow, isValid, format } from 'date-fns';
-import { DateISOString } from '@/types/nexus';
+
+export type DateISOString = string;
 
 /**
  * Calculate time elapsed from today to the given day

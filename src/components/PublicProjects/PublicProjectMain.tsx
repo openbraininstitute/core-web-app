@@ -15,7 +15,7 @@ import DescriptionSection from './sections/Description';
 import NotebookSection from './sections/Notebook';
 
 import { useSanity } from '@/services/sanity';
-import { Sections } from '@/types/public-projects';
+import { Sections } from './type';
 
 const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType => {
   return tryType('ShowCaseProjectProps', data, {

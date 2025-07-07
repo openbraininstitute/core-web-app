@@ -1,19 +1,15 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
-import { Suspense, use, useEffect } from 'react';
-import { useSetAtom } from 'jotai';
+import { Suspense, use } from 'react';
 import dynamic from 'next/dynamic';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
 import { Label, Content, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
-import { idAtom as brainModelConfigIdAtom } from '@/state/brain-model-config';
-import { useSetBrainRegionFromQuery } from '@/hooks/brain-region-panel';
 import { Container as SideMenuContainer } from '@/components/SideMenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { resolveDataKey } from '@/utils/key-builder';
-import { defaultModelRelease } from '@/config';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
@@ -35,12 +31,6 @@ const BrainRegionsHierarchy = dynamic(() => import('@/features/brain-region-hier
 
 export default function Layout({ params, children }: Props) {
   const { virtualLabId, projectId } = use(params);
-
-  const setConfigId = useSetAtom(brainModelConfigIdAtom);
-  useSetBrainRegionFromQuery();
-
-  // set Release as the configuration of explore interactive
-  useEffect(() => setConfigId(defaultModelRelease.id), [setConfigId]);
 
   const labUrl = generateLabUrl(virtualLabId);
   const labProjectUrl = `${labUrl}/project/${projectId}`;
