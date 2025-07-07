@@ -17,14 +17,12 @@ const fetchMesh = (accessToken: string, distributionID: string) =>
  *
  * @param url
  */
-export const fetchPointCloud = (url: string, token: string, bucket: string) =>
+export const fetchPointCloud = (url: string, token: string) =>
   fetch(url, {
     method: 'get',
     headers: new Headers({
       Accept: '*/*',
       'nexus-token': token,
-      'nexus-endpoint': nexus.url,
-      'nexus-bucket': bucket,
     }),
   }).then((response) => {
     if (!response.ok) {
