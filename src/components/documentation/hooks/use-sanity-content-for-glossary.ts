@@ -1,6 +1,6 @@
 import query from '../query/glossary-hooks.groq';
 
-import { ContentForGlossaryItem } from '../type';
+import { ContentForGlossaryItem } from '@/components/documentation/type';
 
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';

@@ -7,7 +7,7 @@ import { ServerSideComponentProp } from '@/types/common';
 
 export default async function VirtualLab({
   params: promisedParams,
-}: ServerSideComponentProp<{ virtualLabId: string }>) {
+}: ServerSideComponentProp<{ virtualLabId: string }, null>) {
   const params = await promisedParams;
   const { virtualLabId } = params;
   return (

@@ -1,6 +1,8 @@
 import { Divider } from 'antd';
 import startCase from 'lodash/startCase';
 
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import {
@@ -9,8 +11,6 @@ import {
 } from '@/api/entitycore/types';
 import { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
-import { atom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
 
 const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
   atom<Promise<MeasurementKind[]>>(async () => {

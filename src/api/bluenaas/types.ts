@@ -10,7 +10,3 @@ export interface SectionSynapses {
   section_id: string;
   synapses: Array<SynapsePosition>;
 }
-
-interface SynapsePlacementResponse {
-  synapses: Array<SectionSynapses>;
-}

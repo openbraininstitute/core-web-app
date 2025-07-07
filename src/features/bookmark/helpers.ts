@@ -14,7 +14,7 @@ import { SIMULATIONS_DATATYPES } from '@/entity-configuration/domain/simulation'
 import { MODEL_DATATYPES } from '@/entity-configuration/domain/model';
 import { getEntitiesByGroup, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { getViewDefinitionsByLegacyType } from '@/entity-configuration/definitions/view-defs';
-import { DataType, TDataType } from '@/constants/explore-section/list-views';
+import { DataType } from '@/constants/explore-section/list-views';
 
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';

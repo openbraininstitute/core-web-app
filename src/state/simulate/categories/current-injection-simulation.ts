@@ -124,7 +124,7 @@ export default function useCurrentInjectionSimulationConfig() {
       ...state,
       {
         ...DEFAULT_CURRENT_INJECTION_CONFIG,
-        configId: crypto.randomUUID(),
+        config_id: crypto.randomUUID(),
         id: state.length,
       },
     ]);

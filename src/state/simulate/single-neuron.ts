@@ -1,4 +1,3 @@
-import { atom } from 'jotai';
 import { atomWithReset } from 'jotai/utils';
 
 import { PlotData } from '@/services/bluenaas-single-cell/types';
