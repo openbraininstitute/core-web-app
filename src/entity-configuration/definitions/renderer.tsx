@@ -1,6 +1,6 @@
 'use client';
 
-import { Empty } from 'antd';
+import { Empty, Modal } from 'antd';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
@@ -14,9 +14,9 @@ import type {
   EntityCoreDensityObjectTypes,
   IReconstructionMorphology,
 } from '@/api/entitycore/types';
-import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import { IEModel } from '@/api/entitycore/types/entities/e-model';
 import { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type {
   EntityCoreResource,
   ILicense,
@@ -181,4 +181,45 @@ export const renderMorphologyMeasurement = (
   if (label === 'soma_radius') value = 2 * measurement.value;
 
   return `${renderFloatNumber(value)}${unitSuffix}`;
+};
+
+export const renderContributorsModal = (
+  contributors: Array<{ agent: { pref_label: string; type: string } }> | null | undefined,
+  open: boolean,
+  onClose: () => void
+): ReactNode => {
+  if (!contributors || contributors.length === 0) return EmptyValue;
+
+  const processedContributors = contributors.map((contributor) => ({
+    name: contributor.agent.pref_label,
+    type: contributor.agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
+  }));
+
+  const sortedContributors = processedContributors.sort((a, b) =>
+    a.type === b.type ? a.name.localeCompare(b.name) : a.type - b.type
+  );
+
+  return (
+    <Modal
+      title="Contributors"
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      centered
+      width={600}
+      style={{
+        color: 'var(--primary-8)',
+        padding: '32px',
+      }}
+    >
+      <p className="text-primary-8" style={{ margin: 0, fontSize: '18px' }}>
+        {sortedContributors.map((contributor, index) => (
+          <span key={`${contributor.name}-${contributor.type}`}>
+            {contributor.name}
+            {index < sortedContributors.length - 1 ? ', ' : ''}
+          </span>
+        ))}
+      </p>
+    </Modal>
+  );
 };
