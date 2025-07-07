@@ -71,7 +71,7 @@ export default function SearchFilter({
           value: id,
         }))}
         mode="multiple"
-        placeholder={`Search for ${getFieldDefinition(filter.field)?.vocabulary.plural}`}
+        placeholder={`Search for ${getFieldDefinition(filter.field)?.vocabulary?.plural}`}
         tagRender={(props) => {
           return tagRender(props);
         }}

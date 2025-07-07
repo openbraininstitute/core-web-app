@@ -5,7 +5,7 @@ import { parseAsString, useQueryState } from 'nuqs';
 
 import { tryType } from '../LandingPage/content';
 
-import { ShowCaseProjectQueryType , Sections } from './type';
+import { ShowCaseProjectQueryType, Sections } from './type';
 
 import HeaderPublicProject from './HeaderPublicProject';
 import NavigationSections from './NavigationSections';

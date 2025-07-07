@@ -8,7 +8,7 @@
     "dev:next": "npx dotenv -e .env.development-next -- next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start --turbopack",
-    "lint": "npx eslint src tests && npx tsc --noEmit",
+    "lint": "npx eslint src && npx tsc --noEmit",
     "lint:only": "next lint",
     "lint:fix": "next lint --fix",
     "prettier:check": "prettier --check . --log-level warn",

@@ -42,7 +42,8 @@ export default function CheckList({ children, data, filter, values, onChange }: 
   const adjustedLoadMoreLength =
     remainingLength >= loadMoreLength ? loadMoreLength : remainingLength;
   const field = getFieldDefinition(filter.field);
-  const fieldLabel = remainingLength === 1 ? field?.vocabulary.singular : field?.vocabulary.plural;
+  const fieldLabel =
+    remainingLength === 1 ? field?.vocabulary?.singular : field?.vocabulary?.plural;
 
   const updateRenderLength = () => setFiltersRenderLength((prev) => prev + adjustedLoadMoreLength);
   const loadMoreBtn = () =>
