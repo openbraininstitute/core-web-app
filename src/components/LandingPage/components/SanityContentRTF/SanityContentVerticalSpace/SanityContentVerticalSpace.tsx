@@ -6,7 +6,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './SanityContentVerticalSpace.module.css';
 
-export interface SanityContentVerticalSpaceProps {
+interface SanityContentVerticalSpaceProps {
   value: ContentForRichTextVerticalSpace;
 }
 

@@ -1,7 +1,7 @@
 import { RichText, tryType } from './_common';
 import { useSanity } from '@/services/sanity';
 
-export interface ContentForOurFoundationsText {
+interface ContentForOurFoundationsText {
   title: string | null;
   subtitle: string | null;
   videoURL: string;
@@ -37,7 +37,7 @@ export function useSanityContentForOurFoundationsText() {
   );
 }
 
-export interface ContentForOurFoundationsLink {
+interface ContentForOurFoundationsLink {
   label: string;
   sublabel: string;
   url: string;

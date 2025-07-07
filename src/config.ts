@@ -4,7 +4,7 @@ export const basePath = env.NEXT_PUBLIC_BASE_PATH;
 
 export const isServer = typeof window === 'undefined';
 
-export const sentryDsn = env.NEXT_PUBLIC_SENTRY_DSN;
+const sentryDsn = env.NEXT_PUBLIC_SENTRY_DSN;
 
 export const accountingBaseUrl = env.NEXT_PUBLIC_ACCOUNTING_BASE_URL;
 
@@ -18,7 +18,7 @@ export const entityCoreUrl = env.NEXT_PUBLIC_ENTITY_CORE_URL;
 export const entityCorePublicVirtualLabId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID;
 export const entityCorePublicProjectId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID;
 
-export const notebookSvcBaseUrl = env.NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL;
+const notebookSvcBaseUrl = env.NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL;
 export const blueNaasUrl = env.NEXT_PUBLIC_BLUE_NAAS_URL;
 export const smallScaleSimulatorUrl = env.NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL;
 
@@ -66,14 +66,14 @@ export const atlasESView = {
   id: env.NEXT_PUBLIC_ATLAS_ES_VIEW_ID,
 };
 
-export const inferenceSimilarityModels = [
+const inferenceSimilarityModels = [
   {
     id: env.NEXT_PUBLIC_INFERENCE_SIMILARITY_MODEL_ID,
     title: env.NEXT_PUBLIC_INFERENCE_SIMILARITY_MODEL_TITLE,
   },
 ];
 
-export const inferenceMorphRelevantRule = {
+const inferenceMorphRelevantRule = {
   id: env.NEXT_PUBLIC_INFERENCE_MORPH_RELEVANT_RULE_ID,
 };
 

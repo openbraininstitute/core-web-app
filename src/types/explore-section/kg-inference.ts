@@ -20,16 +20,16 @@ type EmbeddingModel = {
   id: string;
 };
 
-export interface InputFilter {
+interface InputFilter {
   TargetResourceParameter: string;
   SelectModelsParameter: string[];
   LimitQueryParameter?: number;
 }
 
-export interface PayLoadValues {
+interface PayLoadValues {
   [key: string]: string;
 }
-export interface Payload {
+interface Payload {
   name: string;
   description: string;
   optional: boolean;
@@ -38,14 +38,14 @@ export interface Payload {
   values: PayLoadValues;
 }
 
-export interface InferenceOptionsState {
+interface InferenceOptionsState {
   [key: string]: boolean;
 }
-export interface RuleWithOptionsProps {
+interface RuleWithOptionsProps {
   [rule: string]: InferenceOptionsState;
 }
 
-export interface InputParameter {
+interface InputParameter {
   name: string;
   payload: Payload;
   values?: ResourceBasedGeneralization[];
@@ -85,7 +85,7 @@ export interface ResourceBasedInferenceRequest {
   inputFilter: InputFilter;
 }
 
-export type ResourceBasedInferenceSingleResponse = {
+type ResourceBasedInferenceSingleResponse = {
   id: string;
   results: ResourceBasedInference[];
 };

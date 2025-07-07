@@ -49,7 +49,7 @@ export type IdFilter = Partial<{
   id__in: string; // this should be comma separated
 }>;
 
-export type SearchFilter = {
+type SearchFilter = {
   search: string | null;
 };
 export type NameFilter = {

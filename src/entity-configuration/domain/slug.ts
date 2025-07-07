@@ -1,4 +1,4 @@
-export const ExperimentalEntitySlug = {
+const ExperimentalEntitySlug = {
   ReconstructionMorphology: 'morphology',
   ExperimentalNeuronDensity: 'neuron-density',
   ElectricalCellRecording: 'electrophysiology',
@@ -6,7 +6,7 @@ export const ExperimentalEntitySlug = {
   ExperimentalSynapsesPerConnection: 'synapse-per-connection',
 } as const;
 
-export const ModelEntitySlug = {
+const ModelEntitySlug = {
   EModel: 'e-model',
   MeModel: 'me-model',
   SingleNeuronSynaptome: 'synaptome',
@@ -14,7 +14,7 @@ export const ModelEntitySlug = {
   Circuit: 'small-microcircuit',
 } as const;
 
-export const SimulationEntitySlug = {
+const SimulationEntitySlug = {
   SingleNeuronSimulation: 'single-neuron-simulation',
   SingleNeuronSynaptomeSimulation: 'synaptome-simulation',
   SimulationCampaign: 'simulation-campaign',
@@ -26,7 +26,7 @@ export const EntitySlug = {
   ...SimulationEntitySlug,
 } as const;
 
-export type EntitySlugUnion = keyof typeof EntitySlug;
+type EntitySlugUnion = keyof typeof EntitySlug;
 export type EntitySlugValue = (typeof EntitySlug)[keyof typeof EntitySlug];
 export type ModelEntitySlugValue = (typeof ModelEntitySlug)[keyof typeof ModelEntitySlug];
 export type SimulationEntitySlugValue =

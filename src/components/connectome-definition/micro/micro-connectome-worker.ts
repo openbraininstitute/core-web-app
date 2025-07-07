@@ -817,7 +817,7 @@ export type AggregatedParamViewEntry = {
   noData: boolean;
 };
 
-export function createAggregatedParamView(
+function createAggregatedParamView(
   hemisphereDirection: HemisphereDirection,
   variantName: string,
   paramName: string,
@@ -1593,7 +1593,7 @@ async function computeOverrides(options?: ComputeOverridesOptions): Promise<Over
   };
 }
 
-export type ComputeOverridesFn = typeof computeOverrides;
+type ComputeOverridesFn = typeof computeOverrides;
 
 function setOverrides(overrides: Overrides): void {
   assertInitialised(workerState);

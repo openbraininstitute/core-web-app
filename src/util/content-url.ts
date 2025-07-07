@@ -12,7 +12,7 @@ export function useSwcContentUrl(
   return useContentUrl(resourceDistribution, 'application/swc');
 }
 
-export function useContentUrl(
+function useContentUrl(
   resourceDistribution: ResourceDistribution | ResourceDistribution[],
   encodingFormat: string
 ): string | undefined {

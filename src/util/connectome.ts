@@ -99,7 +99,7 @@ export function createMacroConnectomeOverridesTable(
   return overridesTable;
 }
 
-export function toSerialisibleSelection(selection: PathwaySideSelection) {
+function toSerialisibleSelection(selection: PathwaySideSelection) {
   const serialisibleSelection: SerialisiblePathwaySideSelection = {
     ...selection,
     mtypeFilterSet: selection.mtypeFilterSet

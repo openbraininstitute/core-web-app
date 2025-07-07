@@ -4,7 +4,7 @@ export function arrayBufferToString(buffer: ArrayBuffer): string {
   return jsonString;
 }
 
-export function arrayBufferToJson<T>(buffer: ArrayBuffer): T {
+function arrayBufferToJson<T>(buffer: ArrayBuffer): T {
   const data = arrayBufferToString(buffer);
   return JSON.parse(data);
 }

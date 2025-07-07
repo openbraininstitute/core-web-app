@@ -33,7 +33,7 @@ type AddMembersProps = {
 };
 type ProjectContext = { virtualLabId: string; projectId: string };
 
-export function filterMembers(members: Member[], query: string): Member[] {
+function filterMembers(members: Member[], query: string): Member[] {
   const lowerQuery = query.toLowerCase();
   return members.filter(
     (member) =>

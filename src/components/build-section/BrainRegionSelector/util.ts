@@ -26,7 +26,7 @@ export function getMetric(
  * @param input NavValue  object with nested object (ex: brain regions expanded nodes)
  * @returns result string[] all the deeply nested keys of the input
  */
-export function getNestedKeysDeeply(input: NavValue, result: Array<string> = []) {
+function getNestedKeysDeeply(input: NavValue, result: Array<string> = []) {
   if (input) {
     for (const [key, value] of Object.entries(input)) {
       result.push(key);

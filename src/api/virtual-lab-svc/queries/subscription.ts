@@ -64,9 +64,7 @@ export async function createSubscription(
  * @returns {Promise<VlmGetSubscriptionResponse>} - The subscription details
  * @throws {Error} - Throws an error if the request fails
  */
-export async function getSubscription(
-  subscriptionId: string
-): Promise<GetSubscriptionResponse | null> {
+async function getSubscription(subscriptionId: string): Promise<GetSubscriptionResponse | null> {
   const session = await getSession();
   const response = await fetch(`${BASE_URL}/${subscriptionId}`, {
     headers: {
@@ -125,7 +123,7 @@ export async function cancelSubscription(
  * @returns {Promise<VlmListSubscriptionResponse>} - List of filtered subscriptions
  * @throws {Error} - Throws an error if the request fails
  */
-export async function listSubscriptions(params?: {
+async function listSubscriptions(params?: {
   status?: SubscriptionStatus;
 }): Promise<Array<SubscriptionDetails> | null> {
   const session = await getSession();
@@ -213,7 +211,7 @@ export async function getUserActiveSubscription(): Promise<UserActiveSubscriptio
  * @returns {Promise<VlmNextPaymentResponse>} - Next payment date information
  * @throws {Error} - Throws an error if the request fails
  */
-export async function getNextPaymentDate(): Promise<NextPaymentDateResponse | null> {
+async function getNextPaymentDate(): Promise<NextPaymentDateResponse | null> {
   const session = await getSession();
   const response = await fetch(`${BASE_URL}/next-payment`, {
     headers: {
@@ -238,7 +236,7 @@ export async function getNextPaymentDate(): Promise<NextPaymentDateResponse | nu
  * @returns {Promise<VlmSubscriptionStatusResponse>} - Subscription status information
  * @throws {Error} - Throws an error if the request fails
  */
-export async function checkUserSubscription(): Promise<SubscriptionStatusResponse | null> {
+async function checkUserSubscription(): Promise<SubscriptionStatusResponse | null> {
   const session = await getSession();
   const response = await fetch(`${BASE_URL}/check`, {
     headers: {

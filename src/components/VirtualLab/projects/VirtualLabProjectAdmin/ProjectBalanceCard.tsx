@@ -36,7 +36,7 @@ export function ProjectBalanceCard({
   );
 }
 
-export function ProjectBalanceCardWithFetching({
+function ProjectBalanceCardWithFetching({
   virtualLabId,
   projectId,
 }: {

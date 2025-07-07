@@ -12,11 +12,11 @@ export function isNumber(data: unknown): data is number {
   return typeof data === 'number';
 }
 
-export function isNull(data: unknown): data is null {
+function isNull(data: unknown): data is null {
   return typeof data === null;
 }
 
-export function isFunction(data: unknown): data is () => unknown {
+function isFunction(data: unknown): data is () => unknown {
   return typeof data === 'function';
 }
 
@@ -33,12 +33,12 @@ export function isArrayBuffer(data: unknown): data is ArrayBuffer {
   return data instanceof ArrayBuffer;
 }
 
-export function isArrayBufferView(data: unknown): data is ArrayBufferView {
+function isArrayBufferView(data: unknown): data is ArrayBufferView {
   if (!data) return false;
   return ArrayBuffer.isView(data);
 }
 
-export function isBufferSource(data: unknown): data is BufferSource {
+function isBufferSource(data: unknown): data is BufferSource {
   return isArrayBuffer(data) || isArrayBufferView(data);
 }
 
@@ -63,16 +63,13 @@ export function assertString(data: unknown, name = 'data'): asserts data is stri
   }
 }
 
-export function assertOptionalString(
-  data: unknown,
-  name = 'data'
-): asserts data is string | undefined {
+function assertOptionalString(data: unknown, name = 'data'): asserts data is string | undefined {
   if (data && !isString(data)) {
     throw Error(`${name} was expected to be a string but we got ${typeof data}!`);
   }
 }
 
-export function assertBoolean(data: unknown, name = 'data'): asserts data is boolean {
+function assertBoolean(data: unknown, name = 'data'): asserts data is boolean {
   if (!isBoolean(data)) {
     throw Error(`${name} was expected to be a boolean but we got ${typeof data}!`);
   }
@@ -87,13 +84,13 @@ export function assertObject(
   }
 }
 
-export function assertArray(data: unknown, name = 'data'): asserts data is unknown[] {
+function assertArray(data: unknown, name = 'data'): asserts data is unknown[] {
   if (!Array.isArray(data)) {
     throw Error(`${name} was expected to be an Array but we got ${typeof data}!`);
   }
 }
 
-export function assertArrayBuffer(data: unknown, name = 'data'): asserts data is ArrayBuffer {
+function assertArrayBuffer(data: unknown, name = 'data'): asserts data is ArrayBuffer {
   if (!isArrayBuffer(data)) {
     throw Error(`${name} was expected to be an ArrayBuffer but we got ${typeof data}!`);
   }
@@ -108,9 +105,9 @@ export function assertOptionalArrayBuffer(
   }
 }
 
-export type TypeDefFunction = (data: unknown) => boolean;
+type TypeDefFunction = (data: unknown) => boolean;
 
-export type TypeDefArray =
+type TypeDefArray =
   | ['array', TypeDef]
   | ['array', TypeDef, number]
   | ['array', TypeDef, { min?: number; max?: number }];
@@ -421,11 +418,11 @@ export function ensureType<T>(
   return isType<T>(defaultValue, type) ? defaultValue : defaultValue(data);
 }
 
-export function ensureBoolean(data: unknown, defaultValue: boolean): boolean {
+function ensureBoolean(data: unknown, defaultValue: boolean): boolean {
   return ensureType(data, 'boolean', defaultValue);
 }
 
-export function ensureNumber(data: unknown, defaultValue: number): number {
+function ensureNumber(data: unknown, defaultValue: number): number {
   return ensureType(data, 'number', defaultValue);
 }
 

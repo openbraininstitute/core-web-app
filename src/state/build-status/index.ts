@@ -28,16 +28,16 @@ const STEPS = {
   MICRO: 'Micro',
 };
 
-export const GROUPS = {
+const GROUPS = {
   CELL_COMPOSITION: 'Cell composition',
   CELL_MODEL_ASSIGNMENT: 'Cell model assignment',
   CONNECTOME_DEFINITION: 'Connectome definition',
   CONNECTOME_MODEL_ASSIGNMENT: 'Connectome model assignment',
 } as const;
 
-export type CellCompositionStepGroupValues = (typeof GROUPS)[keyof typeof GROUPS];
+type CellCompositionStepGroupValues = (typeof GROUPS)[keyof typeof GROUPS];
 
-export type StatusResponse = typeof STATUS.BUILT | typeof STATUS.TO_BUILD | null;
+type StatusResponse = typeof STATUS.BUILT | typeof STATUS.TO_BUILD | null;
 
 export type StatusStructureItem = {
   name: CellCompositionStepGroupValues;

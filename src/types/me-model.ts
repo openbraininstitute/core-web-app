@@ -3,14 +3,11 @@ import { IdWithType, Type } from './explore-section/common';
 import { Annotation } from './explore-section/delta-properties';
 import { ESeModel } from './explore-section/es';
 import { BrainLocation, Entity, ResourceMetadata } from '@/types/nexus';
-
-export type { MEModelMenuItem };
-
 /* -------------------------------- Features -------------------------------- */
 
-export type MEFeatureKeys = 'somaDiameter' | 'yyy';
+type MEFeatureKeys = 'somaDiameter' | 'yyy';
 
-export type MEFeatureProps = {
+type MEFeatureProps = {
   displayName: string;
   range: [number, number]; // min - max
   step: number;
@@ -106,7 +103,7 @@ export interface MEModel extends Entity {
 
 export interface MEModelResource extends ResourceMetadata, MEModel {}
 
-export type NexusMEModel = ResourceMetadata &
+type NexusMEModel = ResourceMetadata &
   MEModel & {
     eModel: string;
     eType: string;

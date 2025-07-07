@@ -86,7 +86,7 @@ export const densityOrCountLabelAtom = atom<'Counts [N]' | 'Densities [/mm³]' |
   }
 });
 
-export const brainRegionOntologyAtom = atom(getBrainRegionOntology);
+const brainRegionOntologyAtom = atom(getBrainRegionOntology);
 
 export const brainRegionOntologyViewsAtom = selectAtom<
   Promise<BrainRegionOntology | null>,
@@ -98,7 +98,7 @@ export const brainRegionOntologyVolumesAtom = selectAtom<
   { [key: string]: number } | null
 >(unwrap(brainRegionOntologyAtom), (brainRegionOntology) => brainRegionOntology?.volumes ?? null);
 
-export const defaultBrainRegionOntologyViewAtom = selectAtom<
+const defaultBrainRegionOntologyViewAtom = selectAtom<
   Promise<BrainRegionOntologyView[] | null>,
   BrainRegionOntologyView | null | undefined
 >(unwrap(brainRegionOntologyViewsAtom), (views) =>
@@ -133,7 +133,7 @@ export const brainRegionsWithRepresentationAtom = selectAtom<
 type BrainRegionId = string;
 type BrainRegionNotation = string;
 
-export const brainRegionIdByNotationMapAtom = selectAtom<
+const brainRegionIdByNotationMapAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   Map<string, string> | null
 >(
@@ -305,7 +305,7 @@ export const brainRegionLeaveIdxByIdAtom = selectAtom<
 /**
  * This atom returns the filtered brain regions as array sorted by id
  */
-export const brainRegionsFilteredArrayAtom = selectAtom<
+const brainRegionsFilteredArrayAtom = selectAtom<
   Promise<BrainRegion[] | null>,
   BrainRegion[] | null | undefined
 >(unwrap(brainRegionsUnsortedArrayAtom), (flattenedRegions) =>
@@ -411,7 +411,7 @@ export const brainRegionSidebarIsCollapsedAtom = atom(true);
 /**
  * Returns the descendants of a list of brain regions based on their id
  */
-export const getBrainRegionDescendantsAndAncestors = (brainRegionIds: string[]) =>
+const getBrainRegionDescendantsAndAncestors = (brainRegionIds: string[]) =>
   atom(async (get) => {
     const brainRegionTree = await get(brainRegionsAlternateTreeAtom);
     if (!brainRegionTree) return undefined;

@@ -2,7 +2,7 @@ import { ModelResource } from './explore-section/delta-model';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
-export const NEXUS_SYNAPTOME_TYPE = 'SingleNeuronSynaptome';
+const NEXUS_SYNAPTOME_TYPE = 'SingleNeuronSynaptome';
 
 export type SynapsesConfiguration = {
   synapses: Array<TSingleNeuronSynaptomeConfiguration>;
@@ -14,7 +14,7 @@ type ExclusionRule = {
   distance_soma_lte: number | undefined;
 };
 
-export type SingleSynaptomeConfig = {
+type SingleSynaptomeConfig = {
   id: string;
   name: string;
   target: string | undefined;

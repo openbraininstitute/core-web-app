@@ -193,7 +193,7 @@ export function MemberAvatarCasual({
   );
 }
 
-export function List({ members }: { members: Array<Omit<TMember, 'index'>> }) {
+function List({ members }: { members: Array<Omit<TMember, 'index'>> }) {
   return (
     <div className="space-y-6">
       {members.map(({ id, role, initials, name, email }, index) => (

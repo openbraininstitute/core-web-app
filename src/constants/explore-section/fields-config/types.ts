@@ -59,4 +59,4 @@ type NestedFieldConfig = {
 };
 
 // export type DetailType = DeltaResource;
-export type EntityCoreElement<T> = T extends EntityCoreIdentifiable ? T : never;
+type EntityCoreElement<T> = T extends EntityCoreIdentifiable ? T : never;

@@ -1,6 +1,6 @@
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const Mesh: EntityCoreTypeConfig<any> = {
+const Mesh: EntityCoreTypeConfig<any> = {
   group: 'models',
   legacyType: undefined,
   type: 'mesh',

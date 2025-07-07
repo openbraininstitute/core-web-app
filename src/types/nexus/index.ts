@@ -74,7 +74,7 @@ type BrainRegionWorkflowConfigEntry = {
   hasPart: Record<string, MtypeWorkflowConfigEntry>;
 };
 
-export type BrainRegionURI = string;
+type BrainRegionURI = string;
 
 export type CompositionOverridesWorkflowConfig = Record<
   BrainRegionURI,
@@ -163,7 +163,7 @@ export interface BrainLocation {
   };
 }
 
-export interface CellComposition extends Entity {
+interface CellComposition extends Entity {
   about: string[];
   atlasRelease: {
     '@id': string;
@@ -364,7 +364,7 @@ export interface MicroConnectomeEntryBase {
   distribution: Distribution;
 }
 
-export interface MicroConnectomeVariantSelection extends MicroConnectomeEntryBase, Entity {
+interface MicroConnectomeVariantSelection extends MicroConnectomeEntryBase, Entity {
   '@type': ['Entity', 'Dataset', 'MicroConnectomeVariantSelection'];
 }
 
@@ -384,7 +384,7 @@ export interface MicroConnectomeData extends MicroConnectomeEntryBase, Entity {
   '@type': ['Entity', 'Dataset', 'MicroConnectomeData'];
 }
 
-export interface MicroConnectomeDataResource extends ResourceMetadata, MicroConnectomeData {}
+interface MicroConnectomeDataResource extends ResourceMetadata, MicroConnectomeData {}
 
 export interface MicroConnectomeDataOverrides extends MicroConnectomeEntryBase, Entity {
   '@type': ['Entity', 'Dataset', 'MicroConnectomeDataOverrides'];
@@ -482,7 +482,7 @@ export interface BbpWorkflowConfigResource extends Entity {
   distribution: Distribution;
 }
 
-export interface VariantTaskActivity extends Entity {
+interface VariantTaskActivity extends Entity {
   '@type': 'VariantTaskActivity';
   generated: {
     '@type': 'DetailedCircuit';
@@ -502,8 +502,8 @@ export interface VariantTaskActivity extends Entity {
 
 export interface VariantTaskActivityResource extends ResourceMetadata, VariantTaskActivity {}
 
-export type VariantTaskConfigType = 'VariantTaskConfig';
-export interface VariantTaskConfig extends Entity {
+type VariantTaskConfigType = 'VariantTaskConfig';
+interface VariantTaskConfig extends Entity {
   '@type': [VariantTaskConfigType, 'Entity'];
   name: string;
   distribution: Distribution;
@@ -596,7 +596,7 @@ export interface ContributionEntity {
   };
 }
 
-export interface AgentOrIsPartOfOrLicense {
+interface AgentOrIsPartOfOrLicense {
   '@id': string;
   '@type': string;
   email?: string;
@@ -619,14 +619,14 @@ export type LaunchedSimCampUIConfigType = SimulationCampaignUIConfigResource & {
 
 type NeuronMorphologyModelDistributionType = 'NeuronMorphologyModelDistribution';
 
-export interface NeuronMorphologyModelDistribution extends Entity {
+interface NeuronMorphologyModelDistribution extends Entity {
   name: string;
   description: string;
   '@type': [NeuronMorphologyModelDistributionType, 'Entity'];
   distribution: Distribution;
 }
 
-export interface NeuronMorphologyModelDistributionResource
+interface NeuronMorphologyModelDistributionResource
   extends ResourceMetadata,
     NeuronMorphologyModelDistribution {}
 
@@ -639,7 +639,7 @@ export interface NeuronMorphologyModelParameter extends Entity {
   distribution: Distribution;
 }
 
-export interface NeuronMorphologyModelParameterResource
+interface NeuronMorphologyModelParameterResource
   extends ResourceMetadata,
     NeuronMorphologyModelParameter {}
 
@@ -662,9 +662,7 @@ export interface CanonicalMorphologyModel extends Entity {
   };
 }
 
-export interface CanonicalMorphologyModelResource
-  extends ResourceMetadata,
-    CanonicalMorphologyModel {}
+interface CanonicalMorphologyModelResource extends ResourceMetadata, CanonicalMorphologyModel {}
 
 type CanonicalMorphologyModelConfigType = 'CanonicalMorphologyModelConfig';
 
@@ -675,7 +673,7 @@ export interface CanonicalMorphologyModelConfig extends Entity {
   distribution: Distribution;
 }
 
-export interface CanonicalMorphologyModelConfigResource
+interface CanonicalMorphologyModelConfigResource
   extends ResourceMetadata,
     CanonicalMorphologyModelConfig {}
 
@@ -700,7 +698,7 @@ export type CanonicalMorphologyModelConfigPayload = {
   };
 };
 
-export type SimulationStatus = 'pending' | 'started' | 'success' | 'failure';
+type SimulationStatus = 'pending' | 'started' | 'success' | 'failure';
 export interface SingleNeuronSimulation extends Entity {
   '@type': ['Entity', 'SingleNeuronSimulation'];
   name: string;
@@ -717,7 +715,7 @@ export interface SingleNeuronSimulation extends Entity {
   status?: SimulationStatus;
 }
 
-export interface SynaptomeSimulation extends Entity, ResourceMetadata {
+interface SynaptomeSimulation extends Entity, ResourceMetadata {
   '@type': ['Entity', 'SynaptomeSimulation'];
   name: string;
   description: string;
@@ -733,11 +731,11 @@ export interface SynaptomeSimulation extends Entity, ResourceMetadata {
   status?: SimulationStatus;
 }
 
-export interface SingleNeuronSimulationResource extends ResourceMetadata, SingleNeuronSimulation {
+interface SingleNeuronSimulationResource extends ResourceMetadata, SingleNeuronSimulation {
   status: undefined;
 }
 
-export interface Paper extends Entity {
+interface Paper extends Entity {
   '@type': ['ScholarlyArticle', 'Entity'];
   name: string;
   description: string;

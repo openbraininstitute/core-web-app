@@ -5,7 +5,7 @@ import { log } from '@/utils/logger';
 
 import styles from './zoomable-image.module.css';
 
-export interface ZoomableImageProps {
+interface ZoomableImageProps {
   className?: string;
   src?: string;
 }

@@ -39,7 +39,7 @@ export type Simulation = EntityResource & {
   wasGeneratedBy: IdWithType;
 };
 
-export type SimCampSims = Type & {
+type SimCampSims = Type & {
   contentSize: ContentSize;
   contentUrl: string;
   digest: Digest;

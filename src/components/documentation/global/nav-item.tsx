@@ -11,7 +11,7 @@ import { ChevronRight } from '@/components/icons';
 import { activeNavItemAtom } from '@/state/documentation/currentSection';
 import { classNames } from '@/util/utils';
 
-export function ItemDisabled({ name }: { name: string }) {
+function ItemDisabled({ name }: { name: string }) {
   return (
     <Tooltip title="Coming soon" placement="topLeft">
       <div className="font-sans text-lg font-normal text-white opacity-40">{name}</div>
@@ -19,7 +19,7 @@ export function ItemDisabled({ name }: { name: string }) {
   );
 }
 
-export function ItemEnabled({
+function ItemEnabled({
   content,
   allContent,
   name,

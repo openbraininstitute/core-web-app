@@ -3,12 +3,12 @@ import JSZip from 'jszip';
 
 import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 
-export function getPlotlyAsCsv(trace: PlotDataEntry) {
+function getPlotlyAsCsv(trace: PlotDataEntry) {
   const csvContent = `time[ms],voltage[mV]\n${trace.x.map((x, i) => `${x},${trace.y[i]}`).join('\n')}`;
   return csvContent;
 }
 
-export function exportSimulationPlotlyToCsv(trace: PlotDataEntry) {
+function exportSimulationPlotlyToCsv(trace: PlotDataEntry) {
   const blob = new Blob([getPlotlyAsCsv(trace)], { type: 'text/csv;charset=utf-8' });
   return saveAs(blob, `${trace.name}.csv`);
 }

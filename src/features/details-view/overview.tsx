@@ -16,7 +16,7 @@ type FieldProps = {
   data: any;
 };
 
-export function Field({ field, className, data }: FieldProps) {
+function Field({ field, className, data }: FieldProps) {
   const fieldObj = getFieldDefinition(field);
 
   return (

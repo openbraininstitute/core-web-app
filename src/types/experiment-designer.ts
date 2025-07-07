@@ -1,4 +1,4 @@
-export type StepperTypeName = 'Number of steps' | 'Step size';
+type StepperTypeName = 'Number of steps' | 'Step size';
 
 export interface StepperType {
   name: StepperTypeName;
@@ -160,7 +160,7 @@ export type StimulusModule =
   | 'ornstein_uhlenbeck'
   | 'relative_ornstein_uhlenbeck';
 
-export interface StimulusTypeDropdownOptionType {
+interface StimulusTypeDropdownOptionType {
   label: string;
   value: StimulusType;
 }
@@ -199,7 +199,7 @@ type RecordingType = 'compartment' | 'summation' | 'synapse';
 
 type RecordingVariableName = 'v' | 'i_membrane' | 'IClamp';
 
-export interface RecordingTypeDropdownOptionType {
+interface RecordingTypeDropdownOptionType {
   label: string;
   value: RecordingType;
 }
@@ -209,7 +209,7 @@ export interface RecordingTypeDropdown extends ExpDesignerDropdownParameter {
   options: RecordingTypeDropdownOptionType[];
 }
 
-export interface RecordingVariableNameDropdownOptionType {
+interface RecordingVariableNameDropdownOptionType {
   label: string;
   value: RecordingVariableName;
 }
@@ -219,7 +219,7 @@ export interface RecordingVariableNameDropdown extends ExpDesignerDropdownParame
   options: RecordingVariableNameDropdownOptionType[];
 }
 
-export interface RecordingSectionDropdownOptionType {
+interface RecordingSectionDropdownOptionType {
   label: string;
   value: RecordingSections;
 }
@@ -229,7 +229,7 @@ export interface RecordingModuleDropdown extends ExpDesignerDropdownParameter {
   options: RecordingSectionDropdownOptionType[];
 }
 
-export type ExpDesignerRecordingValueParameterType =
+type ExpDesignerRecordingValueParameterType =
   | RecordingTypeDropdown
   | RecordingVariableNameDropdown
   | RecordingModuleDropdown

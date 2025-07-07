@@ -5,7 +5,7 @@ import query from './milestones.groq';
 import { typeStringOrNull } from './types';
 import { useSanity } from '@/services/sanity';
 
-export interface ContentForMilestoneItem {
+interface ContentForMilestoneItem {
   title: string;
   description: string;
   astrocytes: string | null;

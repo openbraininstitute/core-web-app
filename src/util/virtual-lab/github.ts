@@ -77,7 +77,7 @@ export async function fetchGithubFile(url: string) {
   }
 }
 
-export async function fetchRawGithubFile(url: string) {
+async function fetchRawGithubFile(url: string) {
   const response = await fetch(url, options);
 
   const data = await response.text();

@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './slider.module.css';
 
-export interface SliderProps {
+interface SliderProps {
   className?: string;
   min: number;
   max: number;

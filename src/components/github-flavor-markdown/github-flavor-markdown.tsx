@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './github-flavor-markdown.module.css';
 
-export interface GithubFlavorMarkdownProps {
+interface GithubFlavorMarkdownProps {
   className?: string;
   children: string;
 }

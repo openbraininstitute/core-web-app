@@ -7,7 +7,7 @@ import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { ensureString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
-export default function StatItem({
+function StatItem({
   href,
   title,
   subtitle,
@@ -38,7 +38,7 @@ export default function StatItem({
   );
 }
 
-export function StatItemSkeleton() {
+function StatItemSkeleton() {
   return (
     <div className="bg-neutral-7 flex h-[50px] w-full animate-pulse justify-between rounded-sm px-3 py-4 opacity-85" />
   );

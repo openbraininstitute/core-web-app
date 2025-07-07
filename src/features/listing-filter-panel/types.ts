@@ -1,6 +1,6 @@
 import { FilterTypeEnum } from '@/types/explore-section/filters';
 
-export type AggregationType = 'buckets' | 'stats' | null;
+type AggregationType = 'buckets' | 'stats' | null;
 
 export interface GteLteValue {
   gte: Date | number | null;
@@ -14,22 +14,22 @@ interface BaseFilter {
   constraint?: string | Record<string, string>;
 }
 
-export interface CheckListFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface CheckListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: FilterTypeEnum.CheckList;
   value: string[];
 }
 
-export interface SearchFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface SearchFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: FilterTypeEnum.Search;
   value: string[];
 }
 
-export interface DateRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface DateRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: FilterTypeEnum.DateRange;
   value: GteLteValue;
 }
 
-export interface TextFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface TextFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: FilterTypeEnum.Text;
   value: string;
 }
@@ -55,7 +55,7 @@ export type Filter =
 
 export type FilterType = FilterTypeEnum | null;
 
-export type Bucket = {
+type Bucket = {
   doc_count: number;
   key: string | number;
   key_as_string?: string;

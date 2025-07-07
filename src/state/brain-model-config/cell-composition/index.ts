@@ -14,7 +14,7 @@ import {
 } from '@/types/nexus';
 
 const refetchTriggerAtom = atom<{}>({});
-export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
+const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 
 export const configAtom = atom<Promise<CellCompositionConfigResource | null>>(async (get) => {
   const session = get(sessionAtom);
@@ -76,28 +76,28 @@ export const configPayloadAtom = atom<Promise<CellCompositionConfigPayload | nul
   return localConfig ?? remoteConfig;
 });
 
-export const createGetVariantAtom = (entityId: string) => {
+const createGetVariantAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId].variantDefinition;
 
   return selectAtom(unwrap(configPayloadAtom), selectorFn);
 };
 
-export const createGetInputsAtom = (entityId: string) => {
+const createGetInputsAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId].inputs;
 
   return selectAtom(unwrap(configPayloadAtom), selectorFn);
 };
 
-export const createGetConfigurationAtom = (entityId: string) => {
+const createGetConfigurationAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId]?.configuration;
 
   return selectAtom(unwrap(configPayloadAtom), selectorFn);
 };
 
-export const createGetJobConfigAtom = (entityId: string) => {
+const createGetJobConfigAtom = (entityId: string) => {
   const selectorFn = (cellCompositionConfigPayload: CellCompositionConfigPayload | null) =>
     cellCompositionConfigPayload?.[entityId].jobConfiguration;
 

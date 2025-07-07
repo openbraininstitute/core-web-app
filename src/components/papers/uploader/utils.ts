@@ -10,7 +10,7 @@ export type VideoThumbnailMetadata = {
   height: number;
 };
 
-export const getBase64 = (file: FileType): Promise<string> => {
+const getBase64 = (file: FileType): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);

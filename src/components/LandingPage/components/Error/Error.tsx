@@ -5,7 +5,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './Error.module.css';
 
-export interface ErrorProps {
+interface ErrorProps {
   className?: string;
   children: React.ReactNode;
 }

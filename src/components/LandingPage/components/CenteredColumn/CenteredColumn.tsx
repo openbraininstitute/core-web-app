@@ -5,7 +5,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './CenteredColumn.module.css';
 
-export interface CenteredColumnProps {
+interface CenteredColumnProps {
   className?: string;
   children: React.ReactNode;
 }

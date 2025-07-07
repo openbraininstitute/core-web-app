@@ -8,7 +8,7 @@ import {
 
 import styles from './FeatureBloc.module.css';
 
-export interface FeatureBlocProps {
+interface FeatureBlocProps {
   bloc: ContentForPricingFeatureBloc;
   plans: ContentForPricingPlan[];
 }

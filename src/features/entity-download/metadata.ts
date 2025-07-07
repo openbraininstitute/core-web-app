@@ -10,7 +10,7 @@ type FileEntry = {
   size: number;
 };
 
-export const METADATA_FLATTEN_DELIMITER = '__';
+const METADATA_FLATTEN_DELIMITER = '__';
 
 /**
  * Manages metadata collection and CSV generation for entity downloads.

@@ -2,7 +2,7 @@ import { nexus } from '@/config';
 
 export const API_SEARCH = `${nexus.url}/search/query/suite/sbo`;
 
-export const REPORT_SPARQL_QUERY = `PREFIX s:<http://schema.org/>
+const REPORT_SPARQL_QUERY = `PREFIX s:<http://schema.org/>
 PREFIX prov:<http://www.w3.org/ns/prov#>
 PREFIX nsg:<https://neuroshapes.org/>
 PREFIX nxv:<https://bluebrain.github.io/nexus/vocabulary/>

@@ -1,9 +1,9 @@
 import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
 
-export type GetMorphoToolResult = GetMorphoToolItem[];
+type GetMorphoToolResult = GetMorphoToolItem[];
 
-export interface GetMorphoToolItem {
+interface GetMorphoToolItem {
   morphology_id: string;
   morphology_name: string;
   morphology_description: string;

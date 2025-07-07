@@ -4,7 +4,7 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 
-export type SearchBarProps = {
+type SearchBarProps = {
   searchQuery: string;
   onSearchChange: (query: string) => void;
 };

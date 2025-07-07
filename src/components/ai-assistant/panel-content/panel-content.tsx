@@ -15,7 +15,7 @@ import {
 
 import styles from './panel-content.module.css';
 
-export interface PanelContentProps {
+interface PanelContentProps {
   threadId: string | undefined;
   onClearChat(): void;
 }

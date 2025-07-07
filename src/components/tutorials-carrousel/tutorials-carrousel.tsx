@@ -12,7 +12,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './tutorials-carrousel.module.css';
 
-export interface TutorialsCarrouselProps {
+interface TutorialsCarrouselProps {
   className?: string;
 }
 

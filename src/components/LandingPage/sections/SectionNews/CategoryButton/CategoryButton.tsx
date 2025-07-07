@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './CategoryButton.module.css';
 
-export interface CategoryButtonProps {
+interface CategoryButtonProps {
   className?: string;
   selected?: boolean;
   disabled?: boolean;

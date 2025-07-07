@@ -8,7 +8,7 @@ export function useCollapsedPanel(): [value: boolean, setValue: (value: boolean)
   return useAtom(atomSuggestedValue);
 }
 
-export interface AiContext {
+interface AiContext {
   section: 'explore' | 'build' | 'simulate' | 'bookmark' | 'activity';
 }
 

@@ -3,7 +3,7 @@ import { MEModel } from '@/types/me-model';
 import { ensureArray } from '@/util/nexus';
 
 // get m-type
-export function getMtypeFromMEModel(model: MEModel | undefined) {
+function getMtypeFromMEModel(model: MEModel | undefined) {
   return (
     ensureArray(model?.annotation)?.find(({ '@type': type }) => type.includes('MTypeAnnotation'))
       ?.hasBody.label ?? model?.mType
@@ -22,7 +22,7 @@ export function getMtype(meModel: MEModel | undefined, mModel: NeuronMorphology 
 }
 
 // get e-type
-export function getEtypeFromMEModel(model: MEModel | undefined) {
+function getEtypeFromMEModel(model: MEModel | undefined) {
   return (
     ensureArray(model?.annotation)?.find(({ '@type': type }) => type.includes('ETypeAnnotation'))
       ?.hasBody.label ?? model?.eType

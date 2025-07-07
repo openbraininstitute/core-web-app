@@ -52,7 +52,7 @@ export async function bookmarkToProjectLibrary(
  * @param {string} bookmarkDetails.category - The category of the bookmark to remove.
  * @returns {Promise<boolean>} A promise that resolves to true if the bookmark was successfully removed, false otherwise.
  */
-export async function removeBookmarkFromProjectLibrary(
+async function removeBookmarkFromProjectLibrary(
   { virtualLabId, projectId }: WorkspaceContext,
   { resource_id, entity_id, category }: BookmarkRequest
 ): Promise<boolean> {

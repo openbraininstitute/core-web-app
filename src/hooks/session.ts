@@ -37,7 +37,7 @@ function initClientSession() {
 
 const { getSession: getClientSession, setSession } = initClientSession();
 
-export { getClientSession, setSession };
+export { getClientSession };
 
 export default function useSessionState() {
   const currentSession = useSession();

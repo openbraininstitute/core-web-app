@@ -15,7 +15,7 @@ import { Switch } from '@/components/VirtualLab/create-entity-flows/checkout/sha
 
 import styles from './PlanHeader.module.css';
 
-export interface PlanHeaderProps {
+interface PlanHeaderProps {
   className?: string;
   plan: ContentForPricingPlan;
 }

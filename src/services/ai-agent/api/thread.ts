@@ -31,7 +31,7 @@ function isThreadCreateResponse(data: unknown): data is ThreadCreateResponse {
   });
 }
 
-export async function serviceAiAgentThreadDelete({
+async function serviceAiAgentThreadDelete({
   accessToken,
   threadId,
 }: {

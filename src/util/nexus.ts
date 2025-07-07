@@ -125,7 +125,7 @@ export function removeMetadata(resource: Record<string, any>) {
   return pickBy(resource, (value, key) => !metadataKeys.includes(key));
 }
 
-export function getMetadata(resource: Record<string, any>) {
+function getMetadata(resource: Record<string, any>) {
   return pickBy(resource, (value, key) => metadataKeys.includes(key));
 }
 
@@ -137,7 +137,7 @@ export function setRev(url: string, rev: number | string) {
   return urlObj.toString();
 }
 
-export function getUUIDFromId(id: string | null) {
+function getUUIDFromId(id: string | null) {
   if (!id) return null;
   if (!id.includes('/')) return id;
 
@@ -151,11 +151,11 @@ export function getIdFromSelfUrl(selfUrl: string | null) {
   return decodedId;
 }
 
-export function getOrgFromSelfUrl(selfUrl: string | null) {
+function getOrgFromSelfUrl(selfUrl: string | null) {
   return selfUrl ? (selfUrl.split('/').at(-4) ?? null) : null;
 }
 
-export function getProjectFromSelfUrl(selfUrl: string | null) {
+function getProjectFromSelfUrl(selfUrl: string | null) {
   return selfUrl ? (selfUrl.split('/').at(-3) ?? null) : null;
 }
 

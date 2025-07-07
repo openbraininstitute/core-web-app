@@ -51,7 +51,7 @@ export function isVoidType(data: unknown): data is void {
   return true;
 }
 
-export type AsyncAction<T extends unknown[], R> = (...args: T) => Promise<R>;
+type AsyncAction<T extends unknown[], R> = (...args: T) => Promise<R>;
 
 /**
  * Transform a async function into a squashable one.

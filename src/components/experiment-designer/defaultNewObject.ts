@@ -34,7 +34,7 @@ export const getNewTargetObj = (): ExpDesignerTargetParameter => ({
   value: 'AAA',
 });
 
-export const getNewMultiDropdown = (): ExpDesignerMultipleDropdownParameter => ({
+const getNewMultiDropdown = (): ExpDesignerMultipleDropdownParameter => ({
   id: crypto.randomUUID(),
   name: '',
   type: 'multipleDropdown',

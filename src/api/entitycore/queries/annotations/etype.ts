@@ -33,7 +33,7 @@ export async function getEtypes({
 
  * @returns {Promise<IEType>} A promise that resolves to the single etype
  */
-export async function getEtype({ id }: { id: string }) {
+async function getEtype({ id }: { id: string }) {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<IEType>(`${baseUri}/${id}`);
 }

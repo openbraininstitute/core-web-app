@@ -33,7 +33,7 @@ export const formatEsContributors = (contributor: ESContributor | null): IdLabel
   return { id, type };
 };
 
-export const contributorLabelParser = (contributors: DeltaContributor[] | null) => {
+const contributorLabelParser = (contributors: DeltaContributor[] | null) => {
   if (!contributors) return null;
 
   const result = normalizeContributors<DeltaContributor>(contributors, formatContributors);

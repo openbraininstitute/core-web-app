@@ -1,6 +1,6 @@
 import { RefObject, useEffect, useRef } from 'react';
 
-export function on<T extends Window | Document | HTMLElement | EventTarget>(
+function on<T extends Window | Document | HTMLElement | EventTarget>(
   obj: T | null,
   ...args: Parameters<T['addEventListener']> | [string, Function | null, ...any]
 ): void {
@@ -9,7 +9,7 @@ export function on<T extends Window | Document | HTMLElement | EventTarget>(
   }
 }
 
-export function off<T extends Window | Document | HTMLElement | EventTarget>(
+function off<T extends Window | Document | HTMLElement | EventTarget>(
   obj: T | null,
   ...args: Parameters<T['removeEventListener']> | [string, Function | null, ...any]
 ): void {

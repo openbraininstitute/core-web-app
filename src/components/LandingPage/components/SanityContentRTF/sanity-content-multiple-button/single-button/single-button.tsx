@@ -7,7 +7,7 @@ import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFil
 
 import styles from './single-button.module.css';
 
-export interface SingleButtonProps {
+interface SingleButtonProps {
   className?: string;
   value: {
     title: string;

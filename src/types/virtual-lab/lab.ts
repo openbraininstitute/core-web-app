@@ -1,12 +1,12 @@
 import { DataType } from '@/constants/explore-section/list-views';
 
-export enum VirtualLabPlanType {
+enum VirtualLabPlanType {
   Entry = 'Cellular lab',
   Beginner = 'Circuit lab',
   Intermediate = 'System lab',
 }
 
-export type MockBilling = {
+type MockBilling = {
   organization: string;
   firstname: string;
   lastname: string;
@@ -29,7 +29,7 @@ export enum SimulationType {
 }
 
 // maps each simulation scope to a data type
-export const SimulationScopeToDataType = {
+const SimulationScopeToDataType = {
   [SimulationType.SingleNeuron]: DataType.SingleNeuronSimulation,
   [SimulationType.IonChannel]: null,
   [SimulationType.PairedNeuron]: null,
@@ -42,7 +42,7 @@ export const SimulationScopeToDataType = {
 };
 
 // Nexus resource `@type` that should be shown in project -> build tab.
-export const SimulationScopeToModelType = {
+const SimulationScopeToModelType = {
   [SimulationType.SingleNeuron]: DataType.CircuitMEModel,
   [SimulationType.Synaptome]: DataType.SingleNeuronSynaptome,
   [SimulationType.IonChannel]: null,
@@ -54,7 +54,7 @@ export const SimulationScopeToModelType = {
   [SimulationType.WholeBrain]: null,
 };
 
-export interface VirtualLabPlanDefinition {
+interface VirtualLabPlanDefinition {
   id: number;
   name: string;
   features: Record<string, string[]>;

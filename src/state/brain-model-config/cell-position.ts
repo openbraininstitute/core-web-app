@@ -12,7 +12,7 @@ import {
 } from '@/types/nexus';
 
 const refetchTriggerAtom = atom<{}>({});
-export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
+const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 
 export const configAtom = atom<Promise<CellPositionConfigResource | null>>(async (get) => {
   const session = get(sessionAtom);

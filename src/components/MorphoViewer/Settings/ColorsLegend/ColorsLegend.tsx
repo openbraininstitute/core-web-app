@@ -10,7 +10,7 @@ import { Switch } from '@/components/common/Switch';
 
 import styles from './colors-legend.module.css';
 
-export interface ColorsLegendProps {
+interface ColorsLegendProps {
   className?: string;
   painter: MorphologyCanvas;
 }

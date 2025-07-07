@@ -21,7 +21,7 @@ import { classNames } from '@/util/utils';
 import styles from './LandingPage.module.css';
 import './global.css';
 
-export interface LandingPageProps {
+interface LandingPageProps {
   className?: string;
   section: EnumSection;
   errorCode?: string;

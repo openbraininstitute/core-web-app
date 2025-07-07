@@ -24,13 +24,13 @@ import { tryCatch } from '@/api/utils';
 import { getElectricalCellRecordings } from '@/api/entitycore/queries';
 import { IElectricalCellRecording } from '@/api/entitycore/types';
 
-export type ModelResourceInfo = {
+type ModelResourceInfo = {
   eModelId: string;
   projectId: string;
   virtualLabId: string;
 };
 
-export const eModelFamily = atomFamily<ModelResourceInfo, Atom<Promise<EModelResource | null>>>(
+const eModelFamily = atomFamily<ModelResourceInfo, Atom<Promise<EModelResource | null>>>(
   (resourceInfo) =>
     atom(async (get) => {
       const { eModelId, projectId, virtualLabId } = resourceInfo;
@@ -49,10 +49,7 @@ export const eModelFamily = atomFamily<ModelResourceInfo, Atom<Promise<EModelRes
   isEqual
 );
 
-export const eModelWorkflowFamily = atomFamily<
-  ModelResourceInfo,
-  Atom<Promise<EModelWorkflow | null>>
->(
+const eModelWorkflowFamily = atomFamily<ModelResourceInfo, Atom<Promise<EModelWorkflow | null>>>(
   (resourceInfo) =>
     atom(async (get) => {
       const eModel = await get(eModelFamily(resourceInfo));
@@ -73,7 +70,7 @@ export const eModelWorkflowFamily = atomFamily<
   isEqual
 );
 
-export const eModelConfigurationFamily = atomFamily<
+const eModelConfigurationFamily = atomFamily<
   ModelResourceInfo,
   Atom<Promise<EModelConfiguration | null>>
 >(
@@ -103,7 +100,7 @@ export const eModelConfigurationFamily = atomFamily<
   isEqual
 );
 
-export const eModelExemplarMorphologyFamily = atomFamily<
+const eModelExemplarMorphologyFamily = atomFamily<
   Omit<ModelResourceInfo, 'eModelId'> & { eModelId?: string },
   Atom<Promise<ExemplarMorphologyDataType | null>>
 >(
@@ -185,7 +182,7 @@ export const experimentalTracesAtomFamily = atomFamily<
   (a, b) => a.key === b.key
 );
 
-export const eModelConfigurationDistributionFamily = atomFamily<
+const eModelConfigurationDistributionFamily = atomFamily<
   ModelResourceInfo,
   Atom<Promise<EModelConfigurationPayload | null>>
 >(
@@ -213,7 +210,7 @@ export const eModelConfigurationDistributionFamily = atomFamily<
 // This whole MechanismForUI stuff is kind of garbage.
 // Should be thrown-out.
 // Same for convertDeltaMorphologyForUI and convertESTraceForUI.
-export const eModelMechanismsAtomFamily = atomFamily<
+const eModelMechanismsAtomFamily = atomFamily<
   ModelResourceInfo,
   Atom<Promise<MechanismForUI | null>>
 >(

@@ -25,7 +25,7 @@ const DEFAULT_EDITOR_STATE =
 const DEFAULT_EDITOR_CONFIG_NAME = 'lexical-editor--state.json';
 const DEFAULT_EDITOR_CONFIG_FORMAT = 'application/json';
 
-export async function getJson(markdown: string) {
+async function getJson(markdown: string) {
   const json = await new Promise<string>((resolve, reject) => {
     try {
       const editor = createHeadlessEditor({

@@ -3,7 +3,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './card.module.css';
 
-export type SingleSectionCardProps = {
+type SingleSectionCardProps = {
   index: number;
   title: string;
   description: string;

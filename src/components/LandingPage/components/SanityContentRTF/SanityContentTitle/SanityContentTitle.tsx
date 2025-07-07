@@ -6,7 +6,7 @@ import { makeSpecialWidget } from './special-widget';
 
 import styles from './SanityContentTitle.module.css';
 
-export interface SanityContentTitleProps {
+interface SanityContentTitleProps {
   value: ContentForRichTextTitle;
 }
 

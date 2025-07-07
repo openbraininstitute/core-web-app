@@ -35,7 +35,7 @@ export interface ICircuitSimulationExecutionFilter extends IActivityFilter {
   // TODO: add supported filters
 }
 
-export const activityCreateSchema = z.object({
+const activityCreateSchema = z.object({
   start_time: z.string().datetime(),
   end_time: z.string().datetime(),
   used_ids: z.array(z.string().uuid()),
@@ -43,7 +43,7 @@ export const activityCreateSchema = z.object({
   authorized_public: z.boolean(),
 });
 
-export const simulationExecutionCreateSchema = z
+const simulationExecutionCreateSchema = z
   .object({
     status: z.nativeEnum(CircuitSimulationExecutionStatus),
   })

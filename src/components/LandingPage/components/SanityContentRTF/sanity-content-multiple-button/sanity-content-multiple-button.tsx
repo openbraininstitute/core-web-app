@@ -7,7 +7,7 @@ import { styleBlockMedium } from '@/components/LandingPage/styles';
 
 import styles from './sanity-content-multiple-button.module.css';
 
-export interface SanityContentMultipleButtonProps {
+interface SanityContentMultipleButtonProps {
   className?: string;
   value: ContentForRichTextMultipleButton;
 }

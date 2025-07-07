@@ -8,7 +8,7 @@ import { useAITools } from '@/services/ai-agent/tools/tools';
 
 import styles from './footer.module.css';
 
-export interface FooterProps {
+interface FooterProps {
   status: 'ready' | 'error' | 'streaming' | 'submitted';
   threadId: string | undefined;
   onPrompt(prompt: string): void;

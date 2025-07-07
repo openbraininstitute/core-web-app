@@ -116,7 +116,7 @@ export function convertESMorphologyForUI(
   };
 }
 
-export function convertESTraceForUI(trace: ExperimentalTrace): ExperimentalTracesDataType {
+function convertESTraceForUI(trace: ExperimentalTrace): ExperimentalTracesDataType {
   const commonProps = {
     '@id': trace['@id'],
     '@type': trace['@type'],

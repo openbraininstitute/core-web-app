@@ -37,7 +37,7 @@ export enum ValidationStatus {
   Error = 'error',
 }
 
-export interface IMEModelBase {
+interface IMEModelBase {
   name: string;
   description: string;
   validation_status: ValidationStatus;

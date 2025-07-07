@@ -10,7 +10,7 @@ export function AtomProvider({ children }: PropsWithChildren) {
   return <AtomContext.Provider value={atoms}>{children}</AtomContext.Provider>;
 }
 
-export function useInitAtom<T>(key: string, value: T | null = null) {
+function useInitAtom<T>(key: string, value: T | null = null) {
   const atoms = useContext(AtomContext);
   const theAtom = atoms.get(key) ?? atom(value);
   atoms.set(key, theAtom);
@@ -18,6 +18,6 @@ export function useInitAtom<T>(key: string, value: T | null = null) {
   return theAtom as WritableAtom<T | null, [T | null], void>;
 }
 
-export function useAtom<T>(key: string) {
+function useAtom<T>(key: string) {
   return useAtomJ(useInitAtom<T>(key));
 }

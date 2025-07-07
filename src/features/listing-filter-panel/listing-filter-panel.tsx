@@ -44,7 +44,7 @@ import { fieldTitleSentenceCase } from '@/util/utils';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 import type { WorkspaceContext } from '@/types/common';
 
-export type Props = {
+type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: DataType;

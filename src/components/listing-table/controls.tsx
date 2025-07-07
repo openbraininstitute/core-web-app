@@ -6,7 +6,7 @@ import { RenderButtonProps } from '@/components/explore-section/ExploreSectionLi
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
 import { useScrollNav } from '@/components/explore-section/ExploreSectionListingView/hooks';
 
-export function DefaultRenderButton<T>({
+function DefaultRenderButton<T>({
   children,
   clearSelectedRows,
   selectedRows,

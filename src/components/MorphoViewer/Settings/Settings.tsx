@@ -11,7 +11,7 @@ import { SettingsIcon } from '@/components/icons';
 
 import styles from './settings.module.css';
 
-export interface SettingsProps {
+interface SettingsProps {
   className?: string;
   painter: MorphologyCanvas;
 }

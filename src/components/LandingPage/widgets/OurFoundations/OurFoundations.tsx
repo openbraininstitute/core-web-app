@@ -12,7 +12,7 @@ import { Text } from '@/components/LandingPage/components/Text';
 
 import styles from './OurFoundations.module.css';
 
-export interface WidgetOurFoundationsProps {
+interface WidgetOurFoundationsProps {
   className?: string;
 }
 

@@ -44,5 +44,5 @@ export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = O
   'api' | 'viewDefinition'
 >;
 
-export type TEntityCoreConfigurationItem =
+type TEntityCoreConfigurationItem =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration];

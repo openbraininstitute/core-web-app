@@ -34,7 +34,7 @@ export async function patchVirtualLab(
   return assertApiResponse(res);
 }
 
-export async function deleteVirtualLab(id: string): Promise<
+async function deleteVirtualLab(id: string): Promise<
   VlmResponse<{
     virtual_lab: VirtualLab;
   }>
@@ -72,7 +72,7 @@ export async function getVirtualLabAccountBalance({
   return response.json();
 }
 
-export async function getVirtualLabJobReports({
+async function getVirtualLabJobReports({
   virtualLabId,
   page = 0,
   pageSize = 10,

@@ -12,7 +12,7 @@ import usePathname from '@/hooks/pathname';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { classNames } from '@/util/utils';
 
-export const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
+const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
   {
     name: 'Interactive exploration',
     description:

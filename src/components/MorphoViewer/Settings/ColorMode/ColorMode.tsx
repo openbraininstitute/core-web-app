@@ -7,7 +7,7 @@ import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 
 import styles from './color-mode.module.css';
 
-export interface ColorModeProps {
+interface ColorModeProps {
   className?: string;
   painter: MorphologyCanvas;
 }

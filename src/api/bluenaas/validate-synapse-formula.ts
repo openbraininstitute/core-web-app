@@ -1,10 +1,7 @@
 import { getSession } from '@/authFetch';
 import { blueNaasUrl } from '@/config';
 
-export default async function validateSynapseGenerationFormula(
-  formula: string,
-  token: string
-): Promise<boolean> {
+async function validateSynapseGenerationFormula(formula: string, token: string): Promise<boolean> {
   const response = await fetch(`${blueNaasUrl}/validation/synapse-formula`, {
     method: 'post',
     headers: {

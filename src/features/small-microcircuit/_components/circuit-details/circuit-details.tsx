@@ -5,7 +5,7 @@ import Tooltip from '../tooltip';
 
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
-export interface CircuitDetailsProps {
+interface CircuitDetailsProps {
   className?: string;
   circuit: ICircuit;
 }

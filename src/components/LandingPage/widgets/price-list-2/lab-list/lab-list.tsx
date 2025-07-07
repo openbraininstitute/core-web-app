@@ -5,7 +5,7 @@ import SectionTitle from '../section-title';
 
 import styles from './lab-list.module.css';
 
-export interface LabListProps {
+interface LabListProps {
   value: ContentForPriceList2LabItem[];
   plans: Array<{ title: string; id: string }>;
 }

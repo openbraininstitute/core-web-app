@@ -206,7 +206,7 @@ export function FormatUnderlined(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function AddLink(props: SVGProps<SVGSVGElement>) {
+function AddLink(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path
@@ -239,7 +239,7 @@ export function TextDecrease(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function LightArticleOutline(props: SVGProps<SVGSVGElement>) {
+function LightArticleOutline(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path
@@ -250,7 +250,7 @@ export function LightArticleOutline(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function FontFamilyTitle(props: SVGProps<SVGSVGElement>) {
+function FontFamilyTitle(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path fill="currentColor" d="M11.385 19V6.25H6.019V5H18v1.25h-5.365V19z" />
@@ -376,7 +376,7 @@ export function FormatStrikethrough(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function StackAddOutline(props: SVGProps<SVGSVGElement>) {
+function StackAddOutline(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path
@@ -387,7 +387,7 @@ export function StackAddOutline(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function PageBreakOutline(props: SVGProps<SVGSVGElement>) {
+function PageBreakOutline(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path
@@ -398,7 +398,7 @@ export function PageBreakOutline(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function HorizontalRule(props: SVGProps<SVGSVGElement>) {
+function HorizontalRule(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path
@@ -409,7 +409,7 @@ export function HorizontalRule(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function Column2Outline(props: SVGProps<SVGSVGElement>) {
+function Column2Outline(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path
@@ -517,7 +517,7 @@ export function Delete(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function StorageSolid(props: SVGProps<SVGSVGElement>) {
+function StorageSolid(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 36 36" {...props}>
       <path
@@ -530,7 +530,7 @@ export function StorageSolid(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function CreditsSolid(props: SVGProps<SVGSVGElement>) {
+function CreditsSolid(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <g fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -544,7 +544,7 @@ export function CreditsSolid(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function StorageOutline(props: SVGProps<SVGSVGElement>) {
+function StorageOutline(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 36 36" {...props}>
       <path
@@ -569,7 +569,7 @@ export function StorageOutline(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function LightFile(props: SVGProps<SVGSVGElement>) {
+function LightFile(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       <path

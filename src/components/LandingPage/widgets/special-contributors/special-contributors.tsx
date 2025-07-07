@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './special-contributors.module.css';
 
-export interface SpecialContributorsProps {
+interface SpecialContributorsProps {
   className?: string;
 }
 

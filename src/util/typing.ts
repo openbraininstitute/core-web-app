@@ -9,7 +9,7 @@
  * ```
  * Then, `KeysOfType<Foo, string>` is equivalent to `"a" | "c"`.
  */
-export type KeysOfType<T, V> = keyof {
+type KeysOfType<T, V> = keyof {
   [P in keyof T as T[P] extends V ? P : never]: any;
 };
 
@@ -53,7 +53,7 @@ type CamelCase<S extends string> = S extends `${infer T}_${infer U}`
  * CamelCased is equivalent to:
  * { firstName: string; lastName: number; }
  */
-export type KeysToCamelCase<T> = {
+type KeysToCamelCase<T> = {
   [K in keyof T as CamelCase<string & K>]: T[K] extends Record<string, any>
     ? KeysToCamelCase<T[K]>
     : T[K];

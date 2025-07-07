@@ -24,13 +24,13 @@ export interface SortState {
   field: string;
   order: 'asc' | 'desc';
 }
-export interface EntityCoreSortState {
+interface EntityCoreSortState {
   property: string;
   value: string;
   direction: '+' | '-';
 }
 
-export type ListViewAtomValues = {
+type ListViewAtomValues = {
   activeColumns: string[];
   aggregations: Loadable<FlattenedExploreESResponse<ExploreResource>['aggs']>;
   data: Loadable<ExploreResource[] | undefined>;
@@ -41,7 +41,7 @@ export type ListViewAtomValues = {
   total: Loadable<FlattenedExploreESResponse<ExploreResource>['total'] | undefined>;
 };
 
-export type ListViewAtoms<T> = {
+type ListViewAtoms<T> = {
   [P in keyof T]: [T[P], Dispatch<SetStateAction<T[P]>>];
 };
 
@@ -49,7 +49,7 @@ export type FilterValues = {
   [field: string]: string | number | string[] | GteLteValue | null;
 };
 
-export type CheckListProps = {
+type CheckListProps = {
   options: {
     checked: boolean;
     count: number | null;
@@ -64,13 +64,13 @@ export type CheckListProps = {
   defaultRenderLength: number; // Added defaultRenderLength as a prop
 };
 
-export type SubSectionCardItem = {
+type SubSectionCardItem = {
   name: string;
   type: DataType;
   url: string;
 };
 
-export type SingleCard = {
+type SingleCard = {
   prefixIcon?: string;
   name: string;
   description: string;

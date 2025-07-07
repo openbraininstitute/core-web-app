@@ -8,7 +8,7 @@ import { styleBlockMedium } from '@/components/LandingPage/styles';
 
 import styles from './sanity-content-video.module.css';
 
-export interface SanityContentVideoProps {
+interface SanityContentVideoProps {
   className?: string;
   value: ContentForRichTextVideo;
 }

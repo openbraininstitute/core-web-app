@@ -44,4 +44,4 @@ export default function useBuildSingleNeuronSynaptomeSessionState(props: Props) 
   };
 }
 
-export function useSession() {}
+function useSession() {}

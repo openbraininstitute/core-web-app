@@ -11,7 +11,7 @@ import Slugify from '@/util/slugify';
 
 type FilterLetter = string | null;
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: 'Open Brain Platform Glossary',
   description: 'Explore the glossary definitions in our documentation.',
 };

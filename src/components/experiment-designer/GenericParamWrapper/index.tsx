@@ -12,7 +12,7 @@ import { getSubGroupFocusedAtom } from '@/components/experiment-designer/utils';
 
 export const defaultPadding = 'py-[12px] px-[14px]'; // to match the collapse padding
 export const defaultColumnStyle = 'w-1/2 align-baseline text-primary-7';
-export const headerStyle = 'w-1/2 p-[16px] font-light text-left';
+const headerStyle = 'w-1/2 p-[16px] font-light text-left';
 export const subheaderStyle = `${defaultPadding} uppercase text-gray-400`;
 export const disabledParamStyle = 'opacity-30 cursor-not-allowed pointer-events-none';
 const overflowStyle = 'max-h-[92vh] overflow-y-auto';

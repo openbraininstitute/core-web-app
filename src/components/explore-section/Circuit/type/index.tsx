@@ -11,14 +11,14 @@ export type PaperLiteratureProps = {
   category: string;
 };
 
-export type SingleFileProps = {
+type SingleFileProps = {
   type: string;
   url: string;
   key: string;
   isAvailable: boolean;
 };
 
-export type GraphDataImageProps = {
+type GraphDataImageProps = {
   src: string;
   alt: string;
   width: number;
@@ -78,13 +78,13 @@ export type CircuitSchemaProps = {
   buildCategory: string;
 };
 
-export type FullCircuitData = {
+type FullCircuitData = {
   content: CircuitSchemaProps;
   parent: CircuitSchemaProps | null;
   derivedFrom: CircuitSchemaProps[] | null;
 };
 
-export type CircuitCellValue = {
+type CircuitCellValue = {
   name: string;
   description: 'string';
   brainRegion: string;
@@ -93,7 +93,7 @@ export type CircuitCellValue = {
   hasSubcircuits: boolean;
 };
 
-export type CircuitColumn = {
+type CircuitColumn = {
   title: string;
   key?: string;
   render?: (value: CircuitSchemaProps) => ReactNode;
@@ -101,7 +101,7 @@ export type CircuitColumn = {
   fixed?: 'left';
 };
 
-export type InteractiveImageProps = {
+type InteractiveImageProps = {
   circuit: string;
   src: string;
   alt: string;
@@ -109,25 +109,25 @@ export type InteractiveImageProps = {
   height: number;
 };
 
-export type NumericFilterProperty =
+type NumericFilterProperty =
   | 'numberOfNeurons'
   | 'numberOfConnections'
   | 'numberOfSynapses'
   | 'scaleType';
 
-export type NumericFilterType =
+type NumericFilterType =
   | 'greaterThan'
   | 'lessThan'
   | 'between'
   | 'smallMicrocircuit'
   | 'microcircuit';
 
-export type FilterOptionsProps = {
+type FilterOptionsProps = {
   searchQuery?: string;
   numericFilter?: NumericFilterOptions | null;
 };
 
-export type NumericFilterOptions = {
+type NumericFilterOptions = {
   property:
     | 'numberOfNeurons'
     | 'numberOfConnections'
@@ -163,7 +163,7 @@ export interface FilteredCircuit extends CircuitSchemaProps {
   isNonMatchingParent?: boolean;
 }
 
-export type CollaboratingInstitution = {
+type CollaboratingInstitution = {
   name: string;
   url: string;
   location: string;
@@ -174,7 +174,7 @@ export type ContributorsProps = {
   lastName: string;
 };
 
-export type NumericFilterProps = {
+type NumericFilterProps = {
   filter: NumericFilterOptions | null;
   minValue: number | undefined;
   maxValue: number | undefined;

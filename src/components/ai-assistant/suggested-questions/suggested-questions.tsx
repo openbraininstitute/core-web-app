@@ -9,7 +9,7 @@ import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent'
 
 import styles from './suggested-questions.module.css';
 
-export interface SuggestedQuestionsProps {
+interface SuggestedQuestionsProps {
   className?: string;
   /**
    * Suggestions depend on the current chat's thread.

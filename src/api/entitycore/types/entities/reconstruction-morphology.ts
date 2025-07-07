@@ -27,12 +27,12 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
 
-export type ReconstructionMorphologyExpandFields =
+type ReconstructionMorphologyExpandFields =
   | 'brain_location'
   | 'species'
   | 'strain'
   | 'brain_region';
-export type ReconstructionMorphologyExpand = ReconstructionMorphologyExpandFields[];
+type ReconstructionMorphologyExpand = ReconstructionMorphologyExpandFields[];
 
 export type ReconstructionMorphologyFilter = Partial<
   IDFilter &
@@ -47,7 +47,7 @@ export type ReconstructionMorphologyFilter = Partial<
     SharedFilter
 >;
 
-export interface IReconstructionMorphologyBase extends EntityCoreIdentifiable {
+interface IReconstructionMorphologyBase extends EntityCoreIdentifiable {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;

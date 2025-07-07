@@ -13,7 +13,7 @@ import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 
 import styles from './message-item.module.css';
 
-export interface MessageItemProps {
+interface MessageItemProps {
   className?: string;
   value: UIMessage;
   hideTools: boolean;

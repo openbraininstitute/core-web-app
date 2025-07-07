@@ -9,7 +9,7 @@ import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
 import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 
-export async function getVirtualLabProjects(
+async function getVirtualLabProjects(
   id: string,
   size?: number
 ): Promise<VlmResponse<VirtualLabAPIListData<Project>>> {

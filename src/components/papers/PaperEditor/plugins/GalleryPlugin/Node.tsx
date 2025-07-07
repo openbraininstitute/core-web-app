@@ -5,10 +5,10 @@ import { DecoratorNode, EditorConfig, NodeKey } from 'lexical';
 import { $createGalleryNode, SerializedGalleryNode } from '../ImagePlugin/utils';
 // eslint-disable-next-line import/no-cycle
 const Gallery = lazy(() => import('./Gallery'));
-export interface UpdateGalleryImages {
+interface UpdateGalleryImages {
   contentUrl?: string;
 }
-export interface UpdateGalleryDetails {
+interface UpdateGalleryDetails {
   title?: string;
   description?: string;
 }

@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './tooltip.module.css';
 
-export interface TooltipProps {
+interface TooltipProps {
   className?: string;
   value?: React.ReactNode;
   children: React.ReactNode;

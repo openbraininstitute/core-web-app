@@ -63,7 +63,7 @@ export function HistoryEmpty() {
   );
 }
 
-export function ErrorSubscriptionStatus() {
+function ErrorSubscriptionStatus() {
   return (
     <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
@@ -84,7 +84,7 @@ export function ErrorSubscriptionStatus() {
   );
 }
 
-export function NoSubscriptionFound() {
+function NoSubscriptionFound() {
   return (
     <div className="w-full">
       <div className="mb-3 transform rounded-xs border border-white/50 bg-transparent p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
@@ -119,7 +119,7 @@ export function NoSubscriptionFound() {
   );
 }
 
-export function FreeSubscriptionStatus() {
+function FreeSubscriptionStatus() {
   return (
     <div
       data-testid="free-subscription-status"
@@ -142,7 +142,7 @@ export function FreeSubscriptionStatus() {
   );
 }
 
-export function PaidSubscriptionStatus({ data }: { data: UserActiveSubscriptionResponse }) {
+function PaidSubscriptionStatus({ data }: { data: UserActiveSubscriptionResponse }) {
   return (
     <div
       data-testid="paid-subscription-status"

@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './Email.module.css';
 
-export interface WidgetEmailProps {
+interface WidgetEmailProps {
   className?: string;
   type: EMailTypes;
 }

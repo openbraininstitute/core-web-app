@@ -8,7 +8,7 @@ import { classNames } from '@/util/utils';
 import { PauseIcon } from '@/components/icons';
 import styles from './Video.module.css';
 
-export interface ProgressiveVideoProps {
+interface ProgressiveVideoProps {
   className?: string;
   src: string;
   autosize?: boolean;

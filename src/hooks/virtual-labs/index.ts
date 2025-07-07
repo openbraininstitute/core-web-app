@@ -27,7 +27,7 @@ export function useExploreTableOnClickHandler<T extends EntityCoreIdentifiable>(
  * @param {string} params.virtualLabId - The ID of the virtual lab to check.
  * @returns {boolean} - `true` if the current user is an admin of the virtual lab, `false` otherwise.
  */
-export function useIsVirtualLabAdmin({ virtualLabId }: { virtualLabId: string }) {
+function useIsVirtualLabAdmin({ virtualLabId }: { virtualLabId: string }) {
   const session = useAtomValue(sessionAtom);
   const virtualLabUsers = useUnwrappedValue(virtualLabMembersAtomFamily(virtualLabId));
 
@@ -54,7 +54,7 @@ export function useIsVirtualLabAdmin({ virtualLabId }: { virtualLabId: string })
  * @param {string} params.projectId - The ID of the project to check.
  * @returns {boolean} - `true` if the current user is an admin of the virtual lab project, `false` otherwise.
  */
-export function useIsProjectAdmin({
+function useIsProjectAdmin({
   virtualLabId,
   projectId,
 }: {

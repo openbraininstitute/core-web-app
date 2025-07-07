@@ -14,7 +14,6 @@ import DuplicateConfigBtn from './DuplicateConfigBtn';
 import ViewResultsBtn from './ViewResultsBtn';
 
 export {
-  StringParameter,
   ConstantParameter,
   ExperimentDesignerTopTabs,
   RangeParameter,

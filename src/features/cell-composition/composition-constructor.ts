@@ -178,7 +178,7 @@ function buildTreeNode(
  * @param hierarchy - brain region hierarchy information.
  * @returns an object containing nodes, tree structure, links, total volume, and total composition.
  */
-export function resolveBrainRegionCellCompositionFn({
+function resolveBrainRegionCellCompositionFn({
   brainRegionId,
   cellCompositionRoot,
   atlasRegions,

@@ -14,7 +14,7 @@ import { isNumber } from '@/util/type-guards';
 
 import styles from './ai-assistant.module.css';
 
-export interface AiAssistantProps {
+interface AiAssistantProps {
   className?: string;
   section: 'explore' | 'build' | 'simulate' | 'bookmark' | 'activity';
 }

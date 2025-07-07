@@ -5,7 +5,7 @@ import { isString, isType } from '@/util/type-guards';
 
 import styles from './error.module.css';
 
-export interface ErrorProps {
+interface ErrorProps {
   className?: string;
   value: unknown;
 }

@@ -52,7 +52,7 @@ export type SetupIntentResponse = {
   };
 };
 
-export async function generateSetupIntent(id: string, token: string): Promise<SetupIntentResponse> {
+async function generateSetupIntent(id: string, token: string): Promise<SetupIntentResponse> {
   const response = await fetch(`${virtualLabApi.url}/billing/setup-intent`, {
     method: 'POST',
     headers: createApiHeaders(token),
@@ -78,7 +78,7 @@ export async function getVirtualLabPaymentMethods(
   return response.json();
 }
 
-export async function getVirtualLabBalanceDetails(
+async function getVirtualLabBalanceDetails(
   id: string,
   token: string
 ): Promise<VirtualLabBalanceResponse> {
@@ -92,7 +92,7 @@ export async function getVirtualLabBalanceDetails(
   return response.json();
 }
 
-export async function addVirtualLabBudget(
+async function addVirtualLabBudget(
   id: string,
   payload: NewBudgetTopUpPayload,
   token: string
@@ -114,7 +114,7 @@ export async function addVirtualLabBudget(
   return response.json();
 }
 
-export async function addNewPaymentMethodToVirtualLab(
+async function addNewPaymentMethodToVirtualLab(
   id: string,
   token: string,
   payload: NewPaymentMethodPayload
@@ -134,7 +134,7 @@ export async function addNewPaymentMethodToVirtualLab(
   return response.json();
 }
 
-export async function updateDefaultPaymentMethodToVirtualLab(
+async function updateDefaultPaymentMethodToVirtualLab(
   id: string,
   token: string,
   paymentMethodId: string
@@ -157,7 +157,7 @@ export async function updateDefaultPaymentMethodToVirtualLab(
   return response.json();
 }
 
-export async function deletePaymentMethodToVirtualLab(
+async function deletePaymentMethodToVirtualLab(
   id: string,
   token: string,
   paymentMethodId: string

@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './spinner.module.css';
 
-export interface SpinnerProps {
+interface SpinnerProps {
   className?: string;
   count?: number;
   period?: number;

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import AllTypesBlock from './all-types-block';
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: 'Glossary cell types definitions',
   description: 'Explore the glossary cell types definitions in our documentation.',
 };

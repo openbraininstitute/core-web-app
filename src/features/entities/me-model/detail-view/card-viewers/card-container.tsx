@@ -18,7 +18,7 @@ type ModelDetailsProps = {
   details: Detail[];
 };
 
-export function ModelDetails({ details }: ModelDetailsProps) {
+function ModelDetails({ details }: ModelDetailsProps) {
   return (
     <div className="text-primary-8 mt-4 grid grid-cols-3 gap-4">
       {details.map((detail) => (

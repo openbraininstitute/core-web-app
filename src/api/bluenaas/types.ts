@@ -1,6 +1,6 @@
-export type Coordinates3D = [number, number, number];
+type Coordinates3D = [number, number, number];
 
-export interface SynapsePosition {
+interface SynapsePosition {
   segment_id: number;
   coordinates: Coordinates3D;
   position: number;
@@ -11,6 +11,6 @@ export interface SectionSynapses {
   synapses: Array<SynapsePosition>;
 }
 
-export interface SynapsePlacementResponse {
+interface SynapsePlacementResponse {
   synapses: Array<SectionSynapses>;
 }

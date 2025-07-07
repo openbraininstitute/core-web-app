@@ -10,7 +10,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './download-item.module.css';
 
-export function DownloadChildrenItem({
+function DownloadChildrenItem({
   childrenItem,
 }: {
   childrenItem: SingleSelectedDownloadableItemProps;

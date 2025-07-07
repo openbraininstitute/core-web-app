@@ -8,7 +8,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './FooterPanel.module.css';
 
-export interface FooterPanelProps {
+interface FooterPanelProps {
   className?: string;
 }
 

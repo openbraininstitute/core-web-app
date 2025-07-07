@@ -1,4 +1,4 @@
-export function ArrowLarge({ iconColor, className }: { iconColor: string; className?: string }) {
+function ArrowLarge({ iconColor, className }: { iconColor: string; className?: string }) {
   return (
     <svg
       width="22"
@@ -18,7 +18,7 @@ export function ArrowLarge({ iconColor, className }: { iconColor: string; classN
   );
 }
 
-export function ArrowMedium({ iconColor, className }: { iconColor: string; className?: string }) {
+function ArrowMedium({ iconColor, className }: { iconColor: string; className?: string }) {
   return (
     <svg
       width="82"

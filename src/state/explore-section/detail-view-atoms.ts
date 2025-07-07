@@ -105,7 +105,7 @@ export const licenseDataFamily = atomFamily<ResourceInfo, Atom<Promise<string | 
   isEqual
 );
 
-export const latestRevisionFamily = atomFamily(
+const latestRevisionFamily = atomFamily(
   (resourceInfo?: ResourceInfo) =>
     atom<Promise<number | null>>(async (get) => {
       const { session, info } = get(sessionAndInfoFamily(resourceInfo));

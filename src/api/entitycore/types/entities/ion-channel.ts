@@ -47,7 +47,7 @@ export interface IonChannelModel
   contributions: Array<IContributor>;
 }
 
-export interface IonChannelModelCreate extends IonChannelModelBase, EntityAuthorization {
+interface IonChannelModelCreate extends IonChannelModelBase, EntityAuthorization {
   species_id: string;
   strain_id?: string | null;
   brain_region_id: string;

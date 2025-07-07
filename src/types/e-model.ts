@@ -77,7 +77,7 @@ type Generation = {
 
 /* --------------------------------- EModel --------------------------------- */
 
-export type EModelType = 'EModel';
+type EModelType = 'EModel';
 
 export interface EModel extends EModelCommonProps {
   '@type': ['Entity', EModelType];
@@ -119,7 +119,7 @@ interface EModelObjectOfStudy {
 
 /* ----------------------------- EModelWorkflow ----------------------------- */
 
-export type EModelWorkflowType = 'EModelWorkflow';
+type EModelWorkflowType = 'EModelWorkflow';
 
 export interface EModelWorkflow extends EModelCommonProps {
   '@type': ['Entity', EModelWorkflowType];
@@ -155,11 +155,11 @@ export interface EModelWorkflow extends EModelCommonProps {
   state: string;
 }
 
-export interface EModelWorkflowResource extends ResourceMetadata, EModelWorkflow {}
+interface EModelWorkflowResource extends ResourceMetadata, EModelWorkflow {}
 
 /* --------------------------- EModelConfiguration -------------------------- */
 
-export type EModelConfigurationType = 'EModelConfiguration';
+type EModelConfigurationType = 'EModelConfiguration';
 
 export interface EModelConfiguration extends EModelCommonProps {
   '@type': ['Entity', EModelConfigurationType];
@@ -171,16 +171,16 @@ export interface EModelConfiguration extends EModelCommonProps {
   distribution: Distribution;
 }
 
-export interface EModelConfigurationResource extends ResourceMetadata, EModelConfiguration {}
+interface EModelConfigurationResource extends ResourceMetadata, EModelConfiguration {}
 
-export interface EModelConfigurationMechanism {
+interface EModelConfigurationMechanism {
   name: string;
   stochastic?: boolean;
   location?: MechanismLocation;
   version?: null;
 }
 
-export interface EModelConfigurationDistribution {
+interface EModelConfigurationDistribution {
   name: string;
   function: string | null;
   soma_ref_location: number;
@@ -195,7 +195,7 @@ export interface EModelConfigurationParameter {
   distribution?: string;
 }
 
-export interface EModelConfigurationMorphology {
+interface EModelConfigurationMorphology {
   name: string;
   format: 'asc' | 'swc';
   path: string;
@@ -214,7 +214,7 @@ export interface EModelConfigurationPayload {
 
 /* ------------------------------ >> Mechanism ------------------------------ */
 
-export type MechanismLocation = (typeof mechanismLocations)[number];
+type MechanismLocation = (typeof mechanismLocations)[number];
 
 export type MechanismForUI = {
   processed: Record<MechanismLocation, EModelConfigurationMechanism[]>;
@@ -223,22 +223,22 @@ export type MechanismForUI = {
 
 /* ------------------------- EModelPipelineSettings ------------------------- */
 
-export type EModelPipelineSettingsType = 'EModelPipelineSettings';
+type EModelPipelineSettingsType = 'EModelPipelineSettings';
 
-export interface EModelPipelineSettings extends EModelCommonProps {
+interface EModelPipelineSettings extends EModelCommonProps {
   '@type': ['Entity', EModelPipelineSettingsType];
   distribution: Distribution;
 }
 
-export interface EModelPipelineSettingsResource extends ResourceMetadata, EModelPipelineSettings {}
+interface EModelPipelineSettingsResource extends ResourceMetadata, EModelPipelineSettings {}
 
-export interface EModelPipelineSettingsPayload extends Record<string, number> {
+interface EModelPipelineSettingsPayload extends Record<string, number> {
   max_ngen: number;
 }
 
 /* --------------------- ExtractionTargetsConfiguration --------------------- */
 
-export type ExtractionTargetsConfigurationType = 'ExtractionTargetsConfiguration';
+type ExtractionTargetsConfigurationType = 'ExtractionTargetsConfiguration';
 
 export interface ExtractionTargetsConfiguration extends EModelCommonProps {
   '@type': ['Entity', ExtractionTargetsConfigurationType];
@@ -249,11 +249,11 @@ export interface ExtractionTargetsConfiguration extends EModelCommonProps {
   distribution: Distribution;
 }
 
-export interface ExtractionTargetsConfigurationResource
+interface ExtractionTargetsConfigurationResource
   extends ResourceMetadata,
     ExtractionTargetsConfiguration {}
 
-export interface EModelFeature {
+interface EModelFeature {
   efeature: AllFeatureKeys;
   protocol: ECode;
   amplitude: number;
@@ -266,7 +266,7 @@ export interface EModelFeature {
   };
 }
 
-export interface ExtractionTargetsConfigurationPayload {
+interface ExtractionTargetsConfigurationPayload {
   // TODO: improve this type in the future
   files: any[];
   targets: EModelFeature[];
@@ -299,7 +299,7 @@ export type FeaturePresetName = (typeof presetNames)[number];
 
 /* ---------------------------------- Trace --------------------------------- */
 
-export type TraceType = 'Trace';
+type TraceType = 'Trace';
 
 export interface Trace extends Entity {
   '@type': ['Entity', TraceType, 'Dataset'];
@@ -366,11 +366,11 @@ export interface Trace extends Entity {
   };
 }
 
-export interface TraceResource extends ResourceMetadata, Trace {}
+interface TraceResource extends ResourceMetadata, Trace {}
 
 /* ---------------------------- NeuronMorphology ---------------------------- */
 
-export type NeuronMorphologyType = 'NeuronMorphology';
+type NeuronMorphologyType = 'NeuronMorphology';
 
 export interface NeuronMorphology extends Entity {
   '@type': [
@@ -396,13 +396,13 @@ export interface NeuronMorphology extends Entity {
   annotation?: Annotation[];
 }
 
-export interface NeuronMorphologyResource extends ResourceMetadata, NeuronMorphology {}
+interface NeuronMorphologyResource extends ResourceMetadata, NeuronMorphology {}
 
 /* ------------------------- SubCellularModelScript ------------------------- */
 
-export type SubCellularModelScriptType = 'SubCellularModelScript';
+type SubCellularModelScriptType = 'SubCellularModelScript';
 
-export interface SubCellularModelScript extends Entity {
+interface SubCellularModelScript extends Entity {
   '@type': ['Entity', SubCellularModelScriptType, 'Dataset'];
   contribution: ContributionEntity;
   distribution: Distribution;
@@ -425,11 +425,11 @@ export interface SubCellularModelScript extends Entity {
   suffix: string;
 }
 
-export interface SubCellularModelScriptResource extends ResourceMetadata, SubCellularModelScript {}
+interface SubCellularModelScriptResource extends ResourceMetadata, SubCellularModelScript {}
 
 /* ------------------------------ EModelScript ------------------------------ */
 
-export type EModelScriptType = 'EModelScript';
+type EModelScriptType = 'EModelScript';
 
 export interface EModelScript extends Entity {
   '@type': [EModelScriptType];
@@ -440,7 +440,7 @@ export interface EModelScript extends Entity {
   threshold_current: number;
 }
 
-export interface EModelScriptResource extends ResourceMetadata, EModelScript {}
+interface EModelScriptResource extends ResourceMetadata, EModelScript {}
 
 /* ----------------------------- EModelUIConfig ----------------------------- */
 
@@ -466,7 +466,7 @@ export interface EModelByETypeMappingType {
 
 /* ------------------------ EModelOptimizationConfig ------------------------ */
 
-export type EModelOptimizationConfigType = 'EModelOptimizationConfig';
+type EModelOptimizationConfigType = 'EModelOptimizationConfig';
 
 export interface EModelOptimizationConfig extends Entity {
   '@type': ['Entity', EModelOptimizationConfigType];

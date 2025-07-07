@@ -7,7 +7,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 // export * from '@/entity-configuration/domain/experimental/bouton-density';
 // export * from '@/entity-configuration/domain/experimental/neuron-density';
 
-export const EXPERIMENTAL_DATATYPES = [
+const EXPERIMENTAL_DATATYPES = [
   DataType.ExperimentalBoutonDensity,
   DataType.ExperimentalNeuronDensity,
   DataType.ExperimentalElectroPhysiology,
@@ -15,7 +15,7 @@ export const EXPERIMENTAL_DATATYPES = [
   DataType.ExperimentalNeuronMorphology,
 ] as const;
 
-export enum ExperimentTypeNames {
+enum ExperimentTypeNames {
   MORPHOLOGY = 'morphology',
   ELECTROPHYSIOLOGY = 'electrophysiology',
   NEURON_DENSITY = 'neuron-density',

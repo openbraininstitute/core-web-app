@@ -10,7 +10,7 @@ import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './prompt.module.css';
 
-export interface PromptProps {
+interface PromptProps {
   className?: string;
   value: string;
   tools: AIAssistantTool[];

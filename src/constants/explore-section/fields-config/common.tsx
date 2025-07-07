@@ -40,7 +40,7 @@ import {
   renderTimestamp,
 } from '@/constants/explore-section/fields-config/renderer';
 
-export const previewRender = ({
+const previewRender = ({
   distribution,
   '@type': experimentType,
 }:

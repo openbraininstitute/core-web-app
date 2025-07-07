@@ -4,7 +4,7 @@ import DetailView from '@/features/entities/me-model/detail-view';
 import type { Props as MEmodelProps } from '@/features/entities/me-model/detail-view';
 import type { WorkspaceContext } from '@/types/common';
 
-export type Props = {
+type Props = {
   params: WorkspaceContext & {
     id: string;
   };

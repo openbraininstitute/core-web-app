@@ -37,7 +37,7 @@ export interface ICircuitSimulationFilter
     PaginationFilter,
     OwnershipFilter {}
 
-export const CreateCircuitSimulationSchema = z.object({
+const CreateCircuitSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
   simulation_campaign_id: z.string().uuid(),
@@ -45,4 +45,4 @@ export const CreateCircuitSimulationSchema = z.object({
   scan_parameters: z.any(), // TODO: replace with z.looseObject when migrated to zod 4
 });
 
-export type TCreateCircuitSimulation = z.infer<typeof CreateCircuitSimulationSchema>;
+type TCreateCircuitSimulation = z.infer<typeof CreateCircuitSimulationSchema>;

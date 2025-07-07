@@ -15,7 +15,7 @@ import {
 import VideoNode from './Node';
 import { Position } from '@/components/papers/uploader/types';
 
-export interface VideoPayload {
+interface VideoPayload {
   key?: NodeKey;
   title?: string;
   description?: string;
@@ -30,7 +30,7 @@ export type UpdateVideoPayload = {
 
 export type InsertVideoPayload = Readonly<VideoPayload>;
 
-export type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
+type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
 export type SerializedVideoNode = Spread<
   {
@@ -45,7 +45,7 @@ export type SerializedVideoNode = Spread<
 export const INSERT_VIDEO_COMMAND: LexicalCommand<VideoPayload> =
   createCommand('INSERT_VIDEO_COMMAND');
 
-export function $getVideoInSelection(): VideoNode | null {
+function $getVideoInSelection(): VideoNode | null {
   const selection = $getSelection();
   if (!$isNodeSelection(selection)) {
     return null;

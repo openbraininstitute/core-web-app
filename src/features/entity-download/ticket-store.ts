@@ -14,7 +14,7 @@ type DownloadTicket = {
 type DownloadTicketRequest = PartialBy<DownloadTicket, 'createdAt'>;
 
 // Ticket expiration time in milliseconds (60 seconds)
-export const TICKET_EXPIRATION_MS = 60 * 1000;
+const TICKET_EXPIRATION_MS = 60 * 1000;
 
 // Maximum number of tickets to store
 const MAX_TICKETS = 100;

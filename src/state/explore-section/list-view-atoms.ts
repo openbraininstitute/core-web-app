@@ -139,7 +139,7 @@ export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
   return childAtom;
 }, isListAtomEqual);
 
-export const totalByExperimentAndRegionsAtom = atomFamily(
+const totalByExperimentAndRegionsAtom = atomFamily(
   (scope: DataAtomBinding) =>
     atom<Promise<number | undefined | null>>(async (get) => {
       const sortState = get(sortStateAtom(scope));
@@ -158,7 +158,7 @@ export const totalByExperimentAndRegionsAtom = atomFamily(
   isListAtomEqual
 );
 
-export const queryAtom = atomFamily(
+const queryAtom = atomFamily(
   (scope: DataAtomBinding) =>
     atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
       const searchString = get(searchStringAtom(scope.key));
@@ -215,7 +215,7 @@ export const entityTargetIdentifiersAtom = atomFamily((key: string) => {
   return childAtom;
 });
 
-export const refreshDataAtomFamily = atomFamily((_key: string) =>
+const refreshDataAtomFamily = atomFamily((_key: string) =>
   atom<symbol>(Symbol('refreshDataAtomFamily'))
 );
 export function useRefreshDataAtom(key: string): () => void {

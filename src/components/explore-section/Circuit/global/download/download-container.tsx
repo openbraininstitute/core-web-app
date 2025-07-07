@@ -16,7 +16,7 @@ const [
   EDGE_DESCRIPTION,
 ]: FileTypeHeaderProps[] = fileTypeDescriptions;
 
-export function FullCircuitItem({ content }: { content: DownloadItemProps }) {
+function FullCircuitItem({ content }: { content: DownloadItemProps }) {
   return (
     <div className="bg-primary-8 flex w-full flex-row justify-between rounded-lg p-8 shadow-xl">
       <div className="w-3/4 hyphens-auto">

@@ -10,4 +10,4 @@ const NotebookSchema = z.object({
 
 const NotebooksArraySchema = z.array(NotebookSchema);
 
-export { NotebookSchema, NotebooksArraySchema };
+export { NotebooksArraySchema };

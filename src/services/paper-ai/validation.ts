@@ -8,7 +8,7 @@ const LocationSchema = z.object({
   projectId: z.string().min(1),
 });
 
-export const PaperBaseSchema = z.object({
+const PaperBaseSchema = z.object({
   title: z.string().min(1, 'Please provide a title for your paper.'),
   summary: z.string().min(1, 'Please provide a brief summary of your paper.'),
 });
@@ -53,10 +53,10 @@ export const PaperSchema = PaperBaseSchema.merge(LocationSchema).extend({
   sourceData: SourceDataSchema,
 });
 
-export type PaperSchemaFieldErrors = z.inferFlattenedErrors<typeof PaperSchema>['fieldErrors'];
+type PaperSchemaFieldErrors = z.inferFlattenedErrors<typeof PaperSchema>['fieldErrors'];
 export type PaperSchemaType = z.infer<typeof PaperSchema>;
-export type PaperSchemaKeys = keyof PaperSchemaType;
-export type SourceDataSchemaType = z.infer<typeof SourceDataSchema>;
+type PaperSchemaKeys = keyof PaperSchemaType;
+type SourceDataSchemaType = z.infer<typeof SourceDataSchema>;
 
 export type PaperCreationAction =
   | {

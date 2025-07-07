@@ -9,7 +9,7 @@ import PopupMenu from './PopupMenu';
 import { classNames } from '@/util/utils';
 import styles from './Menu.module.css';
 
-export interface MenuProps {
+interface MenuProps {
   className?: string;
   scrollHasStarted: boolean;
   section?: EnumSection;

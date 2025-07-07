@@ -14,7 +14,7 @@ type Config = {
   name: string;
 };
 
-export type Coords = Record<string, number | number[]>; // TODO: Should it really be number | number[]?
+type Coords = Record<string, number | number[]>; // TODO: Should it really be number | number[]?
 
 type Parameter = {
   attrs: Attrs;

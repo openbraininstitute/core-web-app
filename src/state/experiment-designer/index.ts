@@ -36,7 +36,7 @@ import {
   processStimulationConditionalParams,
 } from '@/util/experiment-designer';
 
-export const expDesignerConfigAtomBase = atom<ExpDesignerConfig>(expDesParamsDefaults);
+const expDesignerConfigAtomBase = atom<ExpDesignerConfig>(expDesParamsDefaults);
 
 /* this is a derivated atom that will modify the params of the config based on
    some user input in the stimulus section */
@@ -70,7 +70,7 @@ export const expDesignerConfigAtom = atom<ExpDesignerConfig, [ExpDesignerConfig?
 
 export const idAtom = atom<string | null>(null);
 
-export const refetchTriggerAtom = atom<{}>({});
+const refetchTriggerAtom = atom<{}>({});
 
 export const triggerRefetchAtom = atom(null, (get, set) => set(refetchTriggerAtom, {}));
 

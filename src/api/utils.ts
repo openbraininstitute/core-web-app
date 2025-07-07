@@ -11,7 +11,7 @@ type Err<E> = {
   error: E;
 };
 
-export type Result<T, E = Error> = Ok<T> | Err<E>;
+type Result<T, E = Error> = Ok<T> | Err<E>;
 
 type DebugArgs = {
   section?: string;

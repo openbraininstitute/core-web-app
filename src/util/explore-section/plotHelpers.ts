@@ -2,7 +2,7 @@ export type VoltageUnit = 'mV' | 'V';
 
 export type CurrentUnit = 'pA' | 'nA' | 'A';
 
-export function ensureVoltageUnit(unit: string, defaultUnit: VoltageUnit): VoltageUnit {
+function ensureVoltageUnit(unit: string, defaultUnit: VoltageUnit): VoltageUnit {
   if (['mV', 'V'].includes(unit)) return unit as VoltageUnit;
   return defaultUnit;
 }

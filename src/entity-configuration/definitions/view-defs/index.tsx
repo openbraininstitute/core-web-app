@@ -32,10 +32,10 @@ export function getViewDefinitionsByLegacyType(types: Array<DataType>) {
   return pick(ViewsDefinitionRegistry, types);
 }
 
-export function getViewDefinitionByName(name: TExperimentTypeNames) {
+function getViewDefinitionByName(name: TExperimentTypeNames) {
   return find(ViewsDefinitionRegistry, { name });
 }
 
-export function getViewDefinitionDataTypeByName(name: TExperimentTypeNames): DataType | undefined {
+function getViewDefinitionDataTypeByName(name: TExperimentTypeNames): DataType | undefined {
   return findKey(ViewsDefinitionRegistry, { name }) as DataType;
 }
