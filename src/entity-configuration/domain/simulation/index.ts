@@ -5,7 +5,7 @@ export * from '@/entity-configuration/domain/simulation/single-neuron-synaptome-
 export * from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 export * from '@/entity-configuration/domain/simulation/simulation-campaign';
 
-const SIMULATIONS_DATATYPES = [
+export const SIMULATIONS_DATATYPES = [
   DataType.SingleNeuronSimulation,
   DataType.SingleNeuronSynaptomeSimulation,
   DataType.SimulationCampaign,

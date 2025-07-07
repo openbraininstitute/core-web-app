@@ -24,10 +24,12 @@ export function ProfileError() {
   );
 }
 
-export function XInput(
-  { placeholder, className, ...props }: InputProps,
-  ref: ForwardedRef<InputRef>
-) {
+export function XInput({
+  placeholder,
+  className,
+  ref,
+  ...props
+}: InputProps & { ref?: ForwardedRef<InputRef> }) {
   return (
     <Input
       ref={ref}

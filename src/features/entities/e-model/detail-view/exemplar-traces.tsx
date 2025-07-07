@@ -143,9 +143,9 @@ export default function Wrapper({ params, source }: Props) {
         fallback={
           <div className="mx-auto mt-4 w-full">
             <div className="animate-pulse">
-              {[...Array(5)].map((k) => (
+              {[...Array(5)].map((_, i) => (
                 <div
-                  key={`row-ske-${k}`}
+                  key={`row-ske-${i}`}
                   className="flex h-[132px] w-full items-center gap-x-6 border-b border-gray-300 py-8"
                 >
                   <div className="flex w-[330px] items-center justify-start">
