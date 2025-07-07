@@ -5,11 +5,13 @@ import { useAccessToken } from '@/hooks/useAccessToken';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { useGenericEventListener } from '@/util/generic-event';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+import { useSnapshot } from '@/components/ai-assistant/suggested-questions/hardcoded-suggestions/snapshot';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
   threadId: string,
   count: number
 ): [suggestions: string[], clearSuggestions: () => void] {
+  const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const accessToken = useAccessToken();
@@ -36,5 +38,9 @@ export function useServiceAiAgentSuggestionFromUserJourney(
 
   React.useEffect(fetchSuggestions, [fetchSuggestions]);
   useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
+  React.useEffect(() => {
+    userJourneyTracker.registerArtifactClick(snapshot.artifact);
+    userJourneyTracker.registerBrainRegionClick(snapshot.regionId);
+  }, [snapshot]);
   return [suggestions, () => setSuggestions([])];
 }
