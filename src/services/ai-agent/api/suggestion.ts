@@ -13,7 +13,7 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
   ): Promise<string[]> => {
     const { threadId = null, virtualLabId = null, projectId = null } = options ?? {};
     const journey = userJourneyTracker.value;
-
+    console.log('🚀 [suggestion] journey =', journey); // @FIXME: Remove this line written on 2025-07-07 at 13:07
     const data = await fetchJSON({
       accessToken,
       path: 'qa/question_suggestions',

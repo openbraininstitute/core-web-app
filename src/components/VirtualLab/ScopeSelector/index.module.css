@@ -1,15 +1,11 @@
 .thumbnail {
-  width: 5vw;
-  height: 5vw;
+  width: min(5vw, 80px);
+  height: min(5vw, 80px);
   float: right;
   margin: 0.5em;
   margin-right: 0;
   clip-path: circle();
   shape-outside: circle();
-}
-
-.buildButton {
-  float: right;
 }
 
 .title {
@@ -82,4 +78,8 @@
 
 .floatContainer {
   display: flex;
+}
+
+.floatContainer > div {
+  width: 100%;
 }
