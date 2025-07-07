@@ -32,6 +32,7 @@ import LockIcon from './LockIcon';
 import LockOpenIcon from './LockOpenIcon';
 import { MembersGroupIcon } from './MembersGroupIcon';
 import MissingData from './MissingData';
+import PauseIcon from './PauseIcon';
 import IconPlus from './Plus';
 import RangeIcon from './Range';
 import ReadMeIcon from './ReadMeIcon';
@@ -80,6 +81,7 @@ export {
   LockOpenIcon,
   MembersGroupIcon,
   MissingData,
+  PauseIcon,
   IconPlus as PlusIcon,
   RangeIcon,
   ReadMeIcon,
