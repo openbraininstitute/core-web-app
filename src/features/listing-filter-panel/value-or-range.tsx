@@ -2,10 +2,16 @@
 
 import { ChangeEvent, HTMLProps, useState } from 'react';
 
-import { getFieldUnit } from '@/api/explore-section/fields';
 import { RangeIcon } from '@/components/icons';
 
+export function getFieldUnit(field: EntityCoreFields) {
+  const fieldDef = getFieldDefinition(field);
+  return fieldDef?.unit;
+}
+
 import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 function Radio({
   checked,

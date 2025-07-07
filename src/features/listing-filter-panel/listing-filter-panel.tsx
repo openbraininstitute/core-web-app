@@ -29,11 +29,10 @@ import {
   previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { Filter, GteLteValue, ValueOrRangeFilter } from '@/features/listing-filter-panel/types';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
-import { ExploreDataScope, FilterValues } from '@/types/explore-section/application';
+import { ExploreDataScope } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
@@ -41,7 +40,12 @@ import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { Facets } from '@/api/entitycore/types/shared/response';
 import { fieldTitleSentenceCase } from '@/util/utils';
 
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type {
+  CoreFilter,
+  CoreFilterValues,
+  GteLteValue,
+  ValueOrRangeFilter,
+} from '@/entity-configuration/definitions/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
@@ -62,13 +66,13 @@ type Props = {
 function createFilterItemComponent(
   filter: CoreFilter,
   facets: Facets | undefined,
-  filterValues: FilterValues,
-  setFilterValues: Dispatch<SetStateAction<FilterValues>>
+  filterValues: CoreFilterValues,
+  setFilterValues: Dispatch<SetStateAction<CoreFilterValues>>
 ) {
   return function FilterItemComponent() {
     const { type } = filter;
 
-    const updateFilterValues = (field: string, values: Filter['value']) => {
+    const updateFilterValues = (field: string, values: CoreFilter['value']) => {
       setFilterValues((prevState) => ({
         ...prevState,
         [field]: values,
@@ -182,7 +186,7 @@ export default function ListingFilterPanel({
   const { node } = useBrainRegionHierarchy({ dataKey });
   const brainRegionId = useBrainRegion ? node.id : undefined;
 
-  const [filterValues, setFilterValues] = useState<FilterValues>({});
+  const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
   const resetFilters = useResetAtom(
     filtersAtom({
       dataType,
@@ -241,7 +245,7 @@ export default function ListingFilterPanel({
   );
 
   useEffect(() => {
-    const values: FilterValues = {};
+    const values: CoreFilterValues = {};
 
     filters?.forEach((filter: CoreFilter) => {
       values[filter.field] = filter.value;

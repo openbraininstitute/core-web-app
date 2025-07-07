@@ -1,4 +1,4 @@
-import { Sections } from '@/types/public-projects';
+import { Sections } from './type';
 
 export default function NavigationSections({
   section,

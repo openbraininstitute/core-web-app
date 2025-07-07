@@ -1,6 +1,4 @@
-import { Field } from '@/constants/explore-section/fields-config/enums';
 import { DataType } from '@/constants/explore-section/list-views';
-import { DataTypeConfig, DataTypeGroup } from '@/types/explore-section/data-types';
 
 export const MODEL_DATATYPES = [
   DataType.CircuitEModel,
@@ -14,59 +12,3 @@ export enum ModelTypeNames {
   SINGLE_NEURON_SYNAPTOME = 'synaptome',
   CIRCUIT = 'circuit',
 }
-
-export const MODEL_DATA_TYPE_CONFIG: { [key: string]: DataTypeConfig } = {
-  [DataType.CircuitEModel]: {
-    title: 'E-model',
-    group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.E_MODEL,
-    columns: [
-      Field.Name,
-      Field.EModelResponse,
-      Field.BrainRegion,
-      Field.MType,
-      Field.EType,
-      Field.EModelMorphology,
-      Field.EModelScore,
-      Field.BrainRegion,
-      Field.Contributors,
-    ],
-
-    curated: true,
-  },
-  [DataType.CircuitMEModel]: {
-    title: 'ME-model',
-    group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.ME_MODEL,
-    columns: [
-      Field.Name,
-      Field.MEModelMorphologyPreview,
-      Field.MEModelResponse,
-      Field.MEModelValidated,
-      Field.BrainRegion,
-      Field.MType,
-      Field.EType,
-      Field.CreatedBy,
-      Field.CreationDate,
-    ],
-
-    curated: false,
-  },
-  [DataType.SingleNeuronSynaptome]: {
-    title: 'Synaptome',
-    group: DataTypeGroup.ModelData,
-    name: ModelTypeNames.SINGLE_NEURON_SYNAPTOME,
-    columns: [
-      Field.Name,
-      Field.Description,
-      Field.SynatomeUsedMEModelName,
-      Field.SynaptomeUsedMType,
-      Field.SynaptomeUsedEType,
-      Field.BrainRegion,
-      Field.CreatedBy,
-      Field.CreationDate,
-    ],
-
-    curated: false,
-  },
-} as const;
