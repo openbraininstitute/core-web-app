@@ -39,7 +39,6 @@ export const env = createEnv({
 
     NEXT_PUBLIC_ACCOUNTING_BASE_URL: z.string().url().optional(),
 
-    NEXT_PUBLIC_BBS_ML_BASE_URL: z.string().url(),
     NEXT_PUBLIC_BLUE_NAAS_URL: z.string().url(),
     NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL: z.string().url(),
     NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL: z.string().url(),
@@ -79,7 +78,6 @@ export const env = createEnv({
 
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-    NEXT_PUBLIC_BBS_ML_BASE_URL: process.env.NEXT_PUBLIC_BBS_ML_BASE_URL,
     NEXT_PUBLIC_BLUE_NAAS_URL: process.env.NEXT_PUBLIC_BLUE_NAAS_URL,
     NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL: process.env.NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL,
     NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL: process.env.NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL,
