@@ -1,12 +1,10 @@
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
 import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
-import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 
 import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
-import sessionAtom from '@/state/session';
 
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
@@ -26,7 +24,6 @@ export default function EphysViewer({
   resource: IElectricalCellRecording | ICircuitSimulationResult;
   ctx?: WorkspaceContext;
 }) {
-  const session = useAtomValue(sessionAtom)!;
   const [trace, error] = useTrace({ resource, ctx });
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);

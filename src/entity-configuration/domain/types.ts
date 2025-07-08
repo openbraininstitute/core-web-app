@@ -1,5 +1,3 @@
-import { EntityCoreConfiguration } from '.';
-
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -43,6 +41,3 @@ export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = O
   EntityCoreTypeConfig<T>,
   'api' | 'viewDefinition'
 >;
-
-type TEntityCoreConfigurationItem =
-  (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration];

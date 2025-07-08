@@ -16,7 +16,7 @@ type Props = {
 export default function Configuration({ params, payload }: Props) {
   return (
     <div className="flex flex-col gap-6 pt-5">
-      <EModelView showTitle={false} params={params} payload={payload} />
+      <EModelView params={params} payload={payload} />
     </div>
   );
 }

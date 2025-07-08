@@ -13,18 +13,6 @@ export type StimulusTypeOption = {
   value: StimulusType;
 };
 
-type FunctionParameterNumber = {
-  defaultValue: number;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
-};
-
-type StimulusParameter = Record<'params', FunctionParameterNumber>;
-
-type ConditionalStimulusParamsTypes = Record<StimulusModule, StimulusParameter>;
-
 export type StimulusDropdownInfo = {
   name: string;
   value: string;
@@ -69,15 +57,6 @@ export type SynapseConfig = {
   color: string;
 };
 
-type SingleModelSimConfig = SimulationConfiguration & {
-  direct_stimulation: CurrentInjectionSimulationConfig[];
-  synapses: null;
-};
-
-type SynapseModelSimConfig = SimulationConfiguration & {
-  synapses: SynaptomeConfig;
-};
-
 export type StimulusConfig = {
   stimulus_type: StimulusType;
   stimulus_protocol: StimulusModule | null;
@@ -101,14 +80,6 @@ export type UpdateSynapseSimulationProperty = {
   id: number;
   key: keyof SynapseConfig;
   newValue: number | string | number[] | null;
-};
-
-type UpdateSynapseSimulationProperties = {
-  id: number;
-  entries: Array<{
-    key: keyof SynapseConfig;
-    newValue: number | string | null | number[];
-  }>;
 };
 
 export type ProtocolDetails = {
@@ -139,9 +110,6 @@ type BluenaasError = {
   error_code: string;
 };
 
-type StreamSimulationEvent = 'init' | 'info' | 'data' | 'error';
-type StreamSimulationStatus = 'pending' | 'started' | 'success' | 'failure';
-
 export type SimulationStreamData = {
   name: string;
   amplitude?: number;
@@ -152,16 +120,6 @@ export type SimulationStreamData = {
   y: Array<number>;
 };
 
-type StreamSimulationResponse = {
-  task_id: string;
-  description: string;
-  event: StreamSimulationEvent;
-  state: StreamSimulationStatus;
-  data: SimulationStreamData;
-};
-
 export const isBluenaasError = (obj: Object): obj is BluenaasError => {
   return 'details' in obj && 'message' in obj && 'error_code' in obj;
 };
-
-const isBluenaasSimulationError = (obj: StreamSimulationResponse) => obj.event === 'error';

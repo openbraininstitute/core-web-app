@@ -112,6 +112,3 @@ export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
   Partial<EntityCoreFieldsValue>,
   FieldDefinition<T>
 >;
-
-type FieldsDefinitionItem<T extends EntityCoreIdentifiable> =
-  FieldsDefinitionRegistry<T>[keyof FieldsDefinitionRegistry<T>];

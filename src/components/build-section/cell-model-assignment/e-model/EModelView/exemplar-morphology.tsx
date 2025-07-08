@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 
-import DefaultEModelTable from './DefaultEModelTable';
-import Header from './Header';
-import ErrorMessageLine, { StandardFallback } from './ErrorMessageLine';
+import DefaultEModelTable from '@/components/build-section/cell-model-assignment/e-model/EModelView/DefaultEModelTable';
+import ErrorMessageLine, {
+  StandardFallback,
+} from '@/components/build-section/cell-model-assignment/e-model/EModelView/ErrorMessageLine';
+import Header from '@/components/build-section/cell-model-assignment/e-model/EModelView/Header';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
@@ -35,8 +36,6 @@ type Props = {
 };
 
 export default function ExemplarMorphology({ exemplarMorphology }: Props) {
-  const [openPicker, setOpenPicker] = useState(false);
-
   const exemplarMorphologyAsList = exemplarMorphology ? [exemplarMorphology] : [];
   const morphologies = exemplarMorphologyAsList;
 

@@ -44,15 +44,6 @@ export type Morphology = {
   [secName: string]: NeuronSectionInfo;
 };
 
-type SegTrace = {
-  label: string;
-  recording?: string;
-  t: number[];
-  v: number[];
-};
-
-type TraceData = SegTrace[];
-
 export type PlotDataEntry = {
   x: number[];
   y: number[];

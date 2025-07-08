@@ -18,7 +18,7 @@ const baseUri = '/cell-composition';
  * @remarks
  * The result is cached with a cache name of 'cell-composition' for 24 hours (86,400 seconds).
  */
-async function getCellComposition({ ctx, id }: { ctx?: WorkspaceContext; id: string }) {
+export async function getCellComposition({ ctx, id }: { ctx?: WorkspaceContext; id: string }) {
   const api = await entityCoreApi();
   return await api.get<ICellComposition>(`${baseUri}/${id}`, { ...getEntityCoreContext(ctx) });
 }

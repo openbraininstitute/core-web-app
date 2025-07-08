@@ -80,8 +80,6 @@ const SingleNeuronSynaptomeExclusionRuleSchema = z
     }
   );
 
-type TSingleNeuronSynaptomeExclusionRule = z.infer<typeof SingleNeuronSynaptomeExclusionRuleSchema>;
-
 export const SingleNeuronSynaptomeConfigurationSchema = z
   .object({
     id: z.string().uuid(),

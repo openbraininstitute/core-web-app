@@ -27,13 +27,6 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
 
-type ReconstructionMorphologyExpandFields =
-  | 'brain_location'
-  | 'species'
-  | 'strain'
-  | 'brain_region';
-type ReconstructionMorphologyExpand = ReconstructionMorphologyExpandFields[];
-
 export type ReconstructionMorphologyFilter = Partial<
   IDFilter &
     TimestampsFilter &

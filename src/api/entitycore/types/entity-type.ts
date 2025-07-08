@@ -21,5 +21,4 @@ export enum EntityTypeEnum {
   Simulation = 'simulation',
 }
 
-type EntityTypeUnion = keyof typeof EntityTypeEnum;
 export type EntityTypeValue = `${EntityTypeEnum}`;

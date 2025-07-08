@@ -19,14 +19,12 @@ type Params = WorkspaceContext & {
 export default function EModelView({
   params,
   payload,
-  showTitle = true,
 }: {
   params: Params;
   payload: {
     source: IEModel;
     exemplar_morphology: IReconstructionMorphology;
   };
-  showTitle?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-5">

@@ -17,11 +17,6 @@ export interface SortState {
   field: string;
   order: 'asc' | 'desc';
 }
-interface EntityCoreSortState {
-  property: string;
-  value: string;
-  direction: '+' | '-';
-}
 
 export type DetailViewUrlParams = Prettify<
   {

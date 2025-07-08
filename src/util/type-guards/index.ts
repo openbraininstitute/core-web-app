@@ -12,14 +12,6 @@ export function isNumber(data: unknown): data is number {
   return typeof data === 'number';
 }
 
-function isNull(data: unknown): data is null {
-  return typeof data === null;
-}
-
-function isFunction(data: unknown): data is () => unknown {
-  return typeof data === 'function';
-}
-
 export function isUndefined(data: unknown): data is undefined {
   return typeof data === 'undefined';
 }
@@ -31,15 +23,6 @@ export function isBoolean(data: unknown): data is boolean {
 export function isArrayBuffer(data: unknown): data is ArrayBuffer {
   if (!data) return false;
   return data instanceof ArrayBuffer;
-}
-
-function isArrayBufferView(data: unknown): data is ArrayBufferView {
-  if (!data) return false;
-  return ArrayBuffer.isView(data);
-}
-
-function isBufferSource(data: unknown): data is BufferSource {
-  return isArrayBuffer(data) || isArrayBufferView(data);
 }
 
 export function isStringArray(data: unknown): data is string[] {
@@ -63,18 +46,6 @@ export function assertString(data: unknown, name = 'data'): asserts data is stri
   }
 }
 
-function assertOptionalString(data: unknown, name = 'data'): asserts data is string | undefined {
-  if (data && !isString(data)) {
-    throw Error(`${name} was expected to be a string but we got ${typeof data}!`);
-  }
-}
-
-function assertBoolean(data: unknown, name = 'data'): asserts data is boolean {
-  if (!isBoolean(data)) {
-    throw Error(`${name} was expected to be a boolean but we got ${typeof data}!`);
-  }
-}
-
 export function assertObject(
   data: unknown,
   name = 'data'
@@ -87,12 +58,6 @@ export function assertObject(
 function assertArray(data: unknown, name = 'data'): asserts data is unknown[] {
   if (!Array.isArray(data)) {
     throw Error(`${name} was expected to be an Array but we got ${typeof data}!`);
-  }
-}
-
-function assertArrayBuffer(data: unknown, name = 'data'): asserts data is ArrayBuffer {
-  if (!isArrayBuffer(data)) {
-    throw Error(`${name} was expected to be an ArrayBuffer but we got ${typeof data}!`);
   }
 }
 
@@ -416,14 +381,6 @@ export function ensureType<T>(
   if (isType<T>(data, type)) return data;
 
   return isType<T>(defaultValue, type) ? defaultValue : defaultValue(data);
-}
-
-function ensureBoolean(data: unknown, defaultValue: boolean): boolean {
-  return ensureType(data, 'boolean', defaultValue);
-}
-
-function ensureNumber(data: unknown, defaultValue: number): number {
-  return ensureType(data, 'number', defaultValue);
 }
 
 export function ensureString(data: unknown, defaultValue: string): string {

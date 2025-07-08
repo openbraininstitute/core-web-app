@@ -12,5 +12,3 @@ export const synapseTypeMapping = {
   110: 'Excitatory synapses',
   10: 'Inhibitory synapses',
 };
-
-type SynapseTypeMappingKeys = keyof typeof synapseTypeMapping;

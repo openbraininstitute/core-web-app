@@ -192,13 +192,3 @@ export function MemberAvatarCasual({
     </div>
   );
 }
-
-function List({ members }: { members: Array<Omit<TMember, 'index'>> }) {
-  return (
-    <div className="space-y-6">
-      {members.map(({ id, role, initials, name, email }, index) => (
-        <MemberAvatar key={id} {...{ index, id, role, initials, name, email }} />
-      ))}
-    </div>
-  );
-}

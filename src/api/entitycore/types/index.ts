@@ -35,7 +35,7 @@ export type EntityCoreDensityObjectTypes =
   | IExperimentalBoutonDensity
   | IExperimentalSynapsesPerConnection;
 
-type EntityCoreSimulationObjectTypes =
+export type EntityCoreSimulationObjectTypes =
   | ISingleNeuronSynaptomeSimulation
   | ISingleNeuronSimulation
   | ICircuitSimulationCampaign;

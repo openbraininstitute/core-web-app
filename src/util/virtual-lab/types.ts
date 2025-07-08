@@ -18,7 +18,6 @@ const MetadataInputSchema = z.object({
     mime_type: z.array(z.string()).optional(),
   }),
 });
-type MetadataInput = z.infer<typeof MetadataInputSchema>;
 
 const MetadataSchema = z.object({
   name: z.string(),

@@ -15,7 +15,7 @@ const baseUri = '/simulation';
  *
  *
  */
-async function getCircuitSimulation({
+export async function getCircuitSimulation({
   id,
   context,
 }: {

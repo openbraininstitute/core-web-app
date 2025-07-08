@@ -5,9 +5,9 @@ import { ReactNode } from 'react';
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
 import { useScrollNav } from '@/components/explore-section/ExploreSectionListingView/hooks';
-import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 import { DataType } from '@/constants/explore-section/list-views';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 function DefaultRenderButton<T extends EntityCoreIdentifiable>({
   children,

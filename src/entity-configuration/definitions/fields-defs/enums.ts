@@ -70,5 +70,4 @@ export enum EntityCoreFields {
   CircuitName = 'circuit_name',
 }
 
-type EntityCoreFieldsUnion = keyof typeof EntityCoreFields;
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

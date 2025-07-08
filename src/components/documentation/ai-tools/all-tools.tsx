@@ -1,14 +1,8 @@
 'use client';
 
-import { Metadata } from 'next';
 import Link from 'next/link';
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
-
-const metadata: Metadata = {
-  title: 'AI Chat tools',
-  description: 'Explore the AI chat tools available in our application.',
-};
 
 export default function AllAIToolsContent() {
   const allTools = useAITools();

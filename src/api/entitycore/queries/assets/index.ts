@@ -42,7 +42,7 @@ export async function getAssets({
  * @param {string} params.id - The id of the asset to retrieve
  * @returns {Promise<IAsset>} A promise that resolves to the requested asset
  */
-async function getAsset({
+export async function getAsset({
   ctx,
   entityType,
   entityId,

@@ -416,12 +416,9 @@ export interface LibraryBookmark extends AddBookmarkResponse {}
 
 type BookmarksByCategoryResponse = Record<DataType, Array<LibraryBookmark>>;
 
-type VlmStandalonePaymentResponse = VlmResponse<StandalonePaymentResponse>;
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;
 export type VlmCancelSubscriptionResponse = VlmResponse<CancelSubscriptionResponse>;
-type VlmUserSubscriptionResponse = VlmResponse<UserActiveSubscriptionResponse>;
-type VlmNextPaymentDateResponse = VlmResponse<NextPaymentDateResponse>;
 export type VlmSubscriptionStatusResponse = VlmResponse<SubscriptionStatusResponse>;
 export type VlmUserSubscriptionsResponse = VlmResponse<UserSubscriptionsResponse>;
 export type VlmListSubscriptionResponse = VlmResponse<Array<SubscriptionDetails>>;
@@ -437,4 +434,3 @@ export type VlmUserGroupsResponse = VlmResponse<UserGroupsResponse>;
 export type VlmUserStatsResponse = VlmResponse<UserStats>;
 export type VlmAttachUsersToProjectResponse = VlmResponse<AttachUsersToProject>;
 export type VlmGetProjectBookmarksResponse = VlmResponse<BookmarksByCategoryResponse>;
-type VlmAddBookmarkToProjectResponse = VlmResponse<AddBookmarkResponse>;

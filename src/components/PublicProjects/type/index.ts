@@ -36,11 +36,6 @@ export type LinkAndDownloadArtifactProps = {
   _type: string;
 };
 
-type ArticfactTypeProps = {
-  id: string;
-  name: string;
-};
-
 type MinimalMeModelProps = {
   name: string;
   brainRegion: string;

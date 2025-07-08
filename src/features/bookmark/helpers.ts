@@ -9,18 +9,15 @@ import pick from 'lodash/pick';
 import get from 'lodash/get';
 import map from 'lodash/map';
 
+import { getEntitiesByGroup, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getViewDefinitionsByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { EXPERIMENTAL_DATATYPES } from '@/entity-configuration/domain/experimental';
 import { SIMULATIONS_DATATYPES } from '@/entity-configuration/domain/simulation';
 import { MODEL_DATATYPES } from '@/entity-configuration/domain/model';
-import { getEntitiesByGroup, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
-import { getViewDefinitionsByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { DataType } from '@/constants/explore-section/list-views';
 
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
-
-const BOOKMARK_CATEGORY = ['experimental', 'models', 'simulations'] as const;
-type BookmarkCategoryType = (typeof BOOKMARK_CATEGORY)[number];
 
 type ExperimentalDataMap = Partial<
   Record<(typeof EXPERIMENTAL_DATATYPES)[number], Array<LibraryBookmark>>

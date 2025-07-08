@@ -46,7 +46,13 @@ export async function getBrainAtlases({
  * @param params.context - Optional workspace context for the request, which may include authentication and other headers.
  * @returns A promise that resolves to the requested `IBrainAtlas` object.
  */
-async function getBrainAtlas({ id, context }: { id: string; context?: WorkspaceContext | null }) {
+export async function getBrainAtlas({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
   const api = await entityCoreApi();
   return await api.get<IBrainAtlas>(`${baseUri}/${id}`, {
     headers: {

@@ -18,10 +18,6 @@ import type {
   EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 
-type ElectricalCellRecordingExpandFields = 'brain_location' | 'species' | 'strain' | 'brain_region';
-
-type ElectricalCellRecordingExpand = ElectricalCellRecordingExpandFields[];
-
 export type ElectricalCellRecordingFilter = Partial<
   IDFilter &
     TimestampsFilter &

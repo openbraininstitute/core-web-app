@@ -77,22 +77,6 @@ export async function fetchGithubFile(url: string) {
   }
 }
 
-async function fetchRawGithubFile(url: string) {
-  const response = await fetch(url, options);
-
-  const data = await response.text();
-
-  if (!response.ok) {
-    throw new Error(`Failed to file ${url}`);
-  }
-
-  try {
-    return data;
-  } catch (e) {
-    throw new Error(`Failed to parse contents of ${url}`);
-  }
-}
-
 export async function downloadZippedNotebook(notebook: Notebook) {
   try {
     const zip = new JSZip();
