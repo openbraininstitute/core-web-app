@@ -2,8 +2,8 @@
 
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React, { CSSProperties } from 'react';
+import dynamic from 'next/dynamic';
 
-import { Spinner } from './spinner';
 import { AiContextProvider, useCollapsedPanel } from './hooks';
 import PanelSplitter from './panel-splitter';
 import PanelContent from './panel-content';
@@ -13,6 +13,10 @@ import { useLocalStorage } from '@/util/storage';
 import { isNumber } from '@/util/type-guards';
 
 import styles from './ai-assistant.module.css';
+
+const Spinner = dynamic(() => import('./spinner/spinner'), {
+  ssr: false,
+});
 
 interface AiAssistantProps {
   className?: string;

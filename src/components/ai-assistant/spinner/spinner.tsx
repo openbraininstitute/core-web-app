@@ -36,3 +36,5 @@ export function Spinner({ className, count = 32, period = 0.6 }: SpinnerProps) {
     </div>
   );
 }
+
+export default Spinner;
