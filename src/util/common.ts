@@ -1,5 +1,4 @@
 import { BASE_EXPERIMENTAL_EXPLORE_PATH } from '@/constants/explore-section/paths';
-import { ExperimentTypeNames } from '@/constants/explore-section/data-types/experiment-data-types';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export const switchStateType = {
@@ -43,11 +42,5 @@ export const isValidBase64 = (str: string): boolean => {
 
 export const detailUrlBuilder = <T extends EntityCoreIdentifiable>(basePath: string, resource: T) =>
   `${basePath}/${resource.id}`;
-
-const detailUrlOutsideLab = (
-  projectLabel: string,
-  resourceId: string,
-  resourceType: ExperimentTypeNames
-) => `${BASE_EXPERIMENTAL_EXPLORE_PATH}/${resourceType}/${to64(`${projectLabel}!/!${resourceId}`)}`;
 
 export const localCompareString = (a: string, b: string) => a.localeCompare(b);

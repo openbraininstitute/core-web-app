@@ -2,7 +2,6 @@ import { atom } from 'jotai';
 import { atomFamily, atomWithRefresh, atomWithDefault } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
 
-import sessionAtom from '../session';
 import { virtualLabBalanceRefreshTriggerAtom } from './lab';
 import { Project } from '@/types/virtual-lab/projects';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';

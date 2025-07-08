@@ -5,11 +5,12 @@ import { useState, useEffect, useRef } from 'react';
 import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import NotebookTable from '../NotebookTable';
 import { NotebooksArraySchema } from '../schemas';
-import { Notebook } from '@/util/virtual-lab/github';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 import authFetch from '@/authFetch';
 import { assertErrorMessage, assertApiResponse } from '@/util/utils';
 import { virtualLabApi } from '@/config';
+import { Notebook } from '@/util/virtual-lab/types';
+import { useAppNotification } from '@/components/notification';
 
 function useDelayedLoading(initialValue = false, delay = 200) {
   const [loading, setLoading] = useState<boolean>(initialValue);
@@ -52,6 +53,7 @@ export default function UserNotebookPage({
   serverError?: string;
 }) {
   const [notebooks, setNotebooks] = useState(initialNotebooks);
+  const notification = useAppNotification();
   const [openModal, setOpenModal] = useState(false);
   const [step, setStep] = useState(0);
   const [repoUrl, setRepoUrl] = useState('');
@@ -62,7 +64,11 @@ export default function UserNotebookPage({
   const [deleteNotebookId, setDeleteNotebookId] = useState('');
 
   if (serverError)
-    notification.error(serverError, undefined, undefined, undefined, 'user-notebook-server-error');
+    notification.error({
+      message: serverError,
+      key: 'user-notebook-server-error',
+      placement: 'topRight',
+    });
 
   const resetModal = () => {
     setOpenModal(false);
@@ -84,12 +90,20 @@ export default function UserNotebookPage({
       });
 
       if (!res.ok) {
-        notification.error('There was an error deregistering the notebook, please try again');
+        notification.error({
+          message: 'There was an error deregistering the notebook, please try again',
+          key: 'user-notebook-server-error',
+          placement: 'topRight',
+        });
         setDeleteNotebookId('');
         return;
       }
     } catch {
-      notification.error('There was an error deregistering the notebook, please try again');
+      notification.error({
+        message: 'There was an error deregistering the notebook, please try again',
+        key: 'user-notebook-server-error',
+        placement: 'topRight',
+      });
       setDeleteNotebookId('');
       return;
     }
@@ -150,7 +164,11 @@ export default function UserNotebookPage({
                       setNewNotebooks(fetchedNotebooks);
                       setStep(1);
                     } catch (e) {
-                      notification.error(assertErrorMessage(e));
+                      notification.error({
+                        message: assertErrorMessage(e),
+                        key: 'user-notebook-server-error',
+                        placement: 'topRight',
+                      });
                     } finally {
                       setLoading(false);
                     }
@@ -237,7 +255,11 @@ export default function UserNotebookPage({
                         }),
                       ]);
                     } catch (e) {
-                      notification.error(assertErrorMessage(e));
+                      notification.error({
+                        message: assertErrorMessage(e),
+                        key: 'user-notebook-server-error',
+                        placement: 'topRight',
+                      });
                       resetModal();
                       return;
                     }

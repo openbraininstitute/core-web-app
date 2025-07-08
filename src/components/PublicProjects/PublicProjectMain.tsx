@@ -5,7 +5,7 @@ import { parseAsString, useQueryState } from 'nuqs';
 
 import { tryType } from '../LandingPage/content';
 
-import { ShowCaseProjectQueryType } from './type';
+import { ShowCaseProjectQueryType, Sections } from './type';
 
 import HeaderPublicProject from './HeaderPublicProject';
 import NavigationSections from './NavigationSections';
@@ -15,7 +15,6 @@ import DescriptionSection from './sections/Description';
 import NotebookSection from './sections/Notebook';
 
 import { useSanity } from '@/services/sanity';
-import { Sections } from './type';
 
 const isShowCaseProjectProps = (data: unknown): data is ShowCaseProjectQueryType => {
   return tryType('ShowCaseProjectProps', data, {

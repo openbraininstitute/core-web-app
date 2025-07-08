@@ -2,7 +2,6 @@ import z from 'zod';
 import snakeCase from 'lodash/snakeCase';
 import kebabCase from 'lodash/kebabCase';
 import { NextRequest, NextResponse } from 'next/server';
-
 import { auth } from '@/auth';
 import { EntityTypeValue } from '@/api/entitycore/types';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';

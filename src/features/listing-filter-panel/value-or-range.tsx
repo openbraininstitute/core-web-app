@@ -4,14 +4,14 @@ import { ChangeEvent, HTMLProps, useState } from 'react';
 
 import { RangeIcon } from '@/components/icons';
 
+import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+
 export function getFieldUnit(field: EntityCoreFields) {
   const fieldDef = getFieldDefinition(field);
   return fieldDef?.unit;
 }
-
-import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 function Radio({
   checked,

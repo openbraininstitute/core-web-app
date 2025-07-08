@@ -1,10 +1,12 @@
 import { NotebooksArraySchema } from '../schemas';
 import UserNotebookPage from './UserNotebookPage';
-import { ServerSideComponentProp } from '@/types/common';
-import { fetchNotebook, Notebook } from '@/util/virtual-lab/github';
+import { fetchNotebook } from '@/util/virtual-lab/github';
 import { virtualLabApi } from '@/config';
 import { assertErrorMessage, assertApiResponse } from '@/util/utils';
 import authFetch from '@/authFetch';
+
+import type { ServerSideComponentProp } from '@/types/common';
+import type { Notebook } from '@/util/virtual-lab/types';
 
 export default async function Notebooks({
   params: promisedParams,

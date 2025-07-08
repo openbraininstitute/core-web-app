@@ -78,7 +78,7 @@ export async function createAssetFileEntry({
   path: string;
   ctx?: WorkspaceContext;
 }): Promise<FileEntry> {
-  const response = await downloadAsset<Response>({
+  const response = await downloadAsset({
     ctx,
     entityType: entity.type,
     entityId: entity.id,
@@ -86,9 +86,14 @@ export async function createAssetFileEntry({
     asRawResponse: true,
     retryOnError: false,
   });
+
+  if (!response.body) {
+    throw new Error('Response body is null');
+  }
   return {
     path,
-    stream: Readable.fromWeb(response.body),
+    // FIXME: @pavlo, please remove type casting
+    stream: Readable.fromWeb(response.body as any),
     size: Number(response.headers.get('content-length')),
   };
 }

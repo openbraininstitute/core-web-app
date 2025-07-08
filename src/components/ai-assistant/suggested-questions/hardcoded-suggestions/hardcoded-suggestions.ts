@@ -2,6 +2,7 @@ import React from 'react';
 import { useSnapshot } from './snapshot';
 import { SuggestionsListPerRegion, SuggestionsListFullBrain } from './suggestions-list';
 import { isString } from '@/util/type-guards';
+import { log } from '@/utils/logger';
 
 export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): string[] {
   const snapshot = useSnapshot();
@@ -9,7 +10,7 @@ export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): strin
   React.useEffect(() => {
     const artifact = snapshot.artifact ?? '';
     const list = snapshot.isRootRegion ? SuggestionsListFullBrain : SuggestionsListPerRegion;
-    console.log('🚀 [hardcoded-suggestions] snapshot =', snapshot); // @FIXME: Remove this line written on 2025-07-07 at 13:26
+    log('debug', '🚀 [hardcoded-suggestions] snapshot =', snapshot); // @FIXME: Remove this line written on 2025-07-07 at 13:26
     const questions = shuffle(list[artifact])
       .filter(isNonEmptyString)
       .slice(0, maxNumberOfQuestions)

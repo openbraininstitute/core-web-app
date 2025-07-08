@@ -1,6 +1,7 @@
 import { fetchJSON, asyncCreateSquash } from './util';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { isType } from '@/util/type-guards';
+import { log } from '@/utils/logger';
 
 export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
   async (
@@ -13,7 +14,7 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
   ): Promise<string[]> => {
     const { threadId = null, virtualLabId = null, projectId = null } = options ?? {};
     const journey = userJourneyTracker.value;
-    console.log('🚀 [suggestion] journey =', journey); // @FIXME: Remove this line written on 2025-07-07 at 13:07
+    log('log', '🚀 [suggestion] journey =', journey); // @FIXME: Remove this line written on 2025-07-07 at 13:07
     const data = await fetchJSON({
       accessToken,
       path: 'qa/question_suggestions',

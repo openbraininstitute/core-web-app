@@ -20,8 +20,8 @@ import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { classNames } from '@/util/utils';
 import { basePath } from '@/config';
-import styles from './virtual-lab-banner.module.css';
 import { useAppNotification } from '@/components/notification';
+import styles from './virtual-lab-banner.module.css';
 
 function BackgroundImg({
   backgroundImage,
@@ -316,7 +316,7 @@ export function ProjectDetailBanner({
           .catch(() => notify.error({ message: getErrorMsg(fieldName) }))
       );
     },
-    [updateProject],
+    [updateProject], // eslint-disable-line react-hooks/exhaustive-deps
     600,
     { leading: true }
   );

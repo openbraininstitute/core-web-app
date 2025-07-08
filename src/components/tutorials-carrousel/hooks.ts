@@ -7,7 +7,7 @@ import { logError } from '@/util/logger';
 import { assertType, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForTutorialsList() {
-  return useSanity(query, isContentForTutorialsList) ?? [];
+  return useSanity(query, isContentForTutorialsList) ?? null;
 }
 
 function isContentForTutorialsList(data: unknown): data is ContentForTutorialItem {

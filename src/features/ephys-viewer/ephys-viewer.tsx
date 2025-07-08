@@ -10,7 +10,7 @@ import sessionAtom from '@/state/session';
 
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 import './styles/ephys-plugin-styles.css';
 
@@ -24,10 +24,10 @@ export default function EphysViewer({
   ctx,
 }: {
   resource: IElectricalCellRecording | ICircuitSimulationResult;
-  ctx: WorkspaceContext;
+  ctx?: WorkspaceContext;
 }) {
-  const session = useAtomValue(sessionAtom);
-  const [trace, error] = useTrace({ resource, session, ctx });
+  const session = useAtomValue(sessionAtom)!;
+  const [trace, error] = useTrace({ resource, ctx });
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [repetition, setRepetition] = useState<string>();
