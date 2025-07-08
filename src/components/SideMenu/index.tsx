@@ -39,7 +39,10 @@ function ProjectLink({ project, lab }: { project: ProjectItem; lab: LabItem }) {
 
   return (
     projectInfo && (
-      <div className="flex w-full flex-col items-center justify-center overflow-hidden">
+      <div
+        className="flex w-full flex-col items-center justify-center overflow-hidden"
+        title={projectInfo.name}
+      >
         <Link
           key={lab.id}
           href={project.href}
@@ -74,7 +77,7 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
   const result = useAtomValue(unwrap(virtualLabDetailAtomFamily(lab.id)));
   return (
     <Container>
-      <div className="flex w-[45px] grow flex-col items-center justify-between overflow-hidden">
+      <div className="flex w-[45px] grow flex-col items-center justify-between gap-14 overflow-hidden">
         <div className="mt-4 flex w-full flex-col items-center gap-2 overflow-hidden">
           {links
             .slice()
@@ -99,19 +102,20 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
           {links.length > 0 && <UpOutlined className="text-primary-3" />}
           {project && <ProjectLink project={project} lab={lab} />}
           {!!result && (
-            <div className="text-primary-3 mt-2 flex w-full flex-col items-center gap-2 overflow-hidden">
+            <div className="text-primary-3 mt-2 flex w-full flex-col items-center gap-2">
               <Link
                 key={`${lab.href}/${lab.id}`}
                 href={lab.href}
-                className="overflow-hidden text-center text-ellipsis whitespace-nowrap capitalize"
+                title={result?.virtual_lab.name}
+                className="text-center capitalize"
                 style={{
                   writingMode: 'vertical-rl',
                   transform: 'rotate(180deg)',
                 }}
               >
-                <span>
-                  Virtual lab:
-                  <span className="mt-3 inline-block text-white">{result?.virtual_lab.name}</span>
+                <span className="flex-none">Virtual lab:</span>
+                <span className="mt-3 inline-block overflow-hidden font-semibold whitespace-nowrap text-white">
+                  {result?.virtual_lab.name}
                 </span>
               </Link>
             </div>
