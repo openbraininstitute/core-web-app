@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useAtomValue } from 'jotai';
+import Image from 'next/image';
 import { useMemo } from 'react';
 
 import Link from 'next/link';
@@ -51,14 +52,18 @@ export default function SideBar() {
         <Link
           data-testid="public-explore"
           href="/app/virtual-lab/explore/interactive"
-          className="bg-primary-8 relative mt-4 h-44 rounded-md px-4 py-2 opacity-90 hover:opacity-100"
-          style={{
-            background: `url(/images/multiple-brains.webp) #003A8C no-repeat bottom -122px right -108px`,
-            backgroundSize: '294px 294px',
-          }}
+          className="bg-primary-8 relative mt-4 h-44 overflow-hidden rounded-md px-4 py-2 opacity-90 hover:opacity-100"
         >
-          <div className="bg-primary-8/50 absolute inset-0 h-full w-full rounded-md" />
-          <div className="relative h-full">
+          <Image
+            loading="lazy"
+            src="/images/multiple-brains.webp"
+            alt="Explore public resources"
+            width={294}
+            height={294}
+            className="absolute -right-[80px] -bottom-[80px] z-0"
+          />
+          <div className="bg-primary-8/50 absolute inset-0 z-10 h-full w-full rounded-md" />
+          <div className="relative z-20 h-full">
             <div className="flex h-full flex-col justify-between p-4">
               <h3 className="mb-2 text-xl font-bold">Explore</h3>
               <div className="mt-auto">Browse resources</div>
