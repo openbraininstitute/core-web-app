@@ -38,7 +38,7 @@ export default function GlossaryTableOfContent() {
         <div className="flex flex-col gap-y-2">
           {contentDataType.map((item: ContentForGlossaryItem) => (
             <Link
-              href={`/app/documentation/glossary/${Slugify(item.Name)}`}
+              href={`/app/documentation/glossary/data-types#${Slugify(item.Name)}`}
               aria-label="Select glossary item"
               key={item.Name}
               className={classNames(
@@ -61,7 +61,7 @@ export default function GlossaryTableOfContent() {
         <div className="flex flex-col gap-y-2">
           {contentArtifactType.map((item: ContentForGlossaryItem) => (
             <Link
-              href={`/app/documentation/glossary/${Slugify(item.Name)}`}
+              href={`/app/documentation/glossary/artifact-types#${Slugify(item.Name)}`}
               aria-label="Select glossary item"
               key={item.Name}
               className={classNames(
