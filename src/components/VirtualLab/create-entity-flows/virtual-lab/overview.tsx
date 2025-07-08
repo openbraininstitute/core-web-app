@@ -59,7 +59,9 @@ export default function Overview({ allowAskCode }: Props) {
                 if (exists) {
                   setValidName({ loading: false, status: 'non-valid' });
                   return Promise.reject(
-                    new Error('Another virtual lab with same name already exists')
+                    new Error(
+                      'Another virtual lab with same name already exists, Please use a different name.'
+                    )
                   );
                 }
                 setValidName({ loading: false, status: 'valid' });
@@ -101,13 +103,15 @@ export default function Overview({ allowAskCode }: Props) {
           <div className="flex items-center gap-2">
             <span className="text-primary-8 font-semibold">Affiliated entity</span>
             <Popover
+              destroyTooltipOnHide
               placement="top"
               trigger="hover"
-              overlayClassName={classNames(
-                '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
-                '[&_.ant-popover-arrow:before]:bg-primary-8'
-              )}
-              destroyTooltipOnHide
+              classNames={{
+                root: classNames(
+                  '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
+                  '[&_.ant-popover-arrow:before]:bg-primary-8'
+                ),
+              }}
               content={
                 <div className="bg-primary-8 flex flex-col items-center justify-center gap-4 px-5 py-3 text-white">
                   Organization, University, Company
