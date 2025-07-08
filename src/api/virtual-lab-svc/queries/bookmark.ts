@@ -42,32 +42,6 @@ export async function bookmarkToProjectLibrary(
 }
 
 /**
- * Removes a specific bookmark from a project library within a virtual lab.
- *
- * @param {string} lab - The identifier of the virtual lab.
- * @param {string} labProject - The identifier of the project within the lab.
- * @param {BookmarkRequest} bookmarkDetails - Details of the bookmark to remove.
- * @param {string} bookmarkDetails.resource_id - The ID of the resource to un-bookmark.
- * @param {string} bookmarkDetails.entity_id - The ID of the entity to un-bookmark.
- * @param {string} bookmarkDetails.category - The category of the bookmark to remove.
- * @returns {Promise<boolean>} A promise that resolves to true if the bookmark was successfully removed, false otherwise.
- */
-async function removeBookmarkFromProjectLibrary(
-  { virtualLabId, projectId }: WorkspaceContext,
-  { resource_id, entity_id, category }: BookmarkRequest
-): Promise<boolean> {
-  const api = await virtualLabRootApi();
-  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
-  return await api.delete<boolean>(url, {
-    queryParams: {
-      entity_id,
-      resource_id,
-      category,
-    },
-  });
-}
-
-/**
  * Retrieves all bookmarks for a specific project, grouped by category.
  *
  * @param {string} lab - The identifier of the virtual lab.

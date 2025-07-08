@@ -1,15 +1,15 @@
 'use client';
 
 import { atomFamily, atomWithRefresh } from 'jotai/utils';
-
 import { useAtomValue } from 'jotai';
+
+import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
 import { getBulkEntityCoreResult } from '@/app/api/entity-core/entities/count/route';
 import { findParentIds } from '@/features/brain-region-hierarchy/helpers';
 import { tryCatch } from '@/api/utils';
 
 import type { ExperimentalDataType } from '@/entity-configuration/domain/experimental';
 import type { ModelDataType } from '@/entity-configuration/domain/model';
-import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
 
 export type BulkEntityCoreCountResult = {
   experimental: Record<ExperimentalDataType, number | string>;
@@ -20,23 +20,6 @@ type Params = {
   virtualLabId?: string;
   projectId?: string;
   brainRegionId?: string | null;
-};
-
-const getBulkEntityCoreCount = async ({
-  virtualLabId,
-  projectId,
-  brainRegionId,
-}: Params): Promise<BulkEntityCoreCountResult> => {
-  const searchParam = new URLSearchParams();
-  if (virtualLabId) searchParam.set('virtualLabId', virtualLabId);
-  if (projectId) searchParam.set('projectId', projectId);
-  if (brainRegionId) searchParam.set('brainRegionId', brainRegionId);
-
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const url = `${baseUrl}/api/entitycore/entities/count?${searchParam.toString()}`;
-
-  const result = await fetch(url);
-  return await result.json();
 };
 
 const entitiesCountKey = ({ virtualLabId, projectId, brainRegionId }: Params) => {

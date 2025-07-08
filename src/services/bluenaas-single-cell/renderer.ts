@@ -8,18 +8,15 @@ import {
   DoubleSide,
   EdgesGeometry,
   Fog,
-  InstancedBufferGeometry,
   LineBasicMaterial,
   LineSegments,
   Mesh,
   MeshLambertMaterial,
-  MeshPhongMaterial,
   Object3D,
   PerspectiveCamera,
   PointLight,
   Raycaster,
   Scene,
-  SphereGeometry,
   TextureLoader,
   Vector2,
   Vector3,
@@ -49,8 +46,6 @@ const CLICK_DELAY_TOLERANCE = 500; // ms
 const CLICK_POS_TOLERANCE = 5; // px
 
 const TEXTURE_BASE_URL = `${basePath}/images/e-model-interactive`;
-type SynapseBubble = Mesh<SphereGeometry, MeshPhongMaterial>;
-type SynapseBubblesMesh = Mesh<InstancedBufferGeometry, MeshPhongMaterial>;
 
 export type NeuronViewerClickData = {
   type: string;

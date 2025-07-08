@@ -8,15 +8,12 @@ import isNil from 'lodash/isNil';
 import { ReactNode, useState } from 'react';
 import { ProcessedContributor } from './fields-defs/common';
 
-import PreviewImage from '@/features/thumbnail/image';
 import PreviewThumbnail from '@/features/thumbnail/preview';
 
 import type {
   EntityCoreDensityObjectTypes,
   IReconstructionMorphology,
 } from '@/api/entitycore/types';
-import { IEModel } from '@/api/entitycore/types/entities/e-model';
-import { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type {
   EntityCoreResource,
@@ -102,14 +99,6 @@ export function renderPreview<T extends EntityCoreResource>(
       className={className}
     />
   );
-}
-
-function renderImage(
-  entity: IEModel | IMEModel,
-  size?: { height: number | string; width: number | string },
-  className?: string
-) {
-  return <PreviewImage size={size} className={className} />;
 }
 
 export default function getMeasurements(r: EntityCoreDensityObjectTypes) {

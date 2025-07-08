@@ -1,5 +1,5 @@
 {
-  "plugins": ["lodash", "jsx-a11y", "unused-imports"],
+  "plugins": ["lodash", "jsx-a11y"],
   "extends": [
     "airbnb",
     "airbnb-typescript",
@@ -13,7 +13,14 @@
   },
   "ignorePatterns": ["**/*.js", "**/*.jsx", "**/*.mjs", "vitest.config.ts"],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
     "prefer-template": "off",
     "react/jsx-no-useless-fragment": "off",
     "@typescript-eslint/no-use-before-define": "off",

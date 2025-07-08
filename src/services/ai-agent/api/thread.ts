@@ -1,4 +1,4 @@
-import { fetchJSON, isVoidType } from './util';
+import { fetchJSON } from './util';
 import { isType } from '@/util/type-guards';
 
 export async function serviceAiAgentThreadCreate({
@@ -28,20 +28,5 @@ interface ThreadCreateResponse {
 function isThreadCreateResponse(data: unknown): data is ThreadCreateResponse {
   return isType(data, {
     thread_id: 'string',
-  });
-}
-
-async function serviceAiAgentThreadDelete({
-  accessToken,
-  threadId,
-}: {
-  accessToken?: string;
-  threadId: string;
-}) {
-  await fetchJSON({
-    accessToken,
-    path: `threads/${threadId}`,
-    method: 'DELETE',
-    typeGuard: isVoidType,
   });
 }

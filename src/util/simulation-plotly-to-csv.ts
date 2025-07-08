@@ -8,11 +8,6 @@ function getPlotlyAsCsv(trace: PlotDataEntry) {
   return csvContent;
 }
 
-function exportSimulationPlotlyToCsv(trace: PlotDataEntry) {
-  const blob = new Blob([getPlotlyAsCsv(trace)], { type: 'text/csv;charset=utf-8' });
-  return saveAs(blob, `${trace.name}.csv`);
-}
-
 export async function exportSingleSimulationResultAsZip({
   name,
   type,

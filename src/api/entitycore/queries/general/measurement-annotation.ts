@@ -44,7 +44,7 @@ export async function getMeasurementAnnotations({
  *
  * @returns {Promise<MeasurementAnnotation>} A promise that resolves to the requested measurement annotation
  */
-async function getMeasurementAnnotation({
+export async function getMeasurementAnnotation({
   id,
   context,
 }: {

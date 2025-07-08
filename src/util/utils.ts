@@ -1,7 +1,6 @@
 import { format } from 'date-fns';
 import capitalize from 'lodash/capitalize';
 import _memoize from 'lodash/memoize';
-import { ZodError } from 'zod';
 
 export function createHeaders(
   token: string,
@@ -192,12 +191,6 @@ export function formatTimeDifference(differenceInSeconds: number): string {
   return `${days} days ${hours} hours`;
 }
 
-// Antd email validation does not allow emails such as user@bbp (i.e. emails without top level domain) which is a valid email.
-// The following regular expression to validate emails is taken from MDN and seems to be similar to what most browsers support
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/email#basic_validation
-const VALID_EMAIL_REGEXP =
-  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-
 export function getInitializationValue<T>(storageKey: string): T | null {
   const isClientProcessing = typeof window !== 'undefined';
   if (!isClientProcessing) return null;
@@ -225,13 +218,6 @@ export function setInitializationValue<T>(storageKey: string, dataToSave: T) {
   const storageKeyWithBrainModelConfigId = `${storageKey}-${brainModelConfigId}`;
   window.localStorage.setItem(storageKeyWithBrainModelConfigId, JSON.stringify(dataToSave));
 }
-
-const isStringEmpty = (str: string) => !str.trim() || !str.trim().length;
-const getZodErrorPath = ({ issues }: ZodError) => {
-  return issues.reduce<Array<string | number>>((acc, curr) => {
-    return [...acc, ...curr.path];
-  }, []);
-};
 
 /**
  * Checks if the given input is a valid JSON.

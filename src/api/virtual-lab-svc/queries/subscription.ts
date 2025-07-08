@@ -2,27 +2,18 @@ import { getSession } from '@/authFetch';
 
 import { virtualLabApi } from '@/config';
 import {
-  SubscriptionStatus,
   CancelSubscriptionRequest,
   CreateSubscriptionRequest,
-  VlmNextPaymentResponse,
-  VlmGetSubscriptionResponse,
-  VlmListSubscriptionResponse,
   VlmUserSubscriptionsResponse,
   VlmCancelSubscriptionResponse,
-  VlmSubscriptionStatusResponse,
   VlmCreateSubscriptionResponse,
   VlmActiveSubscriptionResponse,
   VlmListSubscriptionTiersResponse,
   UserSubscriptionsResponse,
-  GetSubscriptionResponse,
   CreateSubscriptionResponse,
   CancelSubscriptionResponse,
-  SubscriptionDetails,
   SubscriptionTiersResponse,
   UserActiveSubscriptionResponse,
-  NextPaymentDateResponse,
-  SubscriptionStatusResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
 const BASE_URL = `${virtualLabApi.url}/subscriptions`;
@@ -58,32 +49,6 @@ export async function createSubscription(
 }
 
 /**
- * retrieves details for a specific subscription.
- *
- * @param {string} subscriptionId - The ID of the subscription to retrieve
- * @returns {Promise<VlmGetSubscriptionResponse>} - The subscription details
- * @throws {Error} - Throws an error if the request fails
- */
-async function getSubscription(subscriptionId: string): Promise<GetSubscriptionResponse | null> {
-  const session = await getSession();
-  const response = await fetch(`${BASE_URL}/${subscriptionId}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Getting subscription details failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmGetSubscriptionResponse = await response.json();
-  return result.data;
-}
-
-/**
  * cancels a subscription.
  *
  * @param {CancelSubscriptionRequest} request - The cancellation details
@@ -110,45 +75,6 @@ export async function cancelSubscription(
   }
 
   const result: VlmCancelSubscriptionResponse = await response.json();
-  return result.data;
-}
-
-/**
- * lists subscriptions with optional filtering.
- *
- * @param {Object} params - Optional filter parameters
- * @param {string} [params.virtual_lab_id] - Filter by virtual lab ID
- * @param {string} [params.user_id] - Filter by user ID
- * @param {SubscriptionStatus} [params.status] - Filter by subscription status
- * @returns {Promise<VlmListSubscriptionResponse>} - List of filtered subscriptions
- * @throws {Error} - Throws an error if the request fails
- */
-async function listSubscriptions(params?: {
-  status?: SubscriptionStatus;
-}): Promise<Array<SubscriptionDetails> | null> {
-  const session = await getSession();
-
-  const queryParams = new URLSearchParams();
-
-  if (params?.status) {
-    queryParams.append('status', params.status);
-  }
-
-  const url = `${BASE_URL}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Listing subscriptions failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmListSubscriptionResponse = await response.json();
   return result.data;
 }
 
@@ -202,57 +128,6 @@ export async function getUserActiveSubscription(): Promise<UserActiveSubscriptio
   }
 
   const result: VlmActiveSubscriptionResponse = await response.json();
-  return result.data;
-}
-
-/**
- * gets the next payment date for the current user's paid subscription.
- *
- * @returns {Promise<VlmNextPaymentResponse>} - Next payment date information
- * @throws {Error} - Throws an error if the request fails
- */
-async function getNextPaymentDate(): Promise<NextPaymentDateResponse | null> {
-  const session = await getSession();
-  const response = await fetch(`${BASE_URL}/next-payment`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Getting next payment date failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmNextPaymentResponse = await response.json();
-  return result.data;
-}
-
-/**
- * checks if the current user has an active subscription.
- *
- * @returns {Promise<VlmSubscriptionStatusResponse>} - Subscription status information
- * @throws {Error} - Throws an error if the request fails
- */
-async function checkUserSubscription(): Promise<SubscriptionStatusResponse | null> {
-  const session = await getSession();
-  const response = await fetch(`${BASE_URL}/check`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Checking user subscription failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmSubscriptionStatusResponse = await response.json();
   return result.data;
 }
 

@@ -49,15 +49,6 @@ export interface Timestamps {
   update_date: string; // ISO format
 }
 
-type BrainRegion = {
-  id: number;
-  name: string;
-  acronym: string;
-  children: Array<number>;
-};
-
-interface IBrainRegion extends BrainRegion, Timestamps {}
-
 type Strain = {
   name: string;
   taxonomy_id: string;
@@ -96,21 +87,12 @@ export type MeasurementBase = {
   value: number;
 };
 
-interface IMtypeFilter extends PaginationFilter {
+export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
   pref_label__in: string | null;
   order_by: string | null;
 }
-type MorphologyMeasurementSerie = {
-  name: string;
-  value: number;
-};
-
-type Measurement = {
-  measurement_of: string;
-  measurement_serie: MorphologyMeasurementSerie[];
-};
 
 export type TypeFilter = {
   id?: string | null;

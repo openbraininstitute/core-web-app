@@ -16,6 +16,4 @@ export enum ModelTypeNames {
   CIRCUIT = 'circuit',
 }
 
-type TModelTypeNames = `${ModelTypeNames}`;
-
 export type ModelDataType = (typeof MODEL_DATATYPES)[number];

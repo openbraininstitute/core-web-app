@@ -1,16 +1,5 @@
 import { tryType } from './_common';
 import { useSanity } from '@/services/sanity';
-import { isString } from '@/util/type-guards';
-
-function useSanityContentForVirtualLabsTitle() {
-  return (
-    useSanity(
-      `*[_type=="pages" && slug.current=="home"][0]
-.content[_type=="tryptich"][0].title`,
-      isString
-    ) ?? ''
-  );
-}
 
 interface ContentForVirtualLabsBlock {
   title: string;

@@ -43,7 +43,7 @@ export async function getValidationResults({
  * @param id - The unique identifier of the validation result to retrieve.
  * @returns A promise that resolves to the requested `IValidationResult` object.
  */
-async function getValidationResult({
+export async function getValidationResult({
   context,
   id,
 }: {

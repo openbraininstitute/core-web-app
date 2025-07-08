@@ -48,9 +48,3 @@ export interface IonChannelModel
   brain_region: IBrainRegionHierarchy;
   contributions: Array<IContributor>;
 }
-
-interface IonChannelModelCreate extends IonChannelModelBase, EntityAuthorization {
-  species_id: string;
-  strain_id?: string | null;
-  brain_region_id: string;
-}

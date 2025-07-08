@@ -2,12 +2,10 @@ import { atom } from 'jotai';
 
 type Coordinates3D = [number, number, number];
 
-const SynapseTypeColorMap = {
+export const SynapseTypeColorMap = {
   110: 0xf43f5e, // Excitatory Synapses
   10: 0x3b82f6, // Inhibitory Synapses
 };
-
-type SynapseTypeColorMapKey = keyof typeof SynapseTypeColorMap;
 
 type SynapsePosition = {
   segment_id: number;

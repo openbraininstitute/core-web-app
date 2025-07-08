@@ -3,7 +3,6 @@ import { RichText, tryType } from './_common';
 import { TypeDef } from '@/util/type-guards';
 
 export const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
-const typeStringOrUndef: TypeDef = ['|', 'string', 'undefined'];
 export const typeNumberOrNull: TypeDef = ['|', 'number', 'null', 'undefined'];
 export const typeBooleanOrNull: TypeDef = ['|', 'boolean', 'null', 'undefined'];
 export const typeImage = {
@@ -221,18 +220,6 @@ const typeContentForRichTextParagraph: TypeDef = () => ({
   _type: ['literal', 'richContent'],
   content: typeRichTextParagraph,
 });
-
-type RichTextParagraph =
-  | {
-      _type: '_block';
-      style: string;
-      children: RichTextParagraph[];
-    }
-  | {
-      _type: 'span';
-      marks: Array<'strong' | 'em' | 'code' | 'underline' | 'strike-through' | 'string'>;
-      text: string;
-    };
 
 export type ContentForRichText = Array<
   | ContentForRichTextItems

@@ -4,7 +4,6 @@ import { InstancedBufferGeometry, Mesh, ShaderMaterial } from 'three';
 
 export const DISPLAY_SYNAPSES_3D_EVENT = 'DISPLAY_SYNAPSES_3D';
 export const REMOVE_SYNAPSES_3D_EVENT = 'REMOVE_SYNAPSES_3D';
-const NEURITE_TYPES_EVENT = 'NEURITE_TYPES';
 export const RESET_SYNAPSES_3D_EVENT = 'RESET_SYNAPSES_3D';
 
 export type SynapsesMesh = Mesh<InstancedBufferGeometry, ShaderMaterial>;

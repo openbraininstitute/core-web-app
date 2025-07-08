@@ -5,13 +5,13 @@ export function useAppNotification() {
   return notification;
 }
 
-function useAppMessage() {
+export function useAppMessage() {
   const { message } = App.useApp();
 
   return message;
 }
 
-function useAppModal() {
+export function useAppModal() {
   const { modal } = App.useApp();
 
   return modal;

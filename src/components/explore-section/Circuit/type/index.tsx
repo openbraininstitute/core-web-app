@@ -1,5 +1,3 @@
-import { ReactNode } from 'react';
-
 export type PaperLiteratureProps = {
   title: string;
   type: string;
@@ -9,20 +7,6 @@ export type PaperLiteratureProps = {
   publicationDate: string;
   abstract: string;
   category: string;
-};
-
-type SingleFileProps = {
-  type: string;
-  url: string;
-  key: string;
-  isAvailable: boolean;
-};
-
-type GraphDataImageProps = {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
 };
 
 export type CircuitSchemaProps = {
@@ -78,67 +62,6 @@ export type CircuitSchemaProps = {
   buildCategory: string;
 };
 
-type FullCircuitData = {
-  content: CircuitSchemaProps;
-  parent: CircuitSchemaProps | null;
-  derivedFrom: CircuitSchemaProps[] | null;
-};
-
-type CircuitCellValue = {
-  name: string;
-  description: 'string';
-  brainRegion: string;
-  createdBy: string;
-  creationDate: string;
-  hasSubcircuits: boolean;
-};
-
-type CircuitColumn = {
-  title: string;
-  key?: string;
-  render?: (value: CircuitSchemaProps) => ReactNode;
-  width?: number;
-  fixed?: 'left';
-};
-
-type InteractiveImageProps = {
-  circuit: string;
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-};
-
-type NumericFilterProperty =
-  | 'numberOfNeurons'
-  | 'numberOfConnections'
-  | 'numberOfSynapses'
-  | 'scaleType';
-
-type NumericFilterType =
-  | 'greaterThan'
-  | 'lessThan'
-  | 'between'
-  | 'smallMicrocircuit'
-  | 'microcircuit';
-
-type FilterOptionsProps = {
-  searchQuery?: string;
-  numericFilter?: NumericFilterOptions | null;
-};
-
-type NumericFilterOptions = {
-  property:
-    | 'numberOfNeurons'
-    | 'numberOfConnections'
-    | 'numberOfSynapses'
-    | 'scaleType'
-    | 'buildCategory';
-  type: string;
-  min?: number;
-  max?: number;
-};
-
 export type DownloadItemProps = {
   fileType: string;
   children?: SingleSelectedDownloadableItemProps[];
@@ -163,24 +86,9 @@ export interface FilteredCircuit extends CircuitSchemaProps {
   isNonMatchingParent?: boolean;
 }
 
-type CollaboratingInstitution = {
-  name: string;
-  url: string;
-  location: string;
-};
-
 export type ContributorsProps = {
   name: string;
   lastName: string;
-};
-
-type NumericFilterProps = {
-  filter: NumericFilterOptions | null;
-  minValue: number | undefined;
-  maxValue: number | undefined;
-  onFilterChange: (filter: NumericFilterOptions | null) => void;
-  onMinChange: (value: number | undefined) => void;
-  onMaxChange: (value: number | undefined) => void;
 };
 
 export type CellTypeProps = {

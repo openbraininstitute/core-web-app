@@ -27,18 +27,6 @@ export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
 }
 
 /**
- * Retrieves a specific brain region by its ID from the Entity Core API.
- *
- * @param {Object} params - The parameters object
- * @param {string} params.id - The unique identifier of the brain region to retrieve
- * @returns {Promise<BrainRegion>} A promise that resolves to the requested brain region
- */
-async function getTemporaryBrainRegionById({ id }: { id: string }) {
-  const api = await entityCoreApi();
-  return await api.get<IBrainRegionHierarchy>(`/brain-region/${id}`);
-}
-
-/**
  * Retrieves the brain region hierarchy from the entity core API.
  *
  * @param params - An object containing the name of the brain region hierarchy to fetch.

@@ -11,13 +11,3 @@ export type CurrentInjectionGraphResponse = {
   name: string;
   amplitude: number;
 };
-
-type SimulationPlotResponse = {
-  t: number[];
-  v: number[];
-  stimulus_name: string;
-  recording_name: string;
-  amplitude: number;
-  frequency?: number;
-  varying_key: number; // For current varying simulations, the varying_key will be = amplitude while for frequency varying simulation it will be = frequency
-};

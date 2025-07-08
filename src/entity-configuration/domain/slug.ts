@@ -26,7 +26,6 @@ export const EntitySlug = {
   ...SimulationEntitySlug,
 } as const;
 
-type EntitySlugUnion = keyof typeof EntitySlug;
 export type EntitySlugValue = (typeof EntitySlug)[keyof typeof EntitySlug];
 export type ModelEntitySlugValue = (typeof ModelEntitySlug)[keyof typeof ModelEntitySlug];
 export type SimulationEntitySlugValue =
