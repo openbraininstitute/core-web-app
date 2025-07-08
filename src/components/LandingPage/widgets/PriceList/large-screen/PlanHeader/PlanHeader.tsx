@@ -107,7 +107,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
               </>
             )}
           </div>
-          <ul className="border-b border-solid border-gray-300 pb-4">
+          <ul className="mt-12 border-b border-solid border-gray-300 pb-4">
             {plan.notes.map((note, index) => (
               <li key={index}>{note}</li>
             ))}
