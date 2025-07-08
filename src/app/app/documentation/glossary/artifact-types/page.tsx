@@ -5,9 +5,7 @@ import { useSanityContentForArtifactTypes } from '@/components/documentation/hoo
 import { ContentForGlossaryItem } from '@/components/documentation/type';
 
 export default function DataTypesPage() {
-  const artifactTypeslContent = useSanityContentForArtifactTypes().sort((a, b) =>
-    a.Name.localeCompare(b.Name)
-  );
+  const artifactTypeslContent = useSanityContentForArtifactTypes();
 
   return (
     <div className="flex w-full flex-row">

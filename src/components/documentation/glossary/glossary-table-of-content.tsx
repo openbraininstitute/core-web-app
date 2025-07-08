@@ -12,13 +12,9 @@ import { classNames } from '@/util/utils';
 export default function GlossaryTableOfContent() {
   const { slug } = useParams();
 
-  const contentDataType = useSanityContentForExperimentsModels().sort((a, b) =>
-    a.Name.localeCompare(b.Name)
-  );
+  const contentDataType = useSanityContentForExperimentsModels();
 
-  const contentArtifactType = useSanityContentForArtifactTypes().sort((a, b) =>
-    a.Name.localeCompare(b.Name)
-  );
+  const contentArtifactType = useSanityContentForArtifactTypes();
 
   return (
     <div className="fixed z-50 h-screen w-[255px] overflow-y-auto">

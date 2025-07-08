@@ -1,4 +1,4 @@
-const queryForArtifactTypes = `*[_type == "glossaryItem" && !(Name in ["Model Data", "Experimental Data"])]
+const queryForArtifactTypes = `*[_type == "glossaryItem" && !(Name in ["Model Data", "Experimental Data"])] | order(Name asc)
     {
     Name,
     New_suggested_name,

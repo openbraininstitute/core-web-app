@@ -5,9 +5,7 @@ import { useSanityContentForExperimentsModels } from '@/components/documentation
 import { ContentForGlossaryItem } from '@/components/documentation/type';
 
 export default function DataTypesPage() {
-  const experimentAndModelContent = useSanityContentForExperimentsModels().sort((a, b) =>
-    a.Name.localeCompare(b.Name)
-  );
+  const experimentAndModelContent = useSanityContentForExperimentsModels();
 
   return (
     <div className="flex w-full flex-row">
