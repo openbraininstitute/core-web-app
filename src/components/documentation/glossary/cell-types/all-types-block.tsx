@@ -19,18 +19,17 @@ function SectionItem({ item, index, highlightedCellType }: SectionItemProps) {
   const slug = slugifyForUrl(item.pref_label);
 
   return (
-    <section
-      key={item.pref_label}
-      id={slug}
-      className={classNames(
-        'scroll-mt-4',
-        index !== 0 && 'border-primary-7 border-t pt-4',
-        highlightedCellType === slug && styles.highlight
-      )}
-    >
-      <h3 className="text-2xl font-bold text-white">{item.pref_label}</h3>
-      <p className="text-primary-1 mt-1">{item.definition || 'No description available.'}</p>
-    </section>
+    <>
+      <section
+        key={item.pref_label}
+        id={slug}
+        className={classNames('scroll-mt-4 py-6', highlightedCellType === slug && styles.highlight)}
+      >
+        <h3 className="text-2xl font-bold text-white">{item.pref_label}</h3>
+        <p className="text-primary-1 mt-1">{item.definition || 'No description available.'}</p>
+      </section>
+      {index !== 0 && <div className="bg-primary-7 block h-px w-full" />}
+    </>
   );
 }
 
@@ -65,7 +64,7 @@ export default function AllTypesBlock({
   }, [highlightedCellType, setHighlightedCellType]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col">
       {sortedData.map((item, index) => (
         <SectionItem
           key={item.pref_label}

@@ -46,7 +46,6 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
     item.pref_label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Smooth scrolling function
   const handleScrollTo = useCallback((slug: string) => {
     const element = document.getElementById(slug);
     if (element) {
@@ -54,17 +53,12 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
     }
   }, []);
 
-  // Handle click to update URL, scroll, and highlight
   const handleItemClick = useCallback(
     (slug: string) => {
-      // Create new search params
       const params = new URLSearchParams(searchParams);
       params.set('cell-type', slug);
-      // Update URL without reloading
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
-      // Trigger smooth scrolling
       handleScrollTo(slug);
-      // Set highlighted cell type
       setHighlightedCellType(slug);
     },
     [pathname, searchParams, router, handleScrollTo]
@@ -72,7 +66,7 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
 
   return (
     <div className="relative flex w-full flex-row">
-      <div className="no-scrollbar fixed flex h-screen w-[220px] flex-col gap-y-3 overflow-y-auto pl-10 text-base text-white">
+      <div className="no-scrollbar fixed ml-12 flex h-screen w-[220px] flex-col gap-y-3 overflow-y-auto pl-10 text-base text-white">
         <div>
           <h3 className="text-primary-3 mb-4 text-xl font-bold">
             {cellType === 'm-type' ? 'M-Types' : 'E-Types'}
@@ -108,7 +102,7 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
           );
         })}
       </div>
-      <div className="ml-[260px]">
+      <div className="ml-[320px]">
         {React.Children.map(children, (child) =>
           React.isValidElement<CellTypeDefinitionsFullListProps>(child)
             ? React.cloneElement(child, {

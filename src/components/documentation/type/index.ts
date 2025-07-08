@@ -39,7 +39,7 @@ export type StepProps = {
   time: number | null;
 };
 
-type SingleTutorialProps = {
+export type SingleTutorialProps = {
   _id: string;
   title: string;
   slug: string;
@@ -54,7 +54,7 @@ type SingleTutorialProps = {
   steps: StepProps[] | null | undefined;
 };
 
-type SingleGuideProps = {
+export type SingleGuideProps = {
   title: string;
   slug: string;
   description: string;
@@ -63,7 +63,7 @@ type SingleGuideProps = {
   scale: string | null;
 };
 
-type SingleWorkshopProps = {
+export type SingleWorkshopProps = {
   title: string;
   slug: string;
   description: string;
@@ -71,7 +71,7 @@ type SingleWorkshopProps = {
   content: PortableText | null;
 };
 
-type AITooslsProps = {
+export type AITooslsProps = {
   name: string;
   name_frontend: string;
   description: string;
