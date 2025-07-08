@@ -35,14 +35,15 @@ export default function LargeScreen() {
             </>
           ))}
         </div>
+
+        <div className={styleBlockSmall}>
+          <ul className={styles.notesExplanation}>
+            <li>*: Expires in 1 year, non-transferable</li>
+            <li>**: Retained for 3 months after cancellation</li>
+            <li>***: Published data & models</li>
+          </ul>
+        </div>
       </CenteredColumn>
-      <div className={styleBlockSmall}>
-        <ul className={styles.notesExplanation}>
-          <li>*: Expires in 1 year, non-transferable</li>
-          <li>**: Retained for 3 months after cancellation</li>
-          <li>***: Published data & models</li>
-        </ul>
-      </div>
     </>
   );
 }

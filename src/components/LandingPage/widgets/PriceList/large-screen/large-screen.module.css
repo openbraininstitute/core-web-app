@@ -1,7 +1,7 @@
 .priceList {
   display: grid;
   grid-template-columns: 280px repeat(var(--custom-plans-count), 280px);
-  gap: 16px;
+  gap: 32px;
   width: auto;
   overflow-x: auto;
   scroll-snap-points-y: repeat(296px);
@@ -27,6 +27,14 @@
 
 .priceList big {
   font-size: var(--font-size-L);
+}
+
+.notesExplanation {
+  margin-top: 42px;
+}
+
+.notesExplanation > li {
+  margin-bottom: 0.3em;
 }
 
 .notesExplanation > li::marker {
@@ -57,4 +65,13 @@
   .notesExplanation {
     display: none;
   }
+}
+
+/*--------------- PRICE LIST ---------------*/
+.quadrupleColumn {
+  max-width: 78%;
+  margin: 30px auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }

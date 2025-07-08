@@ -90,7 +90,7 @@ a.roundedButton {
   grid-column: 5/6;
   max-width: var(--S);
   margin-left: 30px;
-  margin: 20px 0 20px 30px;
+  margin: 20px 0;
 }
 
 .layout .blockSmallExpandRight {
@@ -112,3 +112,5 @@ a.roundedButton {
 .layout .blockSmallMarginLeft {
   grid-column: 1/5;
 }
+
+/*--------------- PRICE LIST ---------------*/
