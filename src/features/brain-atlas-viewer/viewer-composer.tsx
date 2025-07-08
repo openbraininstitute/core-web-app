@@ -98,7 +98,7 @@ export default function ViewerComposer({
       placement: 'topRight',
       key: 'point-cloud-warning',
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onMeshLoadingErrorHandler = useCallback((error: Error, _: ErrorInfo) => {
     notification.warning({
@@ -106,7 +106,7 @@ export default function ViewerComposer({
       placement: 'topRight',
       key: 'mesh-warning',
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!brainRegions) return null;
 
