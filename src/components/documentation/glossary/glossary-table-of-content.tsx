@@ -2,23 +2,23 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useSanityContentForArtifactTypes } from '../hooks/use-sanity-content-for-artifact-types';
+import { useSanityContentForExperimentsModels } from '../hooks/use-sanity-content-for-data-type';
 import { ContentForGlossaryItem } from '../type';
 
 import Slugify from '@/util/slugify';
 import { classNames } from '@/util/utils';
 
-export default function GlossaryTableOfContent({ content }: { content: ContentForGlossaryItem[] }) {
+export default function GlossaryTableOfContent() {
   const { slug } = useParams();
 
-  const contentDataType = content.filter((item: ContentForGlossaryItem) =>
-    ['Experimental Data', 'Model Data'].includes(item.Name)
+  const contentDataType = useSanityContentForExperimentsModels().sort((a, b) =>
+    a.Name.localeCompare(b.Name)
   );
 
-  const contentArtifactType = content
-    .filter(
-      (item: ContentForGlossaryItem) => !['Experimental Data ', 'Model Data '].includes(item.Name)
-    )
-    .sort((a, b) => a.Name.localeCompare(b.Name));
+  const contentArtifactType = useSanityContentForArtifactTypes().sort((a, b) =>
+    a.Name.localeCompare(b.Name)
+  );
 
   return (
     <div className="fixed z-50 h-screen w-[255px] overflow-y-auto">
