@@ -5,7 +5,7 @@ import VerticalSpace from '../../VerticalSpace';
 
 import { ContentForRichTextPreview } from '@/components/LandingPage/content';
 import { styleBlockFullWidth, styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
-import { gotoSection } from '@/components/LandingPage/utils';
+import { gotoSection } from '@/components/LandingPage/client-utils';
 import { classNames } from '@/util/utils';
 
 import styles from './SanityContentPreview.module.css';

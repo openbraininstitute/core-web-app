@@ -1,6 +1,9 @@
+'use server';
+
 import { Metadata } from 'next';
 
-import { tryType, typeStringOrNull } from '../content';
+import { tryType } from '../content';
+import { typeStringOrNull } from '../content/shared-types';
 import queryTemplate from './metadata.groq';
 import { DEFAULT_METADATA } from './default';
 import { fetchSanity } from '@/services/sanity';

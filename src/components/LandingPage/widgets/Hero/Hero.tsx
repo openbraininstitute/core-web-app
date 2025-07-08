@@ -3,7 +3,7 @@ import React from 'react';
 import { Text } from '../../components/Text';
 import { styleBlockMedium, styleLayout } from '../../styles';
 import ProgressiveImage from '../../components/ProgressiveImage';
-import { gotoSection } from '../../utils';
+import { gotoSection } from '../../client-utils';
 import { useContentForHero } from './hooks';
 import { classNames } from '@/util/utils';
 

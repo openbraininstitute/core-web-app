@@ -1,4 +1,4 @@
-button.card {
+div.card {
   position: relative;
   border: 1px solid var(--color-neutral);
   padding: 1em;
@@ -20,7 +20,7 @@ button.card {
   backdrop-filter: blur(4px);
 }
 
-button.card .content {
+div.card .content {
   position: absolute;
   left: 0;
   top: 0;
@@ -61,7 +61,7 @@ button.card .content {
   font-weight: lighter;
 }
 
-button.card .background {
+div.card .background {
   position: absolute;
   left: 0;
   top: 0;

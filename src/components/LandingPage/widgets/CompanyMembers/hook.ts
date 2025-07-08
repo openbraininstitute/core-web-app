@@ -11,7 +11,10 @@ export function useMembersBlocs(group: Group) {
     blocs: [],
     small: false,
   });
-  const allMembers = useSanityContentForMembers();
+  const allMembersRaw = useSanityContentForMembers();
+
+  const allMembers = React.useMemo(() => allMembersRaw, [allMembersRaw.length]);
+
   React.useEffect(() => {
     const specs = SPECS[group];
     const members = allMembers

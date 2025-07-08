@@ -1,3 +1,4 @@
+'use client';
 /* eslint-disable jsx-a11y/media-has-caption */
 import React, { CSSProperties, SyntheticEvent, useRef, useState } from 'react';
 
@@ -103,19 +104,21 @@ export default function ProgressiveVideo({
           <PlayIcon className="h-44 w-auto" />
         </button>
       )}
-      <video
-        className={classNames(controls && styles.pointer)}
-        src={src}
-        ref={refVideo}
-        // controls={controls}
-        muted
-        loop={!controls}
-        disablePictureInPicture
-        playsInline
-        onPlay={handlePlay}
-        onCanPlay={handleReady}
-        onTimeUpdate={handleTimeUpdate}
-      />
+      {src && (
+        <video
+          className={classNames(controls && styles.pointer)}
+          src={src}
+          ref={refVideo}
+          // controls={controls}
+          muted
+          loop={!controls}
+          disablePictureInPicture
+          playsInline
+          onPlay={handlePlay}
+          onCanPlay={handleReady}
+          onTimeUpdate={handleTimeUpdate}
+        />
+      )}
     </div>
   );
 }

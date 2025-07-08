@@ -23,7 +23,7 @@ export default function RepositoryCard({ className, value, showHeader }: Reposit
   const textContent = textExpanded ? value.description : `${value.description.slice(0, 200)}...`;
 
   return (
-    <div className={classNames(className, styles.repositoryCard)}>
+    <div className={classNames(className, styles.repositoryCard, 'flex h-full flex-col')}>
       <h2>{value.title}</h2>
       {showHeader && (
         <header>
@@ -48,7 +48,7 @@ export default function RepositoryCard({ className, value, showHeader }: Reposit
           {textExpanded ? 'Read less' : 'Read more'}
         </button>
       </div>
-      <div className={styles.buttons}>
+      <div className={classNames(styles.buttons, 'mt-auto')}>
         {value.buttons.map((btn) => (
           <a
             className={classNames(styles.button, styleButtonHoverable)}

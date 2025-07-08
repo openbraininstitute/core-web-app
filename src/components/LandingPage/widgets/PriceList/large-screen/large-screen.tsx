@@ -1,4 +1,5 @@
 /* eslint-disable react/no-array-index-key */
+import { Fragment } from 'react';
 
 import FeatureBloc from './FeatureBloc';
 import PlanHeader from './PlanHeader';
@@ -29,10 +30,10 @@ export default function LargeScreen() {
             <PlanHeader key={`${plan.title}/${index}`} plan={plan} />
           ))}
           {features.map((bloc, index) => (
-            <>
+            <Fragment key={bloc.title}>
               {index > 0 && <hr className={styles.fullWidth} />}
               <FeatureBloc bloc={bloc} plans={plans} />
-            </>
+            </Fragment>
           ))}
         </div>
 

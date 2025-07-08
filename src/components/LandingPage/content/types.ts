@@ -1,15 +1,12 @@
+'use client';
+
 import { RichText, tryType } from './_common';
+import { typeStringOrNull, typeNumberOrNull, typeBooleanOrNull, typeImage } from './shared-types';
 
 import { TypeDef } from '@/util/type-guards';
 
-export const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
-export const typeNumberOrNull: TypeDef = ['|', 'number', 'null', 'undefined'];
-export const typeBooleanOrNull: TypeDef = ['|', 'boolean', 'null', 'undefined'];
-export const typeImage = {
-  imageURL: 'string',
-  imageWidth: 'number',
-  imageHeight: 'number',
-} satisfies TypeDef;
+// Re-export shared types for backward compatibility
+export { typeStringOrNull, typeNumberOrNull, typeBooleanOrNull, typeImage };
 
 export interface ContentForRichTextImage {
   _type: 'imageBlock';

@@ -12,7 +12,11 @@ type SingleSectionCardProps = {
 
 export function SingleSectionCard({ index, title, description, video }: SingleSectionCardProps) {
   return (
-    <button className={classNames(styles.card, index > 999 && styles.comingSoon)} type="button">
+    <div
+      id={`${title}/${index}`}
+      className={classNames(styles.card, index > 999 && styles.comingSoon)}
+      role="button"
+    >
       <Video className={styles.background} src={video} />
       <div className={styles.content}>
         <div>
@@ -21,6 +25,6 @@ export function SingleSectionCard({ index, title, description, video }: SingleSe
         </div>
         <div>{description}</div>
       </div>
-    </button>
+    </div>
   );
 }

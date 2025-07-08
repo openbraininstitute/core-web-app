@@ -1,5 +1,6 @@
 import { PortableTextBlock } from '@portabletext/react';
 import { assertType, TypeDef } from '@/util/type-guards';
+import { typeImage } from './shared-types';
 
 /**
  * Check a type and log an explicit error in case of failure.
@@ -18,8 +19,5 @@ export function tryType(typeName: string, data: unknown, type: TypeDef): boolean
 
 export type RichText = PortableTextBlock | PortableTextBlock[];
 
-export const typeImage: Record<string, TypeDef> = {
-  imageURL: 'string',
-  imageWidth: 'number',
-  imageHeight: 'number',
-};
+// Re-export shared typeImage
+export { typeImage };

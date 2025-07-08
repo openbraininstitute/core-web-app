@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import React from 'react';
 
-import { createClient } from 'next-sanity';
+import { createClient, defineQuery } from 'next-sanity';
 
 import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
@@ -68,7 +68,7 @@ const cache = new Map<string, unknown>();
  *
  * @see https://open-brain-institute.sanity.studio
  */
-async function fetchSanityContent(query: string): Promise<unknown> {
+export async function fetchSanityContent(query: string): Promise<unknown> {
   const fromCache = cache.get(query);
   if (fromCache) return fromCache;
 

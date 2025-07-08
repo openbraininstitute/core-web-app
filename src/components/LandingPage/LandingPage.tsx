@@ -15,6 +15,7 @@ import SectionNews from './sections/SectionNews';
 import { EnumSection } from './sections/sections';
 
 import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
+import { ContentForRichText } from './content';
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
 
@@ -25,9 +26,10 @@ interface LandingPageProps {
   className?: string;
   section: EnumSection;
   errorCode?: string;
+  content: ContentForRichText;
 }
 
-export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
+export default function LandingPage({ className, section, errorCode, content }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       <div className={classNames(className, styles.landingPage)}>
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
-        <PaddedBlock>{renderSection(section)}</PaddedBlock>
+        <PaddedBlock>{renderSection(section, content)}</PaddedBlock>
         <VerticalSpace height="30px" />
         <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
@@ -51,7 +53,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
   );
 }
 
-function renderSection(section: EnumSection): React.ReactNode {
+function renderSection(section: EnumSection, content: ContentForRichText): React.ReactNode {
   switch (section) {
     case EnumSection.Home:
     case EnumSection.About:
@@ -64,7 +66,7 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.PrivacyPolicy:
     case EnumSection.ComingSoon:
     case EnumSection.Story:
-      return <SectionGeneric section={section} />;
+      return <SectionGeneric content={content} section={section} />;
     case EnumSection.Contact:
       return <SectionContact />;
     case EnumSection.News:
