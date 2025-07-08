@@ -48,7 +48,7 @@ export function SuspenseWithStatus({
 }: Props) {
   const onPending = useCallback(() => {
     onStatusChange?.('pending');
-  }, [id, onStatusChange]);
+  }, [onStatusChange]);
 
   const onResolve = useCallback(() => {
     onStatusChange?.('resolved', { id });
@@ -64,12 +64,22 @@ export function SuspenseWithStatus({
 
   return withErrorBoundary ? (
     <ErrorBoundary onError={onError} fallback={fallback}>
-      <Suspense key={id} fallback={fallbackLoading?.({ onMount: onPending })}>
+      <Suspense
+        key={id}
+        fallback={
+          fallbackLoading?.({ onMount: onPending }) ?? <FallbackComponent onMount={onPending} />
+        }
+      >
         <ResolvedComponent onMount={onResolve}>{children}</ResolvedComponent>
       </Suspense>
     </ErrorBoundary>
   ) : (
-    <Suspense key={id} fallback={fallbackLoading?.({ onMount: onPending })}>
+    <Suspense
+      key={id}
+      fallback={
+        fallbackLoading?.({ onMount: onPending }) ?? <FallbackComponent onMount={onPending} />
+      }
+    >
       <ResolvedComponent onMount={onResolve}>{children}</ResolvedComponent>
     </Suspense>
   );
@@ -96,4 +106,14 @@ function ResolvedComponent({
     onMount();
   }, [onMount]);
   return <>{children}</>;
+}
+
+/**
+ * Fallback for suspense that does not render any UI but calls a callback when mounted.
+ */
+function FallbackComponent({ onMount }: { onMount: () => void }) {
+  React.useEffect(() => {
+    onMount();
+  }, [onMount]);
+  return null;
 }

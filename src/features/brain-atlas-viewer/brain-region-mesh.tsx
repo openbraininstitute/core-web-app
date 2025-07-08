@@ -1,72 +1,49 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useThree } from '@react-three/fiber';
-import { useEffect, useMemo } from 'react';
-import { loadable } from 'jotai/utils';
+import { useMemo, useLayoutEffect } from 'react';
 
 import { getAtlasMeshAsset } from '@/features/brain-atlas-viewer/context';
 import { createMesh } from '@/features/brain-atlas-viewer/utils';
-import {
-  addMeshVisibilityAtom,
-  disableLoadingAtom,
-  addLoadingAtom,
-} from '@/features/brain-atlas-viewer/state';
-import { useAppNotification } from '@/components/notification';
-import { messages } from '@/i18n/en/atlas';
-
-import type { ApplicationSection } from '@/types/common';
+import { addMeshVisibilityAtom } from '@/features/brain-atlas-viewer/state';
 
 export default function BrainRegionMesh({
   brainRegionId,
-  section,
   color,
+  dataKey,
 }: {
   brainRegionId: string;
-  section: ApplicationSection;
   color?: string;
+  dataKey: string;
 }) {
-  const { warning } = useAppNotification();
-  const addLoading = useSetAtom(addLoadingAtom);
-  const disableLoading = useSetAtom(disableLoadingAtom);
-
-  const brainRegionMesh = useAtomValue(
-    useMemo(() => loadable(getAtlasMeshAsset(brainRegionId)), [brainRegionId])
-  );
-
   const addMeshVisibility = useSetAtom(addMeshVisibilityAtom);
   const { scene } = useThree();
 
-  useEffect(() => {
-    if (brainRegionMesh.state === 'loading') {
-      addLoading(section, brainRegionId, 'mesh');
-    }
-    if (brainRegionMesh.state === 'hasError') {
-      disableLoading(section, brainRegionId, 'mesh');
-      warning({
-        message: messages.brainRegionMeshLoadingError,
-        description: typeof brainRegionMesh.error === 'string' ? brainRegionMesh.error : '',
-        placement: 'topRight',
-        key: 'brain-region-mesh',
-      });
-      return;
-    }
-    if (brainRegionMesh.state === 'hasData' && brainRegionMesh.data) {
-      const mesh = createMesh(brainRegionMesh.data.data, color || '#FFF');
+  // Direct atom read - this will throw a promise if not resolved yet
+  const brainRegionMeshData = useAtomValue(
+    useMemo(() => getAtlasMeshAsset(brainRegionId), [brainRegionId])
+  );
+
+  // Create mesh object only when data is available
+  const meshObject = useMemo(() => {
+    if (brainRegionMeshData?.data) {
+      const mesh = createMesh(brainRegionMeshData.data, color || '#FFF');
       mesh.userData = { brainRegionId };
-      scene.add(mesh);
-      addMeshVisibility(section, brainRegionId, 'mesh', mesh.uuid);
-      disableLoading(section, brainRegionId, 'mesh');
+      return mesh;
     }
-  }, [
-    addLoading,
-    addMeshVisibility,
-    brainRegionId,
-    brainRegionMesh,
-    color,
-    disableLoading,
-    scene,
-    section,
-    warning,
-  ]);
+    return null;
+  }, [brainRegionMeshData, color, brainRegionId]);
+
+  // Add to scene and register visibility when mesh is created
+  useLayoutEffect(() => {
+    if (meshObject) {
+      scene.add(meshObject);
+      addMeshVisibility(dataKey, brainRegionId, 'mesh', meshObject.uuid);
+
+      return () => {
+        scene.remove(meshObject);
+      };
+    }
+  }, [meshObject, scene, addMeshVisibility, dataKey, brainRegionId]);
 
   return null;
 }

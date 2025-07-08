@@ -13,17 +13,10 @@ export const meshVisibilityAtom = atomFamily(() => atomWithReset<MeshVisibility[
 
 export const addMeshVisibilityAtom = atom(
   null,
-  (
-    get,
-    set,
-    section: ApplicationSection,
-    brainRegionId: string,
-    type: VisibilityType,
-    sceneId: string
-  ) => {
-    const visibility = get(meshVisibilityAtom(section));
+  (get, set, dataKey: string, brainRegionId: string, type: VisibilityType, sceneId: string) => {
+    const visibility = get(meshVisibilityAtom(dataKey));
     set(
-      meshVisibilityAtom(section),
+      meshVisibilityAtom(dataKey),
       uniqBy(
         [...visibility, { brainRegionId, type, sceneId }],
         (item) => `${item.brainRegionId}-${item.type}`
@@ -36,10 +29,9 @@ export const addMeshVisibilityAtom = atom(
  * Returns an async atom that fetches the point cloud of a given brain region
  * in a buffer array format
  *
- * @param brainRegionId
- * @param circuitConfigPathOverride
+ * @param brainRegionAnnotationValue
  */
-export const getPointCloudAtom = (brainRegionAnnotationValue: number) =>
+export const getPointCloudAtom = atomFamily((brainRegionAnnotationValue: number) =>
   atom(async (get) => {
     const session = await get(sessionAtom);
     if (!session) {
@@ -50,7 +42,8 @@ export const getPointCloudAtom = (brainRegionAnnotationValue: number) =>
       env.NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID || ''
     )}&region=${brainRegionAnnotationValue}&how=arrow`;
     return await fetchPointCloud(url, session.accessToken);
-  });
+  })
+);
 
 export const loadingAtom = atom<Record<ApplicationSection, LoadingState[]>>({
   explore: [],
