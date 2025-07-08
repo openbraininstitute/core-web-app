@@ -8,7 +8,7 @@ export default function GlossaryLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex w-full flex-row">
       <GlossaryTableOfContent content={content} />
-      <div className="relative ml-[200px] w-full pl-20">{children}</div>
+      <div className="relative ml-24 w-full pl-20">{children}</div>
     </div>
   );
 }

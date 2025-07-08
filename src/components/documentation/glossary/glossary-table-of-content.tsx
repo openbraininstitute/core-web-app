@@ -11,7 +11,7 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
   const { slug } = useParams();
 
   const contentDataType = content.filter((item: ContentForGlossaryItem) =>
-    ['Experimental Data ', 'Model Data '].includes(item.Name)
+    ['Experimental Data', 'Model Data'].includes(item.Name)
   );
 
   const contentArtifactType = content
@@ -29,9 +29,12 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
         Glossary
       </Link>
       <div className="mb-7 flex flex-col">
-        <div className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']">
+        <Link
+          href="/app/documentation/glossary/data-types"
+          className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']"
+        >
           Data types
-        </div>
+        </Link>
         <div className="flex flex-col gap-y-2">
           {contentDataType.map((item: ContentForGlossaryItem) => (
             <Link
@@ -49,9 +52,12 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
         </div>
       </div>
       <div className="mb-7 flex flex-col">
-        <div className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']">
+        <Link
+          href="/app/documentation/glossary/artifact-types"
+          className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']"
+        >
           Artifact types
-        </div>
+        </Link>
         <div className="flex flex-col gap-y-2">
           {contentArtifactType.map((item: ContentForGlossaryItem) => (
             <Link
@@ -69,9 +75,12 @@ export default function GlossaryTableOfContent({ content }: { content: ContentFo
         </div>
       </div>
       <div className="flex flex-col">
-        <div className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']">
+        <Link
+          href="/app/documentation/glossary/cell-types"
+          className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']"
+        >
           Cell types
-        </div>
+        </Link>
         <div className="flex flex-col gap-y-2">
           <Link
             href="/app/documentation/glossary/cell-type/m-type"
