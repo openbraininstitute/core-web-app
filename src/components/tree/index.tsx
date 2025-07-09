@@ -30,6 +30,7 @@ interface Props<TNode extends TTreeNode> {
   defaultColor?: string;
   selectedNode: TNode | null;
   separator?: boolean;
+  keepPreviousExpanded?: boolean;
 }
 
 function Container({
@@ -70,6 +71,7 @@ export default function Tree<TNode extends TTreeNode>({
   defaultColor,
   selectedNode,
   separator = true,
+  keepPreviousExpanded = false,
 }: Props<TNode>) {
   const nodes = React.useMemo(() => (Array.isArray(data) ? data : [data]), [data]);
 
@@ -84,20 +86,43 @@ export default function Tree<TNode extends TTreeNode>({
   useEffect(() => {
     if (selectedNode) {
       setExpandedIds((prev) => {
+        // get parents path to the selected node across all trees
         const currentParents = flatMap(nodes, (node) =>
           flatMap(getParentsToRoot(selectedNode.id, node as any), 'id')
         );
-        const list = [...prev, ...currentParents];
+
+        // get parents for default expanded nodes
         const initialParents = flatMap(defaultExpandedNodes, (id) =>
           flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
         );
-        list.push(...defaultExpandedNodes, ...initialParents);
 
-        return new Set(list);
+        let finalExpandedNodes: Array<string>;
+
+        if (keepPreviousExpanded) {
+          // keep all previous expanded nodes and add path to selected node
+          finalExpandedNodes = [
+            ...Array.from(prev),
+            ...currentParents,
+            ...defaultExpandedNodes.map(String),
+            ...initialParents,
+          ];
+        } else {
+          // only expand path to selected node + default expanded nodes (collapse everything else)
+          finalExpandedNodes = [
+            ...currentParents,
+            ...defaultExpandedNodes.map(String),
+            ...initialParents,
+          ];
+        }
+
+        return new Set(finalExpandedNodes);
       });
-      scrollToNode(selectedNode as any, 'start');
+
+      requestAnimationFrame(() => {
+        scrollToNode(selectedNode as any, 'start');
+      });
     }
-  }, [selectedNode, data, defaultExpandedNodes, nodes]);
+  }, [selectedNode, data, defaultExpandedNodes, keepPreviousExpanded, nodes]);
 
   const handleToggle = useCallback(
     (node: TNode) => {
