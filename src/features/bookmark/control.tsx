@@ -112,7 +112,7 @@ export default function BookmarkButton({
       }
       if (action === 'remove') {
         return notification.success({
-          message: 'Resource removed from library successfully',
+          message: 'Entity removed from library successfully',
           duration: 3,
           placement: 'topRight',
         });
