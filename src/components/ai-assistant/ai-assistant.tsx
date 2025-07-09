@@ -10,9 +10,9 @@ import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import PanelContent from './panel-content';
 import { classNames } from '@/util/utils';
-import { useServiceAiAgentThread } from '@/services/ai-agent';
 import { useLocalStorage } from '@/util/storage';
 import { isNumber } from '@/util/type-guards';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
 
 import styles from './ai-assistant.module.css';
 
@@ -25,7 +25,8 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const [panelWidth, setPanelWidth] = useLocalStorage('ai-assistant/panel-width', 25, isNumber);
   const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
-  const [threadId, recreateThreadId] = useServiceAiAgentThread();
+  const assistant = useAiAssistant();
+  const threadId = assistant.threadId.useValue();
 
   const style: CSSProperties = {
     '--custom-panel-width': `${panelWidth.toFixed(2)}vw`,
@@ -67,7 +68,7 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
             <PanelContent
               className={styles.content}
               threadId={threadId}
-              onClearChat={recreateThreadId}
+              onClearChat={assistant.createThread}
               tab={tab}
             />
             <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />

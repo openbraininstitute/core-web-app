@@ -1,7 +1,6 @@
-import React from "react";
-
 import { Spinner } from "../spinner";
 import Chat from "./chat";
+import History from "./history";
 
 interface PanelContentProps {
 	className?: string;
@@ -19,13 +18,16 @@ export default function PanelContent({
 	return (
 		<>
 			{threadId ? (
-				tab === "chat" && (
-					<Chat
-						className={className}
-						threadId={threadId}
-						onClearChat={onClearChat}
-					/>
-				)
+				<>
+					{tab === "chat" && (
+						<Chat
+							className={className}
+							threadId={threadId}
+							onClearChat={onClearChat}
+						/>
+					)}
+					{tab === "history" && <History className={className} />}
+				</>
 			) : (
 				<Spinner />
 			)}

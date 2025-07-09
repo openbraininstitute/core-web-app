@@ -3,7 +3,7 @@ import { createHeaders } from '@/util/utils';
 
 interface QueryOptions<T> {
   accessToken?: string | null;
-  method?: 'POST' | 'DELETE' | 'GET';
+  method?: 'POST' | 'DELETE' | 'GET' | 'PATCH';
   path: string;
   query?: unknown;
   params?: Record<string, string | null>;
@@ -29,13 +29,14 @@ export async function fetchJSON<T>({
     });
     const data = await resp.json();
     if (!resp.ok) {
-      // logError(`Error #${resp.status}`);
-      // logError('URL:', url);
-      // logError('Query:', query);
-      // logError(`Output:`, data);
       throw new Error(`Query failed with error code #${resp.status}!`);
     }
     if (!typeGuard(data)) {
+      console.error('The following query failed because of an unexpected return type!');
+      console.error('', 'url:', url);
+      console.error('', 'method:', method);
+      console.error('', 'params:', params);
+      console.error('', 'output:', data);
       throw new Error('Unexpected return type!');
     }
     return data;
