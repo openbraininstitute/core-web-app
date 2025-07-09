@@ -58,7 +58,7 @@ export default async function Page({
             fallback={
               <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
                 <Spin indicator={<LoadingOutlined />} size="large" />
-                <h2 className="text-primary-9 font-light">Loading analysis...</h2>
+                <h2 className="font-light text-white">Loading...</h2>
               </div>
             }
           >
