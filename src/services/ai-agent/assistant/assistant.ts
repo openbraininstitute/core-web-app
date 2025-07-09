@@ -1,12 +1,12 @@
 import debounce from 'lodash/debounce';
 
+import { serviceAiAgentThreadCreate } from '../api';
 import { Signal } from './signal';
 import { AssistantContext } from './types';
-import { initThread } from './init/thread';
+import { InitializerThread } from './init/thread';
 
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
-import { serviceAiAgentThreadCreate } from '../api';
 
 class AiAssistantClass {
   public readonly threadId = new Signal<string | undefined>(undefined);
@@ -16,6 +16,8 @@ class AiAssistantClass {
   private readonly virtualLabId = new Signal<string | null>(null);
 
   private readonly projectId = new Signal<string | null>(null);
+
+  private readonly threadInitializer = new InitializerThread(this);
 
   constructor() {
     this.accessToken.event.addListener(this.handleInit);
@@ -48,7 +50,7 @@ class AiAssistantClass {
   }
 
   private readonly handleInit = debounce(() => {
-    initThread(this.context, this);
+    this.threadInitializer.init(this.context);
   }, 50);
 }
 

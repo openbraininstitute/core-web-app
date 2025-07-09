@@ -3,11 +3,11 @@ import React from 'react';
 import { IconMore } from '../../icons/more';
 import { IconEdit } from '../../icons/edit';
 import { IconDelete } from '../../icons/delete';
-
 import DialogEdit from './dialog-edit';
 
 import { classNames } from '@/util/utils';
-import { useServiceAiAgentThread, useServiceAiAgentThreadList } from '@/services/ai-agent';
+import { useServiceAiAgentThreadList } from '@/services/ai-agent';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
 
 import styles from './history.module.css';
 
@@ -16,7 +16,8 @@ export interface HistoryProps {
 }
 
 export default function History({ className }: HistoryProps) {
-  const { threadId, setThreadId } = useServiceAiAgentThread();
+  const assistant = useAiAssistant();
+  const [threadId, setThreadId] = assistant.threadId.use();
   const [openEdit, setOpenEdit] = React.useState(false);
   const [currentThreadId, setCurrentThreadId] = React.useState<string | undefined>(undefined);
   const [currentThreadTitle, setCurrentThreadTitle] = React.useState<string | undefined>(undefined);
@@ -37,7 +38,12 @@ export default function History({ className }: HistoryProps) {
           <div>
             {history.map((thread) => (
               <div className={styles.card} key={thread.id}>
-                <button key={thread.id} type="button" className={styles.mainButton}>
+                <button
+                  key={thread.id}
+                  type="button"
+                  className={styles.mainButton}
+                  onClick={() => setThreadId(thread.id)}
+                >
                   <pre>{JSON.stringify(thread, null, 2)}</pre>
                 </button>
                 <div className={styles.actions}>
@@ -57,7 +63,15 @@ export default function History({ className }: HistoryProps) {
                       <IconEdit />
                     </button>
                     {threadId !== thread.id && (
-                      <button type="button">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          console.log({
+                            threadId,
+                            thread,
+                          })
+                        }
+                      >
                         <div className={styles.red}>Delete</div>
                         <IconDelete className={styles.red} />
                       </button>
