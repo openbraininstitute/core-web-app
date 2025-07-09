@@ -25,19 +25,38 @@ export default function useScrollComplete({
   callback?: (value: boolean) => void;
 }) {
   useEffect(() => {
+    const checkScrollPosition = (target: HTMLElement) => {
+      const { scrollHeight, clientHeight, scrollTop } = target;
+      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
+
+      const isScrollable = scrollHeight > clientHeight;
+
+      // only trigger callback with true if scrollable and at bottom
+      // if not scrollable, always call with false to hide load more
+      callback?.(isScrollable && isAtBottom);
+    };
+
     const onScroll = ({ currentTarget }: Event) => {
-      const { scrollHeight, clientHeight, scrollTop } = currentTarget as HTMLDivElement;
-      callback?.(Math.abs(scrollHeight - clientHeight - scrollTop) < 1);
+      checkScrollPosition(currentTarget as HTMLElement);
     };
 
     if (element) {
+      // check initial state when element mounts
+      checkScrollPosition(element);
+
       element.addEventListener('scroll', onScroll);
-    }
-    return () => {
-      if (element) {
+
+      //  check on resize in case content changes
+      const resizeObserver = new ResizeObserver(() => {
+        checkScrollPosition(element);
+      });
+      resizeObserver.observe(element);
+
+      return () => {
         element.removeEventListener('scroll', onScroll);
-      }
-    };
+        resizeObserver.unobserve(element);
+      };
+    }
   }, [callback, element]);
 
   return null;
