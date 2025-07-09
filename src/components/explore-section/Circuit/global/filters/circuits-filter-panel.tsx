@@ -3,7 +3,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 
-import { DatePicker, Switch, Tooltip } from 'antd';
+import { DatePicker, Switch } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
@@ -25,49 +25,24 @@ import { classNames } from '@/util/utils';
 
 import styles from './circuits-filter-panel.module.css';
 
-function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onClick: () => void }) {
-  return isDisabled ? (
-    <Tooltip title="Please fill in the required fields to apply the filter">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={isDisabled}
-        className="flex h-10 w-20 items-center justify-center text-base font-normal text-white opacity-50"
-        aria-label="Apply filter"
-      >
-        Apply
-      </button>
-    </Tooltip>
-  ) : (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={isDisabled}
-      className="border-primary-4 flex h-10 w-20 items-center justify-center border border-solid text-base font-normal text-white opacity-100"
-      aria-label="Apply filter"
-    >
-      Apply
-    </button>
-  );
-}
-
 function SingleFilterItem({
   title,
   id,
   index,
   filterType,
   columnCustomizable,
+  onFilterChange,
 }: {
   title: string;
   id: string;
   index: number;
   filterType: SingleColumnContent['filterType'];
   columnCustomizable: SingleColumnContent['columnCustomizable'];
+  onFilterChange: (columnId: string, filter: any) => void;
 }) {
   const [columns] = useAtom(columnsAtom);
   const [, toggleColumn] = useAtom(toggleColumnAtom);
   const [filters] = useAtom(filtersAtom);
-  const [, setFilter] = useAtom(setFilterAtom);
   const isColumnActive = columns.find((column) => column.id === id)?.isActive ?? false;
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const isFilterActive = filters[id] !== null && filters[id] !== undefined;
@@ -75,6 +50,7 @@ function SingleFilterItem({
   const [localType, setLocalType] = useState<string | undefined>(filters[id]?.type);
   const [localMin, setLocalMin] = useState<number | string | undefined>(filters[id]?.min);
   const [localMax, setLocalMax] = useState<number | string | undefined>(filters[id]?.max);
+  const [localValues, setLocalValues] = useState<string[]>(filters[id]?.values || []);
 
   const {
     categories,
@@ -84,7 +60,8 @@ function SingleFilterItem({
   const { scales, loading: scalesLoading, error: scalesError } = useCircuitScales();
   const { species, isLoading: speciesLoading, error: speciesError } = useCircuitSpecies();
 
-  const handleApplyFilter = () => {
+  // Notify parent of filter changes whenever local state changes
+  useEffect(() => {
     if (filterType === 'numeric' && localType) {
       const filter = {
         property: id,
@@ -92,26 +69,22 @@ function SingleFilterItem({
         min: localType === 'greaterThan' || localType === 'between' ? localMin : undefined,
         max: localType === 'lessThan' || localType === 'between' ? localMax : undefined,
       };
-      setFilter({ columnId: id, filter });
+      onFilterChange(id, filter);
     } else if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
-      setFilter({ columnId: id, filter: localMin ? { property: id, min: localMin } : null });
+      onFilterChange(id, localMin ? { property: id, min: localMin } : null);
+    } else if (filterType === 'select' && id === 'scale' && localValues.length > 0) {
+      onFilterChange(id, { property: id, values: localValues });
     } else if (filterType === 'select' && localType) {
-      setFilter({ columnId: id, filter: { property: id, type: localType } });
+      onFilterChange(id, { property: id, type: localType });
+    } else {
+      onFilterChange(id, null);
     }
-  };
-
-  const handleResetFilter = () => {
-    setLocalType(undefined);
-    setLocalMin(undefined);
-    setLocalMax(undefined);
-    setFilter({ columnId: id, filter: null });
-  };
+  }, [filterType, id, localType, localMin, localMax, localValues, onFilterChange]);
 
   const renderFilterControls = () => {
     if (!filterType) return null;
 
     if (filterType === 'text') {
-      const isApplyDisabled = !localMin;
       return (
         <div className="mt-4 flex flex-col gap-y-2">
           <input
@@ -120,17 +93,6 @@ function SingleFilterItem({
             onChange={(e) => setLocalMin(e.target.value || undefined)}
             className="text-bas mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans focus:outline-none"
           />
-          <div className="flex gap-x-2">
-            <ApplyButton isDisabled={isApplyDisabled} onClick={handleApplyFilter} />
-            <button
-              onClick={handleResetFilter}
-              type="button"
-              aria-label="Reset filter"
-              className="text-primary-3 text-base font-normal"
-            >
-              Reset
-            </button>
-          </div>
         </div>
       );
     }
@@ -168,19 +130,6 @@ function SingleFilterItem({
               className="mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans text-base focus:outline-none"
             />
           )}
-          <div className="flex gap-x-2">
-            <ApplyButton
-              isDisabled={!localType || (localType === 'between' && (!localMin || !localMax))}
-              onClick={handleApplyFilter}
-            />
-            <button
-              type="button"
-              onClick={handleResetFilter}
-              className="text-primary-3 text-base font-normal"
-            >
-              Reset
-            </button>
-          </div>
         </div>
       );
     }
@@ -188,6 +137,7 @@ function SingleFilterItem({
     if (filterType === 'select') {
       const isBuildCategory = id === 'buildCategory';
       const isSpecies = id === 'specie';
+      const isScale = id === 'scale';
 
       // OPTIONS
       let options;
@@ -232,6 +182,45 @@ function SingleFilterItem({
         selectPlaceholder = 'Select species';
       }
 
+      if (isScale) {
+        if (loading) {
+          return <div>Loading scales...</div>;
+        }
+        if (error) {
+          return <div>Error loading scales: {error}</div>;
+        }
+        if (!options || options.length === 0) {
+          return <div>No scales available</div>;
+        }
+        return (
+          <div className="mt-4 flex max-h-48 flex-col gap-y-2 overflow-y-auto">
+            {options.map((option) => (
+              <label
+                key={option}
+                htmlFor={`scale-checkbox-${option}`}
+                className="flex items-center gap-x-2 text-base text-white"
+              >
+                <input
+                  id={`scale-checkbox-${option}`}
+                  type="checkbox"
+                  value={option}
+                  checked={localValues.includes(option)}
+                  onChange={(e) => {
+                    const { value } = e.target;
+                    setLocalValues((prev) =>
+                      e.target.checked ? [...prev, value] : prev.filter((v) => v !== value)
+                    );
+                  }}
+                  disabled={loading}
+                  className="h-4 w-4"
+                />
+                <span className="text-lg">{option.charAt(0).toUpperCase() + option.slice(1)}</span>
+              </label>
+            ))}
+          </div>
+        );
+      }
+
       return (
         <div className="mt-4 flex flex-col gap-y-2">
           <select
@@ -255,19 +244,6 @@ function SingleFilterItem({
               ))
             )}
           </select>
-          <div className="flex gap-x-2">
-            <ApplyButton
-              isDisabled={!localType || (localType === 'between' && (!localMin || !localMax))}
-              onClick={handleApplyFilter}
-            />
-            <button
-              onClick={handleResetFilter}
-              type="button"
-              className="text-primary-3 text-base font-normal"
-            >
-              Reset
-            </button>
-          </div>
         </div>
       );
     }
@@ -279,16 +255,6 @@ function SingleFilterItem({
             checked={localMin === 'true'}
             onChange={(checked) => setLocalMin(checked ? 'true' : undefined)}
           />
-          <div className="flex gap-x-2">
-            <ApplyButton isDisabled={!localMin} onClick={handleApplyFilter} />
-            <button
-              type="button"
-              onClick={handleResetFilter}
-              className="text-primary-3 text-base font-normal"
-            >
-              Reset
-            </button>
-          </div>
         </div>
       );
     }
@@ -301,17 +267,6 @@ function SingleFilterItem({
             onChange={(date) => setLocalMin(date ? date.format('YYYY-MM-DD') : undefined)}
             className="w-full"
           />
-          <div className="flex gap-x-2">
-            <ApplyButton isDisabled={!localMin} onClick={handleApplyFilter} />
-            <button
-              type="button"
-              onClick={handleResetFilter}
-              aria-label="Reset filter"
-              className="text-primary-3 text-base font-normal"
-            >
-              Reset
-            </button>
-          </div>
         </div>
       );
     }
@@ -323,24 +278,21 @@ function SingleFilterItem({
     <div className={classNames('w-full', index !== 0 && 'border-primary-6 border-t pt-6')}>
       <header className="flex w-full flex-row items-center justify-between">
         <div className="flex flex-row items-center">
-          <Tooltip title={`Toggle column visibility for ${title}`}>
-            <button
-              type="button"
-              onClick={() => toggleColumn(id)}
-              className={classNames(
-                'flex h-8 w-8 items-center justify-between text-white',
-                columnCustomizable ? 'pointer-events-auto' : 'pointer-events-none hidden'
-              )}
-              disabled={!columnCustomizable}
-            >
-              {isColumnActive ? (
-                <EyeIcon className="h-5 w-5" />
-              ) : (
-                <EyeSlashIcon className="h-5 w-5 opacity-70" />
-              )}
-            </button>
-          </Tooltip>
-
+          <button
+            type="button"
+            onClick={() => toggleColumn(id)}
+            className={classNames(
+              'flex h-8 w-8 items-center justify-between text-white',
+              columnCustomizable ? 'pointer-events-auto' : 'pointer-events-none hidden'
+            )}
+            disabled={!columnCustomizable}
+          >
+            {isColumnActive ? (
+              <EyeIcon className="h-5 w-5" />
+            ) : (
+              <EyeSlashIcon className="h-5 w-5 opacity-70" />
+            )}
+          </button>
           <div className="flex flex-row items-baseline gap-x-2">
             <button
               type="button"
@@ -397,6 +349,8 @@ export default function CircuitsFilterPanel({
   const ref = useRef<HTMLDialogElement | null>(null);
   const columns = useAtomValue(columnsAtom);
   const totalColumns = useAtomValue(activeColumnsCountAtom);
+  const [, setFilter] = useAtom(setFilterAtom);
+  const [pendingFilters, setPendingFilters] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const dialog = ref.current;
@@ -420,6 +374,24 @@ export default function CircuitsFilterPanel({
       }
     }, 500);
   };
+
+  const handleFilterChange = (columnId: string, filter: any) => {
+    setPendingFilters((prev) => ({
+      ...prev,
+      [columnId]: filter,
+    }));
+  };
+
+  const handleApplyAllFilters = () => {
+    Object.entries(pendingFilters).forEach(([columnId, filter]) => {
+      setFilter({ columnId, filter });
+    });
+    handleClose();
+  };
+
+  const isApplyDisabled = Object.values(pendingFilters).every(
+    (filter) => filter === null || (Array.isArray(filter.values) && filter.values.length === 0)
+  );
 
   return (
     <dialog ref={ref} className={styles.filterPanel} onClick={handleClose}>
@@ -463,6 +435,7 @@ export default function CircuitsFilterPanel({
                       index={index}
                       filterType={column.filterType}
                       columnCustomizable={column.columnCustomizable}
+                      onFilterChange={handleFilterChange}
                     />
                   )
                 );
@@ -479,9 +452,20 @@ export default function CircuitsFilterPanel({
               onClick={handleResetFilter}
               type="button"
               id="reset-filter"
-              aria-label="Reset filter"
+              aria-label="Reset all filters"
             >
-              Reset filter
+              Reset all filters
+            </button>
+            <button
+              className={classNames(
+                'border-primary-4 border border-solid px-4 py-2 text-base text-white',
+                isApplyDisabled ? 'pointer-events-none opacity-50' : 'opacity-100'
+              )}
+              onClick={handleApplyAllFilters}
+              type="button"
+              aria-label="Apply all filters"
+            >
+              Apply all filters
             </button>
             {!isFilterActive ? (
               <div className="text-base font-normal text-white">No filter active</div>

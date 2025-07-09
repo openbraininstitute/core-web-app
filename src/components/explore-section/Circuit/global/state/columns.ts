@@ -13,6 +13,7 @@ export type FilterConfig = {
   type?: string;
   min?: number | string;
   max?: number | string;
+  values?: string[];
 };
 
 const CIRCUITS_COLUMNS: SingleColumnContent[] = [

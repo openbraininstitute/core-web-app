@@ -38,3 +38,18 @@
 .ifFilterClosed {
   transform: translateX(100%);
 }
+
+.checkbox-list input[type='checkbox'] {
+  accent-color: #1890ff; /* Matches AntD primary color */
+  width: 16px;
+  height: 16px;
+}
+.checkbox-list label {
+  cursor: pointer;
+  padding: 4px 0;
+}
+.checkbox-list {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 8px;
+}

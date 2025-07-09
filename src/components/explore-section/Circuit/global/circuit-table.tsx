@@ -177,6 +177,8 @@ export default function CircuitTable({
           }
         } else if (filterType === 'text' && typeof value === 'string' && filter.min) {
           currentMatch = value.toLowerCase().includes((filter.min as string).toLowerCase());
+        } else if (filterType === 'select' && columnId === 'scale' && filter.values) {
+          currentMatch = filter.values.includes(value as string);
         } else if (filterType === 'select' && filter.type) {
           currentMatch = value === filter.type;
         } else if (filterType === 'date' && typeof value === 'string' && filter.min) {
