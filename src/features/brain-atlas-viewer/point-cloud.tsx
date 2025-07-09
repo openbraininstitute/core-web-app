@@ -1,78 +1,57 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useThree } from '@react-three/fiber';
-import { useEffect, useMemo } from 'react';
-import { loadable } from 'jotai/utils';
-import get from 'lodash/get';
+import { useMemo, useLayoutEffect, useRef } from 'react';
 
 import { createPointCloud } from '@/features/brain-atlas-viewer/utils';
-import {
-  addLoadingAtom,
-  addMeshVisibilityAtom,
-  disableLoadingAtom,
-  getPointCloudAtom,
-} from '@/features/brain-atlas-viewer/state';
-import { useAppNotification } from '@/components/notification';
-import { messages } from '@/i18n/en/atlas';
-
-import type { ApplicationSection } from '@/types/common';
+import { addMeshVisibilityAtom, getPointCloudAtom } from '@/features/brain-atlas-viewer/state';
 
 type PointCloudMeshProps = {
   brainRegionId: string;
   brainRegionAnnotationValue: number;
-  section: ApplicationSection;
+  dataKey: string;
   color?: string;
 };
 
 export default function PointCloudMesh({
   brainRegionAnnotationValue,
   brainRegionId,
-  section,
+  dataKey,
   color,
 }: PointCloudMeshProps) {
   const { scene } = useThree();
-  const { info } = useAppNotification();
   const addMeshVisibility = useSetAtom(addMeshVisibilityAtom);
-  const disableLoading = useSetAtom(disableLoadingAtom);
-  const addLoading = useSetAtom(addLoadingAtom);
+  const hasAddedVisibility = useRef(false);
 
+  // Direct atom read - this will throw a promise if not resolved yet
   const pointCloudData = useAtomValue(
-    useMemo(
-      () => loadable<Promise<ArrayBuffer | null>>(getPointCloudAtom(brainRegionAnnotationValue)),
-      [brainRegionAnnotationValue]
-    )
+    useMemo(() => getPointCloudAtom(brainRegionAnnotationValue), [brainRegionAnnotationValue])
   );
 
-  useEffect(() => {
-    if (pointCloudData.state === 'loading') {
-      addLoading(section, brainRegionId, 'pointCloud');
+  // Create point cloud object only when data is available
+  const pointCloud3DObject = useMemo(() => {
+    if (pointCloudData) {
+      const pointCloudObj = createPointCloud(pointCloudData, color || '#FFF');
+      pointCloudObj.userData = { brainRegionId };
+      // Reset visibility tracking when new object is created
+      hasAddedVisibility.current = false;
+      return pointCloudObj;
     }
-    if (pointCloudData.state === 'hasError') {
-      info({
-        message: get(messages, (pointCloudData.error as Error).message, messages.default),
-        placement: 'topRight',
-        key: 'point-cloud-warning',
-      });
-      disableLoading(section, brainRegionId, 'pointCloud');
-      return;
-    }
-    if (pointCloudData.state === 'hasData' && pointCloudData.data) {
-      const pointCloud3DObject = createPointCloud(pointCloudData.data, color || '#FFF');
-      pointCloud3DObject.userData = { brainRegionId };
-      addMeshVisibility(section, brainRegionId, 'pointCloud', pointCloud3DObject.uuid);
+    return null;
+  }, [pointCloudData, color, brainRegionId]);
+
+  // Add to scene when point cloud is created
+  useLayoutEffect(() => {
+    if (pointCloud3DObject && !hasAddedVisibility.current) {
       scene.add(pointCloud3DObject);
-      disableLoading(section, brainRegionId, 'pointCloud');
+      addMeshVisibility(dataKey, brainRegionId, 'pointCloud', pointCloud3DObject.uuid);
+      hasAddedVisibility.current = true;
+
+      return () => {
+        scene.remove(pointCloud3DObject);
+        hasAddedVisibility.current = false;
+      };
     }
-  }, [
-    addLoading,
-    addMeshVisibility,
-    brainRegionId,
-    color,
-    disableLoading,
-    info,
-    pointCloudData,
-    scene,
-    section,
-  ]);
+  }, [pointCloud3DObject, scene, addMeshVisibility, dataKey, brainRegionId]);
 
   return null;
 }
