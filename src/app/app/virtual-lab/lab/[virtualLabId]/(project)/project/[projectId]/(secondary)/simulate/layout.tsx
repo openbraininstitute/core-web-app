@@ -35,15 +35,16 @@ export default function SimulateSingleNeuronEditLayout({
         links={[
           {
             key: 'scope',
-            href: '#',
+            href: `${labProjectUrl}/simulate?s=new&t=${scope}`,
             content: <>{scope.replace('-', ' ')}</>,
-            styles: 'text-primary-5 hover:text-primary-5! cursor-default',
+            styles: 'text-primary-5 hover:text-primary-2! cursor-pointer',
           },
           {
             key: LinkItemKey.Simulate,
             href: `${labProjectUrl}/simulate`,
             content: Content.Simulate,
-            styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
+            styles:
+              'rounded-full bg-primary-5 py-1 px-1 text-primary-9 w-[26px] font-semibold capitalize',
           },
         ]}
         lab={{

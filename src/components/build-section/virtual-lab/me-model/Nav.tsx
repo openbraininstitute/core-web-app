@@ -28,16 +28,16 @@ export default function Nav({ params, extraLinks }: Props) {
       href: `${labProjectUrl}/build`,
       content: 'Build',
       styles:
-        'rounded-full bg-primary-5 py-1 px-2 text-primary-9 w-[21px] font-semibold capitalize',
+        'rounded-full bg-primary-5 py-1 px-1 text-primary-9 w-[21px] font-semibold capitalize',
     },
   ];
 
   if (scope)
     links.unshift({
-      key: 'scope',
-      href: '#',
+      key: LinkItemKey.Build,
+      href: `${labProjectUrl}/build?s=new&t=${scope}`,
       content: <>{scope.replace('-', ' ')}</>,
-      styles: 'text-primary-5 hover:text-primary-5! cursor-default',
+      styles: 'text-primary-5 hover:text-primary-2! cursor-pointer',
     });
 
   return (
