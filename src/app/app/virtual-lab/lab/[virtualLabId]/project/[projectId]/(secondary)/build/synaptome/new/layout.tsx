@@ -25,7 +25,7 @@ export default async function Layout({ params: promisedParams, children }: Props
           {
             key: 'scope',
             href: '#',
-            content: 'single neuron',
+            content: 'Synaptome',
             styles: 'text-primary-5 hover:text-primary-5! cursor-default',
           },
           {
