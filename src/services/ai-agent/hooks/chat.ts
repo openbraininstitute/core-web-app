@@ -1,9 +1,9 @@
 import React from 'react';
-import { useSession } from 'next-auth/react';
 import { ChatRequestOptions } from '@ai-sdk/ui-utils';
 import { CreateMessage, Message, useChat } from '@ai-sdk/react';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
+import { useAiAssistant } from '../assistant';
 
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import { logError } from '@/util/logger';
@@ -16,13 +16,15 @@ export interface AiAgentRateLimit {
 }
 
 export function useServiceAiAgentChat(threadId: string) {
+  const assistant = useAiAssistant();
+  const initialMessages = assistant.initialMessages.useValue();
+  const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
   const [rateLimit, setRateLimit] = React.useState<AiAgentRateLimit | null>(null);
-  const session = useSession();
-  const accessToken = session.data?.accessToken ?? 'NO-TOKEN';
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
+    initialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

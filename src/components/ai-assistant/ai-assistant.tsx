@@ -70,6 +70,7 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
               threadId={threadId}
               onClearChat={assistant.createThread}
               tab={tab}
+              onTabChange={setTab}
             />
             <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
           </div>

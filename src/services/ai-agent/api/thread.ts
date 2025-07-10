@@ -33,31 +33,73 @@ function isThreadCreateResponse(data: unknown): data is ThreadCreateResponse {
   });
 }
 
-export async function serviceAiAgentThreadDelete({
+export async function serviceAiAgentThreadMessages({
   accessToken,
+  virtualLabId,
+  projectId,
   threadId,
 }: {
-  accessToken?: string;
+  accessToken: string;
+  virtualLabId: string | null;
+  projectId: string | null;
   threadId: string;
-}) {
-  await fetchJSON({
+}): Promise<ThreadMessagesResponse> {
+  const data = await fetchJSON({
+    method: 'GET',
     accessToken,
-    path: `threads/${threadId}`,
-    method: 'DELETE',
-    typeGuard: isVoidType,
+    path: `threads/${threadId}/messages`,
+    params: {
+      virtual_lab_id: virtualLabId,
+      project_id: projectId,
+      vercel_format: 'true',
+      sort: '-creation_date',
+      page_size: '1000',
+    },
+    typeGuard: isThreadMessagesResponse,
   });
+  return data;
+}
+
+export interface ThreadMessagesResponse {
+  results: Array<{
+    id: string;
+    role: 'system' | 'user' | 'assistant' | 'data';
+    content: string;
+  }>;
+}
+
+function isThreadMessagesResponse(data: unknown): data is ThreadMessagesResponse {
+  try {
+    assertType(data, {
+      results: [
+        'array',
+        {
+          id: 'string',
+          role: ['literal', 'system', 'user', 'assistant', 'data'],
+          content: 'string',
+        },
+      ],
+    });
+    return true;
+  } catch (ex) {
+    logError('Unexpected return type when fetching list of threads:', data);
+    logError(ex);
+    return false;
+  }
 }
 
 export async function serviceAiAgentThreadList({
   accessToken,
   virtualLabId,
   projectId,
-  pageSize = 100,
+  pageSize = 10,
+  cursor = null,
 }: {
   accessToken: string;
   virtualLabId: string | null;
   projectId: string | null;
   pageSize?: number;
+  cursor?: string | null;
 }): Promise<ThreadListResponse> {
   const data = await fetchJSON({
     method: 'GET',
@@ -67,12 +109,47 @@ export async function serviceAiAgentThreadList({
       virtual_lab_id: virtualLabId,
       project_id: projectId,
       sort: '-update_date',
-      cursor: null,
+      cursor,
       page_size: `${pageSize}`,
     },
     typeGuard: isThreadListResponse,
   });
   return data;
+}
+
+export async function serviceAiAgentThreadRename({
+  accessToken,
+  threadId,
+  title,
+}: {
+  accessToken: string;
+  threadId: string;
+  title: string;
+}): Promise<ThreadSuggestTitleResponse> {
+  return await fetchJSON({
+    method: 'PATCH',
+    accessToken,
+    path: `threads/${threadId}`,
+    query: {
+      title,
+    },
+    typeGuard: isThreadSuggestTitleResponse,
+  });
+}
+
+export async function serviceAiAgentThreadDelete({
+  accessToken,
+  threadId,
+}: {
+  accessToken: string;
+  threadId: string;
+}): Promise<void> {
+  return await fetchJSON({
+    method: 'DELETE',
+    accessToken,
+    path: `threads/${threadId}`,
+    typeGuard: isVoidType,
+  });
 }
 
 export async function serviceAiAgentThreadSuggestTitle({
@@ -133,7 +210,7 @@ export interface ThreadListResponse {
 export function isThreadListResponse(data: unknown): data is ThreadListResponse {
   try {
     assertType(data, {
-      next_cursor: ['?', 'string'],
+      next_cursor: ['?', ['|', 'string', 'null']],
       has_more: 'boolean',
       page_size: 'number',
       results: [
@@ -151,8 +228,8 @@ export function isThreadListResponse(data: unknown): data is ThreadListResponse 
     });
     return true;
   } catch (ex) {
-    console.error('Unexpected return type when fetching list of threads:', data);
-    console.error(ex);
+    logError('Unexpected return type when fetching list of threads:', data);
+    logError(ex);
     return false;
   }
 }

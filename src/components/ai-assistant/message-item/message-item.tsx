@@ -11,6 +11,7 @@ import { classNames } from '@/util/utils';
 import { AiAgentRateLimit } from '@/services/ai-agent';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 
+import { isString } from '@/util/type-guards';
 import styles from './message-item.module.css';
 
 interface MessageItemProps {
@@ -118,10 +119,16 @@ function useDebug(): boolean {
   return debug;
 }
 
-function formatDate(d: Date): string {
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  });
-  return formatter.format(d);
+function formatDate(d: Date | string): string {
+  try {
+    const formatter = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+    const date = isString(d) ? new Date(d) : d;
+    return formatter.format(date);
+  } catch (ex) {
+    console.log('🚀 [message-item] d, ex =', d, ex); // @FIXME: Remove this line written on 2025-07-10 at 16:37
+    return '';
+  }
 }

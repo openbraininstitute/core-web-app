@@ -2,10 +2,19 @@ import { serviceAiAgentThreadCreate, serviceAiAgentThreadList } from '../../api'
 import { Signal } from '../signal';
 import { AssistantContext } from '../types';
 
-export class InitializerThread {
-  constructor(private readonly target: { threadId: Signal<string | undefined> }) {}
+export class ThreadManager {
+  constructor(
+    private readonly target: {
+      threadId: Signal<string | undefined>;
+    }
+  ) {}
 
-  init = async (context: AssistantContext) => {
+  /**
+   * The first time we open the AI Assistant, we try to get the
+   * last recently used thread. If no such thread exists, we
+   * create  new one.
+   */
+  readonly init = async (context: AssistantContext) => {
     const { target } = this;
     const { accessToken, virtualLabId, projectId } = context;
     target.threadId.set(undefined);

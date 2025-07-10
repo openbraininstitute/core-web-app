@@ -1,3 +1,4 @@
+import { logError } from '@/util/logger';
 import { serviceAiAgentUrl } from './url';
 import { createHeaders } from '@/util/utils';
 
@@ -32,11 +33,11 @@ export async function fetchJSON<T>({
       throw new Error(`Query failed with error code #${resp.status}!`);
     }
     if (!typeGuard(data)) {
-      console.error('The following query failed because of an unexpected return type!');
-      console.error('', 'url:', url);
-      console.error('', 'method:', method);
-      console.error('', 'params:', params);
-      console.error('', 'output:', data);
+      logError('The following query failed because of an unexpected return type!');
+      logError('', 'url:', url);
+      logError('', 'method:', method);
+      logError('', 'params:', params);
+      logError('', 'output:', data);
       throw new Error('Unexpected return type!');
     }
     return data;

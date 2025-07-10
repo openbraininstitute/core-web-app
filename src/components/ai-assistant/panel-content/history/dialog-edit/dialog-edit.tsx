@@ -34,7 +34,11 @@ export default function DialogEdit({
   }, [open]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (event.key === 'Enter') onValidate(threadId, title);
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      onValidate(threadId, title);
+    }
   };
 
   return (

@@ -16,12 +16,12 @@ export class Signal<T> {
     return this.value;
   }
 
-  set(value: T) {
+  readonly set = (value: T) => {
     if (value === this.value) return;
 
     this.value = value;
     this.event.dispatch(value);
-  }
+  };
 
   use(): [value: T, setValue: (value: T) => void] {
     const [value, setValue] = React.useState(this.value);
@@ -29,7 +29,7 @@ export class Signal<T> {
       this.event.addListener(setValue);
       return () => this.event.removeListener(setValue);
     }, []);
-    return [value, setValue];
+    return [value, this.set];
   }
 
   useValue() {
