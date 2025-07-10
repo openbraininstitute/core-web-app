@@ -40,7 +40,7 @@
 }
 
 .checkbox-list input[type='checkbox'] {
-  accent-color: #1890ff; /* Matches AntD primary color */
+  accent-color: #1890ff;
   width: 16px;
   height: 16px;
 }

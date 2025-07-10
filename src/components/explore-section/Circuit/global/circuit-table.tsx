@@ -9,7 +9,6 @@ import collectExpandableKeys from '../utils/collectExpandableKeys';
 import { flattenCircuits } from '../utils/flatten-circuits';
 import columns from './Columns';
 import DownloadContainer from './download/download-container';
-import CircuitsFilterPanel from './filters/circuits-filter-panel';
 import FilterButton from './filters/filter-button';
 import SearchBar from './search-bar';
 import { columnsAtom, filtersAtom, setFilterAtom } from './state/columns';
@@ -17,6 +16,11 @@ import SubcircuitTable from './subcircuit-table';
 import TableScrollButton from './table-scroll-button';
 import ViewToggle from './ViewToggle';
 
+import { DataType } from '@/constants/explore-section/list-views';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import { CoreFilter, GteLteValue } from '@/entity-configuration/definitions/types';
+
+import ListingFilterPanel from '@/features/listing-filter-panel/listing-filter-panel';
 import { classNames } from '@/util/utils';
 import styles from './exploreCircuitTable.module.scss';
 
@@ -30,19 +34,14 @@ export default function CircuitTable({
   const [circuitToDownload, setCircuitToDownload] = useState<CircuitSchemaProps | null>(null);
   const [downloadModalOpen, setDownloadModalOpen] = useState<boolean>(false);
   const [expandedRowKeys, setExpandedRowKeys] = useState<Key[]>([]);
-
-  // FILTERING
   const [filterPanelActive, setFilterPanelActive] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [, setFilter] = useAtom(setFilterAtom);
-
-  // VIEWS
   const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
-
-  // SCROLL BEHAVIOR
   const [isAtStart, setIsAtStart] = useState<boolean>(true);
   const [isAtEnd, setIsAtEnd] = useState<boolean>(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [coreFilters, setCoreFilters] = useState<CoreFilter[]>([]);
 
   const updateScrollPosition = useCallback(() => {
     if (scrollContainerRef.current) {
@@ -56,7 +55,7 @@ export default function CircuitTable({
     const container = scrollContainerRef.current;
     if (container) {
       container.addEventListener('scroll', updateScrollPosition);
-      updateScrollPosition(); // Initial check
+      updateScrollPosition();
       return () => container.removeEventListener('scroll', updateScrollPosition);
     }
   }, [updateScrollPosition]);
@@ -79,19 +78,17 @@ export default function CircuitTable({
     }
   }, [updateScrollPosition]);
 
-  // COLUMN VISIBILITY AND FILTERS FROM JOTAI
   const columnState = useAtomValue(columnsAtom);
   const filters = useAtomValue(filtersAtom);
 
-  // RESET FILTERS
   const handleResetFilter = useCallback(() => {
     Object.keys(filters).forEach((columnId) => {
       setFilter({ columnId, filter: null });
     });
+    setCoreFilters([]);
     setSearchQuery('');
   }, [filters, setFilter]);
 
-  // DOWNLOAD MODAL
   const handleOpenDownloadModal = useCallback((record: CircuitSchemaProps) => {
     setCircuitToDownload(record);
     setDownloadModalOpen(true);
@@ -102,11 +99,9 @@ export default function CircuitTable({
     setDownloadModalOpen(false);
   }, []);
 
-  // PATHNAME
   const pathname = usePathname();
   const isCircuitDetailPage = pathname.includes('/circuit/');
 
-  // ROW EXPANSION
   const handleRowExpandClick = useCallback((row: CircuitSchemaProps) => {
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
@@ -114,7 +109,6 @@ export default function CircuitTable({
     );
   }, []);
 
-  // DATA CLEANING
   const cleanedData = useMemo(() => {
     const result = data.map((circuit: CircuitSchemaProps) => {
       const { numberOfNeurons } = circuit;
@@ -147,16 +141,101 @@ export default function CircuitTable({
     });
 
     const flattened = flattenCircuits(result);
-
     return { hierarchical: result, flattened };
   }, [data]);
 
-  // HELPER FUNCTION TO CHECK IF A CIRCUIT MATCHES FILTERS
+  // Synchronize Jotai filters with CoreFilter
+  useEffect(() => {
+    const newCoreFilters: CoreFilter[] = Object.entries(filters).map(([columnId, filter]) => {
+      const column = columnState.find((col) => col.id === columnId);
+      let filterType: CoreFieldFilterTypeEnum;
+      let value: CoreFilter['value'] = filter;
+
+      switch (column?.filterType) {
+        case 'numeric':
+          filterType = CoreFieldFilterTypeEnum.ValueRange;
+          if (filter?.type === 'between') {
+            value = { gte: filter.min, lte: filter.max };
+          } else if (filter?.type === 'greaterThan') {
+            value = { gte: filter.min };
+          } else if (filter?.type === 'lessThan') {
+            value = { lte: filter.max };
+          }
+          break;
+        case 'text':
+          filterType = CoreFieldFilterTypeEnum.Text;
+          value = filter?.min || '';
+          break;
+        case 'select':
+          filterType = CoreFieldFilterTypeEnum.CheckList;
+          value = filter?.values || [];
+          break;
+        case 'date':
+          filterType = CoreFieldFilterTypeEnum.DateRange;
+          value = { gte: filter?.min, lte: filter?.min };
+          break;
+        case 'boolean':
+          filterType = CoreFieldFilterTypeEnum.CheckList;
+          value = filter?.min ? [filter.min] : [];
+          break;
+        default:
+          filterType = CoreFieldFilterTypeEnum.Text;
+          value = null;
+      }
+
+      return {
+        field: columnId,
+        type: filterType,
+        value,
+      };
+    });
+
+    setCoreFilters(newCoreFilters);
+  }, [filters, columnState]);
+
+  const handleSetCoreFilters = useCallback(
+    (newFilters: CoreFilter[]) => {
+      setCoreFilters(newFilters);
+
+      newFilters.forEach((filter) => {
+        const column = columnState.find((col) => col.id === filter.field);
+        let jotaiFilter: any = null;
+
+        switch (filter.type) {
+          case CoreFieldFilterTypeEnum.ValueRange:
+            const range = filter.value as GteLteValue;
+            if (range.gte !== undefined && range.lte !== undefined) {
+              jotaiFilter = { type: 'between', min: range.gte, max: range.lte };
+            } else if (range.gte !== undefined) {
+              jotaiFilter = { type: 'greaterThan', min: range.gte };
+            } else if (range.lte !== undefined) {
+              jotaiFilter = { type: 'lessThan', max: range.lte };
+            }
+            break;
+          case CoreFieldFilterTypeEnum.Text:
+            jotaiFilter = { min: filter.value || '' };
+            break;
+          case CoreFieldFilterTypeEnum.CheckList:
+            jotaiFilter = { values: filter.value || [] };
+            break;
+          case CoreFieldFilterTypeEnum.DateRange:
+            const dateRange = filter.value as GteLteValue;
+            jotaiFilter = { min: dateRange.gte, max: dateRange.lte };
+            break;
+        }
+
+        if (jotaiFilter) {
+          setFilter({ columnId: filter.field, filter: jotaiFilter });
+        }
+      });
+    },
+    [columnState, setFilter]
+  );
+
   const matchesFilters = useCallback(
     (circuit: CircuitSchemaProps) => {
       let matches = true;
 
-      // Apply column filters
       Object.entries(filters).forEach(([columnId, filter]) => {
         if (!filter) return;
 
@@ -190,7 +269,6 @@ export default function CircuitTable({
         matches = matches && currentMatch;
       });
 
-      // Apply search query
       if (searchQuery) {
         matches =
           matches &&
@@ -209,7 +287,6 @@ export default function CircuitTable({
     [filters, searchQuery, columnState]
   );
 
-  // HELPER FUNCTION TO CHECK IF A CIRCUIT OR ITS SUBCIRCUITS MATCH
   const hasMatchingSubcircuit = useCallback(
     (circuit: CircuitSchemaProps): boolean => {
       if (matchesFilters(circuit)) return true;
@@ -219,7 +296,6 @@ export default function CircuitTable({
     [matchesFilters]
   );
 
-  // FILTERED DATA
   const filteredData = useMemo(() => {
     let result: CircuitSchemaProps[] =
       toggle === 'hierarchical' ? cleanedData.hierarchical : cleanedData.flattened;
@@ -266,7 +342,10 @@ export default function CircuitTable({
     return toggle === 'hierarchical' ? filteredData : flattenedData;
   }, [toggle, filteredData, flattenedData]);
 
-  // COLUMNS
+  const activeColumns = useMemo(() => {
+    return columnState.filter((col) => col.isActive).map((col) => col.id);
+  }, [columnState]);
+
   const filteredColumns = useMemo(() => {
     const allColumns = columns(
       expandedRowKeys,
@@ -295,7 +374,6 @@ export default function CircuitTable({
     hasMatchingSubcircuit,
   ]);
 
-  // EXPAND ALL WHEN FILTERS OR SEARCH ARE ACTIVE
   useEffect(() => {
     const isFilterActive =
       Object.values(filters).some((f) => f !== null) || searchQuery.trim() !== '';
@@ -307,7 +385,6 @@ export default function CircuitTable({
     }
   }, [filters, searchQuery, cleanedData, toggle]);
 
-  // ROW EXPANSION
   const handleExpandRow = useCallback((expanded: boolean, row: CircuitSchemaProps) => {
     const rowKey = row.key;
     setExpandedRowKeys((prev) =>
@@ -315,7 +392,6 @@ export default function CircuitTable({
     );
   }, []);
 
-  // RENDER SUBCIRCUITS
   const renderSubcircuits = useCallback(
     (circuit: CircuitSchemaProps) =>
       circuit.subcircuits && circuit.subcircuits.length > 0 ? (
@@ -332,13 +408,8 @@ export default function CircuitTable({
     [expandedRowKeys, handleExpandRow, filteredColumns, filters, searchQuery, columnState]
   );
 
-  // FILTERS CHECKS
   const isFilterActive = useMemo(() => {
     return Object.values(filters).some((f) => f !== null);
-  }, [filters]);
-
-  const numberOfActiveFilters = useMemo(() => {
-    return Object.values(filters).filter((f) => f !== null).length;
   }, [filters]);
 
   return (
@@ -405,13 +476,18 @@ export default function CircuitTable({
         scrollToStart={scrollToStart}
         isAtStart={isAtStart}
       />
-      <CircuitsFilterPanel
-        isActive={filterPanelActive}
-        toggle={() => setFilterPanelActive(false)}
-        handleResetFilter={handleResetFilter}
-        isFilterActive={isFilterActive}
-        numberOfActiveFilters={numberOfActiveFilters}
-      />
+      {filterPanelActive && (
+        <ListingFilterPanel
+          toggleDisplay={() => setFilterPanelActive(false)}
+          dataType={DataType.Circuit}
+          dataKey="circuits"
+          filters={coreFilters}
+          setFilters={handleSetCoreFilters}
+          facets={undefined}
+          showDisplayTrigger
+          useBrainRegion={false}
+        />
+      )}
       <div
         className={classNames(
           'out-expo bg-primary-9 transition-right fixed bottom-3 z-100 h-screen w-[44vw] overflow-y-scroll p-8 duration-500',

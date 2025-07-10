@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+
 'use client';
 
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
@@ -6,7 +8,7 @@
 import { DatePicker, Switch } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useBuildCategoryData } from '../../hook/use-build-category-data';
 import { useCircuitSpecies } from '../../hook/use-circuit-species';
 import { useCircuitScales } from '../../hook/use-scale-type-data';
@@ -60,26 +62,67 @@ function SingleFilterItem({
   const { scales, loading: scalesLoading, error: scalesError } = useCircuitScales();
   const { species, isLoading: speciesLoading, error: speciesError } = useCircuitSpecies();
 
-  // Notify parent of filter changes whenever local state changes
-  useEffect(() => {
-    if (filterType === 'numeric' && localType) {
-      const filter = {
-        property: id,
-        type: localType,
-        min: localType === 'greaterThan' || localType === 'between' ? localMin : undefined,
-        max: localType === 'lessThan' || localType === 'between' ? localMax : undefined,
-      };
-      onFilterChange(id, filter);
-    } else if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
-      onFilterChange(id, localMin ? { property: id, min: localMin } : null);
-    } else if (filterType === 'select' && id === 'scale' && localValues.length > 0) {
-      onFilterChange(id, { property: id, values: localValues });
-    } else if (filterType === 'select' && localType) {
-      onFilterChange(id, { property: id, type: localType });
-    } else {
-      onFilterChange(id, null);
-    }
-  }, [filterType, id, localType, localMin, localMax, localValues, onFilterChange]);
+  const handleTypeChange = useCallback(
+    (value: string) => {
+      setLocalType(value);
+      if (filterType === 'numeric') {
+        const filter = {
+          property: id,
+          type: value,
+          min: value === 'greaterThan' || value === 'between' ? localMin : undefined,
+          max: value === 'lessThan' || value === 'between' ? localMax : undefined,
+        };
+        onFilterChange(id, filter);
+      } else if (filterType === 'select' && id !== 'scale') {
+        onFilterChange(id, value ? { property: id, type: value } : null);
+      }
+    },
+    [filterType, id, localMin, localMax, onFilterChange]
+  );
+
+  const handleMinChange = useCallback(
+    (value: number | string | undefined) => {
+      setLocalMin(value);
+      if (filterType === 'numeric' && localType) {
+        const filter = {
+          property: id,
+          type: localType,
+          min: localType === 'greaterThan' || localType === 'between' ? value : undefined,
+          max: localType === 'lessThan' || localType === 'between' ? localMax : undefined,
+        };
+        onFilterChange(id, filter);
+      } else if (filterType === 'text' || filterType === 'date' || filterType === 'boolean') {
+        onFilterChange(id, value ? { property: id, min: value } : null);
+      }
+    },
+    [filterType, id, localType, localMax, onFilterChange]
+  );
+
+  const handleMaxChange = useCallback(
+    (value: number | undefined) => {
+      setLocalMax(value);
+      if (filterType === 'numeric' && localType) {
+        const filter = {
+          property: id,
+          type: localType,
+          min: localType === 'greaterThan' || localType === 'between' ? localMin : undefined,
+          max: localType === 'lessThan' || localType === 'between' ? value : undefined,
+        };
+        onFilterChange(id, filter);
+      }
+    },
+    [filterType, id, localType, localMin, onFilterChange]
+  );
+
+  const handleValuesChange = useCallback(
+    (values: string[]) => {
+      setLocalValues(values);
+      if (filterType === 'select' && id === 'scale') {
+        onFilterChange(id, values.length > 0 ? { property: id, values } : null);
+      }
+    },
+    [filterType, id, onFilterChange]
+  );
 
   const renderFilterControls = () => {
     if (!filterType) return null;
@@ -90,8 +133,8 @@ function SingleFilterItem({
           <input
             placeholder="Search..."
             value={localMin as string}
-            onChange={(e) => setLocalMin(e.target.value || undefined)}
-            className="text-bas mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans focus:outline-none"
+            onChange={(e) => handleMinChange(e.target.value || undefined)}
+            className="text-bas mb-2 w-full overflow-hidden rounded-full px-4 py-2 font-sans focus:outline-none"
           />
         </div>
       );
@@ -102,8 +145,8 @@ function SingleFilterItem({
         <div className="mt-4 flex flex-col gap-y-2">
           <select
             value={localType}
-            onChange={(e) => setLocalType(e.target.value)}
-            className="mb-2 w-full px-6 py-2 font-sans text-base"
+            onChange={(e) => handleTypeChange(e.target.value)}
+            className="mb-2 w-full px-4 py-2 font-sans text-base"
           >
             <option value="" disabled selected>
               Condition
@@ -117,8 +160,8 @@ function SingleFilterItem({
               type="number"
               placeholder="Min..."
               value={localMin as number | undefined}
-              onChange={(e) => setLocalMin(e.target.value ? Number(e.target.value) : undefined)}
-              className="mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans text-base focus:outline-none"
+              onChange={(e) => handleMinChange(e.target.value ? Number(e.target.value) : undefined)}
+              className="mb-2 w-full overflow-hidden rounded-full px-4 py-2 font-sans text-base focus:outline-none"
             />
           )}
           {(localType === 'lessThan' || localType === 'between') && (
@@ -126,8 +169,8 @@ function SingleFilterItem({
               type="number"
               placeholder="Max..."
               value={localMax as number | undefined}
-              onChange={(e) => setLocalMax(e.target.value ? Number(e.target.value) : undefined)}
-              className="mb-2 w-full overflow-hidden rounded-full px-6 py-2 font-sans text-base focus:outline-none"
+              onChange={(e) => handleMaxChange(e.target.value ? Number(e.target.value) : undefined)}
+              className="mb-2 w-full overflow-hidden rounded-full px-4 py-2 font-sans text-base focus:outline-none"
             />
           )}
         </div>
@@ -193,30 +236,38 @@ function SingleFilterItem({
           return <div>No scales available</div>;
         }
         return (
-          <div className="mt-4 flex max-h-48 flex-col gap-y-2 overflow-y-auto">
-            {options.map((option) => (
-              <label
-                key={option}
-                htmlFor={`scale-checkbox-${option}`}
-                className="flex items-center gap-x-2 text-base text-white"
-              >
-                <input
-                  id={`scale-checkbox-${option}`}
-                  type="checkbox"
-                  value={option}
-                  checked={localValues.includes(option)}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    setLocalValues((prev) =>
-                      e.target.checked ? [...prev, value] : prev.filter((v) => v !== value)
-                    );
-                  }}
-                  disabled={loading}
-                  className="h-4 w-4"
-                />
-                <span className="text-lg">{option.charAt(0).toUpperCase() + option.slice(1)}</span>
-              </label>
-            ))}
+          <div
+            className="checkbox-list mt-4 flex max-h-48 flex-col gap-y-2 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {options.map((option) => {
+              const inputId = `scale-checkbox-${option}`;
+              return (
+                <label
+                  key={option}
+                  htmlFor={inputId}
+                  className="flex items-center gap-x-2 text-base text-white"
+                >
+                  <input
+                    id={inputId}
+                    type="checkbox"
+                    value={option}
+                    checked={localValues.includes(option)}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      handleValuesChange(
+                        e.target.checked
+                          ? [...localValues, value]
+                          : localValues.filter((v) => v !== value)
+                      );
+                    }}
+                    disabled={loading}
+                    className="h-4 w-4"
+                  />
+                  <span>{option.charAt(0).toUpperCase() + option.slice(1)}</span>
+                </label>
+              );
+            })}
           </div>
         );
       }
@@ -225,9 +276,9 @@ function SingleFilterItem({
         <div className="mt-4 flex flex-col gap-y-2">
           <select
             value={localType}
-            onChange={(e) => setLocalType(e.target.value)}
+            onChange={(e) => handleTypeChange(e.target.value)}
             disabled={loading}
-            className="mb-2 w-full px-6 py-2 font-sans text-base"
+            className="mb-2 w-full px-4 py-2 font-sans text-base"
           >
             <option value="" disabled>
               {loading ? `Loading ${errorLabel}...` : selectPlaceholder}
@@ -253,7 +304,7 @@ function SingleFilterItem({
         <div className="mt-4 flex flex-col gap-y-2">
           <Switch
             checked={localMin === 'true'}
-            onChange={(checked) => setLocalMin(checked ? 'true' : undefined)}
+            onChange={(checked) => handleMinChange(checked ? 'true' : undefined)}
           />
         </div>
       );
@@ -264,7 +315,7 @@ function SingleFilterItem({
         <div className="mt-4 flex flex-col gap-y-2">
           <DatePicker
             value={localMin && typeof localMin === 'string' ? moment(localMin) : null}
-            onChange={(date) => setLocalMin(date ? date.format('YYYY-MM-DD') : undefined)}
+            onChange={(date) => handleMinChange(date ? date.format('YYYY-MM-DD') : undefined)}
             className="w-full"
           />
         </div>
@@ -352,17 +403,14 @@ export default function CircuitsFilterPanel({
   const [, setFilter] = useAtom(setFilterAtom);
   const [pendingFilters, setPendingFilters] = useState<Record<string, any>>({});
 
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
+  const handleFilterChange = useCallback((columnId: string, filter: any) => {
+    setPendingFilters((prev) => ({
+      ...prev,
+      [columnId]: filter,
+    }));
+  }, []);
 
-    if (isActive) {
-      dialog.showModal();
-      dialog.style.transform = 'translateX(0)';
-    }
-  }, [isActive]);
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     const dialog = ref.current;
     if (!dialog) return;
 
@@ -373,25 +421,21 @@ export default function CircuitsFilterPanel({
         toggle();
       }
     }, 500);
-  };
+  }, [toggle]);
 
-  const handleFilterChange = (columnId: string, filter: any) => {
-    setPendingFilters((prev) => ({
-      ...prev,
-      [columnId]: filter,
-    }));
-  };
-
-  const handleApplyAllFilters = () => {
+  const handleApplyAllFilters = useCallback(() => {
     Object.entries(pendingFilters).forEach(([columnId, filter]) => {
       setFilter({ columnId, filter });
     });
     handleClose();
-  };
+  }, [pendingFilters, setFilter, handleClose]);
 
-  const isApplyDisabled = Object.values(pendingFilters).every(
-    (filter) => filter === null || (Array.isArray(filter.values) && filter.values.length === 0)
-  );
+  const handleResetAllFilters = useCallback(() => {
+    setPendingFilters({});
+    if (handleResetFilter) {
+      handleResetFilter();
+    }
+  }, [handleResetFilter]);
 
   return (
     <dialog ref={ref} className={styles.filterPanel} onClick={handleClose}>
@@ -449,7 +493,7 @@ export default function CircuitsFilterPanel({
                 'border-primary-4 mr-3 border border-solid px-4 py-2 text-base text-white',
                 isFilterActive ? 'opacity-100' : 'pointer-events-none opacity-70'
               )}
-              onClick={handleResetFilter}
+              onClick={handleResetAllFilters}
               type="button"
               id="reset-filter"
               aria-label="Reset all filters"
@@ -457,10 +501,7 @@ export default function CircuitsFilterPanel({
               Reset all filters
             </button>
             <button
-              className={classNames(
-                'border-primary-4 border border-solid px-4 py-2 text-base text-white',
-                isApplyDisabled ? 'pointer-events-none opacity-50' : 'opacity-100'
-              )}
+              className="border-primary-4 border border-solid px-4 py-2 text-base text-white"
               onClick={handleApplyAllFilters}
               type="button"
               aria-label="Apply all filters"
