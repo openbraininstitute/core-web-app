@@ -1,4 +1,5 @@
 import {
+  CloseOutlined,
   LoadingOutlined,
   MinusCircleOutlined,
   PlusOutlined,
@@ -17,6 +18,7 @@ import {
   addBookmarksToProjectLibrary,
   deleteBookmarksFromProjectLibrary,
 } from '@/features/bookmark/actions';
+import { useAppNotification } from '@/components/notification';
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { resolveLibraryUrl } from '@/utils/url-builder';
@@ -26,7 +28,6 @@ import { tryCatch } from '@/api/utils';
 
 import type { EntityTypeValue } from '@/api/entitycore/types';
 import type { ErrorCause } from '@/api/apiClient';
-import { useAppMessage, useAppNotification } from '@/components/notification';
 
 type Props = {
   virtualLabId: string;
@@ -46,7 +47,6 @@ export default function BookmarkButton({
   customButton,
 }: Props) {
   const pathname = usePathname();
-  const message = useAppMessage();
   const notification = useAppNotification();
   const [opStatus, setOpStatus] = useState<{
     op: 'add' | 'remove' | 'none';
@@ -89,14 +89,12 @@ export default function BookmarkButton({
   const notifySuccess = useCallback(
     (action: 'add' | 'remove') => {
       if (action === 'add') {
-        message.info({
+        notification.info({
           key: 'bookmark-success',
           icon: <></>,
-          duration: 6000000,
-          className: classNames(
-            '[&_.ant-message-notice-content]:bg-accent-dark! [&_.ant-message-notice-content]:rounded-none!'
-          ),
-          content: (
+          className: classNames('bookmark-success', '[&_.ant-notification-notice-message]:m-0!'),
+          closeIcon: <CloseOutlined className="text-white" />,
+          message: (
             <div className="flex flex-col items-center justify-center gap-4 text-white">
               <div className="self-start text-white">
                 This entity has been added to library successfully
