@@ -25,36 +25,63 @@ export default function useScrollComplete({
   callback?: (value: boolean) => void;
 }) {
   useEffect(() => {
-    const checkScrollPosition = (target: HTMLElement) => {
+    const checkScrollState = (target: HTMLElement) => {
       const { scrollHeight, clientHeight, scrollTop } = target;
-      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 1;
 
+      // check if content is actually scrollable
       const isScrollable = scrollHeight > clientHeight;
 
-      // only trigger callback with true if scrollable and at bottom
-      // if not scrollable, always call with false to hide load more
-      callback?.(isScrollable && isAtBottom);
+      // if not scrollable, never show load more
+      if (!isScrollable) {
+        callback?.(false);
+        return;
+      }
+
+      // firefox-specific: use a larger threshold for scroll detection
+      const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+      const threshold = isFirefox ? 3 : 1;
+
+      // check if scrolled to bottom with browser-specific threshold
+      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) <= threshold;
+
+      callback?.(isAtBottom);
     };
 
     const onScroll = ({ currentTarget }: Event) => {
-      checkScrollPosition(currentTarget as HTMLElement);
+      checkScrollState(currentTarget as HTMLElement);
     };
 
     if (element) {
-      // check initial state when element mounts
-      checkScrollPosition(element);
+      // initial check when element becomes available
+      checkScrollState(element);
 
       element.addEventListener('scroll', onScroll);
 
-      //  check on resize in case content changes
-      const resizeObserver = new ResizeObserver(() => {
-        checkScrollPosition(element);
-      });
+      // check on resize/mutation in case content changes
+      let rafId: number | null = null;
+
+      const debouncedCheck = () => {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+        }
+        rafId = requestAnimationFrame(() => {
+          checkScrollState(element);
+        });
+      };
+
+      const resizeObserver = new ResizeObserver(debouncedCheck);
+      const mutationObserver = new MutationObserver(debouncedCheck);
+
       resizeObserver.observe(element);
+      mutationObserver.observe(element, { childList: true, subtree: true });
 
       return () => {
         element.removeEventListener('scroll', onScroll);
         resizeObserver.unobserve(element);
+        mutationObserver.disconnect();
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+        }
       };
     }
   }, [callback, element]);
