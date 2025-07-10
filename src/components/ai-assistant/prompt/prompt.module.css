@@ -49,4 +49,12 @@
 
 .prompt > button {
   flex: 0 0 auto;
+  transition: 0.3s all;
+  opacity: 1;
+  filter: grayscale(0);
+}
+
+.prompt > button[disabled] {
+  opacity: 0.3;
+  filter: grayscale(100%);
 }
