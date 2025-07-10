@@ -220,7 +220,7 @@ class ApiClient {
 
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach((v) => url.searchParams.append(`${key}[]`, `${v}`));
+        value.forEach((v) => url.searchParams.append(`${key}`, `${v}`));
       } else {
         url.searchParams.append(key, String(value));
       }

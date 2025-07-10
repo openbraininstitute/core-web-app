@@ -142,6 +142,7 @@ export default function ActivityTable() {
     );
   }
 
+  if (isLoading) return null;
   return (
     <div className="flex h-full w-full flex-col">
       <ConfigProvider

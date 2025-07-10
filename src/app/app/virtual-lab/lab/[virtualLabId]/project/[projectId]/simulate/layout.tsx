@@ -30,16 +30,17 @@ export default function VirtualLabProjectLayout({
       key: LinkItemKey.Simulate,
       href: `${labProjectUrl}/simulate`,
       content: 'Experiment',
-      styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
+      styles:
+        'rounded-full bg-primary-5 py-1 px-1 text-primary-9 w-[26px] font-semibold capitalize',
     },
   ];
 
   if (scope)
     links.unshift({
       key: 'scope',
-      href: '#',
+      href: `${labProjectUrl}/simulate?s=new&t=${scope}`,
       content: <>{scope.replace('-', ' ')}</>,
-      styles: 'text-primary-5 hover:text-primary-5! cursor-default',
+      styles: 'text-primary-5 hover:text-primary-2! cursor-pointer',
     });
 
   return (

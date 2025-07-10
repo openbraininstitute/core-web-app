@@ -12,10 +12,7 @@ import {
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
 import { PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import {
-  transformFiltersToQuery,
-  transformQueryParamsArrayToString,
-} from '@/api/entitycore/transformers';
+import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { useUnwrappedValue } from '@/hooks/hooks';
@@ -170,7 +167,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
         within_brain_region_brain_region_id: ctx.brainRegionId,
         within_brain_region_ascendants: false,
-        ...transformQueryParamsArrayToString(transformFiltersToQuery(filters as any)),
+        ...transformFiltersToQuery(filters as any),
       });
 
       const entity = getEntityByLegacyType({ legacyType: ctx.dataType as EntityCoreLegacyType });
