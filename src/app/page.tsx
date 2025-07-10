@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 
-import LandingPage from '@/components/LandingPage';
 import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
+import { fetchSanityPageContent } from '@/services/sanity';
+import LandingPage from '@/components/LandingPage';
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await generateMetadataFromSanity('/');
@@ -15,5 +16,9 @@ export default async function RootPage({
   searchParams: Promise<{ errorcode: string | undefined }>;
 }) {
   const searchParams = await promisedParams;
-  return <LandingPage section={EnumSection.Home} errorCode={searchParams.errorcode} />;
+  const content = await fetchSanityPageContent(EnumSection.Home);
+
+  return (
+    <LandingPage content={content} section={EnumSection.Home} errorCode={searchParams.errorcode} />
+  );
 }

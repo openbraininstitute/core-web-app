@@ -13,7 +13,7 @@ export function useMembersBlocs(group: Group) {
   });
   const allMembersRaw = useSanityContentForMembers();
 
-  const allMembers = React.useMemo(() => allMembersRaw, [allMembersRaw.length]);
+  const allMembers = React.useMemo(() => allMembersRaw, [allMembersRaw.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     const specs = SPECS[group];

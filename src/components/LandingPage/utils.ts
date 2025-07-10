@@ -1,9 +1,8 @@
-import React from 'react';
-
 import { EnumSection } from './sections/sections';
-import { DEFAULT_SECTION, ID_MENU, Section, SECTIONS } from './constants';
-import { basePath } from '@/config';
+import { DEFAULT_SECTION, Section, SECTIONS } from './constants';
+
 import { isString } from '@/util/type-guards';
+import { basePath } from '@/config';
 
 /**
  * When an URL starts with a "/", that is an application page.

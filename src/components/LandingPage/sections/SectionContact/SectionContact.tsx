@@ -1,12 +1,8 @@
 import React from 'react';
 
 import SectionGeneric from '../SectionGeneric';
-import { EnumSection } from '../sections';
+import { ContentForRichText } from '../../content';
 
-export default function SectionContact() {
-  return (
-    <>
-      <SectionGeneric section={EnumSection.Contact} />
-    </>
-  );
+export default function SectionContact({ content }: { content: ContentForRichText }) {
+  return <SectionGeneric content={content} />;
 }

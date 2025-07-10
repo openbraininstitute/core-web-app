@@ -1,10 +1,14 @@
 /* eslint-disable no-console */
 import React from 'react';
 
-import { createClient, defineQuery } from 'next-sanity';
+import { createClient } from 'next-sanity';
 
 import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
+import { getSection } from '@/components/LandingPage/utils';
+import { EnumSection } from '@/components/LandingPage/sections/sections';
+import queryContentRTF from '@/components/LandingPage/content/content.groq';
+import { ContentForRichText } from '@/components/LandingPage/content';
 
 const client = createClient({
   projectId: 'fgi7eh1v',
@@ -86,4 +90,15 @@ export async function fetchSanityContent(query: string): Promise<unknown> {
     logError('Unable to connect to Sanity!', ex);
     return null;
   }
+}
+
+export async function fetchSanityPageContent(
+  slugOrIndex: string | EnumSection
+): Promise<ContentForRichText> {
+  const section = getSection(slugOrIndex);
+  const slug = section.slug.split('/').pop() || '/';
+  const query = queryContentRTF.replaceAll('<SLUG>', slug);
+  const content = (await fetchSanityContent(query)) as ContentForRichText;
+
+  return content;
 }

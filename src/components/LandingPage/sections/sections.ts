@@ -13,3 +13,9 @@ export enum EnumSection {
   Contact,
   Story,
 }
+
+export type EnumSectionValues = `${EnumSection}`;
+
+type ExcludeNews = Exclude<EnumSection, EnumSection.News>;
+
+export type EnumSectionStringWithoutNews = `${ExcludeNews}`;

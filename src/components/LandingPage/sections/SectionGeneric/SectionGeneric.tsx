@@ -1,15 +1,12 @@
 'use client';
 
 import React from 'react';
-
-import SanityContentRTF from '../../components/SanityContentRTF';
-import { useSanityContentRTF } from '../../content/content';
-import { EnumSection } from '../sections';
-import { ContentForRichText } from '../../content';
 import isEmpty from 'lodash/isEmpty';
 
+import SanityContentRTF from '../../components/SanityContentRTF';
+import { ContentForRichText } from '../../content';
+
 interface GenericSectionProps {
-  section: EnumSection;
   content: ContentForRichText;
 }
 

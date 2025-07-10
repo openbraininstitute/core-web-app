@@ -1,5 +1,7 @@
-'use client';
 /* eslint-disable jsx-a11y/media-has-caption */
+
+'use client';
+
 import React, { CSSProperties, SyntheticEvent, useRef, useState } from 'react';
 
 import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
