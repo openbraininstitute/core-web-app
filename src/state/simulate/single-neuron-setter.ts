@@ -1,19 +1,38 @@
 'use client';
 
 import { captureException } from '@sentry/nextjs';
-import { RESET } from 'jotai/utils';
 import { atom } from 'jotai';
+import { RESET } from 'jotai/utils';
+import { match } from 'ts-pattern';
 
+import delay from 'lodash/delay';
+import isNil from 'lodash/isNil';
+import pick from 'lodash/pick';
+import sortBy from 'lodash/sortBy';
 import uniqBy from 'lodash/uniqBy';
 import values from 'lodash/values';
-import sortBy from 'lodash/sortBy';
-import isNil from 'lodash/isNil';
-import delay from 'lodash/delay';
-import pick from 'lodash/pick';
 
-import runGenericSingleNeuronSimulation from '@/api/bluenaas/run-single-neuron-simulation';
+import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import updateArray from '@/util/updateArray';
 
+import {
+  createSingleNeuronSimulation,
+  createSingleNeuronSynaptomeSimulation,
+  getMEModel,
+} from '@/api/entitycore/queries';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
+import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
+import { tryCatch } from '@/api/utils';
+import {
+  SingleNeuronSimulation,
+  SingleNeuronSynaptomeSimulation,
+} from '@/entity-configuration/domain/simulation';
+import { messages } from '@/i18n/en/simulation';
+import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
+import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
+import { simulationExperimentalSetupAtom } from '@/state/simulate/categories/simulation-conditions';
+import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
 import {
   genericSingleNeuronSimulationPlotDataAtom,
   secNamesAtom,
@@ -21,37 +40,19 @@ import {
   simulationStatusAtom,
   stimulusPreviewPlotDataAtom,
 } from '@/state/simulate/single-neuron';
-import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
-import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
-import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
-import { simulationExperimentalSetupAtom } from '@/state/simulate/categories/simulation-conditions';
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
-import {
-  getMEModel,
-  createSingleNeuronSimulation,
-  createSingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/queries';
-import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import { isBluenaasError } from '@/types/simulation/single-neuron';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { SimulationType } from '@/types/simulation/common';
-import { isJSON } from '@/util/utils';
-import {
-  SingleNeuronSynaptomeSimulation,
-  SingleNeuronSimulation,
-} from '@/entity-configuration/domain/simulation';
-import { messages } from '@/i18n/en/simulation';
-import { tryCatch } from '@/api/utils';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import { JobStatus, Message, MessageType } from '@/services/small-scale-simulator/types';
 import type {
-  SingleNeuronModelSimulationConfig,
   SimulationStreamData,
+  SingleNeuronModelSimulationConfig,
 } from '@/types/simulation/single-neuron';
+import { readNdjsonResponse } from '@/utils/response';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -234,7 +235,7 @@ export const launchSimulationAtom = atom<
 
     try {
       const { data: response, error } = await tryCatch(
-        runGenericSingleNeuronSimulation({
+        runSingleNeuronSimulation({
           ctx: { virtualLabId, projectId },
           modelId,
           config: {
@@ -282,36 +283,26 @@ export const launchSimulationAtom = atom<
         return;
       }
 
-      const reader = response.body?.getReader();
-
-      const decoder = new TextDecoder('utf-8');
-      if (reader) {
-        let buffer: string = '';
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split('\n');
-          buffer = parts.pop() ?? '';
-          parts.forEach((part) => mergeJsonBuffer(part.trim()));
-        }
-
-        // if we encountered that the remaining part is also a string
-        if (isJSON(buffer.trim())) {
-          const jsonData = JSON.parse(buffer);
-          mergeJsonBuffer(jsonData);
-        }
-
-        set(simulationStatusAtom, { status: 'finished' });
-        set(simulateStepTrackerAtom, {
-          steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-            ...p,
-            status: p.title === 'Results' ? 'finish' : p.status,
-          })),
-          current: { title: 'Results', status: 'finish' },
-        });
-      }
+      await readNdjsonResponse<Message<SimulationStreamData>>(response, (message) => {
+        match(message)
+          .with({ message_type: MessageType.DATA }, (msg) => appendStreamData(msg.data))
+          .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, (msg) => {
+            throw new Error(msg.extra ?? messages.SteamingSimulationResultDefaultError, {
+              cause: 'BluenaasError',
+            });
+          })
+          .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, () => {
+            set(simulationStatusAtom, { status: 'finished' });
+            set(simulateStepTrackerAtom, {
+              steps: get(simulateStepTrackerAtom).steps.map((p) => ({
+                ...p,
+                status: p.title === 'Results' ? 'finish' : p.status,
+              })),
+              current: { title: 'Results', status: 'finish' },
+            });
+          })
+          .otherwise(() => null);
+      });
     } catch (error: any) {
       captureException(error, {
         tags: { section: 'simulation', type: 'simulationType' },
@@ -341,54 +332,45 @@ export const launchSimulationAtom = atom<
       });
     }
 
-    function mergeJsonBuffer(part: string) {
-      if (part && isJSON(part)) {
-        const jsonData = JSON.parse(part) as SimulationStreamData;
+    function appendStreamData(streamData: SimulationStreamData) {
+      const newPlot: PlotDataEntry = {
+        x: streamData.x,
+        y: streamData.y,
+        type: 'scatter',
+        name: streamData.name,
+        recording: streamData.recording,
+        amplitude: streamData.amplitude,
+        frequency: streamData.frequency,
+        varyingKey: streamData.varying_key,
+      };
 
-        if (isBluenaasError(jsonData)) {
-          throw new Error(jsonData.details ?? messages.SteamingSimulationResultDefaultError, {
-            cause: 'BluenaasError',
-          });
-        }
-        const newPlot: PlotDataEntry = {
-          x: jsonData.x,
-          y: jsonData.y,
-          type: 'scatter',
-          name: jsonData.name,
-          recording: jsonData.recording,
-          amplitude: jsonData.amplitude,
-          frequency: jsonData.frequency,
-          varyingKey: jsonData.varying_key,
+      const currentRecording = get(genericSingleNeuronSimulationPlotDataAtom)![
+        streamData.recording
+      ];
+
+      if (currentRecording) {
+        const updatedPlot = {
+          ...get(genericSingleNeuronSimulationPlotDataAtom),
+          [streamData.recording]:
+            !currentRecording.length || !currentRecording.find((o) => o.name === newPlot.name)
+              ? [...currentRecording, newPlot]
+              : updateArray({
+                  array: currentRecording,
+                  keyfn: (item) => item.name === newPlot.name,
+                  newVal: (value) => ({
+                    ...value,
+                    x: [...value.x, ...newPlot.x],
+                    y: [...value.y, ...newPlot.y],
+                  }),
+                }),
         };
 
-        const currentRecording = get(genericSingleNeuronSimulationPlotDataAtom)![
-          jsonData.recording
-        ];
+        // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
+        Object.keys(updatedPlot).forEach((recordingLocation) => {
+          updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
+        });
 
-        if (currentRecording) {
-          const updatedPlot = {
-            ...get(genericSingleNeuronSimulationPlotDataAtom),
-            [jsonData.recording]:
-              !currentRecording.length || !currentRecording.find((o) => o.name === newPlot.name)
-                ? [...currentRecording, newPlot]
-                : updateArray({
-                    array: currentRecording,
-                    keyfn: (item) => item.name === newPlot.name,
-                    newVal: (value) => ({
-                      ...value,
-                      x: [...value.x, ...newPlot.x],
-                      y: [...value.y, ...newPlot.y],
-                    }),
-                  }),
-          };
-
-          // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
-          Object.keys(updatedPlot).forEach((recordingLocation) => {
-            updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
-          });
-
-          set(genericSingleNeuronSimulationPlotDataAtom, updatedPlot);
-        }
+        set(genericSingleNeuronSimulationPlotDataAtom, updatedPlot);
       }
     }
   }

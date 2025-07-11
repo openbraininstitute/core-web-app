@@ -37,6 +37,9 @@ import { assertErrorMessage, classNames } from '@/util/utils';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 
 import styles from './small-microcircuit.module.css';
+import { Progress } from 'antd';
+import { match } from 'ts-pattern';
+import { MessageType } from '@/services/small-scale-simulator/types';
 
 export default function SimulationCampaignConfiguration({
   circuitId,
@@ -354,6 +357,8 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const [selectedSimulation, setSelectedSimulation] = useState<null | ICircuitSimulation>(null);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
 
+  const [progress, setProgress] = useState<number | null>(null);
+
   const activeSimulationExecStatus = selectedSimulation && statusMap?.get(selectedSimulation.id);
 
   useEffect(() => {
@@ -393,6 +398,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
+  // TODO Refactor
   const run = async () => {
     setSimRequestInProgress(true);
     try {
@@ -400,11 +406,26 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
         await runCircuitSimulation({
           ctx: { virtualLabId, projectId },
           simulationId: simulations[0].id,
-          onMessage: (msg) => {
-            updateStatusMap(statusMap!.set(simId, msg.status));
-            if (msg.status !== 'done') return;
+          onMessage: (message) => {
+            match(message)
+              .with({ message_type: MessageType.STATUS }, (msg) => {
+                // TODO: fix types
+                updateStatusMap(
+                  statusMap!.set(simId, msg.status as unknown as CircuitSimulationExecutionStatus)
+                );
 
-            notification.success({ message: `Simulation ${simulations[0].name} done` });
+                if (msg.status === 'running' && msg.extra) {
+                  const progressParsed = parseInt(msg.extra, 10);
+                  if (Number.isFinite(progressParsed) && progressParsed > 0) {
+                    setProgress(progressParsed);
+                  }
+                }
+
+                if (msg.status !== 'done') return;
+
+                notification.success({ message: `Simulation ${simulations[0].name} done` });
+              })
+              .otherwise(() => null);
           },
         });
       }
@@ -431,6 +452,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
             simulation={simulation}
             execStatus={statusMap?.get(simulation.id)}
             onSelect={() => {}}
+            progress={progress}
           />
         ))}
         <button
@@ -474,14 +496,15 @@ type SimulationBlockProps = {
   simulation: ICircuitSimulation;
   execStatus?: CircuitSimulationExecutionStatus;
   onSelect: (simulationId: string) => void;
+  progress: number | null;
 };
 
-function SimulationListItem({ simulation, execStatus, onSelect }: SimulationBlockProps) {
+function SimulationListItem({ simulation, execStatus, onSelect, progress }: SimulationBlockProps) {
   return (
     <button
       type="button"
       title={simulation.name}
-      className="h-18 w-full cursor-pointer rounded-lg bg-white p-4"
+      className="h-20 w-full cursor-pointer rounded-lg bg-white p-4"
       onClick={() => onSelect(simulation.id)}
     >
       <div className="flex items-center justify-between">
@@ -491,6 +514,7 @@ function SimulationListItem({ simulation, execStatus, onSelect }: SimulationBloc
           <RightOutlined className="ml-2 text-sm" />
         </div>
       </div>
+      {progress && <Progress className="mt-2" size="small" percent={progress} status="active" />}
     </button>
   );
 }

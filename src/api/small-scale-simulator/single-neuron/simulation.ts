@@ -1,7 +1,9 @@
-import { bluenaasApi } from '@/api/bluenaas/utils';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
+
+import type { WorkspaceContext } from '@/types/common';
 
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type { SimulationType } from '@/types/simulation/common';
 import type {
@@ -20,18 +22,21 @@ type SimulationConfiguration = {
   duration: number;
 };
 
-export default async function runGenericSingleNeuronSimulation({
+export async function runSimulation({
   ctx,
   modelId,
   config,
+  signal,
 }: {
-  ctx: { virtualLabId: string; projectId: string };
+  ctx: WorkspaceContext;
   modelId: string;
   config: SimulationConfiguration;
+  signal?: AbortSignal;
 }) {
-  const api = await bluenaasApi();
-  const url = `/entitycore/simulation/single-neuron/${ctx.virtualLabId}/${ctx.projectId}/run`;
+  const api = await smallScaleSimulatorApi();
+  const url = '/single-neuron/simulation/run';
   const formattedConfig = convertObjectKeysToSnakeCase(config);
+
   return await api.post<Response>(
     url,
     {
@@ -45,6 +50,7 @@ export default async function runGenericSingleNeuronSimulation({
         'Content-Type': 'application/json',
         accept: 'application/octet-stream',
       },
+      signal,
     },
     { asRawResponse: true }
   );

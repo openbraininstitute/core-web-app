@@ -3,23 +3,27 @@ import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 
 import type { WorkspaceContext } from '@/types/common';
 
-type Params = {
+export async function runValidation({
+  ctx,
+  modelId,
+  signal,
+}: {
   ctx: WorkspaceContext;
-  simulationId: string;
+  modelId: string;
   signal?: AbortSignal;
-};
-
-export default async function runCircuitSimulation({ ctx, simulationId, signal }: Params) {
+}) {
   const api = await smallScaleSimulatorApi();
 
-  return api.post<Response>(
-    '/circuit/simulation/run',
+  return await api.post<Response>(
+    '/single-neuron/validation/run',
     {
-      queryParams: { simulation_id: simulationId },
+      queryParams: {
+        model_id: modelId,
+      },
       headers: {
         ...getEntityCoreContext(ctx).headers,
-        accept: 'application/x-ndjson',
         'Content-Type': 'application/json',
+        accept: 'application/octet-stream',
       },
       signal,
     },

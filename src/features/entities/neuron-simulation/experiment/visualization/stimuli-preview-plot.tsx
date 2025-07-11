@@ -10,7 +10,7 @@ import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { StimulusModule } from '@/types/simulation/single-neuron';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { useAppNotification } from '@/components/notification';
-import { getDirectCurrentGraph } from '@/api/bluenaas';
+import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
 import { getSession } from '@/authFetch';
 
 const PlotRenderer = dynamic(
@@ -64,17 +64,12 @@ export default function StimuliPreviewPlot({
         throw new Error('No Stimulus protocol found');
       }
 
-      const rawPlotData = await getDirectCurrentGraph(
+      const rawPlotData = await getSingleNeuronStimuliPlot({
         modelId,
-        session.accessToken,
-        {
-          amplitudes,
-          stimulusProtocol: protocol,
-        },
-        projectId,
-        virtualLabId,
-        controller.signal
-      );
+        config: { amplitudes, stimulusProtocol: protocol },
+        ctx: { projectId, virtualLabId },
+        signal: controller.signal,
+      });
 
       const plotData: PlotData = rawPlotData.map((d, i) => ({
         type: 'scatter',

@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAtom } from 'jotai';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import AnalysisTransportRunner from '@/features/model-analysis/runner/analysis-transport-runner';
 import CentralLoadingWheel from '@/components/CentralLoadingWheel';
 
-import { resolveExploreDetailsPageUrl, resolveProjectUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
+import { resolveExploreDetailsPageUrl, resolveProjectUrl } from '@/utils/url-builder';
 
+import { runValidationAtomFamily } from '@/features/model-analysis/runner/atoms';
+import { JobStatus } from '@/services/small-scale-simulator/types';
 import type { WorkspaceContext } from '@/types/common';
 
 // Format elapsed time as HH:mm:ss
@@ -45,7 +47,6 @@ function ElapsedTime() {
   );
 }
 
-type AnalysisState = 'initializing' | 'running' | 'error' | 'done';
 type Props = {
   modelId: string;
   workspace: WorkspaceContext;
@@ -177,56 +178,29 @@ function ValidationError({ modelId, workspace }: Props) {
 
 export default function ModelAnalysisContainer({
   ctx,
-  accessToken,
   modelId,
 }: {
   ctx: WorkspaceContext;
-  accessToken: string;
-  modelId?: string;
+  modelId: string;
 }) {
   const router = useRouter();
 
-  const bluePyEModelInstance = useRef<AnalysisTransportRunner | null>(null);
-
-  const [analysisState, setAnalysisState] = useState<AnalysisState>('initializing');
+  const runValidationAtom = runValidationAtomFamily({ modelId, ctx });
+  const [validationJobStatus, runValidation] = useAtom(runValidationAtom);
 
   useEffect(() => {
-    if (bluePyEModelInstance.current || !modelId || !accessToken) return;
+    runValidation();
+  }, [modelId, router, ctx, runValidation]);
 
-    const onInit = () => {
-      setAnalysisState('running');
-    };
-
-    const onAnalysisDone = () => {
-      setAnalysisState('done');
-    };
-
-    const onAnalysisError = () => {
-      setAnalysisState('error');
-    };
-
-    bluePyEModelInstance.current = new AnalysisTransportRunner(ctx, modelId, accessToken, {
-      onInit,
-      onAnalysisDone,
-      onAnalysisError,
-    });
-
-    return () => {
-      if (!bluePyEModelInstance.current) return;
-      bluePyEModelInstance.current.destroy();
-      bluePyEModelInstance.current = null;
-    };
-  }, [modelId, router, accessToken, ctx.projectId, ctx.virtualLabId, ctx]);
-
-  if (analysisState === 'initializing') {
+  if (validationJobStatus === JobStatus.CREATED || JobStatus.PENDING) {
     return <ValidationInit workspace={ctx} modelId={modelId as string} />;
   }
 
-  if (analysisState === 'running') {
+  if (validationJobStatus === JobStatus.RUNNING) {
     return <ValidationRunning workspace={ctx} modelId={modelId as string} />;
   }
 
-  if (analysisState === 'done') {
+  if (validationJobStatus === JobStatus.DONE) {
     return <ValidationSuccess workspace={ctx} modelId={modelId as string} />;
   }
 

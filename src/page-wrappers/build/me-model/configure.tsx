@@ -97,7 +97,7 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
 }
 
 type Props = {
-  params: WorkspaceContext;
+  ctx: WorkspaceContext;
   searchParams: {
     s: string;
     m: string;
@@ -139,7 +139,7 @@ function CustomButton({
     </Button>
   );
 }
-export default function Configure({ params, searchParams }: Props) {
+export default function Configure({ ctx, searchParams }: Props) {
   const { push: navigate } = useRouter();
   const { notification } = App.useApp();
   const [isPending, startTransition] = useTransition();
@@ -148,7 +148,7 @@ export default function Configure({ params, searchParams }: Props) {
   const stateId = get(searchParams, 's', undefined);
 
   const exploreDataKey = resolveDataKey({
-    projectId: params.projectId,
+    projectId: ctx.projectId,
     section: 'explore',
     entity: MEmodel,
   });
@@ -158,19 +158,19 @@ export default function Configure({ params, searchParams }: Props) {
   const refreshActivityAtom = useSetAtom(
     activityAtomFamily({
       key: resolveDataKey({
-        projectId: params.projectId,
+        projectId: ctx.projectId,
         section: 'activity',
         entity: MEmodel,
       }),
-      projectId: params.projectId,
-      virtualLabId: params.virtualLabId,
+      projectId: ctx.projectId,
+      virtualLabId: ctx.virtualLabId,
       type: 'memodel',
     })
   );
   const { sessionValue } = useBuildMeModelSessionState({
     stateId: stateId || '',
-    virtualLabId: params.virtualLabId,
-    projectId: params.projectId,
+    virtualLabId: ctx.virtualLabId,
+    projectId: ctx.projectId,
   });
 
   const [activeProcess, setActiveProcess] = useState<
@@ -199,16 +199,10 @@ export default function Configure({ params, searchParams }: Props) {
     });
   };
 
-  const fetchFreshAccessToken = async () => {
-    const res = await fetch('/api/auth/new-access-token', { method: 'POST' });
-    const token = await res.json();
-    return token.accessToken;
-  };
-
   const buildMeModel = async (mode: 'validation' | 'standard') => {
     const body: Partial<TCreateMeModelContext> = {
-      virtualLabId: params.virtualLabId,
-      projectId: params.projectId,
+      virtualLabId: ctx.virtualLabId,
+      projectId: ctx.projectId,
       name: sessionValue.name,
       description: sessionValue.description ?? '',
       emodel_id: sessionValue.emodel?.id,
@@ -226,8 +220,8 @@ export default function Configure({ params, searchParams }: Props) {
     }
     const accountingSession = new OneshotSession({
       subtype: ServiceSubtype.SingleCellBuild,
-      virtualLabId: params.virtualLabId,
-      projectId: params.projectId,
+      virtualLabId: ctx.virtualLabId,
+      projectId: ctx.projectId,
       count: 1,
     });
 
@@ -235,7 +229,7 @@ export default function Configure({ params, searchParams }: Props) {
       accountingSession.useWith<IMEModel>(() =>
         createMEModel({
           body: omit(validationData, ['virtualLabId', 'projectId']),
-          context: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+          context: ctx,
         })
       ),
       undefined,
@@ -245,8 +239,8 @@ export default function Configure({ params, searchParams }: Props) {
         section: 'build/create-me-model',
         extra: {
           ...validationData,
-          virtualLabId: params.virtualLabId,
-          projectId: params.projectId,
+          virtualLabId: ctx.virtualLabId,
+          projectId: ctx.projectId,
         },
       }
     );
@@ -263,11 +257,9 @@ export default function Configure({ params, searchParams }: Props) {
         showErrorNotification(error, errorType);
         return;
       }
-      const accessToken = await fetchFreshAccessToken();
       createValidationModal({
-        ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+        ctx,
         modelId: data.id,
-        accessToken,
       });
     });
   };
@@ -286,7 +278,7 @@ export default function Configure({ params, searchParams }: Props) {
       refreshEntityCountsToParent(data.brain_region.id);
       navigate(
         resolveExploreDetailsPageUrl({
-          ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
+          ctx: { virtualLabId: ctx.virtualLabId, projectId: ctx.projectId },
           dataType: DataType.CircuitMEModel,
           entityId: data.id,
         })
@@ -319,8 +311,8 @@ export default function Configure({ params, searchParams }: Props) {
         <Header
           {...{
             stateId,
-            virtualLabId: params.virtualLabId,
-            projectId: params.projectId,
+            virtualLabId: ctx.virtualLabId,
+            projectId: ctx.projectId,
           }}
         />
         <div className="flex flex-col gap-4">
