@@ -106,8 +106,9 @@ export function ScopeSelector() {
   const { push: navigate } = useRouter();
   const setScope = useSetAtom(selectedSimulationScopeAtom);
   const { selectedTab, section, type: modelType, updateScopeConfig } = useTileScopeQuery();
-  const tileJSX = ({ id, title, type, description, disabled, img, url }: TTileConfig) => {
-    const highlight = type === modelType;
+  const tileJSX = ({ id, title, type: tileType, description, disabled, img, url }: TTileConfig) => {
+    const highlight = tileType === modelType;
+
     const showImage = section !== 'build' || (section === 'build' && !highlight);
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
@@ -129,7 +130,7 @@ export function ScopeSelector() {
     return (
       <div
         id={id}
-        key={`tile-${section}/${selectedTab}/${type}`}
+        key={`tile-${section}/${selectedTab}/${tileType}`}
         aria-hidden
         className={classNames(
           styles.tabCell,
@@ -139,8 +140,8 @@ export function ScopeSelector() {
         )}
         onClick={() => {
           if (!disabled) {
-            setScope(type as unknown as SimulationType);
-            updateScopeConfig({ selectedTab, type });
+            setScope(tileType as unknown as SimulationType);
+            updateScopeConfig({ selectedTab, type: tileType });
           }
         }}
       >

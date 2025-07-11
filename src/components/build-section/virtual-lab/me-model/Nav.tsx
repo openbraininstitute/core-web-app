@@ -1,26 +1,24 @@
 import { ErrorBoundary } from 'react-error-boundary';
-import { useAtomValue } from 'jotai';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import SideMenu from '@/components/SideMenu';
+
+import { useTileScopeQuery } from '@/components/VirtualLab/ScopeSelector';
 import { Label, LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
-import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { LinkItem } from '@/components/VerticalLinks';
 
+import type { WorkspaceContext } from '@/types/common';
+
 type Props = {
-  params: {
-    virtualLabId: string;
-    projectId: string;
-  };
+  params: WorkspaceContext;
   extraLinks?: LinkItem[];
 };
 
 export default function Nav({ params, extraLinks }: Props) {
   const labUrl = generateLabUrl(params.virtualLabId);
-
+  const { type: modelType } = useTileScopeQuery();
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;
-  const scope = useAtomValue(selectedSimulationScopeAtom);
 
   const links: LinkItem[] = [
     {
@@ -32,11 +30,11 @@ export default function Nav({ params, extraLinks }: Props) {
     },
   ];
 
-  if (scope)
+  if (modelType)
     links.unshift({
-      key: LinkItemKey.Build,
-      href: `${labProjectUrl}/build?s=new&t=${scope}`,
-      content: <>{scope.replace('-', ' ')}</>,
+      key: 'build/scope',
+      href: `${labProjectUrl}/build?s=new&t=${modelType}`,
+      content: <>{modelType.replace('-', ' ')}</>,
       styles: 'text-primary-5 hover:text-primary-2! cursor-pointer',
     });
 
