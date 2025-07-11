@@ -128,7 +128,6 @@ function formatDate(d: Date | string): string {
     const date = isString(d) ? new Date(d) : d;
     return formatter.format(date);
   } catch (ex) {
-    console.log('🚀 [message-item] d, ex =', d, ex); // @FIXME: Remove this line written on 2025-07-10 at 16:37
     return '';
   }
 }
