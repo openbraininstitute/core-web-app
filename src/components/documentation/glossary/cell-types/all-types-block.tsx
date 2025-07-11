@@ -35,14 +35,16 @@ function SectionItem({ item, index, highlightedCellType }: SectionItemProps) {
 
 type AllTypesBlockProps = {
   cellType: 'm-type' | 'e-type';
-  highlightedCellType: string | null;
-  setHighlightedCellType: (slug: string | null) => void;
+  highlightedCellType?: string | null;
+  setHighlightedCellType?: (slug: string | null) => void;
+  selectedLetter?: string | null;
 };
 
 export default function AllTypesBlock({
   cellType,
   highlightedCellType,
   setHighlightedCellType,
+  selectedLetter,
 }: AllTypesBlockProps) {
   const cellcontent = useFetchEntityTypes({ cellType });
 
@@ -54,10 +56,16 @@ export default function AllTypesBlock({
 
   const sortedData = data.sort((a, b) => a.pref_label.localeCompare(b.pref_label));
 
+  const filteredData = selectedLetter
+    ? sortedData.filter((item) => item.pref_label.toUpperCase().startsWith(selectedLetter))
+    : sortedData;
+
   useEffect(() => {
     if (highlightedCellType) {
       const timer = setTimeout(() => {
-        setHighlightedCellType(null);
+        if (setHighlightedCellType) {
+          setHighlightedCellType(null);
+        }
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -65,14 +73,15 @@ export default function AllTypesBlock({
 
   return (
     <div className="flex flex-col">
-      {sortedData.map((item, index) => (
-        <SectionItem
-          key={item.pref_label}
-          item={item}
-          index={index}
-          highlightedCellType={highlightedCellType}
-        />
-      ))}
+      {filteredData.length > 0 &&
+        filteredData.map((item, index) => (
+          <SectionItem
+            key={item.pref_label}
+            item={item}
+            index={index}
+            highlightedCellType={highlightedCellType ?? null}
+          />
+        ))}
     </div>
   );
 }

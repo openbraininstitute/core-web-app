@@ -72,7 +72,7 @@ export default function GlossaryTableOfContent() {
       </div>
       <div className="flex flex-col">
         <Link
-          href="/app/documentation/glossary/cell-types"
+          href="/app/documentation/glossary/cell-type"
           className="text-primary-3 after:bg-primary-6 mb-3 flex flex-row items-center text-sm font-normal tracking-wider whitespace-nowrap uppercase after:ml-2 after:block after:h-px after:w-full after:content-['']"
         >
           Cell types
