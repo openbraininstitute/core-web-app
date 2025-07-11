@@ -1,1 +1,1 @@
-export { default } from "./dialog-edit"
+export { default } from './dialog-edit';
