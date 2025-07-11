@@ -40,7 +40,6 @@ export default function ZoomableImage({ className, src }: ZoomableImageProps) {
     } else {
       const { clientX, clientY } = evt;
       log('warn', '[zoomable-image] clientX, clientY =', clientX, clientY);
-      // console.log('🚀 [zoomable-image] clientX, clientY =', clientX, clientY); // @FIXME: Remove this line written on 2025-07-02 at 09:48
       setZoom(2);
     }
   };

@@ -9,6 +9,7 @@ import { useAITools } from '@/services/ai-agent/tools/tools';
 import styles from './footer.module.css';
 
 interface FooterProps {
+  className?: string;
   status: 'ready' | 'error' | 'streaming' | 'submitted';
   threadId: string | undefined;
   onPrompt(prompt: string): void;
@@ -16,7 +17,14 @@ interface FooterProps {
   stop(): void;
 }
 
-export default function Footer({ status, threadId, onPrompt, messagesCount, stop }: FooterProps) {
+export default function Footer({
+  className,
+  status,
+  threadId,
+  onPrompt,
+  messagesCount,
+  stop,
+}: FooterProps) {
   const tools = useAITools();
   const [prompt, setPrompt] = React.useState('');
   const handlePrompt = (value: string) => {
@@ -25,7 +33,7 @@ export default function Footer({ status, threadId, onPrompt, messagesCount, stop
   };
 
   return (
-    <footer>
+    <footer className={className}>
       {status === 'ready' && messagesCount === 0 && (
         <SuggestedQuestions threadId={threadId} messagesLength={0} onClick={handlePrompt} />
       )}

@@ -40,7 +40,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
   React.useEffect(() => {
     userJourneyTracker.registerArtifactClick(snapshot.artifact);
-    userJourneyTracker.registerBrainRegionClick(snapshot.regionId);
+    userJourneyTracker.registerBrainRegionClick(snapshot.regionTitle);
   }, [snapshot]);
   return [suggestions, () => setSuggestions([])];
 }
