@@ -1,5 +1,5 @@
 import {
-  EyeFilled,
+  CloseOutlined,
   LoadingOutlined,
   MinusCircleOutlined,
   PlusOutlined,
@@ -7,8 +7,8 @@ import {
 } from '@ant-design/icons';
 import { HTMLProps, ReactNode, useCallback, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { Button, Spin, App } from 'antd';
+import { useAtom, useSetAtom } from 'jotai';
+import { Button, Spin } from 'antd';
 import { loadable } from 'jotai/utils';
 
 import Link from 'next/link';
@@ -18,6 +18,7 @@ import {
   addBookmarksToProjectLibrary,
   deleteBookmarksFromProjectLibrary,
 } from '@/features/bookmark/actions';
+import { useAppNotification } from '@/components/notification';
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { resolveLibraryUrl } from '@/utils/url-builder';
@@ -46,20 +47,26 @@ export default function BookmarkButton({
   customButton,
 }: Props) {
   const pathname = usePathname();
-  const { notification } = App.useApp();
-
-  const [loadingSave, setLoadingSave] = useState(false);
-  const [loadingRemove, setLoadingRemove] = useState(false);
-  const loadingAction = loadingSave || loadingRemove;
-
-  const onSaving = () => setLoadingSave(true);
-  const endSaving = () => setLoadingSave(false);
+  const notification = useAppNotification();
+  const [opStatus, setOpStatus] = useState<{
+    op: 'add' | 'remove' | 'none';
+    status: 'none' | 'succeeded' | 'failed';
+  }>({ op: 'none', status: 'none' });
+  const [opRunning, setOpRunning] = useState<{ id?: string; op: 'add' | 'remove' | 'none' }>({
+    id: undefined,
+    op: 'none',
+  });
+  const onOpRunning = (id: string, op: 'add' | 'remove') => setOpRunning({ id, op });
+  const resetOp = () => setOpRunning({ id: undefined, op: 'none' });
+  const isSaving = opRunning.op === 'add' && !!opRunning.id;
+  const isRemoving = opRunning.op === 'remove' && !!opRunning.id;
+  const isSaved = opStatus.op === 'add' && opStatus.status === 'succeeded';
 
   const entity = getEntityByCoreType({ type });
   const dataType = entity?.legacyType;
   const category = entity?.group;
 
-  const bookmarks = useAtomValue(
+  const [bookmarks] = useAtom(
     loadable(
       bookmarksForProjectAtomFamily({
         virtualLabId,
@@ -82,35 +89,26 @@ export default function BookmarkButton({
   const notifySuccess = useCallback(
     (action: 'add' | 'remove') => {
       if (action === 'add') {
-        return notification.open({
+        notification.info({
+          key: 'bookmark-success',
+          icon: <></>,
+          className: classNames('bookmark-success', '[&_.ant-notification-notice-message]:m-0!'),
+          closeIcon: <CloseOutlined className="text-white" />,
           message: (
-            <div className="flex items-stretch justify-center">
-              <div className="px-4 py-4 text-white select-none">Added to the library</div>
-              <div className="w-px bg-white" />
+            <div className="flex flex-col items-center justify-center gap-4 text-white">
+              <div className="self-start text-white">
+                This entity has been added to library successfully
+              </div>
               <Link
                 href={libraryPage}
-                prefetch={false}
-                className={classNames(
-                  'bg-secondary-2 flex items-center justify-center gap-1.5 px-4 py-4',
-                  'font-normal text-white hover:bg-teal-400/40 hover:text-white'
-                )}
+                className="hover:text-primary-8 w-max rounded-none border border-white px-3 py-2 text-center hover:bg-white"
               >
-                <span>View in Library</span>
-                <EyeFilled className="text-white" />
+                See in library
               </Link>
             </div>
           ),
-          description: null,
-          className: classNames(
-            '[&_.ant-notification-notice-message]:!mb-0 [&_.ant-notification-notice-message]:flex',
-            '[&_.ant-notification-notice-message]:items-center',
-            'bg-secondary-2 !w-max flex items-center !p-0'
-          ),
-          duration: 5,
-          closeIcon: null,
-          placement: 'bottom',
-          key: `view-bookmark/${virtualLabId}/${projectId}`,
         });
+        return;
       }
       if (action === 'remove') {
         return notification.success({
@@ -120,7 +118,7 @@ export default function BookmarkButton({
         });
       }
     },
-    [notification, libraryPage, virtualLabId, projectId]
+    [notification, libraryPage, virtualLabId, projectId] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const notifyError = useCallback(
@@ -131,14 +129,14 @@ export default function BookmarkButton({
       }>;
       if (action === 'add') {
         notification.error({
-          message: 'Resource could not be added to the library',
+          message: 'Entity could not be added to the library',
           description: get(serverMessages, get(cause, 'data.error_code'), ''),
           duration: 3,
           placement: 'topRight',
         });
       } else {
         notification.error({
-          message: 'Resource could not be removed from the library',
+          message: 'Entity could not be removed from the library',
           description: get(serverMessages, get(cause, 'data.error_code'), ''),
           duration: 3,
           placement: 'topRight',
@@ -146,10 +144,10 @@ export default function BookmarkButton({
       }
     },
     [notification]
-  );
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveToLibrary = useCallback(async () => {
-    onSaving();
+    onOpRunning(entityId, 'add');
     const { error } = await tryCatch(
       addBookmarksToProjectLibrary({
         virtualLabId,
@@ -160,7 +158,7 @@ export default function BookmarkButton({
           resource_id: resourceId,
         },
       }),
-      endSaving,
+      resetOp,
       {
         feature: 'bookmark-to-project',
         section: pathname,
@@ -175,9 +173,11 @@ export default function BookmarkButton({
     );
     if (error) {
       notifyError('add', error);
+      setOpStatus({ op: 'add', status: 'failed' });
     } else {
-      refreshBookmarks();
+      setOpStatus({ op: 'add', status: 'succeeded' });
       notifySuccess('add');
+      refreshBookmarks();
     }
   }, [
     virtualLabId,
@@ -192,14 +192,14 @@ export default function BookmarkButton({
   ]);
 
   const removeFromLibrary = useCallback(async () => {
-    setLoadingRemove(true);
+    onOpRunning(entityId, 'remove');
     const { error } = await tryCatch(
       deleteBookmarksFromProjectLibrary({
         virtualLabId,
         projectId,
         bookmarks: [{ category: dataType!, entity_id: entityId, resource_id: resourceId }],
       }),
-      () => setLoadingRemove(false),
+      resetOp,
       {
         feature: 'remove-bookmark-from-project',
         section: pathname,
@@ -213,7 +213,9 @@ export default function BookmarkButton({
     );
     if (error) {
       notifyError('remove', error);
+      setOpStatus({ op: 'remove', status: 'failed' });
     } else {
+      setOpStatus({ op: 'remove', status: 'succeeded' });
       notifySuccess('remove');
       refreshBookmarks();
     }
@@ -227,7 +229,7 @@ export default function BookmarkButton({
     notifyError,
     notifySuccess,
     refreshBookmarks,
-  ]);
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isBookmarked = useMemo(() => {
     return (
@@ -255,33 +257,41 @@ export default function BookmarkButton({
   }
 
   const addButton = customButton ? (
-    customButton({ onClick: saveToLibrary, children: 'Add to Library', loading: loadingAction })
+    customButton({
+      onClick: saveToLibrary,
+      children: 'Add to Library',
+      loading: isSaving,
+    })
   ) : (
     <Button
       type="text"
       className="text-primary-7 hover:text-primary-6! flex items-center gap-2 hover:bg-transparent!"
       onClick={saveToLibrary}
-      loading={loadingAction}
-      disabled={loadingAction}
+      loading={isSaving}
+      disabled={isSaving}
     >
-      {loadingSave ? 'Saving...' : 'Save to library'}
+      {isSaving ? 'Saving...' : 'Save to library'}
       <PlusOutlined className="border-neutral-2 border px-4 py-3" />
     </Button>
   );
 
   const removeButton = customButton ? (
-    customButton({ onClick: removeFromLibrary, children: 'Remove from library' })
+    customButton({
+      onClick: removeFromLibrary,
+      children: 'Remove from library',
+      loading: isRemoving,
+    })
   ) : (
     <Button
       type="text"
       className="hover:text-primary-6! mr-3 flex h-[36px] items-center gap-2 px-1 text-gray-500 hover:bg-transparent!"
-      loading={loadingAction}
-      disabled={loadingAction}
+      loading={isRemoving}
+      disabled={isRemoving}
       onClick={removeFromLibrary}
     >
-      {loadingRemove ? 'Removing...' : 'Remove from library'}
+      {isRemoving ? 'Removing...' : 'Remove from library'}
       <MinusCircleOutlined />
     </Button>
   );
-  return <>{isBookmarked ? removeButton : addButton}</>;
+  return <>{isBookmarked || isSaved ? removeButton : addButton}</>;
 }

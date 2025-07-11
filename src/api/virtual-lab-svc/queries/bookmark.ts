@@ -53,8 +53,9 @@ export async function getAllBookmarksByCategory(
   { category }: { category?: DataType }
 ): Promise<VlmGetProjectBookmarksResponse> {
   const api = await virtualLabRootApi();
-  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks${category ? `?category=${category}` : ''}`;
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
   return await api.get<VlmGetProjectBookmarksResponse>(url, {
+    queryParams: { category },
     cache: 'no-store',
     next: {
       tags: ['list-bookmarks'],

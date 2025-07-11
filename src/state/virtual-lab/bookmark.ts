@@ -10,9 +10,12 @@ const isVirtualLabInfoAtomEqual = (a: VirtualLabInfo, b: VirtualLabInfo): boolea
   a.virtualLabId === b.virtualLabId && a.projectId === b.projectId;
 
 export const bookmarksForProjectAtomFamily = atomFamily(
-  ({ virtualLabId, projectId, category }: WorkspaceContext & { category?: DataType }) =>
-    atomWithRefresh<Promise<VlmGetProjectBookmarksResponse>>(async () => {
+  ({ virtualLabId, projectId, category }: WorkspaceContext & { category?: DataType }) => {
+    const childAtom = atomWithRefresh<Promise<VlmGetProjectBookmarksResponse>>(async () => {
       return await getAllBookmarksByCategory({ virtualLabId, projectId }, { category });
-    }),
+    });
+    childAtom.debugLabel = `bookmarks/${projectId}/${category ?? 'all'}`;
+    return childAtom;
+  },
   isVirtualLabInfoAtomEqual
 );
