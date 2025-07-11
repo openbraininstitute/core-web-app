@@ -5,6 +5,8 @@ import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Progress } from 'antd';
+import { match } from 'ts-pattern';
 import {
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
@@ -27,19 +29,16 @@ import { File, SimulationFiles } from './_components/simulation-files';
 import { SimulationStatusBadge } from './_components/simulation-status';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { runCircuitSimulation } from '@/services/small-scale-simulator/circuit';
+import { MessageType } from '@/services/small-scale-simulator/types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-
 import styles from './small-microcircuit.module.css';
-import { Progress } from 'antd';
-import { match } from 'ts-pattern';
-import { MessageType } from '@/services/small-scale-simulator/types';
 
 export default function SimulationCampaignConfiguration({
   circuitId,
