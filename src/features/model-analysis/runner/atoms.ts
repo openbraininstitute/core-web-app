@@ -17,6 +17,8 @@ export const runValidationAtomFamily = atomFamilyWithExpiration(
       async (get, set) => {
         if (get(alreadyRunningAtom)) return;
 
+        set(alreadyRunningAtom, true);
+
         try {
           const response = await runSingleNeuronValidation({ modelId, ctx });
 

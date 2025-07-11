@@ -69,20 +69,32 @@ function ValidationInit({ modelId, workspace }: Props) {
         Activity section.
       </p>
 
+      <p className="text-primary-8">
+        You can close the window at any time now. Analysis results will appear under the
+        <Link className="ml-2 font-bold text-nowrap underline" href={meModelPageUrl}>
+          ME-model details page
+        </Link>
+        .
+      </p>
+
       <CentralLoadingWheel
         text={
           <>
-            <div>Please don&apos;t close the window</div>
-            <span className="text-sm font-light">Validation is launching</span>
+            <span className="text-md">Validation is launching</span>
           </>
         }
         noResults
         style={{ display: 'table', width: '100%', height: '200px' }}
       />
 
-      <Link className="border-primary-8 text-primary-8 border px-4 py-2" href={meModelPageUrl}>
-        Cancel Validation
-      </Link>
+      <div className="mt-10 flex flex-row gap-3">
+        <a
+          className="border-primary-8 text-primary-8 border px-4 py-2"
+          href={`${resolveProjectUrl(workspace)}/activity`}
+        >
+          View activity
+        </a>
+      </div>
     </div>
   );
 }
@@ -192,7 +204,7 @@ export default function ModelAnalysisContainer({
     runValidation();
   }, [modelId, router, ctx, runValidation]);
 
-  if (validationJobStatus === JobStatus.CREATED || JobStatus.PENDING) {
+  if ([JobStatus.CREATED, JobStatus.PENDING].includes(validationJobStatus)) {
     return <ValidationInit workspace={ctx} modelId={modelId as string} />;
   }
 
