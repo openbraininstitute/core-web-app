@@ -288,7 +288,7 @@ export const launchSimulationAtom = atom<
           .with({ message_type: MessageType.DATA }, (msg) => appendStreamData(msg.data))
           .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, (msg) => {
             throw new Error(msg.extra ?? messages.SteamingSimulationResultDefaultError, {
-              cause: 'BluenaasError',
+              cause: 'SmallScaleSimulatorError',
             });
           })
           .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, () => {
