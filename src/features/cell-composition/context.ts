@@ -1,6 +1,7 @@
 import { arrayToTree } from 'performant-array-to-tree';
 import { atomFamily } from 'jotai/utils';
 import { Atom, atom } from 'jotai';
+import isEqual from 'lodash/isEqual';
 
 import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
 import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
@@ -64,7 +65,8 @@ export const annotationTypesAtom = atomFamily<WorkspaceContext, Atom<Promise<Arr
 
     childAtom.debugLabel = 'annotation-types';
     return childAtom;
-  }
+  },
+  isEqual
 );
 
 export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionId: string }) => {

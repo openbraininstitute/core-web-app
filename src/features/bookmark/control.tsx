@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { HTMLProps, ReactNode, useCallback, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { Button, Spin } from 'antd';
 import { loadable } from 'jotai/utils';
 
@@ -66,7 +66,7 @@ export default function BookmarkButton({
   const dataType = entity?.legacyType;
   const category = entity?.group;
 
-  const [bookmarks] = useAtom(
+  const bookmarks = useAtomValue(
     loadable(
       bookmarksForProjectAtomFamily({
         virtualLabId,
@@ -112,7 +112,7 @@ export default function BookmarkButton({
       }
       if (action === 'remove') {
         return notification.success({
-          message: 'Resource removed from library successfully',
+          message: 'Entity removed from library successfully',
           duration: 3,
           placement: 'topRight',
         });
