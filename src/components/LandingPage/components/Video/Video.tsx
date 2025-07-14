@@ -1,11 +1,13 @@
 /* eslint-disable jsx-a11y/media-has-caption */
+import { usePathname } from 'next/navigation';
 import React, { CSSProperties, SyntheticEvent, useRef, useState } from 'react';
 
-import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
 import { isNumber } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
 import { PauseIcon } from '@/components/icons';
+import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
+
 import styles from './Video.module.css';
 
 interface ProgressiveVideoProps {
@@ -25,6 +27,9 @@ export default function ProgressiveVideo({
   currentTime,
   onCurrentTimeChange,
 }: ProgressiveVideoProps) {
+  const pathname = usePathname();
+  const isHomepage = pathname === '/';
+
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [videoPlaying, setVideoPlaying] = useState<boolean>(false);
   const refVideo = useRef<HTMLVideoElement | null>(null);
@@ -59,7 +64,6 @@ export default function ProgressiveVideo({
     if (!video || !onCurrentTimeChange) return;
 
     setVideoPlaying(true);
-    video.muted = false;
     video.play();
   };
 
@@ -67,9 +71,15 @@ export default function ProgressiveVideo({
     const video = refVideo.current;
     if (!video || !onCurrentTimeChange) return;
     setVideoPlaying(false);
-    video.muted = true;
     video.pause();
   };
+
+  React.useEffect(() => {
+    const video = refVideo.current;
+    if (!video) return;
+
+    video.muted = !isHovered;
+  }, [isHovered]);
 
   return (
     <div
@@ -78,40 +88,45 @@ export default function ProgressiveVideo({
       onMouseOut={() => setIsHovered(false)}
       onBlur={() => setIsHovered(false)}
       className={classNames(className, styles.video)}
-      aria-label="Tap to play"
+      aria-label="Click to play"
       style={style}
     >
-      {videoPlaying ? (
-        <button
-          type="button"
-          aria-label="pause video"
-          onClick={handlePause}
-          className={styles.playButton}
-          style={{
-            opacity: isHovered ? 1 : 0,
-          }}
-        >
-          <PauseIcon className="h-20 w-auto" />
-        </button>
-      ) : (
-        <button
-          type="button"
-          aria-label="play video"
-          onClick={handlePlay}
-          className={styles.playButton}
-        >
-          <PlayIcon className="h-44 w-auto" />
-        </button>
+      {isHomepage && (
+        <>
+          {videoPlaying ? (
+            <button
+              type="button"
+              aria-label="pause video"
+              onClick={handlePause}
+              className={styles.playButton}
+              style={{
+                opacity: isHovered ? 1 : 0,
+              }}
+            >
+              <PauseIcon className="h-16 w-auto" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              aria-label="play video"
+              onClick={handlePlay}
+              className={styles.playButton}
+            >
+              <PlayIcon className="h-32 w-auto" />
+            </button>
+          )}
+        </>
       )}
       <video
         className={classNames(controls && styles.pointer)}
         src={src}
         ref={refVideo}
-        // controls={controls}
+        controls={controls}
         muted
         loop={!controls}
         disablePictureInPicture
         playsInline
+        autoPlay={!controls && !isHomepage}
         onPlay={handlePlay}
         onCanPlay={handleReady}
         onTimeUpdate={handleTimeUpdate}
