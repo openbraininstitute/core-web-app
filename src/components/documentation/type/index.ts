@@ -112,3 +112,21 @@ export type ContentForGlossaryItem = {
   Scale: string;
   Status: string;
 };
+
+export type MTypesItem = {
+  id: string;
+  creation_date: string;
+  update_date: string;
+  pref_label: string;
+  alt_label: string;
+  definition: string;
+};
+
+export type ETypesItem = {
+  id: string;
+  creation_date: string;
+  update_date: string;
+  pref_label: string;
+  alt_label: string;
+  definition: string;
+};
