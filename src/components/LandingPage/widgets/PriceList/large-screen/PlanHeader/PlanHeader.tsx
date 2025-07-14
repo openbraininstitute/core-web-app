@@ -112,7 +112,11 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
               <li key={index}>{note}</li>
             ))}
           </ul>
-          <SinglePriceColumn content={PRICES_PER_PLAN[0]} />
+          {plan.title === 'Free' ? (
+            <SinglePriceColumn content={PRICES_PER_PLAN[0]} />
+          ) : (
+            <SinglePriceColumn content={PRICES_PER_PLAN[1]} />
+          )}
         </>
       )}
     </div>
