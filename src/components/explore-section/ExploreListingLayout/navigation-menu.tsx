@@ -9,15 +9,15 @@ import get from 'lodash/get';
 
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';
-import { DataType } from '@/constants/explore-section/list-views';
 import { resolveDataKey } from '@/utils/key-builder';
 
+import type { EntityTypeValue } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type NavigationMenuItem = {
   key: string;
   title: string;
-  entitytype: DataType | undefined;
+  entitytype: Partial<EntityTypeValue> | undefined;
   label: ReactNode;
   className: string;
   style: CSSProperties;
@@ -37,14 +37,13 @@ export default function NavigationMenu({ activePath, items, onClick }: Props) {
   const { data, error } = useAtomValue(
     entitiesCountAtom({ virtualLabId, projectId, brainRegionId: node.id })
   );
-  const allData = data ? { ...data.experimental, ...data.model } : {};
 
   const updatedItems = items.map(({ entitytype, label, ...rest }) => {
     let value: ReactNode;
     if (error) value = <WarningOutlined className="text-xl" />;
-    if (allData) {
-      const v = get(allData, `${entitytype}`, null);
-      if (typeof v === 'number') value = get(allData, `${entitytype}`, null);
+    if (data) {
+      const v = get(data, `${entitytype}`, null);
+      if (typeof v === 'number') value = get(data, `${entitytype}`, null);
       else value = null;
     }
     return {

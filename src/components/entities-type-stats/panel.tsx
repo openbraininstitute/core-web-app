@@ -16,12 +16,12 @@ import {
   EntityCoreModelConfiguration,
 } from '@/entity-configuration/domain';
 
-import type { BulkEntityCoreCountResult } from '@/services/entitycore/entities-count';
+import type { EntityCountResponse } from '@/api/entitycore/types/entities/entity';
 import type { WorkspaceContext } from '@/types/common';
 
 type EntityTypeCountProps = {
   dataKey: string;
-  data: BulkEntityCoreCountResult | null;
+  data: EntityCountResponse | null;
   error: Error | null;
 };
 
@@ -46,7 +46,7 @@ function EntityTypeStats(props: StatsPanelProps) {
   const selectedTab = useAtomValue(dataTabAtom);
   const { error: circuitError, filteredCircuits } = useFilteredCircuits({ dataKey: props.dataKey });
 
-  let data: BulkEntityCoreCountResult | null = null;
+  let data: EntityCountResponse | null = null;
   let error: Error | null = null;
   let isLoading = false;
 
@@ -66,7 +66,7 @@ function EntityTypeStats(props: StatsPanelProps) {
           let isError = false;
 
           if (!isLoading) {
-            const tmpResult = get(data?.experimental, `${value.legacyType}`, '');
+            const tmpResult = get(data, `${value.type}`, '');
             records =
               typeof tmpResult === 'number'
                 ? `${tmpResult} record${tmpResult > 0 ? 's' : ''}`
@@ -95,7 +95,7 @@ function EntityTypeStats(props: StatsPanelProps) {
           let records = '';
           let isError = false;
           if (!isLoading) {
-            const tmpResult = get(data?.model, `${value.legacyType}`, '');
+            const tmpResult = get(data, `${value.type}`, '');
             records =
               typeof tmpResult === 'number'
                 ? `${tmpResult} record${tmpResult > 0 ? 's' : ''}`
