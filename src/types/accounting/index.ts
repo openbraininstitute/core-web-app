@@ -46,6 +46,7 @@ export enum ServiceSubtype {
   MlLlm = 'ml-llm',
   MlRag = 'ml-rag',
   Notebook = 'notebook',
+  SmallCircuitSim = 'small-circuit-sim',
 }
 
 export type JobReport = {
