@@ -46,14 +46,14 @@ function ProjectLink({ project, lab }: { project: ProjectItem; lab: LabItem }) {
         <Link
           key={lab.id}
           href={project.href}
-          className="overflow-hidden text-center font-semibold text-ellipsis whitespace-nowrap capitalize hover:text-white"
+          className="min-w-6! overflow-hidden text-center font-semibold text-ellipsis whitespace-nowrap !text-white capitalize hover:text-white"
           style={{
             writingMode: 'vertical-rl',
             transform: 'rotate(180deg)',
           }}
         >
-          {projectInfo && <DownOutlined className="text-primary-3 my-3" />}
-          <span className="px-2">{projectInfo?.name}</span>
+          {projectInfo && <DownOutlined className="text-primary-3 mx-1" />}
+          <span className="px-2 text-white!">{projectInfo?.name}</span>
         </Link>
       </div>
     )
@@ -107,7 +107,7 @@ export default function SideMenu({ lab, project, links }: SideMenuProps) {
                 key={`${lab.href}/${lab.id}`}
                 href={lab.href}
                 title={result?.virtual_lab.name}
-                className="text-center capitalize"
+                className="flex items-center justify-center text-center capitalize"
                 style={{
                   writingMode: 'vertical-rl',
                   transform: 'rotate(180deg)',
