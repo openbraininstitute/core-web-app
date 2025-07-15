@@ -111,6 +111,7 @@ export async function serviceAiAgentThreadList({
       sort: '-update_date',
       cursor,
       page_size: `${pageSize}`,
+      exclude_empty: 'true',
     },
     typeGuard: isThreadListResponse,
   });
