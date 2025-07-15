@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { ChatRequestOptions } from '@ai-sdk/ui-utils';
 import { CreateMessage, Message, useChat } from '@ai-sdk/react';
@@ -33,6 +35,7 @@ export function useServiceAiAgentChat(threadId: string) {
       return {
         content: (lastMessage?.content ?? '').trim(),
         tool_selection: activeTools,
+        frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
       };
     },
     fetch: async (url, options) => {
