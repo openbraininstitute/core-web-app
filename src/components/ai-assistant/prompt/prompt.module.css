@@ -27,6 +27,7 @@
   margin: 0;
   padding: 0;
   opacity: 0;
+  white-space: pre-wrap;
 }
 
 .prompt > .input > textarea,
