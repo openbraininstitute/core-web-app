@@ -21,7 +21,7 @@ export default function CellTypePage() {
   // })) as CellTypeProps[];
 
   return (
-    <div className="relative ml-32 flex w-full flex-col">
+    <div className="relative ml-32 flex max-w-3/4 flex-col">
       <header>
         <h1 className="text-primary-3 mb-4 text-xl font-bold">Cell Types</h1>
       </header>

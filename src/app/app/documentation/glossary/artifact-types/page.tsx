@@ -18,7 +18,7 @@ export default function DataTypesPage() {
     : artifactTypesContent;
 
   return (
-    <div className="flex w-full flex-row">
+    <div className="flex max-w-3/4 flex-row">
       <div className="relative ml-24 w-full">
         <h1 className="text-primary-3 mb-4 block text-xl font-bold">Artifact Types</h1>
         <AlphabeticalFilter
