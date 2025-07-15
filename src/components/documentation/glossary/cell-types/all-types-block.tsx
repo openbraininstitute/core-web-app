@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+import AlphabeticalFilter from '@/components/documentation/global/AlphabeticalFilter'; // Adjust path if needed based on your project structure
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
 import { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { slugifyForUrl } from '@/components/explore-section/utils';
@@ -37,15 +38,15 @@ type AllTypesBlockProps = {
   cellType: 'm-type' | 'e-type';
   highlightedCellType?: string | null;
   setHighlightedCellType?: (slug: string | null) => void;
-  selectedLetter?: string | null;
 };
 
 export default function AllTypesBlock({
   cellType,
   highlightedCellType,
   setHighlightedCellType,
-  selectedLetter,
 }: AllTypesBlockProps) {
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+
   const cellcontent = useFetchEntityTypes({ cellType });
 
   const data: CellTypeProps[] = (cellcontent.data?.data ?? []).map((item: any) => ({
@@ -73,6 +74,12 @@ export default function AllTypesBlock({
 
   return (
     <div className="flex flex-col">
+      <AlphabeticalFilter
+        data={sortedData}
+        selectedLetter={selectedLetter}
+        setSelectedLetter={setSelectedLetter}
+        labelKey="pref_label"
+      />
       {filteredData.length > 0 &&
         filteredData.map((item, index) => (
           <SectionItem

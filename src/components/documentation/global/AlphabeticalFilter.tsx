@@ -2,27 +2,28 @@
 
 import { useRef, useState } from 'react';
 
-import { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { classNames } from '@/util/utils';
 
-interface AlphabeticalFilterProps {
-  data: CellTypeProps[];
+interface AlphabeticalFilterProps<T extends Record<K, string>, K extends keyof T> {
+  data: T[];
   selectedLetter: string | null;
   setSelectedLetter: (letter: string | null) => void;
+  labelKey: K;
 }
 
-export default function AlphabeticalFilter({
+export default function AlphabeticalFilter<T extends Record<K, string>, K extends keyof T>({
   data,
   selectedLetter,
   setSelectedLetter,
-}: AlphabeticalFilterProps) {
+  labelKey,
+}: AlphabeticalFilterProps<T, K>) {
   const [slideOffset, setSlideOffset] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonListRef = useRef<HTMLDivElement>(null);
 
   const validLetters = new Set<string>();
   data.forEach((item) => {
-    const firstLetter = item.pref_label.charAt(0).toUpperCase();
+    const firstLetter = item[labelKey].charAt(0).toUpperCase();
     if (/[A-Z]/.test(firstLetter)) {
       validLetters.add(firstLetter);
     }
@@ -55,7 +56,7 @@ export default function AlphabeticalFilter({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="mb-8 flex items-center gap-2">
       <button
         type="button"
         onClick={handleSlideLeft}
