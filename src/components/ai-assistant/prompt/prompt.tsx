@@ -39,7 +39,7 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
     <>
       <div className={classNames(className, styles.prompt)}>
         <div className={styles.input}>
-          <div className={styles.content}>{value}</div>
+          <div className={styles.content}>{value + '!'}</div>
           <textarea
             placeholder="What would you like to do?"
             value={value}
