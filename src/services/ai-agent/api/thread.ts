@@ -94,12 +94,14 @@ export async function serviceAiAgentThreadList({
   projectId,
   pageSize = 10,
   cursor = null,
+  excludeEmptyThreads = true,
 }: {
   accessToken: string;
   virtualLabId: string | null;
   projectId: string | null;
   pageSize?: number;
   cursor?: string | null;
+  excludeEmptyThreads?: boolean;
 }): Promise<ThreadListResponse> {
   const data = await fetchJSON({
     method: 'GET',
@@ -111,7 +113,7 @@ export async function serviceAiAgentThreadList({
       sort: '-update_date',
       cursor,
       page_size: `${pageSize}`,
-      exclude_empty: 'true',
+      exclude_empty: `${excludeEmptyThreads}`,
     },
     typeGuard: isThreadListResponse,
   });

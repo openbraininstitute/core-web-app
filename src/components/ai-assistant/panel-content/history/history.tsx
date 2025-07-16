@@ -11,6 +11,8 @@ import DialogDelete from './dialog-delete';
 import { classNames } from '@/util/utils';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { AiAssistantHistory, AiAssistantHistoryItem } from '@/services/ai-agent/assistant/types';
+import { logError } from '@/util/logger';
+import IconPlus from '@/components/icons/Plus';
 
 import styles from './history.module.css';
 
@@ -22,7 +24,7 @@ export interface HistoryProps {
 export default function History({ className, onBack }: HistoryProps) {
   const assistant = useAiAssistant();
   const [threadId, setThreadId] = assistant.threadId.use();
-  const history = assistant.useHistory();
+  const [history, hasMore, next] = assistant.useHistory();
   const sections = useSections(history);
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
@@ -31,6 +33,9 @@ export default function History({ className, onBack }: HistoryProps) {
   const handleRename = (newThreadId: string, newTitle: string) => {
     setOpenEdit(false);
     assistant.renameThread(newThreadId, newTitle);
+  };
+  const handleNext = () => {
+    next();
   };
 
   return (
@@ -99,6 +104,14 @@ export default function History({ className, onBack }: HistoryProps) {
             </div>
           )}
         </div>
+        {hasMore && (
+          <div className={styles.loadMore}>
+            <button type="button" onClick={handleNext}>
+              <IconPlus />
+              <div>Load more</div>
+            </button>
+          </div>
+        )}
       </div>
       <DialogEdit
         open={openEdit}
@@ -149,7 +162,12 @@ function useSections(history: AiAssistantHistory) {
 }
 
 function deltaDays(thread: AiAssistantHistoryItem, days: number) {
-  const now = new Date();
-  const delta = Math.floor((now.valueOf() - thread.date.valueOf()) / (24 * 60 * 60 * 1000));
-  return delta < days;
+  try {
+    const now = new Date();
+    const delta = Math.floor((now.valueOf() - thread.date.valueOf()) / (24 * 60 * 60 * 1000));
+    return delta < days;
+  } catch (ex) {
+    logError('Unable to read the date from this thread:', thread);
+    return false;
+  }
 }

@@ -55,15 +55,17 @@ class AiAssistantClass {
     this.projectId.set(projectId);
   }
 
-  async createThread() {
-    const thread = await serviceAiAgentThreadCreate({
+  readonly createThread = async () => {
+    const params = {
       ...this.context,
       title: new Date().toUTCString(),
-    });
+    };
+    const thread = await serviceAiAgentThreadCreate(params);
     const { threadId } = thread;
     this.threadId.set(threadId);
+    this.historyManager.reset();
     return threadId;
-  }
+  };
 
   async renameThread(threadId: string, title: string) {
     const history = this.history.get().slice();
@@ -91,7 +93,11 @@ class AiAssistantClass {
     });
   }
 
-  useHistory() {
+  useHistory(): [
+    history: AiAssistantHistory,
+    hasMore: boolean,
+    fetchNextPage: () => Promise<void>,
+  ] {
     const history = this.history.useValue();
     const threadId = this.threadId.useValue();
     const context = this.useContext();
@@ -103,7 +109,7 @@ class AiAssistantClass {
       };
     }, [threadId, context]);
 
-    return history;
+    return [history, this.historyManager.hasMore, () => this.historyManager.next(context)];
   }
 
   useContext() {

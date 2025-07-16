@@ -23,6 +23,7 @@ export class ThreadManager {
       virtualLabId,
       projectId,
       pageSize: 1,
+      excludeEmptyThreads: false,
     });
     const [result] = threads.results;
     if (result) {
