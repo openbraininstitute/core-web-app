@@ -96,3 +96,32 @@
   font-weight: bold;
   font-size: 120%;
 }
+
+div.loadMore {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 0;
+  padding: 1em 0;
+}
+
+div.loadMore > button {
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  background: #fff;
+  border: 2px solid #f0f0f0;
+  border-radius: 999vmax;
+  flex-flow: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em 2em;
+  line-height: 2;
+  display: flex;
+  box-shadow:
+    0 0.5em 1em #0004,
+    0 -0.5em 0.5em #fff;
+}

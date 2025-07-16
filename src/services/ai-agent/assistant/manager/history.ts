@@ -18,11 +18,22 @@ export class HistoryManager {
 
   private currentProcess: Promise<void> | null = null;
 
+  private hasMorePages = false;
+
   constructor(
     private readonly target: { history: Signal<AiAssistantHistory>; error: Signal<AssistantError> }
   ) {}
 
-  start = async (context: AssistantContext, threadId: string) => {
+  get hasMore() {
+    return this.hasMorePages;
+  }
+
+  readonly reset = async () => {
+    await this.stop();
+    this.target.history.set([]);
+  };
+
+  readonly start = async (context: AssistantContext, threadId: string) => {
     if (threadId === this.currentThreadId) {
       // We are already loading history for this thread.
       return;
@@ -30,7 +41,13 @@ export class HistoryManager {
 
     await this.stop();
     this.target.history.set([]);
-    this.currentProcess = this.process(context, threadId);
+    const lastThread = await this.getLastThread(context);
+    if (!lastThread) return;
+
+    this.target.history.set([lastThread]);
+    this.currentThreadId = threadId;
+    this.cursor = null;
+    this.currentProcess = this.next(context);
     await this.currentProcess;
   };
 
@@ -43,28 +60,25 @@ export class HistoryManager {
     this.currentProcess = null;
   };
 
-  private async process(context: AssistantContext, threadId: string): Promise<void> {
-    this.cursor = null;
-    this.isProcessing = true;
-    this.currentThreadId = threadId;
+  readonly next = async (context: AssistantContext): Promise<void> => {
+    if (this.isProcessing) return;
+
     const { history } = this.target;
-    while (this.isProcessing) {
-      const newList = [...history.get()];
-      const existingThreadIds = new Set(newList.map((item) => item.id));
-      const page = await this.loadNextPage(context);
-      for (const thread of page) {
-        if (!existingThreadIds.has(thread.id)) {
-          newList.push(thread);
-        }
+    const newList = [...history.get()];
+    const existingThreadIds = new Set(newList.map((item) => item.id));
+    const page = await this.loadNextPage(context);
+    for (const thread of page) {
+      if (!existingThreadIds.has(thread.id)) {
+        newList.push(thread);
       }
-      const oldList = history.get();
-      if (newList.length > oldList.length) history.set(newList);
     }
-    this.isProcessing = false;
-  }
+    const oldList = history.get();
+    if (newList.length > oldList.length) history.set(newList);
+  };
 
   private async loadNextPage(context: AssistantContext): Promise<AiAssistantHistory> {
     try {
+      this.isProcessing = true;
       const { accessToken, projectId, virtualLabId } = context;
       const resp = await serviceAiAgentThreadList({
         accessToken,
@@ -72,8 +86,8 @@ export class HistoryManager {
         virtualLabId,
         cursor: this.cursor,
         pageSize: PAGE_SIZE,
+        excludeEmptyThreads: true,
       });
-      this.isProcessing = resp.has_more;
       this.cursor = resp.next_cursor ?? null;
       return resp.results.map((result) => {
         const item: AiAssistantHistoryItem = {
@@ -81,12 +95,42 @@ export class HistoryManager {
           title: result.title,
           date: new Date(result.update_date),
         };
+        this.hasMorePages = resp.has_more;
         return item;
       });
     } catch (ex) {
-      this.isProcessing = false;
       this.target.error.set({ message: 'Unable to load chat history!', reason: ex });
       return [];
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  private async getLastThread(
+    context: AssistantContext
+  ): Promise<AiAssistantHistoryItem | undefined> {
+    try {
+      const { accessToken, projectId, virtualLabId } = context;
+      const resp = await serviceAiAgentThreadList({
+        accessToken,
+        projectId,
+        virtualLabId,
+        cursor: this.cursor,
+        pageSize: 1,
+        excludeEmptyThreads: false,
+      });
+      const [firstItem] = resp.results;
+      if (!firstItem) return undefined;
+
+      const thread: AiAssistantHistoryItem = {
+        id: firstItem.thread_id,
+        title: firstItem.title,
+        date: new Date(firstItem.update_date),
+      };
+      return thread;
+    } catch (ex) {
+      this.target.error.set({ message: 'Unable to load chat history last item!', reason: ex });
+      return undefined;
     }
   }
 }

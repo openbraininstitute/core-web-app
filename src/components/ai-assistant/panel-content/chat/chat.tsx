@@ -47,8 +47,8 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     globalThis.setTimeout(scroll, 2000);
   }, [suggestions, status]);
   const handleClearChat = () => {
-    clear();
     onClearChat();
+    clear();
   };
   const handlePrompt = (content: string) => {
     append({
