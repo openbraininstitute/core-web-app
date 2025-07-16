@@ -278,7 +278,7 @@ export default function Configure({ ctx, searchParams }: Props) {
       refreshEntityCountsToParent(data.brain_region.id);
       navigate(
         resolveExploreDetailsPageUrl({
-          ctx: { virtualLabId: ctx.virtualLabId, projectId: ctx.projectId },
+          ctx,
           dataType: DataType.CircuitMEModel,
           entityId: data.id,
         })

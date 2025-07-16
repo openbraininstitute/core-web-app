@@ -70,7 +70,7 @@ function ValidationInit({ modelId, workspace }: Props) {
       </p>
 
       <p className="text-primary-8">
-        You can close the window at any time now. Analysis results will appear under the
+        You may now close the window. Analysis results will appear under the
         <Link className="ml-2 font-bold text-nowrap underline" href={meModelPageUrl}>
           ME-model details page
         </Link>
