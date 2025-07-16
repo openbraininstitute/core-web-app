@@ -20,7 +20,6 @@ import {
   SimulationCampaign,
 } from '@/entity-configuration/domain/simulation';
 
-// NOTE: order is important (it's used in stats panel in explore)
 export const EntityCoreExperimentalConfiguration = {
   ReconstructionMorphology,
   ElectricalCellRecording,
@@ -29,7 +28,6 @@ export const EntityCoreExperimentalConfiguration = {
   SynapsePerConnection,
 } as const;
 
-// NOTE: order is important (it's used in stats panel in explore)
 export const EntityCoreModelConfiguration = {
   Emodel,
   MEmodel,

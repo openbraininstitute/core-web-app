@@ -11,27 +11,24 @@ import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
-import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
+import NavigationMenu from '@/components/entities-type-stats/listing-navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
-import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { StatError } from '@/components/explore-section/ExploreInteractive/StatItem';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { resolveDataKey } from '@/utils/key-builder';
 import { ensureString } from '@/util/type-guards';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
 } from '@/components/entities-type-stats/helpers';
 
-import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
+import type { NavigationMenuItem } from '@/components/entities-type-stats/listing-navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,7 +37,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   const router = useRouter();
   const params = useParams<WorkspaceContext & { type: EntitySlugValue; id: string }>();
   const pathname = usePathname();
-  const dataKey = resolveDataKey({ projectId: params.projectId, section: 'explore' });
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
   const brainRegionHierarchy = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
@@ -60,7 +56,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
       ? ExperimentalEntitiesTileTypes
       : ModelEntitiesTileTypes;
 
-  const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
 
   const onClick: MenuProps['onClick'] = async (info) => {
@@ -82,7 +77,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     router.push(key);
   };
 
-  const nMenuItems = Object.keys(config).length + (showCircuitMenu ? 1 : 0);
+  const nMenuItems = Object.keys(config).length;
   const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
   const items: Array<NavigationMenuItem> = Object.keys(config).map((dataType) => {
@@ -106,30 +101,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     };
   });
 
-  const { filteredCircuits, loading, error } = useFilteredCircuits({ dataKey });
-
-  if (error) {
-    return <StatError text={error} />;
-  }
-
-  if (showCircuitMenu && !loading) {
-    const circuitActive = activePath === 'circuit';
-
-    items.push({
-      key: 'circuit',
-      title: 'Circuit',
-      // @ts-expect-error
-      entitytype: 'Circuit',
-      label: `Circuit (${filteredCircuits.count})`,
-      className: 'text-center font-semibold',
-      style: {
-        backgroundColor: circuitActive ? 'white' : '#002766',
-        color: circuitActive ? '#002766' : 'white',
-        flexBasis: menuItemWidth,
-      },
-    });
-  }
-
   // NOTE: this is legacy to handle details page,
   // TODO: (this should change to layout per page type (one for listing and one for details))
   // ! The menu is not rendered for details pages (where the route contains `id` segment)
@@ -147,7 +118,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
         key={`${params.type}/${brainRegionId}`}
       >
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
-
         <div className="flex w-full grow flex-col overflow-x-hidden">
           <Suspense
             fallback={

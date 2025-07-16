@@ -1,3 +1,7 @@
+import find from 'lodash/find';
+
+import map from 'lodash/map';
+import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { DataType } from '@/constants/explore-section/list-views';
 import {
@@ -17,6 +21,7 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -61,14 +66,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.EModelResponse]: {
     title: 'Response',
     filter: null,
-    // use image field in nexus (waiting for entitycore to add image to emodel)
     render: (r) =>
       renderPreview(
         r as EntityCoreResource,
         { width: 184, height: 116 },
         'border border-neutral-3 h-full'
       ),
-    //  renderImage(r as IEModel, { width: 196, height: 116 }, 'my-4'),
     vocabulary: {
       plural: 'responses',
       singular: 'response',
@@ -140,6 +143,87 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     vocabulary: {
       plural: 'ME-models',
       singular: 'ME-model',
+    },
+    style: { width: 184, align: 'left' },
+  },
+  [EntityCoreFields.NumberNeurons]: {
+    title: 'Number of neurons',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => {
+      return 'number_neurons' in r ? r.number_neurons : '-';
+    },
+    isDisplayable: true,
+    isFilterable: true,
+    defaultConstraint: {
+      lte: 'number_neurons__lte',
+      gte: 'number_neurons__gte',
+    },
+    style: { width: 70 },
+  },
+  [EntityCoreFields.NumberSynapses]: {
+    title: 'Number of synapses',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => {
+      return 'number_synapses' in r ? r.number_synapses : '-';
+    },
+    isDisplayable: true,
+    isFilterable: true,
+    defaultConstraint: {
+      lte: 'number_synapses__lte',
+      gte: 'number_synapses__gte',
+    },
+    style: { width: 70 },
+  },
+  [EntityCoreFields.NumberConnections]: {
+    title: 'Number of connections',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => {
+      return 'number_connections' in r ? r.number_connections : '-';
+    },
+    isDisplayable: true,
+    isFilterable: true,
+    defaultConstraint: {
+      lte: 'number_connections__lte',
+      gte: 'number_connections__gte',
+    },
+    style: { width: 70 },
+  },
+  [EntityCoreFields.CircuitBuildCategory]: {
+    className: 'text-left',
+    title: 'Build category',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: map(CircuitBuildCategory, (item) => ({
+      label: item.label,
+      value: item.key,
+    })),
+    isFilterable: true,
+    isDisplayable: true,
+    render: (r) =>
+      renderEmptyOrValue(
+        find(CircuitBuildCategory, { key: (r as ICircuit).build_category })?.label
+      ),
+    defaultConstraint: 'build_category__in',
+    vocabulary: {
+      plural: 'Build categories',
+      singular: 'Build category',
+    },
+    style: { width: 184, align: 'left' },
+  },
+  [EntityCoreFields.CircuitScale]: {
+    className: 'text-left',
+    title: 'Scale',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: map(CircuitScale, (item) => ({
+      label: item.label,
+      value: item.key,
+    })),
+    defaultConstraint: 'scale__in',
+    isFilterable: true,
+    isDisplayable: true,
+    render: (r) => renderEmptyOrValue(find(CircuitScale, { key: (r as ICircuit).scale })?.label),
+    vocabulary: {
+      plural: 'Scales',
+      singular: 'Scale',
     },
     style: { width: 184, align: 'left' },
   },
