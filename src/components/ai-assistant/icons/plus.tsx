@@ -1,4 +1,4 @@
-export function IconChat() {
+export function IconPlus() {
   return (
     <svg
       width="1em"
