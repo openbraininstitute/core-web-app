@@ -3,8 +3,8 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   group: 'models',
@@ -27,7 +27,6 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   },
   asset: {
     extension: 'application/json',
-    // configfile: AssetLabel.single_neuron_synaptome_config,
   },
   isBookmarkable: true,
 } as const;

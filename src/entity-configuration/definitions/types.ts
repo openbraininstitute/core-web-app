@@ -60,6 +60,11 @@ interface WithinListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   value: Array<string>;
 }
 
+interface DropdownListFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.DropdownList;
+  value: string | Array<string> | null;
+}
+
 export type CoreFilter =
   | CheckListFilter
   | SearchFilter
@@ -68,7 +73,8 @@ export type CoreFilter =
   | ValueFilter
   | ValueOrRangeFilter
   | BaseFilter
-  | WithinListFilter;
+  | WithinListFilter
+  | DropdownListFilter;
 
 type CoreFilterType = CoreFieldFilterTypeEnum | null;
 
@@ -96,6 +102,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   title: string;
   description?: string;
   filter: CoreFilterType;
+  filterData?: any;
   defaultConstraint?: string | Record<string, string>;
   perTypeConstraint?: Partial<Record<DataType, string>>;
   isSortable?: boolean;

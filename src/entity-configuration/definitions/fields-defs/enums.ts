@@ -6,6 +6,7 @@ export enum CoreFieldFilterTypeEnum {
   Text = 'Text',
   ValueOrRange = 'ValueOrRange',
   ValueRange = 'ValueRange',
+  DropdownList = 'DropdownList',
 }
 
 export enum EntityCoreFields {

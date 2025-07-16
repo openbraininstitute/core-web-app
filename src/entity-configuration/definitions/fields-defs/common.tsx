@@ -129,7 +129,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Description',
     },
     defaultConstraint: 'search',
-    isFilterable: true,
+    isFilterable: false,
     isDisplayable: true,
   },
   [EntityCoreFields.Contributions]: {

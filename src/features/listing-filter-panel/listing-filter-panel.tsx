@@ -21,6 +21,8 @@ import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 import ClearFilters from '@/features/listing-filter-panel/clear-filters';
 import DateRange from '@/features/listing-filter-panel/date-range';
 import CheckList from '@/features/listing-filter-panel/checklist';
+import ValueRange from '@/features/listing-filter-panel/value-range';
+import DropdownList from '@/features/listing-filter-panel/filter-as-dropdown';
 
 import {
   activeColumnsAtom,
@@ -67,7 +69,8 @@ function createFilterItemComponent(
   filter: CoreFilter,
   facets: Facets | undefined,
   filterValues: CoreFilterValues,
-  setFilterValues: Dispatch<SetStateAction<CoreFilterValues>>
+  setFilterValues: Dispatch<SetStateAction<CoreFilterValues>>,
+  items?: Array<{ value: string; label: string }> | undefined
 ) {
   return function FilterItemComponent() {
     const { type } = filter;
@@ -95,23 +98,23 @@ function createFilterItemComponent(
         );
 
       case CoreFieldFilterTypeEnum.ValueRange:
-        if (!facets) return emptyFilter;
+        return (
+          <ValueRange
+            filter={filter}
+            onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
+          />
+        );
 
-        // if (esConfig?.nested) {
-        //   const nestedAgg = facets[filter.field] as NestedStatsAggregation;
-        //   facet = nestedAgg[filter.field][esConfig?.nested.aggregationName];
-        // } else {
-        //   facet = facets[filter.field] as Statistics;
-        // }
-
-        // return (
-        //   <ValueRange
-        //     filter={filter}
-        //     aggregation={facet}
-        //     onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
-        //   />
-        // );
-        return null;
+      case CoreFieldFilterTypeEnum.DropdownList:
+        if (!items?.length) return emptyFilter;
+        return (
+          <DropdownList
+            filter={filter}
+            data={items}
+            onChange={(values: string[]) => updateFilterValues(filter.field, values)}
+            allowMultiple
+          />
+        );
 
       case CoreFieldFilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
@@ -257,8 +260,12 @@ export default function ListingFilterPanel({
   const submitValues = () => {
     setPageNumber(PAGE_NUMBER);
     setPrevData([]);
+    const appliedFilters = filters?.map((fil: CoreFilter) => ({
+      ...fil,
+      value: filterValues[fil.field],
+    }));
 
-    setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
+    setFilters(appliedFilters);
   };
 
   const Entity = getViewDefinitionByLegacyType(dataType);
@@ -273,7 +280,13 @@ export default function ListingFilterPanel({
               filter.type &&
               item?.isFilterable &&
               (Entity?.filterableFields ? Entity?.filterableFields.includes(filter.field) : true)
-                ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
+                ? createFilterItemComponent(
+                    filter,
+                    facets,
+                    filterValues,
+                    setFilterValues,
+                    item.filterData
+                  )
                 : undefined,
             display: item?.isDisplayable && activeColumns?.includes(filter.field),
             label: fieldTitleSentenceCase(item?.title ?? ''),

@@ -20,6 +20,7 @@ export default async function Page({
   if (!entity) {
     notFound();
   }
+
   return (
     <ListingView
       entity={omit(entity, ['api', 'viewDefinition'])}

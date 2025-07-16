@@ -43,7 +43,13 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
       />
     ))
     .with(
-      { legacyType: P.union(DataType.CircuitMEModel, DataType.SingleNeuronSynaptome).select() },
+      {
+        legacyType: P.union(
+          DataType.CircuitMEModel,
+          DataType.SingleNeuronSynaptome,
+          DataType.Circuit
+        ).select(),
+      },
       () => (
         <ListingView
           {...{

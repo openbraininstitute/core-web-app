@@ -44,7 +44,6 @@ function isEntityTypeCountProps(p: StatsPanelProps): p is EntityTypeCountProps {
 function EntityTypeStats(props: StatsPanelProps) {
   const pathName = usePathname();
   const selectedTab = useAtomValue(dataTabAtom);
-  const { error: circuitError, filteredCircuits } = useFilteredCircuits({ dataKey: props.dataKey });
 
   let data: EntityCountResponse | null = null;
   let error: Error | null = null;
@@ -114,15 +113,6 @@ function EntityTypeStats(props: StatsPanelProps) {
             />
           );
         })}
-        <EntityTypeCount
-          isError={!!circuitError}
-          key="count-circuit"
-          href={`${pathName}/model/circuit`}
-          type="Circuit"
-          records={`${filteredCircuits.count} record${filteredCircuits.count !== 1 ? 's' : ''}`}
-          title="Circuit"
-          isLoading={false}
-        />
       </>
     ))
     .otherwise(() => null);
