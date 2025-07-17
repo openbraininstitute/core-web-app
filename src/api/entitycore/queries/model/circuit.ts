@@ -1,4 +1,5 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { compactRecord } from '@/utils/dictionary';
 
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -29,10 +30,10 @@ export async function getCircuits({
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICircuit>>(baseUri, {
-    queryParams: {
+    queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,
-    },
+    }),
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
