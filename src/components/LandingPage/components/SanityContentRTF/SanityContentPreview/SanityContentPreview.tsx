@@ -10,7 +10,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './SanityContentPreview.module.css';
 
-export interface SanityContentPreviewProps {
+interface SanityContentPreviewProps {
   value: ContentForRichTextPreview;
 }
 

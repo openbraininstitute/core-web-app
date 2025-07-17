@@ -10,10 +10,6 @@ import { z } from 'zod';
  */
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-export type PartialRecord<K extends keyof any, T> = {
-  [P in K]?: T;
-};
-
 /**
  * Constructs a uniot type, properties from the second type take precedence when there is a conflict.
  */
@@ -23,8 +19,6 @@ export type ErrorComponentProps = {
   error: Error;
   reset: () => void;
 };
-
-export type BrainRegionId = string;
 
 export type BrainRegionIdx = number;
 

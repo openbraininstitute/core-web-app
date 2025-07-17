@@ -5,12 +5,13 @@ import sessionAtom from '@/state/session';
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
-export function ExploreDownloadButton({
+export function ExploreDownloadButton<T extends EntityCoreIdentifiable>({
   children,
   selectedRows,
   dataType,
-}: RenderButtonProps & { children: ReactNode }) {
+}: RenderButtonProps<T> & { children: ReactNode }) {
   const session = useAtomValue(sessionAtom);
 
   const [fetching, setFetching] = useState<boolean>(false);

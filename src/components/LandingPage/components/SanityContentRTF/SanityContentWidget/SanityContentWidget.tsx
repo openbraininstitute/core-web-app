@@ -22,7 +22,7 @@ import WidgetRepositories from '@/components/LandingPage/widgets/repositories';
 import WidgetSpecialContributors from '@/components/LandingPage/widgets/special-contributors';
 import WidgetMilestones from '@/components/LandingPage/widgets/milestones';
 
-export interface SanityContentWidgetProps {
+interface SanityContentWidgetProps {
   value: ContentForRichTextWidget;
 }
 

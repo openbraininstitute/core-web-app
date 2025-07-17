@@ -12,8 +12,8 @@ import type { WorkspaceContext } from '@/types/common';
 export const AllowedTypes = ['application/pdf', 'image/png', 'image/jpeg'] as const;
 export type TAllowedTypes = (typeof AllowedTypes)[number];
 
-export const DEFAULT_CACHE_NAME = 'analysis-pdf-cache-v1';
-export const DEFAULT_CACHE_EXPIRE_AFTER = 1 * 60 * 60 * 1000; // 1 Hour
+const DEFAULT_CACHE_NAME = 'analysis-pdf-cache-v1';
+const DEFAULT_CACHE_EXPIRE_AFTER = 1 * 60 * 60 * 1000; // 1 Hour
 
 // TODO: allow the hook to be used for other types of resources, not just Blobs (PDFs)
 /**
@@ -140,7 +140,7 @@ export const useClientCachedUrl = ({
  * Clear all PDF cache entries
  * @returns {Promise<boolean>} - True if the cache was cleared successfully
  */
-export const clearAllCache = async (cacheKey: string = DEFAULT_CACHE_NAME): Promise<boolean> => {
+const clearAllCache = async (cacheKey: string = DEFAULT_CACHE_NAME): Promise<boolean> => {
   try {
     return await caches.delete(cacheKey);
   } catch (error) {

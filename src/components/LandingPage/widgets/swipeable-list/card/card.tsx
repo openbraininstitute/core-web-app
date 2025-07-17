@@ -6,7 +6,7 @@ import ProgressiveImage from '@/components/LandingPage/components/ProgressiveIma
 
 import styles from './card.module.css';
 
-export interface NewsCardProps {
+interface NewsCardProps {
   className?: string;
   value: ContentForSwipeableListItem;
 }

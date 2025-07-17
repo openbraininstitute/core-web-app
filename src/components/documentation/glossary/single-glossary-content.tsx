@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import ItemCard from '../global/item-card';
 
-import GlossaryContent from '@/components/documentation/glossary/glossary-content';
 import { useSanityContentForGlossary } from '@/components/documentation/hooks/use-sanity-content-for-glossary';
 import Slugify from '@/util/slugify';
 
@@ -13,9 +13,12 @@ export default function SingleGlossaryContent() {
 
   const activeItem = content.find((item) => Slugify(item.Name) === slug);
 
+  if (!activeItem) {
+    return <div>Glossary item not found.</div>;
+  }
   return (
-    <div className="w-full">
-      {activeItem ? <GlossaryContent content={activeItem} /> : <div>Glossary item not found.</div>}
+    <div className="ml-24">
+      <ItemCard content={activeItem} />
     </div>
   );
 }

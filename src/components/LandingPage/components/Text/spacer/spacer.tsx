@@ -6,7 +6,7 @@ import { isType } from '@/util/type-guards';
 
 import styles from './spacer.module.css';
 
-export interface SpacerProps {
+interface SpacerProps {
   className?: string;
   value: unknown;
 }
@@ -33,7 +33,7 @@ interface SpacerDef {
   };
 }
 
-export function isSpacerDef(data: unknown): data is SpacerDef {
+function isSpacerDef(data: unknown): data is SpacerDef {
   return isType(data, {
     value: {
       size: ['literal', 'small', 'medium', 'large'],

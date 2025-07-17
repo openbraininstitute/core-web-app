@@ -5,7 +5,7 @@ import PlanHeader from './PlanHeader';
 
 import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
 import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
-import { styleBlockFullWidth, styleBlockSmall } from '@/components/LandingPage/styles';
+import { styleBlockFullWidth } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
 
 import styles from './large-screen.module.css';
@@ -35,14 +35,13 @@ export default function LargeScreen() {
             </>
           ))}
         </div>
-      </CenteredColumn>
-      <div className={styleBlockSmall}>
+
         <ul className={styles.notesExplanation}>
           <li>*: Expires in 1 year, non-transferable</li>
           <li>**: Retained for 3 months after cancellation</li>
           <li>***: Published data & models</li>
         </ul>
-      </div>
+      </CenteredColumn>
     </>
   );
 }

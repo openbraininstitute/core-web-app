@@ -7,7 +7,7 @@ import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
 import { styleBlockFullWidthPadded, styleButtonHoverable } from '@/components/LandingPage/styles';
 import styles from './ContributorsList.module.css';
 
-export interface ContributorsListProps {
+interface ContributorsListProps {
   className?: string;
   list: Contributor[];
 }

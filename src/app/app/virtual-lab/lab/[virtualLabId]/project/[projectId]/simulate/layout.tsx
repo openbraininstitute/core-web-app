@@ -1,16 +1,15 @@
 'use client';
 
 import { ReactNode, use } from 'react';
-
 import { ErrorBoundary } from 'react-error-boundary';
-import { useAtomValue } from 'jotai';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import VirtualLabProjectSidebar from '@/components/VirtualLab/projects/VirtualLabProjectSidebar';
 import SideMenu from '@/components/SideMenu';
+
+import { useTileScopeQuery } from '@/components/VirtualLab/ScopeSelector';
 import { LinkItemKey, Label } from '@/constants/virtual-labs/sidemenu';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
-import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { LinkItem } from '@/components/VerticalLinks';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -18,28 +17,30 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 export default function VirtualLabProjectLayout({
   params: urlParams,
   children,
-}: ServerSideComponentProp<WorkspaceContext, null> & { children: ReactNode }) {
+}: ServerSideComponentProp<WorkspaceContext, { s: string; t: string }> & { children: ReactNode }) {
   const params = use(urlParams);
 
   const labUrl = generateLabUrl(params.virtualLabId);
 
   const labProjectUrl = `${labUrl}/project/${params.projectId}`;
-  const scope = useAtomValue(selectedSimulationScopeAtom);
+  const { type: modelType } = useTileScopeQuery();
+
   const links: LinkItem[] = [
     {
       key: LinkItemKey.Simulate,
       href: `${labProjectUrl}/simulate`,
       content: 'Experiment',
-      styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
+      styles:
+        'rounded-full bg-primary-5 py-1 px-1 text-primary-9 w-[26px] font-semibold capitalize',
     },
   ];
 
-  if (scope)
+  if (modelType)
     links.unshift({
-      key: 'scope',
-      href: '#',
-      content: <>{scope.replace('-', ' ')}</>,
-      styles: 'text-primary-5 hover:text-primary-5! cursor-default',
+      key: 'experiment/scope',
+      href: `${labProjectUrl}/simulate?s=new&t=${modelType}`,
+      content: <>{modelType.replace('-', ' ')}</>,
+      styles: 'text-primary-5 hover:text-primary-2! cursor-pointer',
     });
 
   return (

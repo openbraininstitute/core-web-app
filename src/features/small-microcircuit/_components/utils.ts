@@ -1,6 +1,6 @@
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { Atom } from 'jotai';
 import uniq from 'lodash/uniq';
+import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 
 export type Primitive = null | boolean | number | string;
 export interface ConfigObject {

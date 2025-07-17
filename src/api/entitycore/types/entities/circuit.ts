@@ -13,7 +13,7 @@ import type {
   IdFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export interface CircuitBase {
+interface CircuitBase {
   name: string;
   description: string;
   number_neurons: number;

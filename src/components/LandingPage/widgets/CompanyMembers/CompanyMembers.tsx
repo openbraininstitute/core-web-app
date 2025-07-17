@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './CompanyMembers.module.css';
 
-export interface WidgetCompanyMembersProps {
+interface WidgetCompanyMembersProps {
   className?: string;
   group: Group;
 }

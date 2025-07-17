@@ -1,6 +1,6 @@
 import { DataType } from '@/constants/explore-section/list-views';
 
-export interface VlmResponse<T> {
+interface VlmResponse<T> {
   message: string;
   data: T | null;
 }
@@ -39,7 +39,7 @@ export type Project = {
   user_count?: number;
 };
 
-export type ProjectsResponse = {
+type ProjectsResponse = {
   results: Array<Project>;
   page: number;
   size: number;
@@ -90,7 +90,7 @@ export type InviteResponse = VlmResponse<{
   invite_id: string;
 }>;
 
-export type Invite = {
+type Invite = {
   email: string;
   role: string;
 };
@@ -103,7 +103,7 @@ export type VirtualLabResponseData = {
 
 export type VirtualLabResponse = VlmResponse<VirtualLabResponseData>;
 
-export type VerificationCodeEmailResponseData = {
+type VerificationCodeEmailResponseData = {
   message: string;
   status: 'registered' | 'verified' | 'locked' | 'code_sent' | 'expired' | 'error';
   remaining_time: number | null;
@@ -123,7 +123,7 @@ export enum SubscriptionStatus {
   UNPAID = 'unpaid',
 }
 
-export type PriceOption = {
+type PriceOption = {
   id: string;
   amount: number;
   currency: string;
@@ -131,7 +131,7 @@ export type PriceOption = {
   nickname?: string;
 };
 
-export type SubscriptionTier = {
+type SubscriptionTier = {
   id: string;
   name: string;
   description?: string;
@@ -261,7 +261,7 @@ export type SubscriptionPaymentsResponse = VlmResponse<{
   payments: SubscriptionPaymentDetails[];
 }>;
 
-export type UserSubscriptionHistory = {
+type UserSubscriptionHistory = {
   id: string;
   type: 'free' | 'paid';
   subscription_type: SubscriptionType;
@@ -296,7 +296,7 @@ export type StandalonePaymentResponse = {
   card_brand: string;
 };
 
-export type UserProfile = {
+type UserProfile = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -324,7 +324,7 @@ export type UserProfileResponse = {
   };
 };
 
-export type ProjectStats = {
+type ProjectStats = {
   project_id: string;
   total_stars: number;
   total_bookmarks: number;
@@ -335,7 +335,7 @@ export type ProjectStats = {
   member_users: Array<string>;
 };
 
-export type VirtualLabStats = {
+type VirtualLabStats = {
   virtual_lab_id: string;
   total_projects: number;
   total_members: number;
@@ -344,7 +344,7 @@ export type VirtualLabStats = {
   member_users: Array<string>;
 };
 
-export type DeleteProjectMember = {
+type DeleteProjectMember = {
   project_id: string;
   deleted: string;
   deleted_at: string;
@@ -369,7 +369,7 @@ type UserStats = {
   total_projects: number;
 };
 
-export type AttachUsersToProject = {
+type AttachUsersToProject = {
   project_id: string;
   added_users: Array<{
     id: string;
@@ -393,7 +393,7 @@ export type AttachUsersToProject = {
   processed_at: Date;
 };
 
-export interface UserGroupsResponse {
+interface UserGroupsResponse {
   groups: Array<UserGroup>;
 }
 
@@ -414,14 +414,11 @@ export interface AddBookmarkResponse extends BookmarkRequest {
 
 export interface LibraryBookmark extends AddBookmarkResponse {}
 
-export type BookmarksByCategoryResponse = Record<DataType, Array<LibraryBookmark>>;
+type BookmarksByCategoryResponse = Record<DataType, Array<LibraryBookmark>>;
 
-export type VlmStandalonePaymentResponse = VlmResponse<StandalonePaymentResponse>;
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;
 export type VlmCancelSubscriptionResponse = VlmResponse<CancelSubscriptionResponse>;
-export type VlmUserSubscriptionResponse = VlmResponse<UserActiveSubscriptionResponse>;
-export type VlmNextPaymentDateResponse = VlmResponse<NextPaymentDateResponse>;
 export type VlmSubscriptionStatusResponse = VlmResponse<SubscriptionStatusResponse>;
 export type VlmUserSubscriptionsResponse = VlmResponse<UserSubscriptionsResponse>;
 export type VlmListSubscriptionResponse = VlmResponse<Array<SubscriptionDetails>>;
@@ -437,4 +434,3 @@ export type VlmUserGroupsResponse = VlmResponse<UserGroupsResponse>;
 export type VlmUserStatsResponse = VlmResponse<UserStats>;
 export type VlmAttachUsersToProjectResponse = VlmResponse<AttachUsersToProject>;
 export type VlmGetProjectBookmarksResponse = VlmResponse<BookmarksByCategoryResponse>;
-export type VlmAddBookmarkToProjectResponse = VlmResponse<AddBookmarkResponse>;

@@ -1,5 +1,5 @@
 import { virtualLabApi } from '@/config';
-import { VirtualLabBalanceResponse, VirtualLabJobReportsResponse } from '@/types/accounting';
+import { VirtualLabBalanceResponse } from '@/types/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 
 import { assertApiResponse } from '@/util/utils';
@@ -34,22 +34,6 @@ export async function patchVirtualLab(
   return assertApiResponse(res);
 }
 
-export async function deleteVirtualLab(id: string): Promise<
-  VlmResponse<{
-    virtual_lab: VirtualLab;
-  }>
-> {
-  const response = await authFetch(`${virtualLabApi.url}/virtual-labs/${id}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-
-  return response.json();
-}
-
 export async function getVirtualLabAccountBalance({
   virtualLabId,
   includeProjects = false,
@@ -61,32 +45,6 @@ export async function getVirtualLabAccountBalance({
   searchParams.set('include_projects', includeProjects.toString());
 
   const url = new URL(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/balance`);
-  url.search = searchParams.toString();
-
-  const response = await authFetch(url.toString());
-
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-
-  return response.json();
-}
-
-export async function getVirtualLabJobReports({
-  virtualLabId,
-  page = 0,
-  pageSize = 10,
-}: {
-  virtualLabId: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<VirtualLabJobReportsResponse> {
-  const searchParams = new URLSearchParams();
-
-  searchParams.set('page', page.toString());
-  searchParams.set('page_size', pageSize.toString());
-
-  const url = new URL(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/reports`);
   url.search = searchParams.toString();
 
   const response = await authFetch(url.toString());

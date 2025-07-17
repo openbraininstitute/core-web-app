@@ -87,5 +87,3 @@ export function init({
     refElement.parentNode.insertBefore(scriptElement, refElement);
   }
 }
-
-export default init;

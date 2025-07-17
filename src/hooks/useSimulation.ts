@@ -16,11 +16,11 @@ import {
 } from '@/entity-configuration/domain/simulation';
 
 import type { SimulationPayload } from '@/types/simulation/single-neuron';
-import type { SingleNeuronSynaptomeResource } from '@/types/synaptome';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   IMEModel,
   ISingleNeuronSimulation,
+  ISingleNeuronSynaptome,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 
@@ -37,7 +37,7 @@ export function useSimulation({
 }) {
   const [simulation, setSimulation] = useState<ISingleNeuronSimulation | null>(null);
   const [simulationConfig, setSimulationConfig] = useState<SimulationPayload | null>(null);
-  const [synaptomeModel] = useState<SingleNeuronSynaptomeResource | null>(null);
+  const [synaptomeModel] = useState<ISingleNeuronSynaptome | null>(null);
   const [meModel, setMeModel] = useState<IMEModel | null>(null);
 
   const { error: notifyError } = useAppNotification();

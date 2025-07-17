@@ -1,6 +1,9 @@
 import { captureException } from '@sentry/nextjs';
 import { postJSON } from './common';
-import { ExploreAiSuggestionsQuery, isExploreAiSuggestionsResponse } from './types/suggestions';
+import {
+  type ExploreAiSuggestionsQuery,
+  isExploreAiSuggestionsResponse,
+} from './types/suggestions';
 
 export async function serviceExploreAiGetSuggestions(
   accessToken: string,

@@ -10,7 +10,7 @@ import { FilterConfig, SingleColumnContent } from './state/columns';
 
 import styles from './exploreCircuitTable.module.scss';
 
-export type SubcircuitsTableProps = {
+type SubcircuitsTableProps = {
   circuit: CircuitSchemaProps;
   columns: ColumnsType<CircuitSchemaProps>;
   expandedRowKeys: Key[];

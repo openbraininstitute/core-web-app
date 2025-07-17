@@ -7,7 +7,7 @@ import { ServerSideComponentProp } from '@/types/common';
 
 export default function VirtualLabAdminPage({
   params: promisedParams,
-}: ServerSideComponentProp<{ virtualLabId: string }>) {
+}: ServerSideComponentProp<{ virtualLabId: string }, null>) {
   const params = use(promisedParams);
   const { virtualLabId } = params;
 

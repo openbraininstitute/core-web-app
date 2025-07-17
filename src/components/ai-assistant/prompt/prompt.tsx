@@ -10,7 +10,7 @@ import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './prompt.module.css';
 
-export interface PromptProps {
+interface PromptProps {
   className?: string;
   value: string;
   tools: AIAssistantTool[];
@@ -20,9 +20,14 @@ export interface PromptProps {
 
 export default function Prompt({ className, value, tools, onChange, onClick }: PromptProps) {
   const [showToolsSelector, setShowToolsSelector] = React.useState(false);
-  const handleSendClick = () => onClick(value);
+  const handleSendClick = () => {
+    const promptText = value.trim();
+    if (promptText.length > 0) onClick(promptText);
+  };
   const handleKeyDown = (evt: React.KeyboardEvent) => {
-    if (evt.key === 'Enter') {
+    if (evt.key === 'Enter' && !evt.shiftKey && !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
+      evt.preventDefault();
+      evt.stopPropagation();
       handleSendClick();
     }
   };
@@ -34,7 +39,7 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
     <>
       <div className={classNames(className, styles.prompt)}>
         <div className={styles.input}>
-          <div className={styles.content}>{value}</div>
+          <div className={styles.content}>{value + '!'}</div>
           <textarea
             placeholder="What would you like to do?"
             value={value}
@@ -45,7 +50,12 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
         <button type="button" onClick={handleToolsClick} aria-label="Send prompt">
           <IconGear />
         </button>
-        <button type="button" onClick={handleSendClick} aria-label="Send prompt">
+        <button
+          type="button"
+          onClick={handleSendClick}
+          aria-label="Send prompt"
+          disabled={value.trim().length === 0}
+        >
           <SendIcon />
         </button>
       </div>

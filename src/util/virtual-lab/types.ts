@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const ItemSchema = z.object({
+const ItemSchema = z.object({
   path: z.string(),
   mode: z.string(),
   type: z.string(),
@@ -10,7 +10,7 @@ export const ItemSchema = z.object({
 });
 export type Item = z.infer<typeof ItemSchema>;
 
-export const MetadataInputSchema = z.object({
+const MetadataInputSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   data_type: z.object({
@@ -18,18 +18,17 @@ export const MetadataInputSchema = z.object({
     mime_type: z.array(z.string()).optional(),
   }),
 });
-export type MetadataInput = z.infer<typeof MetadataInputSchema>;
 
-export const MetadataSchema = z.object({
+const MetadataSchema = z.object({
   name: z.string(),
   description: z.string(),
   scale: z.string(),
   input: z.array(MetadataInputSchema),
   authors: z.array(z.string()),
 });
-export type Metadata = z.infer<typeof MetadataSchema>;
+type Metadata = z.infer<typeof MetadataSchema>;
 
-export const NotebookSchema = z.object({
+const NotebookSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
@@ -48,11 +47,11 @@ export const NotebookSchema = z.object({
 });
 export type Notebook = z.infer<typeof NotebookSchema>;
 
-export const RepoDetailsSchema = z.object({
+const RepoDetailsSchema = z.object({
   user: z.string(),
   repo: z.string(),
 });
-export type RepoDetails = z.infer<typeof RepoDetailsSchema>;
+type RepoDetails = z.infer<typeof RepoDetailsSchema>;
 
 export function assertGithubApiResponse(response: Response) {
   if (response.status === 401) throw new Error('You are not logged in to Github');

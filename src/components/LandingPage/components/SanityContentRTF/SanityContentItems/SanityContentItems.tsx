@@ -8,7 +8,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './SanityContentItems.module.css';
 
-export interface SanityContentItemsProps {
+interface SanityContentItemsProps {
   value: ContentForRichTextItems;
 }
 

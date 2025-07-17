@@ -24,7 +24,7 @@ const RX_RGB = /^RGB[\s(?:]+(?:[0-9]+)[^0-9]+(?:[0-9]+)[^0-9]+(?:[0-9]+)/u;
 const RX_RGBA = /^RGBA[\s(?:]+(?:[0-9]+)[^0-9]+(?:[0-9]+)[^0-9]+(?:[0-9]+)[^0-9.]+(?:[0-9.]+)/u;
 const RX_HSL = /^HSL[\s(?:]+(?:[0-9]+)[^0-9]+(?:[0-9]+)[^0-9]+(?:[0-9]+)/u;
 
-export type ColorOrString = Color | string;
+type ColorOrString = Color | string;
 
 /**
  * Fast color manipulations.

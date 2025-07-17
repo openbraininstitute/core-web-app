@@ -14,7 +14,7 @@ import type {
   IEntityFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export interface ISimulationBase extends EntityCoreIdentifiable {
+interface ISimulationBase extends EntityCoreIdentifiable {
   name: string;
   description: string;
   simulation_campaign_id: string;
@@ -22,7 +22,7 @@ export interface ISimulationBase extends EntityCoreIdentifiable {
   scan_parameters: Record<string, any>;
 }
 
-export interface ICircuitSimulationCampaignBase {
+interface ICircuitSimulationCampaignBase {
   name: string;
   description: string;
   scan_parameters: { [key: string]: any };
@@ -44,7 +44,7 @@ export interface ICircuitSimulationCampaignFilter
     NameFilter,
     PaginationFilter {}
 
-export const CreateCircuitSimulationCampaignSchema = z.object({
+const CreateCircuitSimulationCampaignSchema = z.object({
   name: z.string(),
   description: z.string(),
   simulation_campaign_id: z.string().uuid(),

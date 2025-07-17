@@ -1,16 +1,16 @@
 'use client';
 
-import { forwardRef } from 'react';
-import { atom } from 'jotai';
-import map from 'lodash/map';
-import omit from 'lodash/omit';
-import keyBy from 'lodash/keyBy';
-import merge from 'lodash/merge';
 import * as SwitchPrimitives from '@radix-ui/react-switch';
+import { atom } from 'jotai';
+import keyBy from 'lodash/keyBy';
+import map from 'lodash/map';
+import merge from 'lodash/merge';
+import omit from 'lodash/omit';
+import { forwardRef } from 'react';
 
-import { classNames } from '@/util/utils';
-import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
 import { getSanityTiers } from '@/api/sanity/client';
+import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
+import { classNames } from '@/util/utils';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
 
@@ -38,7 +38,7 @@ export type TierFeature = {
   tooltip?: Array<string>;
 };
 
-export type FeatureCategory = {
+type FeatureCategory = {
   title: string;
   available: boolean;
   featuresList: Array<TierFeature>;
@@ -66,7 +66,7 @@ export type ExtendedTier = Tier & {
   metadata: Record<string, string>;
 };
 
-export type TiersData = {
+type TiersData = {
   tiers: Tier[];
 };
 
@@ -91,7 +91,7 @@ export const Switch = forwardRef<
   <SwitchPrimitives.Root
     className={classNames(
       'peer inline-flex h-5 w-11 shrink-0 cursor-pointer items-center',
-      'data-[state=unchecked]:bg-input rounded-full border-2 border-transparent transition-colors',
+      'data-[state=unchecked]:bg-input border-primary-8 rounded-full border-2 transition-colors',
       'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
       'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
       className

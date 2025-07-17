@@ -1,4 +1,4 @@
-import { Notebook } from '@/util/virtual-lab/github';
+import type { Notebook } from '@/util/virtual-lab/types';
 
 export const getSorter = (key: keyof Notebook) => {
   const sorter = (a: Notebook, b: Notebook) => {

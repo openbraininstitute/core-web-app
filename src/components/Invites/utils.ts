@@ -2,7 +2,7 @@ import { captureException } from '@sentry/nextjs';
 
 import { InviteData, InviteErrorCodes } from '@/types/virtual-lab/invites';
 import { VlmError, isVlmError } from '@/types/virtual-lab/common';
-import { generateLabUrl, generateVlProjectUrl } from '@/util/virtual-lab/urls';
+import { generateLabUrl } from '@/util/virtual-lab/urls';
 
 const errorPath = '/';
 
@@ -13,15 +13,6 @@ export const getLabUrl = (vlmData: InviteData): string => {
   }
 
   return `${generateLabUrl(labId)}/overview?invite_accepted=true`;
-};
-
-export const getProjectUrl = (vlmData: InviteData): string => {
-  const { status, virtual_lab_id: labId, project_id: projectId, origin } = vlmData;
-  if (status === 'already_accepted') {
-    return `${errorPath}?errorcode=${InviteErrorCodes.INVITE_ALREADY_ACCEPTED}&origin=${origin}&lab_id=${labId}&project_id=${projectId}`;
-  }
-
-  return `${generateVlProjectUrl(labId, projectId!)}/home?invite_accepted=true`;
 };
 
 export const getErrorUrl = (

@@ -5,7 +5,7 @@ import ArticleCard from '../article-card';
 import Expand from '../../expand';
 import { useArticles } from './hooks';
 
-export interface ToolArticlesProps {
+interface ToolArticlesProps {
   className?: string;
   message: UIMessage;
 }

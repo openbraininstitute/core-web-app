@@ -10,7 +10,7 @@ type TabProps = {
   activeClassName?: HTMLProps<HTMLButtonElement>['className'];
 };
 
-export type MenuTabItem = {
+type MenuTabItem = {
   id: string;
   label: string;
 };

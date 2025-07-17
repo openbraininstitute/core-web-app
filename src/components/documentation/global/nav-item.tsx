@@ -11,7 +11,7 @@ import { ChevronRight } from '@/components/icons';
 import { activeNavItemAtom } from '@/state/documentation/currentSection';
 import { classNames } from '@/util/utils';
 
-export function ItemDisabled({ name }: { name: string }) {
+function ItemDisabled({ name }: { name: string }) {
   return (
     <Tooltip title="Coming soon" placement="topLeft">
       <div className="font-sans text-lg font-normal text-white opacity-40">{name}</div>
@@ -19,7 +19,7 @@ export function ItemDisabled({ name }: { name: string }) {
   );
 }
 
-export function ItemEnabled({
+function ItemEnabled({
   content,
   allContent,
   name,
@@ -67,14 +67,15 @@ export function ItemEnabled({
     <Link
       href={link}
       className={classNames(
-        'font-sans text-lg',
+        'flex flex-row font-sans text-lg',
         isActive
-          ? 'flex flex-row items-center gap-x-6 font-bold text-white after:relative after:top-0.5 after:block after:h-2 after:w-2 after:rounded-full after:bg-white after:content-[""]'
-          : 'text-primary-3 font-normal'
+          ? 'items-center justify-between gap-x-6 font-bold text-white'
+          : 'text-primary-3 justify-start font-normal'
       )}
       aria-label={name}
     >
-      {name}
+      <span>{name}</span>
+      {isActive && <div className="relative top-px block h-3 w-3 rounded-full bg-white" />}
     </Link>
   ) : (
     <div>

@@ -8,7 +8,7 @@ import { getSection, sanitizeURL } from '@/components/LandingPage/utils';
 
 import styles from './NewsCard.module.css';
 
-export interface NewsCardProps {
+interface NewsCardProps {
   className?: string;
   value: ContentForNewsItem;
 }

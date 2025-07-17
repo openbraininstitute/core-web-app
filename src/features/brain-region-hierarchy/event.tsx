@@ -8,7 +8,7 @@ export type TBrainRegionClickEvent = {
   node: IBrainRegionHierarchy;
 };
 
-export const BrainRegionClickEvent = 'BrainRegionClickEvent' as const;
+const BrainRegionClickEvent = 'BrainRegionClickEvent' as const;
 
 export const makeBrainRegionClickEvent = (detail: TBrainRegionClickEvent) => {
   const event = new CustomEvent<TBrainRegionClickEvent>(BrainRegionClickEvent, {

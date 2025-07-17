@@ -21,7 +21,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './morpho-viewer.module.css';
 
-export interface MorphoViewerProps {
+interface MorphoViewerProps {
   className?: string;
   /**
    * Text content of a SWC file.

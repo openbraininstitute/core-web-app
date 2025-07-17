@@ -13,7 +13,6 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
   ): Promise<string[]> => {
     const { threadId = null, virtualLabId = null, projectId = null } = options ?? {};
     const journey = userJourneyTracker.value;
-
     const data = await fetchJSON({
       accessToken,
       path: 'qa/question_suggestions',
@@ -37,7 +36,7 @@ interface SuggestionFromUserJourneyResponse {
   }>;
 }
 
-export function isSuggestionFromUserJourneyResponse(
+function isSuggestionFromUserJourneyResponse(
   data: unknown
 ): data is SuggestionFromUserJourneyResponse {
   return isType(data, {

@@ -31,7 +31,7 @@ export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
   type: EntityCoreDataType;
 }
 
-export type EntityCoreBaseType = {
+type EntityCoreBaseType = {
   type: EntityCoreDataType;
 };
 
@@ -48,15 +48,6 @@ export interface Timestamps {
   creation_date: string; // ISO format
   update_date: string; // ISO format
 }
-
-type BrainRegion = {
-  id: number;
-  name: string;
-  acronym: string;
-  children: Array<number>;
-};
-
-export interface IBrainRegion extends BrainRegion, Timestamps {}
 
 type Strain = {
   name: string;
@@ -102,15 +93,6 @@ export interface IMtypeFilter extends PaginationFilter {
   pref_label__in: string | null;
   order_by: string | null;
 }
-export type MorphologyMeasurementSerie = {
-  name: string;
-  value: number;
-};
-
-export type Measurement = {
-  measurement_of: string;
-  measurement_serie: MorphologyMeasurementSerie[];
-};
 
 export type TypeFilter = {
   id?: string | null;
@@ -127,7 +109,7 @@ type RoleBase = {
   role_id: string;
 };
 
-export interface IRole extends RoleBase, Timestamps, EntityCoreIdentifiable {}
+interface IRole extends RoleBase, Timestamps, EntityCoreIdentifiable {}
 
 type OrganizationBase = {
   type: 'organization';
@@ -135,7 +117,7 @@ type OrganizationBase = {
   alternative_name?: string | null;
 };
 
-export interface IOrganization extends OrganizationBase, Timestamps, EntityCoreIdentifiable {}
+interface IOrganization extends OrganizationBase, Timestamps, EntityCoreIdentifiable {}
 
 type PersonBase = {
   type: 'person';
@@ -158,16 +140,31 @@ enum AssetStatus {
 }
 
 export enum AssetLabel {
+  brain_atlas_annotation = 'brain_atlas_annotation',
+  brain_atlas_region_mesh = 'brain_atlas_region_mesh',
   campaign_generation_config = 'campaign_generation_config',
+  campaign_summary = 'campaign_summary',
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
+  custom_node_sets = 'custom_node_sets',
+  emodel_optimization_output = 'emodel_optimization_output',
+  morphology = 'morphology',
+  neuron_hoc = 'neuron_hoc',
+  neuron_mechanisms = 'neuron_mechanisms',
+  nwb = 'nwb',
+  replay_spikes = 'replay_spikes',
   simulation_designer_image = 'simulation_designer_image',
   simulation_generation_config = 'simulation_generation_config',
-  single_cell_simulation = 'single_cell_simulation_data',
+  single_neuron_simulation_data = 'single_neuron_simulation_data',
   single_neuron_synaptome_config = 'single_neuron_synaptome_config',
   single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
   sonata_circuit = 'sonata_circuit',
-  validation_result = 'validation_result_details',
+  sonata_simulation_config = 'sonata_simulation_config',
+  spike_report = 'spike_report',
+  validation_result_details = 'validation_result_details',
+  validation_result_figure = 'validation_result_figure',
+  voltage_report = 'voltage_report',
+  voxel_densities = 'voxel_densities',
 }
 
 type AssetBase = {
@@ -186,10 +183,10 @@ export interface IAsset extends AssetBase, AssetLegacyMeta {
   status: AssetStatus;
 }
 
-export type Sex = 'male' | 'female' | 'unknown';
-export type AgePeriod = 'prenatal' | 'postnatal' | 'unknown';
+type Sex = 'male' | 'female' | 'unknown';
+type AgePeriod = 'prenatal' | 'postnatal' | 'unknown';
 
-export type SubjectBase = {
+type SubjectBase = {
   name: string;
   description: string;
   sex: Sex;

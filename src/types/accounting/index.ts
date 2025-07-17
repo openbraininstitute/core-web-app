@@ -1,13 +1,13 @@
 import { VlmResponse } from '@/types/virtual-lab/common';
 
-export type Meta = {
+type Meta = {
   total_items: number;
   total_pages: number;
   page: number;
   page_size: number;
 };
 
-export type Links = {
+type Links = {
   self: string;
   first: string;
   last: string;
@@ -46,6 +46,7 @@ export enum ServiceSubtype {
   MlLlm = 'ml-llm',
   MlRag = 'ml-rag',
   Notebook = 'notebook',
+  SmallCircuitSim = 'small-circuit-sim',
 }
 
 export type JobReport = {
@@ -64,7 +65,7 @@ export type JobReport = {
   reserved_count: number;
 };
 
-export type VirtualLabJobReports = {
+type VirtualLabJobReports = {
   items: JobReport[];
   meta: Meta;
   links: Links;
@@ -72,7 +73,7 @@ export type VirtualLabJobReports = {
 
 export type VirtualLabJobReportsResponse = VlmResponse<VirtualLabJobReports>;
 
-export type ProjectJobReports = {
+type ProjectJobReports = {
   items: JobReport[];
   meta: Meta;
   links: Links;

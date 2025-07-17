@@ -8,23 +8,22 @@ import {
   DoubleSide,
   EdgesGeometry,
   Fog,
-  InstancedBufferGeometry,
   LineBasicMaterial,
   LineSegments,
   Mesh,
   MeshLambertMaterial,
-  MeshPhongMaterial,
   Object3D,
   PerspectiveCamera,
   PointLight,
   Raycaster,
   Scene,
-  SphereGeometry,
   TextureLoader,
   Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
+// TODO: to check if three js version is compatible with this
+// @ts-expect-error
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import RendererCtrl from './renderer-ctrl';
@@ -47,8 +46,6 @@ const CLICK_DELAY_TOLERANCE = 500; // ms
 const CLICK_POS_TOLERANCE = 5; // px
 
 const TEXTURE_BASE_URL = `${basePath}/images/e-model-interactive`;
-export type SynapseBubble = Mesh<SphereGeometry, MeshPhongMaterial>;
-export type SynapseBubblesMesh = Mesh<InstancedBufferGeometry, MeshPhongMaterial>;
 
 export type NeuronViewerClickData = {
   type: string;

@@ -2,7 +2,6 @@ import { atom } from 'jotai';
 import { atomFamily, atomWithRefresh, atomWithDefault } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
 
-import sessionAtom from '../session';
 import { virtualLabBalanceRefreshTriggerAtom } from './lab';
 import { Project } from '@/types/virtual-lab/projects';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
@@ -12,7 +11,6 @@ import {
   getUsersProjects,
   getVirtualLabProjectDetails,
 } from '@/services/virtual-lab/projects';
-import { retrievePapersListCount } from '@/services/paper-ai/retrievePapersList';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import {
@@ -53,35 +51,12 @@ export const virtualLabProjectUsersAtomFamily = atomFamily(
   isEqual
 );
 
-export const virtualLabProjectPapersCountAtomFamily = atomFamily(
-  ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-    atomWithRefresh<Promise<number | undefined>>(async (get) => {
-      const session = get(sessionAtom);
-      if (!session) {
-        return;
-      }
-      const response = await retrievePapersListCount({
-        virtualLabId,
-        projectId,
-        accessToken: session.accessToken,
-      });
-
-      return response.total;
-    }),
-  isEqual
-);
-
 export const userProjectsAtom = atomWithRefresh<Promise<VirtualLabAPIListData<Project>>>(
   async () => {
     const response = await getUsersProjects();
     return response.data;
   }
 );
-
-export const userProjectsTotalAtom = atom<Promise<number | undefined>>(async (get) => {
-  const projects = await get(userProjectsAtom);
-  return projects?.total || 0;
-});
 
 export const projectJobReportsAtomFamily = readAtomFamilyWithExpiration(
   ({ virtualLabId, projectId, page }: { virtualLabId: string; projectId: string; page: number }) =>

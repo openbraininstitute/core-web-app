@@ -9,7 +9,7 @@ import { styleButtonSquare } from '../../styles';
 import { classNames } from '@/util/utils';
 import styles from './swipeable-cards-list.module.css';
 
-export interface SwipeableCardsListProps {
+interface SwipeableCardsListProps {
   className?: string;
   children: JSX.Element[];
   buttonLabel?: string;

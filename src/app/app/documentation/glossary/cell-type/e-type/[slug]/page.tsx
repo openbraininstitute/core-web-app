@@ -72,7 +72,7 @@ export default function Page() {
   const content = data.data[0];
 
   return (
-    <div className="relative w-full text-white">
+    <div className="relative ml-24 flex w-full flex-col">
       <div className="flex w-full flex-row items-center justify-between">
         <h1 className="text-4xl font-bold">{content?.pref_label || 'Unnamed Type'}</h1>
         <button

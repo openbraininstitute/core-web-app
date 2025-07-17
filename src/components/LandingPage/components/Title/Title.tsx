@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './Title.module.css';
 
-export interface TitleProps {
+interface TitleProps {
   className?: string;
   value: string;
   margin?: string;

@@ -7,7 +7,7 @@ export function useSanityContentForSocialMediaLinks() {
   return useSanity(query, isContentForSocialMediaLinks) ?? [];
 }
 
-export interface ContentForSocialMediaLink {
+interface ContentForSocialMediaLink {
   url: string;
   title: string;
   imageURL: string;

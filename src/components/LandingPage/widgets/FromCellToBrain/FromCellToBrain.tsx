@@ -7,7 +7,7 @@ import { useSanityContentForFromCelltoBrainContent } from './hooks';
 import { classNames } from '@/util/utils';
 import styles from './FromCellToBrain.module.css';
 
-export interface WidgetFromCellToBrainProps {
+interface WidgetFromCellToBrainProps {
   className?: string;
 }
 

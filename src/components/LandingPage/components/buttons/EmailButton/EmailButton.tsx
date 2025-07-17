@@ -5,7 +5,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './EmailButton.module.css';
 
-export interface EmailButtonProps {
+interface EmailButtonProps {
   className?: string;
   email: string;
   children: React.ReactNode;

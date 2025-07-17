@@ -11,7 +11,7 @@ import { ChevronRight, DownloadIcon } from '@/components/icons';
 import truncateText from '@/util/truncate';
 import { classNames } from '@/util/utils';
 
-export type ResizableColumnType = ColumnType<CircuitSchemaProps> & {
+type ResizableColumnType = ColumnType<CircuitSchemaProps> & {
   onHeaderCell?: (column: ColumnType<CircuitSchemaProps>) => React.HTMLAttributes<HTMLElement> & {
     width: number;
     onResize: (e: SyntheticEvent, data: ResizeCallbackData) => void;

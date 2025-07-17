@@ -42,7 +42,7 @@ const TabsConfig: Array<{ key: TabKeys; title: string }> = [
   { key: 'experiments', title: 'Experiments' },
 ];
 
-export const CommonSummaryViewFields = [
+const CommonSummaryViewFields = [
   { field: EntityCoreFields.Description, className: 'col-span-3' },
   { field: EntityCoreFields.CreatedBy },
   { field: EntityCoreFields.CreationDate },

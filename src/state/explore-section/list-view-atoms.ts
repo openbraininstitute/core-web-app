@@ -1,11 +1,9 @@
-import { atomFamily, atomWithDefault, atomWithRefresh, loadable } from 'jotai/utils';
+import { atomFamily, atomWithDefault, loadable } from 'jotai/utils';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import isEmpty from 'lodash/isEmpty';
-import uniq from 'lodash/uniq';
 import pick from 'lodash/pick';
 import _get from 'lodash/get';
 
-import { bookmarksForProjectAtomFamily } from '../virtual-lab/bookmark';
 import columnKeyToFilter from './column-key-to-filter';
 import {
   EntityCoreFields,
@@ -13,21 +11,8 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
-import fetchDataQuery from '@/queries/explore-section/data';
-import {
-  DataQuery,
-  fetchDimensionAggs,
-  fetchTotalByExperimentAndRegions,
-} from '@/api/explore-section/resources';
-import { DataType, PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
-import {
-  selectedBrainRegionWithDescendantsAndAncestorsAtom,
-  selectedBrainRegionWithDescendantsAndAncestorsFamily,
-} from '@/state/brain-regions';
-import {
-  transformFiltersToQuery,
-  transformQueryParamsArrayToString,
-} from '@/api/entitycore/transformers';
+import { PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
+import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { useUnwrappedValue } from '@/hooks/hooks';
@@ -43,7 +28,6 @@ import { compactRecord } from '@/utils/dictionary';
 import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import { Filter } from '@/features/listing-filter-panel/types';
 
 type DataAtomBinding = {
   key: string;
@@ -102,24 +86,6 @@ export const activeColumnsAtom = atomFamily(
   isListAtomEqual
 );
 
-export const dimensionColumnsAtom = atomFamily((scope: DataAtomBinding) =>
-  atom<Promise<string[] | null>>(async () => {
-    // if the type is not simulation campaign, we dont fetch dimension columns
-    if (scope.dataType !== DataType.SimulationCampaign) {
-      return null;
-    }
-    const dimensionsResponse = await fetchDimensionAggs(scope.workspace);
-    const dimensions: string[] = [];
-    dimensionsResponse.hits.forEach((response: any) => {
-      if (response._source.parameter?.coords) {
-        dimensions.push(...Object.keys(response._source.parameter?.coords));
-      }
-    });
-
-    return uniq(dimensions);
-  })
-);
-
 export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
   const childAtom = atomWithDefault<Promise<Array<CoreFilter>>>(async () => {
     const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
@@ -139,70 +105,6 @@ export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
   return childAtom;
 }, isListAtomEqual);
 
-export const totalByExperimentAndRegionsAtom = atomFamily(
-  (scope: DataAtomBinding) =>
-    atom<Promise<number | undefined | null>>(async (get) => {
-      const sortState = get(sortStateAtom(scope));
-      let descendantAndAncestorIds: string[] = [];
-
-      if (scope.dataScope === ExploreDataScope.SelectedBrainRegion)
-        descendantAndAncestorIds =
-          (await get(selectedBrainRegionWithDescendantsAndAncestorsAtom)) || [];
-
-      const query = fetchDataQuery(1, [], scope.dataType, sortState, '', descendantAndAncestorIds);
-      const result =
-        query && (await fetchTotalByExperimentAndRegions(query, undefined, scope.workspace));
-
-      return result;
-    }),
-  isListAtomEqual
-);
-
-export const queryAtom = atomFamily(
-  (scope: DataAtomBinding) =>
-    atomWithRefresh<Promise<DataQuery | null>>(async (get) => {
-      const searchString = get(searchStringAtom(scope.key));
-      const pageNumber = get(pageNumberAtom(scope.key));
-      const sortState = get(sortStateAtom(scope));
-      const bookmarkResourceIds = (
-        scope.dataScope === ExploreDataScope.BookmarkedResources && scope.workspace
-          ? ((await get(bookmarksForProjectAtomFamily(scope.workspace))) as Record<string, any>)[
-              scope.dataType
-            ] || []
-          : []
-      ).map((b: { resourceId: string }) => b.resourceId);
-
-      const descendantIds: string[] =
-        scope.dataScope === ExploreDataScope.SelectedBrainRegion ||
-        scope.dataScope === ExploreDataScope.BuildSelectedBrainRegion
-          ? (await get(
-              selectedBrainRegionWithDescendantsAndAncestorsFamily(
-                scope.dataScope === ExploreDataScope.SelectedBrainRegion ? 'explore' : 'build'
-              )
-            )) || []
-          : [];
-
-      const filters = await get(filtersAtom(scope));
-
-      if (!filters) {
-        return null;
-      }
-
-      return fetchDataQuery(
-        pageNumber,
-        // @FIXME: I just put this casting to mute the linter, but there may be an error here.
-        filters as Filter[],
-        scope.dataType,
-        sortState,
-        searchString,
-        descendantIds,
-        bookmarkResourceIds
-      );
-    }),
-
-  isListAtomEqual
-);
-
 export const previousDataAtom = atomFamily(<T>(ctx: DataAtomBinding) => {
   const childAtom = atom<T[]>([]);
   childAtom.debugLabel = `previous-data-atom/${ctx.key}`;
@@ -215,7 +117,7 @@ export const entityTargetIdentifiersAtom = atomFamily((key: string) => {
   return childAtom;
 });
 
-export const refreshDataAtomFamily = atomFamily((_key: string) =>
+const refreshDataAtomFamily = atomFamily((_key: string) =>
   atom<symbol>(Symbol('refreshDataAtomFamily'))
 );
 export function useRefreshDataAtom(key: string): () => void {
@@ -265,7 +167,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
         within_brain_region_brain_region_id: ctx.brainRegionId,
         within_brain_region_ascendants: false,
-        ...transformQueryParamsArrayToString(transformFiltersToQuery(filters as any)),
+        ...transformFiltersToQuery(filters as any),
       });
 
       const entity = getEntityByLegacyType({ legacyType: ctx.dataType as EntityCoreLegacyType });

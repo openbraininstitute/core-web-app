@@ -1,10 +1,10 @@
-export interface Pagination {
+interface Pagination {
   page: number;
   page_size: number;
   total_items: number;
 }
 
-export type Facet = {
+type Facet = {
   id: string;
   label: string;
   count: number;

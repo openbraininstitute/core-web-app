@@ -25,7 +25,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './circuits-filter-panel.module.css';
 
-export function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onClick: () => void }) {
+function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onClick: () => void }) {
   return isDisabled ? (
     <Tooltip title="Please fill in the required fields to apply the filter">
       <button
@@ -51,7 +51,7 @@ export function ApplyButton({ isDisabled, onClick }: { isDisabled: boolean; onCl
   );
 }
 
-export function SingleFilterItem({
+function SingleFilterItem({
   title,
   id,
   index,
@@ -240,7 +240,7 @@ export function SingleFilterItem({
             disabled={loading}
             className="mb-2 w-full px-6 py-2 font-sans text-base"
           >
-            <option value="" disabled selected>
+            <option value="" disabled>
               {loading ? `Loading ${errorLabel}...` : selectPlaceholder}
             </option>
             {error ? (
@@ -249,7 +249,7 @@ export function SingleFilterItem({
               </option>
             ) : (
               options.map((option) => (
-                <option key={option} value={option}>
+                <option key={option} value={option} className="capitalize">
                   {option}
                 </option>
               ))
@@ -342,7 +342,14 @@ export function SingleFilterItem({
           </Tooltip>
 
           <div className="flex flex-row items-baseline gap-x-2">
-            <div className="text-xl font-semibold whitespace-nowrap text-white">{title}</div>
+            <button
+              type="button"
+              aria-label="Open filter options"
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-xl font-semibold whitespace-nowrap text-white"
+            >
+              {title}
+            </button>
           </div>
         </div>
         {filterType !== null && (

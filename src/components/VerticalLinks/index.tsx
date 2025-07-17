@@ -6,7 +6,7 @@ import { useRouter, useSelectedLayoutSegment } from 'next/navigation';
 
 import { Label } from '@/constants/virtual-labs/sidemenu';
 
-export type GenericLinkItem = {
+type GenericLinkItem = {
   key: string;
   href: string;
   label?: Label;

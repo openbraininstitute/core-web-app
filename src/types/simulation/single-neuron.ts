@@ -1,7 +1,3 @@
-import { ExploreResource, MEModelSynaptome } from '../explore-section/es';
-import { SynaptomeModelResource } from '../explore-section/delta-model';
-import { MEModelResource } from '../me-model';
-import { DataType } from '@/constants/explore-section/list-views';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
 
 export enum SimulationTypeNames {
@@ -16,18 +12,6 @@ export type StimulusTypeOption = {
   label: string;
   value: StimulusType;
 };
-
-export type FunctionParameterNumber = {
-  defaultValue: number;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
-};
-
-export type StimulusParameter = Record<'params', FunctionParameterNumber>;
-
-export type ConditionalStimulusParamsTypes = Record<StimulusModule, StimulusParameter>;
 
 export type StimulusDropdownInfo = {
   name: string;
@@ -73,15 +57,6 @@ export type SynapseConfig = {
   color: string;
 };
 
-export type SingleModelSimConfig = SimulationConfiguration & {
-  direct_stimulation: CurrentInjectionSimulationConfig[];
-  synapses: null;
-};
-
-export type SynapseModelSimConfig = SimulationConfiguration & {
-  synapses: SynaptomeConfig;
-};
-
 export type StimulusConfig = {
   stimulus_type: StimulusType;
   stimulus_protocol: StimulusModule | null;
@@ -101,39 +76,10 @@ export interface SimulationPayload {
   stimulus: PlotData | null;
 }
 
-export type SelectedSingleNeuronModel = {
-  type: DataType;
-  self: string;
-  source: ExploreResource;
-};
-
-export type SelectedSynaptomeModel = SelectedSingleNeuronModel & {
-  source: MEModelSynaptome;
-};
-
-export type ModelResource = MEModelResource | SynaptomeModelResource;
-
-export const isSynaptomModel = (model: ModelResource | null): model is SynaptomeModelResource => {
-  if (!model) {
-    return false;
-  }
-
-  const type = Array.isArray(model['@type']) ? model['@type'] : [model['@type']];
-  return type.includes(DataType.SingleNeuronSynaptome) && 'distribution' in model;
-};
-
 export type UpdateSynapseSimulationProperty = {
   id: number;
   key: keyof SynapseConfig;
   newValue: number | string | number[] | null;
-};
-
-export type UpdateSynapseSimulationProperties = {
-  id: number;
-  entries: Array<{
-    key: keyof SynapseConfig;
-    newValue: number | string | null | number[];
-  }>;
 };
 
 export type ProtocolDetails = {
@@ -164,9 +110,6 @@ type BluenaasError = {
   error_code: string;
 };
 
-type StreamSimulationEvent = 'init' | 'info' | 'data' | 'error';
-type StreamSimulationStatus = 'pending' | 'started' | 'success' | 'failure';
-
 export type SimulationStreamData = {
   name: string;
   amplitude?: number;
@@ -177,16 +120,6 @@ export type SimulationStreamData = {
   y: Array<number>;
 };
 
-export type StreamSimulationResponse = {
-  task_id: string;
-  description: string;
-  event: StreamSimulationEvent;
-  state: StreamSimulationStatus;
-  data: SimulationStreamData;
-};
-
 export const isBluenaasError = (obj: Object): obj is BluenaasError => {
   return 'details' in obj && 'message' in obj && 'error_code' in obj;
 };
-
-export const isBluenaasSimulationError = (obj: StreamSimulationResponse) => obj.event === 'error';

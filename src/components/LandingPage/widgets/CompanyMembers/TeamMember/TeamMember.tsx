@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 import { ContentForMember } from '@/components/LandingPage/content';
 import styles from './TeamMember.module.css';
 
-export interface TeamMemberProps {
+interface TeamMemberProps {
   className?: string;
   value: ContentForMember;
   big?: boolean;

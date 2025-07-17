@@ -14,12 +14,12 @@ import {
   NameFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export type Density = {
+type Density = {
   density: number;
   count: number;
 };
 
-export type NeuronComposition = {
+type NeuronComposition = {
   neuron: Density;
   glia: Density;
 };

@@ -9,24 +9,6 @@ import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import authFetch, { authFetchRetryOnError } from '@/authFetch';
 import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 
-export async function getVirtualLabProjects(
-  id: string,
-  size?: number
-): Promise<VlmResponse<VirtualLabAPIListData<Project>>> {
-  const url = new URL(`${virtualLabApi.url}/virtual-labs/${id}/projects`);
-  if (size) {
-    const params = new URLSearchParams(url.search);
-    params.set('size', `${size}`);
-    url.search = params.toString();
-  }
-
-  const response = await authFetchRetryOnError(url);
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-  return response.json();
-}
-
 export async function getVirtualLabProjectDetails(
   virtualLabId: string,
   projectId: string

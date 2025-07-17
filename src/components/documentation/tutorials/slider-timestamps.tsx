@@ -6,7 +6,7 @@ import SingleStep from './single-step';
 
 import { StepProps } from '@/components/documentation/type';
 
-export type ActiveSteps = {
+type ActiveSteps = {
   first: number;
   last: number;
 };

@@ -24,7 +24,7 @@ import { classNames } from '@/util/utils';
 
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
-export function FilterBtn({ disabled, children, onClick }: HTMLProps<HTMLButtonElement>) {
+function FilterBtn({ disabled, children, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
     <button
       className={classNames(

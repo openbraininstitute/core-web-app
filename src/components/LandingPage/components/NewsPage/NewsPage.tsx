@@ -17,7 +17,7 @@ import { classNames } from '@/util/utils';
 
 import styles from '@/components/LandingPage/components/NewsPage/single-news-page.module.css';
 
-export type NewsPageProps = {
+type NewsPageProps = {
   className?: string;
   slug: string;
 };

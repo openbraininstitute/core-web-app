@@ -10,7 +10,7 @@ import { classNames } from '@/util/utils';
 import { WorkspaceContext } from '@/types/common';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 
-export type FileViewerProps = {
+type FileViewerProps = {
   file?: File;
   context: WorkspaceContext;
   className?: string;
@@ -35,12 +35,12 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
   );
 }
 
-export type JsonFileViewerProps = {
+type JsonFileViewerProps = {
   file: File;
   context: WorkspaceContext;
 };
 
-export function JsonFileViewer({ file, context }: JsonFileViewerProps) {
+function JsonFileViewer({ file, context }: JsonFileViewerProps) {
   const parsedJson = useAtomValue(
     fileAtomFamily({
       id: file.asset.id,
@@ -54,20 +54,20 @@ export function JsonFileViewer({ file, context }: JsonFileViewerProps) {
   return <pre>{JSON.stringify(parsedJson, null, 2)}</pre>;
 }
 
-export type NwbFileViewerProps = {
+type NwbFileViewerProps = {
   file: File;
   context: WorkspaceContext;
 };
 
-export function NwbFileViewer({ file, context }: NwbFileViewerProps) {
+function NwbFileViewer({ file, context }: NwbFileViewerProps) {
   return <EphysViewer resource={file.entity as ICircuitSimulationResult} ctx={context} />;
 }
 
-export type PlaceholderFileViewerProps = {
+type PlaceholderFileViewerProps = {
   file: File;
 };
 
-export function PlaceholderFileViewer({ file }: PlaceholderFileViewerProps) {
+function PlaceholderFileViewer({ file }: PlaceholderFileViewerProps) {
   const fileName = file?.assetPath?.split('/').at(-1) ?? file?.asset.path.split('/').at(-1);
   const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
 

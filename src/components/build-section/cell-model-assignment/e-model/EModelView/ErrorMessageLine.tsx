@@ -13,7 +13,7 @@ export default function ErrorMessageLine({ message }: Props) {
   return <div className="text-xs text-red-400">{message}</div>;
 }
 
-export function ErrorMessageBox({ message }: Props) {
+function ErrorMessageBox({ message }: Props) {
   return (
     <div className="border-error text-error flex items-center justify-center gap-4 border p-16 text-xl">
       <WarningFilled style={{ fontSize: 24 }} />
@@ -22,7 +22,7 @@ export function ErrorMessageBox({ message }: Props) {
   );
 }
 
-export function InfoMessageBox({ message }: Props) {
+function InfoMessageBox({ message }: Props) {
   return (
     <div className="border-neutral-3 text-neutral-4 flex items-center justify-center gap-4 border p-16 text-xl">
       {message}

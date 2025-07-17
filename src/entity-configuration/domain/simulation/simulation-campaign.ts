@@ -25,7 +25,7 @@ import type {
 import type { WorkspaceContext } from '@/types/common';
 
 // NOTE: this is due entitycore do not support yet
-export async function resolveSimulationCampaigns({
+async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,

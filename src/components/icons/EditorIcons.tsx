@@ -206,17 +206,6 @@ export function FormatUnderlined(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function AddLink(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="M17.077 19v-2.923h-2.923v-1h2.923v-2.923h1v2.923H21v1h-2.923V19zm-6.462-2.923H7.077q-1.692 0-2.884-1.192Q3 13.693 3 12t1.193-2.885t2.884-1.193h3.538v1H7.077q-1.27 0-2.173.904T4 12t.904 2.173t2.173.904h3.538zM8.5 12.5v-1h7v1zM21 12h-1q0-1.27-.904-2.173t-2.173-.904h-3.538v-1h3.538q1.692 0 2.885 1.193T21 12"
-      />
-    </svg>
-  );
-}
-
 export function TextIncrease(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
@@ -235,25 +224,6 @@ export function TextDecrease(props: SVGProps<SVGSVGElement>) {
         fill="currentColor"
         d="m1.615 18.5l5.289-13h.961l5.289 13h-1.208l-1.448-3.633H4.194L2.746 18.5zm2.939-4.6h5.584L7.435 7.1h-.139zm10.83-1.4v-1h7v1z"
       />
-    </svg>
-  );
-}
-
-export function LightArticleOutline(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="M7.5 16.5h6v-1h-6zm0-4h9v-1h-9zm0-4h9v-1h-9zM5.615 20q-.69 0-1.152-.462T4 18.385V5.615q0-.69.463-1.152T5.615 4h12.77q.69 0 1.152.463T20 5.615v12.77q0 .69-.462 1.152T18.385 20zm0-1h12.77q.23 0 .423-.192t.192-.423V5.615q0-.23-.192-.423T18.385 5H5.615q-.23 0-.423.192T5 5.615v12.77q0 .23.192.423t.423.192M5 5v14z"
-      />
-    </svg>
-  );
-}
-
-export function FontFamilyTitle(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path fill="currentColor" d="M11.385 19V6.25H6.019V5H18v1.25h-5.365V19z" />
     </svg>
   );
 }
@@ -376,50 +346,6 @@ export function FormatStrikethrough(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function StackAddOutline(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="M8 19.385V9.61q0-.672.475-1.14T9.621 8h9.764q.67 0 1.143.472q.472.472.472 1.143v6.962L16.577 21H9.615q-.67 0-1.143-.472Q8 20.056 8 19.385M3.025 6.596q-.13-.671.258-1.208t1.06-.669l9.619-1.694q.67-.13 1.208.258t.668 1.06l.212 1.272h-1.012l-.213-1.192q-.038-.211-.23-.336T14.17 4L4.52 5.713q-.269.039-.404.25t-.096.481l1.596 9.016v1.936q-.342-.167-.581-.475t-.315-.706zM9 9.616v9.769q0 .269.173.442t.442.173H16l4-4V9.615q0-.269-.173-.442T19.385 9h-9.77q-.269 0-.442.173T9 9.615M14 18h1v-3h3v-1h-3v-3h-1v3h-3v1h3z"
-      />
-    </svg>
-  );
-}
-
-export function PageBreakOutline(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="M6.615 21q-.666 0-1.14-.475Q5 20.051 5 19.385V16.5h1v2.885q0 .269.173.442t.442.173h10.77q.269 0 .442-.173t.173-.442V16.5h1v2.885q0 .666-.475 1.14q-.474.475-1.14.475zM5 11.5V4.615q0-.666.475-1.14Q5.949 3 6.615 3H14.5L19 7.5v4h-1V8h-4V4H6.615q-.269 0-.442.173T6 4.615V11.5zm4.192 3v-1h5.616v1zm7.616 0v-1h5.615v1zm-15.231 0v-1h5.615v1zM12 16.5"
-      />
-    </svg>
-  );
-}
-
-export function HorizontalRule(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="m9.108 11.758l2.284-2.29l-2.054-2.06l-1.157 1.157l-.708-.707L8.625 6.7L6.673 4.748l-2.29 2.29zm7.834 7.84l2.29-2.29l-1.951-1.952l-1.158 1.152l-.708-.708l1.152-1.158l-2.04-2.034l-2.285 2.284zM17.273 5l1.733 1.733zM7.153 20H4v-3.154l4.394-4.394L3 7.038l3.673-3.673l5.439 5.42l5.205-5.212l3.085 3.173l-5.142 5.167l5.375 5.414L16.962 21l-5.414-5.394zM5 19h1.727l9.82-9.813l-1.734-1.733L5 17.274zM15.692 8.313l-.879-.86l1.733 1.734z"
-      />
-    </svg>
-  );
-}
-
-export function Column2Outline(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="M15 20q-.69 0-1.153-.462t-.462-1.153V5.615q0-.69.462-1.152T15 4h2.77q.69 0 1.152.463t.463 1.152v12.77q0 .69-.463 1.152T17.77 20zm-.615-14.385v12.77q0 .23.192.423T15 19h2.77q.23 0 .422-.192t.193-.423V5.615q0-.23-.193-.423T17.77 5H15q-.23 0-.423.192t-.192.423M6.23 20q-.69 0-1.153-.462t-.463-1.153V5.615q0-.69.463-1.152T6.23 4H9q.69 0 1.153.463t.462 1.152v12.77q0 .69-.462 1.152T9 20zM5.615 5.615v12.77q0 .23.193.423T6.23 19H9q.23 0 .423-.192t.192-.423V5.615q0-.23-.192-.423T9 5H6.23q-.23 0-.422.192t-.193.423M18.385 5h-4zm-8.77 0h-4z"
-      />
-    </svg>
-  );
-}
-
 export function EditDocument(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
@@ -513,69 +439,6 @@ export function Delete(props: SVGProps<SVGSVGElement>) {
         />
         <path d="M6.5 6h.11a2 2 0 0 0 1.83-1.32l.034-.103l.097-.291c.083-.249.125-.373.18-.479a1.5 1.5 0 0 1 1.094-.788C9.962 3 10.093 3 10.355 3h3.29c.262 0 .393 0 .51.019a1.5 1.5 0 0 1 1.094.788c.055.106.097.23.18.479l.097.291A2 2 0 0 0 17.5 6" />
       </g>
-    </svg>
-  );
-}
-
-export function StorageSolid(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 36 36" {...props}>
-      <path
-        fill="currentColor"
-        d="M17.91 18.28c8.08 0 14.66-1.74 15.09-3.94V8.59c-.43 2.2-7 3.94-15.09 3.94A39.4 39.4 0 0 1 6.25 11V9a39.4 39.4 0 0 0 11.66 1.51C26 10.53 32.52 8.79 33 6.61c-.2-3.41-9.48-4.33-15-4.33S3 3.21 3 6.71v22.58c0 3.49 9.43 4.43 15 4.43s15-.93 15-4.43v-5.2C32.57 26.28 26 28 17.91 28a39.4 39.4 0 0 1-11.66-1.48v-2A39.4 39.4 0 0 0 17.91 26C26 26 32.57 24.28 33 22.09v-5.75c-.43 2.2-7 3.94-15.09 3.94a39.4 39.4 0 0 1-11.66-1.51v-2a39.4 39.4 0 0 0 11.66 1.51"
-        className="clr-i-solid clr-i-solid-path-1"
-      />
-      <path fill="none" d="M0 0h36v36H0z" />
-    </svg>
-  );
-}
-
-export function CreditsSolid(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <g fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="m20.312 12.647l.517-1.932c.604-2.255.907-3.382.68-4.358a4 4 0 0 0-1.162-2.011c-.731-.685-1.859-.987-4.114-1.591c-2.255-.605-3.383-.907-4.358-.68a4 4 0 0 0-2.011 1.162c-.587.626-.893 1.543-1.348 3.209l-.244.905l-.517 1.932c-.605 2.255-.907 3.382-.68 4.358a4 4 0 0 0 1.162 2.011c.731.685 1.859.987 4.114 1.592c2.032.544 3.149.843 4.064.73q.15-.019.294-.052a4 4 0 0 0 2.011-1.16c.685-.732.987-1.86 1.592-4.115Z" />
-        <path
-          d="M16.415 17.974a4 4 0 0 1-1.068 1.678c-.731.685-1.859.987-4.114 1.591s-3.383.907-4.358.679a4 4 0 0 1-2.011-1.161c-.685-.731-.988-1.859-1.592-4.114l-.517-1.932c-.605-2.255-.907-3.383-.68-4.358a4 4 0 0 1 1.162-2.011c.731-.685 1.859-.987 4.114-1.592q.638-.172 1.165-.309"
-          opacity=".5"
-        />
-      </g>
-    </svg>
-  );
-}
-
-export function StorageOutline(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 36 36" {...props}>
-      <path
-        fill="currentColor"
-        d="M7 7.76v2.09a43.5 43.5 0 0 0 11 1.27a55 55 0 0 0 6.2-.36a7.5 7.5 0 0 1-1.13-1.88c-1.5.15-3.2.24-5.07.24A37.6 37.6 0 0 1 7 7.76"
-        className="clr-i-outline--badged clr-i-outline-path-1--badged"
-      />
-      <path
-        fill="currentColor"
-        d="M31 13.43v.82c-.33.86-5.06 2.45-13 2.45a37.5 37.5 0 0 1-11-1.36v2.08a43.3 43.3 0 0 0 11 1.28c4 0 9.93-.48 13-2v5.17c-.33.86-5.06 2.45-13 2.45a37.5 37.5 0 0 1-11-1.4V25a43.3 43.3 0 0 0 11 1.28c4 0 9.93-.48 13-2v5.1c-.35.86-5.08 2.45-13 2.45S5.3 30.2 5 29.37V6.82c.3-.82 5-2.46 13-2.46c1.7 0 3.25.08 4.64.2a7.4 7.4 0 0 1 .67-1.94c-1.88-.18-3.75-.26-5.31-.26c-5.57 0-15 .93-15 4.43v22.58c0 3.49 9.43 4.43 15 4.43s15-.93 15-4.43v-16.5a7.5 7.5 0 0 1-2 .56"
-        className="clr-i-outline--badged clr-i-outline-path-2--badged"
-      />
-      <circle
-        cx="30"
-        cy="6"
-        r="5"
-        fill="currentColor"
-        className="clr-i-outline--badged clr-i-outline-path-3--badged clr-i-badge"
-      />
-      <path fill="none" d="M0 0h36v36H0z" />
-    </svg>
-  );
-}
-
-export function LightFile(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
-      <path
-        fill="currentColor"
-        d="M14 11a3 3 0 0 1-3-3V4H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-8zm-2-3a2 2 0 0 0 2 2h3.59L12 4.41zM7 3h5l7 7v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3"
-      />
     </svg>
   );
 }

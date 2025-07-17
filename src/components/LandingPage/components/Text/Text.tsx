@@ -8,7 +8,7 @@ import { isString } from '@/util/type-guards';
 
 import styles from './Text.module.css';
 
-export interface TextProps {
+interface TextProps {
   className?: string;
   value: string | RichText;
   raw?: boolean;

@@ -1,6 +1,6 @@
 import { CSSProperties } from 'react';
 
-export type IconDefaultProps = {
+type IconDefaultProps = {
   fill: string;
   className?: string;
   style?: CSSProperties;

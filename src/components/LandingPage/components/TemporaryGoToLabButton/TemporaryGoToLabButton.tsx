@@ -8,7 +8,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './TemporaryGoToLabButton.module.css';
 
-export interface TemporaryGoToLabButtonProps {
+interface TemporaryGoToLabButtonProps {
   className?: string;
   title: string;
   subTitle?: string;

@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './section-title.module.css';
 
-export interface SectionTitleProps {
+interface SectionTitleProps {
   className?: string;
   children: string;
 }

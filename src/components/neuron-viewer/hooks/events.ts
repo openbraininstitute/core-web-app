@@ -4,7 +4,6 @@ import { InstancedBufferGeometry, Mesh, ShaderMaterial } from 'three';
 
 export const DISPLAY_SYNAPSES_3D_EVENT = 'DISPLAY_SYNAPSES_3D';
 export const REMOVE_SYNAPSES_3D_EVENT = 'REMOVE_SYNAPSES_3D';
-export const NEURITE_TYPES_EVENT = 'NEURITE_TYPES';
 export const RESET_SYNAPSES_3D_EVENT = 'RESET_SYNAPSES_3D';
 
 export type SynapsesMesh = Mesh<InstancedBufferGeometry, ShaderMaterial>;
@@ -45,7 +44,7 @@ export class RemoveSynapses3DEvent extends Event {
   };
 }
 
-export class ResetSynapses3DEvent extends Event {}
+class ResetSynapses3DEvent extends Event {}
 
 export function sendDisplaySynapses3DEvent(id: string, mesh: SynapsesMesh) {
   if (mesh) {

@@ -1,7 +1,7 @@
 import { tryType } from './_common';
 import { useSanity } from '@/services/sanity';
 
-export interface ContentForEMail {
+interface ContentForEMail {
   label: string;
   email: string;
 }

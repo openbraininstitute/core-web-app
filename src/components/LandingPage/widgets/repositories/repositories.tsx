@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './repositories.module.css';
 
-export interface WidgetRepositoriesProps {
+interface WidgetRepositoriesProps {
   className?: string;
 }
 

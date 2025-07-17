@@ -13,7 +13,7 @@ import { tryCatch } from '@/api/utils';
 import { env } from '@/env';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
-export const defaultAtlasName = 'BlueBrain Atlas';
+const defaultAtlasName = 'BlueBrain Atlas';
 export const brainAtlasAtom = atom(async () => {
   const { data, error } = await tryCatch(
     getBrainAtlases({

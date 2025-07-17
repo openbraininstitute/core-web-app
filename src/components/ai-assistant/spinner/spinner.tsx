@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './spinner.module.css';
 
-export interface SpinnerProps {
+interface SpinnerProps {
   className?: string;
   count?: number;
   period?: number;
@@ -36,3 +36,5 @@ export function Spinner({ className, count = 32, period = 0.6 }: SpinnerProps) {
     </div>
   );
 }
+
+export default Spinner;

@@ -106,8 +106,9 @@ export function ScopeSelector() {
   const { push: navigate } = useRouter();
   const setScope = useSetAtom(selectedSimulationScopeAtom);
   const { selectedTab, section, type: modelType, updateScopeConfig } = useTileScopeQuery();
-  const tileJSX = ({ id, title, type, description, disabled, img, url }: TTileConfig) => {
-    const highlight = type === modelType;
+  const tileJSX = ({ id, title, type: tileType, description, disabled, img, url }: TTileConfig) => {
+    const highlight = tileType === modelType;
+
     const showImage = section !== 'build' || (section === 'build' && !highlight);
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
@@ -129,7 +130,7 @@ export function ScopeSelector() {
     return (
       <div
         id={id}
-        key={`tile-${section}/${selectedTab}/${type}`}
+        key={`tile-${section}/${selectedTab}/${tileType}`}
         aria-hidden
         className={classNames(
           styles.tabCell,
@@ -139,34 +140,41 @@ export function ScopeSelector() {
         )}
         onClick={() => {
           if (!disabled) {
-            setScope(type as unknown as SimulationType);
-            updateScopeConfig({ selectedTab, type });
+            setScope(tileType as unknown as SimulationType);
+            updateScopeConfig({ selectedTab, type: tileType });
           }
         }}
       >
         <div className="w-full text-left">
           <div className={styles.title}>{title}</div>
-          <div className={classNames('text-sm text-balance', descStyle)}>
-            {showImage && (
-              <div className={styles.thumbnail}>
-                <Image src={img} width={100} height={100} alt={title} />
-              </div>
-            )}
-            {url?.build && (
-              <div className={styles.buildButton}>
-                <Button
-                  onClick={onClick}
+          <div className={classNames('text-sm text-balance', descStyle, styles.floatContainer)}>
+            <div>
+              {showImage && (
+                <div className={styles.thumbnail}>
+                  <Image src={img} width={100} height={100} alt={title} />
+                </div>
+              )}
+              {url?.build && (
+                <div
                   className={classNames(
-                    'bg-primary-9 h-[55px] min-w-[100px] text-xl font-bold text-white',
-                    'items-center justify-center rounded-none hover:text-white',
-                    highlight && section === 'build' ? 'flex' : 'hidden'
+                    styles.buildButtonContainer,
+                    highlight && section === 'build' ? styles.show : styles.hide
                   )}
                 >
-                  Build
-                </Button>
-              </div>
-            )}
-            <p>{description}</p>
+                  <Button
+                    onClick={onClick}
+                    className={classNames(
+                      styles.buildButton,
+                      'bg-primary-9',
+                      'rounded-none hover:text-white'
+                    )}
+                  >
+                    Build
+                  </Button>
+                </div>
+              )}
+              <p>{description}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -264,8 +272,9 @@ export function ScopeSelectorSmall({
               visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeInOut' } },
               exit: { opacity: 0, y: -10, transition: { duration: 0.15, ease: 'easeIn' } },
             }}
-            className="absolute left-0 z-10 grid w-full grid-cols-3 gap-5 bg-white px-8 py-6 shadow-lg"
+            className="absolute left-0 z-10 grid w-full grid-cols-4 gap-5 bg-white px-8 py-6 shadow-lg"
           >
+            {header('SUBCELLULAR')}
             {header('CELLULAR')}
             {header('CIRCUIT')}
             {header('SYSTEM')}

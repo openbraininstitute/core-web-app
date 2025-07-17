@@ -3,6 +3,8 @@
 import { useState } from 'react';
 
 import ContactUs from '../../contact-us';
+import { PRICES_PER_PLAN } from '../../price-per-plan/content/PRICES_PER_PLAN';
+import SinglePriceColumn from '../../price-per-plan/single-price-column/SinglePriceColumn';
 
 import { useCurrency } from '@/components/LandingPage/atoms';
 import {
@@ -15,7 +17,7 @@ import { Switch } from '@/components/VirtualLab/create-entity-flows/checkout/sha
 
 import styles from './PlanHeader.module.css';
 
-export interface PlanHeaderProps {
+interface PlanHeaderProps {
   className?: string;
   plan: ContentForPricingPlan;
 }
@@ -50,7 +52,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
                     checked={interval === 'year'}
                     name="interval"
                     thumbCls="bg-primary-9"
-                    className="border-primary-9 w-[37px]! rounded-3xl! border! p-1!"
+                    className="border-primary-9 w-[37px]! rounded-3xl! border! border-solid p-1!"
                     onCheckedChange={(checked) => setInterval(checked ? 'year' : 'month')}
                   />
                   <span
@@ -105,11 +107,16 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
               </>
             )}
           </div>
-          <ul>
+          <ul className="mt-12 h-40 border-b border-solid border-gray-300 pb-4">
             {plan.notes.map((note, index) => (
               <li key={index}>{note}</li>
             ))}
           </ul>
+          {plan.title === 'Free' ? (
+            <SinglePriceColumn content={PRICES_PER_PLAN[0]} />
+          ) : (
+            <SinglePriceColumn content={PRICES_PER_PLAN[1]} />
+          )}
         </>
       )}
     </div>

@@ -37,7 +37,7 @@ export const SuggestionsListPerRegion: Record<string, string[]> = {
     'Show me publications reporting how the average number of synapses per connection vary across regions in {rodents/humans}.',
     'Tell me about techniques are used to quantify the number of synapses per axonal-dendritic connection in {rodents/humans}.',
   ],
-  'For bouton density': [
+  'Bouton density': [
     'Show me publications reporting bouton densities in {brain_region} in {rodents/humans}.',
     'Show me publications reporting differences in bouton density between excitatory and inhibitory synapses in {brain_region} in {rodents/humans}.',
     'Show me publications reporting bouton densities across cortical layers in {rodents/humans}.',
@@ -81,7 +81,7 @@ export const SuggestionsListFullBrain: Record<string, string[]> = {
     'Show me publications reporting how the average number of synapses per connection vary across regions in {rodents/humans}.',
     'Tell me about techniques are used to quantify the number of synapses per axonal-dendritic connection in {rodents/humans}.',
   ],
-  'For bouton density': [
+  'Bouton density': [
     'Show me publications reporting bouton densities in {rodents/humans}.',
     'Show me publications reporting differences in bouton density between excitatory and inhibitory synapses in {rodents/humans}.',
     'Show me publications reporting bouton densities across cortical layers in {rodents/humans}.',

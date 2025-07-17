@@ -39,7 +39,7 @@ export interface ISingleNeuronSynaptomeSimulation
   synaptome: Prettify<SingleNeuronSynaptomeBase & EntityCoreIdentifiable & Timestamps>;
 }
 
-export interface SynaptomeFilter {
+interface SynaptomeFilter {
   synaptome_creation_date_gte?: string | null;
   synaptome_update_date__lte?: string | null;
   synaptome_update_date_gte?: string | null;
@@ -66,7 +66,7 @@ export interface ISingleNeuronSynaptomeSimulationFilter
     PaginationFilter,
     OwnershipFilter {}
 
-export const CreateSingleNeuronSynaptomeSimulationSchema = z.object({
+const CreateSingleNeuronSynaptomeSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
   status: z.nativeEnum(SingleNeuronSimulationStatus),

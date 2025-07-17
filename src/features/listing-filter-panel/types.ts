@@ -1,6 +1,4 @@
-import { FilterTypeEnum } from '@/types/explore-section/filters';
-
-export type AggregationType = 'buckets' | 'stats' | null;
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export interface GteLteValue {
   gte: Date | number | null;
@@ -14,33 +12,33 @@ interface BaseFilter {
   constraint?: string | Record<string, string>;
 }
 
-export interface CheckListFilter extends Omit<BaseFilter, 'type' | 'value'> {
-  type: FilterTypeEnum.CheckList;
+interface CheckListFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.CheckList;
   value: string[];
 }
 
-export interface SearchFilter extends Omit<BaseFilter, 'type' | 'value'> {
-  type: FilterTypeEnum.Search;
+interface SearchFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.Search;
   value: string[];
 }
 
-export interface DateRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
-  type: FilterTypeEnum.DateRange;
+interface DateRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.DateRange;
   value: GteLteValue;
 }
 
-export interface TextFilter extends Omit<BaseFilter, 'type' | 'value'> {
-  type: FilterTypeEnum.Text;
+interface TextFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.Text;
   value: string;
 }
 
 export interface ValueFilter extends Omit<BaseFilter, 'type' | 'value'> {
-  type: FilterTypeEnum.ValueRange;
+  type: CoreFieldFilterTypeEnum.ValueRange;
   value: GteLteValue;
 }
 
 export interface ValueOrRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
-  type: FilterTypeEnum.ValueOrRange;
+  type: CoreFieldFilterTypeEnum.ValueOrRange;
   value: number | GteLteValue | null; // "value" | "range" | "all"
 }
 
@@ -53,11 +51,4 @@ export type Filter =
   | ValueOrRangeFilter
   | BaseFilter;
 
-export type FilterType = FilterTypeEnum | null;
-
-export type Bucket = {
-  doc_count: number;
-  key: string | number;
-  key_as_string?: string;
-  label?: string | { buckets: Bucket[] };
-};
+export type FilterType = CoreFieldFilterTypeEnum | null;

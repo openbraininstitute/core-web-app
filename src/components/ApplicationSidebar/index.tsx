@@ -1,20 +1,11 @@
-import { Suspense, useRef } from 'react';
+import { UserOutlined, HomeOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
+import { Suspense, useRef } from 'react';
 import Link from 'next/link';
-import kebabCase from 'lodash/kebabCase';
-import Icon, { UserOutlined, HomeOutlined } from '@ant-design/icons';
 
 import { classNames, signOut } from '@/util/utils';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import UserMenu from '@/components/user-menu';
-
-type TDefaulNavigation = {
-  title: string;
-  url: string;
-  icon: React.ForwardRefExoticComponent<any>;
-  showIconOnCollapse?: boolean;
-  bgcolor?: string;
-};
 
 type ApplicationSidebarHeaderProps = {
   title: ({ expanded }: { expanded: boolean }) => React.ReactNode;
@@ -37,15 +28,6 @@ export type NavigationItemProps = {
   bgcolor: string;
 };
 
-const DEFAULT_NAVIGATION: Array<TDefaulNavigation> = [
-  {
-    title: 'Home',
-    url: '/app/virtual-lab',
-    icon: HomeOutlined,
-    showIconOnCollapse: true,
-  },
-];
-
 export function NavigationItem({ url, name, description, bgcolor }: NavigationItemProps) {
   return (
     <li
@@ -65,54 +47,6 @@ export function NavigationItem({ url, name, description, bgcolor }: NavigationIt
         </p>
       </Link>
     </li>
-  );
-}
-
-export function AppNavigationItem({
-  expanded,
-  title,
-  bgcolor,
-  url,
-  icon,
-  showIconOnCollapse,
-}: TDefaulNavigation & { expanded: boolean }) {
-  if (!expanded && showIconOnCollapse) {
-    return (
-      <Link href={url}>
-        <Icon component={icon} title={title} className="text-primary-4 my-2" />
-      </Link>
-    );
-  }
-  return (
-    <Link
-      href={url}
-      className={classNames(
-        'hover:bg-primary-7 inline-flex w-full flex-row items-center justify-between px-3 py-3',
-        bgcolor ?? 'bg-transparent',
-        !expanded && 'hidden'
-      )}
-    >
-      <div className="text-base font-semibold text-white">{title}</div>
-      <Icon component={icon} title={title} className="cursor-pointer text-white" />
-    </Link>
-  );
-}
-
-export function AppNavigation({ expanded }: { expanded: boolean }) {
-  return (
-    <div
-      className={classNames(
-        'my-2 flex w-full flex-col gap-y-1',
-        expanded ? 'items-start' : 'items-center'
-      )}
-    >
-      {DEFAULT_NAVIGATION.map(({ title, url, icon, bgcolor, showIconOnCollapse }) => (
-        <AppNavigationItem
-          key={kebabCase(`${title}${url}`)}
-          {...{ expanded, title, url, icon, bgcolor, showIconOnCollapse }}
-        />
-      ))}
-    </div>
   );
 }
 
