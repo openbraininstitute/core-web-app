@@ -28,7 +28,6 @@ export {
   IEModel,
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
-  ISimulationCampaign,
 };
 
 export type EntityCoreDensityObjectTypes =

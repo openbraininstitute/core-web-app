@@ -24,13 +24,6 @@ const CIRCUITS_COLUMNS: SingleColumnContent[] = [
     filterType: null,
   },
   {
-    title: 'Download',
-    id: 'download',
-    isActive: true,
-    columnCustomizable: false,
-    filterType: null,
-  },
-  {
     title: 'Scale',
     id: 'scale',
     isActive: true,
