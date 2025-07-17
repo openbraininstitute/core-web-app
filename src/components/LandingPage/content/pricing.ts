@@ -1,7 +1,8 @@
 /* eslint-disable no-param-reassign */
 import { tryType } from './_common';
-import { typeBooleanOrNull, typeNumberOrNull, typeStringOrNull } from './types';
 import query from './pricing.groq';
+import { typeBooleanOrNull, typeNumberOrNull, typeStringOrNull } from './types';
+
 import { useSanity } from '@/services/sanity';
 import { isBoolean, TypeDef } from '@/util/type-guards';
 
@@ -30,7 +31,7 @@ const typeContentForPricingFeatureBloc: TypeDef = {
         [
           'array',
           {
-            id: 'string',
+            id: typeStringOrNull, // changed here
             label: typeStringOrNull,
             tooltip: typeStringOrNull,
           },
@@ -57,7 +58,7 @@ export interface ContentForPricingFeatureItem {
   plans: ContentForPricingFeaturePlan[];
 }
 
-export interface ContentForPricingFeaturePlan {
+interface ContentForPricingFeaturePlan {
   id: string;
   label?: string | null;
   tooltip?: string | null;

@@ -3,7 +3,7 @@ import { getSession } from '@/authFetch';
 import { VerificationCodeEmailResponse } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabApi } from '@/config';
 
-export type VerificationCodeResponse<T extends 'init' | 'verify'> = T extends 'init'
+type VerificationCodeResponse<T extends 'init' | 'verify'> = T extends 'init'
   ? {
       message: string;
       status: 'registered' | 'locked' | 'code_sent' | 'error';

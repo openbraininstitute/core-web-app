@@ -2,7 +2,7 @@ import snakeCase from 'lodash/snakeCase';
 import camelCase from 'lodash/camelCase';
 import { mapKeysDeep } from 'deepdash-es/standalone';
 
-export type SnakeCase<S extends string> = S extends `${infer T}_${infer Rest}`
+type SnakeCase<S extends string> = S extends `${infer T}_${infer Rest}`
   ? `${Lowercase<T>}_${SnakeCase<Rest>}` // Key is already in snake_case
   : S extends `${infer T}${infer Rest}`
     ? T extends Capitalize<T>
@@ -10,7 +10,7 @@ export type SnakeCase<S extends string> = S extends `${infer T}_${infer Rest}`
       : `${T}${SnakeCase<Rest>}`
     : S;
 
-export type DeepSnakeCase<T> =
+type DeepSnakeCase<T> =
   T extends Array<infer U> // Check if T is an array
     ? DeepSnakeCase<U>[] // Process the items of the array
     : T extends object // Check if T is a plain object
@@ -21,13 +21,13 @@ export type DeepSnakeCase<T> =
         }
       : T; // Keep primitive types unchanged
 
-export type CamelCase<S extends string> = S extends `${infer T}_${infer U}`
+type CamelCase<S extends string> = S extends `${infer T}_${infer U}`
   ? `${Lowercase<T>}${Capitalize<CamelCase<U>>}` // Convert each part to camelCase
   : S extends `${infer T}${infer U}`
     ? `${Lowercase<T>}${CamelCase<U>}` // Handle any remaining parts
     : S; // If it's a single segment, return as is
 
-export type DeepCamelCase<T> =
+type DeepCamelCase<T> =
   T extends Array<infer U> // Check if T is an array
     ? DeepCamelCase<U>[] // Process the items of the array
     : T extends object // Check if T is a plain object

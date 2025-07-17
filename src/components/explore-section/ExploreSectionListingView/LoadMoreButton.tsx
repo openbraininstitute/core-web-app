@@ -97,7 +97,10 @@ export default function LoadMoreButton({
 }) {
   const { loadMore, showLoadMore } = useLoadMore(dataContext, dataKey, useBrainRegion);
 
-  if (!showLoadMore) return null;
+  if (!showLoadMore) {
+    return null;
+  }
+
   return (
     <Btn
       className="bg-primary-8 text-white"

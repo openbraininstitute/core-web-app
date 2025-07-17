@@ -4,7 +4,7 @@ import SanityContentRTF from '../../components/SanityContentRTF';
 import { useSanityContentRTF } from '../../content/content';
 import { EnumSection } from '../sections';
 
-export interface GenericSectionProps {
+interface GenericSectionProps {
   section: EnumSection;
 }
 

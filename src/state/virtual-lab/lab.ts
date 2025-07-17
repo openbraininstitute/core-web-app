@@ -1,14 +1,11 @@
 import { RefObject } from 'react';
 import { PrimitiveAtom, atom } from 'jotai';
-import { atomFamily, atomWithDefault, atomWithRefresh, atomWithReset } from 'jotai/utils';
+import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
 import isNil from 'lodash/isNil';
 
-import sessionAtom from '@/state/session';
 import { getVirtualLabsOfUser, getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';
-import { getVirtualLabPaymentMethods } from '@/services/virtual-lab/billing';
-import { PaymentMethod } from '@/types/virtual-lab/billing';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import {
@@ -41,45 +38,6 @@ export const virtualLabMembersAtomFamily = atomFamily((virtualLabId?: string) =>
   })
 );
 
-export const transactionFormStateAtom = atomWithReset<{
-  credit: string;
-  selectedPaymentMethodId?: string;
-  loading: boolean;
-  errors?: {
-    credit?: string[] | undefined;
-    selectedPaymentMethodId?: string[] | undefined;
-    defaultPaymentMethodId?: string[] | undefined;
-  };
-}>({
-  credit: '',
-  loading: false,
-  errors: undefined,
-  selectedPaymentMethodId: undefined,
-});
-
-export const virtualLabPaymentMethodsAtomFamily = atomFamily((virtualLabId: string) =>
-  atomWithRefresh<Promise<Array<PaymentMethod> | undefined>>(async (get) => {
-    const session = get(sessionAtom);
-    if (!session) {
-      return;
-    }
-    const response = await getVirtualLabPaymentMethods(virtualLabId, session.accessToken);
-    return response.data.payment_methods;
-  })
-);
-
-// TODO: cleanup
-// export const virtualLabBalanceAtomFamily = atomFamily((virtualLabId: string) =>
-//   atomWithRefresh<Promise<VlabBalance | undefined>>(async (get) => {
-//     const session = get(sessionAtom);
-//     if (!session) {
-//       return;
-//     }
-//     const response = await getVirtualLabBalanceDetails(virtualLabId, session.accessToken);
-//     return response.data;
-//   })
-// );
-
 export const virtualLabsOfUserAtom = atomWithRefresh<
   Promise<VirtualLabAPIListData<VirtualLab> | undefined>
 >(async () => {
@@ -88,15 +46,6 @@ export const virtualLabsOfUserAtom = atomWithRefresh<
 });
 
 export const projectTopMenuRefAtom = atom<RefObject<HTMLDivElement | null> | null>(null);
-
-export const userVirtualLabTotalsAtom = atom<Promise<number | undefined>>(async (get) => {
-  const session = get(sessionAtom);
-  if (!session) {
-    return;
-  }
-  const virtualLabs = await get(virtualLabsOfUserAtom);
-  return virtualLabs?.total || 0;
-});
 
 export const virtualLabBalanceRefreshTriggerAtom = atom(0);
 export const refreshBalanceAtom = atom(null, (get, set) =>

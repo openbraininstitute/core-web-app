@@ -112,12 +112,21 @@ function NotebookTable({
   }, [notebooks, search]);
 
   const runNotebook = async (notebook: Notebook) => {
-    const repo = encodeURIComponent(
-      `https://github.com/${notebook.githubUser}/${notebook.githubRepo}`
-    );
-    const path = encodeURIComponent(`lab/tree/${notebook.githubRepo}/${notebook.path}`);
+    const repo = `https://github.com/${notebook.githubUser}/${notebook.githubRepo}`;
+    const urlpath = `lab/tree/${notebook.githubRepo}/${notebook.path}`;
+
     const environment = env.NEXT_PUBLIC_DEPLOYMENT_ENV;
-    const url = `https://${environment === 'staging' ? 'staging.' : ''}openbraininstitute.org/jupyterhub/hub/user-redirect/git-pull?repo=${repo}&urlpath=${path}&branch=main`;
+    const subdomain = environment === 'production' ? 'www' : 'staging';
+
+    // Metabolism notebook requires a separate jupyterhub instance
+    const jupyterHubBasePath =
+      notebook.name === 'Metabolism' ? 'jupyterhub_metabolism' : 'jupyterhub';
+
+    const url = new URL(`https://${subdomain}.openbraininstitute.org`);
+    url.pathname = `${jupyterHubBasePath}/hub/user-redirect/git-pull`;
+    url.searchParams.append('repo', repo);
+    url.searchParams.append('urlpath', urlpath);
+    url.searchParams.append('branch', 'main');
 
     window.open(url, '_blank');
   };

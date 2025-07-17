@@ -8,7 +8,7 @@ import { isValidEMail } from '@/util/email';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
 import styles from './NewsLetterSubscription.module.css';
 
-export interface NewsLetterSubscriptionProps {
+interface NewsLetterSubscriptionProps {
   className?: string;
   onSectionChange(section: EnumSection): void;
 }

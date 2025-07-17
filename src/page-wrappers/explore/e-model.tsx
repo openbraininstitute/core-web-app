@@ -15,7 +15,7 @@ type ExpandType = Prettify<{
   exemplar_morphology: IReconstructionMorphology | IReconstructionMorphologyExpanded;
 }>;
 
-export type Props = {
+type Props = {
   params: WorkspaceContext & {
     id: string;
   };

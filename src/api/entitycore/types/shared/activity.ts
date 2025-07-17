@@ -11,7 +11,7 @@ import type {
   OwnershipFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export interface IActivityBase<
+interface IActivityBase<
   UsedEntityT extends EntityCoreIdentifiable,
   GeneratedEntityT extends EntityCoreIdentifiable,
 > {

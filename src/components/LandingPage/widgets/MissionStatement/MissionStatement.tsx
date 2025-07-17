@@ -8,7 +8,7 @@ import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFil
 
 import styles from './MissionStatement.module.css';
 
-export interface WidgetMissionStatementProps {
+interface WidgetMissionStatementProps {
   className?: string;
 }
 

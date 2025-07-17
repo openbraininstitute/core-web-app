@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-export const isBrowser = typeof window !== 'undefined';
+const isBrowser = typeof window !== 'undefined';
 
-export type UseMediaQuery = (query: string, defaultState?: boolean) => boolean;
+type UseMediaQuery = (query: string, defaultState?: boolean) => boolean;
 
 function getInitialState(query: string, defaultState?: boolean) {
   if (defaultState !== undefined) {

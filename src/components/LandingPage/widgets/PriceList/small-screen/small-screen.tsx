@@ -9,7 +9,7 @@ import { useMenuHeight } from '@/components/LandingPage/utils';
 
 import styles from './small-screen.module.css';
 
-export interface SmallScreenProps {
+interface SmallScreenProps {
   className?: string;
 }
 

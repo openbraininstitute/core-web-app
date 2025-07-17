@@ -7,7 +7,7 @@ import { MorphoViewer } from '@/components/MorphoViewer';
 
 import styles from './morphology-card.module.css';
 
-export interface MorphologyCardProps {
+interface MorphologyCardProps {
   className?: string;
   value: Morphology;
 }

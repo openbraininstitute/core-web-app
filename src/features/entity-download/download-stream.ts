@@ -6,7 +6,7 @@ import tar from 'tar-stream';
 import { getEntityFilesHandlerMap } from '@/features/entity-download/file-handlers';
 import { EntityTypeValue } from '@/api/entitycore/types';
 
-export type CreateDownloadStreamParams = {
+type CreateDownloadStreamParams = {
   entityIds: string[];
   entityType: EntityTypeValue;
   projectId?: string | null;
@@ -36,7 +36,8 @@ export async function createDownloadStream({
 
   tarPack.pipe(gzip);
 
-  const downloadStream = Readable.toWeb(gzip);
+  // FIX: @pavlo, please remove type casting
+  const downloadStream = Readable.toWeb(gzip) as unknown as ReadableStream<Uint8Array>;
 
   const controller = new AbortController();
   // TODO: pass abort signal to getFilesGenerator
@@ -66,4 +67,4 @@ export async function createDownloadStream({
 
   return downloadStream;
 }
-export const streamPipeline = promisify(pipeline);
+const streamPipeline = promisify(pipeline);

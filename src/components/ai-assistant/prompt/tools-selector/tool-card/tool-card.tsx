@@ -13,7 +13,7 @@ import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
 
 import styles from './tool-card.module.css';
 
-export interface ToolCardProps {
+interface ToolCardProps {
   className?: string;
   tool: AIAssistantTool;
 }

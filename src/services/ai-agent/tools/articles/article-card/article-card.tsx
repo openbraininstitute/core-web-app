@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './article-card.module.css';
 
-export interface ArticleCardProps {
+interface ArticleCardProps {
   className?: string;
   article: ScientificArticle;
 }

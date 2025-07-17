@@ -1,15 +1,9 @@
 'use client';
 
-import { Metadata } from 'next';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import AllTypesBlock from './all-types-block';
-
-export const metadata: Metadata = {
-  title: 'Glossary cell types definitions',
-  description: 'Explore the glossary cell types definitions in our documentation.',
-};
 
 export default function CellTypeDefinitionsFullList() {
   const { slug } = useParams();
@@ -29,7 +23,10 @@ export default function CellTypeDefinitionsFullList() {
   }, [cellTypeParam]);
 
   return (
-    <div className="relative flex w-full flex-col gap-4 text-white">
+    <div className="relative ml-32 flex max-w-3/4 flex-col gap-4 text-white">
+      <h1 className="text-primary-3 mb-4 text-xl font-bold">
+        {slug === 'm-type' ? 'M-Type Cell Types' : 'E-Type Cell Types'}
+      </h1>
       <AllTypesBlock
         cellType={slug as 'm-type' | 'e-type'}
         highlightedCellType={highlightedCellType}

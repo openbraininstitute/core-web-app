@@ -3,7 +3,7 @@ import { ContributorsProps } from '../../type';
 
 import { CloseIcon } from '@/components/icons';
 
-export function SingleContributorPill({ name, lastName }: { name: string; lastName: string }) {
+function SingleContributorPill({ name, lastName }: { name: string; lastName: string }) {
   return (
     <div className="text-primary-9 flex flex-row flex-nowrap rounded-full border border-solid border-gray-200 px-4 py-1 text-lg font-normal">
       <span>

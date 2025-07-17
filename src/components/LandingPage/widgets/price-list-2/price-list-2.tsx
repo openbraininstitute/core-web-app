@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './price-list-2.module.css';
 
-export interface WidgetPriceList2Props {
+interface WidgetPriceList2Props {
   className?: string;
 }
 

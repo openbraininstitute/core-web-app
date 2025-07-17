@@ -1,9 +1,4 @@
 import { ProjectBalance } from '@/types/accounting';
-import {
-  projectBalanceAtomFamily,
-  virtualLabProjectDetailsAtomFamily,
-} from '@/state/virtual-lab/projects';
-import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 import { Project } from '@/api/virtual-lab-svc/queries/types';
 
 export function ProjectBalanceCard({
@@ -34,23 +29,4 @@ export function ProjectBalanceCard({
       </div>
     </div>
   );
-}
-
-export function ProjectBalanceCardWithFetching({
-  virtualLabId,
-  projectId,
-}: {
-  virtualLabId: string;
-  projectId: string;
-}) {
-  const balance = useLastTruthyValue(projectBalanceAtomFamily({ virtualLabId, projectId }));
-  const project = useUnwrappedValue(
-    virtualLabProjectDetailsAtomFamily({ virtualLabId, projectId })
-  );
-
-  if (!project || !balance) {
-    return <div>Loading...</div>;
-  }
-
-  return <ProjectBalanceCard project={project} balance={balance} />;
 }

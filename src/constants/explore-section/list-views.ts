@@ -1,5 +1,4 @@
-import { neuroShapesBaseUrl, ontologyBaseUrl } from '@/config';
-
+// TODO: this types should be removed for the new entity configuration types
 export enum DataType {
   ExperimentalBoutonDensity = `ExperimentalBoutonDensity`,
   ExperimentalNeuronDensity = `ExperimentalNeuronDensity`,
@@ -15,30 +14,7 @@ export enum DataType {
   Circuit = 'Circuit',
 }
 
-export const DataTypeToNexusType = {
-  [DataType.ExperimentalBoutonDensity]: `${ontologyBaseUrl}/ExperimentalBoutonDensity`,
-  [DataType.ExperimentalNeuronDensity]: `${ontologyBaseUrl}/ExperimentalNeuronDensity`,
-  [DataType.ExperimentalElectroPhysiology]: `${ontologyBaseUrl}/ExperimentalTrace`,
-  [DataType.ExperimentalSynapsePerConnection]: `${ontologyBaseUrl}/ExperimentalSynapsesPerConnection`,
-  [DataType.SimulationCampaign]: `${neuroShapesBaseUrl}/SimulationCampaign`,
-  [DataType.ExperimentalNeuronMorphology]: `${neuroShapesBaseUrl}/ReconstructedNeuronMorphology`,
-  [DataType.CircuitEModel]: `${neuroShapesBaseUrl}/EModel`,
-  [DataType.CircuitMEModel]: `${neuroShapesBaseUrl}/MEModel`,
-  [DataType.SingleNeuronSimulation]: `${ontologyBaseUrl}/SingleNeuronSimulation`,
-  [DataType.SingleNeuronSynaptome]: `${ontologyBaseUrl}/SingleNeuronSynaptome`,
-  [DataType.SingleNeuronSynaptomeSimulation]: `${ontologyBaseUrl}/SynaptomeSimulation`,
-};
-
-export const DataTypeToNewSimulationPage: Record<string, string> = {
-  [DataTypeToNexusType.SingleNeuronSynaptome]: 'synaptome',
-  [DataTypeToNexusType.CircuitEModel]: 'single-neuron',
-  [DataTypeToNexusType.CircuitMEModel]: 'single-neuron',
-};
-
-export const DataTypeToViewModelPage: Record<string, string> = {
-  [DataType.SingleNeuronSynaptome]: 'explore/interactive/model/synaptome',
-  [DataType.CircuitMEModel]: 'explore/interactive/model/me-model',
-};
+export type TDataType = `${DataType}`;
 
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;
 export const PAGE_SIZE = 30;

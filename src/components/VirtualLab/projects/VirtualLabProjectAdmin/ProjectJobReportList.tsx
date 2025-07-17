@@ -62,16 +62,17 @@ const tableTheme = {
 };
 
 const activityLabel: Record<ServiceSubtype, string> = {
+  [ServiceSubtype.Notebook]: 'Notebook',
   [ServiceSubtype.SingleCellBuild]: 'Build',
   [ServiceSubtype.SingleCellSim]: 'Simulate',
+  [ServiceSubtype.SmallCircuitSim]: 'Simulate',
+  [ServiceSubtype.Storage]: 'Storage',
   [ServiceSubtype.SynaptomeBuild]: 'Build',
   [ServiceSubtype.SynaptomeSim]: 'Simulate',
-  [ServiceSubtype.Storage]: 'Storage',
   // TODO: check if the following subtypes are still relevant and find better labels for them
   [ServiceSubtype.MlRetrieval]: 'ML',
   [ServiceSubtype.MlLlm]: 'ML',
   [ServiceSubtype.MlRag]: 'ML',
-  [ServiceSubtype.Notebook]: 'Notebook',
 };
 
 function activityRenderFn(subtype: ServiceSubtype) {
@@ -79,16 +80,17 @@ function activityRenderFn(subtype: ServiceSubtype) {
 }
 
 const scaleLabel: Record<ServiceSubtype, string> = {
+  [ServiceSubtype.Notebook]: 'Notebook',
   [ServiceSubtype.SingleCellBuild]: 'Single cell',
   [ServiceSubtype.SingleCellSim]: 'Single cell',
+  [ServiceSubtype.SmallCircuitSim]: 'Small circuit',
+  [ServiceSubtype.Storage]: 'Storage',
   [ServiceSubtype.SynaptomeBuild]: 'Synaptome',
   [ServiceSubtype.SynaptomeSim]: 'Synaptome',
-  [ServiceSubtype.Storage]: 'Storage',
   // TODO: check if the following subtypes are still relevant and find better labels for them
   [ServiceSubtype.MlRetrieval]: 'ML',
   [ServiceSubtype.MlLlm]: 'AI Assistant',
   [ServiceSubtype.MlRag]: 'ML',
-  [ServiceSubtype.Notebook]: 'Notebook',
 };
 
 function scaleRenderFn(subtype: ServiceSubtype) {

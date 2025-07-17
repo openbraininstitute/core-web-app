@@ -8,9 +8,9 @@ import { ProfileFormData } from './types';
 import { Label, XInput } from './elements';
 import { validate, validateEMail } from './validator';
 import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
-import useNotification from '@/hooks/notifications';
 import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
+import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 
 type ProfileProps = {
@@ -22,7 +22,7 @@ function Profile({ data }: ProfileProps) {
   const [valid, setValid] = React.useState(validate(initialValues));
   const handleFieldsChange = useFieldsChangeHandler(setValid);
   const [hydrated, setHydrated] = useState(false);
-  const { error: errorNotify, success: successNotify } = useNotification();
+  const { error: errorNotify, success: successNotify } = useAppNotification();
   const [form] = Form.useForm<UserProfileResponse>();
   const [pending, startTransition] = useTransition();
   const onSubmit = useSubmitCallback(startTransition, errorNotify, successNotify);

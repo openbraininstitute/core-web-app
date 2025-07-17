@@ -11,7 +11,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './repository-card.module.css';
 
-export interface RepositoryCardProps {
+interface RepositoryCardProps {
   className?: string;
   value: ContentForRepository;
   showHeader?: boolean;

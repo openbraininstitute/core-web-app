@@ -71,6 +71,7 @@
 
 .userContent > div {
   padding: 0 1em;
+  white-space: pre-wrap;
 }
 
 .markdown {

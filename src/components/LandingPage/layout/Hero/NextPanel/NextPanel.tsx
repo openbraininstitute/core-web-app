@@ -5,7 +5,7 @@ import { ID_MENU } from '@/components/LandingPage/constants';
 
 import styles from './NextPanel.module.css';
 
-export interface NextPanelProps {
+interface NextPanelProps {
   className?: string;
   children: string | null;
 }

@@ -1,4 +1,4 @@
-// TODO: this data type should be moved from this file
+// TODO: this data type should be moved from this file "/explore-section/list-views"
 import { DataType } from '@/constants/explore-section/list-views';
 
 export * from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
@@ -16,7 +16,3 @@ export enum SimulationTypeNames {
   SYNAPTOME_SIMULATION = 'synaptome-simulation',
   SIMULATION_CAMPAIGN = 'simulation-campaign',
 }
-
-export type TModelTypeNames = `${SimulationTypeNames}`;
-
-export type ModelDataType = (typeof SIMULATIONS_DATATYPES)[number];

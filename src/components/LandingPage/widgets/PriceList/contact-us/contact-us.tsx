@@ -6,7 +6,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './contact-us.module.css';
 
-export interface ContactUsProps {
+interface ContactUsProps {
   className?: string;
   children: React.ReactNode;
   email?: string;

@@ -11,6 +11,9 @@ import {
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
+export type CoreFilterValues = {
+  [field: string]: string | number | string[] | GteLteValue | null;
+};
 export interface GteLteValue {
   gte: Date | number | null;
   lte: Date | number | null;
@@ -23,12 +26,12 @@ interface BaseFilter {
   constraint?: string | Record<string, string>;
 }
 
-export interface CheckListFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface CheckListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.CheckList;
   value: string[];
 }
 
-export interface SearchFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface SearchFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.Search;
   value: string[];
 }
@@ -38,12 +41,12 @@ export interface DateRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
   value: GteLteValue;
 }
 
-export interface TextFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface TextFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.Text;
   value: string;
 }
 
-export interface ValueFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface ValueFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.ValueRange;
   value: GteLteValue;
 }
@@ -52,7 +55,7 @@ export interface ValueOrRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.ValueOrRange;
   value: number | GteLteValue | null; // "value" | "range" | "all"
 }
-export interface WithinListFilter extends Omit<BaseFilter, 'type' | 'value'> {
+interface WithinListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.WithinList;
   value: Array<string>;
 }
@@ -67,7 +70,7 @@ export type CoreFilter =
   | BaseFilter
   | WithinListFilter;
 
-export type CoreFilterType = CoreFieldFilterTypeEnum | null;
+type CoreFilterType = CoreFieldFilterTypeEnum | null;
 
 export enum CoreFieldType {
   CellType,
@@ -97,6 +100,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   unit?: ReactNode;
   group?: StructuralDomain;
   render?: (entity: T) => ReactNode;
+  renderForDetailView?: (entity: T) => ReactNode;
   vocabulary?: {
     plural: string;
     singular: string;
@@ -108,6 +112,3 @@ export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
   Partial<EntityCoreFieldsValue>,
   FieldDefinition<T>
 >;
-
-export type FieldsDefinitionItem<T extends EntityCoreIdentifiable> =
-  FieldsDefinitionRegistry<T>[keyof FieldsDefinitionRegistry<T>];

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { CircuitSchemaProps } from '../../../type';
 import SubtitleBar from '../global/SubtitleBar';
 
-export type ImageProps = {
+type ImageProps = {
   name: string;
   url: string;
 };

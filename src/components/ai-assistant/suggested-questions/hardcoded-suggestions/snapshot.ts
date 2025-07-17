@@ -7,12 +7,14 @@ import { useAiContext } from '../../hooks';
 
 import { useCurrentExplorerArtifactValue } from '@/state/explore-section/artifact';
 import {
+  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
 import { resolveDataKey } from '@/utils/key-builder';
 
 interface Snapshot {
+  isRootRegion: boolean;
   regionId: string;
   regionTitle: string;
   artifact: string;
@@ -20,6 +22,7 @@ interface Snapshot {
 
 export function useSnapshot(): Snapshot {
   const [snapshot, setSnapshot] = React.useState<Snapshot>({
+    isRootRegion: true,
     regionId: '',
     regionTitle: '',
     artifact: 'Morphology',
@@ -29,6 +32,9 @@ export function useSnapshot(): Snapshot {
   const { section } = useAiContext();
   const dataKey = resolveDataKey({ projectId, section });
   const { node: selectedBrainRegion } = useBrainRegionHierarchy({ dataKey });
+  const isRootRegion =
+    `${selectedBrainRegion.annotation_value}` ===
+    BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE;
   const result = useAtomValue(
     React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
@@ -38,8 +44,13 @@ export function useSnapshot(): Snapshot {
   const artifact = useCurrentExplorerArtifactValue();
 
   React.useEffect(() => {
-    setSnapshot({ regionId, regionTitle, artifact });
-  }, [regionId, regionTitle, artifact]);
+    setSnapshot({
+      isRootRegion,
+      regionId,
+      regionTitle,
+      artifact,
+    });
+  }, [isRootRegion, regionId, regionTitle, artifact]);
 
   return snapshot;
 }

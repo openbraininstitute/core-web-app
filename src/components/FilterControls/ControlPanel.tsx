@@ -6,7 +6,7 @@ export type Column<T> = ColumnType<T> & {
   key: string;
 };
 
-export type ControlPanelProps = {
+type ControlPanelProps = {
   children?: React.ReactNode;
   numberOfColumns: number;
   onClose: () => void;

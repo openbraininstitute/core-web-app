@@ -6,7 +6,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './social-media-links.module.css';
 
-export interface SocialMediaLinksProps {
+interface SocialMediaLinksProps {
   className?: string;
 }
 

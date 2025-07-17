@@ -5,7 +5,7 @@ import { CircuitSchemaProps } from '../../../type';
 import Literature from './Literature';
 import RelatedArtifacts from './RelatedArtifacts';
 
-export type ProvenanceSubsectionProps = {
+type ProvenanceSubsectionProps = {
   name: string;
   id: 'literature' | 'related artifacts';
 };

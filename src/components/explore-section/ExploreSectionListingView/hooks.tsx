@@ -8,14 +8,14 @@ import { useSetAtom } from 'jotai';
 import ChevronLast from '@/components/icons/ChevronLast';
 import usePathname from '@/hooks/pathname';
 
-import { Field } from '@/constants/explore-section/fields-config/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { classNames } from '@/util/utils';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { DataType } from '@/constants/explore-section/list-views';
 
-export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
+type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
 
 export function useOnCellRouteHandler<T extends EntityCoreIdentifiable>({
   dataType,
@@ -30,7 +30,7 @@ export function useOnCellRouteHandler<T extends EntityCoreIdentifiable>({
   const onCellRouteHandler = (col: ColumnGroupType<T> | ColumnType<T>) => {
     return {
       onCell: (record: T) =>
-        col.key !== Field.Preview
+        col.key !== EntityCoreFields.Preview
           ? {
               onClick: (e: MouseEvent<HTMLInputElement>) => {
                 e.preventDefault();
@@ -80,7 +80,7 @@ function useTheme(children: ReactNode): ReactNode {
  * @param {HTMLDivElement} node - The HTMLDivElement to check for rightward scrollability.
  * @returns {boolean} - True if scrollable to the right, false otherwise.
  */
-export const isRightScrollable = (node: HTMLElement): boolean =>
+const isRightScrollable = (node: HTMLElement): boolean =>
   (node?.scrollLeft ?? 0) + (node?.offsetWidth ?? 0) < (node?.scrollWidth ?? 0);
 
 /**
@@ -89,7 +89,7 @@ export const isRightScrollable = (node: HTMLElement): boolean =>
  * @param {HTMLDivElement} node - The HTMLDivElement to check for leftward scrollability.
  * @returns {number | boolean} - Number of pixels scrolled to the left or false if not scrollable.
  */
-export const isLeftScrollable = (node: HTMLElement): number | boolean =>
+const isLeftScrollable = (node: HTMLElement): number | boolean =>
   node?.scrollLeft > 0 ? node.getBoundingClientRect().left : false;
 
 export function useScrollNav(element?: HTMLDivElement): Record<'left' | 'right', ReactNode> {

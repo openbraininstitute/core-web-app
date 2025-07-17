@@ -41,7 +41,7 @@ export function SimulationStatusBadge({ status }: { status?: CircuitSimulationEx
     </div>
   );
 }
-export const statusColorMap: Record<CircuitSimulationExecutionStatus, string> = {
+const statusColorMap: Record<CircuitSimulationExecutionStatus, string> = {
   created: '#434343',
   pending: '#fa8c16',
   running: '#1890ff',

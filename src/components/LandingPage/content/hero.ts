@@ -4,7 +4,7 @@ import { tryType } from './_common';
 
 import { useSanity } from '@/services/sanity';
 
-export interface ContentForHero {
+interface ContentForHero {
   title: string;
   content: string | null;
   backgroundType: 'video' | 'image';

@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './VerticalSpace.module.css';
 
-export interface VerticalSpaceProps {
+interface VerticalSpaceProps {
   className?: string;
   height?: string;
 }

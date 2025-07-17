@@ -4,7 +4,6 @@ import round from 'lodash/round';
 import {
   CurrentInjectionSimulationConfig,
   SimulationExperimentalSetup,
-  SimulationConfiguration,
   StimulusDropdownInfo,
   StimulusTypeOption,
   ProtocolDetails,
@@ -151,13 +150,6 @@ export const DEFAULT_CURRENT_INJECTION_CONFIG: CurrentInjectionSimulationConfig 
   config_id: crypto.randomUUID(),
   inject_to: DEFAULT_SECTION,
   stimulus: DEFAULT_STIMULUS_CONFIG,
-};
-
-export const DEFAULT_SIM_CONFIG: SimulationConfiguration = {
-  conditions: DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
-  record_from: [{ ...DEFAULT_RECORDING_LOCATION }],
-  current_injection: [DEFAULT_CURRENT_INJECTION_CONFIG],
-  synapses: undefined,
 };
 
 export const SYNAPSE_CODE_TO_TYPE: Record<number, SynapseType> = {

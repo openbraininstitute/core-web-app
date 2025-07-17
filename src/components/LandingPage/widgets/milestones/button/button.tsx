@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './button.module.css';
 
-export interface ButtonProps {
+interface ButtonProps {
   className?: string;
   onClick(): void;
   children: React.ReactNode;

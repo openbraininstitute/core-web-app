@@ -10,7 +10,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './ContributorsNavigation.module.css';
 
-export interface ContributorsNavigationProps {
+interface ContributorsNavigationProps {
   onPageChange(contributors: Contributor[]): void;
 }
 

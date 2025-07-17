@@ -6,10 +6,7 @@ import { classNames } from '@/util/utils';
 
 const { TextArea: ATextArea } = AInput;
 
-export function XInput(
-  { placeholder, className, ...props }: InputProps,
-  ref: ForwardedRef<InputRef>
-) {
+function XInput({ placeholder, className, ...props }: InputProps, ref: ForwardedRef<InputRef>) {
   return (
     <AInput
       ref={ref}

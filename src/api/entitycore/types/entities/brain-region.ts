@@ -17,11 +17,11 @@ export type TemporaryFlatBrainRegionHierarchy = Array<
 >;
 
 // TODO: temporary placing this here, remove it after get the correct implementation  from entity-core
-export type DefaultBrainViewId = 'https://neuroshapes.org/BrainRegion';
-export type BrainLayerViewId = 'https://bbp.epfl.ch/ontologies/core/bmo/BrainLayer';
-export type BrainViewId = DefaultBrainViewId | BrainLayerViewId;
+type DefaultBrainViewId = 'https://neuroshapes.org/BrainRegion';
+type BrainLayerViewId = 'https://bbp.epfl.ch/ontologies/core/bmo/BrainLayer';
+type BrainViewId = DefaultBrainViewId | BrainLayerViewId;
 
-export type Ancestor = Record<string, BrainViewId>;
+type Ancestor = Record<string, BrainViewId>;
 
 export interface ITemporaryBrainRegionHierarchy {
   id: string;

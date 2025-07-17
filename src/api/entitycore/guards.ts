@@ -2,15 +2,15 @@ import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 
 import type { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
 import type {
-  EntityCoreObjectTypes,
   IExperimentalSynapsesPerConnection,
-  IElectricalCellRecording,
   IExperimentalBoutonDensity,
   IExperimentalNeuronDensity,
+  IReconstructionMorphology,
+  IElectricalCellRecording,
+  ISingleNeuronSynaptome,
+  EntityCoreObjectTypes,
   IEModel,
   IMEModel,
-  IReconstructionMorphology,
-  ISingleNeuronSynaptome,
 } from '@/api/entitycore/types';
 
 export function hasAssets(

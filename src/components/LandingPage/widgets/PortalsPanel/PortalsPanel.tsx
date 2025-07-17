@@ -10,7 +10,7 @@ import {
 
 import styles from './PortalsPanel.module.css';
 
-export interface WidgetPortalsPanelProps {
+interface WidgetPortalsPanelProps {
   className?: string;
 }
 

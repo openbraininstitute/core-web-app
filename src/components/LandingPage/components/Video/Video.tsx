@@ -1,12 +1,16 @@
 /* eslint-disable jsx-a11y/media-has-caption */
-import React, { CSSProperties } from 'react';
+import { usePathname } from 'next/navigation';
+import React, { CSSProperties, SyntheticEvent, useRef, useState } from 'react';
 
-import { classNames } from '@/util/utils';
 import { isNumber } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
+
+import { PauseIcon } from '@/components/icons';
+import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
 
 import styles from './Video.module.css';
 
-export interface ProgressiveVideoProps {
+interface ProgressiveVideoProps {
   className?: string;
   src: string;
   autosize?: boolean;
@@ -23,9 +27,14 @@ export default function ProgressiveVideo({
   currentTime,
   onCurrentTimeChange,
 }: ProgressiveVideoProps) {
-  const refVideo = React.useRef<HTMLVideoElement | null>(null);
-  const [style, setStyle] = React.useState<CSSProperties>({});
-  const handleReady = (evt: React.SyntheticEvent<HTMLVideoElement>) => {
+  const pathname = usePathname();
+  const isHomepage = pathname === '/';
+
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [videoPlaying, setVideoPlaying] = useState<boolean>(false);
+  const refVideo = useRef<HTMLVideoElement | null>(null);
+  const [style, setStyle] = useState<CSSProperties>({});
+  const handleReady = (evt: SyntheticEvent<HTMLVideoElement>) => {
     const video = evt.target as HTMLVideoElement;
     if (!autosize || !video) return;
 
@@ -35,37 +44,89 @@ export default function ProgressiveVideo({
       aspectRatio: `${video.videoWidth}/${video.videoHeight}`,
     });
   };
+
   React.useEffect(() => {
     const video = refVideo.current;
     if (!isNumber(currentTime) || !video) return;
 
     video.currentTime = currentTime;
   }, [currentTime]);
+
   const handleTimeUpdate = () => {
     const video = refVideo.current;
     if (!video || !onCurrentTimeChange) return;
 
     onCurrentTimeChange(video.currentTime);
   };
+
   const handlePlay = () => {
     const video = refVideo.current;
     if (!video || !onCurrentTimeChange) return;
 
-    video.muted = false;
+    setVideoPlaying(true);
+    video.play();
   };
 
+  const handlePause = () => {
+    const video = refVideo.current;
+    if (!video || !onCurrentTimeChange) return;
+    setVideoPlaying(false);
+    video.pause();
+  };
+
+  React.useEffect(() => {
+    const video = refVideo.current;
+    if (!video) return;
+
+    video.muted = !isHovered;
+  }, [isHovered]);
+
   return (
-    <div className={classNames(className, styles.video)} aria-label="Tap to play" style={style}>
+    <div
+      onMouseOver={() => setIsHovered(true)}
+      onFocus={() => setIsHovered(true)}
+      onMouseOut={() => setIsHovered(false)}
+      onBlur={() => setIsHovered(false)}
+      className={classNames(className, styles.video)}
+      aria-label="Click to play"
+      style={style}
+    >
+      {isHomepage && (
+        <>
+          {videoPlaying ? (
+            <button
+              type="button"
+              aria-label="pause video"
+              onClick={handlePause}
+              className={styles.playButton}
+              style={{
+                opacity: isHovered ? 1 : 0,
+              }}
+            >
+              <PauseIcon className="h-16 w-auto" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              aria-label="play video"
+              onClick={handlePlay}
+              className={styles.playButton}
+            >
+              <PlayIcon className="h-32 w-auto" />
+            </button>
+          )}
+        </>
+      )}
       <video
         className={classNames(controls && styles.pointer)}
         src={src}
         ref={refVideo}
         controls={controls}
         muted
-        autoPlay
         loop={!controls}
         disablePictureInPicture
         playsInline
+        autoPlay={!controls && !isHomepage}
         onPlay={handlePlay}
         onCanPlay={handleReady}
         onTimeUpdate={handleTimeUpdate}

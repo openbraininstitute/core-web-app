@@ -18,14 +18,6 @@ import type {
   EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 
-export type ElectricalCellRecordingExpandFields =
-  | 'brain_location'
-  | 'species'
-  | 'strain'
-  | 'brain_region';
-
-export type ElectricalCellRecordingExpand = ElectricalCellRecordingExpandFields[];
-
 export type ElectricalCellRecordingFilter = Partial<
   IDFilter &
     TimestampsFilter &
@@ -35,7 +27,7 @@ export type ElectricalCellRecordingFilter = Partial<
     SharedFilter
 >;
 
-export interface IElectricalCellRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
+interface IElectricalCellRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;

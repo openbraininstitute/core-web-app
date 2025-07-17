@@ -1,0 +1,127 @@
+.history {
+  overflow: auto;
+  display: grid;
+  grid-template-columns: 1fr minmax(200px, 640px) 1fr;
+}
+
+.history > div {
+  grid-column: 2;
+}
+
+.history div > .card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1em;
+  margin: 1em 0;
+  color: #003;
+  box-shadow:
+    0 0.25em 0.5em #0008,
+    0 -0.25em 0.5em #fff;
+  border-radius: 1em;
+  padding: 1em;
+  border: 2px solid #fff;
+  background: linear-gradient(to top, #fff, #eee);
+}
+
+.history div > .card.currentThread {
+  border: 2px solid #abf;
+}
+
+.history div > .mainButton {
+  border: none;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin: 0;
+}
+
+.actions {
+  position: relative;
+  overflow: visible;
+}
+
+.more {
+  display: grid;
+  place-items: center;
+  width: 2em;
+  height: 2em;
+  border-radius: 0.25em;
+  background: #fff;
+  box-shadow: 0 3px 6px #0004;
+}
+
+.actions menu {
+  position: absolute;
+  width: 140px;
+  right: -0.5em;
+  bottom: -2em;
+  padding: 0 1em;
+  background: #f7f7f7;
+  border: 2px solid #fff;
+  box-shadow: 0 0.5em 1em #0007;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.actions menu button {
+  width: 100%;
+  margin: 1em 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+}
+
+.actions:hover menu {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.red {
+  color: #e00;
+}
+
+.history > div h1 {
+  color: #0008;
+  font-variant: small-caps;
+  font-weight: bold;
+  font-size: 120%;
+}
+
+div.loadMore {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 0;
+  padding: 1em 0;
+}
+
+div.loadMore > button {
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  background: #fff;
+  border: 2px solid #f0f0f0;
+  border-radius: 999vmax;
+  flex-flow: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em 2em;
+  line-height: 2;
+  display: flex;
+  box-shadow:
+    0 0.5em 1em #0004,
+    0 -0.5em 0.5em #fff;
+}

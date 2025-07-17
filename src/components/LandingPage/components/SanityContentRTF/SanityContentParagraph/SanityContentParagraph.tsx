@@ -7,7 +7,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './SanityContentParagraph.module.css';
 
-export interface SanityContentParagraphProps {
+interface SanityContentParagraphProps {
   value: ContentForRichTextParagraph;
 }
 

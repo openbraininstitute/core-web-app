@@ -1,10 +1,11 @@
-import { expect, describe, it, vi, beforeEach } from 'vitest';
+import { expect, describe, it, vi } from 'vitest';
 import {
   resolveExploreDetailsPageUrl,
   resolveProjectUrl,
   resolveLibraryUrl,
 } from '../../src/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 // Mock the getEntityByLegacyType helper function
 vi.mock('@/entity-configuration/domain/helpers', () => ({
@@ -91,32 +92,30 @@ describe('URL Builder Utils', () => {
       const url = resolveLibraryUrl({
         ctx: workspaceContext,
         category: 'experimental',
-        dataType: DataType.ExperimentalNeuronMorphology,
+        slug: EntitySlug.ReconstructionMorphology,
       });
       expect(url).toBe(
-        '/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?c=experimental&t=experimental-neuron-morphology'
+        '/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?c=experimental&t=morphology'
       );
     });
 
     it('should build library URL with data type', () => {
       const url = resolveLibraryUrl({
         ctx: workspaceContext,
-        dataType: DataType.ExperimentalNeuronMorphology,
+        slug: EntitySlug.ReconstructionMorphology,
       });
-      expect(url).toBe(
-        '/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?t=experimental-neuron-morphology'
-      );
+      expect(url).toBe('/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?t=morphology');
     });
 
     it('should build library URL with both category and data type', () => {
       const url = resolveLibraryUrl({
         ctx: workspaceContext,
         category: 'experimental',
-        dataType: DataType.ExperimentalNeuronMorphology,
+        slug: EntitySlug.ReconstructionMorphology,
       });
       expect(url).toContain('/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?');
       expect(url).toContain('c=experimental');
-      expect(url).toContain('t=experimental-neuron-morphology');
+      expect(url).toContain('t=morphology');
     });
   });
 });

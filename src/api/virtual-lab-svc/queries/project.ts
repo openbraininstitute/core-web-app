@@ -3,7 +3,6 @@ import { getSession } from '@/authFetch';
 import {
   ProjectCreationResponse,
   ProjectExistsVerificationResponse,
-  ProjectUsersCountResponse,
   VlmAttachUsersToProjectResponse,
   VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
@@ -11,7 +10,6 @@ import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { virtualLabApi } from '@/config';
 
 const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
-// const BASE_URL = `http://localhost:8000/virtual-labs`;
 /**
  * Checks if a project with the given name already exists in a virtual lab.
  *
@@ -70,35 +68,6 @@ export async function createProject(
   }
 
   const result: ProjectCreationResponse = await response.json();
-  return result;
-}
-
-/**
- * Gets the count of users in a project.
- *
- * @param {string} virtualLabId - The ID of the virtual lab.
- * @param {string} projectId - The ID of the project.
- * @returns {Promise<ProjectUsersCountResponse>} - Returns the count of users in the project.
- * @throws {Error} - Throws an error if the API request fails.
- */
-export async function getProjectUsersCount(
-  virtualLabId: string,
-  projectId: string
-): Promise<ProjectUsersCountResponse> {
-  const session = await getSession();
-  const response = await fetch(`${BASE_URL}/${virtualLabId}/projects/${projectId}/users/count`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to get project users count`, { cause: await response.json() });
-  }
-
-  const result = (await response.json()) as ProjectUsersCountResponse;
   return result;
 }
 

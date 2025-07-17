@@ -5,8 +5,11 @@ import { ReactNode } from 'react';
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
 import { useScrollNav } from '@/components/explore-section/ExploreSectionListingView/hooks';
+import { DataType } from '@/constants/explore-section/list-views';
 
-export function DefaultRenderButton<T>({
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
+function DefaultRenderButton<T extends EntityCoreIdentifiable>({
   children,
   clearSelectedRows,
   selectedRows,
@@ -15,9 +18,9 @@ export function DefaultRenderButton<T>({
   children?: (props: RenderButtonProps<T>) => ReactNode;
 }) {
   return children ? (
-    children({ selectedRows, clearSelectedRows })
+    children({ selectedRows, clearSelectedRows, dataType })
   ) : (
-    <ExploreDownloadButton
+    <ExploreDownloadButton<T>
       selectedRows={selectedRows}
       dataType={dataType}
       clearSelectedRows={clearSelectedRows}
@@ -30,7 +33,7 @@ export function DefaultRenderButton<T>({
   );
 }
 
-export default function TableControls<T>({
+export default function TableControls<T extends EntityCoreIdentifiable>({
   clearSelectedRows,
   children,
   renderButton,
@@ -43,7 +46,7 @@ export default function TableControls<T>({
   renderButton?: (props: RenderButtonProps<T>) => ReactNode;
   selectedRows: RenderButtonProps<T>['selectedRows'];
   visible: boolean;
-  dataType: string;
+  dataType: DataType;
 }) {
   const { left, right } = useScrollNav(
     typeof document !== 'undefined'
@@ -61,7 +64,7 @@ export default function TableControls<T>({
         <div className="ml-auto">{right}</div>
       </div>
       {!!selectedRows?.length && clearSelectedRows && (
-        <DefaultRenderButton
+        <DefaultRenderButton<T>
           clearSelectedRows={clearSelectedRows}
           selectedRows={selectedRows}
           dataType={dataType}

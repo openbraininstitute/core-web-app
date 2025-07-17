@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-import { ContentForGlossaryItem } from '@/components/documentation/hooks/use-sanity-content-for-glossary';
 import { classNames } from '@/util/utils';
+import { ContentForGlossaryItem } from '@/components/documentation/type';
 
 // Define props type
-export type GlossaryFilterBarProps = {
+type GlossaryFilterBarProps = {
   onFilterChange: (letter: string | null) => void;
   content: ContentForGlossaryItem[];
 };

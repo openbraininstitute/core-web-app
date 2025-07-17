@@ -4,7 +4,7 @@ import { Tab } from '../components';
 import { TabType } from '../../types';
 import { classNames } from '@/util/utils';
 
-export interface TabsSelectorProps {
+interface TabsSelectorProps {
   className?: string;
   tab: TabType;
   setTab(tab: TabType): void;

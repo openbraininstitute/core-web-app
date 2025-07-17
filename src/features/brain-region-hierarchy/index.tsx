@@ -1,6 +1,7 @@
 'use client';
 
 import { useAtomValue, useSetAtom } from 'jotai';
+import omit from 'lodash/omit';
 
 import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
@@ -16,15 +17,20 @@ import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
+  useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
 import { classNames } from '@/util/utils';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  BrainRegionHierarchyBase,
+  IBrainRegionHierarchy,
+} from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
 
 export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
+  const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
@@ -49,6 +55,7 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     scrollToNode(clickedNode as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
     makeBrainRegionClickEvent({ dataKey, node: clickedNode as IBrainRegionHierarchy });
+    updateSelectedBrainRegion(omit(clickedNode, 'children') as BrainRegionHierarchyBase);
     userJourneyTracker.registerBrainRegionClick(clickedNode.name);
   };
 

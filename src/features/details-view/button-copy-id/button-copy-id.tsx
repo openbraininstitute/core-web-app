@@ -6,7 +6,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './button-copy-id.module.css';
 
-export interface ButtonCopyIdProps {
+interface ButtonCopyIdProps {
   className?: string;
   label?: string;
   tooltip?: string;

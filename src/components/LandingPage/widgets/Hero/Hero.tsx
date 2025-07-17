@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 
 import styles from './Hero.module.css';
 
-export interface WidgetHeroProps {
+interface WidgetHeroProps {
   className?: string;
 }
 

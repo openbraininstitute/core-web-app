@@ -12,7 +12,7 @@ export function useSanityContentForPriceList2(): ContentForPriceList2 {
   );
 }
 
-export interface ContentForPriceList2 {
+interface ContentForPriceList2 {
   plans: Array<{
     id: string;
     title: string;
@@ -26,13 +26,13 @@ export interface ContentForPriceList2LabItem {
   list: ContentForPriceList2LabBlocItem[];
 }
 
-export interface ContentForPriceList2LabBlocItem {
+interface ContentForPriceList2LabBlocItem {
   title: string;
   type: string;
   items: ContentForPriceList2LabBlocSectionItem[];
 }
 
-export interface ContentForPriceList2LabBlocSectionItem {
+interface ContentForPriceList2LabBlocSectionItem {
   name: string;
   plans: ContentForPriceList2LabBlocSectionPlanItem[];
 }
@@ -53,12 +53,12 @@ export interface ContentForPriceList2GeneralPriceItem {
   plans: ContentForPriceList2GeneralPricePlanItem[];
 }
 
-export interface ContentForPriceList2GeneralPricePlanItem {
+interface ContentForPriceList2GeneralPricePlanItem {
   id: string;
   cost: number;
 }
 
-export function isSanityContentForPriceList2(data: unknown): data is ContentForPriceList2 {
+function isSanityContentForPriceList2(data: unknown): data is ContentForPriceList2 {
   return tryType('SanityContentForPriceList2', data, {
     labList: [
       'array',

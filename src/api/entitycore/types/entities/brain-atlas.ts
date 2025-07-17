@@ -12,7 +12,7 @@ import {
   TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export interface BrainAtlasBase {
+interface BrainAtlasBase {
   name: string;
   hierarchy_id: string;
   species: ISpecies;
@@ -20,7 +20,7 @@ export interface BrainAtlasBase {
 
 export interface IBrainAtlas extends EntityCoreIdentifiable, BrainAtlasBase, Timestamps {}
 
-export interface BrainAtlasRegionBase {
+interface BrainAtlasRegionBase {
   volume?: number;
   is_leaf_region: boolean;
   brain_atlas_id: string;

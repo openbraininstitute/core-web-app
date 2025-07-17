@@ -17,10 +17,10 @@ import {
   virtualLabProjectUsersAtomFamily,
 } from '@/state/virtual-lab/projects';
 import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
-import { notification as notify } from '@/api/notifications';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { classNames } from '@/util/utils';
 import { basePath } from '@/config';
+import { useAppNotification } from '@/components/notification';
 import styles from './virtual-lab-banner.module.css';
 
 function BackgroundImg({
@@ -225,6 +225,7 @@ export function SandboxBanner({ description, name }: Omit<Props, 'createdAt'>) {
 }
 
 export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
+  const notify = useAppNotification();
   const usersResult = useUnwrappedValue(virtualLabMembersAtomFamily(vlab?.id));
   const balance = useUnwrappedValue(virtualLabBalanceAtomFamily({ virtualLabId: vlab?.id }));
 
@@ -240,7 +241,9 @@ export function LabDetailBanner({ vlab }: { vlab?: VirtualLab }) {
     if (!fieldName || !vlab) return;
 
     const { value } = target;
-    updateDebounced({ [fieldName]: value })?.catch((error) => notify.error(error.message));
+    updateDebounced({ [fieldName]: value })?.catch((error) =>
+      notify.error({ message: error.message })
+    );
   };
 
   const { button: editBtn, isEditable } = useEditBtn({ dataTestid: 'lab-detail-banner-edit-btn' });
@@ -292,6 +295,7 @@ export function ProjectDetailBanner({
   projectId,
   virtualLabId,
 }: Props & { projectId: string; virtualLabId: string }) {
+  const notify = useAppNotification();
   const usersResult = useAtomValue(
     unwrap(virtualLabProjectUsersAtomFamily({ virtualLabId, projectId }))
   );
@@ -308,11 +312,11 @@ export function ProjectDetailBanner({
       return (
         !!fieldName &&
         updateProject({ [fieldName as string]: value })
-          .then(() => notify.success(getSuccessMsg(fieldName, value)))
-          .catch(() => notify.error(getErrorMsg(fieldName)))
+          .then(() => notify.success({ message: getSuccessMsg(fieldName, value) }))
+          .catch(() => notify.error({ message: getErrorMsg(fieldName) }))
       );
     },
-    [updateProject],
+    [updateProject], // eslint-disable-line react-hooks/exhaustive-deps
     600,
     { leading: true }
   );

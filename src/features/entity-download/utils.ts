@@ -1,4 +1,20 @@
+import fs from 'fs/promises';
+import fsPath from 'path';
 import { Readable } from 'stream';
+
+import { format } from 'date-fns';
+import kebabCase from 'lodash/kebabCase';
+import template from 'lodash/template';
+
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { EntityTypeValue } from '@/api/entitycore/types';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
+import { IAsset } from '@/api/entitycore/types/shared/global';
+import { getSession } from '@/authFetch';
+import { FileEntry } from '@/features/entity-download/types';
+import { WorkspaceContext } from '@/types/common';
+
+const README_TEMPLATE_DIR = './src/features/entity-download/readme-templates';
 
 /**
  * Generates headers for a file download stream.
@@ -33,4 +49,126 @@ export async function bufferStream(readable: Readable): Promise<Buffer> {
   }
 
   return Buffer.concat(chunks);
+}
+
+/**
+ * Creates a file entry for downloading an entity asset.
+ *
+ * @param {Object} params - The parameters for creating an asset file entry.
+ * @param {IEntity} params.entity - The entity containing the asset to download.
+ * @param {IAsset} params.asset - The asset to download.
+ * @param {string} params.path - The file path for the downloaded asset.
+ * @param {WorkspaceContext} [params.ctx] - Optional workspace context for the download request.
+ * @returns {Promise<FileEntry>} A promise that resolves to a file entry with stream, path, and size information.
+ *
+ * @description
+ * - Downloads the asset using the entity type and ID
+ * - Converts the response body to a readable stream
+ * - Extracts content length from response headers for file size
+ * - Returns a structured file entry ready for download processing
+ */
+export async function createAssetFileEntry({
+  ctx,
+  entity,
+  asset,
+  path,
+}: {
+  entity: IEntity;
+  asset: IAsset;
+  path: string;
+  ctx?: WorkspaceContext;
+}): Promise<FileEntry> {
+  const response = await downloadAsset({
+    ctx,
+    entityType: entity.type,
+    entityId: entity.id,
+    id: asset.id,
+    asRawResponse: true,
+    retryOnError: false,
+  });
+
+  if (!response.body) {
+    throw new Error('Response body is null');
+  }
+  return {
+    path,
+    // FIXME: @pavlo, please remove type casting
+    stream: Readable.fromWeb(response.body as any),
+    size: Number(response.headers.get('content-length')),
+  };
+}
+
+type TemplateRenderParams = {
+  date: string;
+  year: string;
+  username: string;
+};
+
+/**
+ * Gets template render parameters for README file generation.
+ *
+ * @returns {Promise<TemplateRenderParams>} A promise that resolves to template parameters containing date, year, and username.
+ *
+ * @description
+ * - Retrieves the current user session to extract username
+ * - Formats the current date in ISO format (yyyy-MM-dd)
+ * - Extracts the current year
+ * - Returns structured parameters for template rendering
+ */
+export async function getReadmeTemplateRenderParams(): Promise<TemplateRenderParams> {
+  const session = await getSession();
+
+  const username = session?.user.username!;
+
+  const now = new Date();
+
+  // Current date in ISO format
+  const date = format(now, 'yyyy-MM-dd');
+
+  const year = format(now, 'yyyy');
+
+  return {
+    date,
+    year,
+    username,
+  };
+}
+
+/**
+ * Creates a file entry for a README template based on entity type.
+ *
+ * @param {EntityTypeValue} entityType - The entity type to determine which template to use.
+ * @returns {Promise<FileEntry>} A promise that resolves to a file entry with README content stream, path, and size information.
+ *
+ * @description
+ * - Retrieves template render parameters (date, year, username)
+ * - Reads the appropriate template file based on entity type using kebab-case naming
+ * - Renders the template by replacing placeholders with actual values
+ * - Converts the rendered content to a readable stream
+ * - Returns a structured file entry ready for download processing
+ */
+export async function createTemplateFileEntry(entityType: EntityTypeValue): Promise<FileEntry> {
+  const renderParams = await getReadmeTemplateRenderParams();
+
+  // Read template file based on entity type
+  const templatePath = fsPath.join(
+    process.cwd(),
+    README_TEMPLATE_DIR,
+    `${kebabCase(entityType)}.md`
+  );
+  const templateContent = await fs.readFile(templatePath, 'utf-8');
+
+  // Render template by replacing placeholders
+  const compiled = template(templateContent);
+  const renderedContent = compiled(renderParams);
+
+  // Convert to buffer and then to readable stream
+  const buffer = Buffer.from(renderedContent, 'utf-8');
+  const stream = Readable.from(buffer);
+
+  return {
+    path: 'README.md',
+    stream,
+    size: buffer.length,
+  };
 }

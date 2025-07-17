@@ -4,7 +4,7 @@ function Placeholder({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-sm bg-gray-200 ${className}`} />;
 }
 
-export default function TiersComparisonSkeleton() {
+function TiersComparisonSkeleton() {
   const skeletonTiers = [1, 2, 3];
   const skeletonCategories = [1, 2, 3, 4];
   const skeletonFeatures = [1, 2, 3];

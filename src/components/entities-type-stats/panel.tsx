@@ -41,7 +41,7 @@ function isEntityTypeCountProps(p: StatsPanelProps): p is EntityTypeCountProps {
   return 'data' in p;
 }
 
-export function EntityTypeStats(props: StatsPanelProps) {
+function EntityTypeStats(props: StatsPanelProps) {
   const pathName = usePathname();
   const selectedTab = useAtomValue(dataTabAtom);
   const { error: circuitError, filteredCircuits } = useFilteredCircuits({ dataKey: props.dataKey });

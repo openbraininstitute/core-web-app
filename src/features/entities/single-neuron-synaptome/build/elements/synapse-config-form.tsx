@@ -46,7 +46,7 @@ import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
-export const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
+const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
   id: '',
   name: '',

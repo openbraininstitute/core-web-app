@@ -12,7 +12,7 @@ import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
 
 type Primitive = null | boolean | number | string;
-export interface Object {
+interface Object {
   [key: string]: Primitive | Primitive[] | Object;
 }
 

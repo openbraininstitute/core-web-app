@@ -24,15 +24,16 @@ export default async function Layout({ params: promisedParams, children }: Props
         links={[
           {
             key: 'scope',
-            href: '#',
-            content: 'single neuron',
-            styles: 'text-primary-5 hover:text-primary-5! cursor-default',
+            href: `${projectUrl}/build?s=new&t=synaptome`,
+            content: 'Synaptome',
+            styles: 'text-primary-5 hover:text-primary-5! cursor-pointer',
           },
           {
             key: LinkItemKey.Build,
             href: `${projectUrl}/build`,
             content: Content.Build,
-            styles: 'rounded-full bg-primary-5 py-3 text-primary-9 w-2/3',
+            styles:
+              'rounded-full bg-primary-5 py-1 px-1 text-primary-9 w-[21px] font-semibold capitalize',
           },
         ]}
         lab={{

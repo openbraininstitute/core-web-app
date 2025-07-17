@@ -1,17 +1,20 @@
-import { Fragment, Suspense, useEffect, useLayoutEffect, useMemo } from 'react';
+import { ErrorInfo, Fragment, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useThree } from '@react-three/fiber';
-
 import compact from 'lodash/compact';
 import groupBy from 'lodash/groupBy';
 import find from 'lodash/find';
+import get from 'lodash/get';
 
 import BrainRegionMesh from '@/features/brain-atlas-viewer/brain-region-mesh';
 import PointCloudMesh from '@/features/brain-atlas-viewer/point-cloud';
 
 import { brainRegionClickEventListener } from '@/features/brain-region-hierarchy/event';
 import { meshVisibilityAtom } from '@/features/brain-atlas-viewer/state';
+import { SuspenseWithStatus } from '@/components/suspense-with-status';
+import { useAppNotification } from '@/components/notification';
+import { messages } from '@/i18n/en/atlas';
 
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
@@ -22,23 +25,26 @@ import {
 
 import type { TBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import type { VisibilityType } from '@/features/brain-atlas-viewer/types';
-import type { ApplicationSection } from '@/types/common';
+import type { TSuspenseStatus } from '@/components/suspense-with-status';
 
 export default function ViewerComposer({
-  section,
   dataKey,
+  onMeshLoadingStatusChange,
+  onPointCloudLoadingStatusChange,
 }: {
-  section: ApplicationSection;
   dataKey: string;
+  onMeshLoadingStatusChange: (status: TSuspenseStatus) => void;
+  onPointCloudLoadingStatusChange: (status: TSuspenseStatus) => void;
 }) {
+  const notification = useAppNotification();
   const { scene } = useThree();
   const { node: brainRegionNode } = useBrainRegionHierarchy({ dataKey });
   const rootBrainRegions = useAtomValue(useMemo(() => unwrap(brainRegionRootHierarchyAtom), []));
   const brainRegions = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
-  const setMeshVisibility = useSetAtom(meshVisibilityAtom(section));
-  const resetMeshVisibility = useResetAtom(meshVisibilityAtom(section));
+  const setMeshVisibility = useSetAtom(meshVisibilityAtom(dataKey));
+  const resetMeshVisibility = useResetAtom(meshVisibilityAtom(dataKey));
 
   useLayoutEffect(() => {
     return () => {
@@ -46,7 +52,7 @@ export default function ViewerComposer({
       resetMeshVisibility();
       scene.clear();
     };
-  }, [resetMeshVisibility, scene, section]);
+  }, [resetMeshVisibility, scene]);
 
   useEffect(() => {
     const handler = (event: CustomEvent<TBrainRegionClickEvent>) => {
@@ -79,8 +85,6 @@ export default function ViewerComposer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene]);
 
-  if (!brainRegions) return null;
-
   const rootBrainRegion = find(rootBrainRegions?.options, { value: ROOT_BRAIN_REGION_ID })?.data;
   const currentBrainRegion = find(brainRegions?.options, { value: brainRegionNode.id })?.data;
 
@@ -88,25 +92,53 @@ export default function ViewerComposer({
     brainRegionNode ? [currentBrainRegion, rootBrainRegion] : [rootBrainRegion]
   );
 
+  const onPointCloudLoadingErrorHandler = useCallback((error: Error, _: ErrorInfo) => {
+    notification.warning({
+      message: get(messages, error.message, messages.default),
+      placement: 'topRight',
+      key: 'point-cloud-warning',
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onMeshLoadingErrorHandler = useCallback((error: Error, _: ErrorInfo) => {
+    notification.warning({
+      message: get(messages, error.message, messages.default),
+      placement: 'topRight',
+      key: 'mesh-warning',
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!brainRegions) return null;
+
   return regions.map((brainRegion) => {
     return (
       <Fragment key={brainRegion.id}>
-        <Suspense>
+        <SuspenseWithStatus
+          withErrorBoundary={false}
+          id={`mesh-loading-${dataKey}-${brainRegion.id}`}
+          onStatusChange={onMeshLoadingStatusChange}
+          onErrorHandler={onMeshLoadingErrorHandler}
+        >
           <BrainRegionMesh
             brainRegionId={brainRegion.id}
-            section={section}
             color={`#${brainRegion?.color_hex_triplet}`}
+            dataKey={dataKey}
           />
-        </Suspense>
+        </SuspenseWithStatus>
         {brainRegion.id !== ROOT_BRAIN_REGION_ID && (
-          <Suspense>
+          <SuspenseWithStatus
+            withErrorBoundary={false}
+            id={`point-cloud-loading-${dataKey}-${brainRegionNode.id}`}
+            onStatusChange={onPointCloudLoadingStatusChange}
+            onErrorHandler={onPointCloudLoadingErrorHandler}
+          >
             <PointCloudMesh
               brainRegionId={brainRegionNode.id}
               brainRegionAnnotationValue={brainRegionNode.annotation_value}
-              section={section}
               color={`#${brainRegion?.color_hex_triplet}`}
+              dataKey={dataKey}
             />
-          </Suspense>
+          </SuspenseWithStatus>
         )}
       </Fragment>
     );

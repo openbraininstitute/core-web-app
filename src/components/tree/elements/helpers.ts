@@ -6,29 +6,6 @@ import isArray from 'lodash/isArray';
 import type { TTreeNode } from '@/components/tree/types';
 
 /**
- * Recursively flattens a tree structure into a flat list of nodes.
- * Each node in the list will have a `parentId` property, except for the root node.
- *
- * @template TNode - The type of the tree node, which must extend `TTreeNode`.
- * @param nodes - The array of tree nodes to flatten.
- * @param parentId - The ID of the parent node, or `null` if the node is a root. Defaults to `null`.
- * @returns An array of nodes where each node includes a `parentId` property indicating its parent.
- */
-export function flattenTree<TNode extends TTreeNode>(
-  nodes: TNode[],
-  parentId: string | null = null
-): (TNode & { parentId: string | null })[] {
-  let flatList: (TNode & { parentId: string | null })[] = [];
-  for (const node of nodes) {
-    flatList.push({ ...node, parentId });
-    if (node.children && node.children.length > 0) {
-      flatList = flatList.concat(flattenTree(node.children as TNode[], node.id));
-    }
-  }
-  return flatList;
-}
-
-/**
  * Flattens a tree structure into a flat array of nodes.
  *
  * Traverses the tree starting from the given node and accumulates all nodes
@@ -148,33 +125,6 @@ export function scrollToNode<TNode extends TTreeNode>(
       });
     }, 50);
   }
-}
-
-/**
- * Searches for nodes in the tree whose names match the query text (case-insensitive).
- * Returns a list of matching node IDs.
- * Assumes TNode might have an optional 'name' property.
- */
-export function searchNodes<TNode extends TTreeNode & { name?: string }>(
-  query: string,
-  rootNode: TNode
-): string[] {
-  const results: string[] = [];
-  const lowerCaseQuery = query.toLowerCase();
-
-  function traverse(node: TNode) {
-    if (node.name && node.name.toLowerCase().includes(lowerCaseQuery)) {
-      results.push(node.id);
-    }
-    if (node.children) {
-      for (const child of node.children as TNode[]) {
-        traverse(child);
-      }
-    }
-  }
-
-  if (rootNode) traverse(rootNode);
-  return results;
 }
 
 /**

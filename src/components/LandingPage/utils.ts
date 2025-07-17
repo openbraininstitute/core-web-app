@@ -35,7 +35,7 @@ export function gotoSection(slugOrIndex: string | EnumSection) {
   window.location.href = url;
 }
 
-export function useResizeObserver(callback: ResizeObserverCallback): ResizeObserver {
+function useResizeObserver(callback: ResizeObserverCallback): ResizeObserver {
   const ref = React.useRef<ResizeObserver | null>(null);
   if (!ref.current) ref.current = new ResizeObserver(callback);
   return ref.current;

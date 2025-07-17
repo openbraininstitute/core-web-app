@@ -5,7 +5,7 @@ import { classNames } from '@/util/utils';
 
 import type { TTreeNode, RenderNodeProps } from '@/components/tree/types';
 
-export type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
+type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
 
 export default function DefaultNode<TNode extends TTreeNode>({
   node,

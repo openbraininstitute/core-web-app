@@ -25,7 +25,7 @@ type TransformFiltersToQueryReturnValue = Record<
  * transformToIlikePattern("foo*bar") // "foo%bar"
  * transformToIlikePattern("%special%") // "\\%special\\%"
  */
-export function transformToIlikePattern(str: string) {
+function transformToIlikePattern(str: string) {
   if (isEmpty(str)) return null;
   return str
     .replace(/%/g, '\\%') // Escape existing `%`
@@ -38,11 +38,12 @@ export function transformToIlikePattern(str: string) {
  * @param {Record<string, any>} queryParams -  query parameters object to transform
  * @returns {Record<string, any>}  transformed query parameters object
  *
+ * @deprecated See release notes: https://github.com/openbraininstitute/entitycore/releases/tag/2025.7.2
  * @example
  * // input: { "contribution_perf_label__in": ["A", "B", "C"],  }
  * // output: { "contribution_perf_label__in": "A,B,C", }
  */
-export function transformQueryParamsArrayToString(
+export function transformQueryParamsListToServerString(
   queryParams: Record<string, any>
 ): Record<string, any> {
   const transformedParams: Record<string, any> = {};

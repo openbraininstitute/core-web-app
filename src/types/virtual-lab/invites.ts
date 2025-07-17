@@ -24,12 +24,6 @@ export type InviteDetailsData = {
 
 export type InviteDetailsResponse = VlmResponse<InviteDetailsData>;
 
-export function isVlmInviteResponse(
-  response: any
-): response is AcceptInviteResponse | InviteDetailsData {
-  return response?.data?.origin && response?.data?.virtual_lab_id;
-}
-
 export enum InviteErrorCodes {
   UNAUTHORIZED = 1,
   INVALID_LINK = 2,

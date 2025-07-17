@@ -33,15 +33,6 @@ type AddMembersProps = {
 };
 type ProjectContext = { virtualLabId: string; projectId: string };
 
-export function filterMembers(members: Member[], query: string): Member[] {
-  const lowerQuery = query.toLowerCase();
-  return members.filter(
-    (member) =>
-      member.name.toLowerCase().includes(lowerQuery) ||
-      member.username.toLowerCase().includes(lowerQuery)
-  );
-}
-
 export function useFilteredMembers(members: Member[], query: string) {
   const deferredQuery = useDeferredValue(query.toLowerCase());
   const filtered = useMemo(() => {

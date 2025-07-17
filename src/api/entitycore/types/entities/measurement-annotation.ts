@@ -2,7 +2,7 @@ import { Timestamps, EntityCoreIdentifiable } from '@/api/entitycore/types/share
 import { TimestampsFilter, PaginationFilter } from '@/api/entitycore/types/shared/request';
 import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 
-export type MeasurementItem = {
+type MeasurementItem = {
   name: string;
   unit: string;
   value: number;

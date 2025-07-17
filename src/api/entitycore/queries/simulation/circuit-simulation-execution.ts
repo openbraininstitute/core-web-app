@@ -2,9 +2,8 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type {
-  ICircuitSimulationExecution,
   ICircuitSimulationExecutionFilter,
-  ISimulationExecutionCreate,
+  ICircuitSimulationExecution,
 } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
@@ -64,61 +63,6 @@ export async function getCircuitSimulationExecutions({
       accept: 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
-    },
-  });
-}
-
-export async function createSimulationExecution({
-  data,
-  context,
-}: {
-  data: ISimulationExecutionCreate;
-  context?: WorkspaceContext | null;
-}) {
-  const api = await entityCoreApi();
-  return await api.post<ICircuitSimulationExecution>(baseUri, {
-    body: data,
-    headers: {
-      ...getEntityCoreContext(context).headers,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-  });
-}
-
-export async function updateSimulationExecution({
-  id,
-  data,
-  context,
-}: {
-  id: string;
-  data: Partial<ICircuitSimulationExecution>;
-  context?: WorkspaceContext | null;
-}) {
-  const api = await entityCoreApi();
-  return await api.patch<ICircuitSimulationExecution>(`${baseUri}/${id}`, {
-    body: data,
-    headers: {
-      ...getEntityCoreContext(context).headers,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-  });
-}
-
-export async function deleteSimulationExecution({
-  id,
-  context,
-}: {
-  id: string;
-  context?: WorkspaceContext | null;
-}) {
-  const api = await entityCoreApi();
-  return await api.delete<void>(`${baseUri}/${id}`, {
-    headers: {
-      ...getEntityCoreContext(context).headers,
-      'content-type': 'application/json',
-      accept: 'application/json',
     },
   });
 }

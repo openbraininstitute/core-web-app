@@ -1,4 +1,4 @@
-export type PTGlossaryProps = {
+type PTGlossaryProps = {
   term: string;
   definition: string;
 };
@@ -8,7 +8,7 @@ export type PTGlossaryListProps = {
   glossaryItems: PTGlossaryProps[];
 };
 
-export function SingleDefinition({ content, index }: { content: PTGlossaryProps; index: number }) {
+function SingleDefinition({ content, index }: { content: PTGlossaryProps; index: number }) {
   return (
     <div className="flex w-full flex-col">
       {index !== 0 && <div className="bg-neutral-2 my-4 block h-px w-full" />}
