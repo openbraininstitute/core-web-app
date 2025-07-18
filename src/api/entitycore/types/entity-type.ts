@@ -21,4 +21,17 @@ export enum EntityTypeEnum {
   Simulation = 'simulation',
 }
 
+export enum EntityTypeWithBrainRegionEnum {
+  ExperimentalSynapsesPerConnection = 'experimental_synapses_per_connection',
+  ExperimentalBoutonDensity = 'experimental_bouton_density',
+  ExperimentalNeuronDensity = 'experimental_neuron_density',
+  ReconstructionMorphology = 'reconstruction_morphology',
+  ElectricalCellRecording = 'electrical_cell_recording',
+  Memodel = 'memodel',
+  Emodel = 'emodel',
+  Circuit = 'circuit',
+  SingleNeuronSynaptome = 'single_neuron_synaptome',
+}
+
 export type EntityTypeValue = `${EntityTypeEnum}`;
+export type EntityTypeWithBrainRegionValue = `${EntityTypeWithBrainRegionEnum}`;

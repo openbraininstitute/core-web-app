@@ -91,7 +91,7 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     const key = entity?.slug!;
     const active = entity?.slug === activePath;
     const label = entity?.title!;
-    const entitytype = entity.legacyType;
+    const entitytype = entity.type;
 
     return {
       key,
