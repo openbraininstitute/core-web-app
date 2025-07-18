@@ -18,6 +18,7 @@ import {
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
 import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
+import { DataType } from '@/constants/explore-section/list-views';
 import { ensureArray } from '@/utils/array';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
@@ -29,7 +30,6 @@ import type {
 } from '@/api/entitycore/types';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
-import { DataType } from '@/constants/explore-section/list-views';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.License]: {
@@ -66,11 +66,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     perTypeConstraint: {
       [DataType.ExperimentalElectroPhysiology]: 'subject__species__name__in',
     },
-    order: {
-      property: 'species__order_by',
-      value: 'name',
-    },
-    isSortable: false,
+    order: [
+      {
+        types: [
+          DataType.ExperimentalElectroPhysiology,
+          DataType.ExperimentalBoutonDensity,
+          DataType.ExperimentalNeuronDensity,
+          DataType.ExperimentalSynapsePerConnection,
+        ],
+        property: 'order_by',
+        value: 'subject__species__name',
+      },
+    ],
+    isSortable: true,
     isFilterable: true,
     isDisplayable: true,
   },
@@ -178,6 +186,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isFilterable: false,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [DataType.ExperimentalBoutonDensity, DataType.ExperimentalNeuronDensity],
+        property: 'order_by',
+        value: 'subject__age_value',
+      },
+    ],
   },
   [EntityCoreFields.MeanSTD]: {
     title: 'Mean ± STD',

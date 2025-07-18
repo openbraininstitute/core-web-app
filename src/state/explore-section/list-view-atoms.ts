@@ -66,10 +66,14 @@ export const searchStringAtom = atomFamily((_key: string) => atom<string>(''));
 
 export const sortStateAtom = atomFamily(
   (_ctx: { key: string }) => {
-    const initialState: SortState = { field: EntityCoreFields.CreationDate, order: 'desc' };
+    const initialState: SortState = {
+      field: EntityCoreFields.CreationDate,
+      backendField: EntityCoreFields.CreationDate,
+      order: 'desc',
+    };
 
     const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {
-      set(writableAtom, update); // Correctly updates the state
+      set(writableAtom, update);
     });
 
     return writableAtom;
@@ -163,7 +167,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         page_size: PAGE_SIZE,
         page: pageNumber,
         search: isEmpty(searchString) ? null : searchString,
-        order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.field}`,
+        order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
         within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
         within_brain_region_brain_region_id: ctx.brainRegionId,
         within_brain_region_ascendants: false,
