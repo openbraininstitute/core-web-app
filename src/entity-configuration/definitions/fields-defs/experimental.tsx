@@ -112,11 +112,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'M-Type',
     },
     defaultConstraint: 'mtype__pref_label__in',
-    order: {
-      property: 'mtype__order_by',
-      value: 'pref_label',
-    },
-    isSortable: false,
+    order: [
+      {
+        types: [
+          DataType.ExperimentalBoutonDensity,
+          DataType.ExperimentalNeuronDensity,
+          DataType.ExperimentalNeuronMorphology,
+          DataType.CircuitEModel,
+        ],
+        property: 'order_by',
+        value: 'mtype__pref_label',
+      },
+    ],
+    isSortable: true,
     isFilterable: true,
     isDisplayable: true,
   },
@@ -150,11 +158,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'E-Type',
     },
     defaultConstraint: 'etype__pref_label__in',
-    order: {
-      property: 'etype__order_by',
-      value: 'pref_label',
-    },
-    isSortable: false,
+    order: [
+      {
+        types: [DataType.ExperimentalElectroPhysiology, DataType.CircuitEModel],
+        property: 'order_by',
+        value: 'etype__pref_label',
+      },
+    ],
+    isSortable: true,
     isFilterable: true,
     isDisplayable: true,
   },
