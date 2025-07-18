@@ -169,7 +169,6 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         within_brain_region_ascendants: false,
         ...transformFiltersToQuery(filters as any),
       });
-
       const entity = getEntityByLegacyType({ legacyType: ctx.dataType as EntityCoreLegacyType });
       if (entity && entity.api.query.list) {
         const response = await entity.api.query.list({
