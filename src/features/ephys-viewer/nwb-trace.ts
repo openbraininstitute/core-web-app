@@ -7,7 +7,7 @@ const SMALL_SCALE_SIMULATOR_ID = 'obi_small_scale_simulator_v1';
 enum NWBKey {
   DATA_ORGANIZATION = 'data_organization',
   ACQUISITION = 'acquisition',
-  STIMULUS_PRESENTATIONON = 'stimulus/presentation',
+  STIMULUS_PRESENTATION = 'stimulus/presentation',
   DATA = 'data',
   STARTING_TIME = 'starting_time',
   GENERAL = 'general',
@@ -54,7 +54,7 @@ export type SweepData = Partial<{
 export default abstract class NWBTrace {
   file: File;
 
-  abstract readonly recordingTypes: RecordingType[];
+  abstract recordingTypes: RecordingType[];
 
   constructor(nwbFile: File) {
     this.file = nwbFile;
@@ -179,10 +179,12 @@ export default abstract class NWBTrace {
  *     ├── Repetition (repeated measurements of the same protocol)
  *       └── Sweep (individual recording instances)
  *
+ * Note: not all traces have stimulus data.
+ *
  * Key Responsibilities:
- * - Initializes and validates the data organization structure
- * - Retrieves protocols, repetitions, and sweeps for a specific cell
- * - Extracts recording data with conversion factors and time information
+ * - Initializes and validates the data organization structure.
+ * - Retrieves protocols, repetitions, and sweeps for a specific cell.
+ * - Extracts recording data with conversion factors and time information.
  *
  * @class
  * @extends NWBTrace
@@ -195,7 +197,15 @@ class NWBLNMCTrace extends NWBTrace {
     this.init();
   }
 
-  public init() {}
+  public init() {
+    const stimulusPresentationGroup = this.getGroup(NWBKey.STIMULUS_PRESENTATION);
+    const hasStimulusRecordings = stimulusPresentationGroup.keys().length > 0;
+
+    if (!hasStimulusRecordings) {
+      // Override recording types if no stimulus data is present
+      this.recordingTypes = [RecordingType.RESPONSE];
+    }
+  }
 
   public getCellIds(): string[] {
     const dataOrganizationGroup = this.getGroup(NWBKey.DATA_ORGANIZATION);
@@ -267,7 +277,7 @@ class NWBLNMCTrace extends NWBTrace {
 
     const datasetKey =
       recordingType === RecordingType.STIMULUS
-        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.DATA}`
+        ? `${NWBKey.STIMULUS_PRESENTATION}/${recId}/${NWBKey.DATA}`
         : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.DATA}`;
 
     const dataset = this.getDataset(datasetKey);
@@ -282,7 +292,7 @@ class NWBLNMCTrace extends NWBTrace {
 
     const timeDatasetKey =
       recordingType === RecordingType.STIMULUS
-        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.STARTING_TIME}`
+        ? `${NWBKey.STIMULUS_PRESENTATION}/${recId}/${NWBKey.STARTING_TIME}`
         : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.STARTING_TIME}`;
 
     const timeDataset = this.getDataset(timeDatasetKey);
@@ -346,9 +356,7 @@ class NWBGenericTrace extends NWBTrace {
 
   private getRecId(sweep: string, recordingType: RecordingType): string {
     const recGroupKey =
-      recordingType === RecordingType.STIMULUS
-        ? NWBKey.STIMULUS_PRESENTATIONON
-        : NWBKey.ACQUISITION;
+      recordingType === RecordingType.STIMULUS ? NWBKey.STIMULUS_PRESENTATION : NWBKey.ACQUISITION;
 
     const recordingGroup = this.getGroup(recGroupKey);
 
@@ -366,7 +374,7 @@ class NWBGenericTrace extends NWBTrace {
 
     const datasetKey =
       recordingType === RecordingType.STIMULUS
-        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.DATA}`
+        ? `${NWBKey.STIMULUS_PRESENTATION}/${recId}/${NWBKey.DATA}`
         : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.DATA}`;
 
     const dataset = this.getDataset(datasetKey);
@@ -381,7 +389,7 @@ class NWBGenericTrace extends NWBTrace {
 
     const timeDatasetKey =
       recordingType === RecordingType.STIMULUS
-        ? `${NWBKey.STIMULUS_PRESENTATIONON}/${recId}/${NWBKey.STARTING_TIME}`
+        ? `${NWBKey.STIMULUS_PRESENTATION}/${recId}/${NWBKey.STARTING_TIME}`
         : `${NWBKey.ACQUISITION}/${recId}/${NWBKey.STARTING_TIME}`;
 
     const timeDataset = this.getDataset(timeDatasetKey);
