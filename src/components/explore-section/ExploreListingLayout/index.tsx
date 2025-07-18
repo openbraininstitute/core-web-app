@@ -27,6 +27,7 @@ import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
 } from '@/components/entities-type-stats/helpers';
+import { classNames } from '@/util/utils';
 
 import type { NavigationMenuItem } from '@/components/entities-type-stats/listing-navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -126,7 +127,10 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
                 mode="horizontal"
                 theme="dark"
                 style={{ backgroundColor: '#002766', opacity: 70 }}
-                className="flex w-[calc(100%+6px)] justify-start"
+                className={classNames(
+                  'flex w-[calc(100%+6px)] justify-start',
+                  '[&>li]:gap2 [&>li]:flex [&>li]:h-[46px] [&>li]:items-center [&>li]:justify-center [&>li]:text-center'
+                )}
                 items={items.map((p) => ({ ...p, itemIcon: <LoadingOutlined className="ml-2" /> }))}
               />
             }

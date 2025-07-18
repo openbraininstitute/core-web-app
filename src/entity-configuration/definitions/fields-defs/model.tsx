@@ -146,8 +146,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     style: { width: 184, align: 'left' },
   },
-  [EntityCoreFields.NumberNeurons]: {
-    title: 'Number of neurons',
+  [EntityCoreFields.CircuitNumberNeurons]: {
+    title: 'N° of neurons',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => {
       return 'number_neurons' in r ? r.number_neurons : '-';
@@ -158,10 +158,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       lte: 'number_neurons__lte',
       gte: 'number_neurons__gte',
     },
-    style: { width: 70 },
+    style: { width: 85 },
   },
-  [EntityCoreFields.NumberSynapses]: {
-    title: 'Number of synapses',
+  [EntityCoreFields.CircuitNumberSynapses]: {
+    title: 'N° of synapses',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => {
       return 'number_synapses' in r ? r.number_synapses : '-';
@@ -172,10 +172,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       lte: 'number_synapses__lte',
       gte: 'number_synapses__gte',
     },
-    style: { width: 70 },
+    style: { width: 85 },
   },
-  [EntityCoreFields.NumberConnections]: {
-    title: 'Number of connections',
+  [EntityCoreFields.CircuitNumberConnections]: {
+    title: 'N° of connections',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => {
       return 'number_connections' in r ? r.number_connections : '-';
@@ -186,7 +186,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       lte: 'number_connections__lte',
       gte: 'number_connections__gte',
     },
-    style: { width: 70 },
+    style: { width: 85 },
   },
   [EntityCoreFields.CircuitBuildCategory]: {
     className: 'text-left',
@@ -207,7 +207,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Build categories',
       singular: 'Build category',
     },
-    style: { width: 184, align: 'left' },
+    style: { align: 'left' },
   },
   [EntityCoreFields.CircuitScale]: {
     className: 'text-left',
@@ -225,6 +225,18 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Scales',
       singular: 'Scale',
     },
-    style: { width: 184, align: 'left' },
+    style: { width: 120, align: 'left' },
+  },
+  [EntityCoreFields.CircuitSubCircuit]: {
+    className: 'text-left',
+    title: 'Subcircuits',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderEmptyOrValue((r as ICircuit).sub_circuits?.length),
+    vocabulary: {
+      plural: 'Subcircuits',
+      singular: 'Subcircuit',
+    },
+    style: { width: 80, align: 'left' },
   },
 };

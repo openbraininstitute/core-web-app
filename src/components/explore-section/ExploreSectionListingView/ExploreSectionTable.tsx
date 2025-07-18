@@ -36,27 +36,55 @@ function CustomTH({
   style,
   onClick,
   handleResizing,
+  className,
   ...props
 }: {
   children: ReactNode;
   style: CSSProperties;
   onClick: () => void;
   handleResizing: () => void;
+  className?: string;
 }) {
+  const { position, left, right, zIndex, transform } = style;
+
+  // preserve positioning styles for fixed columns, but use our custom styles for everything else
   const modifiedStyle: CSSProperties = {
-    ...style,
+    // keep positioning styles for fixed columns
+    ...(position && { position }),
+    ...(left !== undefined && { left }),
+    ...(right !== undefined && { right }),
+    ...(zIndex !== undefined && { zIndex }),
+    ...(transform && { transform }),
+
     fontWeight: '500',
     color: '#434343',
     verticalAlign: 'baseline',
     boxSizing: 'border-box',
     backgroundColor: 'white',
+    // force text wrapping with high priority
+    whiteSpace: 'normal !important' as any,
+    wordWrap: 'break-word !important' as any,
+    wordBreak: 'break-word !important' as any,
+    overflowWrap: 'break-word !important' as any,
   };
+
+  // preserve the original className (which includes Ant Design's fixed column classes)
+  // and only add our custom class that doesn't interfere with positioning
+  const combinedClassName = classNames(
+    className,
+    'before:content-none!',
+    // force text wrapping with high specificity
+    '[&>*]:whitespace-normal! [&>*]:break-words!'
+  );
 
   return handleResizing ? (
     <th
       {...props} /* eslint-disable-line react/jsx-props-no-spreading */
-      style={{ ...modifiedStyle, padding: '16px 16px 16px 0px' }}
-      className="before:content-none!"
+      style={{
+        ...modifiedStyle,
+        padding: '16px 16px 16px 0px',
+      }}
+      className={combinedClassName}
       data-testid="column-header"
     >
       <div className="flex w-full">
@@ -78,20 +106,43 @@ function CustomTH({
       {...props} /* eslint-disable-line react/jsx-props-no-spreading */
       data-testid="column-header"
       style={modifiedStyle}
+      className={combinedClassName}
     >
       {children}
     </th>
   );
 }
 
-function CustomCell({ children, style, ...props }: { children: ReactNode; style: CSSProperties }) {
+function CustomCell({
+  children,
+  style,
+  className,
+  ...props
+}: {
+  children: ReactNode;
+  style: CSSProperties;
+  className?: string;
+}) {
+  // extract positioning related styles from ANT design for fixed columns
+  const { position, left, right, zIndex, transform } = style;
+
+  // preserve positioning styles for fixed columns while allowing text wrapping
   const modifiedStyle = {
-    ...style,
-    padding: '14px 6pX',
+    // Keep positioning styles for fixed columns
+    ...(position && { position }),
+    ...(left !== undefined && { left }),
+    ...(right !== undefined && { right }),
+    ...(zIndex !== undefined && { zIndex }),
+    ...(transform && { transform }),
+    padding: '14px 6px',
   };
 
   return (
-    <td {...props} /* eslint-disable-line react/jsx-props-no-spreading */ style={modifiedStyle}>
+    <td
+      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
+      style={modifiedStyle}
+      className={className}
+    >
       {children}
     </td>
   );
@@ -107,7 +158,7 @@ type AdditionalTableProps<T> = {
   onCellClick?: OnCellClick<T>;
 };
 
-function BaseTable<T extends EntityCoreIdentifiable>({
+export function BaseTable<T extends EntityCoreIdentifiable>({
   columns,
   dataContext,
   dataSource,

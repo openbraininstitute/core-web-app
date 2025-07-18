@@ -120,6 +120,12 @@ export const entityTargetIdentifiersAtom = atomFamily((key: string) => {
   return childAtom;
 });
 
+export const entityPerTypeQueryParams = atomFamily((key: string) => {
+  const childAtom = atom<Record<string, any> | null>(null);
+  childAtom.debugLabel = `entity-per-type-query-params/${key}`;
+  return childAtom;
+});
+
 const refreshDataAtomFamily = atomFamily((_key: string) =>
   atom<symbol>(Symbol('refreshDataAtomFamily'))
 );
@@ -139,9 +145,9 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
       get(refreshDataAtom);
       const sortState = get(sortStateAtom({ key: ctx.key }));
       const searchString = get(searchStringAtom(ctx.key));
+      const extraPerTypeQueryParams = get(entityPerTypeQueryParams(ctx.key));
       const pageNumber = get(pageNumberAtom(ctx.key));
       const filters = get(filtersAtom(ctx));
-
       // TODO: better handling when we have IDs filter
       if (ctx.shouldUseIds) {
         const IDs = get(entityTargetIdentifiersAtom(ctx.key));
@@ -172,6 +178,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         within_brain_region_brain_region_id: ctx.brainRegionId,
         within_brain_region_ascendants: false,
         ...transformFiltersToQuery(filters as any),
+        ...extraPerTypeQueryParams,
       });
       const entity = getEntityByLegacyType({ legacyType: ctx.dataType as EntityCoreLegacyType });
       if (entity && entity.api.query.list) {

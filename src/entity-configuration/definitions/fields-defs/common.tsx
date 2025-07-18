@@ -1,6 +1,9 @@
-import { hasAssets } from '@/api/entitycore/guards';
+import { Button } from 'antd';
+
+import { makeCustomRowSelectionEvent } from '@/components/explore-section/ExploreSectionListingView/expandable-row/custom-row-selection-event';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { DataType } from '@/constants/explore-section/list-views';
+import { hasAssets } from '@/api/entitycore/guards';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -14,6 +17,7 @@ import {
   renderPreview,
   renderTimestamp,
 } from '@/entity-configuration/definitions/renderer';
+import { DownloadIcon } from '@/components/icons';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
@@ -41,6 +45,27 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 194 },
     isFilterable: false,
     isDisplayable: true,
+  },
+  [EntityCoreFields.Download]: {
+    className: 'text-center',
+    title: <DownloadIcon className="text-primary-8" />,
+    filter: null,
+    render: (record) => {
+      const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        e.preventDefault();
+        makeCustomRowSelectionEvent({ record });
+      };
+      return (
+        <Button className="p-2" type="text" htmlType="button" onClick={onClick}>
+          <DownloadIcon className="text-primary-8" />
+        </Button>
+      );
+    },
+    style: { width: 50, fixed: 'left', align: 'center' },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
   },
   [EntityCoreFields.Name]: {
     title: 'Name',

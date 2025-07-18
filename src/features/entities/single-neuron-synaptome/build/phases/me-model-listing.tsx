@@ -25,7 +25,7 @@ const ExploreSectionListingView = dynamic(
   {
     ssr: false,
   }
-) as (props: ExploreSectionListingViewProps<IMEModel>) => ReactElement | null;
+) as unknown as (props: ExploreSectionListingViewProps<IMEModel>) => ReactElement | null;
 
 type Props = WorkspaceContext & {
   stateId: string;

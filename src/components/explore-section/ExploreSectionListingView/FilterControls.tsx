@@ -13,6 +13,7 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { Spin } from 'antd';
 
+import ViewToggle from '../Circuit/global/ViewToggle';
 import ExploreSectionNameSearch from '@/components/explore-section/ExploreSectionListingView/ExploreSectionNameSearch';
 import SettingsIcon from '@/components/icons/Settings';
 
@@ -87,12 +88,18 @@ export default function FilterControls({
   return (
     <div
       className={classNames(
-        'grid w-full grid-cols-[max-content_1fr_max-content] items-center justify-between gap-5 py-5',
+        'grid w-full items-center justify-between gap-5 py-5',
+        dataType === DataType.Circuit
+          ? 'grid-cols-[max-content_1fr_max-content_max-content]'
+          : 'grid-cols-[max-content_1fr_max-content]',
         className
       )}
     >
       <div className="w-max">{children}</div>
       {!resourceId && <ExploreSectionNameSearch dataType={dataType} dataKey={dataKey} />}
+      <div className="text-red-500">
+        <ViewToggle dataKey={dataKey} />
+      </div>
       <div className="inline-flex w-full place-content-end gap-2">
         {/* only show search input on listing views. resource id is present on detail views. */}
         <FilterBtn disabled={disabled} onClick={() => setDisplayControlPanel(!displayControlPanel)}>

@@ -12,6 +12,7 @@ export enum CoreFieldFilterTypeEnum {
 export enum EntityCoreFields {
   ID = 'id',
   Preview = 'preview',
+  Download = 'download',
   Name = 'name',
   Description = 'description',
   Species = 'species',
@@ -71,6 +72,7 @@ export enum EntityCoreFields {
   CircuitName = 'circuit_name',
   CircuitBuildCategory = 'build_category',
   CircuitScale = 'scale',
+  CircuitSubCircuit = 'root_circuit_id', // TODO: change it to sub_circuits, this is only for test the nested table
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

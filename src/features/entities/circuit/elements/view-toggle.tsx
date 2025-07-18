@@ -1,16 +1,18 @@
 import { Tooltip } from 'antd';
 
-import { useAtom } from 'jotai';
 import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
-import { entityPerTypeQueryParams } from '@/state/explore-section/list-view-atoms';
 
-export default function ViewToggle({ dataKey }: { dataKey: string }) {
-  const [queryParams, setQueryParams] = useAtom(entityPerTypeQueryParams(dataKey));
-  const toggle = queryParams?.view || 'flat';
-
+export default function ViewToggle({
+  toggle,
+  setToggle,
+}: {
+  toggle: 'hierarchical' | 'flat';
+  setToggle: (toggle: 'hierarchical' | 'flat') => void;
+}) {
   const handleViewChange = () => {
-    setQueryParams({ ...queryParams, view: toggle === 'hierarchy' ? 'flat' : 'hierarchy' });
+    const newView = toggle === 'hierarchical' ? 'flat' : 'hierarchical';
+    setToggle(newView);
   };
 
   return (
@@ -20,7 +22,7 @@ export default function ViewToggle({ dataKey }: { dataKey: string }) {
         <Tooltip title="Hierarchical view">
           <div>
             <HierarchicalViewIcon
-              iconColor={toggle === 'hierarchy' ? '#002766' : '#AAA'}
+              iconColor={toggle === 'hierarchical' ? '#002766' : '#AAA'}
               className="h-4 w-4"
             />
           </div>
@@ -35,7 +37,7 @@ export default function ViewToggle({ dataKey }: { dataKey: string }) {
           <div
             className={classNames(
               'bg-primary-9 absolute top-px h-5 w-5 rounded-full transition-transform duration-300 ease-in-out',
-              toggle === 'hierarchy' ? 'translate-x-[2px]' : 'translate-x-[21px]'
+              toggle === 'hierarchical' ? 'translate-x-[2px]' : 'translate-x-[21px]'
             )}
           />
         </button>

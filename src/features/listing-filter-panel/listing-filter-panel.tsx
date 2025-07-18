@@ -40,7 +40,7 @@ import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { Facets } from '@/api/entitycore/types/shared/response';
-import { fieldTitleSentenceCase } from '@/util/utils';
+import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 import type {
   CoreFilter,
@@ -324,47 +324,58 @@ export default function ListingFilterPanel({
   };
 
   return (
-    <div
-      data-testid="listing-view-filter-panel"
-      className="bg-primary-8 fixed top-0 right-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6"
-    >
-      <div className="mb-auto">
-        <div className="mb-2 flex items-center justify-between gap-4">
-          <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
-            Filters
-            <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
-          </span>
+    <div className="relative">
+      <div // eslint-disable-line jsx-a11y/click-events-have-key-events
+        role="button"
+        tabIndex={0}
+        aria-label="Close filter panel mask"
+        onClick={toggleDisplay}
+        className={classNames(
+          'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black opacity-50 transition-opacity duration-500'
+        )}
+      />
+      <div
+        data-testid="listing-view-filter-panel"
+        className="bg-primary-8 primary-scrollbar fixed top-0 right-0 z-100 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-x-hidden overflow-y-auto px-8"
+      >
+        <div className="mb-auto">
+          <div className="bg-primary-8 sticky top-0 mb-2 flex items-center justify-between gap-4 py-6">
+            <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
+              Filters
+              <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
+            </span>
+            <button
+              autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+              type="button"
+              onClick={toggleDisplay}
+              className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"
+              aria-label="Close"
+            >
+              <CloseOutlined />
+            </button>
+          </div>
+
+          <p className="pr-4 text-white">
+            Use the eye icon to hide/show columns. Select the column titles and tick the checkbox of
+            the option(s).
+          </p>
+
+          <div className="flex flex-col gap-12">
+            <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
+            {children}
+          </div>
+        </div>
+
+        <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
+          <ClearFilters onClick={clearFilters} />
           <button
-            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
-            type="button"
-            onClick={toggleDisplay}
-            className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"
-            aria-label="Close"
+            type="submit"
+            onClick={submitValues}
+            className="bg-primary-2 text-primary-9 px-8 py-3"
           >
-            <CloseOutlined />
+            Apply
           </button>
         </div>
-
-        <p className="pr-4 text-white">
-          Use the eye icon to hide/show columns. Select the column titles and tick the checkbox of
-          the option(s).
-        </p>
-
-        <div className="flex flex-col gap-12">
-          <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
-          {children}
-        </div>
-      </div>
-
-      <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
-        <ClearFilters onClick={clearFilters} />
-        <button
-          type="submit"
-          onClick={submitValues}
-          className="bg-primary-2 text-primary-9 px-8 py-3"
-        >
-          Apply
-        </button>
       </div>
     </div>
   );
