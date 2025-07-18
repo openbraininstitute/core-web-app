@@ -5,9 +5,11 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { WorkspaceContext } from '@/types/common';
 
 export default function createMorphologyDataAtom(
-  morphology: IReconstructionMorphology
+  morphology: IReconstructionMorphology,
+  ctx?: WorkspaceContext
 ): Atom<Promise<string | null>> {
   return atom(async (get) => {
     const session = get(sessionAtom);
@@ -24,6 +26,7 @@ export default function createMorphologyDataAtom(
       entityType: EntityTypeEnum.ReconstructionMorphology,
       entityId: morphology.id,
       id: asset.id,
+      ctx,
     });
 
     const decoder = new TextDecoder('utf-8');
