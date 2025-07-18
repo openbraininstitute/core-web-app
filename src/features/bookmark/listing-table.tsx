@@ -51,7 +51,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
     setSortState(newSortState);
   };
 
-  const columns = useExploreColumns<T>(onSortChange, sortState, [], null, dataType);
+  const columns = useExploreColumns<T>(onSortChange, sortState, [], dataType);
   const dataScope = ExploreDataScope.BookmarkedResources;
 
   const { result: dataSource, isLoading } = useDataAtom<T>({

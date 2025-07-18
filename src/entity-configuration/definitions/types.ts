@@ -86,6 +86,7 @@ type TableCellAlign = 'left' | 'right' | 'center';
 type Style = {
   align?: TableCellAlign;
   width?: number;
+  fixed?: 'left' | 'right' | false | undefined;
 };
 
 export type OrderShape =
@@ -99,7 +100,7 @@ export type OrderShape =
 export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   fieldType?: CoreFieldType;
   className?: string;
-  title: string;
+  title: ReactNode;
   description?: string;
   filter: CoreFilterType;
   filterData?: any;

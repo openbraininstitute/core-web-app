@@ -116,7 +116,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
             </ActionButton>
           )}
           <ActionButton type="button" label="Download" action={handleOpenDownloadModal}>
-            <DownloadIcon iconColor="#002766" className="h-4 w-4" />
+            <DownloadIcon className="text-primary-9 h-4 w-4" />
           </ActionButton>
         </div>
       </div>

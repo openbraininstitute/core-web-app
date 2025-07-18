@@ -77,8 +77,10 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     name: EntitySlug.Circuit,
     curated: false,
     columns: [
+      EntityCoreFields.Download,
       EntityCoreFields.Name,
       EntityCoreFields.Description,
+      EntityCoreFields.CircuitSubCircuit,
       EntityCoreFields.BrainRegion,
       EntityCoreFields.CircuitScale,
       EntityCoreFields.CircuitNumberNeurons,

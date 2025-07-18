@@ -78,7 +78,9 @@ export interface ICircuit
     Timestamps,
     EntityCoreOwnership,
     EntityCoreType,
-    EntityCoreBaseAsset {}
+    EntityCoreBaseAsset {
+  sub_circuits?: Array<ICircuit>;
+}
 
 type CircuitScaleFilter = {
   scale: string | null;
