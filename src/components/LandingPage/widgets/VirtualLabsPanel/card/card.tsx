@@ -19,7 +19,7 @@ export function SingleSectionCard({ index, title, description, video }: SingleSe
           <h2>{title}</h2>
           {index > 999 && <div className={styles.comingSoon}>Releasing soon</div>}
         </div>
-        <div>{description}</div>
+        <p>{description}</p>
       </div>
     </button>
   );
