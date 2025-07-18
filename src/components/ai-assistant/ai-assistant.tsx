@@ -2,8 +2,8 @@
 
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React, { type CSSProperties } from 'react';
+import dynamic from 'next/dynamic';
 
-import { Spinner } from './spinner';
 import { AiContextProvider, useCollapsedPanel } from './hooks';
 import PanelSplitter from './panel-splitter';
 import { IconChat } from './icons/chat';
@@ -19,6 +19,8 @@ interface AiAssistantProps {
   className?: string;
   section: 'explore' | 'build' | 'simulate' | 'bookmark' | 'activity';
 }
+
+const Spinner = dynamic(() => import('./spinner/spinner'), { ssr: false });
 
 export default function AiAssistant({ className, section }: AiAssistantProps) {
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');

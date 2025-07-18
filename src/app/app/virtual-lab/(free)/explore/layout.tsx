@@ -6,6 +6,7 @@ import { ReactNode, useLayoutEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import HydrateWrapper from '@/wrappers/hydrate-wrapper';
 import { sectionAtom } from '@/state/application';
 
 import styles from './layout.module.css';
@@ -27,7 +28,9 @@ export default function ExploreLayout({ children }: GenericLayoutProps) {
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
       <div className={styles.main}>
         <div className={styles.content}>{children}</div>
-        <AiAssistant section="explore" />
+        <HydrateWrapper>
+          <AiAssistant section="explore" />
+        </HydrateWrapper>
       </div>
     </ErrorBoundary>
   );
