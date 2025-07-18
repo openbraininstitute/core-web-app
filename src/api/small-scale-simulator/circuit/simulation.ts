@@ -1,20 +1,21 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { bluenaasApi } from '@/api/bluenaas/utils';
+import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 
 import type { WorkspaceContext } from '@/types/common';
 
 type Params = {
   ctx: WorkspaceContext;
-  meModelId: string;
+  simulationId: string;
   signal?: AbortSignal;
 };
 
-export default async function getMorphology({ ctx, meModelId, signal }: Params) {
-  const api = await bluenaasApi();
-  return await api.get<Response>(
-    '/entitycore/morphology',
+export async function runSimulation({ ctx, simulationId, signal }: Params) {
+  const api = await smallScaleSimulatorApi();
+
+  return api.post<Response>(
+    '/circuit/simulation/run',
     {
-      queryParams: { model_id: meModelId },
+      queryParams: { simulation_id: simulationId },
       headers: {
         ...getEntityCoreContext(ctx).headers,
         accept: 'application/x-ndjson',

@@ -1,7 +1,7 @@
 import isNil from 'lodash/isNil';
 import { z } from 'zod';
 
-import { validateFormula } from '@/api/bluenaas/validate-synapse-formula';
+import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
 import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
@@ -110,7 +110,7 @@ export const SingleNeuronSynaptomeConfigurationSchema = z
   })
   .superRefine(async (synapse, ctx) => {
     if (synapse.target !== 'soma') {
-      return validateFormula(synapse.formula!).then((v) => {
+      return validateSingleNeuronSynapseGenerationFormula(synapse.formula!).then((v) => {
         if (!v) {
           return ctx.addIssue({
             code: z.ZodIssueCode.custom,

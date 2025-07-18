@@ -12,12 +12,7 @@ export const entityCoreUrl = env.NEXT_PUBLIC_ENTITY_CORE_URL;
 export const entityCorePublicVirtualLabId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID;
 export const entityCorePublicProjectId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID;
 
-export const blueNaasUrl = env.NEXT_PUBLIC_BLUE_NAAS_URL;
 export const smallScaleSimulatorUrl = env.NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL;
-
-export const meModelAnalysisSvc = {
-  wsUrl: env.NEXT_PUBLIC_ME_MODEL_ANALYSIS_WS_URL,
-};
 
 export const autoSaveDebounceInterval = 10000;
 

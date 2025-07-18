@@ -20,11 +20,13 @@ import groupBy from 'lodash/groupBy';
 import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { synapsesPlacementAtom } from '@/state/synaptome';
-import { validateFormula } from '@/api/bluenaas/validate-synapse-formula';
+import {
+  validateSingleNeuronSynapseGenerationFormula,
+  getSingleNeuronSynaptomePlacement,
+} from '@/api/small-scale-simulator';
 import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
 import { useAppNotification } from '@/components/notification';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
-import { getSynaptomePlacement } from '@/api/bluenaas';
 import { messages } from '@/i18n/en/synaptome';
 import {
   sendDisplaySynapses3DEvent,
@@ -196,13 +198,13 @@ export default function SynapseSet({
 
     try {
       const { data, error } = await tryCatch(
-        getSynaptomePlacement({
+        getSingleNeuronSynaptomePlacement({
+          modelId,
           ctx: { virtualLabId, projectId },
           payload: {
             seed,
             config,
           },
-          model_id: modelId,
         })
       );
 
@@ -410,7 +412,7 @@ export default function SynapseSet({
                         return Promise.resolve();
                       }
                       if (value) {
-                        const result = await validateFormula(value);
+                        const result = await validateSingleNeuronSynapseGenerationFormula(value);
                         if (!result) return Promise.reject();
                         return Promise.resolve();
                       }
