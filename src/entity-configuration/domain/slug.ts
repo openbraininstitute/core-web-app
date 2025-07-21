@@ -6,18 +6,23 @@ const ExperimentalEntitySlug = {
   ExperimentalSynapsesPerConnection: 'synapse-per-connection',
 } as const;
 
-const ModelEntitySlug = {
+export const ModelEntitySlug = {
   EModel: 'e-model',
   MeModel: 'me-model',
   SingleNeuronSynaptome: 'synaptome',
   SingleNeuronSimulation: 'single-neuron-simulation',
-  Circuit: 'small-microcircuit',
+  SmallMicrocircuit: 'small-microcircuit',
+  Microcircuit: 'microcircuit',
+  PairedNeuronsCircuit: 'paired-neurons',
+  Circuit: 'circuit',
 } as const;
 
 const SimulationEntitySlug = {
   SingleNeuronSimulation: 'single-neuron-simulation',
   SingleNeuronSynaptomeSimulation: 'synaptome-simulation',
   SimulationCampaign: 'simulation-campaign',
+  PairedNeuronCircuitSimulation: 'paired-neurons-simulation',
+  SmallMicrocircuitSimulation: 'small-microcircuit-simulation',
 } as const;
 
 export const EntitySlug = {

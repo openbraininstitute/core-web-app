@@ -16,7 +16,6 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   api: {
     config: {
       allowedFacets?: boolean;
-      allowedParams: 'all' | string[];
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T>>;

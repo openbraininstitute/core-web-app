@@ -18,7 +18,6 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   api: {
     config: {
       allowedFacets: true,
-      allowedParams: 'all',
     },
     query: {
       list: getElectricalCellRecordings,
