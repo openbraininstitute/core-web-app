@@ -222,3 +222,12 @@ export interface IEType extends IAnnotation {}
 //   linear_density: '1/μm',
 //   volume_density: '1/mm³',
 // } as const;
+
+export type DirectoryItem = {
+  name: string;
+  size: number;
+  last_modified: string; // as Date
+};
+export type DirectoryListContent = {
+  files: Record<string, DirectoryItem>;
+};

@@ -63,7 +63,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
             )}
             <Button
               type="text"
-              className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
+              className="text-primary-7 hover:text-primary-8! flex items-center gap-2 hover:bg-transparent!"
               // disabling download button if currently fetching or if resource does not have a distribution
               disabled={!onDownload}
               onClick={handleDownload}

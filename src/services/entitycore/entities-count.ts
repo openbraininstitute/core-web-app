@@ -40,6 +40,7 @@ export const entitiesCountAtom = atomFamily(
             'single_neuron_synaptome',
             'memodel',
             'emodel',
+            'circuit',
           ],
           brainRegion: {
             within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,

@@ -92,3 +92,53 @@ export interface ICircuitFilter
     SharedFilter,
     PaginationFilter,
     CircuitScaleFilter {}
+
+export type EdgeConfigItem = {
+  edges_file: string;
+  populations: Record<
+    string,
+    {
+      type: string;
+    }
+  >;
+};
+
+export type NodeConfigItem = {
+  nodes_file: string;
+  populations: Record<
+    string,
+    {
+      type: 'biophysical' | 'virtual';
+      biophysical_neuron_models_dir?: string;
+      morphologies_dir?: string;
+      alternate_morphologies?: Record<string, unknown>;
+    }
+  >;
+};
+
+export type CircuitConfigNetworks = {
+  edges: Array<EdgeConfigItem>;
+  nodes: Array<NodeConfigItem>;
+};
+
+export type CircuitComponentConfig = {
+  biophysical_neuron_models_dir: string;
+  mechanisms_dir: string;
+  morphologies_dir: string;
+  point_neuron_models_dir: string;
+  provenance: {
+    id_mapping: string;
+  };
+  synaptic_models_dir: string;
+  templates_dir: string;
+};
+
+export type ICircuitConfiguration = {
+  components: CircuitComponentConfig;
+  networks: CircuitConfigNetworks;
+  node_sets_file: string;
+  version: number;
+  manifest: {
+    [key: string]: string;
+  };
+};
