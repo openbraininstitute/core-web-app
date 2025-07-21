@@ -1,5 +1,6 @@
 import { captureException } from '@sentry/nextjs';
 import get from 'lodash/get';
+import ApiError from './error';
 
 type Ok<T> = {
   data: T;
@@ -38,5 +39,51 @@ export async function tryCatch<T, E = Error>(
     return { data: null, error: error as E };
   } finally {
     onComplete?.();
+  }
+}
+
+function findMappedEntry<T>(arr: any[], fn: (item: any) => any) {
+  for (const item of arr) {
+    const result = fn(item);
+    if (result) return result as T;
+  }
+  return undefined;
+}
+
+const API_ERROR_CODE_PATHS = ['error.code', 'error_code', 'code'];
+const API_ERROR_MESSAGE_PATHS = ['error.message', 'error_message', 'message'];
+const API_ERROR_DETAILS_PATHS = ['error.details', 'error_details', 'details'];
+
+/*
+ * Parse the error code from the API response.
+ *
+ * @param response The HTTP Response object to read from
+ *
+ * @returns The error code or null if not found
+ */
+export async function parseApiError(
+  url: string,
+  status: number,
+  apiClientResponseData: any
+): Promise<ApiError> {
+  const errMessage = `Error while fetching ${url}`;
+
+  try {
+    const responseData =
+      apiClientResponseData instanceof Response
+        ? await apiClientResponseData.json()
+        : apiClientResponseData;
+
+    const code = findMappedEntry<string>(API_ERROR_CODE_PATHS, (path) => get(responseData, path));
+    const message = findMappedEntry<string>(API_ERROR_MESSAGE_PATHS, (path) =>
+      get(responseData, path)
+    );
+    const details = findMappedEntry<string>(API_ERROR_DETAILS_PATHS, (path) =>
+      get(responseData, path)
+    );
+
+    return new ApiError(errMessage, { code, message, details, status });
+  } catch (error) {
+    return new ApiError(errMessage, { status });
   }
 }
