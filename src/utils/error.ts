@@ -1,4 +1,4 @@
-const DEFAULT_ERROR_MESSAGE = 'An unknowerror occurred, please try again later';
+const DEFAULT_ERROR_MESSAGE = 'An unknown error occurred, please try again later';
 
 /*
  * Returns the error message for the given error code.
