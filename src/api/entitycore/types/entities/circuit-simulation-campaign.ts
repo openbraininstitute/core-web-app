@@ -13,9 +13,15 @@ import type {
   NameFilter,
   IEntityFilter,
 } from '@/api/entitycore/types/shared/request';
+<<<<<<< HEAD
 import type {
   TCircuitBuildCategoryDictionary,
   TCircuitScaleDictionary,
+=======
+import {
+  CircuitBuildCategoryDictionary,
+  CircuitScaleDictionary,
+>>>>>>> 77c656e33 (add paired neurons model and simulations with small-microcircuit)
 } from '@/api/entitycore/types/entities/circuit';
 
 interface ISimulationBase extends EntityCoreIdentifiable {
