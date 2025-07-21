@@ -90,6 +90,14 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
       EntityCoreFields.CircuitBuildCategory,
     ],
+    summaryViewFields: [
+      { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
+      { field: EntityCoreFields.CircuitScale, className: 'col-span-1' },
+      { field: EntityCoreFields.CircuitNumberNeurons, className: 'col-span-1' },
+      { field: EntityCoreFields.CircuitNumberSynapses, className: 'col-span-1' },
+      { field: EntityCoreFields.CircuitNumberConnections, className: 'col-span-1' },
+      { field: EntityCoreFields.License, className: 'col-span-1' },
+    ],
   },
   [DataType.SmallMicrocircuit]: {
     title: 'Small microcircuit',

@@ -7,7 +7,12 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 import { entityCoreUrl } from '@/config';
 
-import type { AssetLabel, EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
+import type {
+  AssetLabel,
+  DirectoryListContent,
+  EntityCoreDataType,
+  IAsset,
+} from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -180,27 +185,29 @@ export async function createJsonAsset({
  * @param {string} params.id - The id of the asset to retrieve
  * @returns {Promise<Response>} A promise that resolves to the response from the API
  */
-export async function listDirectoryOfAssets<T>({
+export async function listDirectoryOfAssets({
   ctx,
   entityType,
   entityId,
   id,
-  asRawResponse = false,
   retryOnError = false,
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityTypeValue;
   entityId: string;
   id: string;
-  asRawResponse?: boolean;
   retryOnError?: boolean;
-}): Promise<T | Response> {
+}): Promise<DirectoryListContent> {
   const api = await authApiClient(entityCoreUrl);
-  return await api.get<T>(
+  return await api.get<DirectoryListContent>(
     `/${kebabCase(entityType)}/${entityId}/assets/${id}/list`,
     {
-      ...getEntityCoreContext(ctx),
+      headers: {
+        ...getEntityCoreContext(ctx).headers,
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
     },
-    { asRawResponse, retryOnError }
+    { retryOnError }
   );
 }

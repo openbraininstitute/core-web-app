@@ -6,6 +6,9 @@ export type Nullish = null | undefined;
 export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
+export type Nullable<T> = {
+  [K in keyof T]: T[K] | null;
+};
 
 type KebabCaseHelper<S extends string> = S extends `${infer First}${infer Rest}`
   ? First extends Lowercase<First> | '-' | '_' | ' '

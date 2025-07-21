@@ -97,9 +97,11 @@ export default function FilterControls({
     >
       <div className="w-max">{children}</div>
       {!resourceId && <ExploreSectionNameSearch dataType={dataType} dataKey={dataKey} />}
-      <div className="text-red-500">
-        <ViewToggle dataKey={dataKey} />
-      </div>
+      {dataType === DataType.Circuit && (
+        <div className="text-red-500">
+          <ViewToggle dataKey={dataKey} />
+        </div>
+      )}
       <div className="inline-flex w-full place-content-end gap-2">
         {/* only show search input on listing views. resource id is present on detail views. */}
         <FilterBtn disabled={disabled} onClick={() => setDisplayControlPanel(!displayControlPanel)}>

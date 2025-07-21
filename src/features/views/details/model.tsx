@@ -4,6 +4,7 @@ import { match } from 'ts-pattern';
 import SynaptomeDetailView from '@/page-wrappers/explore/single-neuron-synaptome';
 import MEModelDetailView from '@/page-wrappers/explore/me-model';
 import EModelDetailView from '@/page-wrappers/explore/e-model';
+import CircuitDetailView from '@/page-wrappers/explore/circuit';
 
 import { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
@@ -27,5 +28,6 @@ export default async function DetailView(props: Props) {
     .with({ legacyType: DataType.SingleNeuronSynaptome }, () => (
       <SynaptomeDetailView params={props} />
     ))
+    .with({ legacyType: DataType.Circuit }, () => <CircuitDetailView params={props} />)
     .otherwise(() => null);
 }
