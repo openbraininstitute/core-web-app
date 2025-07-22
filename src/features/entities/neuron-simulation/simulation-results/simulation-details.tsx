@@ -26,6 +26,7 @@ import type {
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 
 const subtitleStyle = 'font-thin text-neutral-4';
 type GenericSimulation = ISingleNeuronSynaptomeSimulation | ISingleNeuronSimulation;
@@ -159,7 +160,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
                 <div className="text-primary-8 mb-4 text-2xl font-bold">Recording</div>
-                <div className="text-primary-8 mb-4 text-2xl font-bold">CP BTN</div>
+                <ButtonCopyId label="Copy simulation ID" value={simulation.id} />
               </div>
               <ConfigProvider theme={{ hashed: false }}>
                 <Segmented
