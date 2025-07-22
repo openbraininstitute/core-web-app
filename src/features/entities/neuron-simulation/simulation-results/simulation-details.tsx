@@ -8,7 +8,7 @@ import startsWith from 'lodash/startsWith';
 import some from 'lodash/some';
 import get from 'lodash/get';
 
-import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot';
+import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
 import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
