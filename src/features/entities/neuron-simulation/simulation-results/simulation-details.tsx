@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import startsWith from 'lodash/startsWith';
 import some from 'lodash/some';
 import get from 'lodash/get';
@@ -27,6 +28,7 @@ import type {
 } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 const subtitleStyle = 'font-thin text-neutral-4';
 type GenericSimulation = ISingleNeuronSynaptomeSimulation | ISingleNeuronSimulation;
@@ -49,6 +51,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
   const [simulationPlot, setSimulationPlot] = useState<SegmentedValue | undefined>(undefined);
   const [loadingConfig, setLoadingConfig] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  const simulationEntity = getEntityByCoreType({ type: simulation.type });
+  const detailsPageUrl = resolveExploreDetailsPageUrl({
+    ctx: { virtualLabId, projectId },
+    dataType: simulationEntity?.legacyType,
+    entityId: simulation.id,
+  });
 
   useEffect(() => {
     async function getConfigurationAsset() {
@@ -111,7 +120,11 @@ export default function SimulationDetail<T extends GenericSimulation>({
     <div className="@container">
       <div className="border-neutral-2 grid gap-20 border p-8 @max-xs:grid-cols-1 @6xl:grid-cols-2">
         <div className="text-primary-8 flex flex-[0_1_60%] flex-col gap-10">
-          <NameDescription name={simulation.name} description={simulation.description} />
+          <NameDescription
+            name={simulation.name}
+            description={simulation.description}
+            detailsPageUrl={detailsPageUrl}
+          />
           <Params payload={configAsset} />
           <div className="flex w-full flex-col gap-2">
             <div className="text-primary-8 text-lg font-bold">Injection location</div>
@@ -194,11 +207,21 @@ export default function SimulationDetail<T extends GenericSimulation>({
   );
 }
 
-function NameDescription({ name, description }: { name: string; description: string }) {
+function NameDescription({
+  name,
+  description,
+  detailsPageUrl,
+}: {
+  name: string;
+  description: string;
+  detailsPageUrl: string;
+}) {
   return (
     <div className="">
       <div className={subtitleStyle}>Name</div>
-      <div className="text-2xl font-bold">{name}</div>
+      <div className="text-2xl font-bold">
+        <Link href={detailsPageUrl}>{name}</Link>
+      </div>
       <p className="">{description}</p>
     </div>
   );
