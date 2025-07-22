@@ -31,15 +31,16 @@ import errorRegistry from './error-registry';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 import { useLastTruthyValue } from '@/hooks/hooks';
+import { messages } from '@/i18n/en/simulation';
 import { runCircuitSimulation } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
-import ApiError from '@/api/error';
 import styles from './small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
@@ -431,8 +432,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
         });
       }
     } catch (error) {
-      const defaultMsg =
-        'Error while requesting one of the simulation runs. Please try again later';
+      const defaultMsg = messages.RunningSimulationDefaultError;
 
       if (error instanceof ApiError) {
         const message = getErrorMessage(error.cause?.code, errorRegistry, defaultMsg);
