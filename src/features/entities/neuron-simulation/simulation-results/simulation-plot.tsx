@@ -1,11 +1,12 @@
 import { Empty } from 'antd';
 import Plotly, { Config, Layout } from 'plotly.js-dist-min';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import { PlotData } from '@/services/bluenaas-single-cell/types';
+import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import { LTTB } from '@/util/explore-section/LTTB';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -77,7 +78,22 @@ export default function SimulationPlot({
     rootMargin: '1200px',
   });
 
-  // const downsampledPlotData = useMemo(() => LTTB(plotData, 250), [plotData]);
+  const downsampledPlotData = useMemo(() => {
+    return plotData.map((entry: PlotDataEntry) => {
+      // Convert from {x: number[], y: number[]} to [[x, y], [x, y], ...] format
+      const points: [number, number][] = entry.x.map((x, index) => [x, entry.y[index]]);
+
+      // Apply LTTB downsampling
+      const downsampledPoints = LTTB(points, 300) as [number, number][];
+
+      // Convert back to original format
+      return {
+        ...entry,
+        x: downsampledPoints.map(([x]) => x),
+        y: downsampledPoints.map(([, y]) => y),
+      };
+    });
+  }, [plotData]);
 
   useEffect(() => {
     if (containerRef.current) setInViewRef(containerRef.current);
@@ -98,7 +114,7 @@ export default function SimulationPlot({
     return <Empty description="Error while rendering plot" image={Empty.PRESENTED_IMAGE_DEFAULT} />;
   }
 
-  if (!plotData || plotData.length === 0) {
+  if (!downsampledPlotData || downsampledPlotData.length === 0) {
     return <Empty description="No data available" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
   }
 
@@ -106,7 +122,7 @@ export default function SimulationPlot({
     <div ref={containerRef} className="aspect-16/9 w-full">
       {inView ? (
         <Plot
-          data={plotData}
+          data={downsampledPlotData}
           layout={{
             ...makePlotLayout({
               title: title ?? '',
