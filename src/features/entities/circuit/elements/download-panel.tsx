@@ -7,8 +7,8 @@ import { Spin } from 'antd';
 import get from 'lodash/get';
 
 import { customRowSelectionEventListener } from '@/components/explore-section/ExploreSectionListingView/expandable-row/custom-row-selection-event';
+import { EntireCircuitExport } from '@/features/entities/circuit/elements/full-circuit-download';
 import ConfigItem, { ConfigItemProps } from '@/features/entities/circuit/elements/config-item';
-import { FullCircuitItem } from '@/features/entities/circuit/elements/full-circuit-download';
 import { configurationText } from '@/features/entities/circuit/elements/configuration-text';
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import { buildNetworksConfig } from '@/features/entities/circuit/elements/helpers';
@@ -21,6 +21,7 @@ import { log } from '@/utils/logger';
 import type { ICircuit, ICircuitConfiguration } from '@/api/entitycore/types/entities/circuit';
 import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
+import { EntityTypeEnum } from '@/api/entitycore/types';
 
 type ConfigState<T> =
   | {
@@ -81,29 +82,23 @@ export default function DownloadPanel() {
 
           const [listingDirectoryPromise, configPromise] = await Promise.allSettled([
             listDirectoryOfAssets({
-              entityType: 'circuit',
+              entityType: EntityTypeEnum.Circuit,
               entityId: circuit.id,
-              id: assetConfig?.id || '',
-              ctx: {
-                virtualLabId,
-                projectId,
-              },
+              id: assetConfig.id,
+              ctx: { virtualLabId, projectId },
             }),
             downloadAsset({
-              entityType: 'circuit',
+              entityType: EntityTypeEnum.Circuit,
               entityId: circuit.id,
-              id: assetConfig?.id || '',
-              ctx: {
-                virtualLabId,
-                projectId,
-              },
+              id: assetConfig.id,
+              ctx: { virtualLabId, projectId },
               asRawResponse: true,
               assetPath: 'circuit_config.json',
             }),
           ]);
-
-          if (listingDirectoryPromise.status === 'fulfilled')
+          if (listingDirectoryPromise.status === 'fulfilled') {
             setDirectoryList({ data: listingDirectoryPromise.value.files, error: undefined });
+          }
           if (listingDirectoryPromise.status === 'rejected') {
             notify.warning({
               message: messages.ListingCircuitDirectoryFailed,
@@ -207,7 +202,14 @@ export default function DownloadPanel() {
                 <CloseOutlined />
               </button>
             </div>
-            <FullCircuitItem />
+            {directoryList.data && circuit?.id && assetConfig?.id && (
+              <EntireCircuitExport
+                directory={directoryList.data}
+                entityId={circuit?.id}
+                assetId={assetConfig?.id}
+                context={{ virtualLabId, projectId }}
+              />
+            )}
             <div className="border-primary-7 text-primary-4 mx-8 my-8 border-y border-solid py-4 text-xl font-bold tracking-wide uppercase">
               Download components only
             </div>
