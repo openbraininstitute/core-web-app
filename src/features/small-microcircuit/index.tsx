@@ -37,7 +37,7 @@ import { useAppNotification } from '@/components/notification';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
-import { runCircuitSimulation } from '@/services/small-scale-simulator/circuit';
+import { runSimulation } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
@@ -405,7 +405,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     setSimRequestInProgress(true);
     try {
       for (const simId of simExecSelectedSimulationIds) {
-        await runCircuitSimulation({
+        await runSimulation({
           ctx: { virtualLabId, projectId },
           simulationId: simulations[0].id,
           onMessage: (message) => {
