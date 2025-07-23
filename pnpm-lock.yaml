@@ -287,6 +287,9 @@ importers:
       optics-ts:
         specifier: ^2.4.0
         version: 2.4.1
+      p-map:
+        specifier: ^7.0.3
+        version: 7.0.3
       pako:
         specifier: ^2.1.0
         version: 2.1.0

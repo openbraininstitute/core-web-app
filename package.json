@@ -119,6 +119,7 @@
     "next-sanity-client": "^1.0.8",
     "nuqs": "^2.4.1",
     "optics-ts": "^2.4.0",
+    "p-map": "^7.0.3",
     "pako": "^2.1.0",
     "performant-array-to-tree": "^1.11.0",
     "plotly.js-dist-min": "^2.35.3",
