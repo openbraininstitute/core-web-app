@@ -1,7 +1,9 @@
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
 import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
 import { useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
@@ -64,22 +66,32 @@ export default function EphysViewer({
       </Radio.Group>
 
       {view === VIEW.OVERVIEW && (
-        <TraceOverview
-          trace={trace}
-          cellId={cellId}
-          onCellIdChange={setCellId}
-          protocol={protocol}
-          onRepetitionClick={showRepetitionDetails}
-          onProtocolChange={setProtocol}
-        />
+        <ErrorBoundary
+          FallbackComponent={SimpleErrorComponent}
+          resetKeys={[trace, cellId, protocol]}
+        >
+          <TraceOverview
+            trace={trace}
+            cellId={cellId}
+            onCellIdChange={setCellId}
+            protocol={protocol}
+            onRepetitionClick={showRepetitionDetails}
+            onProtocolChange={setProtocol}
+          />
+        </ErrorBoundary>
       )}
 
       {view === VIEW.DETAILED && (
-        <TraceDetailsView
-          trace={trace}
-          defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
-          defaultRepetition={repetition}
-        />
+        <ErrorBoundary
+          FallbackComponent={SimpleErrorComponent}
+          resetKeys={[trace, cellId, protocol, repetition]}
+        >
+          <TraceDetailsView
+            trace={trace}
+            defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
+            defaultRepetition={repetition}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );

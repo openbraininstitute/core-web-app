@@ -18,8 +18,15 @@ import Morphometrics from '@/features/entities/reconstruction-morphology/morphom
 import { ensureArray } from '@/utils/array';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import { WorkspaceContext } from '@/types/common';
 
-export default function MorphologyDetailView({ detail }: { detail: IReconstructionMorphology }) {
+export default function MorphologyDetailView({
+  detail,
+  ctx,
+}: {
+  detail: IReconstructionMorphology;
+  ctx?: WorkspaceContext;
+}) {
   if (!detail) return null;
   return (
     <>
@@ -33,7 +40,7 @@ export default function MorphologyDetailView({ detail }: { detail: IReconstructi
           customError: 'Error while loading morphology viewer',
         })}
       >
-        <MorphoViewerLoaderMemo resource={detail} />
+        <MorphoViewerLoaderMemo resource={detail} ctx={ctx} />
       </ErrorBoundary>
       {/* <ErrorBoundary
         FallbackComponent={withErrorConfig({
@@ -56,10 +63,16 @@ export default function MorphologyDetailView({ detail }: { detail: IReconstructi
   );
 }
 
-function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology }) {
+function MorphoViewerLoader({
+  resource,
+  ctx,
+}: {
+  resource: IReconstructionMorphology;
+  ctx?: WorkspaceContext;
+}) {
   const morphologyDataAtom = useMemo(
-    () => loadable(createMorphologyDataAtom(resource)),
-    [resource]
+    () => loadable(createMorphologyDataAtom(resource, ctx)),
+    [resource, ctx]
   );
   // We disable enhanced somas until they are fixed on the backend.
   // const swcContentUrl = useSwcContentUrl(resource.distribution);

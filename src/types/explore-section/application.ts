@@ -15,7 +15,8 @@ export enum ExploreDataScope {
 
 export interface SortState {
   field: string;
-  order: 'asc' | 'desc';
+  backendField: string;
+  order: 'asc' | 'desc' | null;
 }
 
 export type DetailViewUrlParams = Prettify<

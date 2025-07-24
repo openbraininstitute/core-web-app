@@ -5,13 +5,15 @@ import { ColumnProps } from 'antd/lib/table';
 import throttle from 'lodash/throttle';
 
 import { SortState } from '@/types/explore-section/application';
-import { ValueArray } from '@/components/ListTable';
 import fieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configuration/definitions';
 
-import { DataType } from '@/constants/explore-section/list-views';
-import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { DataType } from '@/constants/explore-section/list-views';
+import { classNames, fieldTitleSentenceCase } from '@/util/utils';
+
+import type { OrderShape } from '@/entity-configuration/definitions/types';
+
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
 type ResizeInit = {
@@ -44,6 +46,39 @@ function getProvisionedWidth(title: string, unit?: ReactNode) {
   return width;
 }
 
+function isOrderObject(order: OrderShape): order is { property: string; value: string } {
+  return !Array.isArray(order);
+}
+
+/**
+ * Retrieves the order value from the provided order object or array, optionally filtered by data type.
+ *
+ * @param order - The order information, which can be an `OrderShape` object, an array of order objects, or `undefined`.
+ * @param dataType - (Optional) The data type to filter the order by when `order` is an array.
+ * @returns The order value as a string if found; otherwise, `undefined`.
+ */
+export function getOrderValue(
+  order: OrderShape | undefined,
+  dataType?: DataType
+): string | undefined {
+  if (!order) return undefined;
+
+  if (isOrderObject(order)) {
+    return order.value;
+  }
+
+  if (Array.isArray(order)) {
+    if (!dataType) return undefined;
+
+    const orderForType = order.find((o) => o.types.includes(dataType));
+
+    if (orderForType) {
+      return orderForType.value;
+    }
+  }
+  return undefined;
+}
+
 export default function useExploreColumns<T>(
   setSortState: (sortState: SortState) => void,
   sortState?: SortState,
@@ -73,14 +108,16 @@ export default function useExploreColumns<T>(
     );
   }, [dimensionColumns, keys]);
 
-  const sorterES = useCallback(
-    (field: string) => {
-      let order: 'asc' | 'desc' = 'asc';
+  const columnOrderBy = useCallback(
+    (field: string, backendField: string) => {
+      let order: 'asc' | 'desc' | null = 'asc';
 
       if (sortState?.order && field === sortState.field) {
         order = sortState.order === 'desc' ? 'asc' : 'desc';
       }
+
       setSortState({
+        backendField,
         field,
         order,
       });
@@ -132,88 +169,64 @@ export default function useExploreColumns<T>(
     [updateColumnWidths]
   );
 
-  // Translates ES terminology to AntD terminology.
-  const getSortOrder = useCallback(
+  const getOrderDirection = useCallback(
     (key: string) => {
       switch (sortState?.order) {
         case 'asc':
-          return sortState?.field === key ? 'ascend' : null;
+          return sortState?.field === key ? 'ascend' : undefined;
         case 'desc':
-          return sortState?.field === key ? 'descend' : null;
+          return sortState?.field === key ? 'descend' : undefined;
         default:
-          return null;
+          return undefined;
       }
     },
     [sortState?.field, sortState?.order]
   );
 
-  const main: ColumnProps<T>[] = useMemo(
+  const columns: ColumnProps<T>[] = useMemo(
     () =>
       keys.reduce((acc, key) => {
         const term = getFieldDefinition(key as EntityCoreFields);
-        const isSortable = term?.isSortable;
+        const isSortable = term?.isSortable && !!getOrderValue(term?.order, dataType);
 
-        return [
-          ...acc,
-          {
-            key,
-            title: (
-              <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-                <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title!)}</div>
-                {term?.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
-              </div>
-            ),
-            className: classNames(
-              'text-primary-7 cursor-pointer before:!content-none',
-              term?.className
-            ),
-            sorter: isSortable,
-            ellipsis: true,
-            width: columnWidths.find(({ key: colKey }) => colKey === key)?.width,
-            render: (r) => term?.render?.(r),
-            onHeaderCell: () => ({
-              handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
-              onClick: () => isSortable && term.order?.value && sorterES(term.order?.value),
-              showsortertooltip: {
-                title: term?.description ? term.description : term?.title,
-              },
-            }),
-            sortOrder: getSortOrder(key),
-            align: term?.style?.align,
-          },
-        ];
-      }, initialColumns),
-
-    [columnWidths, getSortOrder, initialColumns, keys, onMouseDown, sorterES]
-  );
-
-  const dimensions: ColumnProps<T>[] = useMemo(
-    () =>
-      (dimensionColumns || []).map((dimColumn) => ({
-        key: dimColumn,
-        title: (
-          <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-            <div className={styles.columnTitle}>{dimColumn}</div>
-          </div>
-        ),
-        className: 'text-primary-7 cursor-pointer before:!content-none',
-        sorter: false,
-        ellipsis: true,
-        width: columnWidths.find(({ key: colKey }) => colKey === dimColumn)?.width,
-        render: (_t: any, r: any) =>
-          ValueArray({
-            value: r._source?.parameter?.coords?.[dimColumn]?.map((label: string) => label),
+        acc.push({
+          key,
+          title: (
+            <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
+              <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title!)}</div>
+              {term?.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
+            </div>
+          ),
+          className: classNames(
+            'text-primary-7 cursor-pointer before:!content-none',
+            term?.className
+          ),
+          sorter: isSortable,
+          ellipsis: true,
+          width: columnWidths.find(({ key: colKey }) => colKey === key)?.width,
+          render: (r) => term?.render?.(r),
+          onHeaderCell: () => ({
+            handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
+            onClick: () => {
+              if (!isSortable || !term.order) return;
+              const field = getOrderValue(term.order, dataType);
+              if (field) {
+                columnOrderBy(key, field);
+              }
+            },
+            showsortertooltip: {
+              title: term?.description ? term.description : term?.title,
+            },
           }),
-        onHeaderCell: () => ({
-          handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, dimColumn),
-          onClick: () => {},
-        }),
-        sortOrder: getSortOrder(dimColumn),
-      })),
-    [columnWidths, dimensionColumns, getSortOrder, onMouseDown]
+          defaultSortOrder: 'descend',
+          sortOrder: getOrderDirection(key),
+          sortDirections: ['ascend', 'descend', 'descend'],
+          align: term?.style?.align,
+        });
+        return acc;
+      }, initialColumns),
+    [columnWidths, initialColumns, keys, onMouseDown, columnOrderBy, getOrderDirection, dataType]
   );
-
-  const columns = [...main, ...dimensions];
 
   if (dataType) {
     return columns.sort((a, b) =>

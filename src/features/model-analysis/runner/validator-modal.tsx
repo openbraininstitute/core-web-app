@@ -11,15 +11,7 @@ export function usePendingValidationModal() {
   const [modal, contextHolder] = Modal.useModal();
   const destroyRef = useRef<() => void>(undefined);
 
-  function createModal({
-    ctx,
-    accessToken,
-    modelId,
-  }: {
-    ctx: WorkspaceContext;
-    accessToken: string;
-    modelId: string;
-  }) {
+  function createModal({ ctx, modelId }: { ctx: WorkspaceContext; modelId: string }) {
     const { destroy } = modal.confirm({
       title: null,
       icon: null,
@@ -35,7 +27,7 @@ export function usePendingValidationModal() {
       },
       closeIcon: <CloseOutlined className="text-primary-8 text-2xl" />,
       className: '![&>.ant-modal-content]:bg-red-500',
-      content: <ModelAnalysisContainer ctx={ctx} modelId={modelId} accessToken={accessToken} />,
+      content: <ModelAnalysisContainer ctx={ctx} modelId={modelId} />,
     });
     destroyRef.current = destroy;
     return destroy;

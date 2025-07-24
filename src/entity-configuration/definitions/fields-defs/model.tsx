@@ -1,4 +1,5 @@
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { DataType } from '@/constants/explore-section/list-views';
 import {
   EmptyPreview,
   renderEmptyOrValue,
@@ -29,6 +30,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'exemplar_morphology__label__in',
     isFilterable: false,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [DataType.CircuitEModel],
+        property: 'order_by',
+        value: 'exemplar_morphology__name',
+      },
+    ],
   },
   [EntityCoreFields.EModelScore]: {
     title: 'Model cumulated score',
@@ -40,7 +49,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isFilterable: false,
     isDisplayable: true,
-    // constraint: 'brain_region_id',
+    isSortable: true,
+    order: [
+      {
+        types: [DataType.CircuitEModel],
+        property: 'order_by',
+        value: 'score',
+      },
+    ],
   },
   [EntityCoreFields.EModelResponse]: {
     title: 'Response',
