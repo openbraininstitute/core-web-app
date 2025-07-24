@@ -16,12 +16,14 @@ import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ExperimentalEntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import { WorkspaceContext } from '@/types/common';
 
 type Props = {
   type: ExperimentalEntitySlugValue;
+  ctx?: WorkspaceContext;
 };
 
-export default function DetailView({ type }: Props) {
+export default function DetailView({ type, ctx }: Props) {
   const entity = getEntityBySlug({ slug: type });
   if (!entity) notFound();
 
@@ -32,13 +34,15 @@ export default function DetailView({ type }: Props) {
       },
       () => (
         <Summary dataType={DataType.ExperimentalNeuronMorphology}>
-          {(detail) => <MorphologyDetailView detail={detail as IReconstructionMorphology} />}
+          {(detail) => (
+            <MorphologyDetailView detail={detail as IReconstructionMorphology} ctx={ctx} />
+          )}
         </Summary>
       )
     )
     .with({ legacyType: DataType.ExperimentalElectroPhysiology }, () => (
       <Summary dataType={DataType.ExperimentalElectroPhysiology}>
-        {(detail) => <EphysViewer resource={detail as IElectricalCellRecording} />}
+        {(detail) => <EphysViewer resource={detail as IElectricalCellRecording} ctx={ctx} />}
       </Summary>
     ))
     .with(

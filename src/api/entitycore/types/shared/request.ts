@@ -10,7 +10,6 @@ export type BrainLocationFilter = {
 };
 
 export type BrainRegionFilter = {
-  brain_region_id: number | null;
   within_brain_region_hierarchy_id: string | null;
   within_brain_region_brain_region_id: string | null;
   within_brain_region_ascendants: boolean;

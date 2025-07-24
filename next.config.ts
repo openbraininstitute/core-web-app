@@ -1,7 +1,7 @@
-import type { NextConfig } from 'next';
 import NextBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 
+import { NextConfig } from 'next/dist/types';
 import { env } from './src/env';
 
 const withBundleAnalyzer = NextBundleAnalyzer({
@@ -36,11 +36,11 @@ const nextConfig: NextConfig = {
         loaders: ['raw-loader'],
         as: '*.js',
       },
-      '*.mp4': {
+      mp4: {
         loaders: ['file-loader'],
         as: 'asset',
       },
-      '*.pdf': {
+      pdf: {
         loaders: ['file-loader'],
         as: 'asset',
       },
@@ -50,26 +50,6 @@ const nextConfig: NextConfig = {
     resolveAlias: {
       canvas: './empty-module.ts',
     },
-  },
-  webpack: (config) => {
-    config.resolve.alias.canvas = false;
-    config.resolve.alias.encoding = false;
-    /**
-     * Using WebGL shaders as modules.
-     */
-    config.module.rules.push(
-      {
-        test: /\.(vert|frag|groq)$/i,
-        // More information here https://webpack.js.org/guides/asset-modules/
-        type: 'asset/source',
-      },
-      {
-        test: /\.(mp4|pdf)$/i,
-        // More information here https://webpack.js.org/guides/asset-modules/
-        type: 'asset',
-      }
-    );
-    return config;
   },
   env: {
     applicationVersion: getVersion(),

@@ -18,5 +18,5 @@ export default async function Page({
   const params = await promisedParams;
   const searchParams = await promisedSearchParams;
 
-  return <Configure params={params} searchParams={searchParams} />;
+  return <Configure ctx={params} searchParams={searchParams} />;
 }

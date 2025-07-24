@@ -1,5 +1,6 @@
 import { hasAssets } from '@/api/entitycore/guards';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
+import { DataType } from '@/constants/explore-section/list-views';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -169,11 +170,25 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'brain_region_id',
     isFilterable: false,
     isDisplayable: true,
-    isSortable: false,
-    order: {
-      property: 'brain_region__order_by',
-      value: 'name',
-    },
+    isSortable: true,
+    order: [
+      {
+        types: [
+          DataType.ExperimentalNeuronMorphology,
+          DataType.ExperimentalElectroPhysiology,
+          DataType.ExperimentalBoutonDensity,
+          DataType.ExperimentalNeuronDensity,
+          DataType.ExperimentalSynapsePerConnection,
+          DataType.CircuitMEModel,
+          DataType.CircuitEModel,
+          DataType.SingleNeuronSimulation,
+          DataType.SingleNeuronSynaptome,
+          DataType.SingleNeuronSynaptomeSimulation,
+        ],
+        property: 'order_by',
+        value: 'brain_region__name',
+      },
+    ],
   },
   [EntityCoreFields.CreatedBy]: {
     title: 'Created by',
@@ -189,6 +204,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'created_by__pref_label__in',
     isDisplayable: true,
     isFilterable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [
+          DataType.CircuitMEModel,
+          DataType.SingleNeuronSynaptome,
+          DataType.SingleNeuronSimulation,
+          DataType.SingleNeuronSynaptomeSimulation,
+        ],
+        property: 'order_by',
+        value: 'created_by__pref_label',
+      },
+    ],
   },
   [EntityCoreFields.UpdatedBy]: {
     title: 'Updated by',

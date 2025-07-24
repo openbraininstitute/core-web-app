@@ -82,6 +82,14 @@ type Style = {
   width?: number;
 };
 
+export type OrderShape =
+  | { property: string; value: string }
+  | Array<{
+      types: Array<Partial<DataType>>;
+      property: string;
+      value: string;
+    }>;
+
 export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   fieldType?: CoreFieldType;
   className?: string;
@@ -93,10 +101,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   isSortable?: boolean;
   isFilterable?: boolean;
   isDisplayable?: boolean;
-  order?: {
-    property: string;
-    value: string;
-  };
+  order?: OrderShape;
   unit?: ReactNode;
   group?: StructuralDomain;
   render?: (entity: T) => ReactNode;

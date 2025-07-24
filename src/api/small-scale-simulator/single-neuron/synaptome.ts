@@ -1,0 +1,62 @@
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { SectionSynapses } from '@/api/small-scale-simulator/types';
+import type { WorkspaceContext } from '@/types/common';
+
+async function validateSynapseGenerationFormula(formula: string) {
+  const api = await smallScaleSimulatorApi();
+
+  return api.post<any>('/single-neuron/synaptome/validate-placement-formula', {
+    body: { formula },
+    headers: {
+      'Content-Type': 'application/json',
+      accept: 'application/json',
+    },
+  });
+}
+
+export async function validateFormula(value: string) {
+  try {
+    return validateSynapseGenerationFormula(value);
+  } catch (error) {
+    return false;
+  }
+}
+
+type GetSynaptomePlacementParams = {
+  ctx: WorkspaceContext;
+  modelId: string;
+  payload: {
+    seed: number;
+    config: TSingleNeuronSynaptomeConfiguration;
+  };
+  signal?: AbortSignal;
+};
+
+export async function getSynaptomePlacement({
+  ctx,
+  modelId,
+  payload,
+  signal,
+}: GetSynaptomePlacementParams) {
+  const api = await smallScaleSimulatorApi();
+
+  return await api.post<{ synapses: Array<SectionSynapses> }>('/single-neuron/synaptome/generate', {
+    queryParams: { model_id: modelId },
+    headers: {
+      ...getEntityCoreContext(ctx).headers,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: {
+      ...payload,
+      config: {
+        ...payload.config,
+        distribution: 'formula',
+      },
+    },
+    signal,
+  });
+}

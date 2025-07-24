@@ -30,7 +30,7 @@ import { getSession } from '@/authFetch';
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { calculateRangeOutput } from '@/constants/simulate/single-neuron';
-import { getSynaptomePlacement } from '@/api/bluenaas';
+import { getSingleNeuronSynaptomePlacement } from '@/api/small-scale-simulator';
 import { Switch } from '@/components/common/Switch';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
@@ -118,8 +118,8 @@ export default function SynapticInputItem({
 
       abortController.current = new AbortController();
       const { data, error } = await tryCatch(
-        getSynaptomePlacement({
-          model_id: meModelId,
+        getSingleNeuronSynaptomePlacement({
+          modelId: meModelId,
           payload: {
             seed: selectedSynapticInputPlacementConfig?.seed!,
             config: selectedSynapticInputPlacementConfig!,
