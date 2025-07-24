@@ -10,7 +10,7 @@ type Params = {
   onMessage?: (message: Message<null>) => void;
 };
 
-export async function runCircuitSimulation({ ctx, simulationId, signal, onMessage }: Params) {
+export async function runSimulation({ ctx, simulationId, signal, onMessage }: Params) {
   const res = await runCircuitSimulationApi({ ctx, simulationId, signal });
 
   await readNdjsonResponse<Message<null>>(res, onMessage);
