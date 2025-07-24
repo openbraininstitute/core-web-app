@@ -17,12 +17,9 @@ import {
   LIGHT_BASAL_DENDRITE,
   LIGHT_SOMA,
 } from '../constants';
-import { TypeDef, assertType } from '@/util/type-guards';
-import { isServer } from '@/config';
+import { atomFamilyWithExpiration } from '@/util/atoms';
 
-const STORAGE_KEY = 'MorphoViewer/settings';
-
-const DEFAULT_SETTINGS: PersistentMorphoViewerSettings = {
+const DEFAULT_SETTINGS: ExtendedMorphoViewerSettings = {
   darkMode: false,
   darkColors: {
     soma: DARK_SOMA,
@@ -39,6 +36,10 @@ const DEFAULT_SETTINGS: PersistentMorphoViewerSettings = {
   radiusType: 0,
   colorBy: 'section',
 };
+
+export function getDefaultSettings() {
+  return structuredClone(DEFAULT_SETTINGS);
+}
 
 export interface MorphoViewerSettings {
   isDarkMode: boolean;
@@ -77,35 +78,34 @@ export function useMorphoViewerSettings(
   update: (settings: Partial<MorphoViewerSettings>) => void,
   reset: (darkMode?: boolean) => void,
 ] {
-  const [persistentSettings, setPersistentSettings] = useAtom(persistentSettingsAtom);
-  const settings = useMemo(() => readSettings(persistentSettings), [persistentSettings]);
+  const extendedSettingsAtom = extendedSettingsAtomFamily(painter);
+  const [extendedSettings, setExtendedSettings] = useAtom(extendedSettingsAtom);
+  const settings = useMemo(() => readSettings(extendedSettings), [extendedSettings]);
 
   useEffect(
-    () => applySettingsToMorphologyCanvas(painter, persistentSettings),
-    [persistentSettings, painter]
+    () => applySettingsToMorphologyCanvas(painter, extendedSettings),
+    [extendedSettings, painter]
   );
   const update = (value: Partial<MorphoViewerSettings>) => {
-    const darkMode = value.isDarkMode ?? persistentSettings.darkMode;
-    const newPersistentSettings =
-      darkMode === persistentSettings.darkMode
+    const darkMode = value.isDarkMode ?? extendedSettings.darkMode;
+    const newExtendedSettings =
+      darkMode === extendedSettings.darkMode
         ? writeSettings({
             ...settings,
             ...value,
           })
         : {
-            ...persistentSettings,
+            ...extendedSettings,
             darkMode,
           };
-    saveSettings(newPersistentSettings);
-    setPersistentSettings(newPersistentSettings);
+    setExtendedSettings(newExtendedSettings);
   };
   const reset = (darkMode?: boolean) => {
-    const defaultSettings = { ...DEFAULT_SETTINGS };
+    const defaultSettings = getDefaultSettings();
     if (typeof darkMode === 'boolean') {
       defaultSettings.darkMode = darkMode;
     }
-    saveSettings(defaultSettings);
-    setPersistentSettings(defaultSettings);
+    setExtendedSettings(defaultSettings);
   };
 
   return [settings, update, reset];
@@ -118,7 +118,7 @@ interface Palette {
   axon: string;
 }
 
-interface PersistentMorphoViewerSettings {
+interface ExtendedMorphoViewerSettings {
   darkMode: boolean;
   darkColors: Palette;
   lightColors: Palette;
@@ -136,7 +136,7 @@ interface PersistentMorphoViewerSettings {
   colorBy: ColoringType;
 }
 
-function readSettings(settings: PersistentMorphoViewerSettings): MorphoViewerSettings {
+function readSettings(settings: ExtendedMorphoViewerSettings): MorphoViewerSettings {
   const { darkMode, darkColors, lightColors } = settings;
   const palette: Palette = darkMode ? darkColors : lightColors;
   return {
@@ -157,8 +157,8 @@ function writeSettings({
   colorAxon,
   radiusType,
   colorBy,
-}: MorphoViewerSettings): PersistentMorphoViewerSettings {
-  const output = loadSettings();
+}: MorphoViewerSettings): ExtendedMorphoViewerSettings {
+  const output = getDefaultSettings();
   output.colorBy = colorBy;
   output.radiusType = radiusType;
   output.darkMode = isDarkMode;
@@ -170,49 +170,14 @@ function writeSettings({
   return output;
 }
 
-const persistentSettingsAtom = atom(loadSettings());
-
-function assertPersistentMorphoViewerSettings(
-  data: unknown
-): asserts data is PersistentMorphoViewerSettings {
-  const colorsType: TypeDef = {
-    soma: 'string',
-    basalDendrite: 'string',
-    apicalDendrite: 'string',
-    axon: 'string',
-  };
-  assertType(data, {
-    darkMode: 'boolean',
-    darkColors: colorsType,
-    lightColors: colorsType,
-    radiusType: 'number',
-    colorBy: ['literal', 'section', 'distance'],
-  });
-}
-
-function loadSettings(): PersistentMorphoViewerSettings {
-  if (isServer) return DEFAULT_SETTINGS;
-  try {
-    const item = window.localStorage.getItem(STORAGE_KEY) ?? '';
-    const data = JSON.parse(item);
-    assertPersistentMorphoViewerSettings(data);
-    return data;
-  } catch (ex) {
-    saveSettings(DEFAULT_SETTINGS);
-    if (typeof window !== 'undefined')
-      window?.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
-    return DEFAULT_SETTINGS;
-  }
-}
-
-function saveSettings(data: PersistentMorphoViewerSettings) {
-  if (typeof window !== 'undefined')
-    window?.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+const extendedSettingsAtomFamily = atomFamilyWithExpiration(
+  (_painter: MorphologyCanvas) => atom(getDefaultSettings()),
+  { ttl: 10_000 } // cache TTL 10 seconds
+);
 
 function applySettingsToMorphologyCanvas(
   painter: MorphologyCanvas,
-  { darkMode, darkColors, lightColors, radiusType, colorBy }: PersistentMorphoViewerSettings
+  { darkMode, darkColors, lightColors, radiusType, colorBy }: ExtendedMorphoViewerSettings
 ) {
   const { soma, basalDendrite, apicalDendrite, axon }: Palette = darkMode
     ? darkColors
