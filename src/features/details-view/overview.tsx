@@ -29,7 +29,7 @@ export function Field({ field, className, data }: FieldProps) {
   }
 
   return (
-    <div className={classNames('text-primary-7', className)}>
+    <div className={classNames('text-primary-7 flex flex-col', className)}>
       <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>
       <div className={classNames('mt-2 break-words', fieldObj?.className)}>{renderedContent}</div>
     </div>

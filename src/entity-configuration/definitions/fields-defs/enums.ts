@@ -73,6 +73,7 @@ export enum EntityCoreFields {
   CircuitBuildCategory = 'build_category',
   CircuitScale = 'scale',
   CircuitSubCircuit = 'root_circuit_id', // TODO: change it to sub_circuits, this is only for test the nested table
+  CircuitSubCircuitOf = 'xxx', // TODO: change it to sub_circuits, this is only for test the nested table
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;
