@@ -239,4 +239,16 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     style: { width: 80, align: 'left' },
   },
+  [EntityCoreFields.CircuitSubCircuitOf]: {
+    className: 'text-left',
+    title: 'Subcircuit of',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderEmptyOrValue((r as ICircuit).sub_circuits?.length),
+    vocabulary: {
+      plural: 'Subcircuit of',
+      singular: 'Subcircuit of',
+    },
+    style: { width: 80, align: 'left' },
+  },
 };

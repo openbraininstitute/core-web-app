@@ -30,6 +30,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   showViewMode,
   dataType,
   children,
+  fieldsClassName,
   commonFields = CommonSummaryViewFields,
   actions,
 }: {
@@ -38,6 +39,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   commonFields?: Array<TypeSummaryProps>;
   dataType: DataType;
   children?: (detail: T) => ReactNode;
+  fieldsClassName?: string;
   actions?: {
     onDownload?: (entity: T) => void;
   };
@@ -111,6 +113,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
               fields={fields}
               commonFields={commonFields}
               detail={data}
+              fieldsClassName={fieldsClassName}
               onDownload={onDownload}
             />
             {children && data && children(data)}

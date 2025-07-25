@@ -91,12 +91,21 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CircuitBuildCategory,
     ],
     summaryViewFields: [
-      { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
-      { field: EntityCoreFields.CircuitScale, className: 'col-span-1' },
-      { field: EntityCoreFields.CircuitNumberNeurons, className: 'col-span-1' },
-      { field: EntityCoreFields.CircuitNumberSynapses, className: 'col-span-1' },
-      { field: EntityCoreFields.CircuitNumberConnections, className: 'col-span-1' },
-      { field: EntityCoreFields.License, className: 'col-span-1' },
+      { field: EntityCoreFields.BrainRegion, className: 'col-span-1 col-start-1' },
+      { field: EntityCoreFields.CircuitSubCircuitOf, className: 'col-span-1 col-start-1' },
+      { field: EntityCoreFields.License, className: 'col-span-1 col-start-1' },
+      {
+        field: EntityCoreFields.CircuitNumberNeurons,
+        className: 'col-start-2 row-start-1',
+      },
+      {
+        field: EntityCoreFields.CircuitNumberConnections,
+        className: 'col-start-2 row-start-2',
+      },
+      {
+        field: EntityCoreFields.CircuitNumberSynapses,
+        className: 'col-start-2 row-start-3',
+      },
     ],
   },
   [DataType.SmallMicrocircuit]: {
