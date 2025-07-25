@@ -11,6 +11,7 @@ type Props = {
   onConfirm?: () => void;
   visible?: boolean;
   onOpenChange?: (open: boolean) => void;
+  cls?: { contentContainer?: string };
 };
 
 export default function CustomPopover({
@@ -21,6 +22,7 @@ export default function CustomPopover({
   placement = 'topRight',
   visible,
   onOpenChange,
+  cls,
 }: Props) {
   return (
     <Popover
@@ -36,7 +38,12 @@ export default function CustomPopover({
         '[&_.ant-popover-arrow:before]:bg-primary-8'
       )}
       content={
-        <div className="bg-primary-8 flex flex-col items-center justify-center gap-4 p-8">
+        <div
+          className={classNames(
+            'bg-primary-8 flex flex-col items-center justify-center gap-4 p-8',
+            cls?.contentContainer
+          )}
+        >
           <p className="text-center text-base font-light text-white">{message}</p>
           {onConfirm && (
             <button
