@@ -1,4 +1,4 @@
-name: Deploy to STAGING NEXT
+name: Deploy to DEV
 
 permissions:
   id-token: write # Required for OIDC authentication
@@ -7,7 +7,7 @@ permissions:
 on:
   push:
     branches:
-      - entitycore-migration
+      - develop
   workflow_dispatch:
 
 concurrency:
@@ -15,10 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-staging:
+  deploy-dev:
     runs-on: ubuntu-latest
     env:
-      ENVIRONMENT: staging
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
       - name: Checkout code
@@ -38,27 +37,27 @@ jobs:
 
       - name: Build a Docker image for AWS
         run: |
-          docker build --build-arg DEPLOYMENT_ENV=staging-next-aws -t ${{ vars.PUBLICECR_URI }}:entitycore-migration-aws .
+          docker build --build-arg DEPLOYMENT_ENV=dev -t ${{ vars.PUBLICECR_URI }}:dev .
 
       - name: Publish the image for AWS To AWS ECR
         run: |
-          docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration-aws
+          docker push ${{ vars.PUBLICECR_URI }}:dev
 
       - name: Authenticate with AWS ECS
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_STAGING_NEXT_ECS_REDEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ vars.DEV_ECS_REDEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_STAGING_REGION }}
 
       - name: Trigger new deployment
         run: |
           aws ecs update-service \
-            --cluster ${{ vars.AWS_STAGING_NEXT_ECS_CLUSTER }} \
-            --service ${{ vars.AWS_STAGING_NEXT_ECS_SERVICE }} \
+            --cluster ${{ vars.DEV_ECS_CLUSTER }} \
+            --service ${{ vars.DEV_ECS_SERVICE }} \
             --force-new-deployment
 
       - name: Wait until the service is stable
         run: |
           aws ecs wait services-stable \
-            --cluster ${{ vars.AWS_STAGING_NEXT_ECS_CLUSTER }} \
-            --service ${{ vars.AWS_STAGING_NEXT_ECS_SERVICE }}
+            --cluster ${{ vars.DEV_ECS_CLUSTER }} \
+            --service ${{ vars.DEV_ECS_SERVICE }}
