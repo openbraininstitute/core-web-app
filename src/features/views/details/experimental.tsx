@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { Suspense } from 'react';
 
@@ -20,12 +20,13 @@ import { WorkspaceContext } from '@/types/common';
 
 type Props = {
   type: ExperimentalEntitySlugValue;
-  ctx?: WorkspaceContext;
 };
 
-export default function DetailView({ type, ctx }: Props) {
+export default function DetailView({ type }: Props) {
   const entity = getEntityBySlug({ slug: type });
   if (!entity) notFound();
+
+  const ctx = useParams<WorkspaceContext>();
 
   const content = match<EntityCoreTypeConfig<any>>(entity)
     .with(
@@ -34,9 +35,7 @@ export default function DetailView({ type, ctx }: Props) {
       },
       () => (
         <Summary dataType={DataType.ExperimentalNeuronMorphology}>
-          {(detail) => (
-            <MorphologyDetailView detail={detail as IReconstructionMorphology} ctx={ctx} />
-          )}
+          {(detail) => <MorphologyDetailView detail={detail as IReconstructionMorphology} />}
         </Summary>
       )
     )
