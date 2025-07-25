@@ -36,10 +36,9 @@ export function Field({ field, className, data }: FieldProps) {
   );
 }
 
-export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
+export default function Overview<T extends EntityCoreIdentifiableNamed>({
   fields,
   detail,
-  extraHeaderAction,
   commonFields = CommonSummaryViewFields,
   commonFieldsClassName,
   fieldsClassName,
@@ -48,17 +47,13 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   fields: Array<TypeSummaryProps>;
   detail: T;
   commonFields?: Array<TypeSummaryProps>;
-  // @FIXME: this property is not used.
-  // eslint-disable-next-line react/no-unused-prop-types
-  url?: string | null;
-  extraHeaderAction?: ReactNode;
   commonFieldsClassName?: string;
   fieldsClassName?: string;
   onDownload?: (entity: T) => void;
 }) {
   return (
     <div className="flex w-full flex-col gap-10">
-      <Header<T> detail={detail} extraHeaderAction={extraHeaderAction} onDownload={onDownload} />
+      <Header<T> detail={detail} onDownload={onDownload} />
       <div className="flex w-full flex-row gap-x-8">
         {commonFields.length > 0 && (
           <div

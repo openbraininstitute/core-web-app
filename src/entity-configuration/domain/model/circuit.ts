@@ -32,5 +32,8 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   asset: {
     extension: 'application/json',
   },
-  isBookmarkable: true,
+  isBookmarkable: false,
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: false, // TODO: should be changed after
 } as const;

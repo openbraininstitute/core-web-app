@@ -1,19 +1,19 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
+import { CloseCircleFilled } from '@ant-design/icons';
 import { Button, Progress } from 'antd';
-import classNames from 'classnames';
 import JSZip from 'jszip';
 import pMap from 'p-map';
 
 import { trackDownloadProgress } from '@/utils/download-progress';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { DownloadIcon } from '@/components/icons';
 import { EntityTypeEnum } from '@/api/entitycore/types';
+import { DownloadIcon } from '@/components/icons';
+import { formatBytes } from '@/utils/format';
+import { classNames } from '@/util/utils';
 import { log } from '@/utils/logger';
 
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
-import { formatBytes } from '@/utils/format';
-import { CloseCircleFilled } from '@ant-design/icons';
 
 type Props = {
   context: WorkspaceContext;
@@ -48,10 +48,7 @@ export function EntireCircuitExport({ directory, entityId, assetId, context }: P
     current: 0,
     total: 0,
     completed: [],
-    failed: [
-      { fileName: 'external_S1nonbarrel_neurons__S1nonbarrel_neurons__chemical.h5', error: 'test' },
-      { fileName: 'external_S1nonbarrel_neurons/nodes.h5', error: 'test2' },
-    ],
+    failed: [],
     isDownloading: false,
     isZipping: false,
     zipProgress: { current: 0, total: 0, currentFile: '' },
@@ -60,12 +57,12 @@ export function EntireCircuitExport({ directory, entityId, assetId, context }: P
 
   const [fileDisplayStates, setFileDisplayStates] = useState<Record<string, FileDisplayState>>({});
   const timeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
-  const abortController = new AbortController();
 
   // Clean up timeouts on unmount
   useEffect(() => {
+    const timeouts = { ...timeoutsRef.current };
     return () => {
-      Object.values(timeoutsRef.current).forEach(clearTimeout);
+      Object.values(timeouts).forEach(clearTimeout);
     };
   }, []);
 
@@ -203,11 +200,15 @@ export function EntireCircuitExport({ directory, entityId, assetId, context }: P
     // Clear any existing file display states
     setFileDisplayStates({});
 
+    const abortController = new AbortController();
     const downloadedFiles = new Map<string, Blob>();
     const completedFiles = [];
     const failedFiles = [];
 
-    const downloadWithConcurrency = async (fileNames: Array<string>, maxConcurrency = 3) => {
+    const downloadWithConcurrency = async (
+      concurrentFileNames: Array<string>,
+      maxConcurrency = 3
+    ) => {
       const downloadFile = async (fileName: string) => {
         const fileSize = directory[fileName]?.size || 0;
 
@@ -266,7 +267,7 @@ export function EntireCircuitExport({ directory, entityId, assetId, context }: P
         }
       };
 
-      const results = await pMap(fileNames, downloadFile, {
+      const results = await pMap(concurrentFileNames, downloadFile, {
         concurrency: maxConcurrency,
         stopOnError: false,
         signal: abortController.signal,
@@ -429,11 +430,9 @@ export function EntireCircuitExport({ directory, entityId, assetId, context }: P
               key={fileName}
               className={classNames(
                 'flex transform items-center justify-between gap-1 px-2 py-1 transition-all duration-300 ease-out',
-                {
-                  'translate-y-0 scale-100 opacity-100':
-                    state.status === 'downloading' || state.status === 'completed',
-                  'translate-y-2 scale-95 opacity-0': state.status === 'hiding',
-                }
+                (state.status === 'downloading' || state.status === 'completed') &&
+                  'translate-y-0 scale-100 opacity-100',
+                state.status === 'hiding' && 'translate-y-2 scale-95 opacity-0'
               )}
               style={{
                 height: '32px',
@@ -465,8 +464,8 @@ export function EntireCircuitExport({ directory, entityId, assetId, context }: P
             Failed Downloads ({downloadProgress.failed.length})
           </h3>
           <ol className="max-h-32 list-inside list-decimal overflow-y-auto">
-            {downloadProgress.failed.map((item, index) => (
-              <li key={index} className="ml-5 py-1 text-sm font-medium text-white">
+            {downloadProgress.failed.map((item) => (
+              <li key={item.fileName} className="ml-5 py-1 text-sm font-medium text-white">
                 {item.fileName}
               </li>
             ))}

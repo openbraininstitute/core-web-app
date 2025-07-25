@@ -32,6 +32,8 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   asset: {
     extension: 'application/json',
   },
-  // viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalBoutonDensity],
   isBookmarkable: true,
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: false,
 } as const;

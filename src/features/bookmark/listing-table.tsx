@@ -109,6 +109,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
                   dataType,
                 }}
                 dataSource={dataSource}
+                selectionType="checkbox"
                 onCellClick={onCellClick}
                 renderButton={({ selectedRows, clearSelectedRows }) => (
                   <Footer

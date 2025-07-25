@@ -39,4 +39,7 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   },
   viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalNeuronMorphology],
   isBookmarkable: true,
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: false,
 } as const;

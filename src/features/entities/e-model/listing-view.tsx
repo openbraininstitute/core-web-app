@@ -55,6 +55,7 @@ export default function ListingView({
         renderButton,
         virtualLabInfo,
         useBrainRegion: true,
+        selectionType: 'checkbox',
       }}
     />
   );

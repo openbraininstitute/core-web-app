@@ -5,7 +5,6 @@ import { useAtomValue, useSetAtom } from 'jotai';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Overview from '@/features/details-view/overview';
-import usePathname from '@/hooks/pathname';
 
 import {
   CommonSummaryViewFields,
@@ -29,7 +28,6 @@ import type { DetailViewUrlParams } from '@/types/explore-section/application';
 export default function Summary<T extends EntityCoreIdentifiableNamed>({
   payload,
   showViewMode,
-  extraHeaderAction,
   dataType,
   children,
   commonFields = CommonSummaryViewFields,
@@ -38,7 +36,6 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   payload?: T | undefined;
   showViewMode?: boolean;
   commonFields?: Array<TypeSummaryProps>;
-  extraHeaderAction?: ReactNode;
   dataType: DataType;
   children?: (detail: T) => ReactNode;
   actions?: {
@@ -48,8 +45,6 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
   const fields = getViewDefinitionByLegacyType(dataType)?.summaryViewFields;
-
-  const path = usePathname();
 
   const memoizedDetailAtom = useMemo(() => {
     const detailFetchAtom = detailFamily({ id, virtualLabId, projectId, dataType, ...params });
@@ -116,8 +111,6 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
               fields={fields}
               commonFields={commonFields}
               detail={data}
-              url={path}
-              extraHeaderAction={extraHeaderAction}
               onDownload={onDownload}
             />
             {children && data && children(data)}
