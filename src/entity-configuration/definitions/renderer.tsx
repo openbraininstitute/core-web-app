@@ -77,9 +77,18 @@ export const renderDictionaryKeys = (
   );
 };
 
-export const renderDate = (isoDateString: string) => {
-  if (!isoDateString) return EmptyValue;
+export const renderDate = (isoDateString?: string | null) => {
+  if (isNil(isoDateString)) return EmptyValue;
   return format(parseISO(isoDateString), 'dd.MM.yyyy');
+};
+
+export const renderEmail = (email?: string | null) => {
+  if (isNil(email)) return EmptyValue;
+  return (
+    <a href={`mailto:${email}`} className="text-primary-8 hover:underline">
+      {email}
+    </a>
+  );
 };
 
 export const renderTimestamp = (timestamp: Date) => {

@@ -73,6 +73,7 @@ export async function downloadAsset(params: {
   id: string;
   asRawResponse: true;
   retryOnError?: boolean;
+  signal?: AbortSignal;
 }): Promise<Response>;
 
 export async function downloadAsset<T>(params: {
@@ -83,6 +84,7 @@ export async function downloadAsset<T>(params: {
   id: string;
   asRawResponse?: false;
   retryOnError?: boolean;
+  signal?: AbortSignal;
 }): Promise<T>;
 
 /**
@@ -102,6 +104,7 @@ export async function downloadAsset<T>({
   asRawResponse = false,
   retryOnError = false,
   assetPath = '',
+  signal,
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityTypeValue;
@@ -110,6 +113,7 @@ export async function downloadAsset<T>({
   id: string;
   asRawResponse?: boolean;
   retryOnError?: boolean;
+  signal?: AbortSignal;
 }): Promise<T | Response> {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<T>(
@@ -117,6 +121,7 @@ export async function downloadAsset<T>({
     {
       ...getEntityCoreContext(ctx),
       queryParams: compactRecord({ asset_path: assetPath }),
+      signal,
     },
     { asRawResponse, retryOnError }
   );

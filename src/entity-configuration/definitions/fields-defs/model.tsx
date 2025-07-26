@@ -6,6 +6,8 @@ import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { DataType } from '@/constants/explore-section/list-views';
 import {
   EmptyPreview,
+  renderDate,
+  renderEmail,
   renderEmptyOrValue,
   renderFloatNumber,
   renderPreview,
@@ -250,5 +252,38 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Subcircuit of',
     },
     style: { width: 80, align: 'left' },
+  },
+  [EntityCoreFields.CircuitPublishedIn]: {
+    className: 'text-left',
+    title: 'Published in',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderEmptyOrValue((r as ICircuit).published_in),
+    vocabulary: {
+      plural: 'Published in',
+      singular: 'Published in',
+    },
+  },
+  [EntityCoreFields.CircuitExperimentDate]: {
+    className: 'text-left',
+    title: 'Registration Date',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderDate((r as ICircuit).experiment_date),
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
+  },
+  [EntityCoreFields.CircuitContactEmail]: {
+    className: 'text-left',
+    title: 'Contact email',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderEmail((r as ICircuit).contact_email ?? 'bmeddah.ofc@gmail.com'),
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
   },
 };

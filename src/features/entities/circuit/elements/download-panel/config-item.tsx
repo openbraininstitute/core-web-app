@@ -8,13 +8,14 @@ import delay from 'lodash/delay';
 import saveAs from 'file-saver';
 
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { trackDownloadProgress } from '@/utils/track-download-progress';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { trackDownloadProgress } from '@/utils/download-progress';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { DownloadIcon } from '@/components/icons';
 import { formatBytes } from '@/utils/format';
 import { classNames } from '@/util/utils';
 
+import type { CircuitContentConfigurationKeys } from '@/features/entities/circuit/elements/download-panel/content-configuration';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
 import type { Nullable } from '@/utils/type';
 
@@ -22,7 +23,8 @@ export type TConfigChild = {
   asset: Nullable<DirectoryItem & { path: string }>;
   title: string;
   mimeType: string;
-  populations: Array<{ title: string; type: string }>;
+  subItems?: Array<{ title: string; type: string }> | null;
+  description?: string | null;
 };
 
 type TConfigChildProps = TConfigChild & {
@@ -37,16 +39,17 @@ function ConfigChild({
   showPrefix,
   title,
   mimeType,
-  populations,
+  subItems,
+  description,
   onDownload,
 }: TConfigChildProps) {
   const [downloadProgress, updateDownloadProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'downloading' | 'done'>('idle');
 
-  const onClick = () => {
+  const onClick = async () => {
     if (asset.path) {
       setStatus('downloading');
-      onDownload({
+      await onDownload({
         path: asset.path,
         onProgress: (p: number) => {
           updateDownloadProgress(p);
@@ -56,6 +59,7 @@ function ConfigChild({
           delay(() => setStatus('idle'), 3000);
         },
       });
+      updateDownloadProgress(0);
     }
   };
 
@@ -100,18 +104,21 @@ function ConfigChild({
         </div>
       </div>
       <p className="text-primary-2 max-w-2/3 text-base leading-normal font-light hyphens-auto">
-        {populations.map((a) => (
-          <span className="line-clamp-3" key={kebabCase(a.title)}>
-            {showPrefix} {a.title} {showType && a.type ? `(${a.type} ${showType})` : ''}
-          </span>
-        ))}
+        {subItems &&
+          subItems.length > 0 &&
+          subItems?.map((a) => (
+            <span className="line-clamp-3" key={kebabCase(a.title)}>
+              {showPrefix} {a.title} {showType && a.type ? `(${a.type} ${showType})` : ''}
+            </span>
+          ))}
+        {!subItems && <span className="line-clamp-3">{description}</span>}
       </p>
     </div>
   );
 }
 
 export type ConfigItemProps = {
-  id: string;
+  key: CircuitContentConfigurationKeys;
   name: string;
   description: ReactNode;
   count: number;
@@ -130,7 +137,7 @@ export type ConfigItemProps = {
   };
 };
 
-export default function ConfigItem({
+export function NodeOrEdgeConfigItem({
   name,
   description,
   count,

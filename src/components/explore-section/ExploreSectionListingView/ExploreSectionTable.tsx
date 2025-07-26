@@ -169,6 +169,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   scrollable = true,
   sticky,
   expandableConfig,
+  showHeader = true,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
@@ -219,6 +220,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   return (
     <ConfigProvider theme={{ hashed: false }}>
       <Table
+        showHeader={showHeader}
         ref={tableRef}
         sticky={sticky}
         aria-label="listing-view-table"

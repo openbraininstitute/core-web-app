@@ -33,14 +33,14 @@ const TabsConfig: Array<{ key: TabsKeys; title: string }> = [
 ];
 
 export default function EModelDetailView({ payload, params }: Props) {
-  const { activeTab } = useTabs({ tabsConfig: TabsConfig });
+  const { activeTab } = useTabs({ tabsConfig: TabsConfig, shallow: true });
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
       <Summary dataType={DataType.CircuitEModel} payload={payload.source}>
         {() => (
           <>
-            <Tabs tabsConfig={TabsConfig} />
+            <Tabs shallow tabsConfig={TabsConfig} />
             <div className="w-full flex-1">
               <Suspense fallback={<CentralLoadingSpinner />}>
                 <If id="configuration" condition={activeTab === 'configuration'}>
