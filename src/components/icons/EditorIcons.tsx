@@ -596,3 +596,83 @@ export function CopyDocument(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function Person(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M9.775 12q-.9 0-1.5-.675T7.8 9.75l.325-2.45q.2-1.425 1.3-2.363T12 4t2.575.938t1.3 2.362l.325 2.45q.125.9-.475 1.575t-1.5.675zM4 18v-.8q0-.85.438-1.562T5.6 14.55q1.55-.775 3.15-1.162T12 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T20 17.2v.8q0 .825-.587 1.413T18 20H6q-.825 0-1.412-.587T4 18"
+      />
+    </svg>
+  );
+}
+
+export function CopyDocumentFill(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M14 8H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h10c1.103 0 2-.897 2-2V10c0-1.103-.897-2-2-2"
+      />
+      <path
+        fill="currentColor"
+        d="M20 2H10a2 2 0 0 0-2 2v2h8a2 2 0 0 1 2 2v8h2a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2"
+      />
+    </svg>
+  );
+}
+
+export function LinkFill(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 12 12" {...props}>
+      <path
+        fill="currentColor"
+        d="M2.548 4.906a.8.8 0 0 1 1.04.077l.496.495l-2.08 2.08l-.1.11a1.724 1.724 0 0 0 2.538 2.328l2.08-2.08l.495.495a.8.8 0 0 1 0 1.131l-1.514 1.514l-.133.126A3.224 3.224 0 0 1 .944 6.497l1.514-1.514zm5.002-1.51a.75.75 0 0 1 .976 1.132L4.528 8.526l-.084.073a.75.75 0 0 1-.976-1.133l3.998-3.998zM6.63.817a3.224 3.224 0 0 1 4.426 4.685L9.542 7.017l-.09.077a.8.8 0 0 1-1.04-.077l-.496-.495l2.08-2.08l.1-.11a1.724 1.724 0 0 0-2.538-2.328l-2.08 2.08l-.495-.495a.8.8 0 0 1 0-1.13L6.497.943z"
+      />
+    </svg>
+  );
+}
+
+export function ShareAlt(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      viewBox="0 0 512 512"
+      {...props}
+    >
+      <path
+        d="M448 248L288 96v85.334C138.666 202.667 85.333 309.334 64 416c53.333-74.666 117.333-108.802 224-108.802v87.469L448 248z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+export function BuildingLibrary(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+        d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6l9 6m-1.5 12V10.333A48.4 48.4 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12z"
+      />
+    </svg>
+  );
+}
+
+export function Calendar(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>
+      <path
+        fill="currentColor"
+        d="M7.5 3A4.5 4.5 0 0 0 3 7.5v17A4.5 4.5 0 0 0 7.5 29h17a4.5 4.5 0 0 0 4.5-4.5v-17A4.5 4.5 0 0 0 24.5 3zM5 7.5A2.5 2.5 0 0 1 7.5 5h17A2.5 2.5 0 0 1 27 7.5V9H5zM5 11h22v13.5a2.5 2.5 0 0 1-2.5 2.5h-17A2.5 2.5 0 0 1 5 24.5z"
+      />
+    </svg>
+  );
+}

@@ -4,7 +4,7 @@ import { isBrowser } from '@/utils/environment';
 const CustomRowSelectionEvent = 'CustomRowSelectionEvent' as const;
 
 export type TCustomRowSelectionEvent<T> = {
-  record: T;
+  record?: T;
 };
 
 export function makeCustomRowSelectionEvent<T>(detail: TCustomRowSelectionEvent<T>) {

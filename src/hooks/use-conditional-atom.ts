@@ -12,12 +12,12 @@ import isNil from 'lodash/isNil';
  * @returns A loadable atom that resolves to the data either from the provided value or by fetching.
  */
 export function conditionalAtom<T>(data: T | null | undefined, fetchAtom: Atom<Promise<T>>) {
-  return loadable(
-    atom(async (get) => {
-      if (!isNil(data)) {
-        return data;
-      }
-      return await get(fetchAtom);
-    })
-  );
+  const innerAtom = atom(async (get) => {
+    if (!isNil(data)) {
+      return data;
+    }
+    return await get(fetchAtom);
+  });
+  innerAtom.debugLabel = 'inner-conditional-atom';
+  return loadable(innerAtom);
 }

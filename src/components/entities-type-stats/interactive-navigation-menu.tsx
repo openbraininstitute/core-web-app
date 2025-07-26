@@ -6,7 +6,6 @@ import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
 import get from 'lodash/get';
 
-import { useFilteredCircuits } from '../explore-section/Circuit/ListView/ExploreCircuitTable';
 import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';

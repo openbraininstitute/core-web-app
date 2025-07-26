@@ -1,27 +1,35 @@
+import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
+import isNil from 'lodash/isNil';
 import find from 'lodash/find';
-
 import map from 'lodash/map';
+
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { DataType } from '@/constants/explore-section/list-views';
 import {
   EmptyPreview,
+  EmptyValue,
+  RenderCustomField,
+  renderDate,
+  renderEmail,
   renderEmptyOrValue,
   renderFloatNumber,
+  renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityTypeEnum } from '@/api/entitycore/types';
 import { hasAssets } from '@/api/entitycore/guards';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -147,10 +155,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 184, align: 'left' },
   },
   [EntityCoreFields.CircuitNumberNeurons]: {
-    title: 'N° of neurons',
+    title: 'Number of neurons',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => {
-      return 'number_neurons' in r ? r.number_neurons : '-';
+      return renderLocalizedNumber('number_neurons' in r ? r.number_neurons : null);
     },
     isDisplayable: true,
     isFilterable: true,
@@ -161,10 +169,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 85 },
   },
   [EntityCoreFields.CircuitNumberSynapses]: {
-    title: 'N° of synapses',
+    title: 'Number of synapses',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => {
-      return 'number_synapses' in r ? r.number_synapses : '-';
+      return renderLocalizedNumber('number_synapses' in r ? r.number_synapses : null);
     },
     isDisplayable: true,
     isFilterable: true,
@@ -175,10 +183,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 85 },
   },
   [EntityCoreFields.CircuitNumberConnections]: {
-    title: 'N° of connections',
+    title: 'Number of connections',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => {
-      return 'number_connections' in r ? r.number_connections : '-';
+      return renderLocalizedNumber('number_connections' in r ? r.number_connections : null);
     },
     isDisplayable: true,
     isFilterable: true,
@@ -239,16 +247,64 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     style: { width: 80, align: 'left' },
   },
-  [EntityCoreFields.CircuitSubCircuitOf]: {
+  [EntityCoreFields.CircuitPublishedIn]: {
     className: 'text-left',
-    title: 'Subcircuit of',
+    title: 'Published in',
     filter: null,
     isDisplayable: true,
-    render: (r) => renderEmptyOrValue((r as ICircuit).sub_circuits?.length),
+    render: (r) => renderEmptyOrValue((r as ICircuit).published_in),
     vocabulary: {
-      plural: 'Subcircuit of',
-      singular: 'Subcircuit of',
+      plural: 'Published in',
+      singular: 'Published in',
     },
-    style: { width: 80, align: 'left' },
+  },
+  [EntityCoreFields.CircuitExperimentDate]: {
+    className: 'text-left',
+    title: 'Registration Date',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderDate((r as ICircuit).experiment_date),
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
+  },
+  [EntityCoreFields.CircuitContactEmail]: {
+    className: 'text-left',
+    title: 'Contact email',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderEmail((r as ICircuit).contact_email ?? 'bmeddah.ofc@gmail.com'),
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
+  },
+  [EntityCoreFields.CircuitRootCircuit]: {
+    className: 'text-left',
+    title: 'Root circuit',
+    filter: null,
+    isDisplayable: true,
+    renderForDetailView: (r) => {
+      if ('root_circuit_id' in r && !isNil(r.root_circuit_id))
+        return (
+          <RenderCustomField<ICircuit>
+            entityId={r.root_circuit_id}
+            entityType={EntityTypeEnum.Circuit}
+            CustomComponent={({ data, loading, error }) => {
+              if (loading) return <LoadingOutlined spin />;
+              if (error) return <WarningFilled className="text-amber-300" />;
+              return <>{data?.name}</>;
+            }}
+          />
+        );
+
+      return EmptyValue;
+    },
+    render: () => null,
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
   },
 };

@@ -48,7 +48,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   },
   [EntityCoreFields.Download]: {
     className: 'text-center',
-    title: <DownloadIcon className="text-primary-8" />,
+    title: <DownloadIcon className="text-primary-8 index-column" />,
+    description: 'Download item',
     filter: null,
     render: (record) => {
       const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -69,6 +70,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   },
   [EntityCoreFields.Name]: {
     title: 'Name',
+    description: 'Name of the entity',
     filter: CoreFieldFilterTypeEnum.Text,
     render: (r) => renderEmptyOrValue(r.name),
     vocabulary: {
