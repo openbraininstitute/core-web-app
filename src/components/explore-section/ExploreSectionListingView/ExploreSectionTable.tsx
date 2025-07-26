@@ -44,6 +44,8 @@ function CustomTH({
   handleResizing: () => void;
   className?: string;
 }) {
+  console.log('–– – ExploreSectionTable.tsx:48 – props:', props);
+
   const { position, left, right, zIndex, transform } = style;
 
   // preserve positioning styles for fixed columns, but use our custom styles for everything else
@@ -86,11 +88,13 @@ function CustomTH({
       className={combinedClassName}
       data-testid="column-header"
     >
-      <div className="flex w-full">
+      <div className="flex w-full items-center justify-center">
         <button
           className={classNames(
             'inline-flex w-full flex-col items-start',
-            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2'
+            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2',
+            '[&:has(.index-column)]:items-center [&:has(.index-column)]:justify-center',
+            '[&:has(.index-column)_.index-column]:text-gray-300'
           )}
           onClick={onClick}
           type="button"
@@ -169,6 +173,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   scrollable = true,
   sticky,
   expandableConfig,
+  showHeader = true,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
@@ -219,6 +224,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   return (
     <ConfigProvider theme={{ hashed: false }}>
       <Table
+        showHeader={showHeader}
         ref={tableRef}
         sticky={sticky}
         aria-label="listing-view-table"

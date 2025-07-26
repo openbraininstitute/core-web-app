@@ -39,7 +39,7 @@ const CommonSummaryViewFields = [
 ] as TypeSummaryProps[];
 
 export default function SummaryView({ showViewMode = false, payload: { source } }: Props) {
-  const { activeTab } = useTabs({ tabsConfig: TabsConfig });
+  const { activeTab } = useTabs({ tabsConfig: TabsConfig, shallow: true });
   useClearClientStorageCacheByKey();
 
   return (
@@ -52,7 +52,7 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
       >
         {() => (
           <>
-            <Tabs tabsConfig={TabsConfig} />
+            <Tabs shallow tabsConfig={TabsConfig} />
             <div className="w-full flex-1">
               <Suspense>
                 <If id="configuration" condition={activeTab === 'configuration'}>

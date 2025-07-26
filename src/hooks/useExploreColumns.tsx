@@ -231,6 +231,7 @@ export default function useExploreColumns<T>(
                 columnOrderBy(key, field);
               }
             },
+            title: isString(term?.title) ? term.title : '',
             showsortertooltip: {
               // eslint-disable-next-line no-nested-ternary
               title: term?.description ? term.description : isString(term?.title) ? term.title : '',

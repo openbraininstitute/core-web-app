@@ -8,13 +8,14 @@ import delay from 'lodash/delay';
 import saveAs from 'file-saver';
 
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { trackDownloadProgress } from '@/utils/track-download-progress';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { trackDownloadProgress } from '@/utils/download-progress';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { DownloadIcon } from '@/components/icons';
 import { formatBytes } from '@/utils/format';
 import { classNames } from '@/util/utils';
 
+import type { TCircuitContentConfigurationKeys } from '@/features/entities/circuit/elements/download-panel/content-configuration';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
 import type { Nullable } from '@/utils/type';
 
@@ -22,7 +23,8 @@ export type TConfigChild = {
   asset: Nullable<DirectoryItem & { path: string }>;
   title: string;
   mimeType: string;
-  populations: Array<{ title: string; type: string }>;
+  subItems?: Array<{ title: string; type: string }> | null;
+  description?: string | null;
 };
 
 type TConfigChildProps = TConfigChild & {
@@ -37,38 +39,48 @@ function ConfigChild({
   showPrefix,
   title,
   mimeType,
-  populations,
+  subItems,
+  description,
   onDownload,
 }: TConfigChildProps) {
   const [downloadProgress, updateDownloadProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'downloading' | 'done'>('idle');
 
-  const onClick = () => {
+  const onClick = async () => {
     if (asset.path) {
       setStatus('downloading');
-      onDownload({
+      await onDownload({
         path: asset.path,
         onProgress: (p: number) => {
           updateDownloadProgress(p);
           if (p >= 100) {
             setStatus('done');
+            delay(() => setStatus('idle'), 3000);
           }
-          delay(() => setStatus('idle'), 3000);
         },
       });
+      updateDownloadProgress(0);
     }
   };
 
+  const shouldBeDisabled = !asset.path || !asset.size;
   const action = match({ status })
     .with({ status: 'idle' }, () => (
       <Button
         onClick={onClick}
         type="text"
         htmlType="button"
-        className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
+        disabled={shouldBeDisabled}
+        className={classNames(
+          'flex items-center justify-center rounded-none border border-solid',
+          'hover:text-primary-6!',
+          shouldBeDisabled
+            ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
+            : 'border-primary-6 text-white'
+        )}
         aria-label={`download ${title}`}
         title={`download ${title}`}
-        icon={<DownloadIcon className="text-white!" />}
+        icon={<DownloadIcon className="text-current!" />}
       />
     ))
     .with({ status: 'downloading' }, () => (
@@ -93,31 +105,40 @@ function ConfigChild({
         <div className="w-2/3 hyphens-auto">
           <div className="line-clamp-2 text-lg font-bold text-white">{title}</div>
         </div>
-        <div className="text-primary-2 flex flex-row items-center gap-x-3 font-light">
+        <div
+          className={classNames(
+            'flex flex-row items-center gap-x-3 font-light',
+            shouldBeDisabled ? 'text-gray-400' : 'text-primary-2'
+          )}
+        >
           <div>{renderEmptyOrValue(asset.size ? formatBytes(asset.size) : null)}</div>
           <div>{renderEmptyOrValue(mimeType)}</div>
           {action}
         </div>
       </div>
       <p className="text-primary-2 max-w-2/3 text-base leading-normal font-light hyphens-auto">
-        {populations.map((a) => (
-          <span className="line-clamp-3" key={kebabCase(a.title)}>
-            {showPrefix} {a.title} {showType && a.type ? `(${a.type} ${showType})` : ''}
-          </span>
-        ))}
+        {subItems &&
+          subItems.length > 0 &&
+          subItems?.map((a) => (
+            <span className="line-clamp-3" key={kebabCase(a.title)}>
+              {showPrefix} {a.title} {showType && a.type ? `(${a.type} ${showType})` : ''}
+            </span>
+          ))}
+        {!subItems && <span className="line-clamp-3">{description}</span>}
       </p>
     </div>
   );
 }
 
 export type ConfigItemProps = {
-  id: string;
+  key: TCircuitContentConfigurationKeys;
   name: string;
   description: ReactNode;
   count: number;
   mimeType: string;
   showType: string | null;
   showPrefix: string | null;
+  emptyMessage?: string | null;
   items: Array<TConfigChild>;
   className?: string;
   downloadConfig: {
@@ -130,12 +151,13 @@ export type ConfigItemProps = {
   };
 };
 
-export default function ConfigItem({
+export function NetworkConfigItem({
   name,
   description,
   count,
   showType,
   showPrefix,
+  emptyMessage,
   mimeType,
   items,
   className,
@@ -206,8 +228,8 @@ export default function ConfigItem({
             );
           })
         ) : (
-          <div className="border-primary-7 text-primary-2 w-full border border-solid p-8 text-base font-light">
-            No files available for this type.
+          <div className="text-primary-4 w-full p-8 text-base font-light">
+            {emptyMessage ?? 'No files available for this type.'}
           </div>
         )}
       </div>

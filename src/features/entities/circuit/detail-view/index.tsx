@@ -1,20 +1,24 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 
+import RelatedPublications from '@/features/entities/circuit/elements/tabs-content/related-publications';
+import RelatedCircuits from '@/features/entities/circuit/elements/tabs-content/related-circuits';
+import Visualization from '@/features/entities/circuit/elements/tabs-content/visualization';
+import Overview from '@/features/entities/circuit/elements/tabs-content/overview';
 import DownloadPanel from '@/features/entities/circuit/elements/download-panel';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Summary from '@/features/details-view/summary';
-
-import { DataType } from '@/constants/explore-section/list-views';
+import If from '@/components/ConditionalRenderer/If';
 
 import { makeCustomRowSelectionEvent } from '@/components/explore-section/ExploreSectionListingView/expandable-row/custom-row-selection-event';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { DataType } from '@/constants/explore-section/list-views';
 import Tabs, { useTabs } from '@/components/detail-view-tabs';
+import { classNames } from '@/util/utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
-import If from '@/components/ConditionalRenderer/If';
 
 type Props = {
   // eslint-disable-next-line react/no-unused-prop-types
@@ -32,19 +36,45 @@ const TabsConfig: Array<{ key: TabsKeys; title: string }> = [
   { key: 'related_circuits', title: 'Related circuits' },
 ];
 
+function VisibilityWrapper({
+  children,
+  activeTab,
+  tabKey,
+}: {
+  children: React.ReactNode;
+  activeTab: TabsKeys | null;
+  tabKey: TabsKeys;
+}) {
+  if (!activeTab) return null;
+
+  return (
+    <div
+      className={classNames(
+        'w-full transition-opacity duration-100',
+        activeTab === tabKey
+          ? 'relative top-auto right-auto left-auto h-auto overflow-visible opacity-100'
+          : 'pointer-events-none absolute top-0 right-0 left-0 h-0 overflow-hidden opacity-0'
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function DetailView({ payload }: Props) {
   const { activeTab } = useTabs({ tabsConfig: TabsConfig, shallow: true });
+
+  const [visitedTabs, setVisitedTabs] = useState<Set<TabsKeys>>(new Set([activeTab as TabsKeys]));
+  useEffect(() => {
+    setVisitedTabs((prev) => new Set([...prev, activeTab as TabsKeys]));
+  }, [activeTab]);
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
       <Summary
         dataType={DataType.Circuit}
         payload={payload}
-        commonFields={[
-          { field: EntityCoreFields.Description, className: 'col-span-3' },
-          { field: EntityCoreFields.CreatedBy },
-          { field: EntityCoreFields.CreationDate },
-        ]}
-        fieldsClassName="grid w-1/2 auto-rows-2 grid-cols-2 gap-x-8 gap-y-6"
+        commonFields={[{ field: EntityCoreFields.Description, className: 'col-span-3' }]}
+        fieldsClassName="grid w-1/2 auto-rows-2 grid-cols-3 gap-x-8 gap-y-6"
         actions={{
           onDownload: () => makeCustomRowSelectionEvent({ record: payload }),
         }}
@@ -52,21 +82,37 @@ export default function DetailView({ payload }: Props) {
         {() => {
           return (
             <div className="mt-10">
-              <Tabs tabsConfig={TabsConfig} />
-              <div className="w-full flex-1">
+              <Tabs shallow tabsConfig={TabsConfig} />
+              <div className="relative w-full flex-1">
                 <Suspense fallback={<CentralLoadingSpinner />}>
-                  <If id="visualization" condition={activeTab === 'visualization'}>
-                    <div></div>
-                  </If>
-                  <If id="overview" condition={activeTab === 'overview'}>
-                    <div>Overview</div>
-                  </If>
-                  <If id="related_publications" condition={activeTab === 'related_publications'}>
-                    <div>Related Publications</div>
-                  </If>
-                  <If id="related_circuits" condition={activeTab === 'related_circuits'}>
-                    <div>Related Circuits</div>
-                  </If>
+                  <div className="relative">
+                    <If id="visualization-tab" condition={visitedTabs.has('visualization')}>
+                      <VisibilityWrapper activeTab={activeTab} tabKey="visualization">
+                        <Visualization circuit={payload} />
+                      </VisibilityWrapper>
+                    </If>
+
+                    <If id="overview-tab" condition={visitedTabs.has('overview')}>
+                      <VisibilityWrapper activeTab={activeTab} tabKey="overview">
+                        <Overview circuit={payload} />
+                      </VisibilityWrapper>
+                    </If>
+
+                    <If
+                      id="related-publications-tab"
+                      condition={visitedTabs.has('related_publications')}
+                    >
+                      <VisibilityWrapper activeTab={activeTab} tabKey="related_publications">
+                        <RelatedPublications circuit={payload} />
+                      </VisibilityWrapper>
+                    </If>
+
+                    <If id="related-circuits-tab" condition={visitedTabs.has('related_circuits')}>
+                      <VisibilityWrapper activeTab={activeTab} tabKey="related_circuits">
+                        <RelatedCircuits circuit={payload} />
+                      </VisibilityWrapper>
+                    </If>
+                  </div>
                 </Suspense>
               </div>
             </div>

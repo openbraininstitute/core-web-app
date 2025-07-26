@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
+import { useCallback } from 'react';
 import Link from 'next/link';
 
 import BookmarkButton, { DetailViewBookmarkButton } from '@/features/bookmark/control';
@@ -33,7 +33,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
   }>();
 
   const entity = getEntityBySlug({ slug: type });
-  const hasWorkspaceContext = virtualLabId && projectId;
+  const withinWorkspace = virtualLabId && projectId;
   const handleDownload = useCallback(() => onDownload?.(detail), [detail, onDownload]);
 
   return (
@@ -43,10 +43,10 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
         <div className="flex items-center gap-5">
           <div className="col-span-3 text-2xl font-bold">{detail?.name}</div>
         </div>
-        {session && (
+        {session && entity && (
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {entity?.isCopyable && <DetailViewCopyButton id={detail.id} />}
-            {entity?.isSimulatable && hasWorkspaceContext && (
+            {entity.isCopyable && <DetailViewCopyButton id={detail.id} />}
+            {entity.isSimulatable && withinWorkspace && (
               <Link
                 href={resolveExperimentUrl({
                   ctx: { virtualLabId, projectId },
@@ -59,7 +59,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
                 </ToolbarButton>
               </Link>
             )}
-            {entity?.isBookmarkable && hasWorkspaceContext && (
+            {entity.isBookmarkable && withinWorkspace && (
               <BookmarkButton
                 virtualLabId={virtualLabId}
                 entityId={detail.id}
@@ -69,7 +69,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
                 customButton={DetailViewBookmarkButton}
               />
             )}
-            {entity?.isDownloadable && (
+            {entity.isDownloadable && (
               <button
                 type="button"
                 title="Download"
