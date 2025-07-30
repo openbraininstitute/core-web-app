@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
 import { useFetchSingleType } from '@/components/documentation/hooks/use-entitycore-fetch-single-type';
-import { CopyIcon } from '@/components/explore-section/Circuit/icon/ArticlesIcons';
+import { CopyIcon } from '@/components/icons/ArticlesIcons';
 import { unslugify } from '@/components/explore-section/utils';
 
 export type CopyButtonProps = {

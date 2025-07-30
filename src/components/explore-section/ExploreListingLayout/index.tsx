@@ -10,9 +10,6 @@ import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
-import { StatError } from '../ExploreInteractive/StatItem';
-
-import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
@@ -29,7 +26,6 @@ import {
   EntityCoreExperimentalConfiguration,
   EntityCoreModelConfiguration,
 } from '@/entity-configuration/domain';
-import { resolveDataKey } from '@/utils/key-builder';
 import { ensureString } from '@/util/type-guards';
 
 import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
@@ -41,7 +37,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   const router = useRouter();
   const params = useParams<WorkspaceContext & { type: EntitySlugValue; id: string }>();
   const pathname = usePathname();
-  const dataKey = resolveDataKey({ projectId: params.projectId, section: 'explore' });
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
   const brainRegionHierarchy = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
@@ -106,30 +101,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
       },
     };
   });
-
-  const { filteredCircuits, loading, error } = useFilteredCircuits({ dataKey });
-
-  if (error) {
-    return <StatError text={error} />;
-  }
-
-  if (showCircuitMenu && !loading) {
-    const circuitActive = activePath === 'circuit';
-
-    items.push({
-      key: 'circuit',
-      title: 'Circuit',
-      // @ts-expect-error
-      entitytype: 'Circuit',
-      label: `Circuit (${filteredCircuits.count})`,
-      className: 'text-center font-semibold',
-      style: {
-        backgroundColor: circuitActive ? 'white' : '#002766',
-        color: circuitActive ? '#002766' : 'white',
-        flexBasis: menuItemWidth,
-      },
-    });
-  }
 
   // NOTE: this is legacy to handle details page,
   // TODO: (this should change to layout per page type (one for listing and one for details))

@@ -4,14 +4,15 @@ import { useEffect, useState } from 'react';
 
 import AlphabeticalFilter from '@/components/documentation/global/AlphabeticalFilter'; // Adjust path if needed based on your project structure
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
-import { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { slugifyForUrl } from '@/components/explore-section/utils';
 import { classNames } from '@/util/utils';
+
+import type { IAnnotation } from '@/api/entitycore/types/shared/global';
 
 import styles from './all-types-block.module.css';
 
 interface SectionItemProps {
-  item: CellTypeProps;
+  item: IAnnotation;
   index: number;
   highlightedCellType: string | null;
 }
@@ -49,11 +50,11 @@ export default function AllTypesBlock({
 
   const cellcontent = useFetchEntityTypes({ cellType });
 
-  const data: CellTypeProps[] = (cellcontent.data?.data ?? []).map((item: any) => ({
+  const data: IAnnotation[] = (cellcontent.data?.data ?? []).map((item: any) => ({
     ...item,
     creation_date: item.creation_date ?? '',
     update_date: item.update_date ?? '',
-  })) as CellTypeProps[];
+  })) as IAnnotation[];
 
   const sortedData = data.sort((a, b) => a.pref_label.localeCompare(b.pref_label));
 
