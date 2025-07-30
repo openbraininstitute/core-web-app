@@ -16,9 +16,9 @@ export default function WidgetRepositories({ className }: WidgetRepositoriesProp
 
   return (
     <div className={classNames(className, styles.repositories, styleBlockFullWidthPadded)}>
-      {repositories.map((repo) => (
-        <RepositoryCard key={repo.url} value={repo} />
-      ))}
+      {repositories.map((repo) => {
+        return <RepositoryCard key={repo.title} value={repo} />;
+      })}
     </div>
   );
 }

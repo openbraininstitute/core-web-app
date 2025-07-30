@@ -9,10 +9,10 @@ import VerticalSpace from './components/VerticalSpace';
 import FooterPanel from './layout/FooterPanel';
 import Hero from './layout/Hero';
 import Menu from './layout/Menu';
-import SectionContact from './sections/SectionContact';
 import SectionGeneric from './sections/SectionGeneric';
 import SectionNews from './sections/SectionNews';
 import { EnumSection } from './sections/sections';
+import { ContentForRichText } from './content';
 
 import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
 import { logError } from '@/util/logger';
@@ -21,13 +21,21 @@ import { classNames } from '@/util/utils';
 import styles from './LandingPage.module.css';
 import './global.css';
 
-interface LandingPageProps {
-  className?: string;
-  section: EnumSection;
-  errorCode?: string;
-}
+type LandingPageProps =
+  | {
+      className?: string;
+      errorCode?: string;
+      section: EnumSection;
+      content: ContentForRichText;
+    }
+  | {
+      className?: string;
+      errorCode?: string;
+      section: EnumSection.News;
+      content?: never;
+    };
 
-export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
+export default function LandingPage({ className, section, errorCode, content }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
 
   useEffect(() => {
@@ -42,7 +50,11 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
       <div className={classNames(className, styles.landingPage)}>
         <Menu scrollHasStarted={scrollHasStarted} section={section} />
         <Hero section={section} />
-        <PaddedBlock>{renderSection(section)}</PaddedBlock>
+        <PaddedBlock>
+          {section === EnumSection.News
+            ? renderSection({ section })
+            : renderSection({ section, content })}
+        </PaddedBlock>
         <VerticalSpace height="30px" />
         <FooterPanel />
         {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
@@ -50,8 +62,17 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
     </>
   );
 }
+type RenderSectionProps =
+  | {
+      section: EnumSection;
+      content: ContentForRichText;
+    }
+  | {
+      section: EnumSection.News;
+      content?: never;
+    };
 
-function renderSection(section: EnumSection): React.ReactNode {
+function renderSection({ section, content }: RenderSectionProps): React.ReactNode {
   switch (section) {
     case EnumSection.Home:
     case EnumSection.About:
@@ -64,9 +85,8 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.PrivacyPolicy:
     case EnumSection.ComingSoon:
     case EnumSection.Story:
-      return <SectionGeneric section={section} />;
     case EnumSection.Contact:
-      return <SectionContact />;
+      return <SectionGeneric content={content} />;
     case EnumSection.News:
       return <SectionNews />;
     default:

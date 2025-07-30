@@ -1,15 +1,16 @@
+'use client';
+
 import React from 'react';
+import isEmpty from 'lodash/isEmpty';
 
 import SanityContentRTF from '../../components/SanityContentRTF';
-import { useSanityContentRTF } from '../../content/content';
-import { EnumSection } from '../sections';
+import { ContentForRichText } from '../../content';
 
 interface GenericSectionProps {
-  section: EnumSection;
+  content: ContentForRichText;
 }
 
-export default function SectionGeneric({ section }: GenericSectionProps) {
-  const content = useSanityContentRTF(section);
-
+export default function SectionGeneric({ content }: GenericSectionProps) {
+  if (isEmpty(content)) return null;
   return <SanityContentRTF value={content} />;
 }

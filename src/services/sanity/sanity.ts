@@ -1,10 +1,12 @@
 /* eslint-disable no-console */
 import React from 'react';
-
 import { createClient } from 'next-sanity';
 
-import { logError } from '@/util/logger';
+import queryContentRTF from '@/components/LandingPage/content/content.groq';
+import { ContentForRichText } from '@/components/LandingPage/content';
+import { Section } from '@/components/LandingPage/constants';
 import { isUndefined } from '@/util/type-guards';
+import { logError } from '@/util/logger';
 
 const client = createClient({
   projectId: 'fgi7eh1v',
@@ -18,7 +20,7 @@ const client = createClient({
  * @returns The expected object, or:
  *
  * - `undefined` if the query has not finished yet.
- * - `null` if an error occured.
+ * - `null` if an error occurred.
  */
 export function useSanity<T>(
   query: string,
@@ -46,19 +48,16 @@ export async function fetchSanity<T>(
 
   try {
     if (typeGuard(data)) return data;
-    throw Error('Type guard rejeted this type, but without any explanation!');
+    throw Error('Type guard rejected this type, but without any explanation!');
   } catch (ex) {
     console.log('The following Sanity GROQ query returned a data of unexpected type:');
-    console.log(`%c${query}`, 'font-family: monospace; color: #0f0; bakground: #000');
+    console.log(`%c${query}`, 'font-family: monospace; color: #0f0; background: #000');
     console.log(data);
     const msg = ex instanceof Error ? ex.message : `${ex}`;
     console.log(`%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
     return null;
   }
 }
-
-// Prevent a query from being fetched twice.
-const cache = new Map<string, unknown>();
 
 /**
  * Query Sanity without checking the returned format.
@@ -67,10 +66,7 @@ const cache = new Map<string, unknown>();
  *
  * @see https://open-brain-institute.sanity.studio
  */
-async function fetchSanityContent(query: string): Promise<unknown> {
-  const fromCache = cache.get(query);
-  if (fromCache) return fromCache;
-
+export async function fetchSanityContent(query: string): Promise<unknown> {
   try {
     const data = await client.fetch(
       query,
@@ -79,10 +75,19 @@ async function fetchSanityContent(query: string): Promise<unknown> {
         cache: 'no-cache',
       }
     );
-    cache.set(query, data);
+
     return data;
   } catch (ex) {
     logError('Unable to connect to Sanity!', ex);
     return null;
   }
+}
+
+export async function fetchSanityPageContent(section: Section): Promise<ContentForRichText> {
+  const slug = section.slug.split('/').pop() || '/';
+
+  const query = queryContentRTF.replaceAll('<SLUG>', slug);
+  const content = (await fetchSanityContent(query)) as ContentForRichText;
+
+  return content;
 }

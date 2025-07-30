@@ -1,7 +1,7 @@
 import SocialMediaLinks from '../../components/social-media-links';
 import { MENU_ITEMS } from '../../constants';
 import { EnumSection } from '../../sections/sections';
-import { gotoSection } from '../../utils';
+import { gotoSection } from '../../client-utils';
 import NewsLetterSubscription from './NewsLetterSubscription';
 
 import { classNames } from '@/util/utils';

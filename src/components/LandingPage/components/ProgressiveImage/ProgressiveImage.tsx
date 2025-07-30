@@ -33,16 +33,18 @@ export default function ProgressiveImage({
       }}
       className={classNames(className, styles.progressiveImage)}
     >
-      <Image
-        className={classNames(styles.image, loaded && styles.show)}
-        onLoad={() => {
-          setLoaded(true);
-        }}
-        src={src}
-        width={width}
-        height={height}
-        alt={alt}
-      />
+      {src && (
+        <Image
+          className={classNames(styles.image, loaded && styles.show)}
+          onLoad={() => {
+            setLoaded(true);
+          }}
+          src={src}
+          width={width}
+          height={height}
+          alt={alt}
+        />
+      )}
     </div>
   );
 }

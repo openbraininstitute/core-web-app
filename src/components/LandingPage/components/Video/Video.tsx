@@ -1,5 +1,8 @@
+'use client';
+
 /* eslint-disable jsx-a11y/media-has-caption */
 import { usePathname } from 'next/navigation';
+
 import React, { CSSProperties, SyntheticEvent, useRef, useState } from 'react';
 
 import { isNumber } from '@/util/type-guards';
@@ -117,20 +120,22 @@ export default function ProgressiveVideo({
           )}
         </>
       )}
-      <video
-        className={classNames(controls && styles.pointer)}
-        src={src}
-        ref={refVideo}
-        controls={controls}
-        muted
-        loop={!controls}
-        disablePictureInPicture
-        playsInline
-        autoPlay={!controls && !isHomepage}
-        onPlay={handlePlay}
-        onCanPlay={handleReady}
-        onTimeUpdate={handleTimeUpdate}
-      />
+      {src && (
+        <video
+          className={classNames(controls && styles.pointer)}
+          src={src}
+          ref={refVideo}
+          controls={controls}
+          muted
+          loop={!controls}
+          disablePictureInPicture
+          playsInline
+          autoPlay={!controls && !isHomepage}
+          onPlay={handlePlay}
+          onCanPlay={handleReady}
+          onTimeUpdate={handleTimeUpdate}
+        />
+      )}
     </div>
   );
 }
