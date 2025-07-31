@@ -1,8 +1,9 @@
 'use client';
 
 import { RowSelectionType } from 'antd/es/table/interface';
-import { ReactNode } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
+import { ReactNode } from 'react';
+import type { TableProps } from 'antd';
 
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
 import ExploreSectionTable, {
@@ -43,6 +44,7 @@ export interface Props<T extends EntityCoreIdentifiable> {
   style?: Record<'background', string>;
   showLoadingState?: boolean;
   useBrainRegion?: boolean;
+  rowClassName?: string | TableProps<T>['rowClassName'];
 }
 
 export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
@@ -61,6 +63,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   tableClass = 'h-full overflow-y-hidden',
   showLoadingState = true,
   useBrainRegion = true,
+  rowClassName,
 }: Props<T>) {
   const { node } = useBrainRegionHierarchy({ dataKey });
 
@@ -147,6 +150,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 onRowsSelected={onRowsSelected}
                 dataKey={dataKeyExpand}
                 useBrainRegion={useBrainRegion}
+                rowClassName={rowClassName}
               />
             </>
           )}
