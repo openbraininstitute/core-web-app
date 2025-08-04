@@ -1,15 +1,12 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useId } from 'react';
+import { HTMLAttributes, TdHTMLAttributes, useEffect, useId } from 'react';
 
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
-import {
-  checkSelectedEmodelBlackList,
-  EmodelBlackList,
-} from '@/page-wrappers/build/me-model/helpers';
+import { checkSelectedEmodelBlackList } from '@/page-wrappers/build/me-model/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
@@ -119,7 +116,7 @@ export default function EmodelSelection({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="h-full px-10" id="explore-table-container-for-observable ">
+    <div className="h-full px-10" id="explore-table-container-for-observable">
       <ExploreSectionListingView<IEModel>
         dataKey={dataKey}
         containerClass="h-full bg-white"
@@ -136,30 +133,41 @@ export default function EmodelSelection({ params, searchParams }: Props) {
             Select e-model
           </Btn>
         )}
+        onRow={(row) => {
+          if (checkSelectedEmodelBlackList(row))
+            // this new line in the attribute is required to be displayed in two lines
+            return {
+              'black-listed': `This e-model cannot be combined 
+              with any morphology for now.
+              `,
+            } as HTMLAttributes<any> & TdHTMLAttributes<any>;
+          return {};
+        }}
         rowClassName={(row: IEModel) => {
-          return EmodelBlackList.includes(row.name)
+          return checkSelectedEmodelBlackList(row)
             ? classNames(
                 'bg-gray-200 [&_td]:bg-gray-200! hover:[bg-gray-200] [&:hover_td]:bg-gray-200',
                 '[&_.ant-radio-input]:pointer-events-none [&_.ant-radio-wrapper]:pointer-events-none [&_.ant-radio]:pointer-events-none [&_.ant-radio-input]:pointer-events-none',
                 '[&_.ant-radio-input]:cursor-not-allowed [&_.ant-radio-wrapper]:cursor-not-allowed',
                 '[&_.ant-table-cell]:cursor-not-allowed',
                 `
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:content-['This_e-model_cannot_be_combined_\\a_with_any_morphology_for_now.']!
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:absolute
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:bg-yellow-100
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:backdrop-blur-xl
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:border
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:border-yellow-100/20
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:shadow-lg
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:text-primary-8
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:text-sm
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:px-2
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:py-1
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:rounded
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:whitespace-pre
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:z-50
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:top-[10px]
-                  [&_td:has(.ant-radio-wrapper)]:hover:after:left-[10px]
+                  [tr:has(.ant-radio-wrapper)]:relative!
+                  [tr:has(.ant-radio-wrapper)]:hover:after:content-[attr(black-listed)]!
+                  [tr:has(.ant-radio-wrapper)]:hover:after:absolute
+                  [tr:has(.ant-radio-wrapper)]:hover:after:bg-yellow-100
+                  [tr:has(.ant-radio-wrapper)]:hover:after:backdrop-blur-xl
+                  [tr:has(.ant-radio-wrapper)]:hover:after:border
+                  [tr:has(.ant-radio-wrapper)]:hover:after:border-yellow-100/20
+                  [tr:has(.ant-radio-wrapper)]:hover:after:shadow-lg
+                  [tr:has(.ant-radio-wrapper)]:hover:after:text-primary-8
+                  [tr:has(.ant-radio-wrapper)]:hover:after:text-sm
+                  [tr:has(.ant-radio-wrapper)]:hover:after:px-2
+                  [tr:has(.ant-radio-wrapper)]:hover:after:py-1
+                  [tr:has(.ant-radio-wrapper)]:hover:after:rounded
+                  [tr:has(.ant-radio-wrapper)]:hover:after:whitespace-pre-line
+                  [tr:has(.ant-radio-wrapper)]:hover:after:z-50
+                  [tr:has(.ant-radio-wrapper)]:hover:after:top-[10px]
+                  [tr:has(.ant-radio-wrapper)]:hover:after:left-[10px]
                 `
               )
             : '';

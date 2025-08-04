@@ -13,6 +13,7 @@ import BookmarkButton from '@/features/bookmark/control';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { DataType } from '@/constants/explore-section/list-views';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { classNames } from '@/util/utils';
 import {
@@ -74,7 +75,10 @@ function BrowseModelsTab() {
     <>
       <div className="flex grow flex-col">
         <ScopeSelectorSmall expanded={expanded} onMenuExpand={onMenuExpand} />
-        {dataType ? (
+
+        {dataType &&
+        dataType !== DataType.PairedNeuronCircuit &&
+        dataType !== DataType.SmallMicrocircuit ? (
           <div
             id="explore-table-container-for-observable"
             className={classNames(

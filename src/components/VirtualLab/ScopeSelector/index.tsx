@@ -114,7 +114,10 @@ export function ScopeSelector() {
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
 
-    if (id === 'small-microcircuit' && section === 'build') {
+    if (
+      (tileType === 'small-microcircuit' || tileType === 'paired-neurons') &&
+      section === 'build'
+    ) {
       // eslint-disable-next-line
       disabled = true;
     }
