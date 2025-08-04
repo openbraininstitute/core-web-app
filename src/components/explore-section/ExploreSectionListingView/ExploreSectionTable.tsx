@@ -120,11 +120,14 @@ function BaseTable<T extends EntityCoreIdentifiable>({
   sticky,
   expandableConfig,
   rowClassName,
+  tableStyle,
+  onRow,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
     expandableConfig?: ExpandableConfig<T>;
+    tableStyle?: CSSProperties | undefined;
   }) {
   const [containerDimension, setContainerDimension] = useState<{ height: number; width: number }>({
     height: 0,
@@ -172,6 +175,7 @@ function BaseTable<T extends EntityCoreIdentifiable>({
       <Table
         ref={tableRef}
         sticky={sticky}
+        style={tableStyle}
         aria-label="listing-view-table"
         className={classNames(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md')}
         columns={
@@ -198,6 +202,7 @@ function BaseTable<T extends EntityCoreIdentifiable>({
             isString(rowClassName) ? rowClassName : rowClassName?.(row, index, indent)
           )
         }
+        onRow={onRow}
         rowKey={(row) => row.id}
         rowSelection={rowSelection}
         scroll={
@@ -231,6 +236,8 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
   useBrainRegion = true,
   expandableConfig,
   rowClassName,
+  tableStyle,
+  onRow,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -242,6 +249,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
     dataKey: string;
     useBrainRegion?: boolean;
     expandableConfig?: ExpandableConfig<T>;
+    tableStyle?: CSSProperties | undefined;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -276,6 +284,8 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
         scrollable={scrollable}
         expandableConfig={expandableConfig}
         rowClassName={rowClassName}
+        style={tableStyle}
+        onRow={onRow}
       />
       {(!autohideControls || (autohideControls && selectedRows.length > 0)) && (
         <TableControls
