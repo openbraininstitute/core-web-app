@@ -6,15 +6,15 @@ import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
 import get from 'lodash/get';
 
+import { useFilteredCircuits } from '../explore-section/Circuit/ListView/ExploreCircuitTable';
 import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
-import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';
 import {
-  EntityCoreExperimentalConfiguration,
-  EntityCoreModelConfiguration,
-} from '@/entity-configuration/domain';
+  ExperimentalEntitiesTileTypes,
+  ModelEntitiesTileTypes,
+} from '@/components/entities-type-stats/helpers';
 
 import type { EntityCountResponse } from '@/api/entitycore/types/entities/entity';
 import type { WorkspaceContext } from '@/types/common';
@@ -60,7 +60,7 @@ function EntityTypeStats(props: StatsPanelProps) {
   return match(selectedTab)
     .with('experimental-data', () => (
       <>
-        {Object.entries(EntityCoreExperimentalConfiguration).map(([key, value]) => {
+        {Object.entries(ExperimentalEntitiesTileTypes).map(([key, value]) => {
           const href = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
           let records = '';
           let isError = false;
@@ -90,7 +90,7 @@ function EntityTypeStats(props: StatsPanelProps) {
     ))
     .with('model-data', () => (
       <>
-        {Object.entries(EntityCoreModelConfiguration).map(([key, value]) => {
+        {Object.entries(ModelEntitiesTileTypes).map(([key, value]) => {
           const href = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
           let records = '';
           let isError = false;
@@ -126,14 +126,6 @@ function EntityTypeStats(props: StatsPanelProps) {
       </>
     ))
     .otherwise(() => null);
-
-  /**
-   * Daniela asked that we removed this section
-   * https://github.com/openbraininstitute/prod-explore-functionality/issues/47
-   */
-  // if (dataTypeActiveTab === 'literature') {
-  //   component = <LiteratureForExperimentType />;
-  // }
 }
 
 function EntityTypeStatsPanelContainer({ children, dataKey }: Props) {

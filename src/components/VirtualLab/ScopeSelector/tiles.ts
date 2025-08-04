@@ -1,31 +1,32 @@
+import { ModelEntitySlug } from '@/entity-configuration/domain/slug';
 import {
   EntityCoreConfiguration,
   TEntityCoreConfigurationItem,
 } from '@/entity-configuration/domain';
 
-export enum ModelTileType {
-  IonChannel = 'ion-channel',
-  SingleNeuron = 'single-neuron',
-  TinyCircuit = 'small-microcircuit',
-  BrainRegions = 'brain-regions',
+export const ModelTileType = {
+  IonChannel: 'ion-channel',
+  SingleNeuron: 'single-neuron',
+  SmallMicrocircuit: ModelEntitySlug.SmallMicrocircuit,
+  BrainRegions: 'brain-regions',
 
-  Metabolism = 'metabolism',
-  Synaptome = 'synaptome',
-  Microcircuit = 'microcircuit',
-  BrainSystems = 'brain-systems',
+  Metabolism: 'metabolism',
+  Synaptome: ModelEntitySlug.SingleNeuronSynaptome,
+  Microcircuit: ModelEntitySlug.Microcircuit,
+  BrainSystems: 'brain-systems',
 
-  NeuroGliaVasculature = 'neuro-glia-vasculature',
-  PairedNeurons = 'paired-neurons',
-  NeuroGliaVasculatureCircuit = 'neuro-glia-vasculature-circuit',
-  WholeBrain = 'whole-brain',
-}
+  NeuroGliaVasculature: 'neuro-glia-vasculature',
+  PairedNeurons: ModelEntitySlug.PairedNeuronsCircuit,
+  NeuroGliaVasculatureCircuit: 'neuro-glia-vasculature-circuit',
+  WholeBrain: 'whole-brain',
+} as const;
 
-export type SectionTypeValue = `${ModelTileType}`;
+export type SectionTypeValue = (typeof ModelTileType)[keyof typeof ModelTileType];
 
 export type TTileConfig = {
   id: string;
   title: string;
-  type: ModelTileType;
+  type: SectionTypeValue;
   description: string;
   img: string;
   disabled: boolean;
@@ -69,15 +70,15 @@ export const ModelTilesConfig: Array<TTileConfig> = [
   {
     id: 'small-microcircuit',
     title: 'Small Microcircuit',
-    type: ModelTileType.TinyCircuit,
+    type: ModelTileType.SmallMicrocircuit,
     description:
       'Design and run virtual experiments using circuits with 3-20 Hodgkin-Huxley cell models. These small microcircuits are often extracted from larger circuit models.',
     img: 'https://cdn.sanity.io/images/fgi7eh1v/staging/9b98c13a388644f3b65c08b95b9471f6a5818f5b-456x456.jpg',
     disabled: false,
     url: null,
     entities: {
-      build: EntityCoreConfiguration.Circuit,
-      simulate: EntityCoreConfiguration.SimulationCampaign,
+      build: EntityCoreConfiguration.SmallMicrocircuit,
+      simulate: EntityCoreConfiguration.SmallMicrocircuitSimulation,
     },
   },
   {
@@ -108,8 +109,8 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     img: 'https://cdn.sanity.io/images/fgi7eh1v/staging/64aabdf189cc9f2cb985eb6c40234d044713d94f-456x456.jpg',
     disabled: false,
     url: {
-      build: 'build/synaptome/new',
-      explore: 'explore/interactive/model/synaptome',
+      build: `build/${ModelTileType.Synaptome}/new`,
+      explore: `explore/interactive/model/${ModelTileType.Synaptome}`,
     },
     entities: {
       build: EntityCoreConfiguration.SingleNeuronSynaptome,
@@ -148,10 +149,15 @@ export const ModelTilesConfig: Array<TTileConfig> = [
     id: 'paired-neurons',
     title: 'Paired Neurons',
     type: ModelTileType.PairedNeurons,
-    description: 'Coming soon.',
+    description:
+      'Retrieve interconnected Hodgkin-Huxley cell models from a circuit and conduct a simulated experiment by establishing a stimulation and reporting protocol.',
     img: 'https://cdn.sanity.io/images/fgi7eh1v/staging/70d553646239f9a4bd866fb4fb178e4b3467b1b9-456x456.jpg',
-    disabled: true,
+    disabled: false,
     url: null,
+    entities: {
+      build: EntityCoreConfiguration.PairedNeuronCircuit,
+      simulate: EntityCoreConfiguration.PairedNeuronCircuitSimulation,
+    },
   },
   {
     id: 'neuro-glia-vasculature-circuit',

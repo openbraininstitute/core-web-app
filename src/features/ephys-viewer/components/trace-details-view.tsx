@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
-import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
+import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
 
 interface TraceDetailsViewProps {

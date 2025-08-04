@@ -27,17 +27,20 @@ import { AtomsMap, JSONSchema, TabType } from './types';
 
 import { File, SimulationFiles } from './_components/simulation-files';
 import { SimulationStatusBadge } from './_components/simulation-status';
+import errorRegistry from './error-registry';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 import { useLastTruthyValue } from '@/hooks/hooks';
-import { runCircuitSimulation } from '@/services/small-scale-simulator/circuit';
+import { messages } from '@/i18n/en/simulation';
+import { runSimulation } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { assertErrorMessage, classNames } from '@/util/utils';
-
+import { getErrorMessage } from '@/utils/error';
 import styles from './small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
@@ -402,7 +405,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     setSimRequestInProgress(true);
     try {
       for (const simId of simExecSelectedSimulationIds) {
-        await runCircuitSimulation({
+        await runSimulation({
           ctx: { virtualLabId, projectId },
           simulationId: simulations[0].id,
           onMessage: (message) => {
@@ -429,9 +432,14 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
         });
       }
     } catch (error) {
-      notification.error({
-        message: 'Error while requesting one of the simulation runs. Please try again later',
-      });
+      const defaultMsg = messages.RunningSimulationDefaultError;
+
+      if (error instanceof ApiError) {
+        const message = getErrorMessage(error.cause?.code, errorRegistry, defaultMsg);
+        return notification.error({ message, duration: 20 });
+      }
+
+      notification.error({ message: defaultMsg, duration: 20 });
     } finally {
       setSimRequestInProgress(false);
     }

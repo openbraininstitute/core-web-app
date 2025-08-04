@@ -146,7 +146,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 80 },
     isDisplayable: true,
   },
-  [EntityCoreFields.NumberNeurons]: {
+  [EntityCoreFields.CircuitNumberNeurons]: {
     title: 'Number of neurons',
     filter: null,
     render: (r) => {
@@ -155,7 +155,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     style: { width: 70 },
   },
-  [EntityCoreFields.NumberSynapses]: {
+  [EntityCoreFields.CircuitNumberSynapses]: {
     title: 'Number of synapses',
     filter: null,
     render: (r) => {
@@ -164,7 +164,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     style: { width: 70 },
   },
-  [EntityCoreFields.NumberConnections]: {
+  [EntityCoreFields.CircuitNumberConnections]: {
     title: 'Number of connections',
     filter: null,
     render: (r) => {

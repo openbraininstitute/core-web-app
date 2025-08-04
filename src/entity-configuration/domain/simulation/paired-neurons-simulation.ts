@@ -3,6 +3,7 @@ import keyBy from 'lodash/keyBy';
 
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -10,7 +11,6 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { getAssetElement } from '@/api/entitycore/utils';
-
 import {
   createSimulationCampaign,
   getCircuitSimulationCampaign,
@@ -18,6 +18,7 @@ import {
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
@@ -29,12 +30,18 @@ async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,
+  circuitFilter,
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
+  circuitFilter?: Partial<ICircuitFilter>;
 }) {
-  const source = await getCircuitSimulationCampaigns({ context, withFacets, filters });
+  const source = await getCircuitSimulationCampaigns({
+    context,
+    withFacets,
+    filters: { ...filters, circuit__scale: CircuitScaleDictionary.PairNeuron },
+  });
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
@@ -44,7 +51,7 @@ async function resolveSimulationCampaigns({
   const executionsResponse = await getCircuitSimulationExecutions({
     context,
     withFacets: false,
-    filters: { used__id__in: allSimIds.join(',') },
+    filters: { used__id__in: allSimIds },
   });
   const executions = executionsResponse.data;
 
@@ -68,7 +75,7 @@ async function resolveSimulationCampaigns({
 
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id).join(',') },
+    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitFilter },
   });
   const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
@@ -118,19 +125,23 @@ export async function resolveSimulationByCampaignId({
   };
 }
 
-export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
+export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: 'simulations',
-  title: 'Simulation Campaign',
-  legacyType: DataType.SimulationCampaign,
+  title: 'Paired Neurons Simulation',
+  legacyType: DataType.PairedNeuronCircuitSimulation,
   type: EntityTypeEnum.SimulationCampaign,
-  slug: EntitySlug.SimulationCampaign,
+  slug: EntitySlug.PairedNeuronCircuitSimulation,
   isBookmarkable: true,
   api: {
-    config: {
-      allowedFacets: true,
-    },
+    config: { allowedFacets: true },
     query: {
-      list: resolveSimulationCampaigns,
+      list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
+        resolveSimulationCampaigns({
+          ...params,
+          circuitFilter: {
+            scale: 'pair',
+          },
+        }),
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },

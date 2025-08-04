@@ -51,6 +51,7 @@ export default function BrowseSimulations() {
     projectId,
     section: 'simulate',
     entity,
+    suffix: entity?.slug,
   });
 
   const selectedRows = useAtomValue<Array<ISingleNeuronSimulationBase>>(selectedRowsAtom(dataKey));

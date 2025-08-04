@@ -1,36 +1,36 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAtomValue, useSetAtom } from 'jotai';
 import { App, Button } from 'antd';
-import omit from 'lodash/omit';
+import { useAtomValue, useSetAtom } from 'jotai';
 import get from 'lodash/get';
+import omit from 'lodash/omit';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
 import z from 'zod';
 
-import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
 import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
+import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
 // import CustomButton from '@/components/buttons/custom-btn';
 
-import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
+import { createMEModel } from '@/api/entitycore/queries';
 import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { tryCatch } from '@/api/utils';
+import { DataType } from '@/constants/explore-section/list-views';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { usePendingValidationModal } from '@/features/model-analysis/runner/validator-modal';
-import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
-import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
-import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { activityAtomFamily } from '@/features/activity-view/context';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
-import { createMEModel } from '@/api/entitycore/queries';
-import { WorkspaceContextSchema } from '@/types/common';
-import { OneshotSession } from '@/services/accounting';
-import { resolveDataKey } from '@/utils/key-builder';
-import { ServiceSubtype } from '@/types/accounting';
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { messages } from '@/i18n/en/me-model';
+import { OneshotSession } from '@/services/accounting';
+import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { runSingleNeuronAnalysis } from '@/services/small-scale-simulator';
+import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
+import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { ServiceSubtype } from '@/types/accounting';
+import { WorkspaceContextSchema } from '@/types/common';
 import { classNames } from '@/util/utils';
-import { tryCatch } from '@/api/utils';
+import { resolveDataKey } from '@/utils/key-builder';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
@@ -173,12 +173,6 @@ export default function Configure({ ctx, searchParams }: Props) {
     projectId: ctx.projectId,
   });
 
-  const [activeProcess, setActiveProcess] = useState<
-    null | 'modelCreation' | 'modelCreationWithValidation'
-  >(null);
-
-  const { contextHolder, createModal: createValidationModal } = usePendingValidationModal();
-
   if (!stateId) {
     navigate('./');
     return;
@@ -199,7 +193,7 @@ export default function Configure({ ctx, searchParams }: Props) {
     });
   };
 
-  const buildMeModel = async (mode: 'validation' | 'standard') => {
+  const buildMeModel = async () => {
     const body: Partial<TCreateMeModelContext> = {
       virtualLabId: ctx.virtualLabId,
       projectId: ctx.projectId,
@@ -234,8 +228,6 @@ export default function Configure({ ctx, searchParams }: Props) {
       ),
       undefined,
       {
-        feature:
-          mode === 'validation' ? 'create-me-model-validation' : 'create-me-model-no-validation',
         section: 'build/create-me-model',
         extra: {
           ...validationData,
@@ -248,31 +240,21 @@ export default function Configure({ ctx, searchParams }: Props) {
     return { data, error, errorType: 'http' as const };
   };
 
-  const onClickWithValidation = async () => {
-    setActiveProcess('modelCreationWithValidation');
+  const onClick = async () => {
     startTransition(async () => {
-      const { data, error, errorType } = await buildMeModel('validation');
+      const { data, error, errorType } = await buildMeModel();
       if (error || !data) {
-        setActiveProcess(null);
         showErrorNotification(error, errorType);
         return;
       }
-      createValidationModal({
-        ctx,
-        modelId: data.id,
-      });
-    });
-  };
 
-  const onClickWithoutValidation = async () => {
-    setActiveProcess('modelCreation');
-    startTransition(async () => {
-      const { data, error, errorType } = await buildMeModel('standard');
-      if (error || !data) {
-        setActiveProcess(null);
-        showErrorNotification(error, errorType);
-        return;
+      try {
+        await runSingleNeuronAnalysis({ ctx, modelId: data.id });
+      } catch (runAnalysisError) {
+        const message = messages.RunAnalysisError;
+        notification.error({ message, duration: 20 });
       }
+
       refreshDataAtom();
       refreshActivityAtom();
       refreshEntityCountsToParent(data.brain_region.id);
@@ -288,19 +270,8 @@ export default function Configure({ ctx, searchParams }: Props) {
 
   const validateTrigger = sessionValue.emodel && sessionValue.mmodel && (
     <div className="fixed right-10 bottom-10 flex flex-row gap-4 text-white">
-      <CustomButton
-        loading={isPending && activeProcess === 'modelCreation'}
-        disable={isPending}
-        onClick={onClickWithoutValidation}
-      >
-        {isPending && activeProcess === 'modelCreation' ? 'Creating ME-model' : 'Save'}
-      </CustomButton>
-      <CustomButton
-        loading={isPending && activeProcess === 'modelCreationWithValidation'}
-        disable={isPending}
-        onClick={onClickWithValidation}
-      >
-        Launch validation
+      <CustomButton loading={isPending} disable={isPending} onClick={onClick}>
+        {isPending ? 'Creating ME-model' : 'Save'}
       </CustomButton>
     </div>
   );
@@ -329,7 +300,6 @@ export default function Configure({ ctx, searchParams }: Props) {
         </div>
       </div>
       {validateTrigger}
-      {contextHolder}
     </>
   );
 }

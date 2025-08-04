@@ -62,12 +62,14 @@ export enum EntityCoreFields {
   SimulationResponse = 'simulation_response',
   SimulationStimulus = 'simulation_stimulus',
   SimulationModel = 'me_model',
-  NumberNeurons = 'number_neurons',
-  NumberSynapses = 'number_synapses',
-  NumberConnections = 'number_connections',
+  CircuitNumberNeurons = 'number_neurons',
+  CircuitNumberSynapses = 'number_synapses',
+  CircuitNumberConnections = 'number_connections',
   ScanParameters = 'scan_parameters',
   SimulationCampaignStatus = 'status',
   CircuitName = 'circuit_name',
+  CircuitBuildCategory = 'build_category',
+  CircuitScale = 'scale',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

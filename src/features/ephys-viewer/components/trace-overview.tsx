@@ -7,7 +7,7 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import useResizeObserver from '@/features/ephys-viewer/hooks/use-resize-observer';
+import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';

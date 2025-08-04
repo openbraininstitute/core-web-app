@@ -8,11 +8,14 @@ import Link from 'next/link';
 import useInfiniteScroll, { useIntersectionObserver } from '@/hooks/virtual-labs/infinite-scroll';
 import ExploreSectionListingView from '@/components/explore-section/ExploreSectionListingView';
 
-import { resolveExperimentUrl, resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import {
+  resolveExperimentUrlByExtendedType,
+  resolveExploreDetailsPageUrl,
+} from '@/utils/url-builder';
 import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType } from '@/constants/explore-section/list-views';
+import { EntityTypeEnum } from '@/api/entitycore/types';
 import { resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
 import {
@@ -26,15 +29,15 @@ import Styles from '@/styles/vlabs.module.css';
 
 export default function StartNewSimulation() {
   const { type } = useTileScopeQuery();
-  const model = ModelTilesConfig.find((o) => o.id === type);
 
+  const model = ModelTilesConfig.find((o) => o.type === type);
   const dataType = model?.entities?.build?.legacyType;
   const entity = getEntityByLegacyType({
     legacyType: dataType,
   });
 
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const dataKey = resolveDataKey({ projectId, section: 'simulate', entity });
+  const dataKey = resolveDataKey({ projectId, section: 'simulate', entity, suffix: entity?.slug });
   const selectedRows = useAtomValue(selectedRowsAtom(dataKey));
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -72,7 +75,7 @@ export default function StartNewSimulation() {
         />
         {buttonsVisible && selectedRows.length > 0 && (
           <div className="fixed right-[50px] bottom-8 flex items-center justify-end gap-2">
-            {dataType !== DataType.Circuit && (
+            {entity?.type !== EntityTypeEnum.Circuit && (
               <Link
                 className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
                 href={resolveExploreDetailsPageUrl({
@@ -86,9 +89,9 @@ export default function StartNewSimulation() {
             )}
             <Link
               className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
-              href={resolveExperimentUrl({
+              href={resolveExperimentUrlByExtendedType({
                 ctx: { virtualLabId, projectId },
-                dataType: entity?.type,
+                dataType: entity?.legacyType,
                 entityId: selectedRows[0].id,
               })}
             >

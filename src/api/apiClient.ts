@@ -1,8 +1,9 @@
-import omitBy from 'lodash/omitBy';
 import isNil from 'lodash/isNil';
+import omitBy from 'lodash/omitBy';
 
-import { compactRecord } from '@/utils/dictionary';
+import { parseApiError } from '@/api/utils';
 import { getSession } from '@/authFetch';
+import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 
 type BackoffStrategy = {
@@ -342,14 +343,7 @@ class ApiClient {
           message: (responseData as any).message || `Request failed with status ${response.status}`,
           data: responseData,
         });
-        throw Error(`Request ${request.url} failed `, {
-          cause: {
-            status: response.status,
-            message:
-              (responseData as any).message || `Request failed with status ${response.status}`,
-            data: responseData,
-          },
-        });
+        throw await parseApiError(request.url, response.status, responseData);
       }
 
       return responseData;

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 
 import EntityGroupTabs from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import CellCompositionExplorer from '@/features/cell-composition/elements/cell-composition-explorer';
-import EntityTypeStatsPanel from '@/components/entities-type-stats/panel';
+import EntityTypeStatsPanel from '@/components/entities-type-stats/interactive-navigation-menu';
 import AtlasViewer from '@/features/brain-atlas-viewer';
 import HydrateWrapper from '@/wrappers/hydrate-wrapper';
 

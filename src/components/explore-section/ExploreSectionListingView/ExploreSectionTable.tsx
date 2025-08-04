@@ -2,10 +2,13 @@
 
 import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import { ConfigProvider, Table, TableProps } from 'antd';
-import { TableRef } from 'antd/es/table';
+import isString from 'lodash/isString';
 
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import type { TableRef } from 'antd/es/table';
+
+import LoadMoreButton from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import useRowSelection, {
   RenderButtonProps,
 } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
@@ -13,7 +16,6 @@ import {
   useOnCellRouteHandler,
   useShowMore,
 } from '@/components/explore-section/ExploreSectionListingView/hooks';
-import LoadMoreButton from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
@@ -117,11 +119,15 @@ function BaseTable<T extends EntityCoreIdentifiable>({
   scrollable = true,
   sticky,
   expandableConfig,
+  rowClassName,
+  tableStyle,
+  onRow,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
     expandableConfig?: ExpandableConfig<T>;
+    tableStyle?: CSSProperties | undefined;
   }) {
   const [containerDimension, setContainerDimension] = useState<{ height: number; width: number }>({
     height: 0,
@@ -169,6 +175,7 @@ function BaseTable<T extends EntityCoreIdentifiable>({
       <Table
         ref={tableRef}
         sticky={sticky}
+        style={tableStyle}
         aria-label="listing-view-table"
         className={classNames(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md')}
         columns={
@@ -189,7 +196,13 @@ function BaseTable<T extends EntityCoreIdentifiable>({
         dataSource={dataSource}
         loading={loading}
         pagination={false}
-        rowClassName={styles.tableRow}
+        rowClassName={(row: T, index: number, indent: number) =>
+          classNames(
+            styles.tableRow,
+            isString(rowClassName) ? rowClassName : rowClassName?.(row, index, indent)
+          )
+        }
+        onRow={onRow}
         rowKey={(row) => row.id}
         rowSelection={rowSelection}
         scroll={
@@ -222,6 +235,9 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
   dataKey,
   useBrainRegion = true,
   expandableConfig,
+  rowClassName,
+  tableStyle,
+  onRow,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -233,6 +249,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
     dataKey: string;
     useBrainRegion?: boolean;
     expandableConfig?: ExpandableConfig<T>;
+    tableStyle?: CSSProperties | undefined;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -266,6 +283,9 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
         showLoadMore={toggleDisplayMore}
         scrollable={scrollable}
         expandableConfig={expandableConfig}
+        rowClassName={rowClassName}
+        style={tableStyle}
+        onRow={onRow}
       />
       {(!autohideControls || (autohideControls && selectedRows.length > 0)) && (
         <TableControls

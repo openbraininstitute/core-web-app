@@ -5,7 +5,7 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { DataType } from '@/constants/explore-section/list-views';
 import type { WorkspaceContext } from '@/types/common';
 
-const baseUri = '/app/virtual-lab';
+export const baseUri = '/app/virtual-lab';
 
 export function resolveExploreDetailsPageUrl({
   ctx,
@@ -59,6 +59,22 @@ export function resolveExperimentUrl({
   entityId?: string;
 }) {
   const entityConfig = getEntityByCoreType({ type: dataType });
+  if (entityId) {
+    return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/simulate/${entityConfig?.slug}/new/${entityId}`;
+  }
+  return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/simulate`;
+}
+
+export function resolveExperimentUrlByExtendedType({
+  ctx,
+  entityId,
+  dataType,
+}: {
+  ctx: Required<WorkspaceContext>;
+  dataType?: DataType;
+  entityId?: string;
+}) {
+  const entityConfig = getEntityByLegacyType({ legacyType: dataType });
   if (entityId) {
     return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/simulate/${entityConfig?.slug}/new/${entityId}`;
   }
