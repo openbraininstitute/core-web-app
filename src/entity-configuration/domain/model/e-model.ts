@@ -16,7 +16,6 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
   api: {
     config: {
       allowedFacets: true,
-      allowedParams: 'all',
     },
     query: {
       list: getEModels,

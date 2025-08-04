@@ -24,7 +24,6 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   api: {
     config: {
       allowedFacets: true,
-      allowedParams: 'all',
     },
     query: {
       list: getReconstructionMorphologies,

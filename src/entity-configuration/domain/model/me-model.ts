@@ -15,7 +15,6 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
   api: {
     config: {
       allowedFacets: true,
-      allowedParams: 'all',
     },
     query: {
       list: getMEModels,

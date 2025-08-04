@@ -16,25 +16,33 @@ import {
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
 
-// NOTE: this is due entitycore do not support yet
+// NOTE: this is due entitycore do not support yet the circuit inclusion
 async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,
+  circuitFilter,
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
+  circuitFilter?: Partial<ICircuitFilter>;
 }) {
-  const source = await getCircuitSimulationCampaigns({ context, withFacets, filters });
+  const source = await getCircuitSimulationCampaigns({
+    context,
+    withFacets,
+    filters: { ...filters, circuit__scale: CircuitScaleDictionary.SmallMicrocircuit },
+  });
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
@@ -44,7 +52,7 @@ async function resolveSimulationCampaigns({
   const executionsResponse = await getCircuitSimulationExecutions({
     context,
     withFacets: false,
-    filters: { used__id__in: allSimIds.join(',') },
+    filters: { used__id__in: allSimIds },
   });
   const executions = executionsResponse.data;
 
@@ -68,7 +76,7 @@ async function resolveSimulationCampaigns({
 
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id).join(',') },
+    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitFilter },
   });
   const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
@@ -118,19 +126,23 @@ export async function resolveSimulationByCampaignId({
   };
 }
 
-export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
+export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: 'simulations',
-  title: 'Simulation Campaign',
-  legacyType: DataType.SimulationCampaign,
+  title: 'Small microcircuit Simulation',
+  legacyType: DataType.SmallMicrocircuitSimulation,
   type: EntityTypeEnum.SimulationCampaign,
-  slug: EntitySlug.SimulationCampaign,
+  slug: EntitySlug.SmallMicrocircuitSimulation,
   isBookmarkable: true,
   api: {
-    config: {
-      allowedFacets: true,
-    },
+    config: { allowedFacets: true },
     query: {
-      list: resolveSimulationCampaigns,
+      list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
+        resolveSimulationCampaigns({
+          ...params,
+          circuitFilter: {
+            scale: 'small',
+          },
+        }),
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
