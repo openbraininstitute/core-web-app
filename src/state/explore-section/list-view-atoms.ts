@@ -120,9 +120,9 @@ export const entityTargetIdentifiersAtom = atomFamily((key: string) => {
   return childAtom;
 });
 
-export const entityPerTypeQueryParams = atomFamily((key: string) => {
+export const queryParamsPerEntityTypeAtomFamily = atomFamily((key: string) => {
   const childAtom = atom<Record<string, any> | null>(null);
-  childAtom.debugLabel = `entity-per-type-query-params/${key}`;
+  childAtom.debugLabel = `query-params-entity-per-type/${key}`;
   return childAtom;
 });
 
@@ -145,7 +145,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
       get(refreshDataAtom);
       const sortState = get(sortStateAtom({ key: ctx.key }));
       const searchString = get(searchStringAtom(ctx.key));
-      const extraPerTypeQueryParams = get(entityPerTypeQueryParams(ctx.key));
+      const extraPerTypeQueryParams = get(queryParamsPerEntityTypeAtomFamily(ctx.key));
       const pageNumber = get(pageNumberAtom(ctx.key));
       const filters = get(filtersAtom(ctx));
       // TODO: better handling when we have IDs filter

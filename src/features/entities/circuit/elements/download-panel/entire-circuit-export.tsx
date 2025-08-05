@@ -51,6 +51,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
         }
       }
     );
+
     const extension = configAsset?.content_type.split('/').pop();
     const blob = new Blob(result, { type: configAsset?.content_type });
     saveAs(blob, `${circuit.name}.${extension}`);

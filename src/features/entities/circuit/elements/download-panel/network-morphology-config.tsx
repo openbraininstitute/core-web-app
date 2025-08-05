@@ -75,6 +75,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
           assetPath: AssetDefaultPath,
           context: { virtualLabId, projectId },
         });
+
         mutateNetworksConfig((prev) => ({
           ...prev,
           directory: result.directory,
@@ -160,8 +161,8 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
           const containerized = value.alternate_morphologies;
           if (containerized) {
             const asset = {
-              path: getAssetPath(key),
-              ...get(directory, getAssetPath(key), {
+              path: getAssetPath(value.alternate_morphologies ?? ''),
+              ...get(directory, getAssetPath(value.alternate_morphologies ?? ''), {
                 name: null,
                 size: null,
                 last_modified: null,

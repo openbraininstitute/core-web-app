@@ -3,10 +3,10 @@ import { Tooltip } from 'antd';
 import { useAtom } from 'jotai';
 import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
-import { entityPerTypeQueryParams } from '@/state/explore-section/list-view-atoms';
+import { queryParamsPerEntityTypeAtomFamily } from '@/state/explore-section/list-view-atoms';
 
 export default function ViewToggle({ dataKey }: { dataKey: string }) {
-  const [queryParams, setQueryParams] = useAtom(entityPerTypeQueryParams(dataKey));
+  const [queryParams, setQueryParams] = useAtom(queryParamsPerEntityTypeAtomFamily(dataKey));
   const toggle = queryParams?.view || 'flat';
 
   const handleViewChange = () => {
