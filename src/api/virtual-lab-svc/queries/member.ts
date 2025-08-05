@@ -9,7 +9,6 @@ import {
 import { VlmResponse } from '@/types/virtual-lab/common';
 
 const baseUri = `${virtualLabApi.url}/virtual-labs`;
-// const baseUri = `http://localhost:8000/virtual-labs`;
 
 /**
  * List all users (members + admin + pending invites)  for a specific virtual lab.
@@ -122,6 +121,9 @@ export async function updateVirtualLabUserRole({
  * @throws {Error} If the invite cannot be deleted (e.g., already accepted, not found)
  *
  */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 export async function cancelVirtualLabInvite({
   virtualLabId,
   email,
@@ -131,6 +133,7 @@ export async function cancelVirtualLabInvite({
   email: string;
   role?: Role;
 }): Promise<VlmResponse<null>> {
+  // await sleep(3000000); // this in minute : 5
   const session = await getSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/invites/cancel`, {
     method: 'post',

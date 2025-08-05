@@ -1,5 +1,5 @@
-import { ProjectBalanceCard } from '../projects/VirtualLabProjectAdmin/ProjectBalanceCard';
-import JobReportList from '../projects/VirtualLabProjectAdmin/ProjectJobReportList';
+import { ProjectBalanceCard } from '../../../ui/segments/project/credits/ProjectBalanceCard';
+import JobReportList from '../../../ui/segments/project/credits/job-report-list';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabBalanceAtomFamily } from '@/state/virtual-lab/lab';
@@ -25,7 +25,7 @@ export default function SpendingsPanel({ virtualLabId }: { virtualLabId: string 
       {projectsObj.data?.results.map((project) => (
         <div key={project.id}>
           <ProjectBalanceCard project={project} balance={getProjectBalance(project.id)} />
-          <JobReportList virtualLabId={virtualLabId} projectId={project.id} />
+          <JobReportList />
         </div>
       ))}
     </>

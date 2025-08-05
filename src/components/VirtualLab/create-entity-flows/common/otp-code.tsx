@@ -8,7 +8,7 @@ type Props = {
   onComplete: (...args: any[]) => void;
 };
 
-export default function VerificationCode({ disabled = false, onComplete }: Props) {
+export function VerificationCode({ disabled = false, onComplete }: Props) {
   return (
     <OTPInput
       maxLength={6}
@@ -26,6 +26,7 @@ export default function VerificationCode({ disabled = false, onComplete }: Props
     />
   );
 }
+export default VerificationCode;
 
 function Slot({ isActive, char, placeholderChar, hasFakeCaret }: SlotProps) {
   return (
@@ -36,7 +37,7 @@ function Slot({ isActive, char, placeholderChar, hasFakeCaret }: SlotProps) {
         'transition-all duration-300',
         'rounded-md border',
         'group-hover:border-accent-foreground/20 group-focus-within:border-accent-foreground/20',
-        'outline-accent-foreground/20 outline outline-0',
+        'outline-accent-foreground/20 outline-0',
         isActive && 'outline-accent-foreground outline-1'
       )}
     >
@@ -51,7 +52,7 @@ function Slot({ isActive, char, placeholderChar, hasFakeCaret }: SlotProps) {
 function Caret() {
   return (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-      <div className="h-8 w-px bg-white" />
+      <div className="bg-primary-7 h-8 w-px" />
     </div>
   );
 }

@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { classNames } from '@/util/utils';
 
-import VerificationCode from '@/components/VirtualLab/create-entity-flows/common/otp-code';
+import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
 import { VirtualLabPayloadSchema } from '@/api/virtual-lab-svc/validation';
 import { VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 

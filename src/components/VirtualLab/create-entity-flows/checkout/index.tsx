@@ -14,7 +14,7 @@ type Props = {
   data: UserActiveSubscriptionResponse | null;
 };
 
-export default function CheckoutFlow({ data }: Props) {
+export function CheckoutFlow({ data }: Props) {
   const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const [flow, updateFlow] = useAtom(flowAtom);
 
@@ -71,3 +71,5 @@ export default function CheckoutFlow({ data }: Props) {
     </AnimatePresence>
   );
 }
+
+export default CheckoutFlow;

@@ -43,6 +43,7 @@
   --color-primary-7: #0050b3;
   --color-primary-8: #003a8c;
   --color-primary-9: #002766;
+  --color-primary-highlight: #B1F0FF;
 
   --color-secondary-0: #daffd7;
   --color-secondary-1: #95de64;
@@ -57,12 +58,16 @@
   --color-transparent-white: rgba(255, 255, 255, 0.3);
   --color-transparent-black: rgba(0, 0, 0, 0.3);
   --color-brand: #00d4fe;
-
+  --color-green-main: #008C05;
+  --color-destructive: #eb3333;
+  --color-destructive-foreground: #f5f9fc;
   --background-color-ocean-blue: radial-gradient(
     circle,
     rgba(77, 194, 237, 1) 0%,
     rgba(33, 36, 77, 1) 100%
   );
+  --color-accent: #eef6fb;
+  --color-accent-foreground: #050a17;
 
   --font-sans:
     var(--font-titillium-web), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
@@ -124,6 +129,7 @@
   --animate-fade-in: fade-in 1.2s cubic-bezier(0.39, 0.575, 0.565, 1) both;
   --animate-fade-out: fade-out 1.2s cubic-bezier(0.39, 0.575, 0.565, 1) both;
   --animate-rotate: rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  --animate-shimmer: shimmer 2s infinite;
 
   @keyframes slide-out {
     0% {
@@ -211,6 +217,15 @@
 
     to {
       transform: scale(1);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
     }
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Table, ConfigProvider, theme, Button } from 'antd';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -11,6 +11,7 @@ import { FileDownloadFill } from '@/components/icons/EditorIcons';
 import { formatCurrency } from '@/utils/format';
 
 interface Props {
+  loading: boolean;
   payments: Array<
     SubscriptionPaymentDetails & {
       subscription_id: string;
@@ -19,11 +20,7 @@ interface Props {
   >;
 }
 
-export default function BillingTable({ payments }: Props) {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
-
-  if (!hydrated) return null;
+export function BillingTable({ payments, loading }: Props) {
   const columns: ColumnsType<SubscriptionPaymentDetails> = [
     {
       title: 'Object',
@@ -123,6 +120,7 @@ export default function BillingTable({ payments }: Props) {
       }}
     >
       <Table
+        loading={loading}
         data-testid="subscription-history"
         columns={columns}
         dataSource={payments}
@@ -134,3 +132,5 @@ export default function BillingTable({ payments }: Props) {
     </ConfigProvider>
   );
 }
+
+export default BillingTable;

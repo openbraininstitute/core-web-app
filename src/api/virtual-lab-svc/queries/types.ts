@@ -47,6 +47,10 @@ type ProjectsResponse = {
   total: number;
 };
 
+type ProjectResponse = {
+  data: Project;
+};
+
 export type ProjectCreationResponse = VlmResponse<{
   project: Project;
   failed_invites: [
@@ -427,6 +431,7 @@ export type VlmActiveSubscriptionResponse = VlmResponse<UserActiveSubscriptionRe
 export type VlmNextPaymentResponse = VlmResponse<NextPaymentDateResponse>;
 export type VlmUserProfile = VlmResponse<{ profile: UserProfileResponse }>;
 export type VlmProjectsResponse = VlmResponse<ProjectsResponse>;
+export type VlmProjectResponse = VlmResponse<ProjectResponse>;
 export type VlmProjectStatsResponse = VlmResponse<ProjectStats>;
 export type VlmVirtualLabStatsResponse = VlmResponse<VirtualLabStats>;
 export type VlmDeleteProjectMemberResponse = VlmResponse<DeleteProjectMember>;

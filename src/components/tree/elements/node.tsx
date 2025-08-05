@@ -71,7 +71,7 @@ function Node<TNode extends TTreeNode>({
             left={(level - 1) * (indentation?.size || 18) + (indentation?.size || 18) / 2 - 1}
             top={0}
             height={nodeRowHeight ? nodeRowHeight / 2 : 0}
-            lineStyle={indentation?.style || 'border-dotted border-primary-6'}
+            lineStyle={indentation?.style || 'border-dashed border-neutral-2!'}
           />
         )}
         <div
@@ -88,7 +88,7 @@ function Node<TNode extends TTreeNode>({
               left={(level - 1) * (indentation?.size || 18) + (indentation?.size || 18) / 2 - 1}
               top={nodeRowHeight ? nodeRowHeight / 2 - 1 : 0}
               width={indentation?.size || 18 / 2 + 1}
-              lineStyle={indentation?.style || 'border-dotted border-primary-6'}
+              lineStyle={indentation?.style || 'border-dashed border-neutral-2!'}
             />
           )}
           <NodeContent
@@ -108,7 +108,7 @@ function Node<TNode extends TTreeNode>({
           {!isLast && !isExpanded && separator && (
             <div
               className={classNames(
-                `border-b-primary-6 absolute border-b`,
+                `border-b-neutral-2 absolute border-b`,
                 'right-1.5 bottom-0 left-[var(--left)] h-px w-[var(--width)]'
               )}
               style={
@@ -133,7 +133,7 @@ function Node<TNode extends TTreeNode>({
               left={level * (indentation?.size || 18) + (indentation?.size || 18) / 2 - 1}
               top={0}
               height="100%"
-              lineStyle={indentation?.style || 'border-dotted border-primary-6'}
+              lineStyle={indentation?.style || 'border-dashed border-neutral-2'}
             />
           )}
           {node.children?.map((childNode, index, arr) => (

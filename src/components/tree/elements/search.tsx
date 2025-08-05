@@ -3,7 +3,6 @@ import { ConfigProvider, Select } from 'antd';
 import delay from 'lodash/delay';
 
 import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
-
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import { classNames } from '@/util/utils';
 
@@ -24,7 +23,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
         delay(() => {
           scrollToNode(selectedOption.data);
           setSearchValue(undefined);
-        }, 100);
+        }, 500);
       }
     },
     [options, onSelect]
@@ -36,21 +35,22 @@ export default function TreeSearch({ options, onSelect }: Props) {
         theme={{
           hashed: false,
           token: {
-            colorBgContainer: '#003A8C',
-            colorBgElevated: '#003A8C',
-            colorBorder: '#003A8C',
-            colorPrimary: 'white',
-            colorText: 'white',
+            colorBgContainer: '#fff',
+            colorBgElevated: '#fff',
+            colorBorder: '#003a8c',
+            colorPrimary: '#003a8c',
+            colorText: '#003a8c',
             colorTextSecondary: 'white',
             colorTextTertiary: 'white',
             colorTextQuaternary: 'white',
-            colorTextPlaceholder: '#69C0FF',
+            colorTextPlaceholder: '#003a8c',
             controlItemBgActive: '#0050B3',
-            controlItemBgHover: '#096DD9',
+            controlItemBgHover: '#f5f5f5',
           },
         }}
       >
         <Select
+          id="region-search"
           showSearch
           allowClear
           size="large"
@@ -68,12 +68,16 @@ export default function TreeSearch({ options, onSelect }: Props) {
             return filterAndSortBasedOnPosition(value, options);
           }}
           className={classNames(
-            'outline-none',
+            'rounded-full! outline-none',
             '[&:hover_.ant-select-selector]:border-white!',
-            '[&.ant-select-focused_.ant-select-selector]:border-white!',
+            '[&.ant-select-focused_.ant-select-selector]:border-neutral-2!',
             '[&.ant-select-focused_.ant-select-selector]:shadow-none!',
             'has-[.ant-select-clear]:[&_.ant-select-arrow]:hidden!',
-            '[&_.ant-select-clear]:bg-transparent!'
+            '[&_.ant-select-clear]:bg-transparent!',
+            '[&_.ant-select-selector]:rounded-full!',
+            '[&_.ant-select-selector]:border-neutral-1!',
+            '[&_.ant-select-selector]:shadow-lg!',
+            '[&_.ant-select-selection-search-input]:text-sm!'
           )}
         />
       </ConfigProvider>

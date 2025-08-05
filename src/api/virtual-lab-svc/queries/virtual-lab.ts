@@ -57,7 +57,7 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
     },
-    body: JSON.stringify(lab),
+    body: JSON.stringify({ ...lab, description: '' }),
   });
 
   if (!response.ok) {
@@ -88,12 +88,15 @@ export async function listVirtualLabs({
 }): Promise<VirtualLabListResponse> {
   const session = await getSession();
   const params = new URLSearchParams({
-    include: include.join(','),
     page: page.toString(),
     size: size.toString(),
     ...(!isEmpty(query) ? { query } : {}),
   });
+  for (const item of include) {
+    params.append('include', item);
+  }
   const url = `${BASE_URL}?${params.toString()}`;
+
   const response = await fetch(url, {
     method: 'get',
     headers: {

@@ -1,13 +1,17 @@
 import { getSession } from '@/authFetch';
 
-import {
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { virtualLabApi } from '@/config';
+
+import type { ProjectResponse } from '@/types/virtual-lab/projects';
+import type { ProjectPayload } from '@/api/virtual-lab-svc/types';
+import type { WorkspaceContext } from '@/types/common';
+import type {
   ProjectCreationResponse,
   ProjectExistsVerificationResponse,
   VlmAttachUsersToProjectResponse,
   VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { ProjectPayload } from '@/api/virtual-lab-svc/types';
-import { virtualLabApi } from '@/config';
 
 const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
 /**
@@ -145,4 +149,29 @@ export async function attachUsersToProject({
 
   const result = (await response.json()) as VlmAttachUsersToProjectResponse;
   return result;
+}
+
+export async function getProject({ virtualLabId, projectId }: WorkspaceContext) {
+  const api = await virtualLabRootApi();
+  return await api.get<ProjectResponse>(`/virtual-labs/${virtualLabId}/projects/${projectId}`);
+}
+
+export async function updateProject({
+  virtualLabId,
+  projectId,
+  payload,
+}: WorkspaceContext & {
+  payload: {
+    name: string;
+    description: string;
+  };
+}) {
+  const api = await virtualLabRootApi();
+  return await api.patch<ProjectResponse>(`/virtual-labs/${virtualLabId}/projects/${projectId}`, {
+    headers: {
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: payload,
+  });
 }

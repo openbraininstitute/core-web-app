@@ -1,12 +1,12 @@
-import useUserRole from '@/hooks/useUserRole';
-import useActiveSubscription from '@/hooks/useActiveSubscription';
+import useActiveSubscription from '@/hooks/use-active-subscription';
+import useUserRole from '@/hooks/use-user-role';
 
 type Props = {
   virtualLabId?: string;
   projectId?: string;
 };
 
-export default function useUserPermissions({ virtualLabId, projectId }: Props) {
+export function useUserPermissions({ virtualLabId, projectId }: Props) {
   const { data, forbiddenOperation, loading: subscriptionLoading } = useActiveSubscription();
   const {
     isAdmin,
@@ -29,3 +29,5 @@ export default function useUserPermissions({ virtualLabId, projectId }: Props) {
     isProjectMember,
   };
 }
+
+export default useUserPermissions;

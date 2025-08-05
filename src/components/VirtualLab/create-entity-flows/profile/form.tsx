@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { Form, Button } from 'antd';
 
 import countries from '../../../../../public/static/country';
@@ -17,18 +17,15 @@ type ProfileProps = {
   data: UserProfileResponse | undefined;
 };
 
-function Profile({ data }: ProfileProps) {
+export function Profile({ data }: ProfileProps) {
   const initialValues = useInitialValues(data);
-  const [valid, setValid] = React.useState(validate(initialValues));
-  const handleFieldsChange = useFieldsChangeHandler(setValid);
-  const [hydrated, setHydrated] = useState(false);
   const { error: errorNotify, success: successNotify } = useAppNotification();
+  const [valid, setValid] = useState(validate(initialValues));
+  const handleFieldsChange = useFieldsChangeHandler(setValid);
   const [form] = Form.useForm<UserProfileResponse>();
   const [pending, startTransition] = useTransition();
   const onSubmit = useSubmitCallback(startTransition, errorNotify, successNotify);
-  useEffect(() => setHydrated(true), []);
 
-  if (!hydrated) return null;
   return (
     <div
       data-testid="profile-form-container"

@@ -6,7 +6,7 @@ import { CollapseProps } from 'antd';
 import { useQueryState } from 'nuqs';
 import { loadable } from 'jotai/utils';
 
-import CostsPanel from './CostPanel';
+import CostsPanel from '../../../../ui/segments/project/credits';
 import DangerZonePanel from './DangerZonePanel';
 import Collapse from '@/components/Collapse';
 import {
@@ -60,10 +60,10 @@ export default function VirtualLabProjectAdmin({
   const costs = useMemo(
     () => ({
       key: 'costs',
-      children: <CostsPanel virtualLabId={virtualLabId} projectId={projectId} />,
+      children: <CostsPanel />,
       label: 'Costs',
     }),
-    [virtualLabId, projectId]
+    []
   );
 
   const dangerZone = useMemo(

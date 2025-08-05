@@ -8,9 +8,9 @@ import {
   TMember,
   SIZE_MAP,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
-import { classNames } from '@/util/utils';
-import { COLOR_DICTIONARY } from '@/util/color';
 import { PendingInvite } from '@/components/icons/EditorIcons';
+import { COLOR_DICTIONARY } from '@/util/color';
+import { cn } from '@/utils/css-class';
 
 export default function MemberAvatar({
   index,
@@ -39,15 +39,15 @@ export default function MemberAvatar({
   return (
     <div className="flex items-center justify-between">
       <div
-        className={classNames(
+        className={cn(
           'flex w-full items-center',
           layout === 'horizontal' ? 'flex-row gap-4' : 'flex-col gap-2',
           cls?.container
         )}
       >
         <Avatar
-          className={classNames(
-            'flex items-center justify-center text-center',
+          className={cn(
+            'text-primary-9! flex items-center justify-center text-center',
             '[&_.ant-avatar-string]:text-xl [&_.ant-avatar-string]:font-bold',
             role === 'admin' && 'rounded-none!',
             scale,
@@ -62,7 +62,7 @@ export default function MemberAvatar({
         <div className="flex flex-1 items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <h3
-              className={classNames(
+              className={cn(
                 'text-primary-8 text-xl font-bold',
                 status !== 'pending' && 'first-letter:uppercase',
                 cls?.text
@@ -77,7 +77,7 @@ export default function MemberAvatar({
               )}
             </h3>
             <small
-              className={classNames(
+              className={cn(
                 'text-base font-light text-gray-400',
                 layout === 'vertical' && 'hidden'
               )}
@@ -86,11 +86,7 @@ export default function MemberAvatar({
             </small>
           </div>
           <p
-            className={classNames(
-              'text-gray-500 capitalize',
-              layout === 'vertical' && 'hidden',
-              cls?.role
-            )}
+            className={cn('text-gray-500 capitalize', layout === 'vertical' && 'hidden', cls?.role)}
           >
             {MemberRoleMap[role]}
           </p>
@@ -134,7 +130,7 @@ export function MemberAvatarCasual({
   return (
     <div className="flex items-center justify-between">
       <div
-        className={classNames(
+        className={cn(
           'flex w-full items-center',
           layout === 'horizontal' ? 'flex-row gap-4' : 'flex-col gap-2',
           cls?.container
@@ -144,7 +140,7 @@ export function MemberAvatarCasual({
           <div className="flex items-center justify-center gap-2">
             <PendingInvite width={48} height={48} />
             <div
-              className={classNames(
+              className={cn(
                 'text-primary-8 text-xl font-bold',
                 !pending && 'first-letter:uppercase',
                 cls?.text
@@ -157,7 +153,7 @@ export function MemberAvatarCasual({
         ) : (
           <>
             <Avatar
-              className={classNames(
+              className={cn(
                 'flex items-center justify-center text-center',
                 '[&_.ant-avatar-string]:text-xl [&_.ant-avatar-string]:font-bold',
                 shape === 'square' && 'rounded-none!',
@@ -171,10 +167,10 @@ export function MemberAvatarCasual({
               {initials}
             </Avatar>
             <div className="flex flex-1 items-center justify-between gap-4">
-              <div className={classNames('flex flex-col')}>
+              <div className={cn('flex flex-col')}>
                 <h3
-                  className={classNames(
-                    'text-primary-8 text-xl font-bold',
+                  className={cn(
+                    'text-primary-8! text-xl font-bold',
                     status !== 'pending' && 'first-letter:uppercase',
                     cls?.text
                   )}
@@ -182,7 +178,7 @@ export function MemberAvatarCasual({
                   {name}
                 </h3>
                 {withEmail && (
-                  <p className={classNames('text-sm font-light', cls?.email)}> {email}</p>
+                  <p className={cn('text-primary-8! text-sm font-light', cls?.email)}> {email}</p>
                 )}
               </div>
             </div>

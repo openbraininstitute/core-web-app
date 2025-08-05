@@ -3,7 +3,6 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import omit from 'lodash/omit';
 
-import TreeSideMenu from '@/features/brain-region-hierarchy/side-menu';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
@@ -12,6 +11,7 @@ import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/eve
 import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
 import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { scrollToNode } from '@/components/tree/elements/helpers';
+import HydrateWrapper from '@/wrappers/hydrate-wrapper';
 import {
   DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
@@ -27,7 +27,7 @@ import type {
 } from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
 
-export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
+export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
@@ -62,25 +62,26 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   return (
     <div
       className={classNames(
-        'bg-primary-8 group flex h-screen flex-col transition-all duration-300 ease-in-out',
-        isCollapsed ? 'collapsed w-[40px]' : 'w-[340px]'
+        'group flex h-full flex-col rounded-xl bg-white transition-all duration-300 ease-in-out',
+        isCollapsed ? 'collapsed w-full' : 'w-full'
       )}
     >
-      <div className="flex w-full flex-col gap-4 overflow-hidden p-4 pt-3">
-        <div className="flex flex-col items-center justify-center">
-          <TreeSideMenu dataKey={dataKey} />
+      <div className="flex h-full w-full flex-col gap-4 overflow-hidden p-4 pt-3">
+        <div className="flex h-full flex-col items-center justify-start">
           <div
             className={classNames(
               'flex w-full flex-col gap-4 overflow-hidden transition-all duration-300 ease-in-out',
-              isCollapsed ? 'invisible max-h-0 opacity-0' : 'visible max-h-[100vh] opacity-100'
+              isCollapsed ? 'invisible max-h-0 opacity-0' : 'visible h-full opacity-100'
             )}
           >
-            <TreeSearch options={brainRegionHierarchyResult.options} onSelect={onClick} />
+            <HydrateWrapper>
+              <TreeSearch options={brainRegionHierarchyResult.options} onSelect={onClick} />
+            </HydrateWrapper>
             {brainRegionHierarchyResult.nodes && (
               <Tree
                 dataKey={dataKey}
                 data={brainRegionHierarchyResult.nodes}
-                height="calc(100vh - 146px)" // 130px for header and search
+                height="100%"
                 defaultExpandedNodes={defaultBrainRegion ? [defaultBrainRegion] : []}
                 indentation={{
                   v: true,
@@ -96,3 +97,5 @@ export default function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     </div>
   );
 }
+
+export default BrainRegionHierarchy;

@@ -1,0 +1,20 @@
+import { useQuery } from '@tanstack/react-query';
+
+import { SubscriptionCheckoutError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
+import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { CheckoutFlow } from '@/components/VirtualLab/create-entity-flows/checkout';
+import { keyBuilder } from '@/ui/queries/user';
+
+export function Subscription() {
+  const { data, isError } = useQuery({
+    queryKey: keyBuilder.subscription(),
+    queryFn: getUserActiveSubscription,
+  });
+
+  if (isError || !data) {
+    return <SubscriptionCheckoutError />;
+  }
+  return <CheckoutFlow data={data} />;
+}
+
+export default Subscription;

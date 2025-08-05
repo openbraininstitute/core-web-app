@@ -1,38 +1,36 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Button, ConfigProvider, Popconfirm, Select, Table } from 'antd';
-import { ColumnType } from 'antd/es/table';
-import { useParams } from 'next/navigation';
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { ConfigProvider, Popconfirm, Select, Table } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
-import { useSetAtom } from 'jotai';
-import get from 'lodash/get';
-import find from 'lodash/find';
-import sortBy from 'lodash/sortBy';
+import { ColumnType } from 'antd/es/table';
+import { useMemo, useState } from 'react';
+
 import compact from 'lodash/compact';
+import sortBy from 'lodash/sortBy';
+import find from 'lodash/find';
+import get from 'lodash/get';
 
 import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import AddMembersModal from '@/components/VirtualLab/create-entity-flows/project/add-members';
-import useUserPermissions from '@/hooks/useUserPermission';
+
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useUserPermissions } from '@/hooks/use-user-permissions';
+import { useAppNotification } from '@/components/notification';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/queries/workspace';
+import { extractInitials } from '@/util/slugify';
+import { Button } from '@/ui/molecules/button';
 import {
   cancelProjectInvite,
+  listProjectMembers,
   removeUserFromProject,
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
 import { classNames } from '@/util/utils';
-import { extractInitials } from '@/util/slugify';
-import { tryCatch } from '@/api/utils';
-import { projectStatsAtomFamily } from '@/state/virtual-lab/projects';
-import { useAppNotification } from '@/components/notification';
 
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
-
-type Props = {
-  total: number;
-  ownerId: string;
-  users: Array<Member>;
-};
 
 const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },
@@ -41,99 +39,96 @@ const roleOptions: { value: Role; label: string }[] = [
 
 type RoleModifierProps = {
   user: Member;
-  ownerId: string;
-  virtualLabId: string;
-  projectId: string;
-  onRemove: (email: string) => void;
+  ownerId?: string;
 };
 
-function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: RoleModifierProps) {
+function RoleModifier({ user, ownerId }: RoleModifierProps) {
   const { data } = useSession();
-  const [role, updateRole] = useState(user.role);
-  const [loading, setLoading] = useState(false);
-  const [removeLoading, seRemoveLoading] = useState(false);
-  const refreshProjectStats = useSetAtom(projectStatsAtomFamily({ virtualLabId, projectId }));
-
+  const { virtualLabId, projectId } = useWorkspace();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
+  const [role, updateRole] = useState(user.role);
+  const queryClient = useQueryClient();
 
-  const onChange = async (_role: Role) => {
-    setLoading(true);
-    const { error, data: result } = await tryCatch(
-      updateProjectUserRole({
-        virtualLabId,
-        projectId,
-        userId: user.id,
-        newRole: _role,
-      }),
-      () => {
-        setLoading(false);
-      }
-    );
-    if (error) {
-      notifyError({
-        message:
-          'Failed to update user role. Please try again or contact support if the issue persists.',
-        placement: 'topRight',
-        key: 'user-role-update',
-      });
-      return;
-    }
-    if (result.data) {
-      updateRole(_role);
-      notifySuccess({
-        message: `User "${user.name}" role updated to ${get(find(roleOptions, { value: _role }), 'label')} successfully`,
-        placement: 'topRight',
-        key: 'user-role-update',
-      });
-    }
-  };
-
-  const onCancelInvite = async () => {
-    setLoading(true);
-    const { error, data: result } = await tryCatch(
+  const cancelInviteMutation = useMutation({
+    mutationKey: [`${virtualLabId}/${projectId}/delete-item/${user.email}`],
+    mutationFn: () =>
       cancelProjectInvite({
         virtualLabId,
         projectId,
         email: user.email,
         role: user.role,
       }),
-      () => {
-        setLoading(false);
+    onMutate: () => {
+      const row =
+        document.querySelector(`tr[data-row-key="${user.email}"]`) ??
+        document.querySelector(`tr[data-row-key="${user.id}"]`);
+      if (row) {
+        row.classList.add('ant-table-row-remove');
       }
-    );
-    if (error) {
+    },
+    onError: () => {
       notifyError({
         message:
           'Failed to cancel invite. Please try again or contact support if the issue persists.',
         placement: 'topRight',
         key: 'user-cancel-invite',
       });
-      return;
-    }
-    if (result.message) {
+    },
+    async onSuccess() {
       notifySuccess({
         message: `Invite for ${user.email} cancelled successfully`,
         placement: 'topRight',
         key: 'user-cancel-invite',
       });
-      refreshProjectStats();
-      onRemove(user.email);
-    }
-  };
+      await queryClient.invalidateQueries({
+        queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
+      });
+    },
+  });
 
-  const onRemoveMember = async () => {
-    seRemoveLoading(true);
-    const { error, data: result } = await tryCatch(
+  const updateRoleMutation = useMutation({
+    mutationFn: (_role: Role) =>
+      updateProjectUserRole({
+        virtualLabId,
+        projectId,
+        userId: user.id,
+        newRole: _role,
+      }),
+    onError() {
+      notifyError({
+        message:
+          'Failed to update user role. Please try again or contact support if the issue persists.',
+        placement: 'topRight',
+        key: 'user-role-update',
+      });
+    },
+    async onSuccess(_, variables) {
+      notifySuccess({
+        message: `User "${user.name}" role updated to ${get(find(roleOptions, { value: variables }), 'label')} successfully`,
+        placement: 'topRight',
+        key: 'user-role-update',
+      });
+      await queryClient.invalidateQueries({
+        queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
+      });
+    },
+  });
+
+  const removeItemMutation = useMutation({
+    mutationKey: [`${virtualLabId}/${projectId}/delete-item/${user.id}`],
+    mutationFn: () =>
       removeUserFromProject({
         virtualLabId,
         projectId,
         userId: user.id,
       }),
-      () => {
-        seRemoveLoading(false);
+    onMutate: () => {
+      const row = document.querySelector(`tr[data-row-key="${user.id}"]`);
+      if (row) {
+        row.classList.add('ant-table-row-remove');
       }
-    );
-    if (error) {
+    },
+    onError: (error) => {
       if (get(error, 'cause.error_code') === 'FORBIDDEN_OPERATION') {
         notifyError({
           message: 'You are not authorized to remove this user from the virtual lab.',
@@ -148,27 +143,29 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
         placement: 'topRight',
         key: 'user-remove-from-vlab',
       });
-      return;
-    }
-    if (result.message) {
+    },
+    async onSuccess() {
       notifySuccess({
         message: `User "${user.name}" removed from virtual lab successfully`,
         placement: 'topRight',
         key: 'user-remove-from-vlab',
       });
-      refreshProjectStats();
-      onRemove(user.id);
-    }
-  };
+      await queryClient.invalidateQueries({
+        queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
+      });
+    },
+  });
+
   if (user.id === ownerId || user.id === data?.user.id) {
     return (
       <div className="flex w-full flex-col items-center justify-end pr-3 text-right">
-        <div className="hover:text-primary-2! w-max! self-end font-bold text-white">
+        <div className="hover:text-primary-2! text-primary-9 w-max! self-end font-bold">
           {get(find(roleOptions, { value: user.role }), 'label')}
         </div>
       </div>
     );
   }
+
   return user.invite_accepted ? (
     <div className="ml-auto text-right text-base text-white">
       <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
@@ -179,39 +176,45 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
               'focus:border-primary-8 w-full bg-transparent shadow-none ring-0 focus:border-2',
               '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
               '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
-              '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
-              'min-w-[140px] [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
+              '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-selection-item]:!font-bold',
+              '[&_.ant-select-arrow]:!text-primary-8 min-w-[140px] [&_.ant-select-selection-item]:!text-left'
             )}
-            onChange={onChange}
+            onChange={(value) => {
+              updateRole(value);
+              updateRoleMutation.mutateAsync(value);
+            }}
             value={role}
             size="large"
             options={roleOptions}
             popupClassName="rounded-none!"
-            disabled={loading}
-            loading={loading}
+            disabled={updateRoleMutation.isPending}
+            loading={updateRoleMutation.isPending}
           />
           <Popconfirm
             placement="bottomLeft"
             title="Remove member"
             description="Are you sure to remove this member from the project ?"
-            onConfirm={onRemoveMember}
+            onConfirm={() => removeItemMutation.mutateAsync()}
             okText="Yes"
             cancelText="No"
-            disabled={removeLoading}
-            overlayClassName={classNames(
-              '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
-              '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
-              '[&_.ant-popconfirm-title]:text-white!',
-              '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
-              '[&_.ant-popover-arrow]:after:bg-primary-9!'
-            )}
+            disabled={removeItemMutation.isPending}
+            classNames={{
+              root: classNames(
+                '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
+                '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
+                '[&_.ant-popconfirm-title]:text-white!',
+                '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
+                '[&_.ant-popover-arrow]:after:bg-primary-9!'
+              ),
+            }}
           >
             <Button
-              type="default"
-              size="large"
-              className="border-primary-7 w-full self-end rounded-none border bg-transparent px-[11px] text-white hover:!border-t"
-              disabled={removeLoading}
-              loading={removeLoading}
+              className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
+              type="button"
+              variant="outline"
+              size="lg"
+              disabled={removeItemMutation.isPending}
+              loading={removeItemMutation.isPending}
             >
               Remove member
             </Button>
@@ -224,13 +227,12 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
       <Button
         data-testid="cancel-invite-btn"
         key="cancel-invite"
-        type="text"
-        htmlType="button"
-        size="middle"
-        className="hover:text-primary-2! w-max! self-end text-white"
-        disabled={loading}
-        loading={loading}
-        onClick={onCancelInvite}
+        type="button"
+        size="md"
+        className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
+        disabled={cancelInviteMutation.isPending}
+        loading={cancelInviteMutation.isPending}
+        onClick={() => cancelInviteMutation.mutateAsync()}
       >
         Cancel invitation
       </Button>
@@ -238,11 +240,22 @@ function RoleModifier({ user, ownerId, virtualLabId, projectId, onRemove }: Role
   );
 }
 
-export default function TeamTable({ users: initialUsers, ownerId, total }: Props) {
+export function TeamTable() {
   const { data } = useSession();
-  const { virtualLabId, projectId } = useParams<{ virtualLabId: string; projectId: string }>();
+  const { virtualLabId, projectId } = useWorkspace();
   const [isOpen, setOpen] = useState(false);
-  const [users, setUsers] = useState(initialUsers);
+
+  const onClose = () => setOpen(false);
+  const onOpen = () => setOpen(true);
+
+  const { data: team, isLoading } = useSuspenseQuery({
+    queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
+    queryFn: () => listProjectMembers({ virtualLabId, projectId }),
+  });
+
+  const ownerId = team?.data?.owner_id;
+  const total = team?.data?.total;
+  const users = team?.data?.users;
   const [popoverOpen, setIsPopoverOpen] = useState(false);
 
   const { isAllowedBySubscription, isAdmin, isProjectAdmin, loading } = useUserPermissions({
@@ -251,33 +264,16 @@ export default function TeamTable({ users: initialUsers, ownerId, total }: Props
   });
   const allowedOperation = isAllowedBySubscription && (isAdmin || isProjectAdmin) && !loading;
 
-  const onClose = () => setOpen(false);
-  const onOpen = () => setOpen(true);
-
-  const onRemoveItem = (value: string) => {
-    const row = document.querySelector(`tr[data-row-key="${value}"]`);
-    if (row) {
-      row.classList.add('ant-table-row-remove');
-      setTimeout(() => {
-        setUsers((prevUsers) =>
-          prevUsers.filter((user) => user.email !== value && user.id !== value)
-        );
-      }, 1000);
-    } else {
-      setUsers((prevUsers) =>
-        prevUsers.filter((user) => user.email !== value && user.id !== value)
-      );
-    }
-  };
-
   const columns: Array<ColumnType<Member>> = [
     {
       title: 'name',
       dataIndex: 'name',
       key: 'name',
+      width: 400,
       render: (_: string, record: Member, indx) => (
         <div className="flex w-max items-center justify-center">
           <MemberAvatarCasual
+            withEmail
             shape={record.role === 'admin' ? 'square' : 'circle'}
             key={`project-avatar-${record.id ?? record.email}`}
             index={indx}
@@ -312,26 +308,12 @@ export default function TeamTable({ users: initialUsers, ownerId, total }: Props
       ),
     },
     {
-      title: 'Last active',
-      dataIndex: 'last_active',
-      key: 'last_active',
-      render: () => <span className="text-primary-3" />, // Empty element for now, to be included when 'active' info is available
-    },
-    {
       title: 'Action',
       key: 'role',
       dataIndex: 'role',
       align: 'right',
-      width: '450px',
-      render: (_: Role, record) => (
-        <RoleModifier
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-          ownerId={ownerId}
-          user={record}
-          onRemove={onRemoveItem}
-        />
-      ),
+      width: '250px',
+      render: (_: Role, record) => <RoleModifier ownerId={ownerId} user={record} />,
     },
   ];
 
@@ -357,9 +339,9 @@ export default function TeamTable({ users: initialUsers, ownerId, total }: Props
   return (
     <div className="flex h-full flex-col pb-8">
       <div className="flex h-8 shrink-0 items-center px-3">
-        <div className="flex gap-2">
-          <span className="text-primary-3 text-lg">Total members</span>
-          {total && <span className="text-lg font-bold">{total}</span>}
+        <div className="flex w-full justify-between gap-2">
+          <span className="text-primary-9 text-lg font-bold capitalize">members</span>
+          {total && <span className="pr-2 text-lg font-bold">{total}</span>}
         </div>
       </div>
       <div className="h-[calc(100vh-180px)] grow overflow-hidden py-5">
@@ -377,6 +359,7 @@ export default function TeamTable({ users: initialUsers, ownerId, total }: Props
           }}
         >
           <Table
+            loading={isLoading}
             bordered={false}
             dataSource={orderedUsers}
             pagination={false}
@@ -387,10 +370,13 @@ export default function TeamTable({ users: initialUsers, ownerId, total }: Props
             className={classNames(
               'h-full',
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
-              '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-0',
-              '[&_.ant-table-tbody>tr.ant-table-row-remove]:overflow-hidden [&_.ant-table-tbody>tr.ant-table-row-remove]:p-0',
+              '[&_.ant-table-cell-row-hover]:bg-gray-200!',
+              '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
               '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full'
             )}
+            rowClassName={() => {
+              return 'hover:bg-primary-9/10 hover:text-white';
+            }}
             scroll={{ y: 'calc(100vh - 180px)' }}
           />
         </ConfigProvider>
@@ -404,22 +390,21 @@ export default function TeamTable({ users: initialUsers, ownerId, total }: Props
           onOpenChange={onOpenChange}
         >
           <Button
+            rounded
+            borderless
             key="add-member"
             data-testid="add-member-btn"
-            className={classNames(
-              'text-primary-9 h-14 rounded-none border border-white bg-white px-14',
-              'hover:!border-primary-8 hover:bg-primary-8 hover:!border hover:font-bold hover:!text-white hover:shadow-sm',
-              'disabled:border-gray-400 disabled:!bg-white disabled:!text-gray-700 disabled:hover:!text-gray-700',
-              'disabled:hover:!border-gray-400 disabled:hover:!bg-white disabled:hover:!text-gray-700'
-            )}
-            type="default"
-            size="large"
-            htmlType="button"
+            type="button"
+            variant="outline"
+            size="lg"
             disabled={!allowedOperation}
             onMouseLeave={() => setIsPopoverOpen(false)}
             onClick={onOpen}
           >
-            Add member
+            <div className="flex items-center justify-between gap-10 font-bold">
+              <span>Add member</span>
+              <PlusOutlined className="ml-auto text-sm text-current" />
+            </div>
           </Button>
         </CustomPopover>
       </div>
@@ -432,3 +417,5 @@ export default function TeamTable({ users: initialUsers, ownerId, total }: Props
     </div>
   );
 }
+
+export default TeamTable;
