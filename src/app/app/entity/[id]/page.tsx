@@ -1,9 +1,9 @@
 import { redirect, notFound } from 'next/navigation';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
-import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { virtualLabApi } from '@/config';
 import authFetch from '@/authFetch';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 interface Group {
   project_id: string;
@@ -19,11 +19,9 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
   } catch (e) {
     notFound();
   }
-  const typeConfig = getEntityByCoreType({ type: entity.type });
-
-  if (!typeConfig) notFound();
   if (entity.authorized_public) {
-    redirect(`/app/virtual-lab/explore/${typeConfig.explore.routePrefix}/${typeConfig.slug}/${id}`);
+    const url = resolveExploreDetailsPageUrl({ entityId: id, entityType: entity.type });
+    redirect(url);
   }
 
   let group: Group | undefined;
@@ -44,7 +42,11 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
     notFound();
   }
 
-  redirect(
-    `/app/virtual-lab/lab/${group.virtual_lab_id}/project/${entity.authorized_project_id}/explore/${typeConfig.explore.routePrefix}/${typeConfig.slug}/${id}`
-  );
+  const url = resolveExploreDetailsPageUrl({
+    ctx: { virtualLabId: group.virtual_lab_id, projectId: entity.authorized_project_id },
+    entityId: id,
+    entityType: entity.type,
+  });
+
+  redirect(url);
 }
