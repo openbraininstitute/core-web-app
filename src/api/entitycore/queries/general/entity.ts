@@ -42,19 +42,19 @@ export async function getEntitiesCount({
 /**
  * Retrieves the entity from the Entity Core API by its
  *
- * @param params.uuid The UUID of the entity.
+ * @param params.id The UUID of the entity.
  * @param params.context - Optional workspace context for the API call.
  * @returns A promise that resolves to an `EntityCoreResponse` containing the count of entities matching the criteria.
  */
 export async function getEntity({
-  uuid,
+  id,
   context,
 }: {
-  uuid: string;
+  id: string;
   context?: WorkspaceContext;
 }): Promise<IEntity> {
   const api = await entityCoreApi();
-  return await api.get(`${baseUri}/${uuid}`, {
+  return await api.get(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

@@ -15,7 +15,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
 
   let entity: IEntity;
   try {
-    entity = await getEntity({ uuid: id });
+    entity = await getEntity({ id });
   } catch (e) {
     notFound();
   }
