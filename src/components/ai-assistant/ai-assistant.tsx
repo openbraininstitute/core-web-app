@@ -3,6 +3,7 @@
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import React, { type CSSProperties } from 'react';
 import dynamic from 'next/dynamic';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AiContextProvider, useCollapsedPanel } from './hooks';
 import PanelSplitter from './panel-splitter';
@@ -22,6 +23,8 @@ interface AiAssistantProps {
 
 const Spinner = dynamic(() => import('./spinner/spinner'), { ssr: false });
 
+const queryClient = new QueryClient();
+
 export default function AiAssistant({ className, section }: AiAssistantProps) {
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const [panelWidth, setPanelWidth] = useLocalStorage('ai-assistant/panel-width', 25, isNumber);
@@ -38,25 +41,26 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
   const isFullWidth = panelWidth > 95;
 
   return (
-    <AiContextProvider value={{ section }}>
-      <div
-        style={style}
-        className={classNames(className, styles.aiAssistant, isFullWidth && styles.fullscreen)}
-        data-collapsed={collapsedPanel}
-      >
-        <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
-        {!collapsedPanel && threadId && (
-          <div className={classNames(styles.overlay, panelWidth > 25 && styles.shadow)}>
-            <nav>
-              <button
-                type="button"
-                className={classNames(tab === 'chat' && styles.selected)}
-                onClick={() => setTab('chat')}
-              >
-                <IconChat />
-                <div>Chat</div>
-              </button>
-              {/* <button
+    <QueryClientProvider client={queryClient}>
+      <AiContextProvider value={{ section }}>
+        <div
+          style={style}
+          className={classNames(className, styles.aiAssistant, isFullWidth && styles.fullscreen)}
+          data-collapsed={collapsedPanel}
+        >
+          <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
+          {!collapsedPanel && threadId && (
+            <div className={classNames(styles.overlay, panelWidth > 25 && styles.shadow)}>
+              <nav>
+                <button
+                  type="button"
+                  className={classNames(tab === 'chat' && styles.selected)}
+                  onClick={() => setTab('chat')}
+                >
+                  <IconChat />
+                  <div>Chat</div>
+                </button>
+                {/* <button
                 type="button"
                 className={classNames(tab === 'history' && styles.selected)}
                 onClick={() => setTab('history')}
@@ -64,21 +68,22 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
                 <IconHistory />
                 <div>History</div>
               </button> */}
-            </nav>
-            <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
-            <PanelContent
-              className={styles.content}
-              threadId={threadId}
-              onClearChat={assistant.createThread}
-              tab={tab}
-              onTabChange={setTab}
-            />
-            <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
-          </div>
-        )}
-        {!collapsedPanel && !threadId && <Spinner />}
-      </div>
-    </AiContextProvider>
+              </nav>
+              <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
+              <PanelContent
+                className={styles.content}
+                threadId={threadId}
+                onClearChat={assistant.createThread}
+                tab={tab}
+                onTabChange={setTab}
+              />
+              <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
+            </div>
+          )}
+          {!collapsedPanel && !threadId && <Spinner />}
+        </div>
+      </AiContextProvider>
+    </QueryClientProvider>
   );
 }
 

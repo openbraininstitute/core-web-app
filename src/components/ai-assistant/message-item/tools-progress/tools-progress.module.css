@@ -31,3 +31,8 @@
     transform: rotate(360deg);
   }
 }
+
+.toolState > .state {
+  font-variant: small-caps;
+  color: #003a8c;
+}
