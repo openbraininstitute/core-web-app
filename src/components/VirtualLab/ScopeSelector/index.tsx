@@ -106,6 +106,7 @@ export function ScopeSelector() {
   const { push: navigate } = useRouter();
   const setScope = useSetAtom(selectedSimulationScopeAtom);
   const { selectedTab, section, type: modelType, updateScopeConfig } = useTileScopeQuery();
+
   const tileJSX = ({ id, title, type: tileType, description, disabled, img, url }: TTileConfig) => {
     const highlight = tileType === modelType;
 
@@ -113,7 +114,10 @@ export function ScopeSelector() {
     const tileStyle = highlight ? 'bg-white text-primary-9' : 'bg-primary-9 text-white';
     const descStyle = highlight ? 'text-primary-8' : 'text-gray-100';
 
-    if (id === 'small-microcircuit' && section === 'build') {
+    if (
+      (tileType === 'small-microcircuit' || tileType === 'paired-neurons') &&
+      section === 'build'
+    ) {
       // eslint-disable-next-line
       disabled = true;
     }
@@ -210,9 +214,13 @@ export function ScopeSelectorSmall({
   const ref = useRef<HTMLDivElement>(null);
 
   const tile = (config: TTileConfig) => {
+    const disabled =
+      (config.type === 'small-microcircuit' || config.type === 'paired-neurons') &&
+      section === 'build';
+
     return (
       <button
-        disabled={type === config.type || config.disabled}
+        disabled={type === config.type || config.disabled || disabled}
         type="button"
         key={`menu-${section}/${selectedTab}/${config.id}`}
         onClick={() => {
@@ -221,6 +229,7 @@ export function ScopeSelectorSmall({
         }}
         className={classNames(
           'hover:bg-neutral-1/40 flex h-[40px] items-center border pl-5 font-semibold',
+          'disabled:pointer-events-none disabled:cursor-not-allowed',
           config.type === type
             ? 'bg-primary-8 border-none text-white'
             : 'text-primary-9 border-gray-300'

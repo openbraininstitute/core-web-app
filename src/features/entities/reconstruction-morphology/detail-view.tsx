@@ -1,15 +1,16 @@
 'use client';
 
+import { LoadingOutlined } from '@ant-design/icons';
+import { Spin } from 'antd';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
+import { useParams } from 'next/navigation';
 import { memo, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import createMorphologyDataAtom from '@/state/morpho-viewer';
 
@@ -20,14 +21,9 @@ import { ensureArray } from '@/utils/array';
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import { WorkspaceContext } from '@/types/common';
 
-export default function MorphologyDetailView({
-  detail,
-  ctx,
-}: {
-  detail: IReconstructionMorphology;
-  ctx?: WorkspaceContext;
-}) {
+export default function MorphologyDetailView({ detail }: { detail: IReconstructionMorphology }) {
   if (!detail) return null;
+
   return (
     <>
       {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
@@ -40,7 +36,7 @@ export default function MorphologyDetailView({
           customError: 'Error while loading morphology viewer',
         })}
       >
-        <MorphoViewerLoaderMemo resource={detail} ctx={ctx} />
+        <MorphoViewerLoaderMemo resource={detail} />
       </ErrorBoundary>
       {/* <ErrorBoundary
         FallbackComponent={withErrorConfig({
@@ -63,13 +59,9 @@ export default function MorphologyDetailView({
   );
 }
 
-function MorphoViewerLoader({
-  resource,
-  ctx,
-}: {
-  resource: IReconstructionMorphology;
-  ctx?: WorkspaceContext;
-}) {
+function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology }) {
+  const ctx = useParams<WorkspaceContext>();
+
   const morphologyDataAtom = useMemo(
     () => loadable(createMorphologyDataAtom(resource, ctx)),
     [resource, ctx]

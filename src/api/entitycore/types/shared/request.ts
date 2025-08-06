@@ -45,7 +45,7 @@ export type StainFilter = {
 
 export type IdFilter = Partial<{
   id: string;
-  id__in: string; // this should be comma separated
+  id__in: string | Array<string>;
 }>;
 
 type SearchFilter = {
