@@ -18,7 +18,6 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   api: {
     config: {
       allowedFacets: true,
-      allowedParams: 'all',
     },
     query: {
       list: getExperimentalSynapsesPerConnections,

@@ -1,7 +1,6 @@
 import { atomFamily, atomWithDefault, loadable } from 'jotai/utils';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import isEmpty from 'lodash/isEmpty';
-import pick from 'lodash/pick';
 import _get from 'lodash/get';
 
 import columnKeyToFilter from './column-key-to-filter';
@@ -91,7 +90,7 @@ export const activeColumnsAtom = atomFamily(
 );
 
 export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
-  const childAtom = atomWithDefault<Promise<Array<CoreFilter>>>(async () => {
+  const childAtom = atomWithDefault<Array<CoreFilter>>(() => {
     const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
     const fields = columns ? getFieldsDefinition(columns) : [];
 
@@ -134,13 +133,14 @@ export function useRefreshDataAtom(key: string): () => void {
 
 export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAtomBinding) => {
   const refreshDataAtom = refreshDataAtomFamily(ctx.key);
+
   const childAtom = atom<Promise<EntityCoreResponse<T>>>(
     async (get): Promise<EntityCoreResponse<T>> => {
       get(refreshDataAtom);
+      const sortState = get(sortStateAtom({ key: ctx.key }));
       const searchString = get(searchStringAtom(ctx.key));
       const pageNumber = get(pageNumberAtom(ctx.key));
-      const filters = await get(filtersAtom(ctx));
-      const sortState = get(sortStateAtom({ key: ctx.key }));
+      const filters = get(filtersAtom(ctx));
 
       // TODO: better handling when we have IDs filter
       if (ctx.shouldUseIds) {
@@ -177,11 +177,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
       if (entity && entity.api.query.list) {
         const response = await entity.api.query.list({
           withFacets: entity.api.config.allowedFacets,
-          filters: {
-            ...(entity.api.config.allowedParams === 'all'
-              ? queryParameters
-              : pick(queryParameters, entity.api.config.allowedParams ?? [])),
-          },
+          filters: queryParameters,
           context: ctx.workspace,
         });
         return response as EntityCoreResponse<T>;

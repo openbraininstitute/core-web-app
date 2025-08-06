@@ -1,4 +1,4 @@
-import SimulationPlotAsImage from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-as-image';
+import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
 import {
   DEFAULT_PROTOCOL,
   PROTOCOL_DETAILS,
@@ -74,7 +74,7 @@ export default function StimulationDetails({ currentInjection, stimulusData }: P
             />
           </div>
 
-          {stimulusData && <SimulationPlotAsImage title="Stimulation" plotData={stimulusData} />}
+          {stimulusData && <SimulationPlot title="Stimulation" plotData={stimulusData} />}
         </div>
       </div>
     </div>

@@ -18,7 +18,6 @@ export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
   api: {
     config: {
       allowedFacets: true,
-      allowedParams: 'all',
     },
     query: {
       list: getExperimentalNeuronDensities,

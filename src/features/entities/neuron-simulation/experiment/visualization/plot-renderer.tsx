@@ -1,18 +1,15 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import Plotly, { Layout, Config } from 'plotly.js-dist-min';
-import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
-import { useRef, useEffect, useState } from 'react';
+import { DownloadOutlined } from '@ant-design/icons';
 import { Button, Spin } from 'antd';
 import lodashSet from 'lodash/set';
+import Plotly, { Config, Layout } from 'plotly.js-dist-min';
+import { useEffect, useRef, useState } from 'react';
 
 import LegendItem from '@/features/entities/neuron-simulation/experiment/visualization/legend-item';
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { exportSingleSimulationResultAsZip } from '@/util/simulation-plotly-to-csv';
 import { classNames } from '@/util/utils';
-import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import { useAppNotification } from '@/components/notification';
-import { isType } from '@/util/type-guards';
 
 const PLOT_LAYOUT: Partial<Layout> = {
   plot_bgcolor: '#fff',
@@ -103,7 +100,6 @@ export default function PlotRenderer({
       result: data,
     });
   };
-  const onCopyID = useCopyIdHandler();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -171,21 +167,6 @@ export default function PlotRenderer({
           <div className="ml-auto flex items-center gap-2 self-end">
             {isDownloadable && !isLoading && (
               <>
-                {onCopyID && (
-                  <Button
-                    type="primary"
-                    size="middle"
-                    htmlType="button"
-                    icon={<CopyOutlined />}
-                    onClick={onCopyID}
-                    className={classNames(
-                      'border-primary-8 text-primary-8 h-10 rounded-none border bg-white',
-                      bordered && 'border-b-0'
-                    )}
-                  >
-                    Copy ID
-                  </Button>
-                )}
                 <Button
                   type="primary"
                   size="middle"
@@ -225,18 +206,4 @@ export default function PlotRenderer({
       </div>
     </div>
   );
-}
-
-function useCopyIdHandler() {
-  const { info } = useAppNotification();
-  const params = useParams();
-  if (isType<{ id: string }>(params, { id: 'string' })) {
-    return () => {
-      navigator.clipboard.writeText(params.id);
-      info({
-        message: 'ID has been copied to the clipboard!',
-      });
-    };
-  }
-  return null;
 }

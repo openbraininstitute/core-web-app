@@ -10,27 +10,26 @@ import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
-import { StatError } from '../ExploreInteractive/StatItem';
-
-import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
+import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { StatError } from '@/components/explore-section/ExploreInteractive/StatItem';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import {
-  EntityCoreExperimentalConfiguration,
-  EntityCoreModelConfiguration,
-} from '@/entity-configuration/domain';
 import { resolveDataKey } from '@/utils/key-builder';
 import { ensureString } from '@/util/type-guards';
+import {
+  ExperimentalEntitiesTileTypes,
+  ModelEntitiesTileTypes,
+} from '@/components/entities-type-stats/helpers';
 
 import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -58,8 +57,8 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
 
   const config =
     dataTypeGroup === DataTypeGroup.ExperimentalData
-      ? EntityCoreExperimentalConfiguration
-      : EntityCoreModelConfiguration;
+      ? ExperimentalEntitiesTileTypes
+      : ModelEntitiesTileTypes;
 
   const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';

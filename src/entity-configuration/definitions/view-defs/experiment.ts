@@ -6,22 +6,6 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
-  [DataType.Circuit]: {
-    title: 'Circuit',
-    name: EntitySlug.Circuit,
-    curated: false,
-    columns: [
-      EntityCoreFields.Name,
-      EntityCoreFields.Description,
-      EntityCoreFields.BrainRegion,
-      EntityCoreFields.NumberNeurons,
-      EntityCoreFields.NumberSynapses,
-      EntityCoreFields.NumberConnections,
-      EntityCoreFields.CreatedBy,
-      EntityCoreFields.CreationDate,
-    ],
-  },
-
   [DataType.SingleNeuronSimulation]: {
     title: 'Simulation',
     group: DataTypeGroup.SimulationData,
@@ -76,6 +60,58 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
       // EntityCoreFields.ScanParameters,
+      EntityCoreFields.SimulationCampaignStatus,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    filterableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    displayableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+  },
+  [DataType.PairedNeuronCircuitSimulation]: {
+    title: 'Paired Neurons Simulation',
+    group: DataTypeGroup.SimulationData,
+    name: EntitySlug.PairedNeuronCircuitSimulation,
+    curated: false,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.CircuitName,
+      EntityCoreFields.SimulationCampaignStatus,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    filterableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    displayableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+  },
+  [DataType.SmallMicrocircuitSimulation]: {
+    title: 'Small microcircuit Simulation',
+    group: DataTypeGroup.SimulationData,
+    name: EntitySlug.SmallMicrocircuitSimulation,
+    curated: false,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.CircuitName,
       EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.CreationDate,

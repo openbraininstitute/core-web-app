@@ -55,7 +55,6 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
     api: {
       config: {
         allowedFacets: true,
-        allowedParams: 'all',
       },
       query: {
         list: getSingleNeuronSynaptomeSimulations,

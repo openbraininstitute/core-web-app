@@ -1,4 +1,7 @@
-// TODO: this types should be removed for the new entity configuration types
+// TODO: this types should be renamed to "ExtendedTypes"
+// TODO: rename the old ones to entity core naming and update virtual-lab-api in the same time
+// NOTE: There are now various nested types associated with a single parent type in EntityCore.
+// We should enable selection and data manipulation for both the nested types and those directly defined in EntityCore.
 export enum DataType {
   ExperimentalBoutonDensity = `ExperimentalBoutonDensity`,
   ExperimentalNeuronDensity = `ExperimentalNeuronDensity`,
@@ -12,6 +15,11 @@ export enum DataType {
   SingleNeuronSynaptome = 'SingleNeuronSynaptome',
   SingleNeuronSynaptomeSimulation = 'SynaptomeSimulation',
   Circuit = 'Circuit',
+  SmallMicrocircuit = 'SmallMicroCircuit',
+  Microcircuit = 'MicroCircuit',
+  PairedNeuronCircuit = 'PairedNeuronCircuit',
+  PairedNeuronCircuitSimulation = 'PairedNeuronCircuitSimulation',
+  SmallMicrocircuitSimulation = 'SmallMicrocircuitSimulation',
 }
 
 export type TDataType = `${DataType}`;

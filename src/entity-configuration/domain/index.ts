@@ -6,7 +6,13 @@ import { ElectricalCellRecording } from './experimental/electrical-cell-recordin
 import { NeuronDensity } from './experimental/neuron-density';
 import { BoutonDensity } from './experimental/bouton-density';
 import { SynapsePerConnection } from './experimental/synapse-per-connection';
-import { Circuit } from '@/entity-configuration/domain/model';
+
+import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
+import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
+import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
+import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 
 import {
   SingleNeuronSimulation,
@@ -21,26 +27,31 @@ export const EntityCoreExperimentalConfiguration = {
   NeuronDensity,
   BoutonDensity,
   SynapsePerConnection,
-};
+} as const;
 
 // NOTE: order is important (it's used in stats panel in explore)
 export const EntityCoreModelConfiguration = {
   Emodel,
   MEmodel,
   SingleNeuronSynaptome,
-};
+  Circuit,
+  SmallMicrocircuit,
+  Microcircuit,
+  PairedNeuronCircuit,
+} as const;
 
 const EntityCoreSimulationConfiguration = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
   SimulationCampaign,
+  SmallMicrocircuitSimulation,
+  PairedNeuronCircuitSimulation,
 };
 
 export const EntityCoreConfiguration = {
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
   ...EntityCoreSimulationConfiguration,
-  Circuit,
 } as const;
 
 export type TEntityCoreConfigurationItem =

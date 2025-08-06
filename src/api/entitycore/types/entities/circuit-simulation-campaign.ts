@@ -13,6 +13,10 @@ import type {
   NameFilter,
   IEntityFilter,
 } from '@/api/entitycore/types/shared/request';
+import type {
+  TCircuitBuildCategoryDictionary,
+  TCircuitScaleDictionary,
+} from '@/api/entitycore/types/entities/circuit';
 
 interface ISimulationBase extends EntityCoreIdentifiable {
   name: string;
@@ -38,11 +42,27 @@ export interface ICircuitSimulationCampaign
     EntityAuthorization,
     EntityCoreType {}
 
+export interface ISimulationCampaignCircuitFilter {
+  circuit__name?: string | null;
+  circuit__name__in?: Array<string> | null;
+  circuit__name__ilike?: string | null;
+
+  circuit__id?: string | null;
+  circuit__id__in?: Array<string> | null;
+
+  circuit__scale?: TCircuitScaleDictionary | null;
+  circuit__scale__in?: Array<TCircuitScaleDictionary> | null;
+
+  circuit__build_category?: TCircuitBuildCategoryDictionary | null;
+  circuit__build_category__in?: Array<TCircuitBuildCategoryDictionary> | null;
+}
+
 export interface ICircuitSimulationCampaignFilter
   extends IEntityFilter,
     BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     NameFilter,
-    PaginationFilter {}
+    PaginationFilter,
+    ISimulationCampaignCircuitFilter {}
 
 const CreateCircuitSimulationCampaignSchema = z.object({
   name: z.string(),
