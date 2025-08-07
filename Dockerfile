@@ -18,10 +18,8 @@ RUN pnpm add sharp
 FROM node:23-alpine AS builder
 
 ARG DEPLOYMENT_ENV
-ARG CORE_WEB_APP_VERSION
 
 ENV NODE_OPTIONS="--max_old_space_size=7168"
-ENV CORE_WEB_APP_VERSION=${CORE_WEB_APP_VERSION}
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10 --activate
@@ -36,13 +34,11 @@ RUN cp .deployment-envs/.env.$DEPLOYMENT_ENV .env.production
 RUN pnpm run build
 
 
-# production image, copy all the files and run next
+# Production image, copy all the files and run next
 FROM node:23-alpine AS runner
 WORKDIR /app
 
-ARG CORE_WEB_APP_VERSION
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_CORE_WEB_APP_VERSION=${CORE_WEB_APP_VERSION}
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
