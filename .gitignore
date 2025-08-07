@@ -218,5 +218,3 @@ notes.md
 playwright/.auth
 
 playwright/.auth
-
-.github/workflows/publish-staging-image-test.yml
