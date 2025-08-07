@@ -29,7 +29,7 @@ export const env = createEnv({
 
   client: {
     NEXT_PUBLIC_BASE_PATH: z.preprocess((basePath) => basePath ?? '', z.string()),
-    NEXT_PUBLIC_CDN_URI: z.string().url().optional(),
+
     // When run on non-protected branch in Gitlab CI the value of env var will be an empty string.
     // This transforms an empty string value to undefined in order to pass the .optional validation.
     NEXT_PUBLIC_SENTRY_DSN: z.preprocess(
@@ -67,7 +67,6 @@ export const env = createEnv({
       .transform((val) => val === 'true')
       .default('false'),
     NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: z.string().url().optional(),
-    NEXT_PUBLIC_CORE_WEB_APP_VERSION: z.string().optional(),
   },
 
   experimental__runtimeEnv: {
@@ -109,7 +108,5 @@ export const env = createEnv({
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ID: process.env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ID,
     NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK: process.env.NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK,
     NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: process.env.NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID,
-    NEXT_PUBLIC_CDN_URI: process.env.NEXT_PUBLIC_CDN_URI,
-    NEXT_PUBLIC_CORE_WEB_APP_VERSION: process.env.NEXT_PUBLIC_CORE_WEB_APP_VERSION,
   },
 });
