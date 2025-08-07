@@ -1,9 +1,11 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { compactRecord } from '@/utils/dictionary';
+
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   ElectricalCellRecordingFilter,
   IElectricalCellRecording,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/electrical-cell-recording';
@@ -25,10 +27,10 @@ export async function getElectricalCellRecordings({
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IElectricalCellRecording>>(baseUri, {
-    queryParams: {
+    queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,
-    },
+    }),
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

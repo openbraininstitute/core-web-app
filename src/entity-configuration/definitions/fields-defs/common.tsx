@@ -38,7 +38,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'previews',
       singular: 'preview',
     },
-    style: { width: 184 },
+    style: { width: 194 },
     isFilterable: false,
     isDisplayable: true,
   },

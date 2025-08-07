@@ -59,6 +59,9 @@ export const entitiesCountAtom = atomFamily(
             recording_origin: ElectricalRecordingOriginDictionary.InVitro,
             page: 1,
             page_size: 1,
+            within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            within_brain_region_brain_region_id: brainRegionId ?? null,
+            within_brain_region_ascendants: false,
           },
         })
       );
