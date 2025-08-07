@@ -1,15 +1,17 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
 import { Data, Layout } from 'plotly.js-dist-min';
 
 import { usePlotFile } from '../hooks';
 import { ToolResult } from '../types';
+import { assertBarChart, convertBarChart } from './charts/bar';
+import { assertHistogramChart, convertHistogramChart } from './charts/histogram';
 import { assertLineChart, convertLineChart } from './charts/line';
 import { assertPieChart, convertPieChart } from './charts/pie';
+import { assertScatterChart, convertScatterChart } from './charts/scatter';
 import GenericPlot from './generic-plot';
 
-import { classNames } from '@/util/utils';
 import { isString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 
 import styles from './tool-plot-generator.module.css';
 
@@ -37,7 +39,9 @@ const plotters: Record<
 > = {
   'json-linechart': { convert: convertLineChart, assert: assertLineChart },
   'json-piechart': { convert: convertPieChart, assert: assertPieChart },
-  'json-scatterplot': { convert: convertLineChart, assert: assertLineChart },
+  'json-scatterplot': { convert: convertScatterChart, assert: assertScatterChart },
+  'json-histogram': { convert: convertHistogramChart, assert: assertHistogramChart },
+  'json-barplot': { convert: convertBarChart, assert: assertBarChart },
 };
 
 function CustomPlot({ result, className }: { result: ToolResult; className?: string }) {
