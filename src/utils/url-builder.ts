@@ -11,13 +11,20 @@ export function resolveExploreDetailsPageUrl({
   ctx,
   entityId,
   dataType,
+  entityType,
 }: {
   ctx?: Partial<WorkspaceContext>;
   entityId?: string;
   dataType?: DataType;
+  entityType?: EntityTypeValue;
 }) {
-  if (!dataType) return '/'; // TODO: find a better to handle this
-  const entityConfig = getEntityByLegacyType({ legacyType: dataType });
+  if (dataType && entityType)
+    throw Error('Only one of dataType and entityType should be specified');
+  if (!dataType && !entityType) return '/'; // TODO: find a better to handle this
+
+  const entityConfig = dataType
+    ? getEntityByLegacyType({ legacyType: dataType })
+    : getEntityByCoreType({ type: entityType });
   const slug = entityConfig?.slug; // morphology, e-model, ...
   const usedSlug: string | undefined = slug;
   const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
