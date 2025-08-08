@@ -25,16 +25,21 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
     <div className={classNames(className, styles.toolsProgress)}>
       {toolsStates.map(({ tool, state }) => {
         const Icon = tool.icon;
+
         return (
           <Link
             className={styles.toolState}
             key={tool.id}
             href={tool.docURL}
             target="documentation"
+            onClick={() =>
+              // eslint-disable-next-line no-console
+              console.info('Tool content:', tool, extractToolsInvocations(message, tool.id))
+            }
           >
             {state === 'result' ? <Icon /> : <IconGear className={styles.spin} />}
             <div className={styles.name}>{tool.name}</div>
-            <div>{state === 'result' ? 'done' : 'running'}</div>
+            <div className={styles.state}>{state === 'result' ? 'done' : 'running'}</div>
           </Link>
         );
       })}
@@ -71,4 +76,11 @@ function getToolsState(message: UIMessage, tools: AIAssistantTool[]): ToolsState
     result.push({ tool, state });
   }
   return result;
+}
+
+function extractToolsInvocations(message: UIMessage, id: string): any {
+  return message.parts
+    .filter((part) => part.type === 'tool-invocation')
+    .map((part) => part.toolInvocation)
+    .filter((tool) => tool.toolName === id);
 }
