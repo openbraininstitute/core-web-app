@@ -22,6 +22,7 @@ ARG CORE_WEB_APP_VERSION
 
 ENV NODE_OPTIONS="--max_old_space_size=7168"
 ENV CORE_WEB_APP_VERSION=${CORE_WEB_APP_VERSION}
+ENV NEXT_PUBLIC_CORE_WEB_APP_VERSION=${CORE_WEB_APP_VERSION}
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10 --activate
