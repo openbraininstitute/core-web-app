@@ -1,4 +1,4 @@
-import { useDocumentationArchitecture } from '../CONTENT/architecture-content'; // @ts-igsnore
+import { useDocumentationArchitecture } from '../CONTENT/architecture-content';
 import { SingleSectionProps } from '../type';
 import NavItem from './nav-item';
 import TutorialNavList from './tutorial-nav-list';
