@@ -3,12 +3,12 @@ import { useAtomValue } from 'jotai';
 import { DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import isNil from 'lodash/isNil';
 
-import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useRecordingSourceForSimulation } from '@/state/simulate/categories';
-import { RecordLocation } from '@/types/simulation/single-neuron';
-import { classNames } from '@/util/utils';
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
+import { RecordLocation } from '@/types/simulation/single-neuron';
+import { secNamesAtom } from '@/state/simulate/single-neuron';
+import { classNames } from '@/util/utils';
 
 type RecordItemProps = {
   index: number;

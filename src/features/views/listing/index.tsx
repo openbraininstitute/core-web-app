@@ -29,8 +29,8 @@ export default function ListingView({ entity, projectId, virtualLabId }: Props) 
   const onCellClick = useExploreTableOnClickHandler();
 
   if (!entity) notFound();
-
   const dataKey = resolveDataKey({ section: 'explore', projectId, entity });
+
   return (
     <ExploreSectionListingView
       useBrainRegion

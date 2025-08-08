@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
-import Profile from '@/components/VirtualLab/create-entity-flows/profile/form';
 import { ProfileError } from '@/components/VirtualLab/create-entity-flows/profile/elements';
+import { Profile } from '@/components/VirtualLab/create-entity-flows/profile/form';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { tryCatch } from '@/api/utils';
 

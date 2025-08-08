@@ -18,10 +18,24 @@ type Props<T> = {
   };
   shallow?: boolean;
   clearOnDefault?: boolean;
+  defaultKey?: string;
 };
 
-export default function Tabs<T extends string>({ tabsConfig, cls, tabKey, shallow }: Props<T>) {
-  const { activeTab, onChangeTab } = useTabs({ tabsConfig, tabKey, shallow });
+export default function Tabs<T extends string>({
+  tabsConfig,
+  cls,
+  tabKey,
+  shallow,
+  defaultKey,
+  clearOnDefault,
+}: Props<T>) {
+  const { activeTab, onChangeTab } = useTabs({
+    tabsConfig,
+    tabKey,
+    shallow,
+    defaultKey,
+    clearOnDefault,
+  });
   return (
     <ul
       className={classNames(
@@ -67,12 +81,13 @@ export function useTabs<T extends string>({
   tabKey = 'tab',
   shallow = false,
   clearOnDefault = false,
+  defaultKey = undefined,
 }: Omit<Props<T>, 'cls'>) {
   const [activeTab, setActiveTab] = useQueryState(
     `${tabKey}`,
     parseAsString
       .withOptions({ shallow, clearOnDefault })
-      .withDefault(tabsConfig?.at(0)!.key!) as Parser<T>
+      .withDefault(defaultKey ?? tabsConfig?.at(0)!.key!) as Parser<T>
   );
 
   const onChangeTab = (key: string) => () => setActiveTab(key as T);

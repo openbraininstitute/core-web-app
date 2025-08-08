@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
 
-import { ProjectCardSkeletonShimmer } from '@/ui/segments/project/banner-skeleton';
+import { ProjectCardSkeletonShimmer } from '@/ui/segments/project/banner/banner-skeleton';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
 import { ProjectActivities } from '@/ui/segments/project/activities';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
-import { ProjectCard } from '@/ui/segments/project/banner';
-import { keyBuilder } from '@/ui/queries/workspace';
+import { ProjectCard } from '@/ui/segments/project/banner/banner';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ServerSideComponentProp } from '@/types/common';
 
@@ -23,7 +23,7 @@ export default async function Home({
 
   return (
     <HydrateClient>
-      <div className="flex flex-col gap-6 p-3">
+      <div className="flex flex-col gap-6 px-3">
         <Suspense fallback={<ProjectCardSkeletonShimmer />}>
           <ProjectCard />
         </Suspense>

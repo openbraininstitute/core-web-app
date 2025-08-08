@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
-import CheckoutFlow from '@/components/VirtualLab/create-entity-flows/checkout';
 import { SubscriptionCheckoutError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { CheckoutFlow } from '@/components/VirtualLab/create-entity-flows/checkout';
 import { tryCatch } from '@/api/utils';
 
 export const metadata: Metadata = {

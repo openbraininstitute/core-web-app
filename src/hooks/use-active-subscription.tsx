@@ -4,9 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
-import { keyBuilder } from '@/ui/queries/user';
+import { keyBuilder } from '@/ui/use-query-keys/user';
 
-export default function useActiveSubscription() {
+export function useActiveSubscription() {
   let forbiddenOperation = true;
 
   const {
@@ -43,3 +43,5 @@ export default function useActiveSubscription() {
     forbiddenOperation,
   };
 }
+
+export default useActiveSubscription;

@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useRef, useState } from 'react';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
@@ -9,7 +11,7 @@ import Loader from '@/components/loader';
 
 import type { TSuspenseStatus } from '@/components/suspense-with-status';
 
-export default function ThreeDeeBrain({ dataKey }: { dataKey: string }) {
+export function AtlasViewer({ dataKey }: { dataKey: string }) {
   const threeDRef = useRef<HTMLDivElement>(null);
   const [meshLoadingStatus, setMeshLoadingStatus] = useState<TSuspenseStatus>('pending');
 
@@ -55,3 +57,5 @@ export default function ThreeDeeBrain({ dataKey }: { dataKey: string }) {
     </div>
   );
 }
+
+export default AtlasViewer;

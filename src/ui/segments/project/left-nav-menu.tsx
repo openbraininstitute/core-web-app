@@ -4,10 +4,12 @@ import { ComponentProps } from 'react';
 import filter from 'lodash/filter';
 import Link from 'next/link';
 
+import { MetricsSkeleton } from '@/ui/segments/project/metrics/metrics-skeleton';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
-import { getActiveSection } from '@/utils/get-section';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Metrics } from '@/ui/segments/project/metrics/metrics';
+import { getActiveSection } from '@/utils/get-section';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -59,7 +61,7 @@ export function LeftMenu({ className }: Props) {
   );
 
   return (
-    <div className={cn('flex gap-2', className)}>
+    <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex w-full flex-col items-center justify-center gap-2">
         {hashedLinks.map(({ title, key, url, baseUrl }) => (
           <Button
@@ -80,6 +82,21 @@ export function LeftMenu({ className }: Props) {
           </Button>
         ))}
       </div>
+      <Metrics
+        {...{
+          virtualLabId,
+          projectId,
+          cls: {
+            container: 'mt-10',
+            label: 'text-neutral-4',
+            value: 'text-primary-9 font-bold',
+            body: 'flex flex-col w-full gap-2',
+          },
+          loadingComponent: (
+            <MetricsSkeleton cls={{ body: 'flex flex-col gap-2', container: 'mt-10' }} />
+          ),
+        }}
+      />
     </div>
   );
 }

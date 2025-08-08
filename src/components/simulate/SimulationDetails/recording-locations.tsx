@@ -1,6 +1,6 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
 
-import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import type { RecordLocation } from '@/types/simulation/single-neuron';
 
 type RecordingLocationItemProps = {

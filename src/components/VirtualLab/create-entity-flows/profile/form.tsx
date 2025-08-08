@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Form, Button } from 'antd';
+import { Form } from 'antd';
 
+import { LoadingOutlined } from '@ant-design/icons';
 import countries from '../../../../../public/static/country';
 import { ProfileFormData } from './types';
 import { Label, XInput } from './elements';
@@ -12,6 +13,7 @@ import { Select } from '@/components/VirtualLab/create-entity-flows/common/input
 import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
+import { Button } from '@/ui/molecules/button';
 
 type ProfileProps = {
   data: UserProfileResponse | undefined;
@@ -126,22 +128,17 @@ export function Profile({ data }: ProfileProps) {
             </div>
           </div>
 
-          <div className="mt-12 flex justify-end">
+          <div className="mt-8 flex justify-end">
             <Button
+              rounded
               key="create-project-btn"
-              className={classNames(
-                'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
-                'hover:border-primary-8! hover:bg-primary-8 hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
-                'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
-                'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
-              )}
-              type="default"
-              size="large"
-              htmlType="submit"
+              type="submit"
+              size="lg"
+              variant="outline"
               disabled={pending || !valid}
-              loading={pending}
             >
               Update
+              {pending && <LoadingOutlined className="ml-2" />}
             </Button>
           </div>
         </Form>

@@ -1,6 +1,6 @@
 import flatMap from 'lodash/flatMap';
 
-import BillingTable from '@/components/VirtualLab/create-entity-flows/subscription/billing-table';
+import { BillingTable } from '@/components/VirtualLab/create-entity-flows/subscription/billing-table';
 import {
   HistoryEmpty,
   HistoryError,
@@ -31,7 +31,8 @@ export default async function History() {
   return (
     allPayments.length > 0 && (
       <div data-testid="payments-list" className="h-full w-full py-5">
-        <BillingTable payments={allPayments} />
+        {/* this should be deleted */}
+        <BillingTable payments={allPayments} loading={false} />
       </div>
     )
   );

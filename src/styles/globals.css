@@ -43,7 +43,7 @@
   --color-primary-7: #0050b3;
   --color-primary-8: #003a8c;
   --color-primary-9: #002766;
-  --color-primary-highlight: #B1F0FF;
+  --color-primary-highlight: #b1f0ff;
 
   --color-secondary-0: #daffd7;
   --color-secondary-1: #95de64;
@@ -58,7 +58,7 @@
   --color-transparent-white: rgba(255, 255, 255, 0.3);
   --color-transparent-black: rgba(0, 0, 0, 0.3);
   --color-brand: #00d4fe;
-  --color-green-main: #008C05;
+  --color-green-main: #008c05;
   --color-destructive: #eb3333;
   --color-destructive-foreground: #f5f9fc;
   --background-color-ocean-blue: radial-gradient(

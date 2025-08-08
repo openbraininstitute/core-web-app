@@ -1,4 +1,3 @@
-import { ProjectBalanceCard } from '../../../ui/segments/project/credits/ProjectBalanceCard';
 import JobReportList from '../../../ui/segments/project/credits/job-report-list';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
@@ -14,17 +13,17 @@ export default function SpendingsPanel({ virtualLabId }: { virtualLabId: string 
     return <div>Loading...</div>;
   }
 
-  const getProjectBalance = (projectId: string) => {
-    const balance = virtualLabBalance.data.projects?.find((p) => p.proj_id === projectId);
-    if (!balance) throw new Error('Project balance not found');
-    return balance;
-  };
+  // const getProjectBalance = (projectId: string) => {
+  //   const balance = virtualLabBalance.data.projects?.find((p) => p.proj_id === projectId);
+  //   if (!balance) throw new Error('Project balance not found');
+  //   return balance;
+  // };
 
   return (
     <>
       {projectsObj.data?.results.map((project) => (
         <div key={project.id}>
-          <ProjectBalanceCard project={project} balance={getProjectBalance(project.id)} />
+          {/* <ProjectBalanceCard project={project} balance={getProjectBalance(project.id)} /> */}
           <JobReportList />
         </div>
       ))}

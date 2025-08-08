@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ProfileError } from '@/components/VirtualLab/create-entity-flows/profile/elements';
 import { Profile } from '@/components/VirtualLab/create-entity-flows/profile/form';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { keyBuilder } from '@/ui/queries/user';
+import { keyBuilder } from '@/ui/use-query-keys/user';
 
 export function UserProfile() {
   const { isLoading, data, isError } = useQuery({
@@ -13,7 +13,7 @@ export function UserProfile() {
   });
 
   if (isLoading) {
-    return <LoadingOutlined spin />;
+    return <LoadingOutlined className="text-white" spin />;
   }
 
   if (isError) {

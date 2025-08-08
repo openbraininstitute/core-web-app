@@ -8,7 +8,7 @@ import {
   TMember,
   SIZE_MAP,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
-import { PendingInvite } from '@/components/icons/EditorIcons';
+import { PendingInvite, StashUsersCrown } from '@/components/icons/EditorIcons';
 import { COLOR_DICTIONARY } from '@/util/color';
 import { cn } from '@/utils/css-class';
 
@@ -109,12 +109,14 @@ export function MemberAvatarCasual({
   shape,
   cls,
   withEmail = false,
+  isOwner = false,
 }: TMember & {
   pending: boolean;
   shape?: 'circle' | 'square';
   size?: 'small' | 'medium' | 'large';
   layout?: 'vertical' | 'horizontal';
   withEmail?: boolean;
+  isOwner?: boolean;
   cls?: {
     container?: string;
     text?: string;
@@ -164,7 +166,10 @@ export function MemberAvatarCasual({
               shape={shape}
               style={{ backgroundColor: bgColor, color }}
             >
-              {initials}
+              <div className="relative flex flex-col items-center justify-center">
+                {isOwner && <StashUsersCrown />}
+                {initials}
+              </div>
             </Avatar>
             <div className="flex flex-1 items-center justify-between gap-4">
               <div className={cn('flex flex-col')}>

@@ -6,7 +6,7 @@ import { ReactNode, useLayoutEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import HydrateWrapper from '@/wrappers/hydrate-wrapper';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { sectionAtom } from '@/state/application';
 
 import styles from './layout.module.css';

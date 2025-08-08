@@ -12,6 +12,7 @@ export function ProjectTeamSkeleton() {
         .map((_, i) => (
           <div
             className="flex items-center justify-between rounded-none bg-transparent px-4 py-2"
+            // eslint-disable-next-line react/no-array-index-key
             key={`sk-team-mem-${i}`}
           >
             <div className="flex items-center space-x-4">

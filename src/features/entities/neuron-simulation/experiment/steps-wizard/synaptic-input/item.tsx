@@ -14,8 +14,8 @@ import {
 } from '@ant-design/icons';
 
 import ConfigInputList from '@/features/entities/neuron-simulation/experiment/steps-wizard/synaptic-input/config-input';
-import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import {
   SECTION_TARGET_MAPPING,
   synapseTypeMapping,

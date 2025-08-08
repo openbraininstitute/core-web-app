@@ -6,13 +6,13 @@ import find from 'lodash/find';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/queries/workspace';
+import { Card, CardContent } from '@/ui/molecules/card';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { ServiceSubtype } from '@/types/accounting';
 import { formatDate } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { JobReport } from '@/types/accounting';
-import { Card, CardContent } from '@/ui/molecules/card';
 
 const { Column } = Table;
 
@@ -89,7 +89,13 @@ export default function JobReportList() {
 
   const { data } = useSuspenseQuery({
     queryKey: keyBuilder.credits({ virtualLabId, projectId, ...pagination }),
-    queryFn: () => getProjectJobReports({ virtualLabId, projectId, page: 1 }),
+    queryFn: () =>
+      getProjectJobReports({
+        virtualLabId,
+        projectId,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      }),
   });
 
   const jobReports = data?.data.items;
@@ -104,15 +110,15 @@ export default function JobReportList() {
   );
 
   return (
-    <div className="mb-4 flex flex-col items-start gap-2">
+    <div className="mb-4 flex w-full flex-col items-start gap-2">
       <h3 className="text-primary-9 text-xl font-bold">History</h3>
-      <Card shadowless>
+      <Card shadowless className="w-full">
         <CardContent>
           <Table<JobReport>
             sticky
             size="middle"
             className={cn(
-              '[&.ant-table]:bg-neutral-1!',
+              '[&.ant-table]:bg-neutral-1! w-full!',
               '[&_.ant-table-thead_th]:text-neutral-4! [&_.ant-table-thead_th]:font-light!',
               '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
               '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2'

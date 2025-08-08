@@ -1,7 +1,6 @@
 'use client';
 
 import { Table, ConfigProvider, theme, Button } from 'antd';
-import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -121,7 +120,8 @@ export function BillingTable({ payments, loading }: Props) {
     >
       <Table
         loading={loading}
-        data-testid="subscription-history"
+        data-testid="invoices-history"
+        rowClassName="[&_.ant-table-thead>tr>th]:font-light!"
         columns={columns}
         dataSource={payments}
         rowKey="id"

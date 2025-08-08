@@ -1,6 +1,7 @@
 'use client';
 
 import JobReportList from './job-report-list';
+import { BalanceCard } from './balance-card';
 
 export function Credits() {
   // const project = useUnwrappedValue(
@@ -13,12 +14,10 @@ export function Credits() {
   // }
 
   return (
-    <>
-      {/* <ProjectBalanceCard project={project} balance={balance} /> */}
-      <div className="px-6">
-        <JobReportList />
-      </div>
-    </>
+    <div id="project-credits" data-testid="project-credits" className="flex flex-col gap-6 px-6">
+      <BalanceCard />
+      <JobReportList />
+    </div>
   );
 }
 

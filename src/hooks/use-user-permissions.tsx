@@ -1,5 +1,5 @@
-import useActiveSubscription from '@/hooks/use-active-subscription';
-import useUserRole from '@/hooks/use-user-role';
+import { useActiveSubscription } from '@/hooks/use-active-subscription';
+import { useUserRole } from '@/hooks/use-user-role';
 
 type Props = {
   virtualLabId?: string;

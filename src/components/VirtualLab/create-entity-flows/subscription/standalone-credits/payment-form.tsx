@@ -8,7 +8,6 @@ import { Button, Spin } from 'antd';
 import isObject from 'lodash/isObject';
 import delay from 'lodash/delay';
 
-import getStripe from '@/components/VirtualLab/Billing/utils';
 import sessionAtom from '@/state/session';
 
 import {
@@ -17,6 +16,7 @@ import {
   CONVERSION_RATE,
 } from '@/components/VirtualLab/create-entity-flows/subscription/standalone-credits/credit-converter';
 import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
+import { getStripe } from '@/components/VirtualLab/Billing/utils';
 
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { useAppNotification } from '@/components/notification';

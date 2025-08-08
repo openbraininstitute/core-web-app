@@ -6,9 +6,8 @@ import { InputNumber } from 'antd';
 import isEqual from 'lodash/isEqual';
 import dynamic from 'next/dynamic';
 
-import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
-
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useCurrentInjectionSimulationConfig } from '@/state/simulate/categories';
 import { StimulusModule } from '@/types/simulation/single-neuron';
 import { secNamesAtom } from '@/state/simulate/single-neuron';

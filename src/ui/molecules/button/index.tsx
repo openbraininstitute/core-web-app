@@ -1,7 +1,9 @@
+/* eslint-disable react/jsx-props-no-spreading */
+
 import { cva, type VariantProps } from 'class-variance-authority';
-import { LoadingOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
 import type { ComponentProps } from 'react';
+
 import { cn } from '@/utils/css-class';
 
 const buttonVariants = cva(
@@ -77,7 +79,6 @@ function Button({
   ...props
 }: ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
-    loading?: boolean;
     rounded?: boolean;
     active?: boolean;
     borderless?: boolean;

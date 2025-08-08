@@ -7,7 +7,7 @@ import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CoinsIcon } from '@/components/icons/buttons';
-import { keyBuilder } from '@/ui/queries/workspace';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Badge } from '@/ui/molecules/badge';
 
 export function Wallet() {
@@ -33,6 +33,7 @@ export function Wallet() {
   return (
     <Badge
       rounded
+      id="workspace-project-credits"
       className="min-w-16 font-bold select-none"
       variant="outline"
       size={breakpoint === 'xl' ? 'lg' : 'md'}

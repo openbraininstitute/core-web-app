@@ -2,7 +2,7 @@ import { Card, CardHeader, CardContent } from '@/ui/molecules/card';
 
 export function ProjectActivities() {
   return (
-    <Card className="shadow-xs">
+    <Card className="w-full shadow-xs">
       <CardHeader className="text-primary-9 font-bold">Recent activities</CardHeader>
       <CardContent>
         <Card borderless shadowless className="flex items-center justify-center py-10">

@@ -1,13 +1,19 @@
 /* eslint-disable react/jsx-props-no-spreading */
+
 export function HelpIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
       <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M36.804 34.298c1.321-.362 2.408-1.224 2.408-3.332V10.154c0-1.66-1.08-2.765-3.667-2.158l-11.792 2.763l-11.79-2.763c-2.579-.648-3.668.498-3.668 2.158v20.812c0 2.108 1.087 2.97 2.408 3.332l13.05 3.574zm2.407-22.659l1.677-.214c1.095-.14 2.612.933 2.612 2.038v21.81c0 1.662-.963 2.166-2.975 2.471L24 40.188L7.475 37.744c-2.012-.305-2.975-.809-2.975-2.471v-21.81c0-1.105 1.517-2.179 2.612-2.038l1.185.151"
+        fill="currentColor"
+        d="M10 7a3 3 0 1 0-6 0 3 3 0 0 0 6 0Zm1 0a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"
+      />
+      <path
+        fill="currentColor"
+        d="M13 7A6 6 0 1 0 1 7a6 6 0 0 0 12 0Zm1 0A7 7 0 1 1 0 7a7 7 0 0 1 14 0Z"
+      />
+      <path
+        fill="currentColor"
+        d="M4.707 4.293 4 5 2 3l.707-.707 2 2ZM4.707 9.707 4 9l-2 2 .707.707 2-2ZM9.293 4.293 10 5l2-2-.707-.707-2 2ZM9.293 9.707 10 9l2 2-.707.707-2-2Z"
       />
     </svg>
   );
@@ -15,72 +21,33 @@ export function HelpIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export function NotebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="14px" height="14px" fill="none" {...props}>
       <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M35.3 15.172H12.664c-.758 0-1.372.614-1.372 1.372V39.18c0 .758.614 1.372 1.371 1.372H35.3c.757 0 1.372-.614 1.372-1.372V16.544c0-.758-.615-1.372-1.372-1.372"
+        fill="currentColor"
+        d="M12.5 3A1.5 1.5 0 0 0 11 1.5H5A1.5 1.5 0 0 0 3.5 3v10A1.5 1.5 0 0 0 5 14.5h6a1.5 1.5 0 0 0 1.5-1.5V3Zm1 10a2.5 2.5 0 0 1-2.5 2.5H5A2.5 2.5 0 0 1 2.5 13V3A2.5 2.5 0 0 1 5 .5h6A2.5 2.5 0 0 1 13.5 3v10Z"
       />
-      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m36.54 34.844l2.08.218a1.37 1.37 0 0 0 1.507-1.221l2.365-22.512a1.37 1.37 0 0 0-1.22-1.508L18.758 7.455a1.37 1.37 0 0 0-1.508 1.221l-.675 6.424" />
-        <path d="M17.084 10.39L6.728 11.48c-.753.08-1.3.754-1.22 1.508l2.369 22.511c.08.754.754 1.3 1.508 1.221l1.768-.186m5.381-15.293H31.43m-14.896 4.414H31.43M16.534 30.07H31.43m-14.896 4.414h6.896" />
-      </g>
+      <path fill="currentColor" d="M3 4v1H0V4h3ZM3 7.5v1H0v-1h3ZM3 11v1H0v-1h3ZM7 15H6V1h1v14Z" />
     </svg>
   );
 }
 
 export function WorkflowIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
-      <circle
-        cx="10.693"
-        cy="11.106"
-        r="5.194"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
       <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.241 8.507h24.37c3.032 0 3.386 5.745.334 5.745H14.972"
+        fill="currentColor"
+        d="M1.559.588c.418-.784 1.464-.784 1.882 0l1.412 2.647c.392.736-.043 1.644-.789 1.754L3.912 5V4c.007 0 .008-.001.013-.004a.147.147 0 0 0 .046-.055.25.25 0 0 0 0-.235L2.559 1.059c-.022-.04-.04-.052-.044-.054A.028.028 0 0 0 2.5 1a.028.028 0 0 0-.015.005c-.004.002-.022.013-.044.054L1.03 3.706a.25.25 0 0 0 0 .235c.018.034.038.05.046.055.005.003.006.004.013.004v1l-.152-.01C.24 4.885-.185 4.087.08 3.384l.067-.15L1.56.588ZM3.912 4v1H1.088V4h2.824ZM13 4v1h-3V4h3Zm0-3h-3v4l-.103-.005a1 1 0 0 1-.892-.892L9 4V1a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3a1 1 0 0 1-.898.995L13 5V1ZM13 11.5a1.5 1.5 0 1 0-1.5 1.5v1a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5v-1a1.5 1.5 0 0 0 1.5-1.5ZM2.875 9l2.874 2.875-2.874 2.875L0 11.875 2.875 9Zm0 4.335 1.46-1.46-1.46-1.46-1.46 1.46 1.46 1.46ZM2 6h1v2H2V6ZM8.005 1.995v1h-2v-1h2ZM11 6h1v2h-1V6Z"
       />
-      <circle
-        cx="11.127"
-        cy="36.894"
-        r="5.194"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    </svg>
+  );
+}
+
+export function Home(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
       <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.675 34.294h24.37c3.031 0 3.385 5.745.333 5.745H15.405"
-      />
-      <circle
-        cx="20.355"
-        cy="24.306"
-        r="4.985"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M24.61 21.28h15.562c3.025 0 3.037 6.092 0 6.092h-15.56"
+        fill="currentColor"
+        d="m14.297 5.406.203.15V14.5H9.321V8.88H5.68v5.62H.5V5.556l.203-.15L7.5.378l6.797 5.028ZM1.5 6.06v7.44h3.179V7.88h5.642v5.62H13.5V6.06l-6-4.439-6 4.439Z"
       />
     </svg>
   );
@@ -88,29 +55,12 @@ export function WorkflowIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export function ExploreIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
-      <circle
-        cx="27.569"
-        cy="23.856"
-        r="7.378"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
+      <path fill="#003A8C" d="M4.326 1.5v1H1v10h10V8.218h1V13.5H0v-12h4.326Z" />
+      <path fill="#003A8C" d="M12 3a2 2 0 1 0-2 2v1a3 3 0 1 1 0-6 3 3 0 0 1 0 6V5a2 2 0 0 0 2-2Z" />
       <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="m32.786 29.073l1.88 1.88m-1.156 1.155l2.311-2.312l6.505 6.505l-2.312 2.312z"
-      />
-      <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M43.5 31.234V12.55a3.16 3.16 0 0 0-3.162-3.163H7.662A3.16 3.16 0 0 0 4.5 12.55v18.973a3.16 3.16 0 0 0 3.162 3.162h22.195"
+        fill="currentColor"
+        d="M13.707 6.293 13 7l-2-2 .707-.707 2 2ZM4 4v1H2V4h2ZM4 7v1H2V7h2ZM4 10v1H2v-1h2ZM9 7v1H5V7h4ZM10 10v1H5v-1h5ZM6 4v1H5V4h1Z"
       />
     </svg>
   );
@@ -134,6 +84,17 @@ export function CoinsIcon(props: React.SVGProps<SVGSVGElement>) {
         <path d="M6 11c-1.892-.23-3.63-.825-4-2m4 7c-1.892-.23-3.63-.825-4-2" />
         <path d="M6 21c-1.892-.23-3.63-.826-4-2V4m13 2V4" />
       </g>
+    </svg>
+  );
+}
+
+export function PeopleCommunity(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" {...props}>
+      <path
+        fill="currentColor"
+        d="M10 2a3 3 0 1 0 0 6a3 3 0 0 0 0-6M5.053 9.996q-.051.244-.051.504V14a4.99 4.99 0 0 0 1.767 3.814l-.171.05a4 4 0 0 1-4.9-2.828l-.647-2.415a1.5 1.5 0 0 1 1.061-1.837zm8.182 7.818A4.99 4.99 0 0 0 15.002 14v-3.5q-.001-.26-.05-.504l2.94.788a1.5 1.5 0 0 1 1.06 1.837l-.647 2.415a4 4 0 0 1-5.07 2.778M16.5 4a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5m-13 0a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5m4 5A1.5 1.5 0 0 0 6 10.5V14a4 4 0 0 0 8 0v-3.5A1.5 1.5 0 0 0 12.5 9z"
+      />
     </svg>
   );
 }

@@ -11,7 +11,7 @@ import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/eve
 import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
 import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { scrollToNode } from '@/components/tree/elements/helpers';
-import HydrateWrapper from '@/wrappers/hydrate-wrapper';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
   DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
   brainRegionBasicCellGroupsRegionsHierarchyAtom,

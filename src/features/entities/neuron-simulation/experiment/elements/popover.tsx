@@ -13,7 +13,7 @@ type Props = {
   onOpenChange?: (open: boolean) => void;
 };
 
-export default function CustomPopover({
+export function CustomPopover({
   onConfirm,
   message,
   children,
@@ -54,3 +54,5 @@ export default function CustomPopover({
     </Popover>
   );
 }
+
+export default CustomPopover;

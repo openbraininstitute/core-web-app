@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 
-import { VirtualLabConfigModal } from '@/ui/segments/virtual-lab-configuration/modal';
-import { UserConfigurationModal } from '@/ui/segments/profile/modal';
+import { AppOnboardingProvider } from '@/ui/segments/app-onboarding/discover-app';
+import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
-import { WorkspaceTopMenu } from '@/ui/segments/workspace-top-menu';
+import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
+import { Container as AiContainer } from '@/ui/segments/ai/container';
 
 type Props = {
   children: ReactNode;
@@ -11,15 +12,22 @@ type Props = {
 
 export default function Layout({ children }: Props) {
   return (
-    <ProjectRootLayout>
-      <div className="w-full p-3 [grid-area:header]">
-        <WorkspaceTopMenu />
+    <AppOnboardingProvider>
+      <div className="h-screen w-full">
+        <ProjectRootLayout>
+          <div className="w-full p-3 [grid-area:header]">
+            <WorkspaceTopMenu />
+          </div>
+          <div
+            id="workspace-body"
+            className="secondary-scrollbar w-full overflow-y-auto py-3 [grid-area:main]"
+          >
+            {children}
+          </div>
+          <SpaceManagerContainer />
+          <AiContainer />
+        </ProjectRootLayout>
       </div>
-      <div id="body" className="secondary-scrollbar w-full overflow-y-auto [grid-area:main]">
-        {children}
-      </div>
-      <VirtualLabConfigModal />
-      <UserConfigurationModal />
-    </ProjectRootLayout>
+    </AppOnboardingProvider>
   );
 }

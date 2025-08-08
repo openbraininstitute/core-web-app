@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-props-no-spreading */
+
 'use client';
 
 import {
@@ -24,6 +26,7 @@ export type ModalAnimation =
   | 'none';
 
 export interface ModalProps {
+  id?: string;
   // Core props
   open: boolean;
   onClose?: () => void;
@@ -175,21 +178,19 @@ const getAnimationStyles = (animation: ModalAnimation, isVisible: boolean): CSSP
   }
 };
 
-// Modal Component
-export const Modal: React.FC<ModalProps> = ({
-  // Core props
+export function Modal({
+  id,
+
   open,
   onClose,
   children,
 
-  // Appearance
   title,
   footer,
   size = 'md',
   position = 'center',
   animation = 'fade',
 
-  // Behavior
   closable = true,
   closeIcon = <CloseOutlined className="text-neutral-4 hover:text-neutral-6 transition-colors" />,
   maskClosable = true,
@@ -197,7 +198,6 @@ export const Modal: React.FC<ModalProps> = ({
   destroyOnClose = false,
   focusTrap = true,
 
-  // Styling
   className,
   overlayClassName,
   bodyClassName,
@@ -206,32 +206,29 @@ export const Modal: React.FC<ModalProps> = ({
   style,
   overlayStyle,
 
-  // Dimensions
   width,
   height,
   maxWidth,
   maxHeight,
 
-  // Advanced
   container,
   zIndex = 1000,
 
-  // Callbacks
   afterClose,
   afterOpen,
-}) => {
+}: ModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
   const animationTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Handle open/close states
+  // handle open/close states
   useEffect(() => {
     if (open) {
       setShouldRender(true);
       previousActiveElement.current = document.activeElement as HTMLElement;
-      // Small delay to trigger animation
+      // small delay to trigger animation
       requestAnimationFrame(() => {
         setIsVisible(true);
         afterOpen?.();
@@ -242,7 +239,7 @@ export const Modal: React.FC<ModalProps> = ({
       animationTimeout.current = setTimeout(() => {
         setShouldRender(false);
         afterClose?.();
-        // Restore focus
+        // restore focus
         if (previousActiveElement.current && previousActiveElement.current.focus) {
           previousActiveElement.current.focus();
         }
@@ -256,7 +253,8 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [open, animation, afterClose, afterOpen]);
 
-  // Handle ESC key
+  // handle ESC key
+  // TODO: to be removed when merge circuit PR (contains the useHotKey package)
   useEffect(() => {
     if (!open || !keyboard) return;
 
@@ -271,7 +269,7 @@ export const Modal: React.FC<ModalProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, keyboard, onClose]);
 
-  // Handle focus trap
+  // handle focus trap
   useEffect(() => {
     if (!open || !focusTrap || !modalRef.current) return;
 
@@ -289,15 +287,13 @@ export const Modal: React.FC<ModalProps> = ({
           e.preventDefault();
           lastFocusable?.focus();
         }
-      } else {
-        if (document.activeElement === lastFocusable) {
-          e.preventDefault();
-          firstFocusable?.focus();
-        }
+      } else if (document.activeElement === lastFocusable) {
+        e.preventDefault();
+        firstFocusable?.focus();
       }
     };
 
-    // Focus first element
+    // focus first element
     firstFocusable?.focus();
 
     document.addEventListener('keydown', handleTab);
@@ -313,7 +309,7 @@ export const Modal: React.FC<ModalProps> = ({
     [maskClosable, onClose]
   );
 
-  // Prevent body scroll when modal is open
+  // prevent body scroll when modal is open
   useEffect(() => {
     if (open) {
       const originalOverflow = document.body.style.overflow;
@@ -328,7 +324,7 @@ export const Modal: React.FC<ModalProps> = ({
     return null;
   }
 
-  // Get container element
+  // get container element
   const getContainer = () => {
     if (typeof container === 'function') return container();
     if (container) return container;
@@ -336,9 +332,9 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   const modalContent = (
-    <div className="modal-root">
-      {/* Overlay */}
+    <div id={id} className="modal-root">
       <div
+        id="modal-overlay"
         className={cn(
           'fixed inset-0 bg-black/50 backdrop-blur-sm',
           modalAnimations[animation].overlay,
@@ -353,8 +349,8 @@ export const Modal: React.FC<ModalProps> = ({
         aria-hidden="true"
       />
 
-      {/* Modal */}
       <div
+        id="modal-dialog"
         ref={modalRef}
         role="dialog"
         aria-modal="true"
@@ -376,9 +372,9 @@ export const Modal: React.FC<ModalProps> = ({
           ...style,
         }}
       >
-        {/* Header */}
         {title && (
           <div
+            id="modal-header"
             className={cn(
               'border-neutral-2 flex items-center justify-between border-b px-6 py-4',
               headerClassName
@@ -402,14 +398,16 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
         )}
 
-        {/* Body */}
-        <div className={cn('max-h-[calc(90vh-8rem)] overflow-auto px-6 py-4', bodyClassName)}>
+        <div
+          id="modal-body"
+          className={cn('max-h-[calc(90vh-8rem)] overflow-auto px-6 py-4', bodyClassName)}
+        >
           {children}
         </div>
 
-        {/* Footer */}
         {footer && (
           <div
+            id="modal-footer"
             className={cn(
               'border-neutral-2 flex items-center justify-end gap-2 border-t px-6 py-4',
               footerClassName
@@ -423,9 +421,9 @@ export const Modal: React.FC<ModalProps> = ({
   );
 
   return createPortal(modalContent, getContainer());
-};
+}
 
-// Modal hook options interface
+// modal hook options interface
 export interface ModalInstance {
   close: () => void;
   update: (options: Partial<ModalHookOptions>) => void;
@@ -440,7 +438,7 @@ export interface ModalHookOptions extends Omit<ModalProps, 'open' | 'onClose'> {
   cancelButtonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
 }
 
-// Modal Hook
+// modal Hook
 export const useModal = () => {
   const [modals, setModals] = useState<Array<{ id: string; props: ModalProps }>>([]);
 
@@ -531,7 +529,7 @@ export const useModal = () => {
   };
 };
 
-// Static modal instance manager
+// static modal instance manager
 class ModalManager {
   private static renderModal(props: ModalProps): { close: () => void } {
     const container = document.createElement('div');
@@ -543,7 +541,7 @@ class ModalManager {
       }
     };
 
-    // Dynamic import to avoid SSR issues
+    // dynamic import to avoid SSR issues
     import('react-dom/client').then(({ createRoot }) => {
       const root = createRoot(container);
       root.render(<Modal {...props} />);
@@ -553,9 +551,7 @@ class ModalManager {
   }
 
   static confirm(options: ModalHookOptions & { content?: ReactNode }) {
-    let instance: { close: () => void };
-
-    instance = this.renderModal({
+    const instance: { close: () => void } = this.renderModal({
       ...options,
       open: true,
       children: options.content || options.children,
@@ -572,9 +568,7 @@ class ModalManager {
   }
 
   static info(options: ModalHookOptions & { content?: ReactNode }) {
-    let instance: { close: () => void };
-
-    instance = this.renderModal({
+    const instance: { close: () => void } = this.renderModal({
       ...options,
       open: true,
       title: options.title || 'Information',
@@ -625,7 +619,7 @@ class ModalManager {
   }
 }
 
-// Export static modal methods
+// export static modal methods
 export const modal = {
   confirm: ModalManager.confirm.bind(ModalManager),
   info: ModalManager.info.bind(ModalManager),

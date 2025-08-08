@@ -9,8 +9,8 @@ import some from 'lodash/some';
 import get from 'lodash/get';
 
 import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
-import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeEnum } from '@/api/entitycore/types';
