@@ -48,11 +48,9 @@ function makeProps<T>(
 ): any {
   try {
     const obj = JSON.parse(value);
-    console.log(`🚀 [generic-plot] ${plotType} =`, obj); // @FIXME: Remove this line written on 2025-08-06 at 15:06
     try {
       assert(obj);
       const finalData = convert(obj);
-      console.log('🚀 [generic-plot] finalData =', finalData); // @FIXME: Remove this line written on 2025-08-06 at 15:12
       return finalData;
     } catch (ex) {
       logError(`Unexpected format for "${plotType}" chart:`, obj);

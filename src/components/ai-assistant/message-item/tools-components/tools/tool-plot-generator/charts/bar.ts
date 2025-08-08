@@ -11,7 +11,7 @@ export interface BarChartInput {
   values: {
     category: string;
     value: number;
-    color: string;
+    color?: string | null;
   }[];
   color?: string | null;
 }
@@ -29,7 +29,7 @@ export function convertBarChart(
         opacity: 0.8,
         xaxis: obj.x_label,
         yaxis: obj.y_label,
-        marker: { color: obj.values.map((item) => item.color) },
+        marker: { color: obj.values.map((item) => item.color ?? '#07f') },
       },
     ],
     layout: {
@@ -52,7 +52,7 @@ export function assertBarChart(data: unknown): asserts data is BarChartInput {
       {
         category: 'string',
         value: 'number',
-        color: 'string',
+        color: ['?', ['|', 'string', 'null']],
       },
     ],
     color: ['?', ['|', 'string', 'null']],
