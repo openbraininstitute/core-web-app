@@ -1,0 +1,63 @@
+import React from 'react';
+
+import { ToolResult } from '../types';
+
+import { classNames } from '@/util/utils';
+import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAsyncMemo } from '@/hooks/async-memo';
+import { serviceAiAgentStorageGetFileContent } from '@/services/ai-agent/api/storage';
+import { logError } from '@/util/logger';
+import { isString } from '@/util/type-guards';
+
+import styles from './tool-thumbnail-generation-morphology-getone.module.css';
+
+export interface ToolThumbnailGenerationMorphologyGetoneProps {
+  className?: string;
+  results: ToolResult[];
+}
+
+export default function ToolThumbnailGenerationMorphologyGetone({
+  className,
+  results,
+}: ToolThumbnailGenerationMorphologyGetoneProps) {
+  return (
+    <>
+      {results.map((result) => (
+        <CustomPlot
+          key={result.storage_id}
+          className={classNames(className, styles.toolThumbnailGenerationMorphologyGetone)}
+          result={result}
+        />
+      ))}
+    </>
+  );
+}
+
+function CustomPlot({ className, result }: { className?: string; result: ToolResult }) {
+  const file = usePlotFile(result.storage_id);
+  if (!file) return null;
+
+  const { content } = file;
+  if (isString(content)) return null;
+
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={className} src={content.src} alt="Morphology thumbnail" />;
+}
+
+function usePlotFile(fileIdentifier: string) {
+  const accessToken = useAccessToken() ?? 'NO-TOKEN';
+  const file = useAsyncMemo(fileIdentifier, async () => {
+    try {
+      const data = await serviceAiAgentStorageGetFileContent({
+        accessToken,
+        fileIdentifier,
+      });
+      return data;
+    } catch (ex) {
+      logError(`Unable to retrieve file "${fileIdentifier}":`, ex);
+      return null;
+    }
+  });
+
+  return file;
+}

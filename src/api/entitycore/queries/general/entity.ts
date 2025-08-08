@@ -2,7 +2,7 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { EntityTypeWithBrainRegionValue } from '@/api/entitycore/types/entity-type';
-import type { EntityCountResponse } from '@/api/entitycore/types/entities/entity';
+import type { EntityCountResponse, IEntity } from '@/api/entitycore/types/entities/entity';
 import type { BrainRegionFilter } from '@/api/entitycore/types/shared/request';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -31,6 +31,30 @@ export async function getEntitiesCount({
       types,
       ...brainRegion,
     }),
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
+/**
+ * Retrieves the entity from the Entity Core API by its
+ *
+ * @param params.id The UUID of the entity.
+ * @param params.context - Optional workspace context for the API call.
+ * @returns A promise that resolves to an `EntityCoreResponse` containing the count of entities matching the criteria.
+ */
+export async function getEntity({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext;
+}): Promise<IEntity> {
+  const api = await entityCoreApi();
+  return await api.get(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
