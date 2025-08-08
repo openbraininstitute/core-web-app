@@ -7,7 +7,7 @@ import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardContent } from '@/ui/molecules/card';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { ServiceSubtype } from '@/types/accounting';
 import { formatDate } from '@/util/utils';
 import { cn } from '@/utils/css-class';
@@ -121,8 +121,7 @@ export default function JobReportList() {
               '[&.ant-table]:bg-neutral-1! w-full!',
               '[&_.ant-table-thead_th]:text-neutral-4! [&_.ant-table-thead_th]:font-light!',
               '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
-              '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2',
-              '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!'
+              '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2'
             )}
             loading={isLoading}
             dataSource={jobReports}

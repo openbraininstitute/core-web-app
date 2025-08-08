@@ -3,7 +3,7 @@
 import { useLayoutEffect, type ReactNode } from 'react';
 import { useNextStep } from 'nextstepjs';
 
-import { defaultWorkspaceTour } from '@/ui/segments/app-setup/discover-app';
+import { defaultWorkspaceTour } from '@/ui/segments/app-onboarding/discover-app';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { AUTO_ONBOARDING_DONE } from '@/config';
 

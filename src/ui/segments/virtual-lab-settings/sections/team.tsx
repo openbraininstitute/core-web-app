@@ -17,7 +17,7 @@ import get from 'lodash/get';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { extractInitials } from '@/util/slugify';
 import {

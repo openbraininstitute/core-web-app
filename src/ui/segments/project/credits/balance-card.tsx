@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SwapOutlined } from '@ant-design/icons';
 
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';

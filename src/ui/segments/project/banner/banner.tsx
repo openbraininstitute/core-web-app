@@ -12,7 +12,7 @@ import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button/index';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 type TCardContent = {
@@ -173,7 +173,6 @@ export function ProjectCard(): ReactElement {
               />
             ) : (
               <ExpandableText
-                id="project-description-text"
                 text={isPending ? variables.description : result.data.project.description}
                 collapsedLines={6}
                 className="text-justify text-base leading-6 text-balance text-white/90 transition-all duration-300 lg:text-lg"
@@ -182,7 +181,7 @@ export function ProjectCard(): ReactElement {
                   <button
                     type="button"
                     onClick={toggle}
-                    aria-controls="project-description-less-more"
+                    aria-controls="project-description-text"
                     className={cn(
                       'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
                       'text-sm'

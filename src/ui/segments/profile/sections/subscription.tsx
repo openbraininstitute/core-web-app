@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SubscriptionCheckoutError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { CheckoutFlow } from '@/components/VirtualLab/create-entity-flows/checkout';
-import { keyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/user-query-keys/user';
 
 export function Subscription() {
   const { data, isError } = useQuery({

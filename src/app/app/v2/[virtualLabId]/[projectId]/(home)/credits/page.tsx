@@ -5,7 +5,7 @@ import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { Credits } from '@/ui/segments/project/credits';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { makeRoles } from '@/hooks/use-user-role';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';

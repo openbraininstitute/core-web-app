@@ -6,7 +6,7 @@ import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
 import { ProjectActivities } from '@/ui/segments/project/activities';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { ProjectCard } from '@/ui/segments/project/banner/banner';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 
 import type { ServerSideComponentProp } from '@/types/common';
 

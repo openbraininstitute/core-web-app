@@ -1,12 +1,12 @@
 'use client';
 
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 import { useState } from 'react';
 
 import { CreditsManagement } from '@/ui/segments/virtual-lab-settings/elements/credits-management';
 import { PurchasesHistory } from '@/ui/segments/virtual-lab-settings/elements/payment-history';
-import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
-import { BuyCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/buy-credits';
+import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/sections/manage-credits';
+import { BuyCreditsStep } from '@/ui/segments/virtual-lab-settings/sections/buy-credits';
 
 type Props = {
   virtualLabId: string;
@@ -28,7 +28,8 @@ export function Credits({ virtualLabId }: Props) {
     setCurrentStep(CreditsStep.BuyCredits);
   };
 
-  const handleManageProjectCreditsClick = () => {
+  const handleManageProjectCreditsClick = (projectId: string) => {
+    setSelectedProjectId(projectId);
     setCurrentStep(CreditsStep.ManageCredits);
   };
 
@@ -44,9 +45,16 @@ export function Credits({ virtualLabId }: Props) {
     .with(
       {
         currentStep: CreditsStep.ManageCredits,
+        selectedProjectId: P.not(P.nullish).select('projectId'),
       },
-      () => {
-        return <ManageCreditsStep virtualLabId={virtualLabId} onBack={handleBackToListing} />;
+      ({ projectId }) => {
+        return (
+          <ManageCreditsStep
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            onBack={handleBackToListing}
+          />
+        );
       }
     )
     .otherwise(() => (
@@ -54,7 +62,9 @@ export function Credits({ virtualLabId }: Props) {
         <CreditsManagement
           virtualLabId={virtualLabId}
           onTransferCreditsClick={() => handleTransferClick()}
-          onManageProjectCreditsClick={() => handleManageProjectCreditsClick()}
+          onManageProjectCreditsClick={({ projectId }) =>
+            handleManageProjectCreditsClick(projectId)
+          }
         />
         <PurchasesHistory virtualLabId={virtualLabId} />
       </div>

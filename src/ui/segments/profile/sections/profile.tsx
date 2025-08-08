@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ProfileError } from '@/components/VirtualLab/create-entity-flows/profile/elements';
 import { Profile } from '@/components/VirtualLab/create-entity-flows/profile/form';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { keyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/user-query-keys/user';
 
 export function UserProfile() {
   const { isLoading, data, isError } = useQuery({

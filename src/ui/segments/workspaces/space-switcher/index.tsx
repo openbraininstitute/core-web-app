@@ -24,10 +24,10 @@ import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscri
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder as userKeyBuilder } from '@/ui/user-query-keys/user';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { Item } from '@/ui/segments/workspaces/space-switcher/item';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -310,7 +310,7 @@ export function SpaceSwitcher({ className }: Props) {
             className={cn(
               'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-lg border border-t-0 bg-white shadow-lg',
               'relative flex flex-col',
-              'h-full max-h-[calc(100vh-4.5rem)] min-h-[calc(100vh-5.5rem)] lg:max-h-[calc(100vh-4.5rem)]',
+              'h-full max-h-[calc(100vh-4.5rem)] min-h-[calc(100vh-4.5rem)]',
               { 'rounded-t-none': isExpanded },
               { 'z-[1001]': boardModalOpen }
             )}

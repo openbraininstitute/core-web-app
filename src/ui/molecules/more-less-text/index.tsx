@@ -3,7 +3,6 @@ import { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 import { cn } from '@/utils/css-class';
 
 type ExpandableTextProps = {
-  id?: string;
   text: string;
   collapsedLines?: number;
   className?: string;
@@ -30,7 +29,6 @@ const clampClassFor = (lines: number): string => {
 };
 
 export function ExpandableText({
-  id,
   text,
   collapsedLines = 6,
   className,
@@ -38,37 +36,34 @@ export function ExpandableText({
 }: ExpandableTextProps): ReactElement {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isOverflowing, setIsOverflowing] = useState<boolean>(false);
-
   const contentRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     const el = contentRef.current;
-
     if (!el) return;
 
-    const checkOverflow = (): void => {
-      const computed = window.getComputedStyle(el);
-      const lineHeight = parseFloat(computed.lineHeight) || parseFloat(computed.fontSize) * 1.2;
-      const actualLines = Math.round(el.scrollHeight / lineHeight);
-      const hasOverflow = actualLines > collapsedLines;
-      setIsOverflowing(hasOverflow);
+    const updateOverflow = (): void => {
+      setIsOverflowing(el.scrollHeight > el.clientHeight + 1);
     };
 
-    const rafId = requestAnimationFrame(checkOverflow);
+    updateOverflow();
 
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        requestAnimationFrame(checkOverflow);
-      });
+      resizeObserver = new ResizeObserver(() => updateOverflow());
       resizeObserver.observe(el);
     }
 
+    const handleResize = (): void => updateOverflow();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
     return () => {
-      cancelAnimationFrame(rafId);
       if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
     };
-  }, [text, collapsedLines, isExpanded]);
+  }, [text, collapsedLines]);
 
   const toggle = (): void => {
     setIsExpanded((prev: boolean) => !prev);
@@ -77,14 +72,16 @@ export function ExpandableText({
   return (
     <div className="relative">
       <p
-        id={id}
         ref={contentRef}
+        id="project-description-text"
         className={cn(!isExpanded && clampClassFor(collapsedLines), className)}
         aria-expanded={isExpanded}
       >
         {text}
       </p>
-      {isOverflowing && <div className="mt-2">{children?.({ isExpanded, toggle })}</div>}
+      {(isOverflowing || isExpanded) && (
+        <div className="mt-2">{children?.({ isExpanded, toggle })}</div>
+      )}
     </div>
   );
 }

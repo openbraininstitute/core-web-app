@@ -12,7 +12,7 @@ import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { Invoices } from '@/ui/segments/profile/sections/invoices';
 import { useTabs } from '@/components/detail-view-tabs';
 import { Button } from '@/ui/molecules/button';
-import { keyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/user-query-keys/user';
 import { cn } from '@/utils/css-class';
 
 function Header({ onClose }: { onClose: () => void }) {

@@ -9,7 +9,7 @@ import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subs
 import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
 import { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
-import { keyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/user-query-keys/user';
 import { formatCurrency } from '@/utils/format';
 import { cn } from '@/utils/css-class';
 
@@ -143,8 +143,7 @@ export function Invoices() {
           rootClassName={cn(
             '[&_.ant-spin-blur]:opacity-0! [&_.ant-table-thead>tr>th]:font-light!',
             '[&_.ant-table-thead>tr>th]:font-light! [&_.ant-table-thead]:text-sm',
-            '[&_.ant-empty-description]:text-white!',
-            'me'
+            '[&_.ant-empty-description]:text-white!'
           )}
           rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
           columns={columns}

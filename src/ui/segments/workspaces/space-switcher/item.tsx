@@ -10,7 +10,7 @@ import {
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 

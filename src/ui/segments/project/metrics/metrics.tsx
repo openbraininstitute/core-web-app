@@ -7,7 +7,7 @@ import get from 'lodash/get';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { getProjectStats } from '@/api/virtual-lab-svc/queries/stats';
 import { Card, CardContent } from '@/ui/molecules/card';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 import type { MembersResponse, VlmProjectStatsResponse } from '@/api/virtual-lab-svc/queries/types';

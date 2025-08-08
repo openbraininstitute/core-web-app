@@ -14,7 +14,7 @@ export function Credits() {
   // }
 
   return (
-    <div id="project-credits" data-testid="project-credits" className="flex flex-col gap-6 px-0">
+    <div id="project-credits" data-testid="project-credits" className="flex flex-col gap-6 px-6">
       <BalanceCard />
       <JobReportList />
     </div>

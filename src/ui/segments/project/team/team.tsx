@@ -38,7 +38,7 @@ import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/
 import { attachUsersToProject } from '@/api/virtual-lab-svc/queries/project';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { extractInitials } from '@/util/slugify';
 import { Button } from '@/ui/molecules/button';

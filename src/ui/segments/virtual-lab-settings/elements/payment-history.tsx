@@ -13,7 +13,7 @@ import { listStandalonePayments } from '@/api/virtual-lab-svc/queries/payment';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -103,7 +103,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
   if (error) return <HistoryError />;
 
   return (
-    <div data-testid="payments-list" className="h-max w-full py-5">
+    <div data-testid="payments-list" className="h-full w-full py-5">
       <Card className="border-primary-4 h-full w-full text-white">
         <CardContent>
           <CardTitle className="mb-5">Payment history</CardTitle>
@@ -139,9 +139,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
               rootClassName={cn(
                 '[&_.ant-table-thead>tr>th]:font-light! [&_.ant-table-thead]:text-sm',
                 '[&_.ant-spin-blur]:opacity-0!',
-                '[&_.ant-empty-description]:text-white!',
-                'me [&:has(.ant-table-empty)_td:last]:border-b-none!',
-                '[&_td]:last:border-b-0!'
+                '[&_.ant-empty-description]:text-white!'
               )}
               rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
               pagination={{
@@ -153,7 +151,6 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
                 hideOnSinglePage: true,
                 size: 'default',
                 className: cn(
-                  '[&_td]:last:border',
                   '[&_.ant-pagination-item_a]:text-white! [&_.ant-pagination-item_a]:bg-primary-9! [&_.ant-pagination-item-active]:bg-primary-7 [&_.ant-pagination-item-active]:text-white! [&_.ant-pagination-item-link]:text-white!',
                   'flex items-center gap-2 [&_.ant-pagination-item]:rounded-sm [&_.ant-pagination-item_a]:rounded-sm'
                 ),

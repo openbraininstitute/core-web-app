@@ -11,7 +11,7 @@ import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { PeopleCommunity } from '@/components/icons/buttons';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Metrics } from '@/ui/segments/project/metrics/metrics';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { Button } from '@/ui/molecules/button';
 
 import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';

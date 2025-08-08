@@ -1,0 +1,447 @@
+'use client';
+
+import { ArrowLeftOutlined, LoadingOutlined, SwapOutlined } from '@ant-design/icons';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Select } from 'antd';
+
+import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
+import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { Button, Button as UiButton } from '@/ui/molecules/button';
+import { useAppNotification } from '@/components/notification';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
+import { CoinsIcon } from '@/components/icons/buttons';
+import { Badge } from '@/ui/molecules/badge';
+import { Input } from '@/ui/molecules/input';
+import { cn } from '@/utils/css-class';
+
+import type { ProjectBalance } from '@/types/accounting';
+
+type ManageCreditsStepProps = {
+  virtualLabId: string;
+  projectId?: string;
+  onBack: () => void;
+};
+
+type TransferDirection = 'vlab->proj' | 'proj->vlab';
+
+async function transferCredits({
+  virtualLabId,
+  projectId,
+  amount,
+  direction,
+}: {
+  virtualLabId?: string;
+  projectId?: string;
+  amount?: number;
+  direction: TransferDirection;
+}) {
+  if (!virtualLabId || !projectId) {
+    throw new Error('Virtual lab ID and project ID are required');
+  }
+  if (!amount) {
+    throw new Error('Amount is required');
+  }
+
+  if (direction === 'vlab->proj') {
+    await assignProjectBudget({
+      virtualLabId,
+      projectId,
+      amount,
+    });
+  } else {
+    await reverseProjectBudget({
+      virtualLabId,
+      projectId,
+      amount,
+    });
+  }
+}
+
+export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCreditsStepProps) {
+  const queryClient = useQueryClient();
+  const [amount, setAmount] = useState<string | undefined>(undefined);
+  const [isSwapping, setIsSwapping] = useState<boolean>(false);
+  const [isLabToProject, setIsLabToProject] = useState<boolean>(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(projectId);
+  const notify = useAppNotification();
+  const amountInputRef = useRef<HTMLInputElement>(null);
+
+  const [labDetails, accountingRes, projectsRes] = useQueries({
+    queries: [
+      {
+        queryKey: keyBuilder.getOneLab({ virtualLabId }),
+        queryFn: () => getVirtualLab(virtualLabId),
+        enabled: Boolean(virtualLabId),
+      },
+      {
+        queryKey: keyBuilder.accounting({ virtualLabId }),
+        queryFn: () => getVirtualLabAccountBalance({ virtualLabId, includeProjects: true }),
+        enabled: Boolean(virtualLabId),
+      },
+      {
+        queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
+        queryFn: () => listProjects({ virtualLabId, page: 1, size: 100 }),
+        enabled: Boolean(virtualLabId),
+      },
+    ],
+  });
+
+  const { mutateAsync: transferCreditsAsync, isPending } = useMutation({
+    mutationKey: [
+      {
+        key: 'transfer-credits',
+        virtualLabId,
+        selectedProjectId,
+        direction: isLabToProject ? 'vlab->proj' : 'proj->vlab',
+      },
+    ],
+    retry: false,
+    mutationFn: () =>
+      transferCredits({
+        virtualLabId,
+        projectId: selectedProjectId,
+        amount: Number(amount),
+        direction: isLabToProject ? 'vlab->proj' : 'proj->vlab',
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
+      notify.success({
+        message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
+        description: (
+          <div className="flex items-center gap-2">
+            {isLabToProject && (
+              <span>
+                You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
+                to{' '}
+                <span className="text-primary-9 font-bold">
+                  {projectsRes.data?.data?.results.find((p) => p.id === selectedProjectId)?.name}
+                </span>
+              </span>
+            )}
+            {!isLabToProject && (
+              <span>
+                You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
+                from{' '}
+                <span className="text-primary-9 font-bold">
+                  {projectsRes.data?.data?.results.find((p) => p.id === selectedProjectId)?.name}
+                </span>{' '}
+                to <span className="text-primary-9 font-bold">{virtualLabName}</span>
+              </span>
+            )}
+          </div>
+        ),
+        placement: 'topRight',
+        key: 'transfer-credits-success',
+      });
+      setAmount('');
+    },
+    onError: (error) => {
+      notify.error({
+        message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
+        description: (
+          <div className="flex flex-col items-start gap-2">
+            <span>There was an error transferring credits. Please try again.</span>
+            {'message' in error && <small className="text-red-500">{error.message}</small>}
+          </div>
+        ),
+        placement: 'topRight',
+        key: 'transfer-credits-error',
+      });
+    },
+  });
+
+  const projects = useMemo(() => {
+    const list = (projectsRes?.data?.data?.results ?? []).map((p) => ({
+      value: String(p.id),
+      label: String(p.name ?? ''),
+    }));
+    return list;
+  }, [projectsRes]);
+
+  const balanceMap: Map<string, number> = useMemo(() => {
+    const map = new Map<string, number>();
+    const balances = (accountingRes?.data?.data?.projects ?? []) as Array<ProjectBalance>;
+    for (const item of balances) {
+      const numericBalance = typeof item.balance === 'string' ? Number(item.balance) : item.balance;
+      map.set(item.proj_id, Number.isFinite(numericBalance) ? numericBalance : 0);
+    }
+    return map;
+  }, [accountingRes]);
+
+  const virtualLabBalance: number = useMemo(() => {
+    const bal = accountingRes?.data?.data?.balance ?? '0';
+    const numeric = typeof bal === 'string' ? Number(bal) : bal;
+    return Number.isFinite(numeric as number) ? (numeric as number) : 0;
+  }, [accountingRes]);
+
+  const selectedProjectBalance: number = useMemo(() => {
+    return selectedProjectId ? (balanceMap.get(selectedProjectId) ?? 0) : 0;
+  }, [balanceMap, selectedProjectId]);
+
+  const virtualLabName = useMemo(() => {
+    return labDetails?.data?.data?.virtual_lab?.name ?? 'Virtual Lab';
+  }, [labDetails]);
+
+  const onSwap = () => {
+    if (isSwapping) return;
+    setIsSwapping(true);
+    setTimeout(() => setIsLabToProject((v) => !v), 250);
+    setTimeout(() => setIsSwapping(false), 600);
+  };
+
+  useEffect(() => {
+    if (!selectedProjectId && projects.length > 0) {
+      setSelectedProjectId(projects[0]?.value);
+    }
+  }, [projects, selectedProjectId]);
+
+  useEffect(() => {
+    if (amountInputRef.current) {
+      amountInputRef.current.focus();
+    }
+  }, []);
+
+  return (
+    <div className="flex h-full w-full flex-col gap-6 pb-10">
+      <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center px-6 py-5">
+        <div className="flex w-full items-center gap-4">
+          <UiButton
+            rounded
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
+          >
+            <ArrowLeftOutlined className="text-lg" />
+            <span className="ml-4 text-lg font-bold text-white">Credits</span>
+          </UiButton>
+        </div>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4 px-3">
+        {/* source panel */}
+        <motion.div
+          layout
+          animate={{
+            x: isLabToProject ? 0 : 'calc(100% + 2.5rem)',
+          }}
+          transition={{
+            duration: 0.35,
+            ease: [0.4, 0, 0.2, 1],
+          }}
+          className="flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl"
+        >
+          <div className="flex w-full items-center gap-2">
+            <span className="text-neutral-3">From</span>
+            <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
+              {isLabToProject ? 'Virtual Lab' : 'Project'}
+            </Badge>
+            <div className="ml-auto flex items-center gap-2 rounded-full bg-[#123e7d] px-3 py-1 text-sm">
+              <CoinsIcon />
+              <span className="font-bold">
+                {isLabToProject ? (virtualLabBalance ?? 0) : selectedProjectBalance}
+              </span>
+            </div>
+          </div>
+          <div className="mt-auto">
+            <AnimatePresence mode="wait">
+              {isLabToProject ? (
+                <motion.div
+                  key="lab-name"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="truncate text-xl leading-10 font-semibold"
+                >
+                  {virtualLabName}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="project-select"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Select
+                    showSearch
+                    loading={projectsRes.isLoading}
+                    value={selectedProjectId}
+                    onChange={(value: string) => setSelectedProjectId(value)}
+                    size="large"
+                    className={cn(
+                      'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
+                      '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
+                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none'
+                    )}
+                    options={projects}
+                    popupClassName={cn(
+                      '!bg-[#0a3a76] !text-white',
+                      '[&_.ant-select-item-option-content]:text-white!',
+                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!'
+                    )}
+                    optionFilterProp="label"
+                    disabled={isPending}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        <div className="flex w-10 shrink-0 items-center">
+          <motion.button
+            type="button"
+            aria-label="Swap transfer direction"
+            className="z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-[#0a3a76] text-white transition-all hover:scale-110 hover:bg-[#0d4a94]"
+            onClick={onSwap}
+            disabled={isPending}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.div
+              animate={{ rotate: isSwapping ? 180 : 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <SwapOutlined />
+            </motion.div>
+          </motion.button>
+        </div>
+
+        {/* destination panel */}
+        <motion.div
+          layout
+          animate={{
+            x: isLabToProject ? 0 : 'calc(-100% - 2.5rem)',
+          }}
+          transition={{
+            duration: 0.35,
+            ease: [0.4, 0, 0.2, 1],
+          }}
+          className="flex h-full w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-neutral-3">To</span>
+            <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
+              {isLabToProject ? 'Project' : 'Virtual Lab'}
+            </Badge>
+            <div className="ml-auto flex items-center gap-2 rounded-full bg-[#123e7d] px-3 py-1 text-sm">
+              <CoinsIcon />
+              <span className="font-bold">
+                {isLabToProject ? selectedProjectBalance : (virtualLabBalance ?? 0)}
+              </span>
+            </div>
+          </div>
+          <div className="mt-auto">
+            <AnimatePresence mode="wait">
+              {isLabToProject ? (
+                <motion.div
+                  key="project-select-to"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Select
+                    showSearch
+                    loading={projectsRes.isLoading}
+                    value={selectedProjectId}
+                    onChange={(value: string) => setSelectedProjectId(value)}
+                    size="large"
+                    className={cn(
+                      'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
+                      '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
+                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none'
+                    )}
+                    options={projects}
+                    popupClassName={cn(
+                      '!bg-[#0a3a76] !text-white',
+                      '[&_.ant-select-item-option-content]:text-white!',
+                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!'
+                    )}
+                    optionFilterProp="label"
+                    disabled={isPending}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="lab-name-to"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="truncate text-xl leading-10 font-semibold"
+                >
+                  {virtualLabName}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="mx-auto max-w-3xl px-3">
+        <div className="rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white">
+          <div className="mb-3 text-lg font-semibold">Amount</div>
+          <div className="relative w-full max-w-md">
+            <Input
+              id="amount"
+              ref={amountInputRef}
+              type="number"
+              min={0}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+              className={cn(
+                'h-16 rounded-xl border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
+                '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+              )}
+              disabled={isPending}
+            />
+            <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg text-white">
+              Credits
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto mt-auto flex w-full max-w-3xl justify-end gap-4 self-end px-3">
+        <Button
+          rounded
+          type="button"
+          variant="ghost"
+          size="lg"
+          className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
+          onClick={onBack}
+        >
+          Cancel
+        </Button>
+        <Button
+          rounded
+          type="button"
+          variant="default"
+          size="lg"
+          className={cn(
+            'border-primary-4! w-max border shadow-2xl',
+            'hover:bg-primary-8/40',
+            'hover:shadow-[1px_2px_4px_0px_#00000099]',
+            'shadow-[8px_12px_24px_0px_#00000099]',
+            'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
+            'disabled:opacity-50'
+          )}
+          disabled={isPending || !amount}
+          onClick={() => transferCreditsAsync()}
+        >
+          Transfer Credits
+          {isPending && <LoadingOutlined spin className="ml-2 text-white" />}
+        </Button>
+      </div>
+    </div>
+  );
+}

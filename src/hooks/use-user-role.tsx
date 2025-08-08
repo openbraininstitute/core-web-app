@@ -3,7 +3,7 @@ import groupBy from 'lodash/groupBy';
 import find from 'lodash/find';
 
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {

@@ -29,7 +29,7 @@ export default function Page() {
     finalRedirectURL = latestVisitedProject || redirectURL;
   }
 
-  const onboarding = `/${V2_MIGRATION_TEMPORARY_BASE_PATH}/setup?redirectUrl=${encodeURIComponent(finalRedirectURL ?? '')}`;
+  const onboarding = `/${V2_MIGRATION_TEMPORARY_BASE_PATH}/onboarding?redirectUrl=${encodeURIComponent(finalRedirectURL ?? '')}`;
   if (!isServer) signIn('keycloak', { callbackUrl: onboarding || basePath });
 
   return 'Logging in...';

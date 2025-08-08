@@ -19,7 +19,7 @@ import { useAppNotification } from '@/components/notification';
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -187,22 +187,16 @@ export function CreationForm() {
           </div>
           <Button
             rounded
+            size="md"
             type="submit"
-            variant="default"
-            size="lg"
-            className={cn(
-              'border-primary-4! w-max border shadow-2xl',
-              'hover:bg-primary-8/40',
-              'hover:shadow-[1px_2px_4px_0px_#00000099]',
-              'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
-            )}
             disabled={isPending}
+            variant="outline"
+            className={cn(
+              'text-pr4 bg-primary-9 border-primary-4 text-primary-4! px-6 font-semibold shadow-2xl'
+            )}
           >
-            <div className="flex items-center gap-2 px-6">
-              Create project
-              {isPending && <LoadingOutlined className="ml-2 text-white" />}
-            </div>
+            Create project
+            {isPending && <LoadingOutlined className="ml-2 text-white" />}
           </Button>
         </div>
       </Form>
