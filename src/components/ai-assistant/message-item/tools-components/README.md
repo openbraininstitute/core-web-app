@@ -25,8 +25,8 @@ Finally, we add this piece of code into `tools-components.tsx`:
 
 ```tsx
 <div className={classNames(className, styles.toolsComponents)}>
-    <ToolPlotGenerator
-        results={extractToolsResults(message, ['plot-generator'], isToolPlotGeneratorResult)}
-    />
+  <ToolPlotGenerator
+    results={extractToolsResults(message, ['plot-generator'], isToolPlotGeneratorResult)}
+  />
 </div>
 ```
