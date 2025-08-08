@@ -29,10 +29,18 @@ const FREE_ACCESS_PAGES = [
 ];
 const ASSETS = ['/static*', '/images*', '/downloads*', '/_next*', '/favicon.ico', '/video*'];
 
-/* Don't allow arbitrary regex to avoid accidentally leaking protected pages
-Only two patterns allowed, exact match or /path* which matches the path
-and all sub-routes
-*/
+/**
+ * Checks whether a request pathname is allowed to pass without auth/redirect.
+ *
+ * Don't allow arbitrary regex to avoid accidentally leaking protected pages.
+ * Only two patterns are supported in `paths`:
+ * - Exact match: '/path'
+ * - Prefix match: '/path*' (matches '/path' and all subroutes like '/path/...')
+ *
+ * @param requestUrl - The request pathname (e.g. '/_next/static/...').
+ * @param paths - List of allowed route patterns (exact or prefix).
+ * @returns true if the request matches any allowed pattern; otherwise false.
+ */
 function isFreeAccessRoute(requestUrl: string, paths: string[]) {
   return paths.some((p) => {
     if (p.endsWith('*')) {
@@ -45,7 +53,46 @@ function isFreeAccessRoute(requestUrl: string, paths: string[]) {
   });
 }
 
+/**
+ * removes the first non-root segment from a pathname to support URLs
+ * prefixed with a version segment (e.g., '/43a61ce3/_next/...').
+ *
+ * examples:
+ * - '/'                       -> '/'
+ * - '/43a61ce3/_next/...'     -> '/_next/...'
+ * - '/v2/images/logo.png'     -> '/images/logo.png'
+ *
+ * @param pathname - original request pathname.
+ * @returns the pathname without the first segment; '/' when only one segment exists.
+ */
+function stripFirstPathSegment(pathname: string): string {
+  if (!pathname || pathname === '/') return pathname;
+  const nextSlashIndex = pathname.indexOf('/', 1);
+  if (nextSlashIndex === -1) return '/';
+  const stripped = pathname.slice(nextSlashIndex);
+  return stripped.length === 0 ? '/' : stripped;
+}
+
+/**
+ * global middleware pipeline
+ *
+ * - bypasses redirects for static assets (supports version-prefixed paths).
+ * - enforces `PRIMARY_HOSTNAME` on non-asset routes by redirecting to the canonical host.
+ * - allows free-access application and API routes as configured.
+ * - delegates remaining routes to next-auth middleware for authentication.
+ */
 export async function middleware(request: NextRequest) {
+  const requestPathname = request.nextUrl.pathname;
+  const pathnameWithoutLeadingSegment = stripFirstPathSegment(requestPathname);
+
+  // Allow free access to assets (supports optional leading version segment like "/<version>/...")
+  if (
+    isFreeAccessRoute(requestPathname, ASSETS) ||
+    isFreeAccessRoute(pathnameWithoutLeadingSegment, ASSETS)
+  ) {
+    return NextResponse.next();
+  }
+
   // Primary hostname redirect
   // TODO: remove after redirect is implemented on infra side
   if (PRIMARY_HOSTNAME) {
