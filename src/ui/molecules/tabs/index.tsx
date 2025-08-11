@@ -4,6 +4,7 @@
 
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import React from 'react';
+
 import { cn } from '@/utils/css-class';
 
 const PillTabs = TabsPrimitive.Root;
@@ -26,7 +27,7 @@ PillTabsList.displayName = TabsPrimitive.List.displayName;
 const PillTabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> & {
-    position?: 'first' | 'middle' | 'last';
+    position?: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'middle' | 'last';
   }
 >(({ className, position, ...props }, ref) => (
   <TabsPrimitive.Trigger
@@ -57,4 +58,4 @@ const PillTabsContent = React.forwardRef<
 ));
 PillTabsContent.displayName = TabsPrimitive.Content.displayName;
 
-export { PillTabs, PillTabsList, PillTabsTrigger, PillTabsContent };
+export { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger };
