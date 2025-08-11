@@ -20,11 +20,14 @@ export function resolveExploreDetailsPageUrl({
 }) {
   if (dataType && entityType)
     throw Error('Only one of dataType and entityType should be specified');
-  if (!dataType && !entityType) return '/'; // TODO: find a better to handle this
+  if (!dataType && !entityType) throw new Error('Cannot resolve url');
 
   const entityConfig = dataType
     ? getEntityByLegacyType({ legacyType: dataType })
     : getEntityByCoreType({ type: entityType });
+
+  if (!entityConfig) throw new Error('Invalid Entity');
+
   const slug = entityConfig?.slug; // morphology, e-model, ...
   const usedSlug: string | undefined = slug;
   const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
