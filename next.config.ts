@@ -2,9 +2,8 @@ import { withSentryConfig } from '@sentry/nextjs';
 import NextBundleAnalyzer from '@next/bundle-analyzer';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
-import { env } from './src/env';
-
 import type { NextConfig } from 'next/dist/types';
+import { env } from './src/env';
 
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
