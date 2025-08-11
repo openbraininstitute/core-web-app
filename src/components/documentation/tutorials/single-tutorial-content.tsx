@@ -54,7 +54,7 @@ export default function SingleTutorialContent() {
           <p className="text-white">Video URL not available.</p>
         )}
       </div>
-      {videoRef.current && (
+      {(content.steps?.length ?? 0) > 0 && (
         <SliderTimestamps
           content={content.steps ?? []}
           videoTime={videoTime}
