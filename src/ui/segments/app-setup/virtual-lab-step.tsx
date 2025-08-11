@@ -3,9 +3,11 @@
 
 'use client';
 
-import { ComponentProps, Dispatch, ReactNode, SetStateAction, useRef, useState } from 'react';
+import { ComponentProps, ReactNode, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
+import { Alert, Form, Popover } from 'antd';
+import { redirect } from 'next/navigation';
 import {
   CheckCircleFilled,
   CloseCircleFilled,
@@ -13,7 +15,6 @@ import {
   InfoCircleOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-import { Alert, Form, Popover } from 'antd';
 import delay from 'lodash/delay';
 
 import { checkVirtualLabExists, createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -29,9 +30,9 @@ import {
   getEmailVerificationCode,
   verifyOtpCode,
 } from '@/api/virtual-lab-svc/queries/email-verification';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { cn } from '@/utils/css-class';
 
-type Step = 'auth' | 'virtual-lab' | 'project';
 const schema = VirtualLabPayloadSchema.partial({
   entity: true,
   email_status: true,
@@ -70,21 +71,7 @@ function CustomInput({
   );
 }
 
-export function VirtualLabStep({
-  onTransition,
-  onNextStep,
-}: {
-  onTransition: Dispatch<SetStateAction<boolean>>;
-  onNextStep: Dispatch<
-    SetStateAction<{
-      step: Step;
-      meta: {
-        virtualLabId: string;
-        virtualLabName: string;
-      } | null;
-    }>
-  >;
-}) {
+export function VirtualLabSetup({ error }: { error?: string | null }) {
   const [codeButtonText, setCodeButtonText] = useState<'Send verification code' | 'Resend'>(
     'Send verification code'
   );
@@ -110,9 +97,11 @@ export function VirtualLabStep({
   const [editableField, setEditableField] = useState<{
     name: boolean;
     reference_email: boolean;
+    institution: boolean;
   }>({
     name: false,
     reference_email: false,
+    institution: false,
   });
 
   const [validName, setValidName] = useState<{
@@ -123,7 +112,7 @@ export function VirtualLabStep({
     status: null,
   });
 
-  const handleEdit = (fieldName: 'name' | 'reference_email') => {
+  const handleEdit = (fieldName: 'name' | 'reference_email' | 'institution') => {
     setEditableField((prev) => ({
       ...prev,
       [fieldName]: true,
@@ -139,17 +128,17 @@ export function VirtualLabStep({
       .then(() => {
         setIsFormValid(true);
       })
-      .catch((error) => {
-        setIsFormValid(!(error.errorFields.length > 0));
+      .catch((err) => {
+        setIsFormValid(!(err.errorFields.length > 0));
       });
   };
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (values: VirtualLabPayload) => createVirtualLab(values),
-    onError: (error) => {
+    onError: (err) => {
       setCreationResult({
         status: 'failed',
-        message: error.message,
+        message: err.message,
       });
     },
     onSuccess: (res) => {
@@ -159,22 +148,25 @@ export function VirtualLabStep({
           message:
             'Congratulations, your account has been created. Review the virtual lab name before starting your first steps with OBI',
         });
-        onTransition(true);
         delay(() => {
-          onNextStep({
-            step: 'project',
-            meta: {
-              virtualLabId: res.data?.virtual_lab.id!,
-              virtualLabName: res.data?.virtual_lab.name!,
-            },
-          });
-          onTransition(false);
+          redirect(
+            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/setup/project?id=${res.data?.virtual_lab.id}&name=${res.data?.virtual_lab.name}`
+          );
         }, 1000);
       }
     },
   });
 
-  const onFormSubmit = async (values: VirtualLabPayload) => await mutateAsync(values);
+  const onFormSubmit = async (values: VirtualLabPayload) => {
+    if (!error) {
+      await mutateAsync(values);
+    } else {
+      setCreationResult({
+        status: 'failed',
+        message: error,
+      });
+    }
+  };
 
   const disableSendCode =
     (schema.safeParse(fields).error?.issues?.length || 0) > 0 ||
@@ -242,22 +234,17 @@ export function VirtualLabStep({
         name: `${userName}'s virtual lab`,
         reference_email: `${data?.user.email}`,
         description: '',
-        entity: null,
+        entity: undefined,
         include_members: [],
       }}
       onValuesChange={onValuesChange}
-      disabled={isPending}
+      disabled={isPending || fields?.email_status === 'verified'}
     >
       <Card className="mr-4 ml-4 flex w-full max-w-lg min-w-lg flex-col bg-transparent shadow-none backdrop-blur-sm">
         <CardContent>
-          {creationResult && (
+          {creationResult && creationResult.status === 'failed' && (
             <div className={cn('mb-6 flex items-start gap-3 rounded-lg border p-4')}>
-              {creationResult.status === 'failed' && (
-                <CloseCircleFilled className="mt-1.5 flex-shrink-0 text-red-600!" />
-              )}
-              {creationResult.status === 'created' && (
-                <CheckCircleFilled className="mt-1.5 flex-shrink-0 text-green-600" />
-              )}
+              <CloseCircleFilled className="mt-1.5 flex-shrink-0 text-red-600!" />
               <p className="text-primary-9 max-w-md text-left">
                 Sorry, something occurred during creation of your virtual lab, please try again or
                 contact support if the issue persist.
@@ -297,7 +284,7 @@ export function VirtualLabStep({
                     }
                     setValidName({ loading: false, status: 'valid' });
                     return Promise.resolve();
-                  } catch (error) {
+                  } catch (err) {
                     setValidName({ loading: false, status: 'non-valid' });
                   }
                 },
@@ -322,9 +309,8 @@ export function VirtualLabStep({
           <Form.Item
             label={
               <div className="flex items-center gap-2">
-                <span className="text-neutral-4 block text-sm">Affiliated entity</span>
+                <span className="text-neutral-4 block text-sm">Institution</span>
                 <Popover
-                  //   destroyTooltipOnHide
                   placement="top"
                   trigger="hover"
                   classNames={{
@@ -345,9 +331,13 @@ export function VirtualLabStep({
             }
             className="w-full flex-1"
             name="entity"
-            rules={[{ required: true, message: 'Please enter affiliated entity' }]}
+            rules={[{ required: true, message: 'Please enter institution name' }]}
           >
-            <CustomInput placeholder="Enter your entity here..." />
+            <CustomInput
+              placeholder="Enter your institution here..."
+              disabled={!editableField.institution}
+              onEdit={() => handleEdit('institution')}
+            />
           </Form.Item>
 
           <Form.Item

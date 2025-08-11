@@ -6,7 +6,7 @@ import {
   ProjectJobReportsResponse,
 } from '@/types/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-import authFetch, { authFetchRetryOnError } from '@/authFetch';
+import authFetch, { authFetchWithoutRetry, authFetchRetryOnError } from '@/authFetch';
 import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 
 export async function getVirtualLabProjectDetails(
@@ -155,7 +155,7 @@ export async function assignProjectBudget({
   projectId: string;
   amount: number;
 }): Promise<any> {
-  const response = await authFetch(
+  const response = await authFetchWithoutRetry(
     `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/assign`,
     {
       method: 'POST',
@@ -180,7 +180,7 @@ export async function reverseProjectBudget({
   projectId: string;
   amount: number;
 }): Promise<any> {
-  const response = await authFetch(
+  const response = await authFetchWithoutRetry(
     `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/reverse`,
     {
       method: 'POST',

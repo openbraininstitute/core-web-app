@@ -3,7 +3,7 @@ import { FormEvent, useState, useEffect, useRef, useTransition } from 'react';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
-import { Button, Spin } from 'antd';
+import { Spin } from 'antd';
 import { useRouter } from 'next/navigation';
 import isObject from 'lodash/isObject';
 import delay from 'lodash/delay';
@@ -11,14 +11,15 @@ import delay from 'lodash/delay';
 import sessionAtom from '@/state/session';
 
 import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/checkout/price-card';
+import { SetupIntentResponse, SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
 import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
-import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { SetupIntentResponse, SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   onPrevious: () => void;
@@ -35,15 +36,35 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
     },
   ],
   appearance: {
+    theme: 'stripe', // or 'flat', 'night', etc.
+    labels: 'floating', // or 'inline'
     variables: {
       fontFamily: 'Titillium Web',
       fontSizeSm: '1rem',
+      colorPrimary: 'white',
+      colorTextPlaceholder: '#fff',
+      colorBackground: '#0a3a76',
+      colorTextSecondary: 'white',
+      colorText: '#333333',
+      spacingUnit: '4px',
     },
     rules: {
-      '.Input:focus': {
+      'Input:focus': {
         boxShadow:
           '0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(18, 42, 66, 0.02), 0 0 0 2px #0050B3',
         borderColor: 'none',
+      },
+      'Input::placeholder': {
+        color: '#fff',
+      },
+      '.Input': {
+        color: '#fff',
+        fontWeight: '700',
+      },
+      '.Label': {
+        color: '#d9d9d9',
+        fontSize: '14px',
+        fontWeight: '500',
       },
     },
   },
@@ -124,6 +145,7 @@ function Form({ onPrevious, successRedirectUrl }: Props) {
       if (data && data.subscription.status === SubscriptionStatus.ACTIVE) {
         successNotify({
           message: 'Subscription created successfully',
+          description: 'You now have full access to the platform',
           placement: 'topRight',
           key: 'subscription-payment-success',
         });
@@ -141,43 +163,44 @@ function Form({ onPrevious, successRedirectUrl }: Props) {
     >
       <div className="flex h-full w-full max-w-3xl grow flex-col items-center justify-center">
         <PricingToggleCards />
-        <div className="mx-auto flex w-full flex-col rounded-lg bg-white px-5 py-14">
-          <div className="mx-auto w-full max-w-xl">
+        <div className="bg-primary-9 mx-auto flex w-full flex-col rounded-lg py-4">
+          <div className="mx-auto w-full">
             <PaymentElement id="subscription-form" onReady={onReady} />
           </div>
         </div>
       </div>
 
       {stripeElementsReady && (
-        <div className="mt-auto flex w-full items-end justify-end gap-3">
+        <div className="mx-auto mt-auto flex w-full max-w-3xl items-end justify-end gap-3">
           <Button
-            key="back-to-btn"
-            className={classNames(
-              'h-14 rounded-none px-6 text-white',
-              'hover:border! hover:border-white! hover:font-bold hover:text-white!'
-            )}
-            type="text"
-            size="large"
-            htmlType="button"
+            rounded
+            type="button"
+            variant="ghost"
+            size="lg"
+            className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
+            disabled={disableForm}
             onClick={onPrevious}
           >
-            Back
+            Cancel
           </Button>
           <Button
-            key="pay-subscription"
-            className={classNames(
-              'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
-              'hover:border-primary-8! hover:bg-primary-8 hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
-              'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
-              'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
+            rounded
+            type="submit"
+            variant="default"
+            size="lg"
+            className={cn(
+              'border-primary-4! w-max border shadow-2xl',
+              'hover:bg-primary-8/40',
+              'hover:shadow-[1px_2px_4px_0px_#00000099]',
+              'shadow-[8px_12px_24px_0px_#00000099]',
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
             )}
-            type="default"
-            size="large"
-            htmlType="submit"
             disabled={disableForm}
-            loading={formLoading}
           >
-            Pay
+            <div className="flex items-center gap-2 px-6">
+              Pay
+              {formLoading && <LoadingOutlined spin />}
+            </div>
           </Button>
         </div>
       )}
@@ -229,7 +252,7 @@ export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
   if (loadingStripe || !setupIntent)
     return (
       <div className="flex h-full grow items-center justify-center py-7">
-        <Spin size="large" indicator={<LoadingOutlined />} />
+        <Spin size="large" indicator={<LoadingOutlined className="text-white" />} />
       </div>
     );
 

@@ -18,7 +18,9 @@ export async function getSession() {
   Adds Authorization header with the accessToken, and calls fetch.
   See fetch for call signature: https://developer.mozilla.org/fr/docs/Web/API/fetch
 */
-async function authFetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
+export async function authFetchWithoutRetry(
+  ...args: Parameters<typeof fetch>
+): ReturnType<typeof fetch> {
   const session = await getSession();
   if (!session) return fetch(...args); // If no active session fetch, for use in unauthenticated routes
 
@@ -33,8 +35,9 @@ async function authFetch(...args: Parameters<typeof fetch>): ReturnType<typeof f
   return fetch(...newArgs); // If there is an active session set Authorization and fetch
 }
 
-export default retry()(authFetch); // Only retry on exceptions
+const authFetch = retry()(authFetchWithoutRetry); // Only retry on exceptions
+export default authFetch;
 
 export const authFetchRetryOnError = retry({
   shouldRetryOnError: (status: number) => status > 405,
-})(authFetch); // Retry on exceptions or error statuses > 405
+})(authFetchWithoutRetry); // Retry on exceptions or error statuses > 405

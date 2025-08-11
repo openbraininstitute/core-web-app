@@ -1,12 +1,13 @@
 'use client';
 
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
-import { Button, Tooltip } from 'antd';
+import { useEffect, useState } from 'react';
+import { match } from 'ts-pattern';
+import { Tooltip } from 'antd';
 import { useAtom } from 'jotai';
 import kebabCase from 'lodash/kebabCase';
-import noop from 'lodash/noop';
 import toUpper from 'lodash/toUpper';
-import { useEffect, useState } from 'react';
+import noop from 'lodash/noop';
 
 import { tryCatch } from '@/api/utils';
 import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
@@ -22,11 +23,21 @@ import {
 } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
 import { classNames } from '@/util/utils';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
   subscriptionData: UserActiveSubscriptionResponse;
 };
+
+const TiersStep = {
+  Listing: 'listing',
+  ContactUs: 'contact-us',
+  Downgrade: 'downgrade',
+} as const;
+
+type TTiersStep = (typeof TiersStep)[keyof typeof TiersStep];
 
 type TiersComparisonPros = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
@@ -165,7 +176,7 @@ function TiersComparison({
     >
       <div
         id="tier-highlighter"
-        className="pointer-events-none absolute top-[10px] right-[20px] bottom-[50px] left-[20px] grid grid-cols-4 gap-6"
+        className="pointer-events-none absolute top-[10px] right-[20px] bottom-[55px] left-[20px] grid grid-cols-4 gap-6"
       >
         <div />
         {tiers.map((t) => {
@@ -176,6 +187,7 @@ function TiersComparison({
 
           return (
             <div
+              id={`${t.id}-bg`}
               key={`${t.id}-bg`}
               className={classNames(
                 'rounded-lg',
@@ -320,7 +332,7 @@ function TiersComparison({
           const isFree = t.title === 'Free';
           const isPro = t.title === 'Pro';
           const isPremium = t.title === 'Premium';
-          const isHovered = hoveredTier === t.app_id;
+          // const isHovered = hoveredTier === t.app_id;
           if (isFree && (isCurrentTier || !currentTier)) return <div key="free-disabled" />;
           if (isPro && isCurrentTier) return <div key="pro-disabled" />;
 
@@ -344,13 +356,19 @@ function TiersComparison({
               onMouseLeave={() => setHoveredTier(null)}
             >
               <Button
-                className={classNames(
-                  'relative z-20 h-10 w-full rounded-none',
-                  'bg-primary-9 border-white text-white',
-                  isHovered && 'hover:bg-primary-8 text-white hover:text-white!'
+                rounded
+                type="button"
+                variant="default"
+                size="lg"
+                className={cn(
+                  'border-primary-4! w-max border shadow-2xl',
+                  'hover:bg-primary-8/40',
+                  'hover:shadow-[1px_2px_4px_0px_#00000099]',
+                  'shadow-[8px_12px_24px_0px_#00000099]',
+                  'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
                 )}
-                onClick={controller}
                 data-testid={`select-${t.title.toLowerCase()}-btn`}
+                onClick={controller}
               >
                 {isFree && !isCurrentTier && 'Downgrade to Free'}
                 {isPro && !isCurrentTier && !isCurrentTierPremium && 'Upgrade to Pro'}
@@ -367,13 +385,11 @@ function TiersComparison({
 export default function TiersList({ currentTier, subscriptionData }: Props) {
   const [loading, setLoading] = useState(true);
   const [tiers, setTiers] = useState<{ data: Array<ExtendedTier> } | { error: any }>({ data: [] });
-  const [open, setOpen] = useState<boolean>(false);
-  const [openDowngrade, setOpenDowngrade] = useState<boolean>(false);
+  const [currentStep, setCurrentStep] = useState<TTiersStep>(TiersStep.Listing);
 
-  const onSelectPremiumTier = () => setOpen(true);
-  const onClosePremiumTier = () => setOpen(false);
-  const onDowngradeFreeClick = () => setOpenDowngrade(true);
-  const onDowngradeFreeClose = () => setOpenDowngrade(false);
+  const onSelectPremiumTier = () => setCurrentStep(TiersStep.ContactUs);
+  const onDowngradeFreeClick = () => setCurrentStep(TiersStep.Downgrade);
+  const onBackToListing = () => setCurrentStep(TiersStep.Listing);
 
   useEffect(() => {
     (async () => {
@@ -405,10 +421,12 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
           </div>
           <div className="mb-2 flex items-center gap-2 self-baseline">
             <Button
-              type="text"
-              size="large"
+              rounded
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
               onClick={() => window.location.reload()}
-              className="rounded-none px-6 py-2 text-white hover:text-white!"
             >
               Refresh Page
             </Button>
@@ -418,20 +436,27 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
     );
 
   return (
-    <div
-      id="tiers-list-container"
-      className="mx-auto flex h-full max-w-6xl flex-col"
-      style={{ height: 'calc(100vh - 100px)' }}
-    >
-      <TiersComparison
-        tiers={tiers.data}
-        currentTier={currentTier}
-        onSelectPremiumTier={onSelectPremiumTier}
-        onSelectFree={onDowngradeFreeClick}
-        subscriptionData={subscriptionData}
-      />
-      <ContactUs isOpen={open} onClose={onClosePremiumTier} />
-      <DowngradeFree isOpen={openDowngrade} onClose={onDowngradeFreeClose} />
+    <div id="tiers-list-container" className="mx-auto flex h-full max-w-6xl flex-col">
+      {match({ currentStep })
+        .with({ currentStep: TiersStep.ContactUs }, () => (
+          <div className="h-full grow px-6 py-3">
+            <ContactUs onBack={onBackToListing} />
+          </div>
+        ))
+        .with({ currentStep: TiersStep.Downgrade }, () => (
+          <div className="h-full grow px-6 py-3">
+            <DowngradeFree onBack={onBackToListing} />
+          </div>
+        ))
+        .otherwise(() => (
+          <TiersComparison
+            tiers={tiers.data}
+            currentTier={currentTier}
+            onSelectPremiumTier={onSelectPremiumTier}
+            onSelectFree={onDowngradeFreeClick}
+            subscriptionData={subscriptionData}
+          />
+        ))}
     </div>
   );
 }

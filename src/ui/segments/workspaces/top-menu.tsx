@@ -32,6 +32,7 @@ type LinkItem = {
   icon: ReactNode;
   allowText: boolean;
   className: React.ComponentProps<'div'>['className'];
+  isActive?: (path: string) => boolean;
 };
 
 const links: Array<LinkItem> = [
@@ -43,6 +44,11 @@ const links: Array<LinkItem> = [
     icon: <Home className="group-hover:text-primary-3 text-lg" />,
     allowText: false,
     className: 'gap-2 flex items-center justify-center',
+    isActive: (pathname: string) => {
+      const section = getActiveSection(pathname);
+      if (section) return ['overview', 'team', 'credits'].includes(section);
+      return false;
+    },
   },
   {
     id: 'workspace-explore-data',
@@ -103,27 +109,29 @@ export function WorkspaceTopMenu({ className }: Props) {
         <Wallet />
       </div>
       <div className="flex items-center justify-center gap-2">
-        {hashedLinks.map(({ id, key, title, url, baseUrl, icon, allowText, className: clx }) => (
-          <Button
-            asChild
-            rounded
-            id={id}
-            key={key}
-            variant="outline"
-            size={breakpoint === 'xl' ? 'lg' : 'md'}
-            className={cn(
-              { 'w-12! justify-center!': !allowText },
-              'group flex items-center justify-between',
-              clx
-            )}
-            active={activeSection === baseUrl}
-          >
-            <Link href={url}>
-              {allowText && <span>{title}</span>}
-              {icon}
-            </Link>
-          </Button>
-        ))}
+        {hashedLinks.map(
+          ({ id, key, title, url, baseUrl, icon, allowText, className: clx, isActive }) => (
+            <Button
+              asChild
+              rounded
+              id={id}
+              key={key}
+              variant="outline"
+              size={breakpoint === 'xl' ? 'lg' : 'md'}
+              className={cn(
+                { 'w-12! justify-center!': !allowText },
+                'group flex items-center justify-between',
+                clx
+              )}
+              active={activeSection === baseUrl || isActive?.(pathname)}
+            >
+              <Link href={url}>
+                {allowText && <span>{title}</span>}
+                {icon}
+              </Link>
+            </Button>
+          )
+        )}
       </div>
     </div>
   );

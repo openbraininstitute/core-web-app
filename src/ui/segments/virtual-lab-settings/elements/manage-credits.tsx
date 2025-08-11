@@ -22,7 +22,6 @@ import type { ProjectBalance } from '@/types/accounting';
 
 type ManageCreditsStepProps = {
   virtualLabId: string;
-  projectId?: string;
   onBack: () => void;
 };
 
@@ -52,21 +51,21 @@ async function transferCredits({
       projectId,
       amount,
     });
-  } else {
+  } else if (direction === 'proj->vlab') {
     await reverseProjectBudget({
       virtualLabId,
       projectId,
       amount,
     });
-  }
+  } else throw new Error('Transfer type not supported');
 }
 
-export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCreditsStepProps) {
+export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepProps) {
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState<string | undefined>(undefined);
   const [isSwapping, setIsSwapping] = useState<boolean>(false);
   const [isLabToProject, setIsLabToProject] = useState<boolean>(true);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(projectId);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
   const notify = useAppNotification();
   const amountInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,7 +98,7 @@ export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCre
         direction: isLabToProject ? 'vlab->proj' : 'proj->vlab',
       },
     ],
-    retry: false,
+    retry: 1,
     mutationFn: () =>
       transferCredits({
         virtualLabId,
@@ -225,17 +224,7 @@ export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCre
 
       <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4 px-3">
         {/* source panel */}
-        <motion.div
-          layout
-          animate={{
-            x: isLabToProject ? 0 : 'calc(100% + 2.5rem)',
-          }}
-          transition={{
-            duration: 0.35,
-            ease: [0.4, 0, 0.2, 1],
-          }}
-          className="flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl"
-        >
+        <div className="flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl">
           <div className="flex w-full items-center gap-2">
             <span className="text-neutral-3">From</span>
             <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
@@ -251,24 +240,11 @@ export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCre
           <div className="mt-auto">
             <AnimatePresence mode="wait">
               {isLabToProject ? (
-                <motion.div
-                  key="lab-name"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="truncate text-xl leading-10 font-semibold"
-                >
+                <div key="lab-name" className="truncate text-xl leading-10 font-semibold">
                   {virtualLabName}
-                </motion.div>
+                </div>
               ) : (
-                <motion.div
-                  key="project-select"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <div key="project-select">
                   <Select
                     showSearch
                     loading={projectsRes.isLoading}
@@ -289,11 +265,11 @@ export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCre
                     optionFilterProp="label"
                     disabled={isPending}
                   />
-                </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
+        </div>
 
         <div className="flex w-10 shrink-0 items-center">
           <motion.button
@@ -315,17 +291,7 @@ export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCre
         </div>
 
         {/* destination panel */}
-        <motion.div
-          layout
-          animate={{
-            x: isLabToProject ? 0 : 'calc(-100% - 2.5rem)',
-          }}
-          transition={{
-            duration: 0.35,
-            ease: [0.4, 0, 0.2, 1],
-          }}
-          className="flex h-full w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl"
-        >
+        <div className="flex h-full w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl">
           <div className="flex items-center gap-2">
             <span className="text-neutral-3">To</span>
             <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
@@ -341,13 +307,7 @@ export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCre
           <div className="mt-auto">
             <AnimatePresence mode="wait">
               {isLabToProject ? (
-                <motion.div
-                  key="project-select-to"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <div key="project-select-to">
                   <Select
                     showSearch
                     loading={projectsRes.isLoading}
@@ -368,22 +328,15 @@ export function ManageCreditsStep({ onBack, virtualLabId, projectId }: ManageCre
                     optionFilterProp="label"
                     disabled={isPending}
                   />
-                </motion.div>
+                </div>
               ) : (
-                <motion.div
-                  key="lab-name-to"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="truncate text-xl leading-10 font-semibold"
-                >
+                <div key="lab-name-to" className="truncate text-xl leading-10 font-semibold">
                   {virtualLabName}
-                </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <div className="mx-auto max-w-3xl px-3">
