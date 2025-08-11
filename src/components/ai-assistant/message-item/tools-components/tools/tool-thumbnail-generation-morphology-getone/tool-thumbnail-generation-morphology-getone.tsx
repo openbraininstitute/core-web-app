@@ -37,11 +37,11 @@ function CustomPlot({ className, result }: { className?: string; result: ToolRes
   const file = usePlotFile(result.storage_id);
   if (!file) return null;
 
-  const { content } = file;
-  if (isString(content)) return null;
+  const { content, type } = file;
+  if (type !== 'image' || !isString(content)) return null;
 
   // eslint-disable-next-line @next/next/no-img-element
-  return <img className={className} src={content.src} alt="Morphology thumbnail" />;
+  return <img className={className} src={content} alt="Morphology thumbnail" />;
 }
 
 function usePlotFile(fileIdentifier: string) {
