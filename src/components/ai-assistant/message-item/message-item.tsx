@@ -3,7 +3,6 @@
 import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
-import ToolArticles from '../../../services/ai-agent/tools/articles/tool-articles';
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
 import { IconPrice } from '../icons/price';
 import ToolsProgress from './tools-progress';
@@ -72,7 +71,8 @@ function renderMessage(
           {!hideTools && (
             <>
               <ToolsComponents message={value} />
-              <ToolArticles message={value} />
+              {/* This tool component has been disabled yet */}
+              {/* <ToolArticles message={value} /> */}
               <ToolMorphologies message={value} />
             </>
           )}
