@@ -1,5 +1,3 @@
-import { tgdLoadImageFromArrayBuffer } from '@tolokoban/tgd';
-
 import { fetchJSON } from './util';
 import { assertString, isString } from '@/util/type-guards';
 
@@ -21,10 +19,7 @@ export async function serviceAiAgentStorageGetFileContent({
   const resp = await fetch(url);
   const type = resp.headers.get('X-Amz-Meta-Category') ?? 'unknown';
   if (type === 'image') {
-    const content = await tgdLoadImageFromArrayBuffer(await resp.arrayBuffer());
-    if (!content) throw Error('Unable to load the image!');
-
-    return { content, type };
+    return { content: url, type };
   }
   return {
     content: await resp.text(),
@@ -33,6 +28,6 @@ export async function serviceAiAgentStorageGetFileContent({
 }
 
 export interface StorageGetFileContent {
-  content: string | HTMLImageElement;
+  content: string;
   type: string;
 }
