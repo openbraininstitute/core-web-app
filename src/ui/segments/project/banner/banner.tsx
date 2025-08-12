@@ -173,6 +173,7 @@ export function ProjectCard(): ReactElement {
               />
             ) : (
               <ExpandableText
+                id="project-description-text"
                 text={isPending ? variables.description : result.data.project.description}
                 collapsedLines={6}
                 className="text-justify text-base leading-6 text-balance text-white/90 transition-all duration-300 lg:text-lg"
@@ -181,7 +182,7 @@ export function ProjectCard(): ReactElement {
                   <button
                     type="button"
                     onClick={toggle}
-                    aria-controls="project-description-text"
+                    aria-controls="project-description-less-more"
                     className={cn(
                       'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
                       'text-sm'

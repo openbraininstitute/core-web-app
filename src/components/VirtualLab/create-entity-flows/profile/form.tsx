@@ -1,9 +1,9 @@
 'use client';
 
+import { LoadingOutlined } from '@ant-design/icons';
 import { useState, useTransition } from 'react';
 import { Form } from 'antd';
 
-import { LoadingOutlined } from '@ant-design/icons';
 import countries from '../../../../../public/static/country';
 import { ProfileFormData } from './types';
 import { Label, XInput } from './elements';
@@ -12,8 +12,9 @@ import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
 import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
-import { classNames } from '@/util/utils';
 import { Button } from '@/ui/molecules/button';
+import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 type ProfileProps = {
   data: UserProfileResponse | undefined;
@@ -22,7 +23,7 @@ type ProfileProps = {
 export function Profile({ data }: ProfileProps) {
   const initialValues = useInitialValues(data);
   const { error: errorNotify, success: successNotify } = useAppNotification();
-  const [valid, setValid] = useState(validate(initialValues));
+  const [, setValid] = useState(validate(initialValues));
   const handleFieldsChange = useFieldsChangeHandler(setValid);
   const [form] = Form.useForm<UserProfileResponse>();
   const [pending, startTransition] = useTransition();
@@ -131,14 +132,23 @@ export function Profile({ data }: ProfileProps) {
           <div className="mt-8 flex justify-end">
             <Button
               rounded
-              key="create-project-btn"
+              key="update-profile-btn"
               type="submit"
+              variant="default"
               size="lg"
-              variant="outline"
-              disabled={pending || !valid}
+              className={cn(
+                'border-primary-4! w-max border shadow-2xl',
+                'hover:bg-primary-8/40',
+                'hover:shadow-[1px_2px_4px_0px_#00000099]',
+                'shadow-[8px_12px_24px_0px_#00000099]',
+                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
+              )}
+              disabled={pending}
             >
-              Update
-              {pending && <LoadingOutlined className="ml-2" />}
+              <div className="flex items-center gap-2 px-6">
+                Update
+                {pending && <LoadingOutlined spin />}
+              </div>
             </Button>
           </div>
         </Form>

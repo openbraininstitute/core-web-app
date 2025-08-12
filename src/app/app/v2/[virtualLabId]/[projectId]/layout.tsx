@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { AppOnboardingProvider } from '@/ui/segments/app-onboarding/discover-app';
+import { AppOnboardingProvider } from '@/ui/segments/app-setup/discover-app';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';

@@ -1,12 +1,15 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useDisableWorkspaceOverflow } from '@/ui/hooks/use-disable-workspace-overflow';
 
 type Props = {
   children: ReactNode;
 };
 
 export function ProjectInnerLayout({ children }: Props) {
+  useDisableWorkspaceOverflow();
+
   return (
     <div
       id="project-inner-layout"

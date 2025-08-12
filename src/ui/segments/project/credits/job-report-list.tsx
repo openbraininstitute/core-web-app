@@ -121,7 +121,8 @@ export default function JobReportList() {
               '[&.ant-table]:bg-neutral-1! w-full!',
               '[&_.ant-table-thead_th]:text-neutral-4! [&_.ant-table-thead_th]:font-light!',
               '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
-              '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2'
+              '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2',
+              '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!'
             )}
             loading={isLoading}
             dataSource={jobReports}

@@ -14,7 +14,7 @@ import { cn } from '@/utils/css-class';
 type Props = {
   virtualLabId: string;
   onTransferCreditsClick?: (args: { virtualLabId: string }) => void;
-  onManageProjectCreditsClick?: (args: { virtualLabId: string; projectId: string }) => void;
+  onManageProjectCreditsClick?: (args: { virtualLabId: string }) => void;
 };
 
 export function CreditsManagement({
@@ -69,30 +69,46 @@ export function CreditsManagement({
   };
 
   if (!isAdmin) return null;
+
   return (
-    <div>
+    <div className="w-full">
       <div className="my-4 flex items-center justify-between">
         <div className="flex gap-1.5">
           <span className="text-primary-3">Credits:</span>
           <span className="font-bold text-white">{virtualLabBalance}</span>
         </div>
-        <Button
-          rounded
-          size="md"
-          variant="outline"
-          className="border-primary-4 group bg-primary-9 hover:text-primary-4 px-4 text-white select-none hover:border-white"
-          onClick={() => onTransferCreditsClick?.({ virtualLabId })}
-        >
-          <div className="flex items-center justify-between gap-5">
-            Buy credits
-            <SwapOutlined className="text-primary-4 group-hover:text-white" />
-          </div>
-        </Button>
+        <div className="ml-auto flex items-center justify-center gap-4">
+          <Button
+            rounded
+            className="border-primary-4 group bg-primary-9 hover:text-primary-4 px-4 text-white select-none hover:border-white"
+            size="md"
+            variant="outline"
+            onClick={() => onManageProjectCreditsClick?.({ virtualLabId })}
+          >
+            <div className="flex items-center justify-between gap-5">
+              Manage credits
+              <SwapOutlined className="text-primary-4 group-hover:text-white" />
+            </div>
+          </Button>
+          <Button
+            rounded
+            size="md"
+            variant="outline"
+            className="border-primary-4 group bg-primary-9 hover:text-primary-4 px-4 text-white select-none hover:border-white"
+            onClick={() => onTransferCreditsClick?.({ virtualLabId })}
+          >
+            <div className="flex items-center justify-between gap-5">
+              Buy credits
+              <SwapOutlined className="text-primary-4 group-hover:text-white" />
+            </div>
+          </Button>
+        </div>
       </div>
       <List
         bordered
+        id="credit-management-list"
         className={cn(
-          'border-primary-4 b bg-primary-9 [&_.ant-list-item]:border-b-primary-4 rounded-md border px-4',
+          'border-primary-4 b bg-primary-9 [&_.ant-list-item]:border-b-primary-4 rounded-md border px-4 pt-4!',
           '[&_.ant-spin-blur]:opacity-0!'
         )}
         loading={isLoading}
@@ -111,24 +127,7 @@ export function CreditsManagement({
           ),
         }}
         renderItem={(item) => (
-          <List.Item
-            className="text-white"
-            actions={[
-              <Button
-                rounded
-                className="border-primary-4 group bg-primary-9 hover:text-primary-4 px-4 text-white select-none hover:border-white"
-                size="md"
-                variant="outline"
-                key={`manage-credits-${item.id}`}
-                onClick={() => onManageProjectCreditsClick?.({ virtualLabId, projectId: item.id })}
-              >
-                <div className="flex items-center justify-between gap-5">
-                  Manage credits
-                  <SwapOutlined className="text-primary-4 group-hover:text-white" />
-                </div>
-              </Button>,
-            ]}
-          >
+          <List.Item className="text-white">
             <List.Item.Meta
               className="[&_.ant-list-item-meta-title]:text-white!"
               title={item.name}

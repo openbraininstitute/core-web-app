@@ -1,49 +1,48 @@
-import { Button } from 'antd';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
-import Modal from '@/components/VirtualLab/create-entity-flows/common/modal';
-import { classNames } from '@/util/utils';
+type Props = { onBack: () => void };
 
-export default function ContactUs({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function ContactUs({ onBack }: Props) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} footer={null} cls={{ content: 'min-h-[4rem]!' }}>
+    <div className="h-full max-h-max">
       <div data-testid="contact-us-form" className="flex flex-col gap-2">
-        <h1 className="text-primary-8 text-3xl font-bold">
-          Upgrade to Premium – Tell Us Your Needs!
-        </h1>
-        <p className="text-lg font-light">
+        <h1 className="text-3xl font-bold text-white">Upgrade to Premium – Tell Us Your Needs!</h1>
+        <p className="text-primary-3 text-lg font-light">
           Let us know your requirements, and we&apos;ll tailor your premium subscription experience
           to fit your needs.
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <Button
-            key="cancel-btn"
-            className={classNames(
-              'text-primary-8 h-14 rounded-none border-0 px-6',
-              'hover:border-primary-8! hover:text-primary-8! hover:border! hover:bg-white!'
-            )}
-            size="large"
-            htmlType="button"
-            onClick={onClose}
+            rounded
+            type="button"
+            variant="ghost"
+            size="lg"
+            className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
+            onClick={onBack}
           >
             Cancel
           </Button>
           <Button
-            key="confirm-btn"
-            className={classNames(
-              'text-primary-8 flex h-14 max-w-max items-center justify-center rounded-none px-6 text-center align-middle',
-              'border-primary-8! hover:bg-primary-8! border! hover:font-bold hover:text-white!'
+            rounded
+            asChild
+            type="button"
+            variant="default"
+            size="lg"
+            className={cn(
+              'border-primary-4! w-max border shadow-2xl',
+              'hover:bg-primary-8/40',
+              'hover:shadow-[1px_2px_4px_0px_#00000099]',
+              'shadow-[8px_12px_24px_0px_#00000099]',
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
             )}
-            size="large"
-            href="mailto:subscription@openbraininstitute.org?subject=Premium Subscription Inquiry"
-            htmlType="button"
           >
-            Contact us
+            <a href="mailto:subscription@openbraininstitute.org?subject=Premium Subscription Inquiry">
+              Contact us
+            </a>
           </Button>
         </div>
-        {/* <div className="mt-3">
-          <TextArea rows={10} className="border!" />
-        </div> */}
       </div>
-    </Modal>
+    </div>
   );
 }

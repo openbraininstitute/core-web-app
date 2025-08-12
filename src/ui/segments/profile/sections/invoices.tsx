@@ -143,7 +143,8 @@ export function Invoices() {
           rootClassName={cn(
             '[&_.ant-spin-blur]:opacity-0! [&_.ant-table-thead>tr>th]:font-light!',
             '[&_.ant-table-thead>tr>th]:font-light! [&_.ant-table-thead]:text-sm',
-            '[&_.ant-empty-description]:text-white!'
+            '[&_.ant-empty-description]:text-white!',
+            'me'
           )}
           rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
           columns={columns}

@@ -9,7 +9,7 @@ type Props = {
   style?: CSSProperties;
 };
 
-export default function ObiLogoSvg({ className, style, fill = '#fff', ...props }: Props) {
+export function ObiLogoSvg({ className, style, fill = '#fff', ...props }: Props) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -24,3 +24,5 @@ export default function ObiLogoSvg({ className, style, fill = '#fff', ...props }
     </svg>
   );
 }
+
+export default ObiLogoSvg;

@@ -187,16 +187,22 @@ export function CreationForm() {
           </div>
           <Button
             rounded
-            size="md"
             type="submit"
-            disabled={isPending}
-            variant="outline"
+            variant="default"
+            size="lg"
             className={cn(
-              'text-pr4 bg-primary-9 border-primary-4 text-primary-4! px-6 font-semibold shadow-2xl'
+              'border-primary-4! w-max border shadow-2xl',
+              'hover:bg-primary-8/40',
+              'hover:shadow-[1px_2px_4px_0px_#00000099]',
+              'shadow-[8px_12px_24px_0px_#00000099]',
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
             )}
+            disabled={isPending}
           >
-            Create project
-            {isPending && <LoadingOutlined className="ml-2 text-white" />}
+            <div className="flex items-center gap-2 px-6">
+              Create project
+              {isPending && <LoadingOutlined className="ml-2 text-white" />}
+            </div>
           </Button>
         </div>
       </Form>

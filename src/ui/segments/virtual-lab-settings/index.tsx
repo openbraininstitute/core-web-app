@@ -24,9 +24,13 @@ function Header({
   virtualLab?: (VirtualLab & { isMine: boolean }) | null;
 }) {
   const name = virtualLab?.isMine ? 'My virtual lab' : virtualLab?.name;
+  const subtitle = virtualLab?.isMine ? virtualLab.name : null;
   return (
     <div className="flex items-center justify-between py-4 text-white">
-      <h2 className="text-xl font-bold select-none">{name}</h2>
+      <div className="flex flex-col gap-0.5">
+        <h2 className="text-xl font-bold select-none">{name}</h2>
+        {subtitle && <small className="text-primary-2">{subtitle}</small>}
+      </div>
       <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
         <CloseOutlined />
       </Button>

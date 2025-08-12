@@ -4,6 +4,7 @@ import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-
 import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useState, useEffect, useRef, useTransition } from 'react';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
 import { Spin } from 'antd';
 
@@ -18,6 +19,7 @@ import { CoinsIcon } from '@/components/icons/buttons';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 import { tryCatch } from '@/api/utils';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 type BuyCreditsStepProps = {
   virtualLabId: string;
@@ -56,12 +58,23 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
       spacingUnit: '4px',
     },
     rules: {
-      '.Input:focus': {
+      'Input:focus': {
         boxShadow:
           '0px 1px 1px rgba(0, 0, 0, 0.03), 0px 3px 6px rgba(18, 42, 66, 0.02), 0 0 0 2px #0050B3',
         borderColor: 'none',
       },
-      '.Input::placeholder': { color: '#fff' },
+      'Input::placeholder': {
+        color: '#fff',
+      },
+      '.Input': {
+        color: '#fff',
+        fontWeight: '700',
+      },
+      '.Label': {
+        color: '#d9d9d9',
+        fontSize: '14px',
+        fontWeight: '500',
+      },
     },
   },
 });
@@ -77,6 +90,7 @@ function PaymentForm({
   onBack: () => void;
   onCreditsChange: (credits: number) => void;
 }) {
+  const queryClient = useQueryClient();
   const elements = useElements();
   const stripe = useStripe();
   const [stripeElementsReady, setElementsReady] = useState(false);
@@ -143,6 +157,7 @@ function PaymentForm({
           placement: 'topRight',
           key: 'credits-purchase-success',
         });
+        await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
         onBack();
       }
 
@@ -175,7 +190,7 @@ function PaymentForm({
     <div className="flex h-full w-full flex-col gap-6">
       <AmountInput {...{ credits, onCreditsChange, formLoading }} />
       <div className="rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white">
-        <div className="mb-3 p-2 text-lg font-semibold">Payment Details</div>
+        <div className="mb-3 p-2 text-lg font-semibold select-none">Payment Details</div>
         <div className="rounded-lg bg-[#0a3a76] p-2">
           <PaymentElement id="credits-form" onReady={onReady} />
         </div>
@@ -342,7 +357,7 @@ export function BuyCreditsStep({ onBack, virtualLabId }: BuyCreditsStepProps) {
               'shadow-[8px_12px_24px_0px_#00000099]',
               'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
             )}
-            disabled={credits === 0}
+            disabled={!credits}
             onClick={handlePaymentClick}
           >
             Continue to Payment

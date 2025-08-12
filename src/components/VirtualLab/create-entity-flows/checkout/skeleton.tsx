@@ -51,7 +51,7 @@ function TiersComparisonSkeleton() {
         <div />
         {[1, 2].map((tier) => (
           <div key={`${tier}-action`} className="flex justify-center">
-            <Placeholder className="h-10 w-full" />
+            <Placeholder className="h-10 w-full rounded-full!" />
           </div>
         ))}
       </div>
