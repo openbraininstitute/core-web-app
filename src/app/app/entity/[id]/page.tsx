@@ -14,13 +14,14 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
   const { id } = await params;
 
   let entity: IEntity;
+  let url: string;
   try {
     entity = await getEntity({ id });
+    url = resolveExploreDetailsPageUrl({ entityId: id, entityType: entity.type });
   } catch (e) {
     notFound();
   }
   if (entity.authorized_public) {
-    const url = resolveExploreDetailsPageUrl({ entityId: id, entityType: entity.type });
     redirect(url);
   }
 
@@ -38,15 +39,15 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
     group = groups.find((g) => g.project_id === entity.authorized_project_id);
 
     if (!group) notFound();
+
+    url = resolveExploreDetailsPageUrl({
+      ctx: { virtualLabId: group.virtual_lab_id, projectId: entity.authorized_project_id },
+      entityId: id,
+      entityType: entity.type,
+    });
   } catch {
     notFound();
   }
-
-  const url = resolveExploreDetailsPageUrl({
-    ctx: { virtualLabId: group.virtual_lab_id, projectId: entity.authorized_project_id },
-    entityId: id,
-    entityType: entity.type,
-  });
 
   redirect(url);
 }
