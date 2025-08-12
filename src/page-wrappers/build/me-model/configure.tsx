@@ -49,8 +49,7 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
 
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
     ?.data?.users;
-  const { mmodel } = sessionValue;
-  const { emodel } = sessionValue;
+  const { mmodel, emodel } = sessionValue;
   const fields = [
     {
       className: 'col-span-6',
@@ -68,13 +67,7 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
     },
     {
       title: 'created by',
-      value: (
-        <ul>
-          {contributors?.map(({ id, name }) => (
-            <li key={id}>{name}</li>
-          ))}
-        </ul>
-      ),
+      value: <ul>{contributors?.map(({ id, name }) => <li key={id}>{name}</li>)}</ul>,
     },
     {
       title: 'created date',
@@ -131,8 +124,7 @@ function CustomButton({
         className,
         'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
         'hover:border-primary-8! hover:bg-primary-8! hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
-        'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
-        'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
+        'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
       )}
       type="default"
       size="large"
@@ -259,7 +251,7 @@ export default function Configure({ ctx, searchParams }: Props) {
       } catch (runAnalysisError) {
         const message = messages.RunAnalysisError;
         notification.error({ message, duration: 20 });
-	console.error(runAnalysisError);
+        console.error(runAnalysisError);
       }
 
       refreshDataAtom();
