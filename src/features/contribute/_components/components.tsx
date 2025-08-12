@@ -1,4 +1,3 @@
-// components.tsx
 import { useEffect, useState, useRef } from 'react';
 import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select, Button } from 'antd';
@@ -28,7 +27,7 @@ const MTYPE_CLASSES = [
   {"mtype_pref_label":"L23_NGC","mtype_id":"dd16dca0-e567-416b-b8b7-f8fbcaa05af0"},
   {"mtype_pref_label":"L23_PC","mtype_id":"0791edc9-7ad4-4a94-a4a5-feab9b690d7e"},
   {"mtype_pref_label":"L23_PTPC","mtype_id":"52ea242f-6591-425a-8eae-962fa0b4dfe0"},
-  {"mtype_pref_label":"L23_SBC","mtype_id":"fbb8b577-92f4-4c93-b355-0982ef5a3c7c"},
+  {"mtype_pref_label":"L23_SBC","mtype_id":"fbb8b577-92f4-4c93-b355-0982af5a3c7c"},
   {"mtype_pref_label":"L23_STPC","mtype_id":"93be8237-9861-4870-9977-ff1cf9e7462c"},
   {"mtype_pref_label":"L2_ChC","mtype_id":"91ba3deb-1139-4bc6-a12f-6a64a0ed0e92"},
   {"mtype_pref_label":"L2_IPC","mtype_id":"e55f12e1-807c-42f6-ba98-91d6d30c57d7"},
@@ -266,17 +265,16 @@ export function JSONSchemaForm({
     const isLicenseIdField = normalizedKey === 'licenseid' || normalizedKey === 'license_id';
     const isMtypeClassIdField = normalizedKey === 'mtypeclassid';
 
-    // Common input props for consistency
-    const commonInputProps = {
-      disabled,
-      className: `w-full ${hasError ? 'border-red-500' : ''}`,
-      onBlur: () => markFieldTouched(k),
-    };
-
     if (isBrainRegionIdField && nodeId) {
       return (
         <div className="w-full">
-          <Input {...commonInputProps} value={nodeId} className="w-full bg-gray-100" readOnly />
+          <Input
+            disabled={disabled}
+            className={`w-full bg-gray-100 ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
+            value={nodeId}
+            readOnly
+          />
         </div>
       );
     }
@@ -285,9 +283,10 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Input
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full bg-gray-100 ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             value="b7ad4cca-4ac2-4095-9781-37fb68fe9ca1"
-            className="w-full bg-gray-100"
             readOnly
           />
         </div>
@@ -298,9 +297,10 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Input
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full bg-gray-100 ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             value="e3e70682-c209-4cac-a29f-6fbed82c07cd"
-            className="w-full bg-gray-100"
             readOnly
           />
         </div>
@@ -342,7 +342,8 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Input
-            {...commonInputProps}
+            disabled={disabled}
+            onBlur={() => markFieldTouched(k)}
             value={currentValue}
             className={`w-full ${hasError || showDateError ? 'border-red-500' : ''}`}
             onChange={(e) => {
@@ -400,7 +401,9 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Select
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => ({ ...prev, [k]: newV }));
               markFieldTouched(k);
@@ -419,7 +422,9 @@ export function JSONSchemaForm({
         return (
           <div className="w-full">
             <Select
-              {...commonInputProps}
+              disabled={disabled}
+              className={`w-full ${hasError ? 'border-red-500' : ''}`}
+              onBlur={() => markFieldTouched(k)}
               onChange={(newV) => {
                 setState({ ...state, [k]: newV });
                 markFieldTouched(k);
@@ -438,7 +443,9 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Input
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             value={typeof state[k] === 'string' ? state[k] : ''}
             onChange={(e) => {
               setState({ ...state, [k]: e.currentTarget.value });
@@ -456,14 +463,14 @@ export function JSONSchemaForm({
           <div className="text-primary-8 mt-2 flex flex-col gap-2">
             <div className="flex flex-wrap gap-3">
               {Array.isArray(state[k]) &&
-                state[k].map((e, i) => (
-                  <div key={`${e}-${i}`} className="flex gap-1">
+                state[k].map((e) => (
+                  <div key={e as string} className="flex gap-1">
                     {e}{' '}
                     {!disabled && (
                       <CloseCircleOutlined
                         onClick={() => {
                           const newElements = [...(Array.isArray(state[k]) ? state[k] : [])];
-                          newElements.splice(i, 1);
+                          newElements.splice(newElements.indexOf(e), 1);
                           setState({ ...state, [k]: newElements });
                           markFieldTouched(k);
                         }}
@@ -540,7 +547,9 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Select
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState({ ...state, [k]: newV });
               markFieldTouched(k);
@@ -568,7 +577,9 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Select
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState({ ...state, [k]: newV });
               markFieldTouched(k);
@@ -614,7 +625,9 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Select
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             onChange={(newV: string) => {
               if (!v.properties?.type.const || typeof v.properties.type.const !== 'string')
                 throw new Error('Invalid reference definition');
@@ -647,8 +660,8 @@ export function JSONSchemaForm({
             <div className="flex flex-wrap gap-3">
               {isPlainObject(state[k]) &&
                 Array.isArray(state[k].elements) &&
-                state[k].elements.map((e, i) => (
-                  <div key={`${e}-${i}`} className="flex gap-1">
+                state[k].elements.map((e) => (
+                  <div key={String(e)} className="flex gap-1">
                     {e}{' '}
                     {!disabled && (
                       <CloseCircleOutlined
@@ -662,7 +675,7 @@ export function JSONSchemaForm({
                           }
 
                           const newElements = [...state[k].elements];
-                          newElements.splice(i, 1);
+                          newElements.splice(newElements.indexOf(e), 1);
                           setState({
                             ...state,
                             [k]: {
@@ -742,7 +755,9 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Select
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState({ ...state, [k]: newV });
               markFieldTouched(k);
@@ -782,7 +797,9 @@ export function JSONSchemaForm({
       return (
         <div className="w-full">
           <Input
-            {...commonInputProps}
+            disabled={disabled}
+            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            onBlur={() => markFieldTouched(k)}
             value={typeof state[k] === 'string' ? state[k] : ''}
             onChange={(e) => {
               setState({ ...state, [k]: e.currentTarget.value });
@@ -796,7 +813,9 @@ export function JSONSchemaForm({
     return (
       <div className="w-full">
         <Input
-          {...commonInputProps}
+          disabled={disabled}
+          className={`w-full ${hasError ? 'border-red-500' : ''}`}
+          onBlur={() => markFieldTouched(k)}
           value={typeof state[k] === 'string' ? state[k] : ''}
           onChange={(e) => {
             setState({ ...state, [k]: e.currentTarget.value });
@@ -807,6 +826,21 @@ export function JSONSchemaForm({
       </div>
     );
   }
+  
+  function getFieldTitle(k: string, v: JSONSchema, normalizedKey: string): string {
+      if (normalizedKey === 'strainid' || normalizedKey === 'strain_id' || normalizedKey === 'strain') {
+          return 'STRAIN';
+      } else if (normalizedKey === 'ageperiod' || normalizedKey === 'age_period') {
+          return 'AGE PERIOD';
+      } else if (normalizedKey === 'licenseid' || normalizedKey === 'license_id') {
+          return 'LICENSE';
+      } else if (normalizedKey === 'mtypeclassid') {
+          return 'MTYPE CLASS';
+      } else {
+          return v.title || k;
+      }
+  }
+
 
   return (
     <div className="flex flex-col gap-2">
@@ -820,7 +854,7 @@ export function JSONSchemaForm({
             Please fix the following required fields:
           </div>
           <ul className="list-inside list-disc text-sm text-red-700">
-            {validationErrors.map((error, index) => (
+            {validationErrors.map((error) => (
               <li key={error}>{error}</li>
             ))}
           </ul>
@@ -836,15 +870,7 @@ export function JSONSchemaForm({
             .map(([k, v]) => {
               const isRequired = schema.required?.includes(k);
               const normalizedKey = k.toLowerCase().replace(/[\s_]/g, '');
-              const isStrainIdField =
-                normalizedKey === 'strainid' ||
-                normalizedKey === 'strain_id' ||
-                normalizedKey === 'strain';
-              const isAgePeriodField =
-                normalizedKey === 'ageperiod' || normalizedKey === 'age_period';
-              const isLicenseIdField =
-                normalizedKey === 'licenseid' || normalizedKey === 'license_id';
-              const isMtypeClassIdField = normalizedKey === 'mtypeclassid';
+              const fieldTitle = getFieldTitle(k, v, normalizedKey);
 
               return (
                 <div key={k}>
@@ -856,15 +882,7 @@ export function JSONSchemaForm({
                       )}
                       title={v.description}
                     >
-                      {isStrainIdField
-                        ? 'STRAIN'
-                        : isAgePeriodField
-                          ? 'AGE PERIOD'
-                          : isLicenseIdField
-                            ? 'LICENSE'
-                            : isMtypeClassIdField
-                              ? 'MTYPE CLASS'
-                              : v.title || k}
+                      {fieldTitle}
                       {isRequired && <span className="ml-1 text-red-500">*</span>}
                     </div>
                     {v.units && <div className="text-lg text-gray-500">{v.units}</div>}
