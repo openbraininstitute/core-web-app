@@ -4,7 +4,7 @@ import { WarningOutlined } from '@ant-design/icons';
 import { ReactNode } from 'react';
 import Link from 'next/link';
 
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 interface Props {
   error?: Error & { cause?: unknown };
@@ -33,7 +33,7 @@ export function ErrorComponent({
 }: Props) {
   return (
     <div
-      className={classNames(
+      className={cn(
         'bg-primary-9 flex h-screen w-full flex-col items-center justify-center p-6 text-white',
         cls.container
       )}

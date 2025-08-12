@@ -44,7 +44,7 @@ function Container({
 }) {
   return (
     <div
-      className={classNames('no-scrollbar w-full overflow-y-auto', className)}
+      className={classNames('no-scrollbar h-full min-h-0 w-full overflow-y-auto', className)}
       style={{ height }}
     >
       {children}

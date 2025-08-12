@@ -62,15 +62,15 @@ export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   return (
     <div
       className={classNames(
-        'group flex h-full flex-col rounded-xl bg-white transition-all duration-300 ease-in-out',
+        'group flex h-full min-h-0 flex-col rounded-xl bg-white transition-all duration-300 ease-in-out',
         isCollapsed ? 'collapsed w-full' : 'w-full'
       )}
     >
-      <div className="flex h-full w-full flex-col gap-4 overflow-hidden p-4 pt-3">
-        <div className="flex h-full flex-col items-center justify-start">
+      <div className="flex h-full min-h-0 w-full flex-col gap-4 overflow-hidden p-4 pt-0">
+        <div className="flex h-full min-h-0 flex-col items-center justify-start">
           <div
             className={classNames(
-              'flex w-full flex-col gap-4 overflow-hidden transition-all duration-300 ease-in-out',
+              'flex min-h-0 w-full flex-col gap-4 overflow-hidden transition-all duration-300 ease-in-out',
               isCollapsed ? 'invisible max-h-0 opacity-0' : 'visible h-full opacity-100'
             )}
           >

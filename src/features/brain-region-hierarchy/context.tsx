@@ -2,7 +2,7 @@
 
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import lowerCase from 'lodash/lowerCase';
 import find from 'lodash/find';
 import omit from 'lodash/omit';
@@ -109,14 +109,18 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
     }
     let options: Array<BrainRegionHierarchyOption> = [];
     let leaves: Map<string, IBrainRegionHierarchy[]> = new Map();
-    const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color');
+    const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color', true);
 
-    if (nodes) {
+    if (root) {
       options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map((region) => ({
         av: region.annotation_value,
         value: region.id,
         label: `${region.name}`,
-        data: region,
+        data: {
+          ...region,
+          color_hex_triplet: region.color_hex_triplet,
+          color: region.color_hex_triplet,
+        },
       }));
       leaves = getLeavesForEachRegion(root);
     }
@@ -142,8 +146,9 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
  */
 export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   const key = getSectionFromDataKey(dataKey);
-  const updateSelectedBrainRegion = useSetAtom(selectedBrainRegionAtom);
+  const [selectedBrainRegion, updateSelectedBrainRegion] = useAtom(selectedBrainRegionAtom);
   const brainRegions = useUnwrappedValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
+
   const defaultSelectedBrainRegion = brainRegions?.options.find(
     (o) => lowerCase(o.label).trim() === lowerCase(DEFAULT_SELECTED_BRAIN_REGION_NAME).trim()
   );
@@ -174,11 +179,16 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
 
   useEffect(() => {
     if (isInitializedRef.current || !brainRegions) return;
-
     const hasURLParams = !!id && !!annotation_value;
 
     if (hasURLParams) {
       isInitializedRef.current = true;
+      if (selectedBrainRegion?.id !== id) {
+        const foundNode = find(brainRegions?.options, (o) => o.data.id === id)?.data;
+        if (foundNode) {
+          updateSelectedBrainRegion(omit(foundNode, 'children'));
+        }
+      }
       return;
     }
 
@@ -186,7 +196,9 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       if (id !== stored.id || annotation_value !== stored.annotation_value) {
         setHierarchyConfig(stored);
         const foundNode = find(brainRegions?.options, (o) => o.data.id === stored.id)?.data;
-        if (foundNode) updateSelectedBrainRegion(omit(foundNode, 'children'));
+        if (foundNode) {
+          updateSelectedBrainRegion(omit(foundNode, 'children'));
+        }
       }
       isInitializedRef.current = true;
       return;
