@@ -107,7 +107,7 @@ export function useObioneJsonConfigurationSchema(
       try {
         const res = await fetch(`http://0.0.0.0:8100/openapi.json`);
         // const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
-        console.log('Fetching schema');
+
         const json = await res.json();
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore

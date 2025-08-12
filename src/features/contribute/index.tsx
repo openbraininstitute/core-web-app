@@ -40,8 +40,9 @@ export default function ContributeMorphologyConfiguration({
   initialCampaignId?: string;
   initialConfig?: Config;
 }) {
-  if (!!initialCampaignId !== !!initialConfig)
+  if (!!initialCampaignId !== !!initialConfig) {
     throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
+  }
 
   const { node } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: 'explore', projectId }),
@@ -94,7 +95,9 @@ export default function ContributeMorphologyConfiguration({
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
-    if (!schema) return;
+    if (!schema) {
+      return;
+    }
     return ajv.compile(schema as AnySchema);
   }, [schema]);
 
@@ -105,19 +108,22 @@ export default function ContributeMorphologyConfiguration({
   if (validate && initialConfig && !initialConfigValidated.current) {
     initialConfigValidated.current = true;
     validate(initialConfig);
-    if (validate.errors) throw new Error('Invalid Simulation Campaign Configuration');
+    if (validate.errors) {
+      throw new Error('Invalid Simulation Campaign Configuration');
+    }
   }
 
   const errors = useMemo(() => {
-    if (validate) validate(config);
+    if (validate) {
+      validate(config);
+    }
     return validate?.errors;
   }, [validate, config]);
 
   useObioneJsonConfigurationSchema(circuitId, notification, setSchema, setAtomsMap);
 
   // Update the submit button condition
-  const canSubmit =
-    !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
+  const canSubmit = !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
 
   // Show success page if upload was successful
   if (isSuccess) {
@@ -194,43 +200,39 @@ export default function ContributeMorphologyConfiguration({
                 <RightOutlined className="text-primary-9" />
               </div>
             </div>
-            {CATEGORIES.filter((c) => c !== 'Assets').map((c) => {
-              return (
-                <Fragment key={c}>
-                  <div className="self-start text-gray-500 uppercase">{c}</div>
-                  {schema.properties &&
-                    Object.entries(schema.properties)
-                      .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                      .sort((a, b) => {
-                        const order = (k: string) => ORDERING[k]?.order ?? 999;
-                        return order(a[0]) - order(b[0]);
-                      })
-                      .map(([k, v]) => {
-                        return (
-                          <Section
-                            key={k}
-                            k={k}
-                            schema={schema}
-                            sectionSchema={v}
-                            atomsMap={atomsMap}
-                            setAtomsMap={setAtomsMap}
-                            configTab={configTab}
-                            setConfigTab={setConfigTab}
-                            config={config}
-                            campaignId={campaignId}
-                            loading={loading}
-                            errors={errors}
-                            selectedItemIdx={selectedItemIdx}
-                            setSelectedItemIdx={setSelectedItemIdx}
-                            setEditing={setEditing}
-                            setSelectedCategory={setSelectedCategory}
-                            readOnly={readOnly}
-                          />
-                        );
-                      })}
-                </Fragment>
-              );
-            })}
+            {CATEGORIES.filter((c) => c !== 'Assets').map((c) => (
+              <Fragment key={c}>
+                <div className="self-start text-gray-500 uppercase">{c}</div>
+                {schema.properties &&
+                  Object.entries(schema.properties)
+                    .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                    .sort((a, b) => {
+                      const order = (k: string) => ORDERING[k]?.order ?? 999;
+                      return order(a[0]) - order(b[0]);
+                    })
+                    .map(([k, v]) => (
+                      <Section
+                        key={k}
+                        k={k}
+                        schema={schema}
+                        sectionSchema={v}
+                        atomsMap={atomsMap}
+                        setAtomsMap={setAtomsMap}
+                        configTab={configTab}
+                        setConfigTab={setConfigTab}
+                        config={config}
+                        campaignId={campaignId}
+                        loading={loading}
+                        errors={errors}
+                        selectedItemIdx={selectedItemIdx}
+                        setSelectedItemIdx={setSelectedItemIdx}
+                        setEditing={setEditing}
+                        setSelectedCategory={setSelectedCategory}
+                        readOnly={readOnly}
+                      />
+                    ))}
+              </Fragment>
+            ))}
           </div>
           {!readOnly && (
             <button
@@ -252,34 +254,35 @@ export default function ContributeMorphologyConfiguration({
                 try {
                   setLoading(true);
 
-                  const morphologyData =
-                    (Array.isArray(config.morphology) && config.morphology.length > 0
+                  const morphologyConfig = (
+                    Array.isArray(config.morphology) && config.morphology.length > 0
                       ? config.morphology[0]
                       : {
                           brain_region_id: node.id,
                           species_id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                        }) ?? {};
+                        }
+                  ) ?? {};
 
                   // --- START: New pre-flight API call to create a subject record ---
                   const subjectUrl =
                     'https://staging.openbraininstitute.org/api/entitycore/subject';
                   const newSubjectItem = {
                     authorized_public: false,
-                    name: morphologyData.name || 'test',
-                    description: morphologyData.description || 'string',
+                    name: morphologyConfig.name || 'test',
+                    description: morphologyConfig.description || 'string',
                     species_id:
-                      morphologyData.species_id ||
-                      morphologyData.species ||
+                      morphologyConfig.species_id ||
+                      morphologyConfig.species ||
                       'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                    strain_id: morphologyData.strain_id || null,
-                    sex: morphologyData.sex || 'unknown',
+                    strain_id: morphologyConfig.strain_id || null,
+                    sex: morphologyConfig.sex || 'unknown',
                     brain_region_id:
-                      morphologyData.brain_region_id || morphologyData.brain_region || node.id,
-                    weight: morphologyData.weight || null,
-                    age_value: morphologyData.age_value || null,
-                    age_min: morphologyData.age_min || null,
-                    age_max: morphologyData.age_max || null,
-                    age_period: morphologyData.age_period || null,
+                      morphologyConfig.brain_region_id || morphologyConfig.brain_region || node.id,
+                    weight: morphologyConfig.weight || null,
+                    age_value: morphologyConfig.age_value || null,
+                    age_min: morphologyConfig.age_min || null,
+                    age_max: morphologyConfig.age_max || null,
+                    age_period: morphologyConfig.age_period || null,
                   };
 
                   const subjectHeaders = {
@@ -311,25 +314,25 @@ export default function ContributeMorphologyConfiguration({
                   const newJson = {
                     authorized_public: false,
                     license_id: null,
-                    name: morphologyData.name || 'test',
-                    description: morphologyData.description || 'string',
+                    name: morphologyConfig.name || 'test',
+                    description: morphologyConfig.description || 'string',
                     location: {
                       x: 0,
                       y: 0,
                       z: 0,
                     },
-                    legacy_id: Array.isArray(morphologyData.legacy_id)
-                      ? morphologyData.legacy_id
-                      : typeof morphologyData.legacy_id === 'string'
-                        ? [morphologyData.legacy_id]
+                    legacy_id: Array.isArray(morphologyConfig.legacy_id)
+                      ? morphologyConfig.legacy_id
+                      : typeof morphologyConfig.legacy_id === 'string'
+                        ? [morphologyConfig.legacy_id]
                         : [],
                     species_id:
-                      morphologyData.species_id ||
-                      morphologyData.species ||
+                      morphologyConfig.species_id ||
+                      morphologyConfig.species ||
                       'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                    strain_id: morphologyData.strain_id || null,
+                    strain_id: morphologyConfig.strain_id || null,
                     brain_region_id:
-                      morphologyData.brain_region_id || morphologyData.brain_region || node.id,
+                      morphologyConfig.brain_region_id || morphologyConfig.brain_region || node.id,
                     subject_id: subjectId,
                   };
 
@@ -368,13 +371,16 @@ export default function ContributeMorphologyConfiguration({
                   // Second API call: Upload file
                   if (selectedFile) {
                     const formData = new FormData();
-                    const mimeType = selectedFile.name.endsWith('.swc')
-                      ? 'application/swc'
-                      : selectedFile.name.endsWith('.asc')
-                        ? 'text/plain'
-                        : selectedFile.name.endsWith('.h5')
-                          ? 'application/x-hdf5'
-                          : 'application/octet-stream';
+                    let mimeType = 'application/octet-stream';
+                    const fileName = selectedFile.name;
+                    if (fileName.endsWith('.swc')) {
+                      mimeType = 'application/swc';
+                    } else if (fileName.endsWith('.asc')) {
+                      mimeType = 'text/plain';
+                    } else if (fileName.endsWith('.h5')) {
+                      mimeType = 'application/x-hdf5';
+                    }
+
                     const fileWithMimeType = new File([selectedFile], selectedFile.name, {
                       type: mimeType,
                     });
@@ -429,16 +435,28 @@ export default function ContributeMorphologyConfiguration({
               disabled={!canSubmit}
               title={
                 !canSubmit
-                  ? `Cannot submit: ${!selectedFile ? 'No file selected. ' : ''}${
-                      !formValidation.isValid ? 'Required fields missing. ' : ''
-                    }${errors?.length ? 'Form validation errors. ' : ''}${
-                      loading ? 'Loading...' : ''
+                  ? `Cannot submit: ${
+                      !selectedFile
+                        ? 'No file selected. '
+                        : ''
+                    }${
+                      !formValidation.isValid
+                        ? 'Required fields missing. '
+                        : ''
+                    }${
+                      errors?.length
+                        ? 'Form validation errors. '
+                        : ''
+                    }${
+                      loading
+                        ? 'Loading...'
+                        : ''
                     }`.trim()
                   : 'Submit record'
               }
             >
               <div className="flex justify-between gap-5">
-                {!campaignId ? 'Submit record' : 'New simulation campaign'}
+                {campaignId ? 'New simulation campaign' : 'Submit record'}
                 {loading && <LoadingOutlined />}
               </div>
             </button>
@@ -464,10 +482,9 @@ export default function ContributeMorphologyConfiguration({
                     htmlFor="file-upload"
                     className={classNames(
                       'flex cursor-pointer items-center justify-center rounded-full px-4 py-2 text-sm',
-                      loading
-                        ? 'bg-gray-300 text-gray-500'
-                        : 'bg-primary-8 hover:bg-primary-9 text-white',
-                      readOnly && 'cursor-not-allowed opacity-50'
+                      loading || readOnly
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                        : 'bg-primary-8 hover:bg-primary-9 text-white'
                     )}
                   >
                     <UploadOutlined className="mr-2" />
@@ -503,70 +520,67 @@ export default function ContributeMorphologyConfiguration({
             editing &&
             configTab !== 'assets' && (
               <div className="flex flex-col items-center gap-5">
-                {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
-                  return (
-                    <Fragment key={o.title}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
-                        onClick={() => {
-                          if (isRootCategory(schema, configTab)) return;
-                          setSelectedCategory(o.properties?.type.const ?? '');
-                          const initial: Record<string, ConfigValue> = {};
-                          if (o.properties)
-                            Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                              if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                              else initial[subkey] = subValue.default ?? null;
-                            });
-                          const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                            parseInt(subkey.split('_')[1], 10)
-                          );
-                          itemIndexes.sort((a, b) => a - b);
-                          const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                          setSelectedItemIdx(itemIdx);
-                          setAtomsMap({
-                            ...atomsMap,
-                            [configTab]: {
-                              ...atomsMap[configTab],
-                              [resolveKey(schema, configTab, itemIdx)]:
-                                atom<Record<string, ConfigValue>>(initial),
-                            },
+                {schema.properties[configTab].additionalProperties.anyOf.map((o) => (
+                  <div
+                    key={o.title}
+                    role="button"
+                    tabIndex={0}
+                    className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
+                    onClick={() => {
+                      if (isRootCategory(schema, configTab)) return;
+                      setSelectedCategory(o.properties?.type.const ?? '');
+                      const initial: Record<string, ConfigValue> = {};
+                      if (o.properties) {
+                        Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                          initial[subkey] = subkey === 'type' ? subValue.const ?? null : subValue.default ?? null;
+                        });
+                      }
+                      const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                        parseInt(subkey.split('_')[1], 10)
+                      );
+                      itemIndexes.sort((a, b) => a - b);
+                      const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                      setSelectedItemIdx(itemIdx);
+                      setAtomsMap({
+                        ...atomsMap,
+                        [configTab]: {
+                          ...atomsMap[configTab],
+                          [resolveKey(schema, configTab, itemIdx)]:
+                            atom<Record<string, ConfigValue>>(initial),
+                        },
+                      });
+                    }}
+                    onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        if (isRootCategory(schema, configTab)) return;
+                        setSelectedCategory(o.properties?.type.const ?? '');
+                        const initial: Record<string, ConfigValue> = {};
+                        if (o.properties) {
+                          Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                            initial[subkey] = subkey === 'type' ? subValue.const ?? null : subValue.default ?? null;
                           });
-                        }}
-                        onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            if (isRootCategory(schema, configTab)) return;
-                            setSelectedCategory(o.properties?.type.const ?? '');
-                            const initial: Record<string, ConfigValue> = {};
-                            if (o.properties)
-                              Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                                else initial[subkey] = subValue.default ?? null;
-                              });
-                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                              parseInt(subkey.split('_')[1], 10)
-                            );
-                            itemIndexes.sort((a, b) => a - b);
-                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                            setSelectedItemIdx(itemIdx);
-                            setAtomsMap({
-                              ...atomsMap,
-                              [configTab]: {
-                                ...atomsMap[configTab],
-                                [resolveKey(schema, configTab, itemIdx)]:
-                                  atom<Record<string, ConfigValue>>(initial),
-                              },
-                            });
-                          }
-                        }}
-                      >
-                        <div className="text-primary-9 text-lg font-bold">{o.title}</div>
-                        <div className="mt-3 text-base text-gray-700">{o.description}</div>
-                      </div>
-                    </Fragment>
-                  );
-                })}
+                        }
+                        const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                          parseInt(subkey.split('_')[1], 10)
+                        );
+                        itemIndexes.sort((a, b) => a - b);
+                        const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                        setSelectedItemIdx(itemIdx);
+                        setAtomsMap({
+                          ...atomsMap,
+                          [configTab]: {
+                            ...atomsMap[configTab],
+                            [resolveKey(schema, configTab, itemIdx)]:
+                              atom<Record<string, ConfigValue>>(initial),
+                          },
+                        });
+                      }
+                    }}
+                  >
+                    <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                    <div className="mt-3 text-base text-gray-700">{o.description}</div>
+                  </div>
+                ))}
               </div>
             )}
           {schema.properties &&

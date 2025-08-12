@@ -10,7 +10,7 @@ import BackToInteractiveExplorationBtn from '@/components/explore-section/BackTo
 
 export default function ContributeLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  console.log('ContributeLayout function entered');
+  
   // Determine the href for the back button.
   // Goal: If current is /virtual-lab/explore/interactive/add/experimental/morphology
   // It should go back to /virtual-lab/explore/interactive
