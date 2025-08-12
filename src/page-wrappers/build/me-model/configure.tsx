@@ -256,9 +256,10 @@ export default function Configure({ ctx, searchParams }: Props) {
 
       try {
         await runSingleNeuronAnalysis({ ctx, modelId: data.id });
-      } catch (_runAnalysisError) {
+      } catch (runAnalysisError) {
         const message = messages.RunAnalysisError;
         notification.error({ message, duration: 20 });
+	console.error(runAnalysisError);
       }
 
       refreshDataAtom();
