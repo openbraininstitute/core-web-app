@@ -123,7 +123,8 @@ export default function ContributeMorphologyConfiguration({
   useObioneJsonConfigurationSchema(circuitId, notification, setSchema, setAtomsMap);
 
   // Update the submit button condition
-  const canSubmit = !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
+  const canSubmit =
+    !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
 
   // Show success page if upload was successful
   if (isSuccess) {
@@ -254,14 +255,13 @@ export default function ContributeMorphologyConfiguration({
                 try {
                   setLoading(true);
 
-                  const morphologyConfig = (
-                    Array.isArray(config.morphology) && config.morphology.length > 0
+                  const morphologyConfig =
+                    (Array.isArray(config.morphology) && config.morphology.length > 0
                       ? config.morphology[0]
                       : {
                           brain_region_id: node.id,
                           species_id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                        }
-                  ) ?? {};
+                        }) ?? {};
 
                   // --- START: New pre-flight API call to create a subject record ---
                   const subjectUrl =
@@ -311,39 +311,38 @@ export default function ContributeMorphologyConfiguration({
                   const subjectId = subjectResponseData.id;
                   // --- END: New pre-flight API call ---
 
+                  let legacyId;
 
-	let legacyId;
+                  if (Array.isArray(morphologyConfig.legacy_id)) {
+                    legacyId = morphologyConfig.legacy_id;
+                  } else if (typeof morphologyConfig.legacy_id === 'string') {
+                    legacyId = [morphologyConfig.legacy_id];
+                  } else {
+                    legacyId = [];
+                  }
 
-if (Array.isArray(morphologyConfig.legacy_id)) {
-  legacyId = morphologyConfig.legacy_id;
-} else if (typeof morphologyConfig.legacy_id === 'string') {
-  legacyId = [morphologyConfig.legacy_id];
-} else {
-  legacyId = [];
-}
+                  const newJson = {
+                    authorized_public: false,
+                    license_id: null,
+                    name: morphologyConfig.name || 'test',
+                    description: morphologyConfig.description || 'string',
+                    location: {
+                      x: 0,
+                      y: 0,
+                      z: 0,
+                    },
+                    legacy_id: legacyId,
+                    species_id:
+                      morphologyConfig.species_id ||
+                      morphologyConfig.species ||
+                      'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+                    strain_id: morphologyConfig.strain_id || null,
+                    brain_region_id:
+                      morphologyConfig.brain_region_id || morphologyConfig.brain_region || node.id,
+                    subject_id: subjectId,
+                  };
 
-		const newJson = {
-  authorized_public: false,
-  license_id: null,
-  name: morphologyConfig.name || 'test',
-  description: morphologyConfig.description || 'string',
-  location: {
-    x: 0,
-    y: 0,
-    z: 0,
-  },
-  legacy_id: legacyId,
-  species_id:
-    morphologyConfig.species_id ||
-    morphologyConfig.species ||
-    'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-  strain_id: morphologyConfig.strain_id || null,
-  brain_region_id:
-    morphologyConfig.brain_region_id || morphologyConfig.brain_region || node.id,
-  subject_id: subjectId,
-};
-
-                    setNewJsonPayload(newJson);
+                  setNewJsonPayload(newJson);
 
                   const headers = {
                     accept: 'application/json',
@@ -442,22 +441,10 @@ if (Array.isArray(morphologyConfig.legacy_id)) {
               disabled={!canSubmit}
               title={
                 !canSubmit
-                  ? `Cannot submit: ${
-                      !selectedFile
-                        ? 'No file selected. '
-                        : ''
-                    }${
-                      !formValidation.isValid
-                        ? 'Required fields missing. '
-                        : ''
-                    }${
-                      errors?.length
-                        ? 'Form validation errors. '
-                        : ''
-                    }${
-                      loading
-                        ? 'Loading...'
-                        : ''
+                  ? `Cannot submit: ${!selectedFile ? 'No file selected. ' : ''}${
+                      !formValidation.isValid ? 'Required fields missing. ' : ''
+                    }${errors?.length ? 'Form validation errors. ' : ''}${
+                      loading ? 'Loading...' : ''
                     }`.trim()
                   : 'Submit record'
               }
@@ -490,7 +477,7 @@ if (Array.isArray(morphologyConfig.legacy_id)) {
                     className={classNames(
                       'flex cursor-pointer items-center justify-center rounded-full px-4 py-2 text-sm',
                       loading || readOnly
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                        ? 'cursor-not-allowed bg-gray-300 text-gray-500 opacity-50'
                         : 'bg-primary-8 hover:bg-primary-9 text-white'
                     )}
                   >
@@ -539,7 +526,10 @@ if (Array.isArray(morphologyConfig.legacy_id)) {
                       const initial: Record<string, ConfigValue> = {};
                       if (o.properties) {
                         Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                          initial[subkey] = subkey === 'type' ? subValue.const ?? null : subValue.default ?? null;
+                          initial[subkey] =
+                            subkey === 'type'
+                              ? (subValue.const ?? null)
+                              : (subValue.default ?? null);
                         });
                       }
                       const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
@@ -564,7 +554,10 @@ if (Array.isArray(morphologyConfig.legacy_id)) {
                         const initial: Record<string, ConfigValue> = {};
                         if (o.properties) {
                           Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                            initial[subkey] = subkey === 'type' ? subValue.const ?? null : subValue.default ?? null;
+                            initial[subkey] =
+                              subkey === 'type'
+                                ? (subValue.const ?? null)
+                                : (subValue.default ?? null);
                           });
                         }
                         const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>

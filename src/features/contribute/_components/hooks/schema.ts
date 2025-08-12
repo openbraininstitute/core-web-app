@@ -10,7 +10,6 @@ import { isPlainObject, isAtom } from '../utils';
 import { assertErrorMessage } from '@/util/utils';
 
 export function useObioneJsonSchema(
-  
   notification: NotificationInstance,
   setSchema: React.Dispatch<React.SetStateAction<JSONSchema | null>>,
   setAtomsMap: (atomsMap: AtomsMap) => void,

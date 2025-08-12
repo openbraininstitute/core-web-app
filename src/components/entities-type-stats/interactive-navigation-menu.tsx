@@ -61,8 +61,6 @@ function EntityTypeStats(props: StatsPanelProps) {
     .with('experimental-data', () => (
       <>
         {Object.entries(ExperimentalEntitiesTileTypes).map(([key, value], index) => {
-
-
           const baseHref = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
           let records = '';
           let isError = false;
