@@ -1,56 +1,56 @@
-'use client'
+'use client';
 
-import { App, Button } from 'antd'
-import { useAtomValue, useSetAtom } from 'jotai'
-import get from 'lodash/get'
-import omit from 'lodash/omit'
-import { useRouter } from 'next/navigation'
-import { useTransition } from 'react'
-import z from 'zod'
+import { App, Button } from 'antd';
+import { useAtomValue, useSetAtom } from 'jotai';
+import get from 'lodash/get';
+import omit from 'lodash/omit';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
+import z from 'zod';
 
-import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card'
-import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card'
+import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
+import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
 // import CustomButton from '@/components/buttons/custom-btn';
 
-import { createMEModel } from '@/api/entitycore/queries'
-import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model'
-import { tryCatch } from '@/api/utils'
-import { DataType } from '@/constants/explore-section/list-views'
-import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer'
-import { MEmodel } from '@/entity-configuration/domain/model/me-model'
-import { activityAtomFamily } from '@/features/activity-view/context'
-import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session'
-import { messages } from '@/i18n/en/me-model'
-import { OneshotSession } from '@/services/accounting'
-import { useEntitiesCountAtom } from '@/services/entitycore/entities-count'
-import { runSingleNeuronAnalysis } from '@/services/small-scale-simulator'
-import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms'
-import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects'
-import { ServiceSubtype } from '@/types/accounting'
-import { WorkspaceContextSchema } from '@/types/common'
-import { classNames } from '@/util/utils'
-import { resolveDataKey } from '@/utils/key-builder'
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder'
+import { createMEModel } from '@/api/entitycore/queries';
+import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { tryCatch } from '@/api/utils';
+import { DataType } from '@/constants/explore-section/list-views';
+import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { activityAtomFamily } from '@/features/activity-view/context';
+import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
+import { messages } from '@/i18n/en/me-model';
+import { OneshotSession } from '@/services/accounting';
+import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
+import { runSingleNeuronAnalysis } from '@/services/small-scale-simulator';
+import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
+import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
+import { ServiceSubtype } from '@/types/accounting';
+import { WorkspaceContextSchema } from '@/types/common';
+import { classNames } from '@/util/utils';
+import { resolveDataKey } from '@/utils/key-builder';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model'
-import type { WorkspaceContext } from '@/types/common'
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { WorkspaceContext } from '@/types/common';
 
-const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS'
+const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
-const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema)
-type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>
+const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema);
+type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
 
 function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { stateId: string }) {
   const { sessionValue } = useBuildMeModelSessionState({
     stateId,
     virtualLabId,
     projectId,
-  })
+  });
 
   const contributors = useAtomValue(virtualLabProjectUsersAtomFamily({ projectId, virtualLabId }))
-    ?.data?.users
-  const { mmodel } = sessionValue
-  const { emodel } = sessionValue
+    ?.data?.users;
+  const { mmodel } = sessionValue;
+  const { emodel } = sessionValue;
   const fields = [
     {
       className: 'col-span-6',
@@ -88,7 +88,7 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
       title: 'e-type',
       value: renderEmptyOrValue(renderArray(emodel?.etypes?.map((m) => m.pref_label) || [])),
     },
-  ]
+  ];
 
   return (
     <div className="grid max-w-(--breakpoint-2xl) grow grid-cols-6 gap-x-10 gap-y-4 break-words">
@@ -99,17 +99,17 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 type Props = {
-  ctx: WorkspaceContext
+  ctx: WorkspaceContext;
   searchParams: {
-    s: string
-    m: string
-    e: string
-  }
-}
+    s: string;
+    m: string;
+    e: string;
+  };
+};
 
 function CustomButton({
   loading,
@@ -118,11 +118,11 @@ function CustomButton({
   onClick,
   children,
 }: {
-  loading: boolean
-  disable: boolean
-  className?: string
-  onClick?: () => void
-  children?: React.ReactNode
+  loading: boolean;
+  disable: boolean;
+  className?: string;
+  onClick?: () => void;
+  children?: React.ReactNode;
 }) {
   return (
     <Button
@@ -132,7 +132,7 @@ function CustomButton({
         'bg-primary-9 h-14 rounded-none border border-white px-14 text-white',
         'hover:border-primary-8! hover:bg-primary-8! hover:border! hover:font-bold hover:text-white! hover:shadow-xs',
         'disabled:border-gray-400 disabled:bg-white! disabled:text-gray-700! disabled:hover:text-gray-700!',
-        'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!',
+        'disabled:hover:border-gray-400! disabled:hover:bg-white! disabled:hover:text-gray-700!'
       )}
       type="default"
       size="large"
@@ -143,24 +143,24 @@ function CustomButton({
     >
       {children}
     </Button>
-  )
+  );
 }
 export default function Configure({ ctx, searchParams }: Props) {
-  const { push: navigate } = useRouter()
-  const { notification } = App.useApp()
-  const [isPending, startTransition] = useTransition()
-  const emodelId = get(searchParams, 'e', undefined)
-  const morphologyId = get(searchParams, 'm', undefined)
-  const stateId = get(searchParams, 's', undefined)
+  const { push: navigate } = useRouter();
+  const { notification } = App.useApp();
+  const [isPending, startTransition] = useTransition();
+  const emodelId = get(searchParams, 'e', undefined);
+  const morphologyId = get(searchParams, 'm', undefined);
+  const stateId = get(searchParams, 's', undefined);
 
   const exploreDataKey = resolveDataKey({
     projectId: ctx.projectId,
     section: 'explore',
     entity: MEmodel,
-  })
+  });
 
-  const refreshEntityCountsToParent = useEntitiesCountAtom()
-  const refreshDataAtom = useRefreshDataAtom(exploreDataKey)
+  const refreshEntityCountsToParent = useEntitiesCountAtom();
+  const refreshDataAtom = useRefreshDataAtom(exploreDataKey);
   const refreshActivityAtom = useSetAtom(
     activityAtomFamily({
       key: resolveDataKey({
@@ -171,33 +171,33 @@ export default function Configure({ ctx, searchParams }: Props) {
       projectId: ctx.projectId,
       virtualLabId: ctx.virtualLabId,
       type: 'memodel',
-    }),
-  )
+    })
+  );
   const { sessionValue } = useBuildMeModelSessionState({
     stateId: stateId || '',
     virtualLabId: ctx.virtualLabId,
     projectId: ctx.projectId,
-  })
+  });
 
   if (!stateId) {
-    navigate('./')
-    return
+    navigate('./');
+    return;
   }
 
   const showErrorNotification = (error: any, type: 'validation' | 'http') => {
-    let message = messages.DefaultErrorMsg
+    let message = messages.DefaultErrorMsg;
     if (type === 'http')
       message =
         error?.cause?.error_code === LOW_FUNDS_ERROR_CODE
           ? messages.LowFundsError
-          : messages.DefaultErrorMsg
-    else message = messages.ValidationError
+          : messages.DefaultErrorMsg;
+    else message = messages.ValidationError;
 
     notification.error({
       duration: 10,
       message,
-    })
-  }
+    });
+  };
 
   const buildMeModel = async () => {
     const body: Partial<TCreateMeModelContext> = {
@@ -211,26 +211,26 @@ export default function Configure({ ctx, searchParams }: Props) {
       brain_region_id: sessionValue.mmodel?.brain_region.id ?? sessionValue.brainRegion?.id,
       strain_id: sessionValue.mmodel?.strain?.id ?? null,
       validation_status: ValidationStatus.Initialized,
-    }
+    };
     const { error: validationError, data: validationData } =
-      await CreateMeModelContextSchema.safeParseAsync(body)
+      await CreateMeModelContextSchema.safeParseAsync(body);
     if (validationError) {
-      showErrorNotification(validationError, 'validation')
-      return { data: null, error: validationError, errorType: 'validation' as const }
+      showErrorNotification(validationError, 'validation');
+      return { data: null, error: validationError, errorType: 'validation' as const };
     }
     const accountingSession = new OneshotSession({
       subtype: ServiceSubtype.SingleCellBuild,
       virtualLabId: ctx.virtualLabId,
       projectId: ctx.projectId,
       count: 1,
-    })
+    });
 
     const { data, error } = await tryCatch(
       accountingSession.useWith<IMEModel>(() =>
         createMEModel({
           body: omit(validationData, ['virtualLabId', 'projectId']),
           context: ctx,
-        }),
+        })
       ),
       undefined,
       {
@@ -240,39 +240,39 @@ export default function Configure({ ctx, searchParams }: Props) {
           virtualLabId: ctx.virtualLabId,
           projectId: ctx.projectId,
         },
-      },
-    )
+      }
+    );
 
-    return { data, error, errorType: 'http' as const }
-  }
+    return { data, error, errorType: 'http' as const };
+  };
 
   const onClick = async () => {
     startTransition(async () => {
-      const { data, error, errorType } = await buildMeModel()
+      const { data, error, errorType } = await buildMeModel();
       if (error || !data) {
-        showErrorNotification(error, errorType)
-        return
+        showErrorNotification(error, errorType);
+        return;
       }
 
       try {
-        await runSingleNeuronAnalysis({ ctx, modelId: data.id })
+        await runSingleNeuronAnalysis({ ctx, modelId: data.id });
       } catch (runAnalysisError) {
-        const message = messages.RunAnalysisError
-        notification.error({ message, duration: 20 })
+        const message = messages.RunAnalysisError;
+        notification.error({ message, duration: 20 });
       }
 
-      refreshDataAtom()
-      refreshActivityAtom()
-      refreshEntityCountsToParent(data.brain_region.id)
+      refreshDataAtom();
+      refreshActivityAtom();
+      refreshEntityCountsToParent(data.brain_region.id);
       navigate(
         resolveExploreDetailsPageUrl({
           ctx,
           dataType: DataType.CircuitMEModel,
           entityId: data.id,
-        }),
-      )
-    })
-  }
+        })
+      );
+    });
+  };
 
   const validateTrigger = sessionValue.emodel && sessionValue.mmodel && (
     <div className="fixed right-10 bottom-10 flex flex-row gap-4 text-white">
@@ -280,7 +280,7 @@ export default function Configure({ ctx, searchParams }: Props) {
         {isPending ? 'Creating ME-model' : 'Save'}
       </CustomButton>
     </div>
-  )
+  );
 
   return (
     <>
@@ -307,5 +307,5 @@ export default function Configure({ ctx, searchParams }: Props) {
       </div>
       {validateTrigger}
     </>
-  )
+  );
 }
