@@ -827,18 +827,14 @@ export function JSONSchemaForm({
     );
   }
 
-
   function getFieldTitle(k: string, v: JSONSchema, normalizedKey: string): string {
-  if (
-    normalizedKey === 'strainid' ||
-    normalizedKey === 'strain_id' ||
-    normalizedKey === 'strain'
-  ) return 'STRAIN';
-  if (normalizedKey === 'ageperiod' || normalizedKey === 'age_period') return 'AGE PERIOD';
-  if (normalizedKey === 'licenseid' || normalizedKey === 'license_id') return 'LICENSE';
-  if (normalizedKey === 'mtypeclassid') return 'MTYPE CLASS';
-  return v.title || k;
-}
+    if (normalizedKey === 'strainid' || normalizedKey === 'strain_id' || normalizedKey === 'strain')
+      return 'STRAIN';
+    if (normalizedKey === 'ageperiod' || normalizedKey === 'age_period') return 'AGE PERIOD';
+    if (normalizedKey === 'licenseid' || normalizedKey === 'license_id') return 'LICENSE';
+    if (normalizedKey === 'mtypeclassid') return 'MTYPE CLASS';
+    return v.title || k;
+  }
 
   return (
     <div className="flex flex-col gap-2">
