@@ -9,11 +9,11 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 const ExploreSections = {
-  AllPublic: 'all-public',
+  AllPublic: 'public',
   Project: 'project',
 } as const;
 
-type ExploreSectionsKeys = (typeof ExploreSections)[keyof typeof ExploreSections];
+export type ExploreSectionsKeys = (typeof ExploreSections)[keyof typeof ExploreSections];
 
 const tabsConfigItems: Array<{
   key: ExploreSectionsKeys;
@@ -22,7 +22,7 @@ const tabsConfigItems: Array<{
 }> = [
   {
     key: ExploreSections.AllPublic,
-    title: 'All public',
+    title: 'Public',
     position: 'first',
   },
   {

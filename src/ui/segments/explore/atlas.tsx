@@ -23,7 +23,7 @@ export function Atlas({ dataKey }: Props) {
               'absolute inset-0 flex items-center justify-center bg-black/5 h-full! rounded-md',
           },
         })}
-        resetKeys={[selectedBrainRegion?.id]}
+        resetKeys={[selectedBrainRegion?.id, dataKey]}
       >
         <AtlasViewer dataKey={dataKey} />
       </ErrorBoundary>

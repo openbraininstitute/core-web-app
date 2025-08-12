@@ -186,6 +186,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       if (selectedBrainRegion?.id !== id) {
         const foundNode = find(brainRegions?.options, (o) => o.data.id === id)?.data;
         if (foundNode) {
+          setHierarchyConfig({ id: foundNode.id, annotation_value: foundNode.annotation_value });
           updateSelectedBrainRegion(omit(foundNode, 'children'));
         }
       }
@@ -194,9 +195,9 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
 
     if (stored?.id && stored?.annotation_value) {
       if (id !== stored.id || annotation_value !== stored.annotation_value) {
-        setHierarchyConfig(stored);
         const foundNode = find(brainRegions?.options, (o) => o.data.id === stored.id)?.data;
         if (foundNode) {
+          setHierarchyConfig({ id: foundNode.id, annotation_value: foundNode.annotation_value });
           updateSelectedBrainRegion(omit(foundNode, 'children'));
         }
       }
