@@ -311,32 +311,35 @@ export default function ContributeMorphologyConfiguration({
                   const subjectId = subjectResponseData.id;
                   // --- END: New pre-flight API call ---
 
-                  const newJson = {
-                    authorized_public: false,
-                    license_id: null,
-                    name: morphologyConfig.name || 'test',
-                    description: morphologyConfig.description || 'string',
-                    location: {
-                      x: 0,
-                      y: 0,
-                      z: 0,
-                    },
-                    legacy_id: Array.isArray(morphologyConfig.legacy_id)
-                      ? morphologyConfig.legacy_id
-                      : typeof morphologyConfig.legacy_id === 'string'
-                        ? [morphologyConfig.legacy_id]
-                        : [],
-                    species_id:
-                      morphologyConfig.species_id ||
-                      morphologyConfig.species ||
-                      'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                    strain_id: morphologyConfig.strain_id || null,
-                    brain_region_id:
-                      morphologyConfig.brain_region_id || morphologyConfig.brain_region || node.id,
-                    subject_id: subjectId,
-                  };
 
-                  setNewJsonPayload(newJson);
+		  const legacyId = Array.isArray(morphologyConfig.legacy_id)
+  ? morphologyConfig.legacy_id
+  : typeof morphologyConfig.legacy_id === 'string'
+    ? [morphologyConfig.legacy_id]
+    : [];
+
+		const newJson = {
+  authorized_public: false,
+  license_id: null,
+  name: morphologyConfig.name || 'test',
+  description: morphologyConfig.description || 'string',
+  location: {
+    x: 0,
+    y: 0,
+    z: 0,
+  },
+  legacy_id: legacyId,
+  species_id:
+    morphologyConfig.species_id ||
+    morphologyConfig.species ||
+    'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+  strain_id: morphologyConfig.strain_id || null,
+  brain_region_id:
+    morphologyConfig.brain_region_id || morphologyConfig.brain_region || node.id,
+  subject_id: subjectId,
+};
+
+                    setNewJsonPayload(newJson);
 
                   const headers = {
                     accept: 'application/json',
