@@ -1,4 +1,3 @@
-// index.tsx
 'use client';
 
 import {
@@ -9,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import { atom } from 'jotai';
-import { Fragment, useMemo, useRef, useState } from 'react';
+import { Fragment, useMemo, useRef, useState, KeyboardEvent } from 'react';
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
 import { useConfigAtom } from './_components/hooks/config-atom';
 import {
@@ -121,14 +120,15 @@ export default function ContributeMorphologyConfiguration({
     !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
 
   // Show success page if upload was successful
-if (isSuccess) {
+  if (isSuccess) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
-        <div className="text-center w-full max-w-md mx-auto">
+        <div className="mx-auto w-full max-w-md text-center">
           <div className="mb-4 text-4xl font-bold text-green-600">
             ✓ Morphology created successfully
           </div>
           <button
+            type="button"
             onClick={() => setIsSuccess(false)}
             className="bg-primary-8 hover:bg-primary-9 rounded-full px-6 py-3 text-white transition-colors"
           >
@@ -163,6 +163,8 @@ if (isSuccess) {
 
             <div className="self-start text-gray-500 uppercase">Assets</div>
             <div
+              role="button"
+              tabIndex={0}
               className={classNames(
                 'flex h-[50px] min-h-[50px] w-full cursor-pointer items-center justify-between rounded-full border border-gray-200 px-5 py-2 drop-shadow hover:bg-white',
                 configTab === 'assets' ? 'bg-white' : 'bg-gray-50'
@@ -173,13 +175,21 @@ if (isSuccess) {
                 setSelectedCategory('');
                 setSelectedItemIdx(null);
               }}
+              onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setConfigTab('assets');
+                  setEditing(true);
+                  setSelectedCategory('');
+                  setSelectedItemIdx(null);
+                }
+              }}
             >
               <span className="text-primary-9 text-base">Assets</span>
               <div className="flex gap-1">
                 {selectedFile ? (
                   <CheckCircleFilled className="text-green-600" />
                 ) : (
-                  <div className="h-4 w-4" /> // Placeholder to maintain spacing
+                  <div className="h-4 w-4" />
                 )}
                 <RightOutlined className="text-primary-9" />
               </div>
@@ -243,12 +253,12 @@ if (isSuccess) {
                   setLoading(true);
 
                   const morphologyData =
-                    Array.isArray(config.morphology) && config.morphology.length > 0
+                    (Array.isArray(config.morphology) && config.morphology.length > 0
                       ? config.morphology[0]
                       : {
                           brain_region_id: node.id,
                           species_id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                        };
+                        }) ?? {};
 
                   // --- START: New pre-flight API call to create a subject record ---
                   const subjectUrl =
@@ -405,7 +415,6 @@ if (isSuccess) {
 
                   setShowConfig(true);
                 } catch (error) {
-                  console.error('Submission error:', error);
                   notification.error({
                     message: 'Failed to submit record',
                     description:
@@ -452,8 +461,9 @@ if (isSuccess) {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <label
+                    htmlFor="file-upload"
                     className={classNames(
-                      'flex items-center justify-center rounded-full px-4 py-2 text-sm',
+                      'flex cursor-pointer items-center justify-center rounded-full px-4 py-2 text-sm',
                       loading
                         ? 'bg-gray-300 text-gray-500'
                         : 'bg-primary-8 hover:bg-primary-9 text-white',
@@ -463,6 +473,7 @@ if (isSuccess) {
                     <UploadOutlined className="mr-2" />
                     Upload swc, asc, or h5
                     <input
+                      id="file-upload"
                       type="file"
                       accept=".swc,.asc,.h5"
                       className="hidden"
@@ -496,6 +507,8 @@ if (isSuccess) {
                   return (
                     <Fragment key={o.title}>
                       <div
+                        role="button"
+                        tabIndex={0}
                         className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                         onClick={() => {
                           if (isRootCategory(schema, configTab)) return;
@@ -520,6 +533,32 @@ if (isSuccess) {
                                 atom<Record<string, ConfigValue>>(initial),
                             },
                           });
+                        }}
+                        onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            if (isRootCategory(schema, configTab)) return;
+                            setSelectedCategory(o.properties?.type.const ?? '');
+                            const initial: Record<string, ConfigValue> = {};
+                            if (o.properties)
+                              Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                                else initial[subkey] = subValue.default ?? null;
+                              });
+                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                              parseInt(subkey.split('_')[1], 10)
+                            );
+                            itemIndexes.sort((a, b) => a - b);
+                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                            setSelectedItemIdx(itemIdx);
+                            setAtomsMap({
+                              ...atomsMap,
+                              [configTab]: {
+                                ...atomsMap[configTab],
+                                [resolveKey(schema, configTab, itemIdx)]:
+                                  atom<Record<string, ConfigValue>>(initial),
+                              },
+                            });
+                          }
                         }}
                       >
                         <div className="text-primary-9 text-lg font-bold">{o.title}</div>
@@ -563,6 +602,7 @@ if (isSuccess) {
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">New Record JSON</h2>
               <button
+                type="button"
                 onClick={() => setShowConfig(false)}
                 className="text-2xl text-gray-500 hover:text-gray-700"
               >
@@ -576,6 +616,7 @@ if (isSuccess) {
 
             <div className="mt-4 flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setShowConfig(false)}
                 className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
               >
