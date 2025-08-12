@@ -1,7 +1,8 @@
 import { atomFamily } from 'jotai/utils';
 import { atom } from 'jotai';
-
 import isNil from 'lodash/isNil';
+import find from 'lodash/find';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
   getBrainAtlases,
@@ -14,6 +15,9 @@ import { env } from '@/env';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
 const defaultAtlasName = 'BlueBrain Atlas';
+const glbFormat = 'model/gltf-binary';
+const objFormat = 'application/obj';
+
 export const brainAtlasAtom = atom(async () => {
   const { data, error } = await tryCatch(
     getBrainAtlases({
@@ -34,11 +38,17 @@ async function resolveBrainRegionAtlasMesh({
   const { data: atlasRegions, error: atlasError } = await tryCatch(
     getBrainAtlasRegion({ atlasId, atlasRegionId })
   );
+
   if (atlasError)
     throw Error(
       `Unable to retrieve data for brain region id "${atlasRegionId}" in atlas "${atlasId}`
     );
-  const atlasAssetId = atlasRegions.assets.at(0)?.id;
+
+  const atlasRegionAsset =
+    find(atlasRegions.assets, { content_type: glbFormat }) ||
+    find(atlasRegions.assets, { content_type: objFormat });
+
+  const atlasAssetId = atlasRegionAsset?.id;
   if (isNil(atlasAssetId))
     throw Error(`No mesh data available for brain region ID "${atlasRegionId}`);
 
