@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { atom, useAtom } from 'jotai';
 import { InputNumber, Input, Select, Button } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { isNil } from 'lodash';
 
 import { JSONSchema } from '../types';
 import { isPlainObject } from './utils';
@@ -61,7 +62,7 @@ const MTYPE_CLASSES = [
 
 // Helper function to check if a field value is considered "empty" or invalid
 const isEmptyValue = (value: ConfigValue): boolean => {
-  if (value === null || value === undefined || value === '') return true;
+  if (isNil(value) || value === '') return true;
   if (Array.isArray(value) && value.length === 0) return true;
   if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) return true;
   return false;
@@ -96,7 +97,7 @@ export function JSONSchemaForm({
   onAddReferenceClick,
   nodeId,
   currentCategory,
-  onValidationChange, // New prop to communicate validation state to parent
+  onValidationChange,
 }: {
   disabled: boolean;
   config: Config;
@@ -208,12 +209,7 @@ export function JSONSchemaForm({
       initial[atlasIdKey] = 'e3e70682-c209-4cac-a29f-6fbed82c07cd';
     }
 
-    console.log('Initial state for morphology:', initial);
-    setState((prev) => {
-      const newState = { ...initial, ...prev };
-      console.log('Updated state for morphology:', newState);
-      return newState;
-    });
+    setState((prev) => ({ ...initial, ...prev }));
   }, [stateAtom, setState, schema.properties, nodeId, currentCategory]);
 
   // Helper function to mark field as touched
@@ -326,9 +322,9 @@ export function JSONSchemaForm({
         const parts = value.split(' ');
         if (parts.length !== 3) return false;
         const [day, month, year] = parts;
-        const dayNum = parseInt(day);
-        const monthNum = parseInt(month);
-        const yearNum = parseInt(year);
+        const dayNum = parseInt(day, 10);
+        const monthNum = parseInt(month, 10);
+        const yearNum = parseInt(year, 10);
         return (
           dayNum >= 1 &&
           dayNum <= 31 &&
@@ -406,12 +402,7 @@ export function JSONSchemaForm({
           <Select
             {...commonInputProps}
             onChange={(newV) => {
-              console.log(`Updating strain_id to: ${newV}`);
-              setState((prev) => {
-                const newState = { ...prev, [k]: newV };
-                console.log('New state after strain_id update:', newState);
-                return newState;
-              });
+              setState((prev) => ({ ...prev, [k]: newV }));
               markFieldTouched(k);
             }}
             value={state[k]}
@@ -424,7 +415,6 @@ export function JSONSchemaForm({
     }
 
     if (isAgePeriodField) {
-      console.log('Rendering age_period field:', { key: k, schema: v, resolved: obj });
       if (obj.enum) {
         return (
           <div className="w-full">
@@ -445,7 +435,6 @@ export function JSONSchemaForm({
           </div>
         );
       }
-      console.warn('No enum found for age_period:', obj);
       return (
         <div className="w-full">
           <Input
@@ -468,12 +457,12 @@ export function JSONSchemaForm({
             <div className="flex flex-wrap gap-3">
               {Array.isArray(state[k]) &&
                 state[k].map((e, i) => (
-                  <div key={i} className="flex gap-1">
+                  <div key={`${e}-${i}`} className="flex gap-1">
                     {e}{' '}
                     {!disabled && (
                       <CloseCircleOutlined
                         onClick={() => {
-                          const newElements = [...state[k]];
+                          const newElements = [...(Array.isArray(state[k]) ? state[k] : [])];
                           newElements.splice(i, 1);
                           setState({ ...state, [k]: newElements });
                           markFieldTouched(k);
@@ -659,7 +648,7 @@ export function JSONSchemaForm({
               {isPlainObject(state[k]) &&
                 Array.isArray(state[k].elements) &&
                 state[k].elements.map((e, i) => (
-                  <div key={i} className="flex gap-1">
+                  <div key={`${e}-${i}`} className="flex gap-1">
                     {e}{' '}
                     {!disabled && (
                       <CloseCircleOutlined
@@ -672,13 +661,14 @@ export function JSONSchemaForm({
                             return;
                           }
 
-                          state[k].elements.splice(i, 1);
+                          const newElements = [...state[k].elements];
+                          newElements.splice(i, 1);
                           setState({
                             ...state,
                             [k]: {
                               type: 'NamedTuple',
                               name: 'example_id_neuron_set',
-                              elements: [...state[k].elements],
+                              elements: newElements,
                             },
                           });
                           markFieldTouched(k);
@@ -704,7 +694,7 @@ export function JSONSchemaForm({
                     setNewElement({ ...newElement, [k]: newV });
                   }}
                 />
-                {newElement[k] !== null && (
+                {!isNil(newElement[k]) && (
                   <CheckCircleOutlined
                     className="text-primary-8"
                     onClick={() => {
@@ -803,7 +793,6 @@ export function JSONSchemaForm({
       );
     }
 
-    console.warn(`Unhandled schema type for key: ${k}`, obj);
     return (
       <div className="w-full">
         <Input
@@ -819,10 +808,6 @@ export function JSONSchemaForm({
     );
   }
 
-  console.log('Rendering JSONSchemaForm with config:', config);
-  console.log('Current state:', state);
-  console.log('Validation errors:', validationErrors);
-
   return (
     <div className="flex flex-col gap-2">
       <div className="text-lg text-gray-500 uppercase">{schema.title}</div>
@@ -836,7 +821,7 @@ export function JSONSchemaForm({
           </div>
           <ul className="list-inside list-disc text-sm text-red-700">
             {validationErrors.map((error, index) => (
-              <li key={index}>{error}</li>
+              <li key={error}>{error}</li>
             ))}
           </ul>
         </div>
@@ -861,18 +846,6 @@ export function JSONSchemaForm({
                 normalizedKey === 'licenseid' || normalizedKey === 'license_id';
               const isMtypeClassIdField = normalizedKey === 'mtypeclassid';
 
-              if (currentCategory === 'subject' && normalizedKey === 'ageperiod') {
-                console.log('Age period field:', {
-                  key: k,
-                  schema: v,
-                  title: v.title,
-                  resolved: {
-                    ...v,
-                    ...v.anyOf?.find((subv) => subv.type !== 'array' && subv.type !== 'null'),
-                  },
-                });
-              }
-
               return (
                 <div key={k}>
                   <div className="flex items-end gap-3">
@@ -888,7 +861,7 @@ export function JSONSchemaForm({
                         : isAgePeriodField
                           ? 'AGE PERIOD'
                           : isLicenseIdField
-                            ? 'LICENSE' // New condition for license title
+                            ? 'LICENSE'
                             : isMtypeClassIdField
                               ? 'MTYPE CLASS'
                               : v.title || k}

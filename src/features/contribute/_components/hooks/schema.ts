@@ -10,7 +10,7 @@ import { isPlainObject, isAtom } from '../utils';
 import { assertErrorMessage } from '@/util/utils';
 
 export function useObioneJsonSchema(
-  circuitId: string,
+  
   notification: NotificationInstance,
   setSchema: React.Dispatch<React.SetStateAction<JSONSchema | null>>,
   setAtomsMap: (atomsMap: AtomsMap) => void,
@@ -66,13 +66,6 @@ export function useObioneJsonSchema(
                   if (subkey === 'type') initial[subkey] = subValue.const ?? null;
                   else initial[subkey] = subValue.default ?? null;
                 });
-
-              if (k === 'initialize') {
-                initial.circuit = {
-                  type: 'CircuitFromID',
-                  id_str: circuitId,
-                };
-              }
 
               map[k] = atom<Record<string, ConfigValue>>(initial);
             } else map[k] = {};
