@@ -1,12 +1,10 @@
-import { Suspense } from 'react';
+import { ExploreLayout, ExploreInnerLayout } from '@/ui/layouts/explore-layout';
 
-import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
-import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
-
-import { AtlasViewer } from '@/features/brain-atlas-viewer';
-import { ExploreLayout } from '@/ui/layouts/explore-layout';
+import { ExploreMenu } from '@/ui/segments/explore/left-menu';
 import { ExploreHeader } from '@/ui/segments/explore/header';
+
 import { resolveDataKey } from '@/utils/key-builder';
+import { Atlas } from '@/ui/segments/explore/atlas';
 import { Card } from '@/ui/molecules/card';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -20,18 +18,20 @@ export default async function Page({
   return (
     <ExploreLayout>
       <ExploreHeader />
-      <div className="h-full max-h-[calc(100vh-10.7rem)] w-full px-3 [grid-area:aside]">
-        <Card borderless className="h-full w-full py-0">
-          <Suspense fallback={<TreeSkeleton />}>
-            <BrainRegionHierarchy dataKey={dataKey} />
-          </Suspense>
-        </Card>
-      </div>
-      <div className="h-full w-full [grid-area:main]">
-        <div id="3d-area" className="3d bg-primary-9 relative h-full w-full rounded-2xl p-1">
-          <AtlasViewer dataKey={dataKey} />
+      <ExploreInnerLayout>
+        <div
+          id="explore-left-menu"
+          data-testid="explore-left-menu"
+          className="h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full overflow-hidden [grid-area:aside]"
+        >
+          <Card borderless className="h-full w-full gap-0 bg-white py-0 shadow-lg">
+            <ExploreMenu dataKey={dataKey} />
+          </Card>
         </div>
-      </div>
+        <div className="h-full max-h-[calc(100vh-11.8rem)] w-full rounded-2xl [grid-area:body]">
+          <Atlas dataKey={dataKey} />
+        </div>
+      </ExploreInnerLayout>
     </ExploreLayout>
   );
 }

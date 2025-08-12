@@ -11,7 +11,6 @@ import { cn } from '@/utils/css-class';
 const ExploreSections = {
   AllPublic: 'all-public',
   Project: 'project',
-  Bookmarks: 'bookmarks',
 } as const;
 
 type ExploreSectionsKeys = (typeof ExploreSections)[keyof typeof ExploreSections];
@@ -29,11 +28,6 @@ const tabsConfigItems: Array<{
   {
     key: ExploreSections.Project,
     title: 'Project',
-    position: 'middle',
-  },
-  {
-    key: ExploreSections.Bookmarks,
-    title: 'Bookmarks',
     position: 'last',
   },
 ];
@@ -57,7 +51,7 @@ function ExploreTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
+        className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-2xl', {
           'h-12': breakpoint === 'xl',
         })}
       >
@@ -84,8 +78,20 @@ export function ExploreHeader() {
 
   return (
     <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
-      <div className="max-w-1/2">
+      <div className="flex max-w-1/2 items-center justify-center gap-2">
         <ExploreTabs />
+        <Button
+          rounded
+          size="lg"
+          variant="outline"
+          className={cn(
+            'inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap shadow-2xl transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+            'hover:bg-neutral-1 hover:text-primary-8 h-10 border-none px-14! py-3 text-base select-none',
+            { 'h-12': breakpoint === 'xl' }
+          )}
+        >
+          Bookmarks
+        </Button>
       </div>
       <div className="max-w-1/2">
         <Button

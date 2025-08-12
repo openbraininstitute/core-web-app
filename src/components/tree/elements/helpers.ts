@@ -117,14 +117,59 @@ export function scrollToNode<TNode extends TTreeNode>(
   if (!node || typeof document === 'undefined') return;
 
   const element = document.querySelector(`[data-node-id="${node.id}"]`);
-  if (element) {
-    setTimeout(() => {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block,
-      });
-    }, 50);
-  }
+  if (!element) return;
+
+  const findScrollableAncestor = (el: Element | null): HTMLElement | null => {
+    let current: HTMLElement | null = el as HTMLElement | null;
+    while (current && current.parentElement) {
+      const parent = current.parentElement as HTMLElement;
+      const style = window.getComputedStyle(parent);
+      const overflowY = style.overflowY || style.overflow;
+      const isScrollable = /auto|scroll/i.test(overflowY);
+      if (isScrollable && parent.scrollHeight > parent.clientHeight) {
+        return parent;
+      }
+      current = parent;
+    }
+    // fallback to document scrolling element
+    return (document.scrollingElement || document.documentElement) as HTMLElement;
+  };
+
+  // delay to allow DOM (expansions) to settle
+  window.setTimeout(() => {
+    const container = findScrollableAncestor(element);
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+
+    // current scroll position of the container
+    const currentTop = container.scrollTop;
+    const offsetTop = elementRect.top - containerRect.top + currentTop;
+
+    let targetScrollTop = offsetTop;
+    if (block === 'center') {
+      targetScrollTop = offsetTop - container.clientHeight / 2 + elementRect.height / 2;
+    } else if (block === 'start') {
+      targetScrollTop = offsetTop;
+    } else if (block === 'end') {
+      targetScrollTop = offsetTop - container.clientHeight + elementRect.height;
+    } else if (block === 'nearest') {
+      // of already in view, do nothing; otherwise choose the closer edge
+      const inView =
+        elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+      if (!inView) {
+        const distanceToTop = Math.abs(elementRect.top - containerRect.top);
+        const distanceToBottom = Math.abs(elementRect.bottom - containerRect.bottom);
+        if (distanceToTop < distanceToBottom) targetScrollTop = offsetTop;
+        else targetScrollTop = offsetTop - container.clientHeight + elementRect.height;
+      } else {
+        return;
+      }
+    }
+
+    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+  }, 50);
 }
 
 /**
@@ -134,6 +179,7 @@ export function scrollToNode<TNode extends TTreeNode>(
  * @param obj - The object to process. If `null`, the function returns `null`.
  * @param field - The key name to be renamed throughout the object.
  * @param newKey - The new key name to replace the old key.
+ * @param keepOriginal - Whether to keep the original key alongside the new key (default: false).
  * @returns A new object with the specified key renamed at all levels, or `null` if the input is `null`.
  *
  * @example
@@ -141,26 +187,44 @@ export function scrollToNode<TNode extends TTreeNode>(
  * const obj = { a: 1, b: { a: 2 }, c: [{ a: 3 }] };
  * const result = renameKeyDeep(obj, 'a', 'x');
  * // result: { x: 1, b: { x: 2 }, c: [{ x: 3 }] }
+ *
+ * const resultWithOriginal = renameKeyDeep(obj, 'a', 'x', true);
+ * // result: { a: 1, x: 1, b: { a: 2, x: 2 }, c: [{ a: 3, x: 3 }] }
  * ```
  */
 export function renameKeyDeep<T extends Record<string, any>>(
   obj: T | null,
   field: string,
-  newKey: string
+  newKey: string,
+  keepOriginal: boolean = false
 ): T | null {
   if (!obj) return null;
 
   return transform(obj, (result, value, key) => {
     if (!result) return;
 
-    const sanitizedField = key === field ? newKey : key;
     const dic = result as Record<string, any>;
+
+    // Process the value recursively if it's an object or array
+    let processedValue: any;
     if (isArray(value)) {
-      dic[sanitizedField] = value.map((item) => renameKeyDeep(item, field, newKey));
+      processedValue = value.map((item) => renameKeyDeep(item, field, newKey, keepOriginal));
     } else if (isObject(value)) {
-      dic[sanitizedField] = renameKeyDeep(value, field, newKey);
+      processedValue = renameKeyDeep(value, field, newKey, keepOriginal);
     } else {
-      dic[sanitizedField] = value;
+      processedValue = value;
+    }
+
+    if (key === field) {
+      // set the new key
+      dic[newKey] = processedValue;
+      // optionally keep the original key
+      if (keepOriginal) {
+        dic[key] = processedValue;
+      }
+    } else {
+      // key doesn't match, set it as-is
+      dic[key] = processedValue;
     }
   });
 }

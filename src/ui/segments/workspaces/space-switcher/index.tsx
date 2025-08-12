@@ -181,7 +181,12 @@ export function SpaceSwitcher({ className }: Props) {
     : 'Select project';
 
   useWorkspaceConfigurationClickEvent((event) => {
-    setBoardModalOpen(event.detail.on);
+    if (isExpanded && event.detail.on) setBoardModalOpen(event.detail.on);
+    else if (isExpanded && !event.detail.on) {
+      setBoardModalOpen(event.detail.on);
+      // TODO: ask for right behavior needed either to close the space switcher or to keep it open
+      setIsExpanded(false);
+    }
   });
 
   const onProClick = () => {
