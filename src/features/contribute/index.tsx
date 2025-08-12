@@ -1,5 +1,4 @@
 // index.tsx
-
 'use client';
 
 import {
@@ -9,20 +8,9 @@ import {
   CheckCircleFilled,
 } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Progress } from 'antd';
-import { match } from 'ts-pattern';
-import {
-  simExecRemoteStatusMapAtomFamily,
-  simExecStatusMapAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-} from './_components/atoms';
-import CircuitPreview from './_components/circuit-preview';
+import { atom } from 'jotai';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
-import { FileViewer } from './_components/file-viewer';
-import { useCircuit } from './_components/hooks/circuit';
 import { useConfigAtom } from './_components/hooks/config-atom';
 import {
   isRootCategory,
@@ -30,23 +18,14 @@ import {
   useObioneJsonConfigurationSchema,
 } from './_components/hooks/schema';
 import { Section } from './_components/section';
-import TabsSelector from './_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
-import { AtomsMap, JSONSchema, TabType } from './types';
+import { AtomsMap, JSONSchema } from './types';
 import { resolveDataKey } from '@/utils/key-builder';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
-import { ButtonCopyId } from '@/features/details-view/button-copy-id';
-import { useLastTruthyValue } from '@/hooks/hooks';
-import { messages } from '@/i18n/en/simulation';
-import { runSimulation } from '@/services/small-scale-simulator/circuit';
-import { MessageType } from '@/services/small-scale-simulator/types';
-import { assertErrorMessage, classNames } from '@/util/utils';
-import { getErrorMessage } from '@/utils/error';
+import { classNames } from '@/util/utils';
 import styles from './small-microcircuit.module.css';
 
 export default function ContributeMorphologyConfiguration({
@@ -65,7 +44,6 @@ export default function ContributeMorphologyConfiguration({
   if (!!initialCampaignId !== !!initialConfig)
     throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
 
-  const params = useParams<WorkspaceContext>();
   const { node } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
@@ -81,7 +59,7 @@ export default function ContributeMorphologyConfiguration({
   const [fileStatus, setFileStatus] = useState<{
     message?: string;
   }>({});
-  const [newJsonPayload, setNewJsonPayload] = useState<any>(null);
+  const [newJsonPayload, setNewJsonPayload] = useState<unknown>(null);
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const initialConfigValidated = useRef(false);
@@ -138,19 +116,15 @@ export default function ContributeMorphologyConfiguration({
 
   useObioneJsonConfigurationSchema(circuitId, notification, setSchema, setAtomsMap);
 
-  const hasSuccessfulUpload = Object.values(fileStatus).some(
-    (status) => status?.status === 'success'
-  );
-
   // Update the submit button condition
   const canSubmit =
     !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
 
   // Show success page if upload was successful
-  if (isSuccess) {
+if (isSuccess) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
-        <div className="mx-auto w-full max-w-md text-center">
+        <div className="text-center w-full max-w-md mx-auto">
           <div className="mb-4 text-4xl font-bold text-green-600">
             ✓ Morphology created successfully
           </div>

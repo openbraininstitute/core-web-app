@@ -23,40 +23,40 @@ export type Config = Record<string, Object | string>;
 
 // Updated structure for MTYPE classification
 const MTYPE_CLASSES = [
-  { mtype_pref_label: 'L23_NBC', mtype_id: '6605787b-ba14-43fd-a954-de9cff4b15a0' },
-  { mtype_pref_label: 'L23_NGC', mtype_id: 'dd16dca0-e567-416b-b8b7-f8fbcaa05af0' },
-  { mtype_pref_label: 'L23_PC', mtype_id: '0791edc9-7ad4-4a94-a4a5-feab9b690d7e' },
-  { mtype_pref_label: 'L23_PTPC', mtype_id: '52ea242f-6591-425a-8eae-962fa0b4dfe0' },
-  { mtype_pref_label: 'L23_SBC', mtype_id: 'fbb8b577-92f4-4c93-b355-0982ef5a3c7c' },
-  { mtype_pref_label: 'L23_STPC', mtype_id: '93be8237-9861-4870-9977-ff1cf9e7462c' },
-  { mtype_pref_label: 'L2_ChC', mtype_id: '91ba3deb-1139-4bc6-a12f-6a64a0ed0e92' },
-  { mtype_pref_label: 'L2_IPC', mtype_id: 'e55f12e1-807c-42f6-ba98-91d6d30c57d7' },
-  { mtype_pref_label: 'L2_MC', mtype_id: 'ea51f2c8-95fc-4940-a400-c37a3ff2d9eb' },
-  { mtype_pref_label: 'L2_PC', mtype_id: 'dd73956b-423e-42c5-87d9-9e2cc84356b9' },
-  { mtype_pref_label: 'L2_TPC', mtype_id: '7abf03d5-30b0-41ae-a02b-1f4e26c243a8' },
-  { mtype_pref_label: 'L2_TPC:A', mtype_id: '9b04acb1-4737-4088-8d22-0658414bdda1' },
-  { mtype_pref_label: 'L2_TPC:B', mtype_id: '4b6862b9-c438-4dfc-a2e6-1ad4d7a00eda' },
-  { mtype_pref_label: 'L3_MC', mtype_id: '52578494-b41c-499b-9717-5d11f4b2f068' },
-  { mtype_pref_label: 'L3_PC', mtype_id: '87fec7dd-7a2f-400a-aee0-94d1946cf1ab' },
-  { mtype_pref_label: 'L3_TPC', mtype_id: '229c31f1-a6ec-4d8c-85d3-d8175ffde109' },
-  { mtype_pref_label: 'L3_TPC:A', mtype_id: 'dd346e90-7bca-4976-bf9a-303b6a94b339' },
-  { mtype_pref_label: 'L3_TPC:B', mtype_id: 'a71d226c-2c56-40ee-a4be-9726fc430932' },
-  { mtype_pref_label: 'L3_TPC:C', mtype_id: 'd9b7bd4d-cec9-4fec-a448-79320de89f2a' },
-  { mtype_pref_label: 'L4_BP', mtype_id: 'a55f6ce7-068a-4c5e-a883-de5f4304612e' },
-  { mtype_pref_label: 'L4_BTC', mtype_id: '8315d249-6678-4d55-b581-3b6f9eb48e86' },
-  { mtype_pref_label: 'L4_ChC', mtype_id: '0e4f3036-0d14-4fd9-b7a8-87f5e90a9fa6' },
-  { mtype_pref_label: 'L4_DBC', mtype_id: '8de61c06-31e8-4483-bd98-608bc874b369' },
-  { mtype_pref_label: 'L4_LBC', mtype_id: 'bb875a91-4ae5-4f6f-b050-5ad952e9cd6c' },
-  { mtype_pref_label: 'L4_MC', mtype_id: '0bdf029e-a55a-444c-a7c9-9d0ff51239a5' },
-  { mtype_pref_label: 'L4_NBC', mtype_id: '72673af9-2f2b-4a9a-95dc-552777ab63b9' },
-  { mtype_pref_label: 'L4_NGC', mtype_id: '41f41550-5e0e-4de7-b52d-62110c338a27' },
-  { mtype_pref_label: 'L4_PC', mtype_id: 'ad5769c6-7e86-4433-8f34-9efcb4f0d182' },
-  { mtype_pref_label: 'L4_SBC', mtype_id: '43a7d86b-71c5-4a10-be62-ef6cf95ca694' },
-  { mtype_pref_label: 'L4_SSC', mtype_id: '400a55f7-e162-4fd1-80a0-4f2facea7cec' },
-  { mtype_pref_label: 'L4_TPC', mtype_id: '02e13718-5227-4c28-b838-04dd0c2c67f2' },
-  { mtype_pref_label: 'L4_UPC', mtype_id: '2ef7e0b5-39e4-441b-a72a-c7186afa7f5c' },
-  { mtype_pref_label: 'L56_PC', mtype_id: '629d6d6f-93f9-43d8-8a99-277740fd8f22' },
-  { mtype_pref_label: 'L5_BP', mtype_id: '7b16c860-ae76-4ddf-b093-4e28620b3712' },
+  {"mtype_pref_label":"L23_NBC","mtype_id":"6605787b-ba14-43fd-a954-de9cff4b15a0"},
+  {"mtype_pref_label":"L23_NGC","mtype_id":"dd16dca0-e567-416b-b8b7-f8fbcaa05af0"},
+  {"mtype_pref_label":"L23_PC","mtype_id":"0791edc9-7ad4-4a94-a4a5-feab9b690d7e"},
+  {"mtype_pref_label":"L23_PTPC","mtype_id":"52ea242f-6591-425a-8eae-962fa0b4dfe0"},
+  {"mtype_pref_label":"L23_SBC","mtype_id":"fbb8b577-92f4-4c93-b355-0982ef5a3c7c"},
+  {"mtype_pref_label":"L23_STPC","mtype_id":"93be8237-9861-4870-9977-ff1cf9e7462c"},
+  {"mtype_pref_label":"L2_ChC","mtype_id":"91ba3deb-1139-4bc6-a12f-6a64a0ed0e92"},
+  {"mtype_pref_label":"L2_IPC","mtype_id":"e55f12e1-807c-42f6-ba98-91d6d30c57d7"},
+  {"mtype_pref_label":"L2_MC","mtype_id":"ea51f2c8-95fc-4940-a400-c37a3ff2d9eb"},
+  {"mtype_pref_label":"L2_PC","mtype_id":"dd73956b-423e-42c5-87d9-9e2cc84356b9"},
+  {"mtype_pref_label":"L2_TPC","mtype_id":"7abf03d5-30b0-41ae-a02b-1f4e26c243a8"},
+  {"mtype_pref_label":"L2_TPC:A","mtype_id":"9b04acb1-4737-4088-8d22-0658414bdda1"},
+  {"mtype_pref_label":"L2_TPC:B","mtype_id":"4b6862b9-c438-4dfc-a2e6-1ad4d7a00eda"},
+  {"mtype_pref_label":"L3_MC","mtype_id":"52578494-b41c-499b-9717-5d11f4b2f068"},
+  {"mtype_pref_label":"L3_PC","mtype_id":"87fec7dd-7a2f-400a-aee0-94d1946cf1ab"},
+  {"mtype_pref_label":"L3_TPC","mtype_id":"229c31f1-a6ec-4d8c-85d3-d8175ffde109"},
+  {"mtype_pref_label":"L3_TPC:A","mtype_id":"dd346e90-7bca-4976-bf9a-303b6a94b339"},
+  {"mtype_pref_label":"L3_TPC:B","mtype_id":"a71d226c-2c56-40ee-a4be-9726fc430932"},
+  {"mtype_pref_label":"L3_TPC:C","mtype_id":"d9b7bd4d-cec9-4fec-a448-79320de89f2a"},
+  {"mtype_pref_label":"L4_BP","mtype_id":"a55f6ce7-068a-4c5e-a883-de5f4304612e"},
+  {"mtype_pref_label":"L4_BTC","mtype_id":"8315d249-6678-4d55-b581-3b6f9eb48e86"},
+  {"mtype_pref_label":"L4_ChC","mtype_id":"0e4f3036-0d14-4fd9-b7a8-87f5e90a9fa6"},
+  {"mtype_pref_label":"L4_DBC","mtype_id":"8de61c06-31e8-4483-bd98-608bc874b369"},
+  {"mtype_pref_label":"L4_LBC","mtype_id":"bb875a91-4ae5-4f6f-b050-5ad952e9cd6c"},
+  {"mtype_pref_label":"L4_MC","mtype_id":"0bdf029e-a55a-444c-a7c9-9d0ff51239a5"},
+  {"mtype_pref_label":"L4_NBC","mtype_id":"72673af9-2f2b-4a9a-95dc-552777ab63b9"},
+  {"mtype_pref_label":"L4_NGC","mtype_id":"41f41550-5e0e-4de7-b52d-62110c338a27"},
+  {"mtype_pref_label":"L4_PC","mtype_id":"ad5769c6-7e86-4433-8f34-9efcb4f0d182"},
+  {"mtype_pref_label":"L4_SBC","mtype_id":"43a7d86b-71c5-4a10-be62-ef6cf95ca694"},
+  {"mtype_pref_label":"L4_SSC","mtype_id":"400a55f7-e162-4fd1-80a0-4f2facea7cec"},
+  {"mtype_pref_label":"L4_TPC","mtype_id":"02e13718-5227-4c28-b838-04dd0c2c67f2"},
+  {"mtype_pref_label":"L4_UPC","mtype_id":"2ef7e0b5-39e4-441b-a72a-c7186afa7f5c"},
+  {"mtype_pref_label":"L56_PC","mtype_id":"629d6d6f-93f9-43d8-8a99-277740fd8f22"},
+  {"mtype_pref_label":"L5_BP","mtype_id":"7b16c860-ae76-4ddf-b093-4e28620b3712"}
 ];
 
 // Helper function to check if a field value is considered "empty" or invalid
@@ -243,7 +243,7 @@ export function JSONSchemaForm({
       ...v.anyOf?.find((subv) => subv.type !== 'array' && subv.type !== 'null'),
     };
     const normalizedKey = k.toLowerCase().replace(/[\s_]/g, '');
-    const isRequired = schema.required?.includes(k);
+
     const fieldError = getFieldErrorMessage(k);
     const hasError = hasFieldError(k);
 
@@ -564,18 +564,18 @@ export function JSONSchemaForm({
         </div>
       );
     }
-
+    
     // New condition for 'mtype class id'
     if (isMtypeClassIdField) {
       const options = MTYPE_CLASSES.map((mtype) => ({
         label: mtype.mtype_pref_label,
         value: mtype.mtype_id,
       }));
-
+    
       const currentMtypeLabel = MTYPE_CLASSES.find(
         (mtype) => mtype.mtype_id === state[k]
       )?.mtype_pref_label;
-
+    
       return (
         <div className="w-full">
           <Select
@@ -602,7 +602,7 @@ export function JSONSchemaForm({
       const referenceConfig = config[referenceKey];
       if (!isPlainObject(referenceConfig)) return null;
 
-      const referees = Object.entries(referenceConfig).filter(([_, val]) => {
+      const referees = Object.entries(referenceConfig).filter(([, val]) => {
         return isPlainObject(val);
       });
 
