@@ -27,7 +27,7 @@ PillTabsList.displayName = TabsPrimitive.List.displayName;
 const PillTabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> & {
-    position?: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'middle' | 'last';
+    position?: 'first' | 'middle' | 'last';
   }
 >(({ className, position, ...props }, ref) => (
   <TabsPrimitive.Trigger

@@ -20,7 +20,7 @@ type HelpSectionsKeys = (typeof HelpSections)[keyof typeof HelpSections];
 const tabsConfigItems: Array<{
   key: HelpSectionsKeys;
   title: string;
-  position: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'last';
+  position: 'first' | 'middle' | 'last';
 }> = [
   {
     key: HelpSections.Overview,
@@ -30,27 +30,27 @@ const tabsConfigItems: Array<{
   {
     key: HelpSections.Tutorials,
     title: 'Tutorials',
-    position: 'second',
+    position: 'middle',
   },
   {
     key: HelpSections.Glossary,
     title: 'Glossary',
-    position: 'third',
+    position: 'middle',
   },
   {
     key: HelpSections.Guides,
     title: 'Guides',
-    position: 'fourth',
+    position: 'middle',
   },
   {
     key: HelpSections.Features,
     title: 'Features',
-    position: 'fifth',
+    position: 'middle',
   },
   {
     key: HelpSections.AIChatTools,
     title: 'AI Chat Tools',
-    position: 'sixth',
+    position: 'middle',
   },
   {
     key: HelpSections.About,
@@ -78,7 +78,7 @@ function HelpTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
+        className={cn('grid h-10 w-full grid-cols-7 bg-white p-0 shadow-2xl', {
           'h-12': breakpoint === 'xl',
         })}
       >
