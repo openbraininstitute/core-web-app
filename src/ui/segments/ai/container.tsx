@@ -65,6 +65,7 @@ export function Container(): JSX.Element {
 
   return (
     <motion.div
+      id="workspace-ai"
       className={cn(
         'text-white [grid-area:ai]',
         { 'text-primary-9 mx-3 bg-white shadow-lg': isExpanded },

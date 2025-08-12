@@ -32,6 +32,7 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
     </OnboardingProvider>
   );
 }
+
 export function OnboardingDiscoverCard({
   step,
   currentStep,
@@ -94,7 +95,16 @@ export function OnboardingDiscoverCard({
           </Button>
         )}
       </div>
-      <span className="flex items-center justify-center text-white">{arrow}</span>
+      <span
+        className={cn(
+          'flex items-center justify-center text-white [&_svg]:-top-[19px]!',
+          { '[&_svg]:left-[20px]!': step.side === 'bottom-left' },
+          { '[&_svg]:right-[20px]!': step.side === 'bottom-right' },
+          { '[&_svg]:top-1/2! [&_svg]:-right-[20px]!': step.side === 'left' }
+        )}
+      >
+        {arrow}
+      </span>
     </Card>
   );
 }
@@ -192,6 +202,21 @@ export const OnboardingDiscoverSteps: Tour[] = [
         ),
         selector: '#workspace-help',
         side: 'bottom-right',
+        showControls: true,
+        pointerPadding: 4,
+        pointerRadius: 25,
+      },
+      {
+        icon: null,
+        title: 'Ai assistant',
+        content: (
+          <>
+            Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
+            lectus elit adipiscing consectetur lectus enim fusce velit netus.
+          </>
+        ),
+        selector: '#workspace-ai',
+        side: 'left',
         showControls: true,
         pointerPadding: 4,
         pointerRadius: 25,
