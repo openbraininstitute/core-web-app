@@ -312,11 +312,15 @@ export default function ContributeMorphologyConfiguration({
                   // --- END: New pre-flight API call ---
 
 
-		  const legacyId = Array.isArray(morphologyConfig.legacy_id)
-  ? morphologyConfig.legacy_id
-  : typeof morphologyConfig.legacy_id === 'string'
-    ? [morphologyConfig.legacy_id]
-    : [];
+	let legacyId;
+
+if (Array.isArray(morphologyConfig.legacy_id)) {
+  legacyId = morphologyConfig.legacy_id;
+} else if (typeof morphologyConfig.legacy_id === 'string') {
+  legacyId = [morphologyConfig.legacy_id];
+} else {
+  legacyId = [];
+}
 
 		const newJson = {
   authorized_public: false,
