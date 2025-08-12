@@ -184,7 +184,7 @@ export default function Configure({ ctx, searchParams }: Props) {
     return;
   }
 
-  const showErrorNotification = (error: any, type: 'validation' | 'http') => {
+  const showErrorNotification = (error: unknown, type: 'validation' | 'http') => {
     let message = messages.DefaultErrorMsg;
     if (type === 'http')
       message =
@@ -256,7 +256,7 @@ export default function Configure({ ctx, searchParams }: Props) {
 
       try {
         await runSingleNeuronAnalysis({ ctx, modelId: data.id });
-      } catch (runAnalysisError) {
+      } catch (_runAnalysisError) {
         const message = messages.RunAnalysisError;
         notification.error({ message, duration: 20 });
       }
