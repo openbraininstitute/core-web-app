@@ -60,8 +60,10 @@ function EntityTypeStats(props: StatsPanelProps) {
   return match(selectedTab)
     .with('experimental-data', () => (
       <>
-        {Object.entries(ExperimentalEntitiesTileTypes).map(([key, value]) => {
+        {Object.entries(ExperimentalEntitiesTileTypes).map(([key, value], index) => {
           const href = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
+
+          const baseHref = `${pathName}/${value?.explore.basePrefix}/${value.slug}`;
           let records = '';
           let isError = false;
 
@@ -74,16 +76,38 @@ function EntityTypeStats(props: StatsPanelProps) {
             isError = !!error || typeof tmpResult === 'string';
           }
 
+          // Find the last occurrence of '/interactive/' and insert '/add/' after it
+          const lastInteractiveIndex = pathName.lastIndexOf('/interactive');
+          let addHref = baseHref;
+          if (lastInteractiveIndex !== -1) {
+            const pathBeforeInteractive = pathName.substring(
+              0,
+              lastInteractiveIndex + '/interactive'.length
+            );
+            const pathAfterInteractive = baseHref.substring(baseHref.indexOf('/experimental')); // Assuming /experimental is always after /interactive
+            addHref = `${pathBeforeInteractive}/add${pathAfterInteractive}`;
+          }
+
           return (
-            <EntityTypeCount
-              isError={isError}
-              key={`count-${key}`}
-              href={href}
-              title={value.title}
-              records={records}
-              type={value.type}
-              isLoading={isLoading}
-            />
+            <div key={`count-container-${key}`} className="flex items-center">
+              <EntityTypeCount
+                isError={isError}
+                key={`count-${key}`}
+                href={baseHref}
+                title={value.title}
+                records={records}
+                type={value.type}
+                isLoading={isLoading}
+              />
+              {index === 0 && (
+                <a
+                  href={addHref} // Use the modified addHref here
+                  className="ml-2 rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                >
+                  add
+                </a>
+              )}
+            </div>
           );
         })}
       </>

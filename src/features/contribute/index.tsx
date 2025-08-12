@@ -1,0 +1,616 @@
+// index.tsx
+
+'use client';
+
+import {
+  LoadingOutlined,
+  RightOutlined,
+  UploadOutlined,
+  CheckCircleFilled,
+} from '@ant-design/icons';
+import Ajv, { AnySchema } from 'ajv';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { Progress } from 'antd';
+import { match } from 'ts-pattern';
+import {
+  simExecRemoteStatusMapAtomFamily,
+  simExecStatusMapAtomFamily,
+  simulationsByCampaignIdAtomFamily,
+} from './_components/atoms';
+import CircuitPreview from './_components/circuit-preview';
+import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
+import { FileViewer } from './_components/file-viewer';
+import { useCircuit } from './_components/hooks/circuit';
+import { useConfigAtom } from './_components/hooks/config-atom';
+import {
+  isRootCategory,
+  resolveKey,
+  useObioneJsonConfigurationSchema,
+} from './_components/hooks/schema';
+import { Section } from './_components/section';
+import TabsSelector from './_components/tabs-selector';
+import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
+import { AtomsMap, JSONSchema, TabType } from './types';
+import { resolveDataKey } from '@/utils/key-builder';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import ApiError from '@/api/error';
+import authFetch from '@/authFetch';
+import { useAppNotification } from '@/components/notification';
+import { ButtonCopyId } from '@/features/details-view/button-copy-id';
+import { useLastTruthyValue } from '@/hooks/hooks';
+import { messages } from '@/i18n/en/simulation';
+import { runSimulation } from '@/services/small-scale-simulator/circuit';
+import { MessageType } from '@/services/small-scale-simulator/types';
+import { assertErrorMessage, classNames } from '@/util/utils';
+import { getErrorMessage } from '@/utils/error';
+import styles from './small-microcircuit.module.css';
+
+export default function ContributeMorphologyConfiguration({
+  circuitId,
+  virtualLabId,
+  projectId,
+  initialCampaignId,
+  initialConfig,
+}: {
+  circuitId: string;
+  virtualLabId: string;
+  projectId: string;
+  initialCampaignId?: string;
+  initialConfig?: Config;
+}) {
+  if (!!initialCampaignId !== !!initialConfig)
+    throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
+
+  const params = useParams<WorkspaceContext>();
+  const { node } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: 'explore', projectId }),
+  });
+
+  const [configTab, setConfigTab] = useState<string>('info');
+  const [editing, setEditing] = useState(true);
+  const [schema, setSchema] = useState<JSONSchema | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileStatus, setFileStatus] = useState<{
+    message?: string;
+  }>({});
+  const [newJsonPayload, setNewJsonPayload] = useState<any>(null);
+  const notification = useAppNotification();
+  const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
+  const initialConfigValidated = useRef(false);
+
+  // Add success state
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Add validation state
+  const [formValidation, setFormValidation] = useState<{
+    isValid: boolean;
+    errors: string[];
+  }>({
+    isValid: true,
+    errors: [],
+  });
+
+  const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
+    (s) => s.properties?.type.const === selectedCategory
+  );
+
+  const handleAddReferenceClick = (referenceTab: string) => {
+    setConfigTab(referenceTab);
+    setEditing(true);
+    setSelectedCategory('');
+  };
+
+  // Handle validation changes from the form
+  const handleValidationChange = (isValid: boolean, errors: string[]) => {
+    setFormValidation({ isValid, errors });
+  };
+
+  const readOnly = initialConfig !== undefined;
+
+  const validate = useMemo(() => {
+    const ajv = new Ajv({ strictSchema: false, allErrors: true });
+    if (!schema) return;
+    return ajv.compile(schema as AnySchema);
+  }, [schema]);
+
+  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
+
+  const config = useConfigAtom(schema, atomsMap, node.id, configTab);
+
+  if (validate && initialConfig && !initialConfigValidated.current) {
+    initialConfigValidated.current = true;
+    validate(initialConfig);
+    if (validate.errors) throw new Error('Invalid Simulation Campaign Configuration');
+  }
+
+  const errors = useMemo(() => {
+    if (validate) validate(config);
+    return validate?.errors;
+  }, [validate, config]);
+
+  useObioneJsonConfigurationSchema(circuitId, notification, setSchema, setAtomsMap);
+
+  const hasSuccessfulUpload = Object.values(fileStatus).some(
+    (status) => status?.status === 'success'
+  );
+
+  // Update the submit button condition
+  const canSubmit =
+    !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
+
+  // Show success page if upload was successful
+  if (isSuccess) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-white">
+        <div className="mx-auto w-full max-w-md text-center">
+          <div className="mb-4 text-4xl font-bold text-green-600">
+            ✓ Morphology created successfully
+          </div>
+          <button
+            onClick={() => setIsSuccess(false)}
+            className="bg-primary-8 hover:bg-primary-9 rounded-full px-6 py-3 text-white transition-colors"
+          >
+            Create Another
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!schema) {
+    return (
+      <div className="flex h-full w-full items-center justify-between">
+        <LoadingOutlined />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
+      <div className="w-full border-t border-gray-200" />
+      <div className={styles.threeColumns}>
+        <div className={styles.scrollable}>
+          <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
+            {/* Show overall form validation status */}
+            {!formValidation.isValid && formValidation.errors.length > 0 && (
+              <div className="mb-4 w-full rounded-md border border-red-200 bg-red-50 p-3">
+                <div className="mb-1 font-medium text-red-800">Required fields missing:</div>
+                <div className="text-sm text-red-700">{formValidation.errors.join(', ')}</div>
+              </div>
+            )}
+
+            <div className="self-start text-gray-500 uppercase">Assets</div>
+            <div
+              className={classNames(
+                'flex h-[50px] min-h-[50px] w-full cursor-pointer items-center justify-between rounded-full border border-gray-200 px-5 py-2 drop-shadow hover:bg-white',
+                configTab === 'assets' ? 'bg-white' : 'bg-gray-50'
+              )}
+              onClick={() => {
+                setConfigTab('assets');
+                setEditing(true);
+                setSelectedCategory('');
+                setSelectedItemIdx(null);
+              }}
+            >
+              <span className="text-primary-9 text-base">Assets</span>
+              <div className="flex gap-1">
+                {selectedFile ? (
+                  <CheckCircleFilled className="text-green-600" />
+                ) : (
+                  <div className="h-4 w-4" /> // Placeholder to maintain spacing
+                )}
+                <RightOutlined className="text-primary-9" />
+              </div>
+            </div>
+            {CATEGORIES.filter((c) => c !== 'Assets').map((c) => {
+              return (
+                <Fragment key={c}>
+                  <div className="self-start text-gray-500 uppercase">{c}</div>
+                  {schema.properties &&
+                    Object.entries(schema.properties)
+                      .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                      .sort((a, b) => {
+                        const order = (k: string) => ORDERING[k]?.order ?? 999;
+                        return order(a[0]) - order(b[0]);
+                      })
+                      .map(([k, v]) => {
+                        return (
+                          <Section
+                            key={k}
+                            k={k}
+                            schema={schema}
+                            sectionSchema={v}
+                            atomsMap={atomsMap}
+                            setAtomsMap={setAtomsMap}
+                            configTab={configTab}
+                            setConfigTab={setConfigTab}
+                            config={config}
+                            campaignId={campaignId}
+                            loading={loading}
+                            errors={errors}
+                            selectedItemIdx={selectedItemIdx}
+                            setSelectedItemIdx={setSelectedItemIdx}
+                            setEditing={setEditing}
+                            setSelectedCategory={setSelectedCategory}
+                            readOnly={readOnly}
+                          />
+                        );
+                      })}
+                </Fragment>
+              );
+            })}
+          </div>
+          {!readOnly && (
+            <button
+              type="button"
+              className={classNames(
+                'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+                !canSubmit
+                  ? 'bg-gray-300 text-gray-500'
+                  : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+              )}
+              onClick={async () => {
+                if (loading) return;
+                if (campaignId) {
+                  setCampaignId('');
+                  setShowConfig(false);
+                  return;
+                }
+
+                try {
+                  setLoading(true);
+
+                  const morphologyData =
+                    Array.isArray(config.morphology) && config.morphology.length > 0
+                      ? config.morphology[0]
+                      : {
+                          brain_region_id: node.id,
+                          species_id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+                        };
+
+                  // --- START: New pre-flight API call to create a subject record ---
+                  const subjectUrl =
+                    'https://staging.openbraininstitute.org/api/entitycore/subject';
+                  const newSubjectItem = {
+                    authorized_public: false,
+                    name: morphologyData.name || 'test',
+                    description: morphologyData.description || 'string',
+                    species_id:
+                      morphologyData.species_id ||
+                      morphologyData.species ||
+                      'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+                    strain_id: morphologyData.strain_id || null,
+                    sex: morphologyData.sex || 'unknown',
+                    brain_region_id:
+                      morphologyData.brain_region_id || morphologyData.brain_region || node.id,
+                    weight: morphologyData.weight || null,
+                    age_value: morphologyData.age_value || null,
+                    age_min: morphologyData.age_min || null,
+                    age_max: morphologyData.age_max || null,
+                    age_period: morphologyData.age_period || null,
+                  };
+
+                  const subjectHeaders = {
+                    accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'virtual-lab-id': virtualLabId || 'bf7d398c-b812-408a-a2ee-098f633f7798',
+                    'project-id': projectId || '100a9a8a-5229-4f3d-aef3-6a4184c59e74',
+                  };
+
+                  const subjectResponse = await authFetch(subjectUrl, {
+                    method: 'POST',
+                    headers: subjectHeaders,
+                    body: JSON.stringify(newSubjectItem),
+                  });
+
+                  if (!subjectResponse.ok) {
+                    const subjectResponseText = await subjectResponse.text();
+                    throw new ApiError({
+                      status: subjectResponse.status,
+                      statusText: subjectResponse.statusText,
+                      message: `Subject creation failed: ${subjectResponseText}`,
+                    });
+                  }
+
+                  const subjectResponseData = await subjectResponse.json();
+                  const subjectId = subjectResponseData.id;
+                  // --- END: New pre-flight API call ---
+
+                  const newJson = {
+                    authorized_public: false,
+                    license_id: null,
+                    name: morphologyData.name || 'test',
+                    description: morphologyData.description || 'string',
+                    location: {
+                      x: 0,
+                      y: 0,
+                      z: 0,
+                    },
+                    legacy_id: Array.isArray(morphologyData.legacy_id)
+                      ? morphologyData.legacy_id
+                      : typeof morphologyData.legacy_id === 'string'
+                        ? [morphologyData.legacy_id]
+                        : [],
+                    species_id:
+                      morphologyData.species_id ||
+                      morphologyData.species ||
+                      'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+                    strain_id: morphologyData.strain_id || null,
+                    brain_region_id:
+                      morphologyData.brain_region_id || morphologyData.brain_region || node.id,
+                    subject_id: subjectId,
+                  };
+
+                  setNewJsonPayload(newJson);
+
+                  const headers = {
+                    accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'virtual-lab-id': virtualLabId || 'bf7d398c-b812-408a-a2ee-098f633f7798',
+                    'project-id': projectId || '100a9a8a-5229-4f3d-aef3-6a4184c59e74',
+                  };
+
+                  // First API call: Submit JSON payload
+                  const jsonResponse = await authFetch(
+                    'https://staging.openbraininstitute.org/api/entitycore/reconstruction-morphology',
+                    {
+                      method: 'POST',
+                      headers,
+                      body: JSON.stringify(newJson),
+                    }
+                  );
+
+                  const jsonResponseText = await jsonResponse.text();
+
+                  if (!jsonResponse.ok) {
+                    throw new ApiError({
+                      status: jsonResponse.status,
+                      statusText: jsonResponse.statusText,
+                      message: jsonResponseText,
+                    });
+                  }
+
+                  const jsonResponseData = JSON.parse(jsonResponseText);
+                  const entityId = jsonResponseData.id;
+
+                  // Second API call: Upload file
+                  if (selectedFile) {
+                    const formData = new FormData();
+                    const mimeType = selectedFile.name.endsWith('.swc')
+                      ? 'application/swc'
+                      : selectedFile.name.endsWith('.asc')
+                        ? 'text/plain'
+                        : selectedFile.name.endsWith('.h5')
+                          ? 'application/x-hdf5'
+                          : 'application/octet-stream';
+                    const fileWithMimeType = new File([selectedFile], selectedFile.name, {
+                      type: mimeType,
+                    });
+                    formData.append('file', fileWithMimeType);
+                    formData.append('label', 'morphology');
+
+                    const fileUploadHeaders = {
+                      'virtual-lab-id': headers['virtual-lab-id'],
+                      'project-id': headers['project-id'],
+                    };
+
+                    const fileResponse = await authFetch(
+                      `https://staging.openbraininstitute.org/api/entitycore/reconstruction-morphology/${entityId}/assets`,
+                      {
+                        method: 'POST',
+                        headers: fileUploadHeaders,
+                        body: formData,
+                      }
+                    );
+
+                    const fileResponseText = await fileResponse.text();
+
+                    if (!fileResponse.ok) {
+                      throw new ApiError({
+                        status: fileResponse.status,
+                        statusText: fileResponse.statusText,
+                        message: fileResponseText,
+                      });
+                    }
+
+                    // Show success page instead of notification
+                    setIsSuccess(true);
+                  } else {
+                    notification.success({
+                      message: 'Record submitted successfully, no file uploaded',
+                    });
+                  }
+
+                  setShowConfig(true);
+                } catch (error) {
+                  console.error('Submission error:', error);
+                  notification.error({
+                    message: 'Failed to submit record',
+                    description:
+                      error instanceof ApiError
+                        ? `${error.message} (Status: ${error.status})`
+                        : String(error),
+                  });
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={!canSubmit}
+              title={
+                !canSubmit
+                  ? `Cannot submit: ${!selectedFile ? 'No file selected. ' : ''}${
+                      !formValidation.isValid ? 'Required fields missing. ' : ''
+                    }${errors?.length ? 'Form validation errors. ' : ''}${
+                      loading ? 'Loading...' : ''
+                    }`.trim()
+                  : 'Submit record'
+              }
+            >
+              <div className="flex justify-between gap-5">
+                {!campaignId ? 'Submit record' : 'New simulation campaign'}
+                {loading && <LoadingOutlined />}
+              </div>
+            </button>
+          )}
+        </div>
+        <div
+          className={classNames(
+            styles.scrollable,
+            'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+          )}
+        >
+          {configTab === 'assets' && editing && (
+            <div className="flex flex-col gap-5 p-5">
+              <div className="text-base font-normal text-gray-900 uppercase">
+                UPLOAD MORPHOLOGY FILE
+              </div>
+              <div className="mt-3 text-base text-gray-700">
+                One reference file should be loaded.
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <label
+                    className={classNames(
+                      'flex items-center justify-center rounded-full px-4 py-2 text-sm',
+                      loading
+                        ? 'bg-gray-300 text-gray-500'
+                        : 'bg-primary-8 hover:bg-primary-9 text-white',
+                      readOnly && 'cursor-not-allowed opacity-50'
+                    )}
+                  >
+                    <UploadOutlined className="mr-2" />
+                    Upload swc, asc, or h5
+                    <input
+                      type="file"
+                      accept=".swc,.asc,.h5"
+                      className="hidden"
+                      disabled={loading || readOnly}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setSelectedFile(file);
+                          setFileStatus({ message: `File selected: ${file.name}` });
+                        } else {
+                          setSelectedFile(null);
+                          setFileStatus({});
+                        }
+                      }}
+                    />
+                  </label>
+                  {fileStatus?.message && (
+                    <span className="text-sm text-gray-600">{fileStatus.message}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {schema.properties &&
+            schema.properties?.[configTab]?.additionalProperties?.anyOf &&
+            !selectedCategory &&
+            editing &&
+            configTab !== 'assets' && (
+              <div className="flex flex-col items-center gap-5">
+                {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
+                  return (
+                    <Fragment key={o.title}>
+                      <div
+                        className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
+                        onClick={() => {
+                          if (isRootCategory(schema, configTab)) return;
+                          setSelectedCategory(o.properties?.type.const ?? '');
+                          const initial: Record<string, ConfigValue> = {};
+                          if (o.properties)
+                            Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                              if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                              else initial[subkey] = subValue.default ?? null;
+                            });
+                          const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                            parseInt(subkey.split('_')[1], 10)
+                          );
+                          itemIndexes.sort((a, b) => a - b);
+                          const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                          setSelectedItemIdx(itemIdx);
+                          setAtomsMap({
+                            ...atomsMap,
+                            [configTab]: {
+                              ...atomsMap[configTab],
+                              [resolveKey(schema, configTab, itemIdx)]:
+                                atom<Record<string, ConfigValue>>(initial),
+                            },
+                          });
+                        }}
+                      >
+                        <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                        <div className="mt-3 text-base text-gray-700">{o.description}</div>
+                      </div>
+                    </Fragment>
+                  );
+                })}
+              </div>
+            )}
+          {schema.properties &&
+            schema.properties?.[configTab] &&
+            editing &&
+            (isRootCategory(schema, configTab) || selectedCatSchema) &&
+            configTab !== 'assets' && (
+              <JSONSchemaForm
+                onAddReferenceClick={handleAddReferenceClick}
+                disabled={!!campaignId || loading || readOnly}
+                config={config}
+                schema={
+                  selectedCatSchema ??
+                  schema.properties[configTab]?.additionalProperties ??
+                  schema.properties[configTab]
+                }
+                stateAtom={
+                  isAtom(atomsMap[configTab])
+                    ? atomsMap[configTab]
+                    : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
+                }
+                nodeId={node.id}
+                currentCategory={configTab}
+                readOnly={readOnly}
+                onValidationChange={handleValidationChange}
+              />
+            )}
+        </div>
+      </div>
+      {showConfig && (
+        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+          <div className="max-h-[80vh] max-w-4xl overflow-auto rounded-lg bg-white p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold">New Record JSON</h2>
+              <button
+                onClick={() => setShowConfig(false)}
+                className="text-2xl text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+
+            <pre className="overflow-auto rounded bg-gray-100 p-4 text-sm">
+              {JSON.stringify(newJsonPayload, null, 2)}
+            </pre>
+
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfig(false)}
+                className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

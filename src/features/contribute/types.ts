@@ -1,0 +1,35 @@
+import { atom } from 'jotai';
+
+import { ConfigValue } from './_components/components';
+import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+
+export type JSONSchema = {
+  type?: 'string' | 'number' | 'integer' | 'object' | 'array' | 'boolean' | 'null';
+  properties?: { [key: string]: JSONSchema };
+  items?: JSONSchema | JSONSchema[];
+  required?: string[];
+  enum?: any[];
+  const?: string;
+  additionalProperties?: JSONSchema;
+  oneOf?: JSONSchema[];
+  anyOf?: JSONSchema[];
+  allOf?: JSONSchema[];
+  not?: JSONSchema;
+  format?: string;
+  title?: string;
+  description?: string;
+  default?: any;
+  examples?: any[];
+  [key: string]: any;
+  singular_name?: string;
+};
+
+export interface AtomsMap {
+  [key: string]:
+    | ReturnType<typeof atom<Record<string, ConfigValue>>>
+    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
+}
+
+export type TabType = 'configuration' | 'simulations';
+
+export type SimExecStatusMap = Map<string, CircuitSimulationExecutionStatus>;
