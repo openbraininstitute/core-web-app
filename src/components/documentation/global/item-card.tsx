@@ -16,7 +16,11 @@ export default function ItemCard({ content }: { content: ContentForGlossaryItem 
         <div>Status: {content.Status || 'N/A'}</div>
       </div>
       <div className={styles.definition}>
-        <PortableText value={content.definition} />
+        {Array.isArray(content.definition) ? (
+          <PortableText value={content.definition} />
+        ) : (
+          <p>{content.definition}</p>
+        )}
       </div>
     </div>
   );

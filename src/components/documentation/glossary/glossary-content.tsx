@@ -24,7 +24,18 @@ export default function GlossaryContent({ content }: { content: ContentForGlossa
       </header>
       {/* <RichContentBloc content={content?.Description || ''} /> */}
       <div className={styles.contentBlock}>
-        <PortableText value={content?.definition ?? []} />
+        {(() => {
+          if (!content?.definition) {
+            return <p>No definition available</p>;
+          }
+          if (Array.isArray(content.definition)) {
+            return <PortableText value={content.definition} />;
+          }
+          if (typeof content.definition === 'string') {
+            return <p>{content.definition}</p>;
+          }
+          return <p>No definition available</p>;
+        })()}
       </div>
     </div>
   );

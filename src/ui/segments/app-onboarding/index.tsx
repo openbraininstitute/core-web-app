@@ -4,7 +4,7 @@ import { RightOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import Image from 'next/image';
 
-import { VirtualLabStep } from '@/ui/segments/app-onboarding/virtual-lab-step';
+import { VirtualLabSetup } from '@/ui/segments/app-onboarding/virtual-lab-step';
 import { ProjectStep } from '@/ui/segments/app-onboarding/project-step';
 import Logo from '@/components/logo/as-svg';
 
@@ -20,7 +20,7 @@ export function OnboardingFlow({
     virtualLabName: string;
   } | null;
 }) {
-  const [flow, setFlowData] = useState<{
+  const [flow] = useState<{
     step: Step;
     meta: {
       virtualLabId: string;
@@ -30,8 +30,6 @@ export function OnboardingFlow({
     step: flowStep ?? 'virtual-lab',
     meta,
   });
-
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-50">
@@ -67,14 +65,8 @@ export function OnboardingFlow({
         </div>
 
         <div className="flex items-center justify-center">
-          <div
-            className={`transition-all duration-500 ease-in-out ${
-              isTransitioning ? 'scale-95 transform opacity-0' : 'scale-100 transform opacity-100'
-            }`}
-          >
-            {flow.step === 'virtual-lab' && (
-              <VirtualLabStep onTransition={setIsTransitioning} onNextStep={setFlowData} />
-            )}
+          <div className="scale-100 transform opacity-100 transition-all duration-500 ease-in-out">
+            {flow.step === 'virtual-lab' && <VirtualLabSetup />}
 
             {flow.step === 'project' && (
               <ProjectStep

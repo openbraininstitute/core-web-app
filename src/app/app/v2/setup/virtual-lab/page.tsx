@@ -2,9 +2,9 @@ import { RightOutlined } from '@ant-design/icons';
 import { redirect } from 'next/navigation';
 
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { VirtualLabSetup } from '@/ui/segments/app-setup/virtual-lab-step';
+import { VirtualLabSetup } from '@/ui/segments/app-onboarding/virtual-lab-step';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { getQueryClient } from '@/query-provider/server';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 

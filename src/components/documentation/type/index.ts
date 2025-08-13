@@ -107,10 +107,25 @@ export type ContentForGlossaryItem = {
   Name: string;
   New_suggested_name: string;
   Description: string;
-  definition: PortableTextBlock[];
+  definition: PortableTextBlock[] | string;
   Data_Type: string;
   Scale: string;
   Status: string;
+  alt_label: string;
+  pref_label: string;
+  id: string;
+  update_date: string;
+  creation_date: string;
+  sourceId?: string;
+};
+
+export type CellTypeContentForGlossaryItem = {
+  alt_label: string;
+  pref_label: string;
+  id: string;
+  creation_date: string;
+  update_date: string;
+  definition: string;
 };
 
 export type MTypesItem = {

@@ -102,7 +102,7 @@ function HelpTabs() {
 
 export function HelpHeader() {
   return (
-    <header className="flex w-full flex-row justify-between gap-4">
+    <header className="mb-8 flex w-full flex-row justify-between gap-4">
       <HelpTabs />
     </header>
   );

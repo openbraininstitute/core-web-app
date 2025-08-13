@@ -5,7 +5,7 @@ import get from 'lodash/get';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { getQueryClient } from '@/query-provider/server';
 

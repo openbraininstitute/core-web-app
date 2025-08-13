@@ -12,7 +12,7 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { Button, Button as UiButton } from '@/ui/molecules/button';
 import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 import { CoinsIcon } from '@/components/icons/buttons';
 import { Badge } from '@/ui/molecules/badge';
 import { Input } from '@/ui/molecules/input';

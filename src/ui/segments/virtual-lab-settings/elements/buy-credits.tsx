@@ -19,7 +19,7 @@ import { CoinsIcon } from '@/components/icons/buttons';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 import { tryCatch } from '@/api/utils';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { keyBuilder } from '@/ui/user-query-keys/workspace';
 
 type BuyCreditsStepProps = {
   virtualLabId: string;

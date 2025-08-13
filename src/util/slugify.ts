@@ -1,4 +1,5 @@
 export default function Slugify(str: string): string {
+  if (!str) return '';
   return str
     .toLowerCase()
     .replace(/ /g, '-')
