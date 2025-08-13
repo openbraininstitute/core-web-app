@@ -2,13 +2,14 @@
 
 import {
   LoadingOutlined,
-  RightOutlined,
   UploadOutlined,
   CheckCircleFilled,
+  WarningFilled,
+  RightOutlined,
 } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import { atom } from 'jotai';
-import { Fragment, useMemo, useRef, useState, KeyboardEvent } from 'react';
+import { Fragment, useMemo, useRef, useState, KeyboardEvent, useEffect } from 'react';
 import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
 import { useConfigAtom } from './_components/hooks/config-atom';
 import {
@@ -75,6 +76,11 @@ export default function ContributeMorphologyConfiguration({
     isValid: true,
     errors: [],
   });
+
+  // Debug log to verify selectedFile state
+  useEffect(() => {
+    console.log('selectedFile state:', selectedFile);
+  }, [selectedFile]);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
     (s) => s.properties?.type.const === selectedCategory
@@ -157,17 +163,10 @@ export default function ContributeMorphologyConfiguration({
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <div className="w-full border-t border-gray-200" />
-      <div className={styles.threeColumns}>
+<div className={styles.threeColumns}>
         <div className={styles.scrollable}>
           <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
-            {/* Show overall form validation status */}
-            {!formValidation.isValid && formValidation.errors.length > 0 && (
-              <div className="mb-4 w-full rounded-md border border-red-200 bg-red-50 p-3">
-                <div className="mb-1 font-medium text-red-800">Required fields missing:</div>
-                <div className="text-sm text-red-700">{formValidation.errors.join(', ')}</div>
-              </div>
-            )}
-
+            {/* ... form validation */}
             <div className="self-start text-gray-500 uppercase">Assets</div>
             <div
               role="button"
@@ -192,13 +191,30 @@ export default function ContributeMorphologyConfiguration({
               }}
             >
               <span className="text-primary-9 text-base">Assets</span>
-              <div className="flex gap-1">
+              <div className="flex gap-2">
                 {selectedFile ? (
-                  <CheckCircleFilled className="text-green-600" />
+                  <>
+                    <CheckCircleFilled
+                      className="text-green-600"
+                      style={{ fontSize: '14px', visibility: 'visible' }}
+                    />
+                    <RightOutlined
+                      className="text-white"
+                      style={{ fontSize: '14px' }}
+                    />
+                  </>
                 ) : (
-                  <div className="h-4 w-4" />
+                  <>
+                    <WarningFilled
+                      className="assets-warning text-yellow-400"
+                      style={{ fontSize: '14px', visibility: 'visible' }}
+                    />
+                    <RightOutlined
+                      className="text-primary-8"
+                      style={{ fontSize: '14px' }}
+                    />
+                  </>
                 )}
-                <RightOutlined className="text-primary-9" />
               </div>
             </div>
             {CATEGORIES.filter((c) => c !== 'Assets').map((c) => (
@@ -491,6 +507,7 @@ export default function ContributeMorphologyConfiguration({
                       disabled={loading || readOnly}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
+                        console.log('File selected:', file); // Debug log
                         if (file) {
                           setSelectedFile(file);
                           setFileStatus({ message: `File selected: ${file.name}` });
