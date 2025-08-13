@@ -1,7 +1,7 @@
 import { getEModel, getEModels } from '@/api/entitycore/queries/model/e-model';
 import { getReconstructionMorphology } from '@/api/entitycore/queries';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -10,7 +10,7 @@ import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 export const Emodel: EntityCoreTypeConfig<IEModel> = {
   group: 'models',
   title: 'E-model',
-  legacyType: DataType.CircuitEModel,
+  extendedType: ExtendedEntitiesType.EModel,
   type: EntityTypeEnum.Emodel,
   slug: EntitySlug.EModel,
   api: {

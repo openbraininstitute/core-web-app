@@ -10,7 +10,7 @@ import ListingView from '@/features/views/listing';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 
 import type { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -35,15 +35,20 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
   }, [projectId, setBackToListPath, virtualLabId, vlProjectUrl]);
 
   return match<SerializedEntityCoreTypeConfig<any>>(entity)
-    .with({ legacyType: DataType.CircuitEModel }, (en) => (
+    .with({ extendedType: ExtendedEntitiesType.EModel }, (en) => (
       <ExploreEModelTable
         virtualLabInfo={{ virtualLabId, projectId }}
-        dataType={en.legacyType}
+        dataType={en.extendedType}
         dataScope={ExploreDataScope.SelectedBrainRegion}
       />
     ))
     .with(
-      { legacyType: P.union(DataType.CircuitMEModel, DataType.SingleNeuronSynaptome).select() },
+      {
+        extendedType: P.union(
+          ExtendedEntitiesType.MEModel,
+          ExtendedEntitiesType.SingleNeuronSynaptome
+        ).select(),
+      },
       () => (
         <ListingView
           {...{

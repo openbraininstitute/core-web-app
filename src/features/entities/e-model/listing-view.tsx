@@ -2,9 +2,9 @@ import { ReactNode, ReactElement } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { resolveDataKey } from '@/utils/key-builder';
 import { detailUrlBuilder } from '@/util/common';
@@ -26,7 +26,7 @@ export default function ListingView({
   renderButton,
   virtualLabInfo,
 }: {
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
   dataScope: ExploreDataScope;
   virtualLabInfo?: VirtualLabInfo;
   renderButton?: (props: RenderButtonProps<IEModel>) => ReactNode;
@@ -38,7 +38,7 @@ export default function ListingView({
     navigate(exploreUrl);
   };
 
-  const entity = getEntityByLegacyType({ legacyType: dataType });
+  const entity = getEntityByExtendedType({ type: dataType });
   const dataKey = resolveDataKey({
     section: 'explore',
     projectId: virtualLabInfo?.projectId,

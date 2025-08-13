@@ -4,7 +4,7 @@ import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { Btn } from '@/components/buttons/base/legacy-btn';
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export function ExploreDownloadButton<T extends EntityCoreIdentifiable>({
@@ -19,7 +19,7 @@ export function ExploreDownloadButton<T extends EntityCoreIdentifiable>({
   const download = useCallback(async () => {
     setFetching(true);
 
-    const entity = getEntityByLegacyType({ legacyType: dataType });
+    const entity = getEntityByExtendedType({ type: dataType });
     if (!entity) {
       setFetching(false);
       throw new Error(`Can not find entity for type: ${dataType}`);

@@ -12,10 +12,10 @@ import BookmarkButton from '@/features/bookmark/control';
 
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { resolveDataKey } from '@/utils/key-builder';
@@ -40,11 +40,11 @@ export default function BrowseSimulations() {
   const model = ModelTilesConfig.find((o) => o.id === type);
   const dataType =
     selectedTab === 'new'
-      ? model?.entities?.build?.legacyType
-      : model?.entities?.simulate?.legacyType;
+      ? model?.entities?.build?.extendedType
+      : model?.entities?.simulate?.extendedType;
 
-  const entity = getEntityByLegacyType({
-    legacyType: dataType!,
+  const entity = getEntityByExtendedType({
+    type: dataType!,
   });
 
   const dataKey = resolveDataKey({
@@ -90,7 +90,7 @@ export default function BrowseSimulations() {
           </div>
           {selectedRows.length > 0 && (
             <div className="fixed right-[60px] bottom-12 flex h-12 items-center justify-end gap-2">
-              {dataType === DataType.SimulationCampaign && (
+              {dataType === ExtendedEntitiesType.SimulationCampaign && (
                 <Btn
                   className="bg-primary-8 h-12 px-8"
                   onClick={() => {

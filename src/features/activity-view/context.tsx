@@ -131,7 +131,7 @@ function generateRowItems(
       date: renderTimestamp(new Date(entity.update_date)),
       linkUrl: resolveExploreDetailsPageUrl({
         ctx: workspace,
-        dataType: getEntityByCoreType({ type: entity.type })?.legacyType,
+        dataType: getEntityByCoreType({ type: entity.type })?.extendedType,
         entityId: entity.id,
       }),
     };

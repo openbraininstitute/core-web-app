@@ -1,12 +1,12 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
-  [DataType.SingleNeuronSimulation]: {
+  [ExtendedEntitiesType.SingleNeuronSimulation]: {
     title: 'Simulation',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.SingleNeuronSimulation,
@@ -29,7 +29,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.CreationDate },
     ],
   },
-  [DataType.SingleNeuronSynaptomeSimulation]: {
+  [ExtendedEntitiesType.SingleNeuronSynaptomeSimulation]: {
     title: 'Synaptome simulations',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.SingleNeuronSynaptomeSimulation,
@@ -50,7 +50,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.CreationDate },
     ],
   },
-  [DataType.SimulationCampaign]: {
+  [ExtendedEntitiesType.SimulationCampaign]: {
     title: 'Simulation Campaign',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.SimulationCampaign,
@@ -77,7 +77,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
     ],
   },
-  [DataType.PairedNeuronCircuitSimulation]: {
+  [ExtendedEntitiesType.PairedNeuronCircuitSimulation]: {
     title: 'Paired Neurons Simulation',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.PairedNeuronCircuitSimulation,
@@ -103,7 +103,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
     ],
   },
-  [DataType.SmallMicrocircuitSimulation]: {
+  [ExtendedEntitiesType.SmallMicrocircuitSimulation]: {
     title: 'Small microcircuit Simulation',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.SmallMicrocircuitSimulation,

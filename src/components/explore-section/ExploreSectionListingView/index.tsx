@@ -22,7 +22,7 @@ import {
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType, PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
@@ -30,7 +30,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 export interface Props<T extends EntityCoreIdentifiable> {
   dataKey: string;
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
   dataScope: ExploreDataScope;
   onCellClick?: OnCellClick<T>;
   renderButton?: (props: RenderButtonProps<T>) => ReactNode;

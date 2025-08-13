@@ -23,7 +23,7 @@ import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/globa
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import type { GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -87,8 +87,8 @@ export default function BookmarksView({
   let data = [];
 
   const entity = getEntityBySlug({ slug: slug as EntitySlugValue });
-  if (entity && entity.legacyType) {
-    data = get(get(list, category), entity.legacyType, []);
+  if (entity && entity.extendedType) {
+    data = get(get(list, category), entity.extendedType, []);
   }
 
   const ids = compact<string>(data?.map((o: LibraryBookmark) => o.entity_id));
@@ -132,7 +132,7 @@ export default function BookmarksView({
                   key={dataKey}
                   virtualLabId={virtualLabId}
                   projectId={projectId}
-                  dataType={entity?.legacyType as DataType}
+                  dataType={entity?.extendedType as ExtendedEntitiesType}
                   dataKey={dataKey}
                 />
               </ErrorBoundary>

@@ -4,25 +4,25 @@ import {
   resolveProjectUrl,
   resolveLibraryUrl,
 } from '../../src/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 // Mock the getEntityByLegacyType helper function
 vi.mock('@/entity-configuration/domain/helpers', () => ({
   getEntityByLegacyType: vi.fn(({ legacyType }) => {
-    if (legacyType === DataType.ExperimentalNeuronMorphology) {
+    if (legacyType === ExtendedEntitiesType.ReconstructionMorphology) {
       return {
         slug: 'morphology',
         explore: { routePrefix: 'interactive/experimental' },
       };
     }
-    if (legacyType === DataType.CircuitEModel) {
+    if (legacyType === ExtendedEntitiesType.EModel) {
       return {
         slug: 'e-model',
         explore: { routePrefix: 'model' },
       };
     }
-    if (legacyType === DataType.SingleNeuronSimulation) {
+    if (legacyType === ExtendedEntitiesType.SingleNeuronSimulation) {
       return {
         slug: 'simulation',
         explore: { routePrefix: 'simulate' },
@@ -42,7 +42,7 @@ describe('URL Builder Utils', () => {
     it('should build URL for morphology without workspace context', () => {
       const url = resolveExploreDetailsPageUrl({
         entityId: 'entity-123',
-        dataType: DataType.ExperimentalNeuronMorphology,
+        dataType: ExtendedEntitiesType.ReconstructionMorphology,
       });
       expect(url).toBe('/app/virtual-lab/explore/interactive/experimental/morphology/entity-123');
     });
@@ -51,7 +51,7 @@ describe('URL Builder Utils', () => {
       const url = resolveExploreDetailsPageUrl({
         ctx: workspaceContext,
         entityId: 'entity-123',
-        dataType: DataType.ExperimentalNeuronMorphology,
+        dataType: ExtendedEntitiesType.ReconstructionMorphology,
       });
       expect(url).toBe(
         '/app/virtual-lab/lab/virtual-lab-1/project/project-1/explore/interactive/experimental/morphology/entity-123'

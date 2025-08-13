@@ -1,5 +1,5 @@
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
@@ -9,7 +9,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: 'models',
   title: 'Paired neuron',
-  legacyType: DataType.PairedNeuronCircuit,
+  extendedType: ExtendedEntitiesType.PairedNeuronCircuit,
   type: EntityTypeEnum.Circuit,
   slug: EntitySlug.PairedNeuronsCircuit,
   api: {

@@ -34,7 +34,7 @@ import { getViewDefinitionByLegacyType } from '@/entity-configuration/definition
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType, PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { Facets } from '@/api/entitycore/types/shared/response';
@@ -51,7 +51,7 @@ import type { WorkspaceContext } from '@/types/common';
 type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
   dataScope?: ExploreDataScope;
   dataKey: string;
   filters: CoreFilter[];

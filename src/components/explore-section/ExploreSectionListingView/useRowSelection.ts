@@ -3,14 +3,14 @@ import { useAtom } from 'jotai';
 import { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
 type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
 
 export type RenderButtonProps<T> = {
   selectedRows: Array<T>;
   clearSelectedRows: () => void;
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
 };
 
 export default function useRowSelection<T extends { id: string }>({

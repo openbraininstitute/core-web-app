@@ -1,4 +1,4 @@
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
@@ -12,7 +12,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
   group: 'experimental',
   title: 'Neuron density',
-  legacyType: DataType.ExperimentalNeuronDensity,
+  extendedType: ExtendedEntitiesType.ExperimentalNeuronDensity,
   type: EntityTypeEnum.ExperimentalNeuronDensity,
   slug: EntitySlug.ExperimentalNeuronDensity,
   api: {

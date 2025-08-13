@@ -1,5 +1,5 @@
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
@@ -9,7 +9,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   group: 'models',
   title: 'Circuit',
-  legacyType: DataType.Circuit,
+  extendedType: ExtendedEntitiesType.Circuit,
   type: EntityTypeEnum.Circuit,
   slug: EntitySlug.Circuit,
   api: {

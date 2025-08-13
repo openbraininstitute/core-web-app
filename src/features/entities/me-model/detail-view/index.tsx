@@ -16,7 +16,7 @@ import If from '@/components/ConditionalRenderer/If';
 import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 
@@ -60,7 +60,7 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
     <Suspense fallback={<CentralLoadingSpinner />}>
       <Summary
         payload={source}
-        dataType={DataType.CircuitMEModel}
+        dataType={ExtendedEntitiesType.MEModel}
         commonFields={CommonSummaryViewFields}
         showViewMode={showViewMode}
         extraHeaderAction={

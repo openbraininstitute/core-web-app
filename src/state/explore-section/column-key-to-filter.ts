@@ -4,11 +4,14 @@ import {
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
-export default function columnKeyToFilter(key: EntityCoreFields, dataType: DataType): CoreFilter {
+export default function columnKeyToFilter(
+  key: EntityCoreFields,
+  dataType: ExtendedEntitiesType
+): CoreFilter {
   const fieldConfig = getFieldDefinition(key);
   if (!fieldConfig) {
     return {
