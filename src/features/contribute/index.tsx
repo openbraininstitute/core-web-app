@@ -163,7 +163,7 @@ export default function ContributeMorphologyConfiguration({
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
       <div className="w-full border-t border-gray-200" />
-<div className={styles.threeColumns}>
+      <div className={styles.threeColumns}>
         <div className={styles.scrollable}>
           <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
             {/* ... form validation */}
@@ -198,10 +198,7 @@ export default function ContributeMorphologyConfiguration({
                       className="text-green-600"
                       style={{ fontSize: '14px', visibility: 'visible' }}
                     />
-                    <RightOutlined
-                      className="text-white"
-                      style={{ fontSize: '14px' }}
-                    />
+                    <RightOutlined className="text-white" style={{ fontSize: '14px' }} />
                   </>
                 ) : (
                   <>
@@ -209,10 +206,7 @@ export default function ContributeMorphologyConfiguration({
                       className="assets-warning text-yellow-400"
                       style={{ fontSize: '14px', visibility: 'visible' }}
                     />
-                    <RightOutlined
-                      className="text-primary-8"
-                      style={{ fontSize: '14px' }}
-                    />
+                    <RightOutlined className="text-primary-8" style={{ fontSize: '14px' }} />
                   </>
                 )}
               </div>
