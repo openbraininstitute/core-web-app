@@ -1,18 +1,26 @@
-'use client';
-
 import { ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import NextLink from 'next/link';
-import { notFound, useParams } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import { basePath } from '@/config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-export default function Layout({ children }: { children: ReactNode }) {
-  const { virtualLabId, projectId } = useWorkspace();
-  const { type, id } = useParams();
+interface Params {
+  virtualLabId: string;
+  projectId: string;
+  id: string;
+  type: string;
+}
+
+export default async function Layout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<Params>;
+}) {
+  const { virtualLabId, projectId, type, id } = await params;
 
   if (!type || !id) notFound();
 
@@ -23,12 +31,8 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   if (!fetchEntity) throw Error(`No fetch one function defined for type ${entityType}`);
 
-  const { data, error } = useQuery({
-    queryKey: [id as string],
-    queryFn: async () => fetchEntity({ id: id as string, context: { virtualLabId, projectId } }),
-  });
-
-  if (error) notFound();
+  const entity = await fetchEntity({ id, context: { virtualLabId, projectId } });
+  if (!entity) notFound();
 
   return (
     <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
@@ -46,7 +50,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               {type}
             </NextLink>
           </Breadcrumb>
-          <Breadcrumb showChevron={false}>{data?.name}</Breadcrumb>
+          <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
         </div>
       </div>
       <div className="grow basis-4/5">{children}</div>
