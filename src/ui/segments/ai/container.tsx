@@ -44,7 +44,7 @@ export function Container(): JSX.Element {
   }, [isCollapsed, isFullscreen]);
 
   const targetHeight = useMemo<string>(
-    () => (isFullscreen ? 'calc(100vh - 1rem)' : 'calc(100vh - 5.7rem)'),
+    () => (isFullscreen ? 'calc(100vh - 1rem)' : 'calc(100vh - 5.2rem)'),
     [isFullscreen]
   );
 

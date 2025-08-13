@@ -14,7 +14,7 @@ import type {
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
-const fieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
+export const fieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   ...CommonFieldsDefinition,
   ...ExperimentalFieldsDefinition,
   ...ExperimentFieldsDefinition,

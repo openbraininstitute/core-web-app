@@ -4,17 +4,16 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
 import throttle from 'lodash/throttle';
 
-import { fieldsDefinitionRegistry, getFieldDefinition } from 'src/entity-configuration/definitions';
-import { SortState } from '@/types/explore-section/application';
-
+import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { OrderShape } from '@/entity-configuration/definitions/types';
+import type { SortState } from '@/types/explore-section/application';
 
-import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
+import styles from '@/ui/segments/data-table/elements/table.module.css';
 
 type ResizeInit = {
   key: string | null;
@@ -79,24 +78,28 @@ export function getOrderValue(
   return undefined;
 }
 
-export default function useExploreColumns<T>(
-  setSortState: (sortState: SortState) => void,
-  sortState?: SortState,
-  initialColumns: ColumnProps<T>[] = [],
-  dimensionColumns?: string[] | null,
-  dataType?: TExtendedEntitiesTypeDict
-): ColumnProps<T>[] {
+export function useDataTableColumns<T>({
+  dataType,
+  sortState,
+  setSortState,
+  initialColumns = [],
+}: {
+  dataType: TExtendedEntitiesTypeDict;
+  setSortState: (sortState: SortState) => void;
+  sortState?: SortState;
+  initialColumns?: ColumnProps<T>[];
+}): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
 
   const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
-    [...keys, ...(dimensionColumns || [])].map((key) => ({
+    [...keys].map((key) => ({
       key,
       width: COL_SIZING.default,
     }))
   );
 
   useEffect(() => {
-    const totalKeys = dimensionColumns ? [...keys, ...dimensionColumns] : [...keys];
+    const totalKeys = [...keys];
     setColumnWidths(
       totalKeys.map((key) => {
         const field = getFieldDefinition(key as EntityCoreFields);
@@ -106,7 +109,7 @@ export default function useExploreColumns<T>(
         };
       })
     );
-  }, [dimensionColumns, keys]);
+  }, [keys]);
 
   const columnOrderBy = useCallback(
     (field: string, backendField: string) => {
@@ -239,3 +242,5 @@ export default function useExploreColumns<T>(
 
   return columns;
 }
+
+export default useDataTableColumns;

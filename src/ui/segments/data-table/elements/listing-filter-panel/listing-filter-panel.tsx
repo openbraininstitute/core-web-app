@@ -14,53 +14,51 @@ import { CloseOutlined } from '@ant-design/icons';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useAtom, useSetAtom } from 'jotai';
 import { Input } from 'antd';
+
 import isNil from 'lodash/isNil';
 import map from 'lodash/map';
 
-import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
-import ClearFilters from '@/features/listing-filter-panel/clear-filters';
-import DateRange from '@/features/listing-filter-panel/date-range';
-import CheckList from '@/features/listing-filter-panel/checklist';
+import ValueOrRange from '@/ui/segments/data-table/elements/listing-filter-panel/value-or-range';
+import ClearFilters from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
+import DateRange from '@/ui/segments/data-table/elements/listing-filter-panel/date-range';
+import CheckList from '@/ui/segments/data-table/elements/listing-filter-panel/checklist';
 
-import {
-  activeColumnsAtom,
-  filtersAtom,
-  pageNumberAtom,
-  previousDataAtom,
-  searchStringAtom,
-} from '@/state/explore-section/list-view-atoms';
+import { defaultList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
+import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
-import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import {
-  TExtendedEntitiesTypeDict,
-  PAGE_NUMBER,
-} from '@/api/entitycore/types/extended-entity-type';
-import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { Facets } from '@/api/entitycore/types/shared/response';
 import { fieldTitleSentenceCase } from '@/util/utils';
+import {
+  coreActiveColumnsAtom,
+  coreFiltersAtom,
+  coreSearchStringAtom,
+} from '@/ui/segments/data-table/elements/context';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceScope } from '@/ui/hooks/use-query-extended-entity-type';
+import type { Facets } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
 import type {
-  CoreFilter,
+  ValueOrRangeFilter,
   CoreFilterValues,
   GteLteValue,
-  ValueOrRangeFilter,
+  CoreFilter,
 } from '@/entity-configuration/definitions/types';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: TExtendedEntitiesTypeDict;
+  // eslint-disable-next-line react/no-unused-prop-types
+  dataScope?: WorkspaceScope;
   dataKey: string;
   filters: CoreFilter[];
   facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
-  virtualLabInfo?: WorkspaceContext;
-  useBrainRegion?: boolean;
+  // eslint-disable-next-line react/no-unused-prop-types
+  workspace?: WorkspaceContext;
 };
 
 function createFilterItemComponent(
@@ -169,7 +167,7 @@ function createFilterItemComponent(
   };
 }
 
-export default function ListingFilterPanel({
+export function ListingFilterPanel({
   children,
   toggleDisplay,
   dataType,
@@ -178,47 +176,28 @@ export default function ListingFilterPanel({
   setFilters,
   facets,
   showDisplayTrigger = true,
-  virtualLabInfo,
-  useBrainRegion,
 }: Props) {
-  const { node } = useBrainRegionHierarchy({ dataKey });
-  const brainRegionId = useBrainRegion ? node.id : undefined;
-
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
   const resetFilters = useResetAtom(
-    filtersAtom({
+    coreFiltersAtom({
       dataType,
-      brainRegionId,
       key: dataKey,
     })
   );
-  const setSearchString = useSetAtom(searchStringAtom(dataKey));
-  const setPrevData = useSetAtom(
-    previousDataAtom({
-      workspace: virtualLabInfo,
-      dataType,
-      brainRegionId,
-      key: dataKey,
-    })
-  );
+  const setSearchString = useSetAtom(coreSearchStringAtom(dataKey));
 
-  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
       () =>
         unwrap(
-          activeColumnsAtom({
+          coreActiveColumnsAtom({
             dataType,
-            brainRegionId,
             key: dataKey,
           })
         ),
-      [dataType, brainRegionId, dataKey]
+      [dataType, dataKey]
     )
   );
-
-  // TODO: to be deleted when confirm filtering works
-  // const fields = activeColumns ? getFieldsDefinition(activeColumns as EntityCoreFields[]) : [];
 
   const onToggleActive = useCallback(
     (key: string) => {
@@ -249,9 +228,6 @@ export default function ListingFilterPanel({
   }, [filters]);
 
   const submitValues = () => {
-    setPageNumber(PAGE_NUMBER);
-    setPrevData([]);
-
     setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 
@@ -306,6 +282,7 @@ export default function ListingFilterPanel({
 
   return (
     <div
+      id="main-table-filter-panel"
       data-testid="listing-view-filter-panel"
       className="bg-primary-8 fixed top-0 right-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6"
     >

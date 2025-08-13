@@ -23,7 +23,13 @@ import { classNames } from '@/util/utils';
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
 
-export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
+export function BrainRegionHierarchy({
+  dataKey,
+  onClickCallback,
+}: {
+  dataKey: string;
+  onClickCallback?: (node: TTreeNode) => void;
+}) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
   const { updateHierarchyConfig } = useBrainRegionHierarchy({
@@ -51,6 +57,7 @@ export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     scrollToNode(clickedNode as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
     makeBrainRegionClickEvent({ dataKey, node: clickedNode as IBrainRegionHierarchy });
+    onClickCallback?.(clickedNode);
     userJourneyTracker.registerBrainRegionClick(clickedNode.name);
   };
 

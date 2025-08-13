@@ -1,18 +1,19 @@
-import { ExploreLayout, ExploreInnerLayout } from '@/ui/layouts/explore-layout';
+import type { ReactNode } from 'react';
 
+import { ExploreLayout, ExploreInnerLayout } from '@/ui/layouts/explore-layout';
 import { ExploreMenu } from '@/ui/segments/explore/left-menu';
 import { ExploreHeader } from '@/ui/segments/explore/header';
-
 import { resolveDataKey } from '@/utils/key-builder';
-import { Atlas } from '@/ui/segments/explore/atlas';
 import { Card } from '@/ui/molecules/card';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default async function Page({
-  params: promisedParams,
-}: ServerSideComponentProp<WorkspaceContext, null>) {
-  const { projectId } = await promisedParams;
+  children,
+  params,
+}: ServerSideComponentProp<WorkspaceContext, null> & { children: ReactNode }) {
+  const { projectId } = await params;
+
   const dataKey = resolveDataKey({ projectId, section: 'explore' });
 
   return (
@@ -28,8 +29,8 @@ export default async function Page({
             <ExploreMenu dataKey={dataKey} />
           </Card>
         </div>
-        <div className="h-full max-h-[calc(100vh-11.8rem)] w-full rounded-2xl [grid-area:body]">
-          <Atlas dataKey={dataKey} />
+        <div className="h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]">
+          {children}
         </div>
       </ExploreInnerLayout>
     </ExploreLayout>
