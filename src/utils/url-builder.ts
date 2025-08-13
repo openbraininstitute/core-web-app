@@ -1,8 +1,11 @@
-import { getEntityByCoreType, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import {
+  getEntityByCoreType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
 import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
 export const baseUri = '/app/virtual-lab';
@@ -15,7 +18,7 @@ export function resolveExploreDetailsPageUrl({
 }: {
   ctx?: Partial<WorkspaceContext>;
   entityId?: string;
-  dataType?: DataType;
+  dataType?: ExtendedEntitiesType;
   entityType?: EntityTypeValue;
 }) {
   if (dataType && entityType)
@@ -23,7 +26,7 @@ export function resolveExploreDetailsPageUrl({
   if (!dataType && !entityType) throw new Error('Cannot resolve url');
 
   const entityConfig = dataType
-    ? getEntityByLegacyType({ legacyType: dataType })
+    ? getEntityByExtendedType({ type: dataType })
     : getEntityByCoreType({ type: entityType });
 
   if (!entityConfig) throw new Error('Invalid Entity');
@@ -81,10 +84,10 @@ export function resolveExperimentUrlByExtendedType({
   dataType,
 }: {
   ctx: Required<WorkspaceContext>;
-  dataType?: DataType;
+  dataType?: ExtendedEntitiesType;
   entityId?: string;
 }) {
-  const entityConfig = getEntityByLegacyType({ legacyType: dataType });
+  const entityConfig = getEntityByExtendedType({ type: dataType });
   if (entityId) {
     return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/simulate/${entityConfig?.slug}/new/${entityId}`;
   }

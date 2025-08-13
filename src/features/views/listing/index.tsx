@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useExploreTableOnClickHandler } from '@/hooks/virtual-labs';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { resolveDataKey } from '@/utils/key-builder';
 
 import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
@@ -34,7 +34,7 @@ export default function ListingView({ entity, projectId, virtualLabId }: Props) 
   return (
     <ExploreSectionListingView
       useBrainRegion
-      dataType={entity.legacyType as DataType}
+      dataType={entity.extendedType as ExtendedEntitiesType}
       dataScope={ExploreDataScope.SelectedBrainRegion}
       virtualLabInfo={{
         virtualLabId,

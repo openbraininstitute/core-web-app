@@ -2,14 +2,14 @@ import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/vi
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityTypeValue } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: EntityCoreTypeGroup;
-  legacyType: DataType;
+  extendedType: ExtendedEntitiesType;
   type: EntityTypeValue;
   slug: EntitySlugValue;
   title: string;

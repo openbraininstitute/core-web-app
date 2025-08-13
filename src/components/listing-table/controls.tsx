@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
 import { useScrollNav } from '@/components/explore-section/ExploreSectionListingView/hooks';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
@@ -46,7 +46,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   renderButton?: (props: RenderButtonProps<T>) => ReactNode;
   selectedRows: RenderButtonProps<T>['selectedRows'];
   visible: boolean;
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
 }) {
   const { left, right } = useScrollNav(
     typeof document !== 'undefined'

@@ -55,7 +55,7 @@ export default function SimulationDetail<T extends GenericSimulation>({
   const simulationEntity = getEntityByCoreType({ type: simulation.type });
   const detailsPageUrl = resolveExploreDetailsPageUrl({
     ctx: { virtualLabId, projectId },
-    dataType: simulationEntity?.legacyType,
+    dataType: simulationEntity?.extendedType,
     entityId: simulation.id,
   });
 

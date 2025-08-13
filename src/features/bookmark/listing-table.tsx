@@ -15,14 +15,14 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
+import { PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
 interface Props extends WorkspaceContext {
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
   dataKey: string;
 }
 

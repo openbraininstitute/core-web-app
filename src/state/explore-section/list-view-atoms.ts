@@ -10,9 +10,9 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
-import { PAGE_NUMBER, PAGE_SIZE } from '@/constants/explore-section/list-views';
+import { PAGE_NUMBER, PAGE_SIZE } from '@/api/entitycore/types/extended-entity-type';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import {
@@ -24,7 +24,7 @@ import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityCoreLegacyType } from '@/entity-configuration/domain/helpers';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -32,7 +32,7 @@ type DataAtomBinding = {
   key: string;
   resourceId?: string;
   shouldUseIds?: boolean;
-  dataType: EntityCoreLegacyType;
+  dataType: EntityCoreExtendedType;
   dataScope?: ExploreDataScope;
   workspace?: WorkspaceContext;
   brainRegionId?: string | null;
@@ -173,7 +173,9 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         within_brain_region_ascendants: false,
         ...transformFiltersToQuery(filters as any),
       });
-      const entity = getEntityByLegacyType({ legacyType: ctx.dataType as EntityCoreLegacyType });
+      const entity = getEntityByExtendedType({
+        type: ctx.dataType as EntityCoreExtendedType,
+      });
       if (entity && entity.api.query.list) {
         const response = await entity.api.query.list({
           withFacets: entity.api.config.allowedFacets,

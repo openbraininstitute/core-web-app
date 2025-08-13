@@ -14,7 +14,7 @@ import If from '@/components/ConditionalRenderer/If';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 
@@ -59,7 +59,7 @@ export default function Page({
         <Summary
           payload={source}
           showViewMode
-          dataType={DataType.SingleNeuronSynaptome}
+          dataType={ExtendedEntitiesType.SingleNeuronSynaptome}
           commonFields={CommonSummaryViewFields}
           extraHeaderAction={
             virtualLabId &&

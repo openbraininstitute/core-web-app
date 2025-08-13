@@ -1,4 +1,4 @@
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
 interface VlmResponse<T> {
   message: string;
@@ -404,7 +404,7 @@ interface UserGroupsResponse {
 export type BookmarkRequest = {
   resource_id?: string;
   entity_id: string;
-  category: DataType;
+  category: ExtendedEntitiesType;
 };
 
 export type DeleteBookmarksResponse = {
@@ -418,7 +418,7 @@ export interface AddBookmarkResponse extends BookmarkRequest {
 
 export interface LibraryBookmark extends AddBookmarkResponse {}
 
-type BookmarksByCategoryResponse = Record<DataType, Array<LibraryBookmark>>;
+type BookmarksByCategoryResponse = Record<ExtendedEntitiesType, Array<LibraryBookmark>>;
 
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;

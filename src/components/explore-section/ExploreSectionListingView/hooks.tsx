@@ -13,15 +13,15 @@ import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { classNames } from '@/util/utils';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
-type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
+type OnCellClick<T> = (basePath: string, record: T, type: ExtendedEntitiesType) => void;
 
 export function useOnCellRouteHandler<T extends EntityCoreIdentifiable>({
   dataType,
   onCellClick,
 }: {
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
   onCellClick?: OnCellClick<T>;
 }) {
   const pathname = usePathname();

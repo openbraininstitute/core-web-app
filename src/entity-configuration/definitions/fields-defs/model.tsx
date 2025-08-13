@@ -1,5 +1,5 @@
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import {
   EmptyPreview,
   renderEmptyOrValue,
@@ -33,7 +33,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     order: [
       {
-        types: [DataType.CircuitEModel],
+        types: [ExtendedEntitiesType.EModel],
         property: 'order_by',
         value: 'exemplar_morphology__name',
       },
@@ -52,7 +52,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     order: [
       {
-        types: [DataType.CircuitEModel],
+        types: [ExtendedEntitiesType.EModel],
         property: 'order_by',
         value: 'score',
       },

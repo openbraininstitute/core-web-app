@@ -7,7 +7,7 @@ import { match, P } from 'ts-pattern';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { dataAtom } from '@/state/explore-section/list-view-atoms';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { useLoadableValue } from '@/hooks/hooks';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -50,7 +50,7 @@ function ResultsCount({
   dataKey,
   useBrainRegion,
 }: {
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
   dataScope: ExploreDataScope;
   virtualLabInfo?: WorkspaceContext;
   dataKey: string;

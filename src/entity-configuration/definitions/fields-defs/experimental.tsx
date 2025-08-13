@@ -18,7 +18,7 @@ import {
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
 import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { ensureArray } from '@/utils/array';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
@@ -64,15 +64,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     defaultConstraint: 'species__name__in',
     perTypeConstraint: {
-      [DataType.ExperimentalElectroPhysiology]: 'subject__species__name__in',
+      [ExtendedEntitiesType.ElectricalCellRecording]: 'subject__species__name__in',
     },
     order: [
       {
         types: [
-          DataType.ExperimentalElectroPhysiology,
-          DataType.ExperimentalBoutonDensity,
-          DataType.ExperimentalNeuronDensity,
-          DataType.ExperimentalSynapsePerConnection,
+          ExtendedEntitiesType.ElectricalCellRecording,
+          ExtendedEntitiesType.ExperimentalBoutonDensity,
+          ExtendedEntitiesType.ExperimentalNeuronDensity,
+          ExtendedEntitiesType.ExperimentalSynapsePerConnection,
         ],
         property: 'order_by',
         value: 'subject__species__name',
@@ -115,10 +115,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     order: [
       {
         types: [
-          DataType.ExperimentalBoutonDensity,
-          DataType.ExperimentalNeuronDensity,
-          DataType.ExperimentalNeuronMorphology,
-          DataType.CircuitEModel,
+          ExtendedEntitiesType.ExperimentalBoutonDensity,
+          ExtendedEntitiesType.ExperimentalNeuronDensity,
+          ExtendedEntitiesType.ReconstructionMorphology,
+          ExtendedEntitiesType.EModel,
         ],
         property: 'order_by',
         value: 'mtype__pref_label',
@@ -160,7 +160,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'etype__pref_label__in',
     order: [
       {
-        types: [DataType.ExperimentalElectroPhysiology, DataType.CircuitEModel],
+        types: [ExtendedEntitiesType.ElectricalCellRecording, ExtendedEntitiesType.EModel],
         property: 'order_by',
         value: 'etype__pref_label',
       },
@@ -200,7 +200,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     order: [
       {
-        types: [DataType.ExperimentalBoutonDensity, DataType.ExperimentalNeuronDensity],
+        types: [
+          ExtendedEntitiesType.ExperimentalBoutonDensity,
+          ExtendedEntitiesType.ExperimentalNeuronDensity,
+        ],
         property: 'order_by',
         value: 'subject__age_value',
       },

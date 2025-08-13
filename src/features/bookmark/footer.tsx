@@ -10,13 +10,13 @@ import { tryCatch } from '@/api/utils';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
 type Props<T> = {
   selectedRows: Array<T>;
   virtualLabId: string;
   projectId: string;
-  category: DataType;
+  category: ExtendedEntitiesType;
   // @FIXME: Is that property used?
   // eslint-disable-next-line react/no-unused-prop-types
   dataKey: string;

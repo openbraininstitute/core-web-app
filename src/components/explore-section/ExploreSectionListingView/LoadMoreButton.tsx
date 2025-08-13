@@ -8,12 +8,12 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { PAGE_SIZE } from '@/constants/explore-section/list-views';
+import { PAGE_SIZE } from '@/api/entitycore/types/extended-entity-type';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
 function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
@@ -33,7 +33,7 @@ export function useLoadMore<T>(
   dataContext: {
     workspace?: VirtualLabInfo;
     dataScope: ExploreDataScope;
-    dataType: DataType;
+    dataType: ExtendedEntitiesType;
   },
   key: string,
   useBrainRegion?: boolean
@@ -89,7 +89,7 @@ export default function LoadMoreButton({
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
     dataScope: ExploreDataScope;
-    dataType: DataType;
+    dataType: ExtendedEntitiesType;
   };
   dataKey: string;
   hide: () => void;

@@ -6,7 +6,7 @@ import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circu
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { getAssetElement } from '@/api/entitycore/utils';
@@ -121,7 +121,7 @@ export async function resolveSimulationByCampaignId({
 export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: 'simulations',
   title: 'Simulation Campaign',
-  legacyType: DataType.SimulationCampaign,
+  extendedType: ExtendedEntitiesType.SimulationCampaign,
   type: EntityTypeEnum.SimulationCampaign,
   slug: EntitySlug.SimulationCampaign,
   isBookmarkable: true,

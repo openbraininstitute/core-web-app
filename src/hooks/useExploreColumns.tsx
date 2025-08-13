@@ -9,7 +9,7 @@ import fieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configu
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 import type { OrderShape } from '@/entity-configuration/definitions/types';
@@ -59,7 +59,7 @@ function isOrderObject(order: OrderShape): order is { property: string; value: s
  */
 export function getOrderValue(
   order: OrderShape | undefined,
-  dataType?: DataType
+  dataType?: ExtendedEntitiesType
 ): string | undefined {
   if (!order) return undefined;
 
@@ -84,7 +84,7 @@ export default function useExploreColumns<T>(
   sortState?: SortState,
   initialColumns: ColumnProps<T>[] = [],
   dimensionColumns?: string[] | null,
-  dataType?: DataType
+  dataType?: ExtendedEntitiesType
 ): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
 

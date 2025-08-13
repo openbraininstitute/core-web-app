@@ -6,7 +6,7 @@ import {
 } from '@/api/entitycore/queries/simulation/single-neuron-synaptome-simulation';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { getMEModel } from '@/api/entitycore/queries/model/me-model';
@@ -49,7 +49,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
   {
     group: 'simulations',
     title: 'Single Neuron Synaptome Simulation',
-    legacyType: DataType.SingleNeuronSynaptomeSimulation,
+    extendedType: ExtendedEntitiesType.SingleNeuronSynaptomeSimulation,
     type: EntityTypeEnum.SingleNeuronSynaptomeSimulation,
     slug: EntitySlug.SingleNeuronSynaptomeSimulation,
     api: {

@@ -12,7 +12,7 @@ import {
   resolveExperimentUrlByExtendedType,
   resolveExploreDetailsPageUrl,
 } from '@/utils/url-builder';
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { EntityTypeEnum } from '@/api/entitycore/types';
@@ -31,9 +31,9 @@ export default function StartNewSimulation() {
   const { type } = useTileScopeQuery();
 
   const model = ModelTilesConfig.find((o) => o.type === type);
-  const dataType = model?.entities?.build?.legacyType;
-  const entity = getEntityByLegacyType({
-    legacyType: dataType,
+  const dataType = model?.entities?.build?.extendedType;
+  const entity = getEntityByExtendedType({
+    type: dataType,
   });
 
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
@@ -91,7 +91,7 @@ export default function StartNewSimulation() {
               className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
               href={resolveExperimentUrlByExtendedType({
                 ctx: { virtualLabId, projectId },
-                dataType: entity?.legacyType,
+                dataType: entity?.extendedType,
                 entityId: selectedRows[0].id,
               })}
             >

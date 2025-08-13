@@ -7,12 +7,12 @@ import {
   previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType, PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
 import { useDebouncedCallback } from '@/hooks/hooks';
 
 type SearchProps = {
   dataKey: string;
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
 };
 
 export default function ExploreSectionNameSearch({ dataType, dataKey }: SearchProps) {

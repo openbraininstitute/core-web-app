@@ -12,11 +12,11 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityTypeValue } from '@/api/entitycore/types';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
-export type EntityCoreLegacyType =
-  (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['legacyType'];
+export type EntityCoreExtendedType =
+  (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['extendedType'];
 
-export const getEntityByLegacyType = ({ legacyType }: { legacyType?: EntityCoreLegacyType }) =>
-  find(EntityCoreConfiguration, { legacyType });
+export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedType }) =>
+  find(EntityCoreConfiguration, { extendedType: type });
 
 // TODO: fix type to be a list of available types in entitycore
 export const getEntityByCoreType = ({ type }: { type?: EntityTypeValue }) =>

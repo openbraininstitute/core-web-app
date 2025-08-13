@@ -63,7 +63,7 @@ export default function BookmarkButton({
   const isSaved = opStatus.op === 'add' && opStatus.status === 'succeeded';
 
   const entity = getEntityByCoreType({ type });
-  const dataType = entity?.legacyType;
+  const dataType = entity?.extendedType;
   const category = entity?.group;
 
   const bookmarks = useAtomValue(

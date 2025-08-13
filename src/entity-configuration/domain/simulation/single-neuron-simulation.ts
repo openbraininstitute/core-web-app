@@ -1,4 +1,4 @@
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -35,7 +35,7 @@ export async function resolveSingleNeuronSimulation(
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
   group: 'simulations',
   title: 'Single Neuron Simulation',
-  legacyType: DataType.SingleNeuronSimulation,
+  extendedType: ExtendedEntitiesType.SingleNeuronSimulation,
   type: EntityTypeEnum.SingleNeuronSimulation,
   slug: EntitySlug.SingleNeuronSimulation,
   isBookmarkable: true,

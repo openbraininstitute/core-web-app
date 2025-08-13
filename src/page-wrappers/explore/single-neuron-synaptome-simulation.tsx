@@ -13,7 +13,7 @@ import Link from '@/components/Link';
 import { resolveSingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { resolveExperimentUrl, resolveProjectUrl } from '@/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { useSimulationConfig } from '@/hooks/useSimulation';
 
@@ -30,12 +30,12 @@ export default function SimulationDetailPage({ payload }: Props) {
   });
 
   const fields = getViewDefinitionByLegacyType(
-    DataType.SingleNeuronSynaptomeSimulation
+    ExtendedEntitiesType.SingleNeuronSynaptomeSimulation
   )?.summaryViewFields;
 
   if (!fields)
     throw new Error(
-      `Cannot find fields definition for ${DataType.SingleNeuronSynaptomeSimulation}`
+      `Cannot find fields definition for ${ExtendedEntitiesType.SingleNeuronSynaptomeSimulation}`
     );
 
   return (

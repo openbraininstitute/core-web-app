@@ -18,7 +18,7 @@ import {
 } from '@/state/explore-section/detail-view-atoms';
 import { ErrorLink, withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { conditionalAtom } from '@/hooks/use-conditional-atom';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
@@ -38,7 +38,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   showViewMode?: boolean;
   commonFields?: Array<TypeSummaryProps>;
   extraHeaderAction?: ReactNode;
-  dataType: DataType;
+  dataType: ExtendedEntitiesType;
   children?: (detail: T) => ReactNode;
 }) {
   const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
@@ -80,7 +80,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
               title="Back to entities list"
               href={resolveExploreDetailsPageUrl({
                 ctx: { virtualLabId, projectId },
-                dataType: DataType.CircuitMEModel,
+                dataType: ExtendedEntitiesType.MEModel,
               })}
             />
             <ErrorLink title="Back to home" href="/app/virtual-lab" />
