@@ -35,9 +35,11 @@ export default function TermCard({
       )}
       {sectionType === 'cell' &&
         (Array.isArray(content.definition) ? (
-          <PortableText value={content.definition} />
+          <div className={styles.definition}>
+            <PortableText value={content.definition} />
+          </div>
         ) : (
-          <p>{content.definition}</p>
+          <p className={styles.definition}>{content.definition}</p>
         ))}
     </div>
   );

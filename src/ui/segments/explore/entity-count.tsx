@@ -13,7 +13,7 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { keyBuilder } from '@/ui/user-query-keys/data';
 import { Button } from '@/ui/molecules/button';
 import {
   ExperimentalEntitiesTileTypes,
