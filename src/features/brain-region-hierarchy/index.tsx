@@ -1,7 +1,6 @@
 'use client';
 
 import { useAtomValue, useSetAtom } from 'jotai';
-import omit from 'lodash/omit';
 
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
@@ -17,23 +16,20 @@ import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
-  useSetSelectedBrainRegion,
+  useGetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
 import { classNames } from '@/util/utils';
 
-import type {
-  BrainRegionHierarchyBase,
-  IBrainRegionHierarchy,
-} from '@/api/entitycore/types/entities/brain-region';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
 
 export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
-  const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
+  const { updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
+  const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
 
   if (!brainRegionHierarchyResult) {
@@ -55,7 +51,6 @@ export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
     scrollToNode(clickedNode as IBrainRegionHierarchy, 'center');
     setPageNumber(PAGE_NUMBER);
     makeBrainRegionClickEvent({ dataKey, node: clickedNode as IBrainRegionHierarchy });
-    updateSelectedBrainRegion(omit(clickedNode, 'children') as BrainRegionHierarchyBase);
     userJourneyTracker.registerBrainRegionClick(clickedNode.name);
   };
 
@@ -87,7 +82,7 @@ export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
                   v: true,
                   h: false,
                 }}
-                selectedNode={node as unknown as TTreeNode}
+                selectedNode={(selectedBrainRegion as unknown as TTreeNode) ?? null}
                 onClick={onClick}
               />
             )}

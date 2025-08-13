@@ -3,12 +3,9 @@
 import { CloseOutlined } from '@ant-design/icons';
 
 import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
-// import { SpeciesSwitcher } from '@/features/brain-region-hierarchy/species-switcher';
 import { HierarchySquare } from '@/components/icons/buttons';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-
-// import type { ISpecies } from '@/api/entitycore/types/shared/global';
 
 export const ExploreLeftMenuContext = {
   BrainRegionHierarchy: 'brain-region-hierarchy',
@@ -24,21 +21,11 @@ type Props = {
 
 export function RegionBanner({ view, onSwitchView }: Props) {
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
-  // const [currentSpecies, setCurrentSpecies] = useState<ISpecies | null>(null);
-  // const speciesOptions = [
-  //   { value: 'rodent', label: 'Rodent', data: null },
-  //   { value: 'human', label: 'Human', data: null },
-  //   { value: 'primate', label: 'Primate', data: null },
-  // ];
-
-  // const handleSpeciesChange = (species: ISpecies | null) => {
-  //   setCurrentSpecies(species);
-  // };
-
+  if (!selectedBrainRegion) return <div className="h-11 py-5" />;
   return (
     <div
-      id="entity-counter-container"
-      data-testid="entity-counter-container"
+      id="brain-region-entities-switcher"
+      data-testid="brain-region-entities-switcher"
       className="flex flex-col items-center justify-between gap-2 px-4 py-5"
     >
       <div
@@ -48,12 +35,6 @@ export function RegionBanner({ view, onSwitchView }: Props) {
         )}
       >
         <div className="flex items-center justify-center gap-2">
-          {/* {currentSpecies?.name && (
-            <div className="flex items-center justify-center gap-1">
-              <span className="text-neutral-2">Species</span>
-              <span className="text-primary-9/90">{currentSpecies.name}</span>
-            </div>
-          )} */}
           {selectedBrainRegion && (
             <div className="flex items-center justify-center gap-1">
               <span className="text-neutral-2">Region:</span>
@@ -63,7 +44,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
                   className="block h-3! w-3! min-w-3! rounded-full"
                   style={{ backgroundColor: `#${selectedBrainRegion.color_hex_triplet}` }}
                 />
-                <span className="line-clamp-2 leading-4 font-bold">{selectedBrainRegion.name}</span>
+                <span className="line-clamp-2 leading-5 font-bold">{selectedBrainRegion.name}</span>
               </div>
             </div>
           )}
@@ -87,12 +68,6 @@ export function RegionBanner({ view, onSwitchView }: Props) {
           )}
         </Button>
       </div>
-      {/* <div className="flex w-full items-center gap-2 text-sm">
-        <div className="relative flex w-full flex-col items-start">
-          <span className="text-neutral-3">Species</span>
-          <SpeciesSwitcher options={speciesOptions} onSelect={handleSpeciesChange} />
-        </div>
-      </div> */}
     </div>
   );
 }
