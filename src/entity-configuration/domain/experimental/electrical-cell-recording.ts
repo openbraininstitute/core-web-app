@@ -1,6 +1,6 @@
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
   getElectricalCellRecordings,
@@ -13,8 +13,8 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: 'experimental',
   title: 'Electrophysiology',
-  extendedType: ExtendedEntitiesType.ElectricalCellRecording,
-  type: EntityTypeEnum.ElectricalCellRecording,
+  extendedType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  type: EntityTypeDict.ElectricalCellRecording,
   slug: EntitySlug.ElectricalCellRecording,
   api: {
     config: {

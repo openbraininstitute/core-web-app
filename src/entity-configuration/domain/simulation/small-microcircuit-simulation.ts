@@ -4,9 +4,9 @@ import keyBy from 'lodash/keyBy';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { getAssetElement } from '@/api/entitycore/utils';
@@ -112,7 +112,7 @@ export async function resolveSimulationByCampaignId({
 
   const rawConfig = await downloadAsset({
     entityId: campaign?.id!,
-    entityType: EntityTypeEnum.SimulationCampaign,
+    entityType: EntityTypeDict.SimulationCampaign,
     id: configAsset?.id,
     ctx: context,
     asRawResponse: true,
@@ -129,8 +129,8 @@ export async function resolveSimulationByCampaignId({
 export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: 'simulations',
   title: 'Small microcircuit Simulation',
-  extendedType: ExtendedEntitiesType.SmallMicrocircuitSimulation,
-  type: EntityTypeEnum.SimulationCampaign,
+  extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SmallMicrocircuitSimulation,
   isBookmarkable: true,
   api: {

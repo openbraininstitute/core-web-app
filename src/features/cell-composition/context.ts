@@ -19,7 +19,7 @@ import { log } from '@/utils/logger';
 import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
 import type { WorkspaceContext } from '@/types/common';
 import type { IAnnotation } from '@/api/entitycore/types/shared/global';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 
@@ -44,7 +44,7 @@ const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> 
 
   const { data: cellCompositionSummary, error: assetError } = await tryCatch(
     downloadAsset<ICellCompositionRoot>({
-      entityType: EntityTypeEnum.CellComposition,
+      entityType: EntityTypeDict.CellComposition,
       entityId: cellComposition.data.at(0)?.id!,
       id: summaryAsset.id,
     })

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import snakeCase from 'lodash/snakeCase';
 
 import { auth } from '@/auth';
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 
 // Schema for ticket creation request
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
   }
 
   const { entityType: entityTypeRaw } = await params;
-  const entityType = snakeCase(entityTypeRaw) as EntityTypeValue;
+  const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
   try {
     const reqData = createTicketSchema.parse(await request.json());

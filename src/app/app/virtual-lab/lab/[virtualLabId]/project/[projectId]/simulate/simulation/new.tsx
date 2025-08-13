@@ -15,7 +15,7 @@ import {
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
 import {
@@ -75,7 +75,7 @@ export default function StartNewSimulation() {
         />
         {buttonsVisible && selectedRows.length > 0 && (
           <div className="fixed right-[50px] bottom-8 flex items-center justify-end gap-2">
-            {entity?.type !== EntityTypeEnum.Circuit && (
+            {entity?.type !== EntityTypeDict.Circuit && (
               <Link
                 className="bg-primary-9 flex h-12 items-center justify-center px-8 font-bold text-white hover:text-white"
                 href={resolveExploreDetailsPageUrl({

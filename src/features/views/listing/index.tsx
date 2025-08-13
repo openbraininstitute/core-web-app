@@ -6,11 +6,11 @@ import dynamic from 'next/dynamic';
 
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useExploreTableOnClickHandler } from '@/hooks/virtual-labs';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { resolveDataKey } from '@/utils/key-builder';
 
 import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
 import type { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -34,7 +34,7 @@ export default function ListingView({ entity, projectId, virtualLabId }: Props) 
   return (
     <ExploreSectionListingView
       useBrainRegion
-      dataType={entity.extendedType as ExtendedEntitiesType}
+      dataType={entity.extendedType as TExtendedEntitiesTypeDict}
       dataScope={ExploreDataScope.SelectedBrainRegion}
       virtualLabInfo={{
         virtualLabId,

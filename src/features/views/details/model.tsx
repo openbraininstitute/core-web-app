@@ -7,7 +7,7 @@ import EModelDetailView from '@/page-wrappers/explore/e-model';
 
 import { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { ModelEntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
@@ -22,11 +22,13 @@ export default async function DetailView(props: Props) {
   if (!entity) notFound();
 
   return match<EntityCoreTypeConfig<any>>(entity)
-    .with({ extendedType: ExtendedEntitiesType.EModel }, () => <EModelDetailView params={props} />)
-    .with({ extendedType: ExtendedEntitiesType.MEModel }, () => (
+    .with({ extendedType: ExtendedEntitiesTypeDict.Emodel }, () => (
+      <EModelDetailView params={props} />
+    ))
+    .with({ extendedType: ExtendedEntitiesTypeDict.Memodel }, () => (
       <MEModelDetailView params={props} />
     ))
-    .with({ extendedType: ExtendedEntitiesType.SingleNeuronSynaptome }, () => (
+    .with({ extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome }, () => (
       <SynaptomeDetailView params={props} />
     ))
     .otherwise(() => null);

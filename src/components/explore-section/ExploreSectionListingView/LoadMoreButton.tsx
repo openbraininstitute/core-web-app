@@ -13,7 +13,7 @@ import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
-import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 function Btn({ children, className, disabled, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
@@ -33,7 +33,7 @@ export function useLoadMore<T>(
   dataContext: {
     workspace?: VirtualLabInfo;
     dataScope: ExploreDataScope;
-    dataType: ExtendedEntitiesType;
+    dataType: TExtendedEntitiesTypeDict;
   },
   key: string,
   useBrainRegion?: boolean
@@ -89,7 +89,7 @@ export default function LoadMoreButton({
   dataContext: {
     virtualLabInfo?: VirtualLabInfo;
     dataScope: ExploreDataScope;
-    dataType: ExtendedEntitiesType;
+    dataType: TExtendedEntitiesTypeDict;
   };
   dataKey: string;
   hide: () => void;

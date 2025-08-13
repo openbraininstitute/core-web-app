@@ -1,6 +1,6 @@
 import { Timestamps, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { TimestampsFilter, PaginationFilter } from '@/api/entitycore/types/shared/request';
-import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 type MeasurementItem = {
   name: string;
@@ -24,7 +24,7 @@ export type MeasurementKind = {
 
 export interface MeasurementAnnotation extends EntityCoreIdentifiable, Timestamps {
   entity_id: string;
-  entity_type: EntityTypeValue;
+  entity_type: TEntityTypeDict;
   measurement_kinds: MeasurementKind[];
 }
 
@@ -33,6 +33,6 @@ export type MeasurementAnnotationFilter = Partial<
   TimestampsFilter &
     PaginationFilter & {
       entity_id?: string;
-      entity_type?: EntityTypeValue;
+      entity_type?: TEntityTypeDict;
     }
 >;

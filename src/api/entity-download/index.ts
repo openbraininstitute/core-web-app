@@ -1,5 +1,5 @@
 import kebabCase from 'lodash/kebabCase';
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 
 type CreateTicketResponse = {
   ticketId: string;
@@ -11,7 +11,7 @@ export default async function createDownloadTicket({
   projectId,
   entityIds,
 }: {
-  entityType: EntityTypeValue;
+  entityType: TEntityTypeDict;
   virtualLabId?: string;
   projectId?: string;
   entityIds: string[];

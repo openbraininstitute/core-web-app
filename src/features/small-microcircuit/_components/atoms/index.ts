@@ -7,7 +7,7 @@ import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
@@ -147,7 +147,7 @@ export const fileAtomFamily = readAtomFamilyWithExpiration(
   }: {
     id: string;
     entityId: string;
-    entityType: EntityTypeValue;
+    entityType: TEntityTypeDict;
     assetPath?: string;
     context: WorkspaceContext;
   }) =>

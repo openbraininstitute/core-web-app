@@ -9,7 +9,7 @@ import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elemen
 
 import { getSingleNeuronSynaptomeSimulations } from '@/api/entitycore/queries';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
@@ -93,7 +93,7 @@ export default function Results({ modelId }: Props) {
           key={sim.id}
         >
           <SimulationDetail<ISingleNeuronSynaptomeSimulation>
-            type={EntityTypeEnum.SingleNeuronSynaptomeSimulation}
+            type={EntityTypeDict.SingleNeuronSynaptomeSimulation}
             simulation={sim}
             index={indx}
           >

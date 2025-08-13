@@ -7,12 +7,15 @@ import {
   previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { ExtendedEntitiesType, PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
+import {
+  PAGE_NUMBER,
+  TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { useDebouncedCallback } from '@/hooks/hooks';
 
 type SearchProps = {
   dataKey: string;
-  dataType: ExtendedEntitiesType;
+  dataType: TExtendedEntitiesTypeDict;
 };
 
 export default function ExploreSectionNameSearch({ dataType, dataKey }: SearchProps) {

@@ -1,7 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityTypeWithBrainRegionValue } from '@/api/entitycore/types/entity-type';
+import type { TEntityTypeWithBrainRegionDict } from '@/api/entitycore/types/entity-type';
 import type { EntityCountResponse, IEntity } from '@/api/entitycore/types/entities/entity';
 import type { BrainRegionFilter } from '@/api/entitycore/types/shared/request';
 import type { WorkspaceContext } from '@/types/common';
@@ -22,7 +22,7 @@ export async function getEntitiesCount({
   brainRegion,
 }: {
   context?: WorkspaceContext | null;
-  types?: Array<EntityTypeWithBrainRegionValue>;
+  types?: Array<TEntityTypeWithBrainRegionDict>;
   brainRegion: BrainRegionFilter;
 }): Promise<EntityCountResponse> {
   const api = await entityCoreApi();

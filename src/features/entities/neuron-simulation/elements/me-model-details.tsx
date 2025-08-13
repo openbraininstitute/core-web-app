@@ -5,7 +5,7 @@ import PreviewThumbnail from '@/features/thumbnail/preview';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { Field } from '@/features/entities/neuron-simulation/elements/field';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { IMEModel } from '@/api/entitycore/types';
 
@@ -23,7 +23,7 @@ export default function ModelDetails({ virtualLabId, projectId, meModel }: Props
         <Link
           href={resolveExploreDetailsPageUrl({
             ctx: { virtualLabId, projectId },
-            dataType: ExtendedEntitiesType.MEModel,
+            dataType: ExtendedEntitiesTypeDict.Memodel,
             entityId: meModel.id,
           })}
           className="text-primary-8 hover:text-primary-7 absolute top-6 right-8 flex items-center justify-center font-bold"

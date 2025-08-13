@@ -8,8 +8,12 @@ import Overview from '@/features/details-view/overview';
 import usePathname from '@/hooks/pathname';
 
 import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
+import {
   CommonSummaryViewFields,
-  getViewDefinitionByLegacyType,
+  getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
 import { DetailsPageSideBackLink } from '@/components/explore-section/Sidebar';
 import {
@@ -18,13 +22,12 @@ import {
 } from '@/state/explore-section/detail-view-atoms';
 import { ErrorLink, withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { conditionalAtom } from '@/hooks/use-conditional-atom';
+import { downloadArchive } from '@/services/entity-download';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { DetailViewUrlParams } from '@/types/explore-section/application';
-import { downloadArchive } from '@/services/entity-download';
 
 export default function Summary<T extends EntityCoreIdentifiableNamed>({
   payload,
@@ -38,12 +41,12 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   showViewMode?: boolean;
   commonFields?: Array<TypeSummaryProps>;
   extraHeaderAction?: ReactNode;
-  dataType: ExtendedEntitiesType;
+  dataType: TExtendedEntitiesTypeDict;
   children?: (detail: T) => ReactNode;
 }) {
   const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
-  const fields = getViewDefinitionByLegacyType(dataType)?.summaryViewFields;
+  const fields = getViewDefinitionByExtendedType(dataType)?.summaryViewFields;
 
   const path = usePathname();
 
@@ -80,7 +83,7 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
               title="Back to entities list"
               href={resolveExploreDetailsPageUrl({
                 ctx: { virtualLabId, projectId },
-                dataType: ExtendedEntitiesType.MEModel,
+                dataType: ExtendedEntitiesTypeDict.Memodel,
               })}
             />
             <ErrorLink title="Back to home" href="/app/virtual-lab" />

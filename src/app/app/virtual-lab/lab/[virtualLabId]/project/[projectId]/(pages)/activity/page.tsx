@@ -11,7 +11,7 @@ import ErrorData from '@/components/message-banners/error';
 import Tabs from '@/components/detail-view-tabs';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { EntityTypeValue } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 function ErrorFallback() {
   return (
@@ -29,7 +29,7 @@ export default async function Page({
   WorkspaceContext,
   {
     type: Extract<
-      EntityTypeValue,
+      TEntityTypeDict,
       | 'single_neuron_synaptome_simulation'
       | 'single_neuron_synaptome'
       | 'memodel'

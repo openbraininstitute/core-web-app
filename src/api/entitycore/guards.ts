@@ -1,4 +1,4 @@
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 import type { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
 import type {
@@ -22,43 +22,43 @@ export function hasAssets(
 export function isReconstructionMorphology(
   entity: EntityCoreObjectTypes
 ): entity is IReconstructionMorphology {
-  return entity.type === EntityTypeEnum.ReconstructionMorphology;
+  return entity.type === EntityTypeDict.ReconstructionMorphology;
 }
 
 export function isElectricalCellRecording(
   entity: EntityCoreObjectTypes
 ): entity is IElectricalCellRecording {
-  return entity.type === EntityTypeEnum.ElectricalCellRecording;
+  return entity.type === EntityTypeDict.ElectricalCellRecording;
 }
 
 export function isExperimentalNeuronDensity(
   entity: EntityCoreObjectTypes
 ): entity is IExperimentalNeuronDensity {
-  return entity.type === EntityTypeEnum.ExperimentalNeuronDensity;
+  return entity.type === EntityTypeDict.ExperimentalNeuronDensity;
 }
 
 export function isExperimentalBoutonDensity(
   entity: EntityCoreObjectTypes
 ): entity is IExperimentalBoutonDensity {
-  return entity.type === EntityTypeEnum.ExperimentalBoutonDensity;
+  return entity.type === EntityTypeDict.ExperimentalBoutonDensity;
 }
 
 export function isExperimentalSynapsesPerConnection(
   entity: EntityCoreObjectTypes
 ): entity is IExperimentalSynapsesPerConnection {
-  return entity.type === EntityTypeEnum.ExperimentalSynapsesPerConnection;
+  return entity.type === EntityTypeDict.ExperimentalSynapsesPerConnection;
 }
 
 export function isSingleNeuronSynaptome(
   entity: EntityCoreObjectTypes
 ): entity is ISingleNeuronSynaptome {
-  return entity.type === EntityTypeEnum.SingleNeuronSynaptome;
+  return entity.type === EntityTypeDict.SingleNeuronSynaptome;
 }
 
 export function isMemodel(entity: EntityCoreObjectTypes): entity is IMEModel {
-  return entity.type === EntityTypeEnum.Memodel;
+  return entity.type === EntityTypeDict.Memodel;
 }
 
 export function isEmodel(entity: EntityCoreObjectTypes): entity is IEModel {
-  return entity.type === EntityTypeEnum.Emodel;
+  return entity.type === EntityTypeDict.Emodel;
 }

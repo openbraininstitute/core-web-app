@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 
@@ -18,7 +18,7 @@ export async function GET(
   { params }: { params: { entityType: string; ticketId: string } }
 ) {
   const { entityType: entityTypeRaw, ticketId } = await params;
-  const entityType = snakeCase(entityTypeRaw) as EntityTypeValue;
+  const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
   const session = await auth();
   if (!session) {

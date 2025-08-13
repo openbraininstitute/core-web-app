@@ -11,7 +11,7 @@ import {
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { findParentIds } from '@/features/brain-region-hierarchy/helpers';
 import { getElectricalCellRecordings } from '@/api/entitycore/queries';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 
 import type { EntityCountResponse } from '@/api/entitycore/types/entities/entity';
@@ -72,7 +72,7 @@ export const entitiesCountAtom = atomFamily(
       if (restData) Object.assign(data, restData);
       if (ephysData)
         Object.assign(data, {
-          [EntityTypeEnum.ElectricalCellRecording]: ephysData.pagination.total_items,
+          [EntityTypeDict.ElectricalCellRecording]: ephysData.pagination.total_items,
         });
 
       if (ephysError || restError) error = restError ?? ephysError;

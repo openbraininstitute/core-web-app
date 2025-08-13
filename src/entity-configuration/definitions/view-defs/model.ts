@@ -1,12 +1,12 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
-  [ExtendedEntitiesType.EModel]: {
+  [ExtendedEntitiesTypeDict.Emodel]: {
     title: 'E-model',
     group: DataTypeGroup.ModelData,
     name: EntitySlug.EModel,
@@ -29,7 +29,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.EType },
     ],
   },
-  [ExtendedEntitiesType.MEModel]: {
+  [ExtendedEntitiesTypeDict.Memodel]: {
     title: 'ME-model',
     group: DataTypeGroup.ModelData,
     name: EntitySlug.MeModel,
@@ -52,7 +52,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.EType, className: 'col-span-4' },
     ],
   },
-  [ExtendedEntitiesType.SingleNeuronSynaptome]: {
+  [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
     title: 'Synaptome',
     group: DataTypeGroup.ModelData,
     name: EntitySlug.SingleNeuronSynaptome,
@@ -72,7 +72,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.License, className: 'col-span-1' },
     ],
   },
-  [ExtendedEntitiesType.Circuit]: {
+  [ExtendedEntitiesTypeDict.Circuit]: {
     title: 'Circuit',
     name: EntitySlug.Circuit,
     curated: false,
@@ -89,7 +89,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CircuitBuildCategory,
     ],
   },
-  [ExtendedEntitiesType.SmallMicrocircuit]: {
+  [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
     title: 'Small microcircuit',
     name: EntitySlug.SmallMicrocircuit,
     curated: false,
@@ -104,7 +104,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
     ],
   },
-  [ExtendedEntitiesType.PairedNeuronCircuit]: {
+  [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
     title: 'Paired neurons',
     name: EntitySlug.PairedNeuronsCircuit,
     curated: false,

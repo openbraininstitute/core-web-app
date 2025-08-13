@@ -2,7 +2,7 @@ import kebabCase from 'lodash/kebabCase';
 
 import authApiClient from '@/api/apiClient';
 
-import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { entityCoreUrl } from '@/config';
 
@@ -61,7 +61,7 @@ export async function getAsset({
 
 export async function downloadAsset(params: {
   ctx?: WorkspaceContext;
-  entityType: EntityTypeValue;
+  entityType: TEntityTypeDict;
   entityId: string;
   assetPath?: string;
   id: string;
@@ -71,7 +71,7 @@ export async function downloadAsset(params: {
 
 export async function downloadAsset<T>(params: {
   ctx?: WorkspaceContext;
-  entityType: EntityTypeValue;
+  entityType: TEntityTypeDict;
   entityId: string;
   assetPath?: string;
   id: string;
@@ -98,7 +98,7 @@ export async function downloadAsset<T>({
   assetPath = '',
 }: {
   ctx?: WorkspaceContext;
-  entityType: EntityTypeValue;
+  entityType: TEntityTypeDict;
   entityId: string;
   assetPath?: string;
   id: string;

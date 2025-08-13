@@ -9,9 +9,9 @@ import Nav from '@/components/build-section/virtual-lab/me-model/Nav';
 import Overview from '@/features/details-view/overview';
 import Link from '@/components/Link';
 
-import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { resolveExperimentUrl, resolveProjectUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { LinkItemKey } from '@/constants/virtual-labs/sidemenu';
 import { useSimulationConfig } from '@/hooks/useSimulation';
 
@@ -34,13 +34,13 @@ export default function SimulationDetailPage({ params, payload }: Props) {
     source: payload.source,
   });
 
-  const fields = getViewDefinitionByLegacyType(
-    ExtendedEntitiesType.SingleNeuronSimulation
+  const fields = getViewDefinitionByExtendedType(
+    ExtendedEntitiesTypeDict.SingleNeuronSimulation
   )?.summaryViewFields;
 
   if (!fields)
     throw new Error(
-      `Cannot find fields definition for ${ExtendedEntitiesType.SingleNeuronSimulation}`
+      `Cannot find fields definition for ${ExtendedEntitiesTypeDict.SingleNeuronSimulation}`
     );
 
   return (

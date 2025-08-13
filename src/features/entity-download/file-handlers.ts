@@ -9,7 +9,7 @@ import {
   getReconstructionMorphology,
 } from '@/api/entitycore/queries';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { EntityTypeEnum, EntityTypeValue } from '@/api/entitycore/types';
+import { EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
 import { Metadata } from '@/features/entity-download/metadata';
 import { FileEntry } from '@/features/entity-download/types';
 import { createAssetFileEntry, createTemplateFileEntry } from '@/features/entity-download/utils';
@@ -29,7 +29,7 @@ async function* getReconstructionMorphologyFiles(entityIds: string[], ctx?: Work
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.ReconstructionMorphology);
+    yield await createTemplateFileEntry(EntityTypeDict.ReconstructionMorphology);
   } catch {}
 
   for (const entityId of entityIds) {
@@ -60,7 +60,7 @@ async function* getElectricalCellRecordingFiles(entityIds: string[], ctx?: Works
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.ElectricalCellRecording);
+    yield await createTemplateFileEntry(EntityTypeDict.ElectricalCellRecording);
   } catch {}
 
   for (const entityId of entityIds) {
@@ -91,7 +91,7 @@ async function* getExperimentalNeuronDensityFiles(entityIds: string[], ctx?: Wor
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.ExperimentalNeuronDensity);
+    yield await createTemplateFileEntry(EntityTypeDict.ExperimentalNeuronDensity);
   } catch {}
 
   for (const entityId of entityIds) {
@@ -109,7 +109,7 @@ async function* getExperimentalBoutonDensityFiles(entityIds: string[], ctx?: Wor
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.ExperimentalBoutonDensity);
+    yield await createTemplateFileEntry(EntityTypeDict.ExperimentalBoutonDensity);
   } catch {}
 
   for (const entityId of entityIds) {
@@ -130,7 +130,7 @@ async function* getExperimentalSynapsesPerConnectionFiles(
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.ExperimentalSynapsesPerConnection);
+    yield await createTemplateFileEntry(EntityTypeDict.ExperimentalSynapsesPerConnection);
   } catch {}
 
   for (const entityId of entityIds) {
@@ -152,7 +152,7 @@ async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.Emodel);
+    yield await createTemplateFileEntry(EntityTypeDict.Emodel);
   } catch {}
 
   for (const entityId of entityIds) {
@@ -206,7 +206,7 @@ async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.Memodel);
+    yield await createTemplateFileEntry(EntityTypeDict.Memodel);
   } catch {}
 
   for (const entityId of entityIds) {
@@ -264,7 +264,7 @@ async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: Workspa
   const metadata = new Metadata();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.SingleNeuronSynaptome);
+    yield await createTemplateFileEntry(EntityTypeDict.SingleNeuronSynaptome);
   } catch {}
 
   // TODO: add emodel assets when supported by the API
@@ -339,15 +339,15 @@ async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: Workspa
   }
 }
 
-export const getEntityFilesHandlerMap: Partial<Record<EntityTypeValue, GetEntityFilesHandler>> = {
+export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntityFilesHandler>> = {
   // Experimental data
-  [EntityTypeEnum.ReconstructionMorphology]: getReconstructionMorphologyFiles,
-  [EntityTypeEnum.ElectricalCellRecording]: getElectricalCellRecordingFiles,
-  [EntityTypeEnum.ExperimentalNeuronDensity]: getExperimentalNeuronDensityFiles,
-  [EntityTypeEnum.ExperimentalBoutonDensity]: getExperimentalBoutonDensityFiles,
-  [EntityTypeEnum.ExperimentalSynapsesPerConnection]: getExperimentalSynapsesPerConnectionFiles,
+  [EntityTypeDict.ReconstructionMorphology]: getReconstructionMorphologyFiles,
+  [EntityTypeDict.ElectricalCellRecording]: getElectricalCellRecordingFiles,
+  [EntityTypeDict.ExperimentalNeuronDensity]: getExperimentalNeuronDensityFiles,
+  [EntityTypeDict.ExperimentalBoutonDensity]: getExperimentalBoutonDensityFiles,
+  [EntityTypeDict.ExperimentalSynapsesPerConnection]: getExperimentalSynapsesPerConnectionFiles,
   // Model data
-  [EntityTypeEnum.Emodel]: getEmodelFiles,
-  [EntityTypeEnum.Memodel]: getMEmodelFiles,
-  [EntityTypeEnum.SingleNeuronSynaptome]: getSingleNeuronSynaptomeFiles,
+  [EntityTypeDict.Emodel]: getEmodelFiles,
+  [EntityTypeDict.Memodel]: getMEmodelFiles,
+  [EntityTypeDict.SingleNeuronSynaptome]: getSingleNeuronSynaptomeFiles,
 };

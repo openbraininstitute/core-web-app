@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import {
   renderEmptyOrValue,
@@ -28,7 +28,7 @@ export default function Configuration({
       <Link
         href={resolveExploreDetailsPageUrl({
           ctx: { virtualLabId, projectId },
-          dataType: ExtendedEntitiesType.MEModel,
+          dataType: ExtendedEntitiesTypeDict.Memodel,
           entityId: memodel.id,
         })}
         className="text-primary-8 hover:text-primary-7 absolute top-4 right-4 flex items-center justify-center font-bold"
