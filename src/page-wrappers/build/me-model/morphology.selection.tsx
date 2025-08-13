@@ -8,7 +8,7 @@ import ExploreSectionListingView from '@/components/explore-section/ExploreSecti
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { resolveDataKey } from '@/utils/key-builder';
 
@@ -62,7 +62,7 @@ export default function MorphologySelection({ params, searchParams }: Props) {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-        dataType: ExtendedEntitiesType.ReconstructionMorphology,
+        dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
         entityId: record.id,
       })
     );
@@ -73,7 +73,7 @@ export default function MorphologySelection({ params, searchParams }: Props) {
       <ExploreSectionListingView<IReconstructionMorphology>
         containerClass="h-full bg-white"
         dataKey={dataKey}
-        dataType={ExtendedEntitiesType.ReconstructionMorphology}
+        dataType={ExtendedEntitiesTypeDict.ReconstructionMorphology}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}
         virtualLabInfo={{ virtualLabId: params.virtualLabId, projectId: params.projectId }}

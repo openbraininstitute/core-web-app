@@ -4,13 +4,13 @@ import dynamic from 'next/dynamic';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { resolveDataKey } from '@/utils/key-builder';
 import { detailUrlBuilder } from '@/util/common';
 
 import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 const ExploreSectionListingView = dynamic(
@@ -26,7 +26,7 @@ export default function ListingView({
   renderButton,
   virtualLabInfo,
 }: {
-  dataType: ExtendedEntitiesType;
+  dataType: TExtendedEntitiesTypeDict;
   dataScope: ExploreDataScope;
   virtualLabInfo?: VirtualLabInfo;
   renderButton?: (props: RenderButtonProps<IEModel>) => ReactNode;

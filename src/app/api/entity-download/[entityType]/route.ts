@@ -3,7 +3,7 @@ import snakeCase from 'lodash/snakeCase';
 import kebabCase from 'lodash/kebabCase';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 
@@ -29,7 +29,7 @@ const downloadRequestSchema = z.object({
  */
 export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
   const { entityType: entityTypeRaw } = await params;
-  const entityType = snakeCase(entityTypeRaw) as EntityTypeValue;
+  const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
   const session = await auth();
   if (!session) {

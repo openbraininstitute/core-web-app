@@ -10,7 +10,7 @@ import {
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
@@ -41,7 +41,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
   if (data) {
     const exploreUrl = resolveExploreDetailsPageUrl({
       ctx: { ...(params ?? {}) },
-      dataType: ExtendedEntitiesType.EModel,
+      dataType: ExtendedEntitiesTypeDict.Emodel,
       entityId: data.id,
     });
 

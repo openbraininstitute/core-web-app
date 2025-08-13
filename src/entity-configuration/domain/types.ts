@@ -1,16 +1,16 @@
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityTypeValue } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: EntityCoreTypeGroup;
-  extendedType: ExtendedEntitiesType;
-  type: EntityTypeValue;
+  extendedType: TExtendedEntitiesTypeDict;
+  type: TEntityTypeDict;
   slug: EntitySlugValue;
   title: string;
   api: {

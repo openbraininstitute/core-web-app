@@ -9,7 +9,7 @@ import type {
   EntityCoreTypeGroup,
 } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { EntityTypeValue } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type EntityCoreExtendedType =
@@ -19,7 +19,7 @@ export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedTyp
   find(EntityCoreConfiguration, { extendedType: type });
 
 // TODO: fix type to be a list of available types in entitycore
-export const getEntityByCoreType = ({ type }: { type?: EntityTypeValue }) =>
+export const getEntityByCoreType = ({ type }: { type?: TEntityTypeDict }) =>
   find(EntityCoreConfiguration, { type });
 
 export const getEntityBySlug = ({ slug }: { slug: EntitySlugValue }) =>

@@ -4,25 +4,25 @@ import {
   resolveProjectUrl,
   resolveLibraryUrl,
 } from '../../src/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 // Mock the getEntityByLegacyType helper function
 vi.mock('@/entity-configuration/domain/helpers', () => ({
   getEntityByLegacyType: vi.fn(({ legacyType }) => {
-    if (legacyType === ExtendedEntitiesType.ReconstructionMorphology) {
+    if (legacyType === ExtendedEntitiesTypeDict.ReconstructionMorphology) {
       return {
         slug: 'morphology',
         explore: { routePrefix: 'interactive/experimental' },
       };
     }
-    if (legacyType === ExtendedEntitiesType.EModel) {
+    if (legacyType === ExtendedEntitiesTypeDict.Emodel) {
       return {
         slug: 'e-model',
         explore: { routePrefix: 'model' },
       };
     }
-    if (legacyType === ExtendedEntitiesType.SingleNeuronSimulation) {
+    if (legacyType === ExtendedEntitiesTypeDict.SingleNeuronSimulation) {
       return {
         slug: 'simulation',
         explore: { routePrefix: 'simulate' },
@@ -42,7 +42,7 @@ describe('URL Builder Utils', () => {
     it('should build URL for morphology without workspace context', () => {
       const url = resolveExploreDetailsPageUrl({
         entityId: 'entity-123',
-        dataType: ExtendedEntitiesType.ReconstructionMorphology,
+        dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
       });
       expect(url).toBe('/app/virtual-lab/explore/interactive/experimental/morphology/entity-123');
     });
@@ -51,7 +51,7 @@ describe('URL Builder Utils', () => {
       const url = resolveExploreDetailsPageUrl({
         ctx: workspaceContext,
         entityId: 'entity-123',
-        dataType: ExtendedEntitiesType.ReconstructionMorphology,
+        dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
       });
       expect(url).toBe(
         '/app/virtual-lab/lab/virtual-lab-1/project/project-1/explore/interactive/experimental/morphology/entity-123'

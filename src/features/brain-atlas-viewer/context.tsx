@@ -11,7 +11,7 @@ import {
 import { arrayBufferToString } from '@/utils/buffer';
 import { tryCatch } from '@/api/utils';
 import { env } from '@/env';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 const defaultAtlasName = 'BlueBrain Atlas';
 export const brainAtlasAtom = atom(async () => {
@@ -45,7 +45,7 @@ async function resolveBrainRegionAtlasMesh({
   const { data: asset, error: assetError } = await tryCatch(
     downloadAsset<ArrayBuffer>({
       asRawResponse: false,
-      entityType: EntityTypeEnum.BrainAtlasRegion,
+      entityType: EntityTypeDict.BrainAtlasRegion,
       entityId: atlasRegions.id,
       id: atlasAssetId,
     } as const)

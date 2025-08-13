@@ -4,7 +4,7 @@ import some from 'lodash/some';
 import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { compactRecord } from '@/utils/dictionary';
 import { tryCatch } from '@/api/utils';
 
@@ -120,7 +120,7 @@ export async function getSingleNeuronSimulationIOResult(
       downloadAsset({
         ctx: context,
         entityId: source.id,
-        entityType: EntityTypeEnum.SingleNeuronSimulation,
+        entityType: EntityTypeDict.SingleNeuronSimulation,
         id: configAsset.id,
         asRawResponse: true,
       })

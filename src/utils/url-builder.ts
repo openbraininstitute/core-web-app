@@ -2,10 +2,10 @@ import {
   getEntityByCoreType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
 export const baseUri = '/app/virtual-lab';
@@ -18,8 +18,8 @@ export function resolveExploreDetailsPageUrl({
 }: {
   ctx?: Partial<WorkspaceContext>;
   entityId?: string;
-  dataType?: ExtendedEntitiesType;
-  entityType?: EntityTypeValue;
+  dataType?: TExtendedEntitiesTypeDict;
+  entityType?: TEntityTypeDict;
 }) {
   if (dataType && entityType)
     throw Error('Only one of dataType and entityType should be specified');
@@ -68,7 +68,7 @@ export function resolveExperimentUrl({
   dataType,
 }: {
   ctx: Required<WorkspaceContext>;
-  dataType?: EntityTypeValue;
+  dataType?: TEntityTypeDict;
   entityId?: string;
 }) {
   const entityConfig = getEntityByCoreType({ type: dataType });
@@ -84,7 +84,7 @@ export function resolveExperimentUrlByExtendedType({
   dataType,
 }: {
   ctx: Required<WorkspaceContext>;
-  dataType?: ExtendedEntitiesType;
+  dataType?: TExtendedEntitiesTypeDict;
   entityId?: string;
 }) {
   const entityConfig = getEntityByExtendedType({ type: dataType });

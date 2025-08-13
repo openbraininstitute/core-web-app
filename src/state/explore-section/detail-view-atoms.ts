@@ -5,14 +5,15 @@ import { atomFamily } from 'jotai/utils';
 import isEqual from 'lodash/isEqual';
 
 import { DetailViewUrlParams } from '@/types/explore-section/application';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const backToListPathAtom = atom<string | null | undefined>(null);
 export const brainRegionSidebarIsCollapsedAtom = atom(true);
 
 export const detailFamily = atomFamily<
-  DetailViewUrlParams & { dataType: ExtendedEntitiesType },
+  DetailViewUrlParams & { dataType: TExtendedEntitiesTypeDict },
   Atom<Promise<any>>
 >(
   (viewParams) =>

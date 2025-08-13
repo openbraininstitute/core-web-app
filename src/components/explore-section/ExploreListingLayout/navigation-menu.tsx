@@ -11,13 +11,13 @@ import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/conte
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';
 import { resolveDataKey } from '@/utils/key-builder';
 
-import type { EntityTypeValue } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type NavigationMenuItem = {
   key: string;
   title: string;
-  entitytype: Partial<EntityTypeValue> | undefined;
+  entitytype: Partial<TEntityTypeDict> | undefined;
   label: ReactNode;
   className: string;
   style: CSSProperties;

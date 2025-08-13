@@ -18,7 +18,7 @@ import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { activityAtomFamily } from '@/features/activity-view/context';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames, getRandomIntInclusive } from '@/util/utils';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import {
@@ -235,7 +235,7 @@ export default function SynaptomeConfigurationForm({
             );
             const url = resolveExploreDetailsPageUrl({
               ctx: { virtualLabId, projectId },
-              dataType: ExtendedEntitiesType.SingleNeuronSynaptome,
+              dataType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
               entityId: result?.entity.id,
             });
 

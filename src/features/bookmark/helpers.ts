@@ -14,8 +14,8 @@ import { getViewDefinitionsByLegacyType } from '@/entity-configuration/definitio
 import { EXPERIMENTAL_DATATYPES } from '@/entity-configuration/domain/experimental';
 import { SIMULATIONS_DATATYPES } from '@/entity-configuration/domain/simulation';
 import { MODEL_DATATYPES } from '@/entity-configuration/domain/model';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 
@@ -35,7 +35,7 @@ export type GroupedLibraryBookmarks = {
   simulations?: SimulationDataMap;
 };
 
-const getCategory = (key: ExtendedEntitiesType): string => {
+const getCategory = (key: TExtendedEntitiesTypeDict): string => {
   if (EXPERIMENTAL_DATATYPES.includes(key as (typeof EXPERIMENTAL_DATATYPES)[number]))
     return 'experimental';
   if (MODEL_DATATYPES.includes(key as (typeof MODEL_DATATYPES)[number])) return 'models';
@@ -45,13 +45,16 @@ const getCategory = (key: ExtendedEntitiesType): string => {
 };
 
 export const groupBookmarksByCategory = (
-  data?: Record<ExtendedEntitiesType, any> | null
-): { data: Record<ExtendedEntitiesType, any> | null; list: GroupedLibraryBookmarks | null } => {
+  data?: Record<TExtendedEntitiesTypeDict, any> | null
+): {
+  data: Record<TExtendedEntitiesTypeDict, any> | null;
+  list: GroupedLibraryBookmarks | null;
+} => {
   if (isNil(data) || isEmpty(data)) return { data: null, list: null };
   const entries = Object.entries(data).map(([key, value]) => ({
     key,
     value,
-    category: getCategory(key as ExtendedEntitiesType),
+    category: getCategory(key as TExtendedEntitiesTypeDict),
   }));
 
   const grouped = groupBy(entries, 'category');
@@ -79,7 +82,7 @@ export function getAvailableTabs(
 
   const tabs = map(picked, (item, key) => {
     return {
-      key: getEntityByExtendedType({ type: key as ExtendedEntitiesType })?.slug,
+      key: getEntityByExtendedType({ type: key as TExtendedEntitiesTypeDict })?.slug,
       label: item!.title,
       name: item!.name,
     };
@@ -91,7 +94,7 @@ export function getAvailableTabs(
       compact(
         Object.keys(categories).map(
           (legacyType) =>
-            getEntityByExtendedType({ type: legacyType as ExtendedEntitiesType })?.slug
+            getEntityByExtendedType({ type: legacyType as TExtendedEntitiesTypeDict })?.slug
         )
       ),
     ])

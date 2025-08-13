@@ -16,7 +16,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import {
-  getViewDefinitionByLegacyType,
+  getViewDefinitionByExtendedType,
   ViewsDefinitionRegistry,
 } from '@/entity-configuration/definitions/view-defs';
 import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
@@ -91,7 +91,7 @@ export const activeColumnsAtom = atomFamily(
 
 export const filtersAtom = atomFamily((scope: DataAtomBinding) => {
   const childAtom = atomWithDefault<Array<CoreFilter>>(() => {
-    const columns = getViewDefinitionByLegacyType(scope.dataType)?.columns;
+    const columns = getViewDefinitionByExtendedType(scope.dataType)?.columns;
     const fields = columns ? getFieldsDefinition(columns) : [];
 
     return [

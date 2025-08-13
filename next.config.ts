@@ -81,15 +81,15 @@ const nextConfig = (phase: string): NextConfig => {
         },
       ],
     },
-    // async redirects() {
-    //   return [
-    //     {
-    //       source: `/app/virtual-lab/:path*`,
-    //       destination: `/app/v2/setup`,
-    //       permanent: false,
-    //     },
-    //   ];
-    // },
+    async redirects() {
+      return [
+        {
+          source: `/app/virtual-lab/:path*`,
+          destination: `/app/v2/setup`,
+          permanent: false,
+        },
+      ];
+    },
   };
 };
 

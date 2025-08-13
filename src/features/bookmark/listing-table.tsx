@@ -18,11 +18,11 @@ import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
 interface Props extends WorkspaceContext {
-  dataType: ExtendedEntitiesType;
+  dataType: TExtendedEntitiesTypeDict;
   dataKey: string;
 }
 

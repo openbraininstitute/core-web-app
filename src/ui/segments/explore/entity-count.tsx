@@ -10,7 +10,7 @@ import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListVi
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -137,7 +137,7 @@ export function EntityCount({ dataKey }: Props) {
   const experimentalState = useMemo(
     () => [
       ...Object.entries(ExperimentalEntitiesTileTypes).map(([, value]) => {
-        if (value.type === EntityTypeEnum.ElectricalCellRecording) {
+        if (value.type === EntityTypeDict.ElectricalCellRecording) {
           return { ...value, isLoading: ephysLoading };
         }
         return { ...value, isLoading: allLoading };
@@ -161,7 +161,7 @@ export function EntityCount({ dataKey }: Props) {
       <>
         {experimentalState.map((value) => {
           let count: number | null = get(allData, value.type, null);
-          if (value.type === EntityTypeEnum.ElectricalCellRecording) {
+          if (value.type === EntityTypeDict.ElectricalCellRecording) {
             count = ephysData?.pagination.total_items ?? null;
           }
 

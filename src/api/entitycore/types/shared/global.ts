@@ -1,6 +1,6 @@
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
-import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 
@@ -13,7 +13,7 @@ export type EntityCoreIdentifiable = {
 };
 
 export type EntityCoreType = {
-  type: EntityTypeValue;
+  type: TEntityTypeDict;
 };
 
 export type ActivityType = {

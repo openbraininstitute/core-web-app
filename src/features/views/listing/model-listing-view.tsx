@@ -10,7 +10,7 @@ import ListingView from '@/features/views/listing';
 import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 
 import type { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -35,7 +35,7 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
   }, [projectId, setBackToListPath, virtualLabId, vlProjectUrl]);
 
   return match<SerializedEntityCoreTypeConfig<any>>(entity)
-    .with({ extendedType: ExtendedEntitiesType.EModel }, (en) => (
+    .with({ extendedType: ExtendedEntitiesTypeDict.Emodel }, (en) => (
       <ExploreEModelTable
         virtualLabInfo={{ virtualLabId, projectId }}
         dataType={en.extendedType}
@@ -45,8 +45,8 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
     .with(
       {
         extendedType: P.union(
-          ExtendedEntitiesType.MEModel,
-          ExtendedEntitiesType.SingleNeuronSynaptome
+          ExtendedEntitiesTypeDict.Memodel,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptome
         ).select(),
       },
       () => (

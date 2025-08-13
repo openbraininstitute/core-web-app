@@ -23,7 +23,7 @@ import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/globa
 import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -132,7 +132,7 @@ export default function BookmarksView({
                   key={dataKey}
                   virtualLabId={virtualLabId}
                   projectId={projectId}
-                  dataType={entity?.extendedType as ExtendedEntitiesType}
+                  dataType={entity?.extendedType as TExtendedEntitiesTypeDict}
                   dataKey={dataKey}
                 />
               </ErrorBoundary>

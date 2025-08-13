@@ -5,7 +5,7 @@ import type {
 } from '@/api/entitycore/types/entities/derivation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { KebabCase, NormalizeChars } from '@/utils/type';
-import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
 /**
@@ -27,7 +27,7 @@ export async function getEntityDerivations({
   filters,
 }: {
   context?: WorkspaceContext | null;
-  entityRoute: KebabCase<NormalizeChars<EntityTypeValue>>;
+  entityRoute: KebabCase<NormalizeChars<TEntityTypeDict>>;
   entityId: string;
   filters?: Partial<IDerivationFilter>;
 }): Promise<EntityCoreResponse<IDerivationBase>> {

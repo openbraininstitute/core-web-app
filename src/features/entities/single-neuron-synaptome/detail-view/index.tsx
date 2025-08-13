@@ -13,8 +13,8 @@ import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 
@@ -59,7 +59,7 @@ export default function Page({
         <Summary
           payload={source}
           showViewMode
-          dataType={ExtendedEntitiesType.SingleNeuronSynaptome}
+          dataType={ExtendedEntitiesTypeDict.SingleNeuronSynaptome}
           commonFields={CommonSummaryViewFields}
           extraHeaderAction={
             virtualLabId &&
@@ -68,7 +68,7 @@ export default function Page({
                 className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
                 href={resolveExperimentUrl({
                   ctx: { virtualLabId, projectId },
-                  dataType: EntityTypeEnum.SingleNeuronSynaptome,
+                  dataType: EntityTypeDict.SingleNeuronSynaptome,
                   entityId: id,
                 })}
               >

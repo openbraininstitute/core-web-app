@@ -9,7 +9,7 @@ import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/
 import { checkSelectedEmodelBlackList } from '@/page-wrappers/build/me-model/helpers';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { resolveDataKey } from '@/utils/key-builder';
@@ -105,7 +105,7 @@ export default function EmodelSelection({ params, searchParams }: Props) {
   const onCellClick = (_basePath: string, record: IEModel) => {
     resolveExploreDetailsPageUrl({
       ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-      dataType: ExtendedEntitiesType.EModel,
+      dataType: ExtendedEntitiesTypeDict.Emodel,
       entityId: record.id,
     });
   };
@@ -120,7 +120,7 @@ export default function EmodelSelection({ params, searchParams }: Props) {
       <ExploreSectionListingView<IEModel>
         dataKey={dataKey}
         containerClass="h-full bg-white"
-        dataType={ExtendedEntitiesType.EModel}
+        dataType={ExtendedEntitiesTypeDict.Emodel}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}
         selectionType="radio"

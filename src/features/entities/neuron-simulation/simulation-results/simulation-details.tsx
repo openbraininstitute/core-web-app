@@ -13,7 +13,7 @@ import SimulationPlot from '@/features/entities/neuron-simulation/simulation-res
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
@@ -35,7 +35,7 @@ type GenericSimulation = ISingleNeuronSynaptomeSimulation | ISingleNeuronSimulat
 
 type Props<T> = {
   index: number;
-  type: EntityTypeEnum;
+  type: TEntityTypeDict;
   simulation: T;
   children?: ({ config }: { config: SingleNeuronModelSimulationConfig }) => ReactNode;
 };

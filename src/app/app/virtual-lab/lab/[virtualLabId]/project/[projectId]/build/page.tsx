@@ -13,7 +13,7 @@ import BookmarkButton from '@/features/bookmark/control';
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { ExtendedEntitiesType } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { classNames } from '@/util/utils';
 import {
@@ -77,8 +77,8 @@ function BrowseModelsTab() {
         <ScopeSelectorSmall expanded={expanded} onMenuExpand={onMenuExpand} />
 
         {dataType &&
-        dataType !== ExtendedEntitiesType.PairedNeuronCircuit &&
-        dataType !== ExtendedEntitiesType.SmallMicrocircuit ? (
+        dataType !== ExtendedEntitiesTypeDict.PairedNeuronCircuit &&
+        dataType !== ExtendedEntitiesTypeDict.SmallMicrocircuit ? (
           <div
             id="explore-table-container-for-observable"
             className={classNames(
