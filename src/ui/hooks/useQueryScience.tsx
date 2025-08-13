@@ -10,8 +10,8 @@ import isEmpty from 'lodash/isEmpty';
 
 import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import { PAGE_SIZE } from '@/api/entitycore/types/extended-entity-type';
 import { compactRecord } from '@/utils/dictionary';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 import {
   sortStateAtom,
   searchStringAtom,
@@ -38,7 +38,7 @@ function useQueryParameters({
   const filters = useAtomValue(filtersAtom(ctx));
 
   const queryParameters = compactRecord({
-    page_size: PAGE_SIZE,
+    page_size: DEFAULT_PAGE_SIZE,
     page: pageNumber,
     search: isEmpty(searchString) ? null : searchString,
     order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,

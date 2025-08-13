@@ -8,8 +8,10 @@ export type Prettify<T> = {
 } & {};
 
 type KebabCaseHelper<S extends string> = S extends `${infer First}${infer Rest}`
-  ? First extends Lowercase<First> | '-' | '_' | ' '
-    ? `${First}${KebabCaseHelper<Rest>}`
+  ? First extends Lowercase<First>
+    ? First extends '_' | ' ' | '-'
+      ? `-${KebabCaseHelper<Rest>}`
+      : `${First}${KebabCaseHelper<Rest>}`
     : `-${Lowercase<First>}${KebabCaseHelper<Rest>}`
   : '';
 
@@ -19,8 +21,11 @@ export type NormalizeChars<S extends string> = S extends `${infer Head}${infer T
     : `${Head}${NormalizeChars<Tail>}`
   : S;
 
-export type KebabCase<S extends string> = S extends `${infer First}${infer Rest}`
-  ? First extends Lowercase<First>
-    ? `${First}${KebabCaseHelper<Rest>}`
+type KebabCaseCore<S extends string> = S extends `${infer First}${infer Rest}`
+  ? First extends '_' | ' ' | '-'
+    ? KebabCaseCore<Rest>
     : `${Lowercase<First>}${KebabCaseHelper<Rest>}`
   : S;
+
+// Strict variant: rejects widened string types. Ensures hover shows concrete transformed literal unions.
+export type KebabCase<S extends string> = string extends S ? never : KebabCaseCore<S>;

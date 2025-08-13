@@ -122,8 +122,8 @@ export function CreditsManagement({
           showSizeChanger: false,
           hideOnSinglePage: true,
           className: cn(
-            '[&_.ant-pagination-item_a]:text-white! [&_.ant-pagination-item_a]:bg-primary-9! [&_.ant-pagination-item-active]:bg-primary-7 [&_.ant-pagination-item-active]:text-white! [&_.ant-pagination-item-link]:text-white!',
-            'flex items-center gap-2 [&_.ant-pagination-item]:rounded-sm [&_.ant-pagination-item_a]:rounded-sm'
+            '[&_.ant-pagination-item]:bg-primary-9! [&_.ant-pagination-item_a]:text-white! [&_.ant-pagination-item-active]:bg-white! [&_.ant-pagination-item-active_a]:text-primary-9!',
+            '[&_.ant-pagination-disabled_button]:text-neutral-1 [&_button.ant-pagination-item-link]:text-white'
           ),
         }}
         renderItem={(item) => (

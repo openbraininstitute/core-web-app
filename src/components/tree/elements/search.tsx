@@ -77,7 +77,8 @@ export default function TreeSearch({ options, onSelect }: Props) {
             '[&_.ant-select-selector]:rounded-full!',
             '[&_.ant-select-selector]:border-neutral-1!',
             '[&_.ant-select-selector]:shadow-lg!',
-            '[&_.ant-select-selection-search-input]:text-sm!'
+            '[&_.ant-select-selection-search-input]:text-sm!',
+            '[&_.ant-select-selection-placeholder]:text-neutral-3'
           )}
         />
       </ConfigProvider>

@@ -22,10 +22,8 @@ import {
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import {
-  TExtendedEntitiesTypeDict,
-  PAGE_NUMBER,
-} from '@/api/entitycore/types/extended-entity-type';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { classNames } from '@/util/utils';
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
@@ -90,7 +88,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   const setPageNumber = useSetAtom(pageNumberAtom(dataKeyExpand));
 
   const onSortChange = (newSortState: any) => {
-    setPageNumber(PAGE_NUMBER);
+    setPageNumber(DEFAULT_PAGE_NUMBER);
     setPrevData([]);
     setSortState(newSortState);
   };

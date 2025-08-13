@@ -31,7 +31,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
       <div
         className={cn(
           'border-neutral-1 flex w-full items-center justify-between gap-6 rounded-full py-2 pr-2 pl-4',
-          { 'shadow-2xl': Boolean(selectedBrainRegion?.id) }
+          { 'shadow-md': Boolean(selectedBrainRegion?.id) }
         )}
       >
         <div className="flex items-center justify-center gap-2">

@@ -1,17 +1,16 @@
 import { ChangeEvent, RefObject, useEffect, useRef, useState } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
 import { SearchOutlined } from '@ant-design/icons';
+import { useAtom, useSetAtom } from 'jotai';
 
 import {
   pageNumberAtom,
   previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
-import {
-  PAGE_NUMBER,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
 import { useDebouncedCallback } from '@/hooks/hooks';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type SearchProps = {
   dataKey: string;
@@ -35,7 +34,7 @@ export default function ExploreSectionNameSearch({ dataType, dataKey }: SearchPr
   const debouncedUpdateAtom = useDebouncedCallback(
     (searchStr: string) => {
       setPrevData([]);
-      setPageNumber(PAGE_NUMBER);
+      setPageNumber(DEFAULT_PAGE_NUMBER);
       setSearchString(searchStr);
     },
     [setPageNumber, setPrevData, setSearchString],

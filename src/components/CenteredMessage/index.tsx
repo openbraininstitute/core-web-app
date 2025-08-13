@@ -5,7 +5,7 @@ type CenteredMessageProps = {
   icon?: ReactElement<any>;
 };
 
-export default function CenteredMessage({ message, icon }: CenteredMessageProps) {
+export function CenteredMessage({ message, icon }: CenteredMessageProps) {
   return (
     <div className="flex h-40 items-center justify-center">
       <div className="text-center">
@@ -15,3 +15,5 @@ export default function CenteredMessage({ message, icon }: CenteredMessageProps)
     </div>
   );
 }
+
+export default CenteredMessage;

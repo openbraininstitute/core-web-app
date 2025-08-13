@@ -1,4 +1,4 @@
-interface Pagination {
+export interface Pagination {
   page: number;
   page_size: number;
   total_items: number;

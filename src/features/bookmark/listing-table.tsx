@@ -15,7 +15,7 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -46,7 +46,7 @@ export default function ListingTable<T extends EntityCoreIdentifiable>({
   const [sortState, setSortState] = useAtom(sortStateAtom({ key: dataKey }));
 
   const onSortChange = (newSortState: any) => {
-    setPageNumber(PAGE_NUMBER);
+    setPageNumber(DEFAULT_PAGE_NUMBER);
     setPrevData([]);
     setSortState(newSortState);
   };

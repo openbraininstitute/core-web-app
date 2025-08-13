@@ -43,10 +43,12 @@ export function Container(): JSX.Element {
     return '24rem';
   }, [isCollapsed, isFullscreen]);
 
-  const targetHeight = useMemo<string>(
-    () => (isFullscreen ? 'calc(100vh - 1rem)' : 'calc(100vh - 5.7rem)'),
-    [isFullscreen]
-  );
+  const targetHeight = useMemo<string>(() => {
+    if (isFullscreen) return 'calc(100vh - 1rem)';
+    if (isExpanded) return 'calc(100vh - 6rem)';
+    if (isCollapsed) return 'calc(100vh - 6.5rem)';
+    return 'calc(100vh - 5.2rem)';
+  }, [isFullscreen, isExpanded, isCollapsed]);
 
   // avoid noticeable morphing of border radius by locking it during animation
   const getRadius = (s: TPanelState): number => (s === PanelState.Collapsed ? 9999 : 16);
@@ -68,9 +70,9 @@ export function Container(): JSX.Element {
       id="workspace-ai"
       className={cn(
         'text-white [grid-area:ai]',
-        { 'text-primary-9 mx-3 bg-white shadow-lg': isExpanded },
+        { 'text-primary-9 mr-3 bg-white shadow-lg': isExpanded },
         { 'text-primary-9 my-2 bg-white px-4 shadow-lg': isFullscreen },
-        { 'bg-primary-9 border-primary-9 m-2 text-white shadow-md': isCollapsed }
+        { 'bg-primary-9 border-primary-9 my-2 mr-3 text-white shadow-md': isCollapsed }
       )}
       animate={{
         width: targetWidth,

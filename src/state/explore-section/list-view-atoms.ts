@@ -10,7 +10,6 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
-import { PAGE_NUMBER, PAGE_SIZE } from '@/api/entitycore/types/extended-entity-type';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -22,6 +21,7 @@ import {
 import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
+import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@/constants';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
@@ -43,7 +43,7 @@ const isListAtomEqual = (a: DataAtomBinding, b: DataAtomBinding): boolean => {
 };
 
 export const pageNumberAtom = atomFamily((_key: string) => {
-  const childAtom = atom<number>(PAGE_NUMBER);
+  const childAtom = atom<number>(DEFAULT_PAGE_NUMBER);
   childAtom.debugLabel = `page-number/${_key}`;
   return childAtom;
 });
@@ -158,13 +158,13 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
             pagination: {
               total_items: 0,
               page: 1,
-              page_size: PAGE_SIZE,
+              page_size: DEFAULT_PAGE_SIZE,
             },
           } as EntityCoreResponse<T>;
         }
       }
       const queryParameters = compactRecord({
-        page_size: PAGE_SIZE,
+        page_size: DEFAULT_PAGE_SIZE,
         page: pageNumber,
         search: isEmpty(searchString) ? null : searchString,
         order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
@@ -190,7 +190,7 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
         pagination: {
           total_items: 0,
           page: 1,
-          page_size: PAGE_SIZE,
+          page_size: DEFAULT_PAGE_SIZE,
         },
       } as EntityCoreResponse<T>;
     }

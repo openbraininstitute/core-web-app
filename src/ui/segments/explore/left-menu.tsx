@@ -1,7 +1,8 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import React, { Suspense, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Suspense, useState } from 'react';
 
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
@@ -11,15 +12,47 @@ import {
   RegionBanner,
   TExploreLeftMenuContext,
 } from '@/features/brain-region-hierarchy/region-banner';
+import {
+  getAllEntitiesCount,
+  getElectricalCellRecordingsCount,
+} from '@/ui/segments/explore/helpers';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { TTreeNode } from '@/components/tree/types';
 
 type Props = { dataKey: string };
 
 export function ExploreMenu({ dataKey }: Props) {
+  const queryClient = useQueryClient();
+  const { virtualLabId, projectId } = useWorkspace();
+
   const [view, updateView] = useState<TExploreLeftMenuContext>(
     ExploreLeftMenuContext.BrainRegionHierarchy
   );
 
   const onSwitchView = (_view: TExploreLeftMenuContext) => updateView(_view);
+
+  const onClickBrainRegion = async (node: TTreeNode) => {
+    const params = {
+      virtualLabId,
+      projectId,
+      brainRegionId: node.id,
+    };
+
+    await queryClient.prefetchQuery({
+      queryKey: keyBuilder.dataCount({ ...params }),
+      queryFn: () => getAllEntitiesCount({ ...params }),
+    });
+
+    await queryClient.prefetchQuery({
+      queryKey: keyBuilder.electricalCellRecordingsCount({ ...params }),
+      queryFn: () =>
+        getElectricalCellRecordingsCount({
+          ...params,
+        }),
+    });
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -40,7 +73,7 @@ export function ExploreMenu({ dataKey }: Props) {
               <div className="flex h-full min-h-0 flex-col overflow-hidden">
                 <div className="text-primary-9/90 mb-1 px-5 text-base font-bold">Brain region</div>
                 <div className="min-h-0 flex-1 overflow-hidden">
-                  <BrainRegionHierarchy dataKey={dataKey} />
+                  <BrainRegionHierarchy dataKey={dataKey} onClickCallback={onClickBrainRegion} />
                 </div>
               </div>
             </Suspense>

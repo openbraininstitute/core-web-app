@@ -4,11 +4,11 @@ import { ReactNode, useState } from 'react';
 import { InfoCircleFilled } from '@ant-design/icons';
 
 import { useOptions } from '@/features/listing-filter-panel/checklist/use-options';
-import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/api/entitycore/types/extended-entity-type';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { CenteredMessage } from '@/components/CenteredMessage';
+import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants';
 
 import SearchFilter from '@/features/listing-filter-panel/search-filter';
-import CenteredMessage from '@/components/CenteredMessage';
 
 import type { FacetLabelValuePair } from '@/features/listing-filter-panel/checklist/use-options';
 import type { CheckListProps } from '@/features/listing-filter-panel/checklist/default-checklist';
