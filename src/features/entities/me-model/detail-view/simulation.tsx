@@ -7,7 +7,7 @@ import { Spin } from 'antd';
 import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
@@ -95,7 +95,7 @@ export default function Results({ modelId }: Props) {
         >
           <SimulationDetail<ISingleNeuronSimulation>
             index={indx}
-            type={EntityTypeEnum.SingleNeuronSimulation}
+            type={EntityTypeDict.SingleNeuronSimulation}
             simulation={sim}
           />
         </ErrorBoundary>

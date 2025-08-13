@@ -19,9 +19,9 @@ import SettingsIcon from '@/components/icons/Settings';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { filterHasValue } from '@/features/listing-filter-panel/util';
-import { DataType } from '@/constants/explore-section/list-views';
 import { classNames } from '@/util/utils';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 function FilterBtn({ disabled, children, onClick }: HTMLProps<HTMLButtonElement>) {
@@ -57,7 +57,7 @@ export default function FilterControls({
   children?: ReactNode;
   displayControlPanel: boolean;
   setDisplayControlPanel: Dispatch<SetStateAction<boolean>>;
-  dataType: DataType;
+  dataType: TExtendedEntitiesTypeDict;
   dataScope?: ExploreDataScope;
   dataKey: string;
   filters?: CoreFilter[];

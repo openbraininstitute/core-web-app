@@ -10,7 +10,7 @@ import Analysis from '@/features/model-analysis/explorer';
 import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { IReconstructionMorphology, IEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -37,7 +37,7 @@ export default function EModelDetailView({ payload, params }: Props) {
 
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
-      <Summary dataType={DataType.CircuitEModel} payload={payload.source}>
+      <Summary dataType={ExtendedEntitiesTypeDict.Emodel} payload={payload.source}>
         {() => (
           <>
             <Tabs tabsConfig={TabsConfig} />

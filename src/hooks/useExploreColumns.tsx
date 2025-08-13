@@ -9,9 +9,9 @@ import fieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configu
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { OrderShape } from '@/entity-configuration/definitions/types';
 
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
@@ -59,7 +59,7 @@ function isOrderObject(order: OrderShape): order is { property: string; value: s
  */
 export function getOrderValue(
   order: OrderShape | undefined,
-  dataType?: DataType
+  dataType?: TExtendedEntitiesTypeDict
 ): string | undefined {
   if (!order) return undefined;
 
@@ -84,7 +84,7 @@ export default function useExploreColumns<T>(
   sortState?: SortState,
   initialColumns: ColumnProps<T>[] = [],
   dimensionColumns?: string[] | null,
-  dataType?: DataType
+  dataType?: TExtendedEntitiesTypeDict
 ): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
 

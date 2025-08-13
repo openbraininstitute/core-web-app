@@ -1,12 +1,12 @@
 // TODO: this data type should be moved from this file
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const EXPERIMENTAL_DATATYPES = [
-  DataType.ExperimentalBoutonDensity,
-  DataType.ExperimentalNeuronDensity,
-  DataType.ExperimentalElectroPhysiology,
-  DataType.ExperimentalSynapsePerConnection,
-  DataType.ExperimentalNeuronMorphology,
+  ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+  ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+  ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+  ExtendedEntitiesTypeDict.ReconstructionMorphology,
 ] as const;
 
 export enum ExperimentTypeNames {

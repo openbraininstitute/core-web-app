@@ -6,7 +6,7 @@ import Configuration from '@/page-wrappers/build/single-neuron-synaptome';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getAssetElement } from '@/api/entitycore/utils';
@@ -76,7 +76,7 @@ async function getSingleNeuronSynaptomeConfiguration({
     const asset = await downloadAsset({
       ctx,
       entityId: data.id,
-      entityType: EntityTypeEnum.SingleNeuronSynaptome,
+      entityType: EntityTypeDict.SingleNeuronSynaptome,
       id: configAsset.id,
     });
 

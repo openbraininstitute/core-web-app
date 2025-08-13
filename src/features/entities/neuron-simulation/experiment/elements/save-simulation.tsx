@@ -83,7 +83,7 @@ export default function SaveSimulationModal({
           resolveExploreDetailsPageUrl({
             ctx: { virtualLabId, projectId },
             entityId: data.simulation.id,
-            dataType: entity?.legacyType,
+            dataType: entity?.extendedType,
           })
         );
         onClose?.();

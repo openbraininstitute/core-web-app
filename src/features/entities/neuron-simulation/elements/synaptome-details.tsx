@@ -5,7 +5,7 @@ import PreviewThumbnail from '@/features/thumbnail/preview';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { Field } from '@/features/entities/neuron-simulation/elements/field';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 
@@ -24,7 +24,7 @@ export default function ModelDetails({ virtualLabId, projectId, meModel, synapto
         <Link
           href={resolveExploreDetailsPageUrl({
             ctx: { virtualLabId, projectId },
-            dataType: DataType.SingleNeuronSynaptome,
+            dataType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
             entityId: synaptome.id,
           })}
           className="text-primary-8 hover:text-primary-7 absolute top-6 right-8 flex items-center justify-center font-bold"

@@ -4,11 +4,11 @@ import { promisify } from 'util';
 import tar from 'tar-stream';
 
 import { getEntityFilesHandlerMap } from '@/features/entity-download/file-handlers';
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 
 type CreateDownloadStreamParams = {
   entityIds: string[];
-  entityType: EntityTypeValue;
+  entityType: TEntityTypeDict;
   projectId?: string | null;
   virtualLabId?: string | null;
 };
@@ -17,7 +17,7 @@ type CreateDownloadStreamParams = {
  * Creates a download stream for a specific entity type with associated files.
  *
  * @param {CreateDownloadStreamParams} params - Parameters for creating the download stream
- * @param {EntityTypeValue} params.entityType - The type of entity being downloaded
+ * @param {TEntityTypeDict} params.entityType - The type of entity being downloaded
  * @param {string} params.virtualLabId - The ID of the virtual lab
  * @param {string} params.projectId - The ID of the project
  * @param {string[]} params.entityIds - The IDs of the entities to download

@@ -26,7 +26,7 @@ import { serverMessages } from '@/i18n/en/bookmark';
 import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
-import type { EntityTypeValue } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { ErrorCause } from '@/api/apiClient';
 
 type Props = {
@@ -34,7 +34,7 @@ type Props = {
   projectId: string;
   entityId: string;
   resourceId?: string;
-  type: EntityTypeValue;
+  type: TEntityTypeDict;
   customButton?: (props: HTMLProps<HTMLButtonElement> & { loading?: boolean }) => ReactNode;
 };
 
@@ -63,7 +63,7 @@ export default function BookmarkButton({
   const isSaved = opStatus.op === 'add' && opStatus.status === 'succeeded';
 
   const entity = getEntityByCoreType({ type });
-  const dataType = entity?.legacyType;
+  const dataType = entity?.extendedType;
   const category = entity?.group;
 
   const bookmarks = useAtomValue(

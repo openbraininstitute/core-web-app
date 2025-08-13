@@ -15,7 +15,7 @@ import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/car
 import { createMEModel } from '@/api/entitycore/queries';
 import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { tryCatch } from '@/api/utils';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { activityAtomFamily } from '@/features/activity-view/context';
@@ -261,7 +261,7 @@ export default function Configure({ ctx, searchParams }: Props) {
       navigate(
         resolveExploreDetailsPageUrl({
           ctx,
-          dataType: DataType.CircuitMEModel,
+          dataType: ExtendedEntitiesTypeDict.Memodel,
           entityId: data.id,
         })
       );

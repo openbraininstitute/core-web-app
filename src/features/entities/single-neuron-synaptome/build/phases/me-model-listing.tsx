@@ -13,7 +13,7 @@ import useRowSelection from '@/components/explore-section/ExploreSectionListingV
 
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
 
 import type { Props as ExploreSectionListingViewProps } from '@/components/explore-section/ExploreSectionListingView';
@@ -73,7 +73,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
-        dataType: DataType.CircuitMEModel,
+        dataType: ExtendedEntitiesTypeDict.Memodel,
         entityId: record.id,
       })
     );
@@ -104,7 +104,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
         <ExploreSectionListingView
           tableScrollable
           controlsVisible={false}
-          dataType={DataType.CircuitMEModel}
+          dataType={ExtendedEntitiesTypeDict.Memodel}
           dataScope={ExploreDataScope.SelectedBrainRegion}
           virtualLabInfo={{ virtualLabId, projectId }}
           selectionType="radio"

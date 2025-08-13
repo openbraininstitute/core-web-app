@@ -10,7 +10,7 @@ import isEmpty from 'lodash/isEmpty';
 
 import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import { PAGE_SIZE } from '@/constants/explore-section/list-views';
+import { PAGE_SIZE } from '@/api/entitycore/types/extended-entity-type';
 import { compactRecord } from '@/utils/dictionary';
 import {
   sortStateAtom,

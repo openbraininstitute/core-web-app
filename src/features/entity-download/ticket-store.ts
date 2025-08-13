@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto';
 
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { PartialBy } from '@/types/common';
 
 type DownloadTicket = {
-  entityType: EntityTypeValue;
+  entityType: TEntityTypeDict;
   virtualLabId?: string | null;
   projectId?: string | null;
   entityIds: string[];

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
-import { DataType } from '@/constants/explore-section/list-views';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import {
   CoreFieldFilterTypeEnum,
@@ -85,7 +85,7 @@ type Style = {
 export type OrderShape =
   | { property: string; value: string }
   | Array<{
-      types: Array<Partial<DataType>>;
+      types: Array<Partial<TExtendedEntitiesTypeDict>>;
       property: string;
       value: string;
     }>;
@@ -97,7 +97,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   description?: string;
   filter: CoreFilterType;
   defaultConstraint?: string | Record<string, string>;
-  perTypeConstraint?: Partial<Record<DataType, string>>;
+  perTypeConstraint?: Partial<Record<TExtendedEntitiesTypeDict, string>>;
   isSortable?: boolean;
   isFilterable?: boolean;
   isDisplayable?: boolean;

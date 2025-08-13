@@ -1,6 +1,6 @@
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
-import { DataType } from '@/constants/explore-section/list-views';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
   getReconstructionMorphologies,
@@ -18,8 +18,8 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
 > = {
   group: 'experimental',
   title: 'Morphology',
-  legacyType: DataType.ExperimentalNeuronMorphology,
-  type: EntityTypeEnum.ReconstructionMorphology,
+  extendedType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
+  type: EntityTypeDict.ReconstructionMorphology,
   slug: EntitySlug.ReconstructionMorphology,
   api: {
     config: {
@@ -37,6 +37,6 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   asset: {
     extension: 'application/swc',
   },
-  viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalNeuronMorphology],
+  viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.ReconstructionMorphology],
   isBookmarkable: true,
 } as const;

@@ -8,7 +8,7 @@ import Tree from '@/components/tree';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
-import { PAGE_NUMBER } from '@/constants/explore-section/list-views';
+import { PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {

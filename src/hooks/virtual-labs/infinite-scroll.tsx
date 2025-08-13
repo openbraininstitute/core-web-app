@@ -2,12 +2,12 @@ import { useMemo, useRef, useEffect } from 'react';
 import { useLoadMore } from '@/components/explore-section/ExploreSectionListingView/LoadMoreButton';
 import { ExploreDataScope } from '@/types/explore-section/application';
 
-import { DataType } from '@/constants/explore-section/list-views';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export default function useInfiniteScroll(
   virtualLabId: string,
   projectId: string,
-  dataType: DataType,
+  dataType: TExtendedEntitiesTypeDict,
   dataKey: string
 ) {
   const loadMoreDivRef = useRef<HTMLDivElement>(null);

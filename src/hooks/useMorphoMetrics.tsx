@@ -2,9 +2,9 @@ import groupBy from 'lodash/groupBy';
 import omit from 'lodash/omit';
 
 import fieldsDefinitionRegistry, { getFieldDefinition } from '@/entity-configuration/definitions';
-import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
@@ -14,7 +14,8 @@ export const useMorphometrics = (
   showLabel: boolean = false
 ) => {
   const groupedCardFields = groupBy(
-    getViewDefinitionByLegacyType(DataType.ExperimentalNeuronMorphology)!.cardViewFields,
+    getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.ReconstructionMorphology)!
+      .cardViewFields,
     (item) => fieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
   );
 

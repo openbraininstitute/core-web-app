@@ -4,7 +4,7 @@ import { ReactNode, useState } from 'react';
 import { InfoCircleFilled } from '@ant-design/icons';
 
 import { useOptions } from '@/features/listing-filter-panel/checklist/use-options';
-import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants/explore-section/list-views';
+import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/api/entitycore/types/extended-entity-type';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 
 import SearchFilter from '@/features/listing-filter-panel/search-filter';

@@ -17,7 +17,7 @@ import {
   useShowMore,
 } from '@/components/explore-section/ExploreSectionListingView/hooks';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DataType } from '@/constants/explore-section/list-views';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
 
 import TableControls from '@/components/listing-table/controls';
@@ -29,7 +29,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
-export type OnCellClick<T> = (basePath: string, record: T, type: DataType) => void;
+export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
 function CustomTH({
   children,
@@ -101,7 +101,7 @@ type AdditionalTableProps<T> = {
   dataContext: {
     virtualLabInfo?: WorkspaceContext;
     dataScope: ExploreDataScope;
-    dataType: DataType;
+    dataType: TExtendedEntitiesTypeDict;
   };
   hasError?: boolean;
   onCellClick?: OnCellClick<T>;

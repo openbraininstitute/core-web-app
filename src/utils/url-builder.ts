@@ -1,8 +1,11 @@
-import { getEntityByCoreType, getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
-import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+import {
+  getEntityByCoreType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
+import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { DataType } from '@/constants/explore-section/list-views';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
 export const baseUri = '/app/virtual-lab';
@@ -15,15 +18,15 @@ export function resolveExploreDetailsPageUrl({
 }: {
   ctx?: Partial<WorkspaceContext>;
   entityId?: string;
-  dataType?: DataType;
-  entityType?: EntityTypeValue;
+  dataType?: TExtendedEntitiesTypeDict;
+  entityType?: TEntityTypeDict;
 }) {
   if (dataType && entityType)
     throw Error('Only one of dataType and entityType should be specified');
   if (!dataType && !entityType) throw new Error('Cannot resolve url');
 
   const entityConfig = dataType
-    ? getEntityByLegacyType({ legacyType: dataType })
+    ? getEntityByExtendedType({ type: dataType })
     : getEntityByCoreType({ type: entityType });
 
   if (!entityConfig) throw new Error('Invalid Entity');
@@ -65,7 +68,7 @@ export function resolveExperimentUrl({
   dataType,
 }: {
   ctx: Required<WorkspaceContext>;
-  dataType?: EntityTypeValue;
+  dataType?: TEntityTypeDict;
   entityId?: string;
 }) {
   const entityConfig = getEntityByCoreType({ type: dataType });
@@ -81,10 +84,10 @@ export function resolveExperimentUrlByExtendedType({
   dataType,
 }: {
   ctx: Required<WorkspaceContext>;
-  dataType?: DataType;
+  dataType?: TExtendedEntitiesTypeDict;
   entityId?: string;
 }) {
-  const entityConfig = getEntityByLegacyType({ legacyType: dataType });
+  const entityConfig = getEntityByExtendedType({ type: dataType });
   if (entityId) {
     return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/simulate/${entityConfig?.slug}/new/${entityId}`;
   }

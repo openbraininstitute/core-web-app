@@ -1,6 +1,6 @@
 import { hasAssets } from '@/api/entitycore/guards';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -174,16 +174,16 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     order: [
       {
         types: [
-          DataType.ExperimentalNeuronMorphology,
-          DataType.ExperimentalElectroPhysiology,
-          DataType.ExperimentalBoutonDensity,
-          DataType.ExperimentalNeuronDensity,
-          DataType.ExperimentalSynapsePerConnection,
-          DataType.CircuitMEModel,
-          DataType.CircuitEModel,
-          DataType.SingleNeuronSimulation,
-          DataType.SingleNeuronSynaptome,
-          DataType.SingleNeuronSynaptomeSimulation,
+          ExtendedEntitiesTypeDict.ReconstructionMorphology,
+          ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+          ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+          ExtendedEntitiesTypeDict.Memodel,
+          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
         ],
         property: 'order_by',
         value: 'brain_region__name',
@@ -208,10 +208,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     order: [
       {
         types: [
-          DataType.CircuitMEModel,
-          DataType.SingleNeuronSynaptome,
-          DataType.SingleNeuronSimulation,
-          DataType.SingleNeuronSynaptomeSimulation,
+          ExtendedEntitiesTypeDict.Memodel,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+          ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
         ],
         property: 'order_by',
         value: 'created_by__pref_label',

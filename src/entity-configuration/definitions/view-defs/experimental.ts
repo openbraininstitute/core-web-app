@@ -1,12 +1,12 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
-  [DataType.ExperimentalNeuronMorphology]: {
+  [ExtendedEntitiesTypeDict.ReconstructionMorphology]: {
     title: 'Morphology',
     group: DataTypeGroup.ExperimentalData,
     name: EntitySlug.ReconstructionMorphology,
@@ -102,7 +102,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     mlTopic: 'Neuron morphology',
   },
-  [DataType.ExperimentalElectroPhysiology]: {
+  [ExtendedEntitiesTypeDict.ElectricalCellRecording]: {
     title: 'Electrophysiology',
     group: DataTypeGroup.ExperimentalData,
     name: EntitySlug.ElectricalCellRecording,
@@ -125,7 +125,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     curated: true,
     mlTopic: 'Neuron spike',
   },
-  [DataType.ExperimentalNeuronDensity]: {
+  [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: {
     title: 'Neuron density',
     group: DataTypeGroup.ExperimentalData,
     name: EntitySlug.ExperimentalNeuronDensity,
@@ -174,7 +174,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     curated: false,
     mlTopic: 'cell composition',
   },
-  [DataType.ExperimentalBoutonDensity]: {
+  [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: {
     title: 'Bouton density',
     group: DataTypeGroup.ExperimentalData,
     name: EntitySlug.ExperimentalBoutonDensity,
@@ -201,7 +201,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     curated: false,
     mlTopic: 'Bouton density',
   },
-  [DataType.ExperimentalSynapsePerConnection]: {
+  [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]: {
     title: 'Synapse per connection',
     group: DataTypeGroup.ExperimentalData,
     name: EntitySlug.ExperimentalSynapsesPerConnection,

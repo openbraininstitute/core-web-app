@@ -30,11 +30,14 @@ import {
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
-import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
+import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
+import {
+  TExtendedEntitiesTypeDict,
+  PAGE_NUMBER,
+} from '@/api/entitycore/types/extended-entity-type';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { Facets } from '@/api/entitycore/types/shared/response';
@@ -51,7 +54,7 @@ import type { WorkspaceContext } from '@/types/common';
 type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
-  dataType: DataType;
+  dataType: TExtendedEntitiesTypeDict;
   dataScope?: ExploreDataScope;
   dataKey: string;
   filters: CoreFilter[];
@@ -261,7 +264,7 @@ export default function ListingFilterPanel({
     setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
   };
 
-  const Entity = getViewDefinitionByLegacyType(dataType);
+  const Entity = getViewDefinitionByExtendedType(dataType);
   const filterItems = useMemo(
     () =>
       filters

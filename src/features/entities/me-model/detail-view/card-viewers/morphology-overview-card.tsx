@@ -11,7 +11,7 @@ import {
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
@@ -55,7 +55,7 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
 
     const exploreUrl = resolveExploreDetailsPageUrl({
       ctx: { ...(params ?? {}) },
-      dataType: DataType.ExperimentalNeuronMorphology,
+      dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
       entityId: data.id,
     });
 

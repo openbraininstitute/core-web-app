@@ -12,8 +12,8 @@ import BookmarkButton from '@/features/bookmark/control';
 
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
-import { DataType } from '@/constants/explore-section/list-views';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { classNames } from '@/util/utils';
 import {
@@ -54,10 +54,10 @@ function BrowseModelsTab() {
   const [expanded, setExpanded] = useState(false);
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const model = ModelTilesConfig.find((o) => o.id === type);
-  const dataType = model?.entities?.build?.legacyType;
+  const dataType = model?.entities?.build?.extendedType;
 
-  const entity = getEntityByLegacyType({
-    legacyType: dataType!,
+  const entity = getEntityByExtendedType({
+    type: dataType!,
   });
 
   const dataKey = resolveDataKey({
@@ -77,8 +77,8 @@ function BrowseModelsTab() {
         <ScopeSelectorSmall expanded={expanded} onMenuExpand={onMenuExpand} />
 
         {dataType &&
-        dataType !== DataType.PairedNeuronCircuit &&
-        dataType !== DataType.SmallMicrocircuit ? (
+        dataType !== ExtendedEntitiesTypeDict.PairedNeuronCircuit &&
+        dataType !== ExtendedEntitiesTypeDict.SmallMicrocircuit ? (
           <div
             id="explore-table-container-for-observable"
             className={classNames(

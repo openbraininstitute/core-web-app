@@ -8,7 +8,7 @@ import {
 } from '@/entity-configuration/domain/simulation';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
 
-import type { EntityTypeValue } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 export type Status =
   | 'initialized'
@@ -47,7 +47,7 @@ export const ActivityEntityTypes = {
 } as const;
 
 export type AllowedEntityTypes = Extract<
-  EntityTypeValue,
+  TEntityTypeDict,
   | 'single_neuron_synaptome_simulation'
   | 'single_neuron_synaptome'
   | 'memodel'

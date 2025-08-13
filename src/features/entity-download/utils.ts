@@ -7,7 +7,7 @@ import kebabCase from 'lodash/kebabCase';
 import template from 'lodash/template';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { EntityTypeValue } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { IAsset } from '@/api/entitycore/types/shared/global';
 import { getSession } from '@/authFetch';
@@ -137,7 +137,7 @@ export async function getReadmeTemplateRenderParams(): Promise<TemplateRenderPar
 /**
  * Creates a file entry for a README template based on entity type.
  *
- * @param {EntityTypeValue} entityType - The entity type to determine which template to use.
+ * @param {TEntityTypeDict} entityType - The entity type to determine which template to use.
  * @returns {Promise<FileEntry>} A promise that resolves to a file entry with README content stream, path, and size information.
  *
  * @description
@@ -147,7 +147,7 @@ export async function getReadmeTemplateRenderParams(): Promise<TemplateRenderPar
  * - Converts the rendered content to a readable stream
  * - Returns a structured file entry ready for download processing
  */
-export async function createTemplateFileEntry(entityType: EntityTypeValue): Promise<FileEntry> {
+export async function createTemplateFileEntry(entityType: TEntityTypeDict): Promise<FileEntry> {
   const renderParams = await getReadmeTemplateRenderParams();
 
   // Read template file based on entity type

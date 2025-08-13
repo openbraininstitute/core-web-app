@@ -10,13 +10,13 @@ import Summary from '@/features/details-view/summary';
 import EphysViewer from '@/features/ephys-viewer';
 
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ExperimentalEntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   type: ExperimentalEntitySlugValue;
@@ -31,25 +31,25 @@ export default function DetailView({ type }: Props) {
   const content = match<EntityCoreTypeConfig<any>>(entity)
     .with(
       {
-        legacyType: DataType.ExperimentalNeuronMorphology,
+        extendedType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
       },
       () => (
-        <Summary dataType={DataType.ExperimentalNeuronMorphology}>
+        <Summary dataType={ExtendedEntitiesTypeDict.ReconstructionMorphology}>
           {(detail) => <MorphologyDetailView detail={detail as IReconstructionMorphology} />}
         </Summary>
       )
     )
-    .with({ legacyType: DataType.ExperimentalElectroPhysiology }, () => (
-      <Summary dataType={DataType.ExperimentalElectroPhysiology}>
+    .with({ extendedType: ExtendedEntitiesTypeDict.ElectricalCellRecording }, () => (
+      <Summary dataType={ExtendedEntitiesTypeDict.ElectricalCellRecording}>
         {(detail) => <EphysViewer resource={detail as IElectricalCellRecording} ctx={ctx} />}
       </Summary>
     ))
     .with(
       {
-        legacyType: P.union(
-          DataType.ExperimentalSynapsePerConnection,
-          DataType.ExperimentalBoutonDensity,
-          DataType.ExperimentalNeuronDensity
+        extendedType: P.union(
+          ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+          ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
         ).select(),
       },
       (dataType) => <Summary dataType={dataType} />

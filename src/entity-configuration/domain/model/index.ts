@@ -1,12 +1,12 @@
 // TODO: this data type should be moved from this file
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export * from '@/entity-configuration/domain/model/circuit';
 
 export const MODEL_DATATYPES = [
-  DataType.CircuitEModel,
-  DataType.CircuitMEModel,
-  DataType.SingleNeuronSynaptome,
+  ExtendedEntitiesTypeDict.Emodel,
+  ExtendedEntitiesTypeDict.Memodel,
+  ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
 ] as const;
 
 export enum ModelTypeNames {

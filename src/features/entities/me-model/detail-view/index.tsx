@@ -16,9 +16,9 @@ import If from '@/components/ConditionalRenderer/If';
 import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { DataType } from '@/constants/explore-section/list-views';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveExperimentUrl } from '@/utils/url-builder';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
@@ -60,7 +60,7 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
     <Suspense fallback={<CentralLoadingSpinner />}>
       <Summary
         payload={source}
-        dataType={DataType.CircuitMEModel}
+        dataType={ExtendedEntitiesTypeDict.Memodel}
         commonFields={CommonSummaryViewFields}
         showViewMode={showViewMode}
         extraHeaderAction={
@@ -70,7 +70,7 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
               className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
               href={resolveExperimentUrl({
                 ctx: { virtualLabId, projectId },
-                dataType: EntityTypeEnum.Memodel,
+                dataType: EntityTypeDict.Memodel,
                 entityId: source.id,
               })}
             >

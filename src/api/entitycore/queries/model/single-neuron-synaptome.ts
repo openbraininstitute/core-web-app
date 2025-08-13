@@ -2,7 +2,7 @@ import startsWith from 'lodash/startsWith';
 import some from 'lodash/some';
 
 import { entityCoreApi, getEntityCoreContext, getAssetElement } from '@/api/entitycore/utils';
-import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { tryCatch } from '@/api/utils';
@@ -122,7 +122,7 @@ export async function getSingleNeuronSynaptomeConfiguration(
       downloadAsset({
         ctx: context,
         entityId: source.id,
-        entityType: EntityTypeEnum.SingleNeuronSynaptome,
+        entityType: EntityTypeDict.SingleNeuronSynaptome,
         id: configAsset.id,
         asRawResponse: true,
       })

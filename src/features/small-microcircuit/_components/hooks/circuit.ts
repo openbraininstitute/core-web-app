@@ -5,7 +5,7 @@ import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { useAppNotification } from '@/components/notification';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { EntityTypeEnum } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 const pendingQueries = new Map<string, Promise<ICircuit | undefined | null>>();
 
@@ -55,7 +55,7 @@ export function useCircuitImageURL(circuitId: string | undefined) {
       }
       try {
         const resp = await downloadAsset({
-          entityType: EntityTypeEnum.Circuit,
+          entityType: EntityTypeDict.Circuit,
           entityId: circuit.id,
           id: asset.id,
           asRawResponse: false,
