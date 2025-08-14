@@ -3,14 +3,14 @@ import NextLink from 'next/link';
 import { notFound } from 'next/navigation';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import { basePath } from '@/config';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
 interface Params {
   virtualLabId: string;
   projectId: string;
   id: string;
-  type: string;
+  type: EntitySlugValue;
 }
 
 export default async function Layout({
@@ -24,14 +24,22 @@ export default async function Layout({
 
   if (!type || !id) notFound();
 
-  const entityType = getEntityByExtendedType({ type: type as TExtendedEntitiesTypeDict });
+  const entityType = getEntityBySlug({ slug: type });
   if (!entityType) notFound();
 
   const fetchEntity = entityType.api.query.one;
 
   if (!fetchEntity) throw Error(`No fetch one function defined for type ${entityType}`);
+  type AwaitedType<T> = T extends Promise<infer U> ? U : T;
 
-  const entity = await fetchEntity({ id, context: { virtualLabId, projectId } });
+  let entity: AwaitedType<ReturnType<typeof fetchEntity>> | undefined;
+
+  try {
+    entity = await fetchEntity({ id, context: { virtualLabId, projectId } });
+  } catch {
+    notFound();
+  }
+
   if (!entity) notFound();
 
   return (
@@ -47,7 +55,7 @@ export default async function Layout({
             <NextLink
               href={`${basePath}/app/v2/${virtualLabId}/${projectId}/explore/browse/${type}`}
             >
-              {type}
+              {entityType.title}
             </NextLink>
           </Breadcrumb>
           <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
