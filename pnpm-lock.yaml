@@ -242,6 +242,9 @@ importers:
       jotai:
         specifier: ^2.7.2
         version: 2.12.2(@types/react@19.1.0)(react@19.1.0)
+      jotai-cache:
+        specifier: ^0.5.0
+        version: 0.5.0(jotai@2.12.2(@types/react@19.1.0)(react@19.1.0))
       jotai-devtools:
         specifier: ^0.11.0
         version: 0.11.0(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(redux@5.0.1)
@@ -8329,6 +8332,11 @@ packages:
 
   jose@4.15.9:
     resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
+
+  jotai-cache@0.5.0:
+    resolution: {integrity: sha512-29pUuEfSXL7Ba6lxZmiNDARc73TspWzAzCy0jCkk2uEOnFJ6kaUBZTp/AZSwnIsh1ndfUfM9/QpbLU7uJAQL0A==}
+    peerDependencies:
+      jotai: '>=2.0.0'
 
   jotai-devtools@0.11.0:
     resolution: {integrity: sha512-UVjjG7EHG/oIm1CKN46xwIbQDLW4Wkpq6pm0mjcIWATvs/W9r52U5l2FW36d9QWIRash+ccJ7RXgiz1JLPGmpA==}
@@ -21528,6 +21536,10 @@ snapshots:
   jiti@2.4.2: {}
 
   jose@4.15.9: {}
+
+  jotai-cache@0.5.0(jotai@2.12.2(@types/react@19.1.0)(react@19.1.0)):
+    dependencies:
+      jotai: 2.12.2(@types/react@19.1.0)(react@19.1.0)
 
   jotai-devtools@0.11.0(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(redux@5.0.1):
     dependencies:

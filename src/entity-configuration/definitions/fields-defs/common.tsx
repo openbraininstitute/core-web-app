@@ -48,7 +48,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   },
   [EntityCoreFields.Download]: {
     className: 'text-center',
-    title: <DownloadIcon className="text-primary-8 index-column" />,
+    title: <DownloadIcon className="index-column text-current" />,
     description: 'Download item',
     filter: null,
     render: (record) => {
@@ -59,7 +59,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       };
       return (
         <Button className="p-2" type="text" htmlType="button" onClick={onClick}>
-          <DownloadIcon className="text-primary-8" />
+          <DownloadIcon className="text-current" />
         </Button>
       );
     },

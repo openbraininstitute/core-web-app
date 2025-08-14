@@ -30,6 +30,10 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import {
+  countDeepSubCircuits,
+  ICircuitEnriched,
+} from '@/features/entities/circuit/elements/helpers';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -240,7 +244,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Subcircuits',
     filter: null,
     isDisplayable: true,
-    render: (r) => renderEmptyOrValue((r as ICircuit).sub_circuits?.length),
+    render: (r) => {
+      if ('sub_circuits' in r) {
+        return countDeepSubCircuits(r as ICircuitEnriched) || EmptyValue;
+      }
+      return EmptyValue;
+    },
     vocabulary: {
       plural: 'Subcircuits',
       singular: 'Subcircuit',

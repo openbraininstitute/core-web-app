@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 
@@ -9,6 +9,7 @@ import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { Error } from '@/features/entities/circuit/elements/error';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { tryCatch } from '@/api/utils';
 
@@ -19,7 +20,8 @@ type Props = {
   circuit: ICircuit;
 };
 
-export default function Parent({ circuit }: Props) {
+export function Root({ circuit }: Props) {
+  const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const [rootCircuit, setRootCircuit] = useState<{
     loading: boolean;
@@ -47,6 +49,16 @@ export default function Parent({ circuit }: Props) {
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
+  const onCellClick = (basePath: string, record: ICircuit) => {
+    navigate(
+      resolveExploreDetailsPageUrl({
+        ctx: { virtualLabId, projectId },
+        dataType: DataType.Circuit,
+        entityId: record.id,
+      })
+    );
+  };
+
   useEffect(() => {
     async function getRoot() {
       setRootCircuit((prev) => ({ ...prev, error: null, loading: true }));
@@ -73,9 +85,9 @@ export default function Parent({ circuit }: Props) {
           });
         }
       } else {
-        setRootCircuit((prev) => ({
-          ...prev,
-          error: 'Could not find the root circuit identifier for this circuit',
+        setRootCircuit(() => ({
+          record: null,
+          error: null,
           loading: false,
         }));
       }
@@ -111,6 +123,7 @@ export default function Parent({ circuit }: Props) {
         dataType: DataType.Circuit,
       }}
       dataSource={rootCircuit.record ? [rootCircuit.record] : []}
+      onCellClick={onCellClick}
     />
   );
 }

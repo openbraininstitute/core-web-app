@@ -6,6 +6,7 @@ import { unwrap } from 'jotai/utils';
 import { useMemo } from 'react';
 
 import useExploreColumns from '@/hooks/useExploreColumns';
+
 import { BaseTable } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
@@ -19,9 +20,9 @@ type Props = {
   data: ICircuit | undefined;
 };
 
-export function Parent({ data }: Props) {
-  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+export function DerivedFrom({ data }: Props) {
   const { push: navigate } = useRouter();
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const cols = useExploreColumns<ICircuit>(undefined, undefined, [], DataType.Circuit);
   const activeColumns = useAtomValue(
     useMemo(
@@ -38,6 +39,7 @@ export function Parent({ data }: Props) {
     )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
+
   const onCellClick = (basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
@@ -47,7 +49,6 @@ export function Parent({ data }: Props) {
       })
     );
   };
-
   return (
     <BaseTable
       loading={false}
@@ -57,8 +58,8 @@ export function Parent({ data }: Props) {
         virtualLabInfo: undefined,
         dataType: DataType.Circuit,
       }}
-      onCellClick={onCellClick}
       dataSource={data ? [data] : []}
+      onCellClick={onCellClick}
     />
   );
 }

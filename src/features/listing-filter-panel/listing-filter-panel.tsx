@@ -31,6 +31,7 @@ import {
   previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
+import { resetFilterSignalAtom } from '@/features/entities/circuit/elements/context';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
@@ -188,7 +189,6 @@ export default function ListingFilterPanel({
 }: Props) {
   const { node } = useBrainRegionHierarchy({ dataKey });
   const brainRegionId = useBrainRegion ? node.id : undefined;
-
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
   const resetFilters = useResetAtom(
     filtersAtom({
@@ -200,6 +200,7 @@ export default function ListingFilterPanel({
     })
   );
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
+  const setResetFilterSignal = useSetAtom(resetFilterSignalAtom);
   const setPrevData = useSetAtom(
     previousDataAtom({
       workspace: virtualLabInfo,
@@ -321,6 +322,7 @@ export default function ListingFilterPanel({
   const clearFilters = () => {
     resetFilters();
     setSearchString('');
+    setResetFilterSignal((prev) => prev + 1);
   };
 
   return (

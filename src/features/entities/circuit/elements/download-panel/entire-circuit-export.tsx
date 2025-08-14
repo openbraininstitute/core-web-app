@@ -64,7 +64,9 @@ export default function EntireCircuitExport({ circuit }: Props) {
       downloadDirectory();
     }
   };
-  const totalSize = formatBytes(configAsset?.size ?? 0);
+  const totalSize =
+    configAsset?.size && configAsset?.size > 1 ? formatBytes(configAsset?.size) : 'N/A';
+
   const action = match({ status })
     .with({ status: 'idle' }, () => (
       <Button
@@ -113,7 +115,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
           </p>
         </div>
         <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
-          <div>{totalSize ?? 'N/A'}</div>
+          <div>{totalSize}</div>
           <div>h5</div>
           {action}
         </div>

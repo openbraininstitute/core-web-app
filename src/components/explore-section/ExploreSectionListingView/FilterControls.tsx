@@ -99,7 +99,7 @@ export default function FilterControls({
       {!resourceId && <ExploreSectionNameSearch dataType={dataType} dataKey={dataKey} />}
       {dataType === DataType.Circuit && (
         <div className="text-red-500">
-          <ViewToggle setToggle={() => {}} toggle="flat" />
+          <ViewToggle />
         </div>
       )}
       <div className="inline-flex w-full place-content-end gap-2">

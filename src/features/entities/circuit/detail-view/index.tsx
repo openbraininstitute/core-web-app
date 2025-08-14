@@ -109,7 +109,13 @@ export default function DetailView({ payload }: Props) {
 
                     <If id="related-circuits-tab" condition={visitedTabs.has('related_circuits')}>
                       <VisibilityWrapper activeTab={activeTab} tabKey="related_circuits">
-                        <RelatedCircuits circuit={payload} />
+                        <Suspense
+                          fallback={
+                            <div className="h-full min-h-96 w-full bg-red-200">loading ...</div>
+                          }
+                        >
+                          <RelatedCircuits circuit={payload} />
+                        </Suspense>
                       </VisibilityWrapper>
                     </If>
                   </div>

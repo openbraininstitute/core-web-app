@@ -1,68 +1,47 @@
-import { useState, useCallback, ReactNode } from 'react';
+import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
-import get from 'lodash/get';
-import isNil from 'lodash/isNil';
-
 import type { ExpandableConfig } from 'antd/es/table/interface';
+
+import { resetFilterSignalAtom } from '@/features/entities/circuit/elements/context';
+import { log } from '@/utils/logger';
+
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
-export interface ExpandableTableCache<T extends EntityCoreIdentifiable> {
-  [key: string]: Array<T> | null;
-}
-
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
-  expandedData: ExpandableTableCache<T>;
+  expandedData: Record<string, Array<T> | null>;
   loadingRows: Record<string, boolean>;
+  expandedRowKeys: Array<string>;
 }
 
 export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P = unknown> {
-  /**
-   * fetch data for expanded row
-   */
+  // fetch data for expanded row
   fetcher?: (record: T, params?: P) => Promise<T | Array<T>>;
-  /**
-   * optional parameters to pass to fetcher
-   */
+  // optional parameters to pass to fetcher
   fetcherParams?: P;
-  /**
-   * get unique key for caching
-   */
   getRowKey: (record: T) => string;
-  /**
-   * get the id to fetch (e.g., id of circuit)
-   */
+  // get the id to fetch (e.g., id of circuit)
   getFetchId: (record: T) => string | null;
-  /**
-   * render expanded content
-   */
+  // render expanded content
   renderExpanded: (records: Array<T>, originalRecord: T, isLoading: boolean) => ReactNode;
-  /**
-   * determine if row is expandable
-   */
+  // determine if row is expandable
   isRowExpandable?: (record: T) => boolean;
-  /**
-   * clear cache when component unmounts
-   */
-  persistCache?: boolean;
-  /**
-   * index of the column to render the expand icon
-   */
+  // index of the column to render the expand icon
   expandIconColumnIndex?: number;
-  /**
-   * render the expand icon
-   */
+  // render the expand icon
   expandIcon?: ExpandableConfig<T>['expandIcon'];
+  // whether this is a top-level table that should sync with filter resets
+  isTopLevel?: boolean;
 }
 
 /**
- * Reusable hook for managing expandable tables with caching and hierarchy support
+ * Reusable hook for managing expandable tables with hierarchy support
  */
 export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown>(
   options: UseExpandableTableOptions<T, P>
 ): {
   expandableConfig: ExpandableConfig<T>;
-  clearCache: () => void;
   isRowExpanded: (record: T) => boolean;
   isRowLoading: (record: T) => boolean;
   getExpandedData: (record: T) => Array<T> | null;
@@ -74,22 +53,29 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
     getFetchId,
     renderExpanded,
     isRowExpandable = () => true,
-    persistCache = true,
     expandIconColumnIndex,
     expandIcon,
+    isTopLevel = false,
   } = options;
 
   const [state, setState] = useState<ExpandableTableState<T>>({
     expandedData: {},
     loadingRows: {},
+    expandedRowKeys: [],
   });
 
-  const clearCache = useCallback(() => {
-    setState({
-      expandedData: {},
-      loadingRows: {},
-    });
-  }, []);
+  const resetFilterSignal = useAtomValue(resetFilterSignalAtom);
+
+  // Only top-level tables should reset when filters are cleared
+  useEffect(() => {
+    if (isTopLevel && resetFilterSignal > 0) {
+      setState({
+        expandedData: {},
+        loadingRows: {},
+        expandedRowKeys: [], // Clear expanded keys to sync with Ant Design table
+      });
+    }
+  }, [resetFilterSignal, isTopLevel]);
 
   const isRowExpanded = useCallback(
     (record: T): boolean => {
@@ -110,7 +96,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
   const getExpandedData = useCallback(
     (record: T): Array<T> | null => {
       const key = getRowKey(record);
-      return get(state.expandedData, key, null);
+      return state.expandedData[key] || null;
     },
     [state.expandedData, getRowKey]
   );
@@ -121,24 +107,22 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
       const fetchId = getFetchId(record);
 
       if (!expanded) {
-        // Row is being collapsed - remove from expanded data but keep in cache if persistCache is true
-        if (!persistCache) {
-          setState((prev) => {
-            const newExpandedData = { ...prev.expandedData };
-            delete newExpandedData[key];
-            const newLoadingRows = { ...prev.loadingRows };
-            delete newLoadingRows[key];
-            return {
-              expandedData: newExpandedData,
-              loadingRows: newLoadingRows,
-            };
-          });
-        }
-        return;
-      }
+        setState((prev) => {
+          const newExpandedData = { ...prev.expandedData };
+          delete newExpandedData[key];
+          const newLoadingRows = { ...prev.loadingRows };
+          delete newLoadingRows[key];
 
-      const existingData = get(state.expandedData, key, null);
-      if (!isNil(existingData)) {
+          const newState: ExpandableTableState<T> = {
+            expandedData: newExpandedData,
+            loadingRows: newLoadingRows,
+            expandedRowKeys: isTopLevel
+              ? prev.expandedRowKeys.filter((rowKey) => rowKey !== key)
+              : prev.expandedRowKeys,
+          };
+
+          return newState;
+        });
         return;
       }
 
@@ -146,6 +130,10 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
         setState((prev) => ({
           ...prev,
           loadingRows: { ...prev.loadingRows, [key]: true },
+          expandedRowKeys:
+            isTopLevel && !prev.expandedRowKeys.includes(key)
+              ? [...prev.expandedRowKeys, key]
+              : prev.expandedRowKeys,
         }));
 
         try {
@@ -161,6 +149,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
               ...prev.loadingRows,
               [key]: false,
             },
+            expandedRowKeys: prev.expandedRowKeys,
           }));
         } catch (error) {
           setState((prev) => ({
@@ -172,21 +161,22 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
               ...prev.loadingRows,
               [key]: false,
             },
+            expandedRowKeys: prev.expandedRowKeys,
           }));
         }
       } else if (!fetchId) {
         // No fetcher and no fetchId - this shouldn't happen for expandable rows
         // eslint-disable-next-line no-console
-        console.warn('Row is expandable but no fetcher provided and no fetchId available');
+        log('warn', 'Row is expandable but no fetcher provided and no fetchId available');
       }
     },
-    [fetcher, fetcherParams, getRowKey, getFetchId, persistCache, state.expandedData]
+    [fetcher, fetcherParams, getRowKey, getFetchId, isTopLevel]
   );
 
   const expandedRowRender = useCallback(
     (record: T): ReactNode => {
       const key = getRowKey(record);
-      const records = get(state.expandedData, key, null);
+      const records = state.expandedData[key] || null;
       const isLoading = Boolean(state.loadingRows[key]);
 
       if (isLoading) {
@@ -197,7 +187,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
         );
       }
 
-      if (isNil(records)) {
+      if (records === null) {
         return null;
       }
 
@@ -206,17 +196,19 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
     [state.expandedData, state.loadingRows, getRowKey, renderExpanded]
   );
 
+  // create expandable config - only use controlled mode for top-level tables
   const expandableConfig: ExpandableConfig<T> = {
     rowExpandable: isRowExpandable,
     onExpand,
     expandedRowRender,
     expandIconColumnIndex,
     expandIcon,
+    // only top-level tables use controlled mode (expandedRowKeys)
+    ...(isTopLevel && { expandedRowKeys: state.expandedRowKeys }),
   };
 
   return {
     expandableConfig,
-    clearCache,
     isRowExpanded,
     isRowLoading,
     getExpandedData,

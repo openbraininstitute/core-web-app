@@ -1,10 +1,8 @@
 'use client';
 
 import { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
-import { useQuery } from '@tanstack/react-query';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { CSSProperties, ReactNode } from 'react';
-
-import { useAtom, useSetAtom } from 'jotai';
 import type { TableProps } from 'antd';
 
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
@@ -15,24 +13,23 @@ import ResultsCount from '@/features/listing-filter-panel/numeric-results-info';
 import WithListingFilterPanel from '@/features/listing-filter-panel';
 import useExploreColumns from '@/hooks/useExploreColumns';
 
+import { circuitRepresentationAtom } from '@/features/entities/circuit/elements/context';
 import {
   sortStateAtom,
   useDataAtom,
   previousDataAtom,
   pageNumberAtom,
 } from '@/state/explore-section/list-view-atoms';
-import { getCircuitHierarchyByDerivation } from '@/api/entitycore/queries/model/circuit';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { DerivationType } from '@/api/entitycore/types/entities/derivation';
 import { classNames } from '@/util/utils';
 
 import type { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
 
-export interface Props<T extends EntityCoreIdentifiable> {
+export interface Props<T extends ICircuit> {
   dataKey: string;
   dataType: DataType;
   dataScope: ExploreDataScope;
@@ -51,10 +48,11 @@ export interface Props<T extends EntityCoreIdentifiable> {
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
   onRow?: TableProps<T>['onRow'];
+  rowKey: TableProps<T>['rowKey'];
   expandableConfig?: ExpandableConfig<T>;
 }
 
-export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
+export default function TableWithFilters<T extends ICircuit>({
   dataKey,
   dataType,
   dataScope,
@@ -73,11 +71,14 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   rowClassName,
   tableStyle,
   onRow,
+  rowKey,
   expandableConfig = undefined,
 }: Props<T>) {
   const { node } = useBrainRegionHierarchy({ dataKey });
+  const view = useAtomValue(circuitRepresentationAtom);
 
   const dataKeyExpand = useBrainRegion ? `${dataKey}/${node.id}` : dataKey;
+  const hierarchyExpandKey = `${dataKeyExpand}/hierarchy`;
   const brainRegionId = useBrainRegion ? node.id : undefined;
   const [sortState, setSortState] = useAtom(sortStateAtom({ key: dataKeyExpand }));
 
@@ -87,7 +88,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
       dataType,
       dataScope,
       brainRegionId,
-      key: dataKeyExpand,
+      key: view === 'hierarchy' ? hierarchyExpandKey : dataKeyExpand,
     })
   );
   const setPageNumber = useSetAtom(pageNumberAtom(dataKeyExpand));
@@ -100,21 +101,12 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
 
   const columns = useExploreColumns<T>(onSortChange, sortState, [], dataType);
 
-  useQuery({
-    queryKey: ['circuit', { ...virtualLabInfo, type: DerivationType.circuit_extraction }],
-    queryFn: () =>
-      getCircuitHierarchyByDerivation({
-        context: virtualLabInfo,
-        derivation_type: DerivationType.circuit_extraction,
-      }),
-  });
-
   const { result: dataSource, isLoading } = useDataAtom<T>({
     dataType,
     dataScope,
     brainRegionId,
     workspace: virtualLabInfo,
-    key: dataKeyExpand,
+    key: view === 'hierarchy' ? hierarchyExpandKey : dataKeyExpand,
   });
 
   return (
@@ -134,7 +126,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
           dataType={dataType}
           dataScope={dataScope}
           virtualLabInfo={virtualLabInfo}
-          dataKey={dataKeyExpand}
+          dataKey={view === 'hierarchy' ? hierarchyExpandKey : dataKeyExpand}
           className="relative"
         >
           {({ activeColumns, displayControlPanel, setDisplayControlPanel, filters }) => (
@@ -144,17 +136,19 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 displayControlPanel={displayControlPanel}
                 dataType={dataType}
                 dataScope={dataScope}
-                dataKey={dataKeyExpand}
+                dataKey={view === 'hierarchy' ? hierarchyExpandKey : dataKeyExpand}
                 setDisplayControlPanel={setDisplayControlPanel}
                 className="sticky top-0 px-4 py-5"
               >
-                <ResultsCount
-                  dataType={dataType}
-                  dataScope={dataScope}
-                  virtualLabInfo={virtualLabInfo}
-                  dataKey={dataKeyExpand}
-                  useBrainRegion={useBrainRegion}
-                />
+                {view === 'flat' && (
+                  <ResultsCount
+                    dataType={dataType}
+                    dataScope={dataScope}
+                    virtualLabInfo={virtualLabInfo}
+                    dataKey={dataKeyExpand}
+                    useBrainRegion={useBrainRegion}
+                  />
+                )}
               </FilterControls>
               <ExploreSectionTable<T>
                 columns={columns.filter(({ key }) => (activeColumns || []).includes(key as string))}
@@ -167,12 +161,14 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 scrollable={tableScrollable}
                 controlsVisible={controlsVisible}
                 onRowsSelected={onRowsSelected}
-                dataKey={dataKeyExpand}
+                dataKey={view === 'hierarchy' ? hierarchyExpandKey : dataKeyExpand}
                 useBrainRegion={useBrainRegion}
                 rowClassName={rowClassName}
                 tableStyle={tableStyle}
                 onRow={onRow}
+                rowKey={rowKey}
                 expandableConfig={expandableConfig}
+                defaultDisplayLoadMore={view === 'flat'}
               />
             </>
           )}

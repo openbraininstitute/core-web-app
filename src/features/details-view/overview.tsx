@@ -54,7 +54,7 @@ export default function Overview<T extends EntityCoreIdentifiableNamed>({
   return (
     <div className="flex w-full flex-col gap-10">
       <Header<T> detail={detail} onDownload={onDownload} />
-      <div className="flex w-full flex-row gap-x-8">
+      <div className="flex w-full flex-row items-start gap-x-8">
         {commonFields.length > 0 && (
           <div
             className={

@@ -20,7 +20,7 @@ export function Authors({ authors, className, maxVisible = 3 }: Props) {
       <div className="border-neutral-2 flex items-center justify-center rounded-full border p-1">
         <Person className="text-primary-8" />
       </div>
-      <span>
+      <div className="flex items-center justify-center gap-2">
         {visibleAuthors.map((author, index) => (
           <span key={author.given_name + author.family_name || index}>
             {author.given_name} {author.family_name}
@@ -28,25 +28,31 @@ export function Authors({ authors, className, maxVisible = 3 }: Props) {
           </span>
         ))}
         {hasHiddenAuthors && (
-          <>
-            {', '}
-            <Popover
-              message={authors.map((author, index) => (
-                <div
-                  key={author.given_name + author.family_name || index}
-                  className="hover:bg-muted rounded px-2 py-1 text-sm"
-                >
-                  {author.given_name} {author.family_name}
-                </div>
-              ))}
+          <Popover
+            cls={{ contentContainer: 'p-0!' }}
+            content={
+              <div className="primary-scrollbar max-h-[200px] overflow-auto px-2 py-4 text-white">
+                {' '}
+                {authors.map((author, index) => (
+                  <div
+                    key={author.given_name + author.family_name || index}
+                    className="hover:bg-muted rounded px-2 py-1 text-sm"
+                  >
+                    {author.given_name} {author.family_name}
+                  </div>
+                ))}
+              </div>
+            }
+          >
+            <Button
+              type="text"
+              className="text-paper-link hover:text-paper-hover h-auto p-0 font-normal underline"
             >
-              <Button className="text-paper-link hover:text-paper-hover h-auto p-0 font-normal underline">
-                +{hiddenAuthors.length} more
-              </Button>
-            </Popover>
-          </>
+              + {hiddenAuthors.length} more
+            </Button>
+          </Popover>
         )}
-      </span>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,10 @@
 import Link from 'next/link';
 
-import PreviewThumbnail from '@/features/thumbnail/preview';
-
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { Field } from '@/features/entities/neuron-simulation/elements/field';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 

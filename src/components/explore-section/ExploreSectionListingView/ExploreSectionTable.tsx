@@ -45,8 +45,6 @@ function CustomTH({
   handleResizing: () => void;
   className?: string;
 }) {
-  console.log('–– – ExploreSectionTable.tsx:48 – props:', props);
-
   const { position, left, right, zIndex, transform } = style;
 
   // preserve positioning styles for fixed columns, but use our custom styles for everything else
@@ -295,6 +293,8 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
   rowClassName,
   tableStyle,
   onRow,
+  rowKey,
+  defaultDisplayLoadMore = true,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -307,6 +307,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
     useBrainRegion?: boolean;
     expandableConfig?: ExpandableConfig<T>;
     tableStyle?: CSSProperties | undefined;
+    defaultDisplayLoadMore?: boolean;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -335,7 +336,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
         hasError={hasError}
         loading={loading}
         onCellClick={onCellClick}
-        rowKey={(row) => row.id}
+        rowKey={(row) => (rowKey && typeof rowKey === 'function' ? rowKey?.(row) : row.id)}
         rowSelection={rowSelection}
         showLoadMore={toggleDisplayMore}
         scrollable={scrollable}
@@ -352,7 +353,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
           visible={controlsVisible}
           dataType={dataContext.dataType}
         >
-          {displayLoadMoreBtn && (
+          {displayLoadMoreBtn && defaultDisplayLoadMore && (
             <LoadMoreButton
               hide={toggleDisplayMore}
               dataKey={dataKey}

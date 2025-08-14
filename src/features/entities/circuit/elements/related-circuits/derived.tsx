@@ -26,7 +26,7 @@ type Props = {
   data: HierarchyOutputNode[] | undefined;
 };
 
-export function Subcircuits({ data }: Props) {
+export function Derived({ data }: Props) {
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const cols = useExploreColumns<ICircuit>(undefined, undefined, [], DataType.Circuit);
@@ -122,7 +122,7 @@ export function Subcircuits({ data }: Props) {
         dataSource={data}
         onCellClick={onCellClick}
         expandableConfig={expandableConfig}
-        rowKey={(record: ICircuit) => `subcircuits-hierarchy-${record.id}`}
+        rowKey={(record: ICircuit) => `derived-hierarchy-${record.id}`}
       />
     </>
   );

@@ -4,13 +4,13 @@ import set from 'lodash/set';
 
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type {
   EntityCoreTypeConfig,
   EntityCoreTypeGroup,
 } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityTypeValue } from '@/api/entitycore/types';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type EntityCoreLegacyType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['legacyType'];

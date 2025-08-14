@@ -4,8 +4,9 @@ import React from 'react';
 import { classNames } from '@/util/utils';
 
 type Props = {
-  message: React.ReactNode;
+  message?: React.ReactNode;
   children: React.ReactNode;
+  content?: React.ReactNode;
   when?: PopoverProps['trigger'];
   placement?: PopoverProps['placement'];
   onConfirm?: () => void;
@@ -17,6 +18,7 @@ type Props = {
 export default function CustomPopover({
   onConfirm,
   message,
+  content,
   children,
   when = ['click'],
   placement = 'topRight',
@@ -44,7 +46,8 @@ export default function CustomPopover({
             cls?.contentContainer
           )}
         >
-          <p className="text-center text-base font-light text-white">{message}</p>
+          {message && <p className="text-center text-base font-light text-white">{message}</p>}
+          {content}
           {onConfirm && (
             <button
               type="button"

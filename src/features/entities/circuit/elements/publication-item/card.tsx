@@ -6,6 +6,7 @@ import { Actions } from '@/features/entities/circuit/elements/publication-item/a
 
 import type { IPublication } from '@/api/entitycore/types/entities/publication';
 import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';
+import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 
 interface Props {
   publication: IPublication;
@@ -25,7 +26,11 @@ export function Card({ publication, scientificArtifact }: Props) {
           <Authors authors={publication.authors || []} />
           <Metadata
             publisher={scientificArtifact.published_in}
-            date={scientificArtifact.experiment_date?.toISOString()}
+            date={
+              scientificArtifact.experiment_date
+                ? new Date(scientificArtifact.experiment_date)?.toISOString()
+                : EmptyValue
+            }
           />
         </div>
 

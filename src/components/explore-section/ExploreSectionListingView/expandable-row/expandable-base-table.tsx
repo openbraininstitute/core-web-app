@@ -113,7 +113,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable, P 
         scroll: {
           x: undefined, // no horizontal scroll needed since parent will adjust
           y: undefined, // disable vertical scrolling to show all rows
-          ...expandedTableProps.scroll,
+          ...expandedTableProps?.scroll,
         },
         pagination: false as const, // ensure no pagination in nested table
       };
