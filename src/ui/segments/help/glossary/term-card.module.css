@@ -1,0 +1,21 @@
+.definition {
+  font-size: 1.2em;
+  line-height: 1.55;
+  color: #002766;
+}
+
+.definition ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin: 0.5em 0;
+  padding-left: 14px;
+}
+
+.definition li {
+  list-style: disc;
+}
+
+.definition a {
+  color: '#24E831';
+}
