@@ -15,13 +15,13 @@ export default function Tab({
     <a
       href={href}
       className={cn(
-        'flex h-[50px] w-full items-center justify-between rounded-full p-3 shadow-sm',
+        'hover:bg-primary-8 flex h-[50px] w-full items-center justify-between rounded-full p-3 pl-5 font-bold shadow-sm hover:text-white',
         highlight ? 'bg-primary-8 text-white' : 'bg-white'
       )}
     >
       {children}
       <div className="text-gray-500">
-        <RightOutlined />
+        <RightOutlined className={highlight ? 'text-white' : ''} />
       </div>
     </a>
   );
