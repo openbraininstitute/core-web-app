@@ -1,4 +1,4 @@
-import { formatDistanceToNow, isValid, format } from 'date-fns';
+import { formatDistanceToNow, isValid, format, formatDate } from 'date-fns';
 
 export type DateISOString = string;
 
@@ -31,4 +31,26 @@ function validDate(stringDate?: DateISOString) {
   const date = new Date(stringDate);
   if (!isValid(date)) return;
   return date;
+}
+
+function formatTimeHhMm(date: Date) {
+  if (!(date instanceof Date)) {
+    throw new Error('Input must be a Date object');
+  }
+
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${hours}h${minutes}`;
+}
+
+export function renderDateAndHour(date: string) {
+  const dateObj = new Date(date);
+  return (
+    <div className="flex flex-row">
+      <span>{formatDate(dateObj, 'dd.MM.yyyy')}</span>
+      <span className="px-1">|</span>
+      <span>{formatTimeHhMm(dateObj)}</span>
+    </div>
+  );
 }

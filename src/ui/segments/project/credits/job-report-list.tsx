@@ -5,11 +5,11 @@ import find from 'lodash/find';
 
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardContent } from '@/ui/molecules/card';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { ServiceSubtype } from '@/types/accounting';
-import { formatDate } from '@/util/utils';
+import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { JobReport } from '@/types/accounting';
@@ -54,28 +54,6 @@ function scaleRenderFn(subtype: ServiceSubtype) {
 
 function costRenderFn(amount: string) {
   return <span>{amount}</span>;
-}
-
-function formatTimeHhMm(date: Date) {
-  if (!(date instanceof Date)) {
-    throw new Error('Input must be a Date object');
-  }
-
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-
-  return `${hours}h${minutes}`;
-}
-
-function dateRenderFn(date: string) {
-  const dateObj = new Date(date);
-  return (
-    <div className="flex flex-row">
-      <span>{formatDate(dateObj, 'dd.MM.yyyy')}</span>
-      <span className="px-1">|</span>
-      <span>{formatTimeHhMm(dateObj)}</span>
-    </div>
-  );
 }
 
 export default function JobReportList() {
@@ -137,7 +115,7 @@ export default function JobReportList() {
             <Column title="Activity" dataIndex="subtype" key="activity" render={activityRenderFn} />
             <Column title="Scale" dataIndex="subtype" key="scale" render={scaleRenderFn} />
             <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
-            <Column title="Date" dataIndex="started_at" key="date" render={dateRenderFn} />
+            <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
             <Column title="Credits" dataIndex="amount" key="cost" render={costRenderFn} />
           </Table>
         </CardContent>
