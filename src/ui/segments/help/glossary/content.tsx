@@ -7,36 +7,33 @@ import TermCard from './term-card';
 import type { ContentForGlossaryItem } from '@/components/documentation/type';
 import Slugify from '@/util/slugify';
 
-// ---------------- Types expected in props ----------------
 export type CellGroup = {
-  name: string; // "M-type" | "E-type"
-  slug: string; // "m-type" | "e-type"
-  data: any[]; // raw cell items
+  name: string;
+  slug: string;
+  data: any[];
 };
 
 export type GlossarySectionInput = {
-  name: string; // "Data" | "Artifact" | "Cell"
-  data: any[] | CellGroup[]; // for "Cell", this is CellGroup[]
+  name: string;
+  data: any[] | CellGroup[];
 };
 
 export type GlossaryContentProps = {
   glossarySections: GlossarySectionInput[];
 };
 
-// -------------- helpers --------------
 const normalize = (s?: string | null) => (s ?? '').trim().toLowerCase();
 
-// use the SAME slug function as the nav (critical!)
+// Keep consistency of slug with navigation
 const toSlug = (v: unknown) => Slugify((v ?? '').toString());
 
 const asArray = (value: any): any[] => {
   if (Array.isArray(value)) return value;
-  if (value && Array.isArray(value.data)) return value.data; // { data: [...] }
-  if (value && value.data && Array.isArray(value.data.data)) return value.data.data; // { data: { data: [...] } }
+  if (value && Array.isArray(value.data)) return value.data;
+  if (value && value.data && Array.isArray(value.data.data)) return value.data.data;
   return [];
 };
 
-// Convert a plain string to minimal PortableText so <PortableText /> renders it
 const richTextFromString = (s?: string | null) =>
   s && String(s).trim().length
     ? [
@@ -49,7 +46,6 @@ const richTextFromString = (s?: string | null) =>
       ]
     : [];
 
-// Map Sanity Data/Artifact items to what TermCard expects
 const mapSanityItem = (x: any): ContentForGlossaryItem => ({
   _id: x?._id ?? x?.id ?? toSlug(x?.Name ?? x?.New_suggested_name ?? x?.name ?? ''),
   Name: x?.Name ?? x?.New_suggested_name ?? x?.name ?? 'Untitled',
@@ -59,7 +55,6 @@ const mapSanityItem = (x: any): ContentForGlossaryItem => ({
   ...x,
 });
 
-// Map Cell items to what TermCard expects
 const mapCellItem = (x: any): ContentForGlossaryItem => ({
   _id: x?.id ?? x?._id ?? toSlug(x?.pref_label ?? x?.alt_label ?? ''),
   Name: x?.pref_label ?? x?.alt_label ?? 'Untitled',
@@ -71,13 +66,11 @@ const mapCellItem = (x: any): ContentForGlossaryItem => ({
 
 export default function GlossaryContent({ glossarySections }: GlossaryContentProps) {
   const searchParams = useSearchParams();
-  const termRaw = searchParams?.get('term') ?? undefined; // e.g., "me-model", "m-type", "data"
+  const termRaw = searchParams?.get('term') ?? undefined;
   const term = normalize(termRaw);
 
-  // Always call hooks at the top level
   const [selectedLetter, setSelectedLetter] = useState<string>('All');
 
-  // Guard: nothing passed
   if (!Array.isArray(glossarySections) || glossarySections.length === 0) {
     return (
       <section className="col-span-3">
@@ -86,8 +79,6 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
     );
   }
 
-  // ---------- SECTION-WIDE LISTS ----------
-  // Show all items when term points to a section like "data" or "artifact"
   if (term === 'data' || term === 'data-types' || term === 'datatypes') {
     const dataSection = glossarySections.find((s) => normalize(s.name) === 'data');
     const items = asArray(dataSection?.data).map(mapSanityItem);
@@ -173,7 +164,7 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
           );
 
     return (
-      <section className="col-span-3 flex flex-col gap-6">
+      <section className="col-span-3 flex h-full w-full flex-col gap-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">{term.toUpperCase()}</h2>
         </div>
@@ -211,8 +202,8 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
           })}
         </div>
 
-        {/* List */}
-        <div className="flex flex-col gap-8">
+        {/* ---------- MULTIPLE TERMS LOOKUP (Cell) ---------- */}
+        <div className="flex max-h-[70vh] flex-col gap-8 overflow-y-scroll">
           {filtered.map((content) => (
             <TermCard key={content.id ?? content.Name} content={content} sectionType="cell" />
           ))}
@@ -229,7 +220,6 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
     const dataList = asArray(dataSection?.data);
     const artifactList = asArray(artifactSection?.data);
 
-    // IMPORTANT: Use the SAME slugifier as the nav to compare
     const matches = (x: any) => {
       const candidates = [x?.Name, x?.New_suggested_name, x?.name, x?.Description];
       return candidates.some((c) => normalize(toSlug(c)) === term);
@@ -255,7 +245,6 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
     );
   }
 
-  // ---------- Nothing selected ----------
   return (
     <section className="col-span-3">
       <p className="text-primary-9/80">Select a term on the left to see its definition.</p>

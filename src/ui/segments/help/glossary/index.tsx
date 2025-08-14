@@ -77,7 +77,7 @@ export default function GlossarySection() {
   }
 
   return (
-    <div className="grid w-full grid-cols-4 gap-x-6">
+    <div className="grid h-full w-full grid-cols-4 gap-x-6">
       <div className="col-span-1">
         <GlossaryNavigation glossarySectionsTypes={glossarySectionsTypes} />
       </div>

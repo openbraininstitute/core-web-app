@@ -30,7 +30,7 @@ function Content() {
 
 export default function Sections() {
   return (
-    <div className="w-full">
+    <div className="h-full w-full">
       <Content />
     </div>
   );
