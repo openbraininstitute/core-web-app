@@ -1,3 +1,4 @@
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceContext } from '@/types/common';
 
 const prefix = 'workspace';
@@ -51,4 +52,19 @@ export const keyBuilder = {
     page: number;
     pageSize: number;
   }) => [`${prefix}/virtual-lab-purchases`, { virtualLabId, page, pageSize }],
+  activities: ({
+    virtualLabId,
+    projectId,
+    scale,
+    type,
+    entity,
+    page,
+    pageSize,
+  }: WorkspaceContext & {
+    page: number;
+    pageSize: number;
+    scale: TExtendedEntitiesTypeDict;
+    entity?: TExtendedEntitiesTypeDict;
+    type: 'build' | 'simulate';
+  }) => [`${prefix}/activities`, { virtualLabId, projectId, page, pageSize, scale, type, entity }],
 };
