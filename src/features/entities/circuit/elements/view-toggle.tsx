@@ -3,7 +3,7 @@ import { Tooltip } from 'antd';
 import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
-export default function ViewToggle({
+export function ViewToggle({
   toggle,
   setToggle,
 }: {

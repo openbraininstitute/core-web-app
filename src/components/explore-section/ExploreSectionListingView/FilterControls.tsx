@@ -13,10 +13,10 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { Spin } from 'antd';
 
-import ViewToggle from '../Circuit/global/ViewToggle';
 import ExploreSectionNameSearch from '@/components/explore-section/ExploreSectionListingView/ExploreSectionNameSearch';
 import SettingsIcon from '@/components/icons/Settings';
 
+import { ViewToggle } from '@/features/entities/circuit/elements/view-toggle';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { filterHasValue } from '@/features/listing-filter-panel/util';
@@ -99,7 +99,7 @@ export default function FilterControls({
       {!resourceId && <ExploreSectionNameSearch dataType={dataType} dataKey={dataKey} />}
       {dataType === DataType.Circuit && (
         <div className="text-red-500">
-          <ViewToggle dataKey={dataKey} />
+          <ViewToggle setToggle={() => {}} toggle="flat" />
         </div>
       )}
       <div className="inline-flex w-full place-content-end gap-2">

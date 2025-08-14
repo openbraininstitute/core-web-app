@@ -113,7 +113,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
           </p>
         </div>
         <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
-          <div>{totalSize}</div>
+          <div>{totalSize ?? 'N/A'}</div>
           <div>h5</div>
           {action}
         </div>
