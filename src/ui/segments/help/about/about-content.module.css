@@ -1,0 +1,36 @@
+.content {
+  width: 100%;
+  color: #002766;
+}
+
+.content > p {
+  font-size: 1.2em;
+  line-height: 1.5;
+  font-weight: normal;
+}
+
+.content > h2 {
+  font-size: 2em;
+  line-height: 1.5;
+  font-weight: bold;
+}
+
+.content > p > a {
+  display: block;
+  background: white;
+  padding: 16px 32px;
+  border-radius: 50px;
+  color: #002766;
+  box-shadow:
+    -8px -8px 16px 0 rgba(255, 255, 255, 0.82),
+    12px 12px 24px 0 rgba(0, 0, 0, 0.08);
+  margin-top: 10px;
+  transition: all 0.3s ease-in-out;
+  transform: scale(1);
+}
+
+.content > p > a:hover {
+  color: white;
+  background: #002766;
+  transform: scale(0.96);
+}

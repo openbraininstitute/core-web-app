@@ -1,8 +1,11 @@
+import AboutContent from './content';
+import AboutNavigation from './navigation';
+
 export default function AboutSection() {
   return (
-    <div>
-      <h2>About</h2>
-      <p>This is the about section.</p>
+    <div className="grid h-full w-full grid-cols-4 gap-x-6">
+      <AboutNavigation />
+      <AboutContent />
     </div>
   );
 }

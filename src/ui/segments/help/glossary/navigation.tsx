@@ -41,8 +41,8 @@ export default function GlossaryNavigation({
             <AccordionButton
               key={section.name}
               label={section.name}
-              defaultOpen={!!isSectionActive}
               isActive={!!isSectionActive}
+              defaultOpen
             >
               {section.data.map((item) => {
                 let displayName = '';
