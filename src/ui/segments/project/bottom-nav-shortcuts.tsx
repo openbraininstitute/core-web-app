@@ -28,7 +28,7 @@ export function Shortcuts() {
   const breakpoint = useDefaultBreakpoint();
 
   return (
-    <div>
+    <div className="mb-10">
       <div className="text-primary-9 mb-4 text-lg font-semibold">Would you like to: </div>
       <div className="flex grid-cols-3 flex-col items-start justify-start gap-2 lg:grid">
         {links.map(({ key, title, url }) => (
