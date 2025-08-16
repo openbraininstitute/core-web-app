@@ -51,6 +51,7 @@ export function Search({ dataKey, className }: SearchProps) {
 
   const handleClearSearch = (): void => {
     setSearchInput('');
+    setPageNumber(DEFAULT_PAGE_NUMBER);
     searchInputRef.current?.focus();
   };
 

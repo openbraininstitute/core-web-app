@@ -38,7 +38,7 @@ function ExploreTabs() {
     // @ts-ignore
     tabsConfig: tabsConfigItems,
     tabKey: 'scope',
-    shallow: true,
+    shallow: false,
     clearOnDefault: false,
     defaultKey: 'public',
   });

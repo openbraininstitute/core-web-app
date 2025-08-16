@@ -33,7 +33,7 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 
-export function Browse() {
+export function BrowseLibraryScope() {
   const searchParams = useSearchParams();
   const scope = searchParams.get('scope') as TWorkspaceScope;
   const { type } = useParams<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }>();

@@ -2,7 +2,7 @@ import { Pagination as AntPagination, type PaginationProps } from 'antd';
 import { useAtom } from 'jotai';
 import type { ComponentProps } from 'react';
 
-import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
+import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { cn } from '@/utils/css-class';
 
@@ -19,7 +19,7 @@ type Props = {
 };
 
 export function Pagination({ dataKey, size, resultPagination, className }: Props) {
-  const [page, updatePage] = useAtom(pageNumberAtom(dataKey));
+  const [page, updatePage] = useAtom(corePageNumberAtom(dataKey));
 
   return (
     <AntPagination

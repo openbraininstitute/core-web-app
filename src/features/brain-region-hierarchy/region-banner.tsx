@@ -62,9 +62,9 @@ export function RegionBanner({ view, onSwitchView }: Props) {
           }
         >
           {view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
-            <HierarchySquare />
-          ) : (
             <CloseOutlined className="text-primary-9/90" />
+          ) : (
+            <HierarchySquare />
           )}
         </Button>
       </div>

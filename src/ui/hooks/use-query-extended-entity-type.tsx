@@ -13,9 +13,9 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { compactRecord } from '@/utils/dictionary';
-import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
 import {
   coreFiltersAtom,
+  corePageNumberAtom,
   coreSearchStringAtom,
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
@@ -52,7 +52,7 @@ function useQueryParameters({ context }: { context: QueryContext }) {
   const selectedBrainRegin = useAtomValue(selectedBrainRegionAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
   const searchString = useAtomValue(coreSearchStringAtom(context.key));
-  const pageNumber = useAtomValue(pageNumberAtom(context.key));
+  const pageNumber = useAtomValue(corePageNumberAtom(context.key));
   const filters = useAtomValue(
     coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key })
   );
