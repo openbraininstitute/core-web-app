@@ -65,7 +65,12 @@ export default async function Layout({
         <div className="mt-5 flex flex-col gap-5">
           <DetailMenu />
         </div>
-        <ActionMenu entity={entity} />
+        <ActionMenu
+          entity={entity}
+          entityType={entityType.type}
+          ctx={{ virtualLabId, projectId }}
+          isBookmarkable={entityType.isBookmarkable}
+        />
       </div>
       <div className="grow basis-4/5">{children}</div>
     </div>

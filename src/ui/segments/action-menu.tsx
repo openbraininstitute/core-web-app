@@ -10,9 +10,30 @@ import {
 import Action from '../molecules/side-menu-action';
 
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { useQuery } from '@tanstack/react-query';
+import { getAllBookmarksByCategory } from '@/api/virtual-lab-svc/queries/bookmark';
+import { TEntityCoreConfigurationItem } from '@/entity-configuration/domain';
 
-export default function ActionMenu<T extends EntityCoreIdentifiable>({ entity }: { entity: T }) {
+export default function ActionMenu<T extends EntityCoreIdentifiable>({
+  entity,
+  entityType,
+  isBookmarkable,
+  ctx,
+}: {
+  entity: T;
+  entityType: TEntityCoreConfigurationItem['type'];
+  isBookmarkable: boolean;
+  ctx: { virtualLabId: string; projectId: string };
+}) {
   const [copied, setCopied] = useState(false);
+
+  const bookmarks = useQuery({
+    queryKey: [ctx.projectId, ctx.virtualLabId, entityType],
+    queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType }),
+  });
+
+  console.log(bookmarks.data);
+
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 pr-20 pl-10 text-lg font-bold">
       <Action
@@ -37,7 +58,7 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({ entity }:
         {copied ? 'Copied' : 'Copy ID'}
       </Action>
       <Action icon={<ExperimentOutlined />}>Simulate</Action>
-      <Action icon={<BookOutlined />}>Bookmark</Action>
+      {isBookmarkable && <Action icon={<BookOutlined />}>Bookmark</Action>}
       <Action icon={<DownloadOutlined />}>Download</Action>
     </div>
   );
