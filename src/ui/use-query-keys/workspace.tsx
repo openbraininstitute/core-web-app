@@ -1,6 +1,5 @@
-import { TEntityTypeDict } from '@/api/entitycore/types';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceContext } from '@/types/common';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
 
 const prefix = 'workspace';
 

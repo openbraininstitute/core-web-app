@@ -50,7 +50,7 @@ type Props = {
   dataKey: string;
 };
 
-export function EntityCount({ dataKey }: Props) {
+export function EntityLinkCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
 
   const { virtualLabId, projectId } = useWorkspace();
