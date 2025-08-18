@@ -160,7 +160,7 @@
     "use-breakpoint": "^4.0.6",
     "wavefront-obj-parser": "^2.0.1",
     "whatwg-fetch": "^3.6.19",
-    "zod": "^3.22.4"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@playwright/test": "^1.51.1",

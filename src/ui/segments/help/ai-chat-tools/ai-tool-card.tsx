@@ -1,3 +1,4 @@
+import { InfoCircleOutlined } from '@ant-design/icons';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -11,7 +12,8 @@ import slugiy from '@/util/slugify';
 // Move code renderer outside the component and type props correctly
 function MarkdownCodeBlock({ children }: { children?: React.ReactNode }) {
   return (
-    <pre className="border-neutral-2 text-neutral-5 mt-3 rounded-md border border-solid px-3 py-2 text-base">
+    <pre className="border-neutral-2 text-neutral-5 mt-3 flex flex-row gap-x-2 rounded-md border border-solid px-3 py-2 text-base">
+      <InfoCircleOutlined />
       <code>{children}</code>
     </pre>
   );
