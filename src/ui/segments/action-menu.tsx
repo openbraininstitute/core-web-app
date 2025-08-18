@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { CopyOutlined } from '@ant-design/icons';
+import {
+  BookOutlined,
+  CopyOutlined,
+  DownloadOutlined,
+  ExperimentOutlined,
+} from '@ant-design/icons';
 import Action from '../molecules/side-menu-action';
 
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
@@ -31,10 +36,9 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({ entity }:
       >
         {copied ? 'Copied' : 'Copy ID'}
       </Action>
-      {/* <div>Simulate</div>
-          <div>Clone Model</div>
-          <div>Bookmark</div>
-          <div>Download</div> */}
+      <Action icon={<ExperimentOutlined />}>Simulate</Action>
+      <Action icon={<BookOutlined />}>Bookmark</Action>
+      <Action icon={<DownloadOutlined />}>Download</Action>
     </div>
   );
 }
