@@ -1,11 +1,17 @@
+import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ReconstructionMorphology } from '@/entity-configuration/domain/experimental/reconstruction-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
+import { getElectricalCellRecordings } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
+import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
-import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
-import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { Emodel } from '@/entity-configuration/domain/model/e-model';
+
+import type { WorkspaceContext } from '@/types/common';
+import { env } from '@/env';
 // import { Circuit } from '@/entity-configuration/domain/model/circuit';
 
 export const ExperimentalEntitiesTileTypes = {
@@ -21,3 +27,51 @@ export const ModelEntitiesTileTypes = {
   MEmodel,
   SingleNeuronSynaptome,
 } as const;
+
+export function getEntityTypeFromUrl(url: string) {
+  const match = url.match(/\/browse\/([^/?]+)/);
+  return match ? match[1] : null;
+}
+
+export function getAllEntitiesCount({
+  virtualLabId,
+  projectId,
+  brainRegionId,
+}: WorkspaceContext & { brainRegionId: string }) {
+  return getEntitiesCount({
+    context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
+    types: [
+      'experimental_synapses_per_connection',
+      'experimental_neuron_density',
+      'experimental_bouton_density',
+      'reconstruction_morphology',
+      'single_neuron_synaptome',
+      'memodel',
+      'emodel',
+    ],
+    brainRegion: {
+      within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_brain_region_id: brainRegionId ?? null,
+      within_brain_region_ascendants: false,
+    },
+  });
+}
+
+export function getElectricalCellRecordingsCount({
+  virtualLabId,
+  projectId,
+  brainRegionId,
+}: WorkspaceContext & { brainRegionId: string }) {
+  return getElectricalCellRecordings({
+    withFacets: false,
+    context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
+    filters: {
+      recording_origin: ElectricalRecordingOriginDictionary.InVitro,
+      page: 1,
+      page_size: 1,
+      within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_brain_region_id: brainRegionId ?? null,
+      within_brain_region_ascendants: false,
+    },
+  });
+}

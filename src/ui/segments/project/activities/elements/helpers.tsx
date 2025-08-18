@@ -83,19 +83,19 @@ export const Scales: Partial<
     link: 'explore',
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
-    title: 'single neuron synaptome',
+    title: 'Single neuron synaptome',
     build: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     simulate: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     link: 'explore',
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
-    title: 'small circuit',
+    title: 'Small microcircuits',
     build: null,
     simulate: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
     link: 'workflows',
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
-    title: 'paired neuron circuit',
+    title: 'Paired neuron circuits',
     build: null,
     simulate: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
     link: 'workflows',

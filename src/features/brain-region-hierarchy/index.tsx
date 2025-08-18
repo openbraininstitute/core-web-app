@@ -7,8 +7,7 @@ import Tree from '@/components/tree';
 
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
-import { pageNumberAtom } from '@/state/explore-section/list-view-atoms';
-import { PAGE_NUMBER } from '@/api/entitycore/types/extended-entity-type';
+import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
@@ -18,19 +17,26 @@ import {
   useBrainRegionHierarchy,
   useGetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { classNames } from '@/util/utils';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
 
-export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
+export function BrainRegionHierarchy({
+  dataKey,
+  onClickCallback,
+}: {
+  dataKey: string;
+  onClickCallback?: (node: TTreeNode) => void;
+}) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
   const { updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
-  const setPageNumber = useSetAtom(pageNumberAtom(dataKey));
+  const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
   if (!brainRegionHierarchyResult) {
     return (
@@ -49,8 +55,9 @@ export function BrainRegionHierarchy({ dataKey }: { dataKey: string }) {
   const onClick = (clickedNode: TTreeNode) => {
     updateHierarchyConfig(clickedNode as IBrainRegionHierarchy);
     scrollToNode(clickedNode as IBrainRegionHierarchy, 'center');
-    setPageNumber(PAGE_NUMBER);
+    setPageNumber(DEFAULT_PAGE_NUMBER);
     makeBrainRegionClickEvent({ dataKey, node: clickedNode as IBrainRegionHierarchy });
+    onClickCallback?.(clickedNode);
     userJourneyTracker.registerBrainRegionClick(clickedNode.name);
   };
 

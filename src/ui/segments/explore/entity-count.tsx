@@ -1,74 +1,33 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQueries } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
+import { useMemo } from 'react';
+
+import snakeCase from 'lodash/snakeCase';
+import kebabCase from 'lodash/kebabCase';
+import Link from 'next/link';
 import get from 'lodash/get';
 
-import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { getElectricalCellRecordings } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
 import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { Button } from '@/ui/molecules/button';
 import {
+  getElectricalCellRecordingsCount,
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
+  getEntityTypeFromUrl,
+  getAllEntitiesCount,
 } from '@/ui/segments/explore/helpers';
-import {
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-  useGetSelectedBrainRegion,
-} from '@/features/brain-region-hierarchy/context';
 import { cn } from '@/utils/css-class';
-
-import type { WorkspaceContext } from '@/types/common';
-
-function getAllEntitiesCount({
-  virtualLabId,
-  projectId,
-  brainRegionId,
-}: WorkspaceContext & { brainRegionId: string }) {
-  return getEntitiesCount({
-    context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-    types: [
-      'experimental_synapses_per_connection',
-      'experimental_neuron_density',
-      'experimental_bouton_density',
-      'reconstruction_morphology',
-      'single_neuron_synaptome',
-      'memodel',
-      'emodel',
-    ],
-    brainRegion: {
-      within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-      within_brain_region_brain_region_id: brainRegionId ?? null,
-      within_brain_region_ascendants: false,
-    },
-  });
-}
-
-function getElectricalCellRecordingsCount({
-  virtualLabId,
-  projectId,
-  brainRegionId,
-}: WorkspaceContext & { brainRegionId: string }) {
-  return getElectricalCellRecordings({
-    withFacets: false,
-    context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-    filters: {
-      recording_origin: ElectricalRecordingOriginDictionary.InVitro,
-      page: 1,
-      page_size: 1,
-      within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-      within_brain_region_brain_region_id: brainRegionId ?? null,
-      within_brain_region_ascendants: false,
-    },
-  });
-}
 
 const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -97,8 +56,51 @@ type Props = {
   dataKey: string;
 };
 
+function BrowseLink({
+  isLoading,
+  type,
+  title,
+  count,
+  href,
+}: {
+  isLoading: boolean;
+  type: string;
+  title: string;
+  count: number | null;
+  href: string;
+}) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const entityType = snakeCase(getEntityTypeFromUrl(pathname) ?? '');
+  return (
+    <Button
+      asChild
+      rounded
+      key={`counter-${type}`}
+      variant="outline"
+      size="lg"
+      className="group w-full"
+      active={entityType === type}
+    >
+      <Link
+        href={{
+          pathname: href,
+          query: searchParams.toString(),
+        }}
+        className="flex! w-full items-center justify-between!"
+      >
+        <div className="font-bold text-current">{title}</div>
+        <div className="text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white">
+          {isLoading ? <LoadingOutlined /> : <div>{count}</div>}
+        </div>
+      </Link>
+    </Button>
+  );
+}
+
 export function EntityCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
+
   const { virtualLabId, projectId } = useWorkspace();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
@@ -155,7 +157,6 @@ export function EntityCount({ dataKey }: Props) {
     ],
     [allLoading]
   );
-
   const content = match(activeTab)
     .with('experimental', () => (
       <>
@@ -164,22 +165,16 @@ export function EntityCount({ dataKey }: Props) {
           if (value.type === EntityTypeDict.ElectricalCellRecording) {
             count = ephysData?.pagination.total_items ?? null;
           }
-
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
           return (
-            <Button
-              rounded
-              key={`counter-${value.type}`}
-              variant="outline"
-              size="lg"
-              className="group w-full"
-            >
-              <div className="flex w-full items-center justify-between">
-                <div className="font-bold text-current">{value.title}</div>
-                <div className="text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white">
-                  {value.isLoading ? <LoadingOutlined /> : <div>{count}</div>}
-                </div>
-              </div>
-            </Button>
+            <BrowseLink
+              key={`link-${value.title}/${value.type}`}
+              href={link}
+              type={value.type}
+              title={value.title}
+              count={count}
+              isLoading={value.isLoading}
+            />
           );
         })}
       </>
@@ -188,32 +183,26 @@ export function EntityCount({ dataKey }: Props) {
       <>
         {modelState.map((value) => {
           const count = get(allData, value.type, null);
-
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
           return (
-            <Button
-              rounded
-              key={`counter-${value.type}`}
-              variant="outline"
-              size="lg"
-              className="group w-full"
-            >
-              <div className="flex w-full items-center justify-between">
-                <div className="font-bold text-current">{value.title}</div>
-                <div className="text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white">
-                  {value.isLoading ? <LoadingOutlined /> : <div>{count}</div>}
-                </div>
-              </div>
-            </Button>
+            <BrowseLink
+              key={`link-${value.title}/${value.type}`}
+              href={link}
+              type={value.type}
+              title={value.title}
+              count={count}
+              isLoading={value.isLoading}
+            />
           );
         })}
-        <Button rounded key="counter-circuit" variant="outline" size="lg" className="group w-full">
-          <div className="flex w-full items-center justify-between">
-            <div className="font-bold text-current">Circuit</div>
-            <div className="text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white">
-              {filteredCircuits.count}
-            </div>
-          </div>
-        </Button>
+        <BrowseLink
+          key="link-circuit"
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase('circuit')}`}
+          type={ExtendedEntitiesTypeDict.Circuit}
+          title="Circuit"
+          count={filteredCircuits.count}
+          isLoading={false}
+        />
       </>
     ))
     .otherwise(() => null);

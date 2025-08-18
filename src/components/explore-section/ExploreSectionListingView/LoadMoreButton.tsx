@@ -8,9 +8,9 @@ import {
 } from '@/state/explore-section/list-view-atoms';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { PAGE_SIZE } from '@/api/entitycore/types/extended-entity-type';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { useLoadableValue } from '@/hooks/hooks';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { classNames } from '@/util/utils';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -58,13 +58,13 @@ export function useLoadMore<T>(
   const loading = res.state === 'loading';
   const showLoadMore =
     res.state === 'hasData' &&
-    res.data.data.length + (res.data.pagination.page - 1) * PAGE_SIZE <
+    res.data.data.length + (res.data.pagination.page - 1) * DEFAULT_PAGE_SIZE <
       res.data.pagination.total_items;
 
   const loadMore = useCallback(
     (load: boolean = true) => {
       if (res.state === 'loading' || res.state === 'hasError' || !load) return;
-      if (res.data && res.data.data.length < PAGE_SIZE) return;
+      if (res.data && res.data.data.length < DEFAULT_PAGE_SIZE) return;
 
       // Store previous hits before fetching next page
       setPrevData(data);
@@ -109,7 +109,7 @@ export default function LoadMoreButton({
         hide();
       }}
     >
-      <span>Load {PAGE_SIZE} more results...</span>
+      <span>Load {DEFAULT_PAGE_SIZE} more results...</span>
     </Btn>
   );
 }

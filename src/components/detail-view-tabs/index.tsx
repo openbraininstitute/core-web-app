@@ -84,7 +84,7 @@ export function useTabs<T extends string>({
   defaultKey = undefined,
 }: Omit<Props<T>, 'cls'>) {
   const [activeTab, setActiveTab] = useQueryState(
-    `${tabKey}`,
+    tabKey,
     parseAsString
       .withOptions({ shallow, clearOnDefault })
       .withDefault(defaultKey ?? tabsConfig?.at(0)!.key!) as Parser<T>

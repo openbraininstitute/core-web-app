@@ -134,7 +134,6 @@ export function ProjectActivities() {
                   current: page,
                   hideOnSinglePage: true,
                   align: 'end',
-                  simple: true,
                   size: 'default',
                   responsive: true,
                   role: 'button',
@@ -142,6 +141,10 @@ export function ProjectActivities() {
                   onChange: (_page, _pageSize) => {
                     setPage(_page);
                   },
+                  className: cn(
+                    '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
+                    '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
+                  ),
                 }}
                 locale={{
                   emptyText: (
