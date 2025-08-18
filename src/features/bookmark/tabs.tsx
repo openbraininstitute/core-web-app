@@ -11,7 +11,7 @@ import useHorizontalScrollInfo from '@/hooks/useHorizontalScrollInfo';
 import { DotsHorizontal } from '@/components/icons/EditorIcons';
 import { classNames } from '@/util/utils';
 
-import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
 type EntityTypeTabsProps = {
@@ -25,7 +25,7 @@ type EntityTypeTabsProps = {
 };
 
 type DataTypeTabsProps = {
-  items: Array<{ key: EntityCoreTypeGroup; label: string }>;
+  items: Array<{ key: TEntityTypeGroup; label: string }>;
   basePath: string;
   activeCategory: string;
   categoryTypes: Record<string, string[]>;

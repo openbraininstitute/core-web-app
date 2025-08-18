@@ -28,7 +28,7 @@ function SkeletonItem({
         style={{ paddingLeft: `${paddingLeft}px` }}
       >
         <div
-          className="shine h-4 rounded-full bg-gray-200"
+          className="shine h-4 rounded-full bg-gray-100"
           style={{
             width,
           }}
@@ -36,7 +36,7 @@ function SkeletonItem({
 
         <CaretRightFilled
           size={14}
-          className={cn('text-base text-gray-200', {
+          className={cn('text-base text-gray-100', {
             'rotate-90': hasChildren,
           })}
         />
@@ -75,10 +75,9 @@ export function TreeSkeleton({ isLoading = true, children }: SkeletonTreeProps) 
         }
       `}</style>
 
-      <div className="p-4">
-        <div className="relative">
-          <div className="shine h-10 rounded-full bg-gray-100" />
-        </div>
+      <div className="relative px-2">
+        <div className="shine relative mb-2 h-3 w-1/3 rounded-full bg-gray-100 px-2!" />
+        <div className="shine h-10 rounded-full bg-gray-100" />
       </div>
 
       <div className="relative py-2 pr-4">

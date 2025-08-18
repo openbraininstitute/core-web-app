@@ -4,13 +4,18 @@ import { useQuery } from '@tanstack/react-query';
 import { useAtom, useAtomValue } from 'jotai';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
+
 import snakeCase from 'lodash/snakeCase';
 import compact from 'lodash/compact';
+import dynamic from 'next/dynamic';
 import map from 'lodash/map';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { DEFAULT_PAGE_LOW_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';
-import { getProjectBookmarksPerCategory } from '@/api/virtual-lab-svc/queries/bookmark';
+import {
+  getProjectBookmarkCategories,
+  getProjectBookmarksPerCategory,
+} from '@/api/virtual-lab-svc/queries/bookmark';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import {
   coreActiveColumnsAtom,
@@ -21,12 +26,12 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { MainTable } from '@/ui/segments/data-table';
-import { cn } from '@/utils/css-class';
 import {
   makeSelectEntityClickEvent,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
+import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
+import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -35,12 +40,20 @@ import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
 
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false });
+
 export function BrowseLibraryScope() {
   const { virtualLabId, projectId } = useWorkspace();
   const { type } = useParams<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }>();
   const dataKey = compact([virtualLabId, projectId, type, WorkspaceScope.Bookmarks]).join('/');
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const [pageNumber, setPageNumber] = useAtom(corePageNumberAtom(dataKey));
+
+  const { isLoading: loadingBookmarksCategory, data: bookmarksCategories } = useQuery({
+    queryKey: keyBuilder.bookmarkCategories({ virtualLabId, projectId }),
+    queryFn: () => getProjectBookmarkCategories({ virtualLabId, projectId }),
+    select: (response) => response.data,
+  });
 
   const { isLoading: loadingBookmarks, data: bookmarks } = useQuery({
     queryKey: keyBuilder.bookmarks({
@@ -105,9 +118,6 @@ export function BrowseLibraryScope() {
   const pagination = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.pagination;
 
   const onCellClick = (_: string, record: EntityCoreIdentifiableNamed) => {
-    // navigate(
-    //   `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`
-    // );
     makeSelectEntityClickEvent({
       display: true,
       data: record,
@@ -117,6 +127,23 @@ export function BrowseLibraryScope() {
   useSelectEntityClickEvent((event) => {
     updateDisplayMiniView(event.detail.display);
   });
+
+  if (!loadingBookmarksCategory) {
+    if (!Object.keys(bookmarksCategories ?? {}).includes(entity?.extendedType!)) {
+      return (
+        <div className="flex w-full items-center justify-center">
+          <Card className="text-primary-9 p-5">
+            <CardTitle className="select-none">No bookmarks for this type</CardTitle>
+            <CardDescription className="select-none">
+              Nothing saved here (yet). Pick a type from the left menu or bookmark entities from
+              <br />
+              your data to create your own collection.
+            </CardDescription>
+          </Card>
+        </div>
+      );
+    }
+  }
 
   if (error)
     return (
@@ -133,7 +160,7 @@ export function BrowseLibraryScope() {
         className="h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]"
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
-          <MainTable<EntityCoreIdentifiableNamed>
+          <MainTable
             controlsVisible
             showLoadingState
             sticky={{ offsetHeader: 75.5 }}

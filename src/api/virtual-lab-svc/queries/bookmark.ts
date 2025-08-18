@@ -13,8 +13,7 @@ import type {
 } from '@/api/virtual-lab-svc/queries/types';
 
 const baseUri = '/virtual-labs';
-const vla = 'a54716f1-7321-4f6b-a4ed-317a82c248c2';
-const pr = 'b2420cc0-cd69-40f7-b961-922637bb3feb';
+
 /**
  * Bookmarks an entity to a specific project library within a virtual lab.
  *
@@ -104,9 +103,8 @@ export async function getProjectBookmarkCategories({
   virtualLabId,
   projectId,
 }: WorkspaceContext): Promise<VlmGetProjectLibraryCategories> {
-  const api = await virtualLabRootApi('http://localhost:8000');
-  // const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/categories`;
-  const url = `${baseUri}/${vla}/projects/${pr}/bookmarks/categories`;
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/categories`;
   return await api.get<VlmGetProjectLibraryCategories>(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -135,10 +133,8 @@ export async function getProjectBookmarksPerCategory({
     page_size: number;
   };
 }): Promise<VlmGetProjectLibraryPerCategory> {
-  const api = await virtualLabRootApi('http://localhost:8000');
-
-  // const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/paginated`;
-  const url = `${baseUri}/${vla}/projects/${pr}/bookmarks/paginated`;
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/paginated`;
 
   return await api.get<VlmGetProjectLibraryPerCategory>(url, {
     queryParams: {

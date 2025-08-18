@@ -4,13 +4,11 @@ import set from 'lodash/set';
 
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
-import type {
-  EntityCoreTypeConfig,
-  EntityCoreTypeGroup,
-} from '@/entity-configuration/domain/types';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type EntityCoreExtendedType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['extendedType'];
@@ -25,7 +23,7 @@ export const getEntityByCoreType = ({ type }: { type?: TEntityTypeDict }) =>
 export const getEntityBySlug = ({ slug }: { slug: EntitySlugValue }) =>
   find(EntityCoreConfiguration, { slug });
 
-export const getEntitiesByGroup = ({ group }: { group: EntityCoreTypeGroup }) => {
+export const getEntitiesByGroup = ({ group }: { group: TEntityTypeGroup }) => {
   return filter(EntityCoreConfiguration, { group });
 };
 

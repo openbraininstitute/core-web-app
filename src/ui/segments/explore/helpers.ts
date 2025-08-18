@@ -28,8 +28,8 @@ export const ModelEntitiesTileTypes = {
   SingleNeuronSynaptome,
 } as const;
 
-export function getEntityTypeFromUrl(url: string) {
-  const match = url.match(/\/browse\/([^/?]+)/);
+export function getEntityTypeFromUrlOnEntityScope(url: string) {
+  const match = url.match(/\/browse\/entity\/([^/?]+)/);
   return match ? match[1] : null;
 }
 

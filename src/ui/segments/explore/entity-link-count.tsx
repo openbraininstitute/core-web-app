@@ -23,13 +23,13 @@ import {
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
 
-const ExploreDataTypeTabs = {
+export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
-  Model: 'model',
+  Models: 'models',
 } as const;
-type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
+export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
 
-const tabsConfigItems: Array<{
+export const tabsConfigItems: Array<{
   key: TExploreDataTypeTabs;
   title: string;
   position: 'first' | 'middle' | 'last';
@@ -40,7 +40,7 @@ const tabsConfigItems: Array<{
     position: 'first',
   },
   {
-    key: ExploreDataTypeTabs.Model,
+    key: ExploreDataTypeTabs.Models,
     title: 'Model',
     position: 'last',
   },
@@ -50,14 +50,14 @@ type Props = {
   dataKey: string;
 };
 
-export function EntityCount({ dataKey }: Props) {
+export function EntityLinkCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
 
   const { virtualLabId, projectId } = useWorkspace();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
     tabsConfig: tabsConfigItems,
-    tabKey: 'data-type',
+    tabKey: 'group',
     shallow: true,
   });
 
@@ -111,14 +111,14 @@ export function EntityCount({ dataKey }: Props) {
   );
 
   const content = match(activeTab)
-    .with('experimental', () => (
+    .with(ExploreDataTypeTabs.Experimental, () => (
       <>
         {experimentalState.map((value) => {
           let count: number | null = get(allData, value.type, null);
           if (value.type === EntityTypeDict.ElectricalCellRecording) {
             count = ephysData?.pagination.total_items ?? null;
           }
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.type)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
@@ -132,11 +132,11 @@ export function EntityCount({ dataKey }: Props) {
         })}
       </>
     ))
-    .with('model', () => (
+    .with(ExploreDataTypeTabs.Models, () => (
       <>
         {modelState.map((value) => {
           const count = get(allData, value.type, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.type)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
@@ -150,7 +150,7 @@ export function EntityCount({ dataKey }: Props) {
         })}
         <BrowseLink
           key="link-circuit"
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase('circuit')}`}
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase('circuit')}`}
           type={ExtendedEntitiesTypeDict.Circuit}
           title="Circuit"
           count={filteredCircuits.count}
@@ -163,8 +163,8 @@ export function EntityCount({ dataKey }: Props) {
   return (
     <div className="px-4">
       <PillTabs
-        value={activeTab ?? 'all-public'}
-        defaultValue={activeTab ?? 'all-public'}
+        value={activeTab ?? ExploreDataTypeTabs.Experimental}
+        defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
         className="w-full"
         activationMode="manual"
         onValueChange={(value) => {
