@@ -6,8 +6,7 @@ import { basePath } from '@/config';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
-import Action from '@/ui/molecules/side-menu-action';
-import { CopyOutlined } from '@ant-design/icons';
+import ActionMenu from '@/ui/segments/action-menu';
 
 interface Params {
   virtualLabId: string;
@@ -66,13 +65,7 @@ export default async function Layout({
         <div className="mt-5 flex flex-col gap-5">
           <DetailMenu />
         </div>
-        <div className="text-primary-9 mt-10 flex flex-col gap-5 pr-20 pl-10 text-lg font-bold">
-          <Action Icon={CopyOutlined}>Copy Id</Action>
-          {/* <div>Simulate</div>
-          <div>Clone Model</div>
-          <div>Bookmark</div>
-          <div>Download</div> */}
-        </div>
+        <ActionMenu entity={entity} />
       </div>
       <div className="grow basis-4/5">{children}</div>
     </div>
