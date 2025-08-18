@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import GlossaryNavigation from './navigation';
-
-import GlossaryContent from './content';
+import GlossaryContent from '@/ui/segments/help/glossary/content';
+import GlossaryNavigation from '@/ui/segments/help/glossary/navigation';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';

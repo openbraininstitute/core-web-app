@@ -31,6 +31,6 @@
 
 .content > p > a:hover {
   color: white;
-  background: #002766;
+  background: var(--color-primary-9);
   transform: scale(0.96);
 }

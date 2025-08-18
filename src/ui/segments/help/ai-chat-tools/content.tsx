@@ -1,14 +1,15 @@
-import { useSearchParams } from 'next/navigation';
+import AIToolCard from '@/ui/segments/help/ai-chat-tools/ai-tool-card';
 
-import AIToolCard from './ai-tool-card';
+import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools/';
 
-import { AIChatToolsSectionProps } from '.';
-
-export default function AIChatToolsContent({ content }: { content: AIChatToolsSectionProps[] }) {
-  const searchParams = useSearchParams();
-  const aiTool = searchParams.get('ai-tool');
-
-  const singleTool = content.find((tool) => tool.id === aiTool);
+export default function AIChatToolsContent({
+  content,
+  searchParams,
+}: {
+  content: AIChatToolsSectionProps[];
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const singleTool = content.find((tool) => tool.id === searchParams?.tool);
 
   if (!singleTool) {
     return (

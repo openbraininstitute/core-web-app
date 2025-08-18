@@ -1,19 +1,16 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-
-import FeaturesCard from './features-card';
+import FeaturesCard from '@/ui/segments/help/features/features-card';
 
 import {
   useSanityContentForFeatureItems,
   type ContentForFeatureItem,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
 import Slugify from '@/util/slugify';
+import { getSearchParam, PageProps } from '@/utils/getSearchParams';
 
-export default function FeaturesContent() {
-  const searchParams = useSearchParams();
-  const scaleParam = searchParams.get('scale');
-  const normalizedScale = Slugify(scaleParam ?? '');
+export default function FeaturesContent({ searchParams }: PageProps) {
+  const sectionParams = getSearchParam(searchParams ?? {}, 'scale');
 
   const items = useSanityContentForFeatureItems() as ContentForFeatureItem[];
 
@@ -21,7 +18,7 @@ export default function FeaturesContent() {
     return <div className="col-span-3">No features available.</div>;
   }
 
-  if (!scaleParam) {
+  if (!sectionParams) {
     return (
       <div className="col-span-3 text-neutral-600">
         Pick a scale on the left to view features for that scale.
@@ -30,7 +27,7 @@ export default function FeaturesContent() {
   }
 
   const matches = items
-    .filter((it) => Slugify(it.Scale) === normalizedScale)
+    .filter((it) => Slugify(it.Scale) === sectionParams)
     .sort((a, b) => {
       const an = (a.Feature_title ?? '').toLowerCase();
       const bn = (b.Feature_title ?? '').toLowerCase();
@@ -42,7 +39,7 @@ export default function FeaturesContent() {
   if (matches.length === 0) {
     return (
       <div className="col-span-3">
-        No features found for scale <span className="font-medium">“{scaleParam}”</span>.
+        No features found for scale <span className="font-medium">“{sectionParams}”</span>.
       </div>
     );
   }

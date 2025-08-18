@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import bImage from './background-help-get_started-banner.webp';
+import bImage from '@/ui/segments/help/overview/background-help-get_started-banner.webp';
 
 export default function GetStartedBanner() {
   return (

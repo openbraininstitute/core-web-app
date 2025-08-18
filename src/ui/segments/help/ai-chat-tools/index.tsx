@@ -1,5 +1,7 @@
-import AIChatToolsContent from './content';
-import AIChatToolsNavigation from './navigation';
+'use client';
+
+import AIChatToolsContent from '@/ui/segments/help/ai-chat-tools/content';
+import AIChatToolsNavigation from '@/ui/segments/help/ai-chat-tools/navigation';
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
 
@@ -10,13 +12,17 @@ export type AIChatToolsSectionProps = {
   name: string;
 };
 
-export default function AiChatToolsSection() {
+export default function AiChatToolsSection({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const allTools: AIChatToolsSectionProps[] = useAITools() ?? [];
 
   return (
     <div className="grid h-full w-full grid-cols-4 gap-x-6">
-      <AIChatToolsNavigation content={allTools} />
-      <AIChatToolsContent content={allTools} />
+      <AIChatToolsNavigation content={allTools} searchParams={searchParams ?? {}} />
+      <AIChatToolsContent content={allTools} searchParams={searchParams} />
     </div>
   );
 }

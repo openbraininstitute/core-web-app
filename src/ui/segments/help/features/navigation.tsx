@@ -1,16 +1,12 @@
-import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 import { RightOutlined } from '@ant-design/icons';
 
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { getSearchParam, PageProps } from '@/utils/getSearchParams';
 
-export default function FeaturesNavigation() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const breakpoint = useDefaultBreakpoint();
-
-  const currentScale = searchParams.get('scale');
+export default function FeaturesNavigation({ searchParams }: PageProps) {
+  const scaleParams = getSearchParam(searchParams ?? {}, 'scale');
 
   const scalesList = [
     {
@@ -31,16 +27,16 @@ export default function FeaturesNavigation() {
     },
   ];
 
-  const handleClick = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('scale', id);
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
-
   return (
     <div className="col-span-1 flex flex-col gap-y-3">
       {scalesList.map((scale) => {
-        const isActive = currentScale === scale.id;
+        const isActive = scaleParams === scale.id;
+
+        const params = new URLSearchParams(scaleParams?.toString());
+        params.set('section', 'features');
+        params.set('scale', scale.id);
+        const href = `?${params.toString()}`;
+
         return (
           <Button
             rounded
@@ -48,20 +44,15 @@ export default function FeaturesNavigation() {
             asChild
             key={`view-${scale.id}-features`}
             variant="outline"
-            className={`h-auto w-full justify-start font-bold shadow-sm ${
+            className={`shadow-base h-15 w-full justify-start px-6 text-lg font-semibold ${
               isActive ? 'bg-primary-9 text-white' : ''
             }`}
-            size={breakpoint === 'xl' ? 'lg' : 'md'}
             aria-label={`View ${scale.name} features`}
           >
-            <button
-              type="button"
-              onClick={() => handleClick(scale.id)}
-              aria-label={`View ${scale.name} features`}
-            >
+            <Link href={href} scroll={false}>
               {scale.name}
               <RightOutlined className="ml-auto text-current" />
-            </button>
+            </Link>
           </Button>
         );
       })}

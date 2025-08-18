@@ -1,13 +1,15 @@
-import { useSearchParams } from 'next/navigation';
-
 import { PortableText } from 'next-sanity';
 
-import { PortableTextBlock } from '@sanity/types';
+import type { PortableTextBlock } from '@sanity/types';
 
-import { useSanityContentForAboutContent } from '@/components/documentation/hooks/use-sanity-content-for-about-section';
 import { cn } from '@/utils/css-class';
 
-import styles from './about-content.module.css';
+import { getAboutContent } from '@/api/sanity/help-about-section/route';
+import { getSearchParam, PageProps } from '@/utils/getSearchParams';
+
+import styles from '@/ui/segments/help/about/about-content.module.css';
+
+export const revalidate = 60;
 
 export type AboutContentProps = {
   aboutContent: PortableTextBlock[];
@@ -15,13 +17,12 @@ export type AboutContentProps = {
   aboutTheAppContent: PortableTextBlock[];
 };
 
-export default function AboutContent() {
-  const searchParams = useSearchParams();
-  const aboutParam = searchParams.get('about');
+export default async function AboutContent({ searchParams }: PageProps) {
+  const aboutParam = getSearchParam(searchParams ?? {}, 'subsection');
 
-  const content: AboutContentProps = useSanityContentForAboutContent();
+  const content = (await getAboutContent()) as AboutContentProps;
 
-  const contentFiltered = () => {
+  const contentFiltered = (): PortableTextBlock[] => {
     if (aboutParam === 'about') {
       return content.aboutContent;
     }

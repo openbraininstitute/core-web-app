@@ -1,26 +1,17 @@
-import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 import { RightOutlined } from '@ant-design/icons';
 
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { getSearchParam, PageProps } from '@/utils/getSearchParams';
 
 export type AboutNavigationProps = {
   id: string;
   name: string;
 };
 
-export default function AboutNavigation() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const breakpoint = useDefaultBreakpoint();
-
-  const handleClick = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('about', id);
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
+export default function AboutNavigation({ searchParams }: PageProps) {
+  const sectionParams = getSearchParam(searchParams ?? {}, 'section');
 
   const content: AboutNavigationProps[] = [
     {
@@ -39,27 +30,29 @@ export default function AboutNavigation() {
 
   return (
     <div className="col-span-1 flex max-h-[82vh] w-full flex-col gap-y-4 overflow-y-scroll">
-      {content?.map((section: AboutNavigationProps) => (
-        <Button
-          rounded
-          borderless
-          asChild
-          key={`view-${section.id}-features`}
-          variant="outline"
-          className="h-auto w-full justify-start font-bold shadow-sm"
-          size={breakpoint === 'xl' ? 'lg' : 'md'}
-          aria-label={`View ${section.name} features`}
-        >
-          <button
-            type="button"
-            onClick={() => handleClick(section.id)}
+      {content?.map((section: AboutNavigationProps) => {
+        const params = new URLSearchParams(sectionParams?.toString());
+        params.set('section', 'about');
+        params.set('subsection', section.id);
+        const href = `?${params.toString()}`;
+
+        return (
+          <Button
+            rounded
+            borderless
+            asChild
+            key={`view-${section.id}-features`}
+            variant="outline"
+            className="h-auto w-full justify-start font-bold shadow-sm"
             aria-label={`View ${section.name} features`}
           >
-            {section.name}
-            <RightOutlined className="ml-auto text-current" />
-          </button>
-        </Button>
-      ))}
+            <Link href={href} scroll={false}>
+              {section.name}
+              <RightOutlined className="ml-auto text-current" />
+            </Link>
+          </Button>
+        );
+      })}
     </div>
   );
 }
