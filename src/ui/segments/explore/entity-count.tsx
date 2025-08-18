@@ -1,12 +1,7 @@
-import { LoadingOutlined } from '@ant-design/icons';
 import { useQueries } from '@tanstack/react-query';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
-
-import snakeCase from 'lodash/snakeCase';
 import kebabCase from 'lodash/kebabCase';
-import Link from 'next/link';
 import get from 'lodash/get';
 
 import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
@@ -15,16 +10,15 @@ import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/con
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Button } from '@/ui/molecules/button';
 import {
   getElectricalCellRecordingsCount,
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
-  getEntityTypeFromUrl,
   getAllEntitiesCount,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
@@ -55,48 +49,6 @@ const tabsConfigItems: Array<{
 type Props = {
   dataKey: string;
 };
-
-function BrowseLink({
-  isLoading,
-  type,
-  title,
-  count,
-  href,
-}: {
-  isLoading: boolean;
-  type: string;
-  title: string;
-  count: number | null;
-  href: string;
-}) {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const entityType = snakeCase(getEntityTypeFromUrl(pathname) ?? '');
-  return (
-    <Button
-      asChild
-      rounded
-      key={`counter-${type}`}
-      variant="outline"
-      size="lg"
-      className="group w-full"
-      active={entityType === type}
-    >
-      <Link
-        href={{
-          pathname: href,
-          query: searchParams.toString(),
-        }}
-        className="flex! w-full items-center justify-between!"
-      >
-        <div className="font-bold text-current">{title}</div>
-        <div className="text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white">
-          {isLoading ? <LoadingOutlined /> : <div>{count}</div>}
-        </div>
-      </Link>
-    </Button>
-  );
-}
 
 export function EntityCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
@@ -157,6 +109,7 @@ export function EntityCount({ dataKey }: Props) {
     ],
     [allLoading]
   );
+
   const content = match(activeTab)
     .with('experimental', () => (
       <>

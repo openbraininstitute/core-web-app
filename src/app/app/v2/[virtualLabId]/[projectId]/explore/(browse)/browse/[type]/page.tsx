@@ -19,7 +19,7 @@ export default async function Page({
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   { scope: TWorkspaceScope | null }
 >) {
-  const { type } = await params;
+  const { type, virtualLabId, projectId } = await params;
   const { scope } = await searchParams;
 
   const entity = getEntityByExtendedType({ type: snakeCase(type) as TExtendedEntitiesTypeDict });
@@ -33,7 +33,9 @@ export default async function Page({
       },
       () => <BrowseStandardScope />
     )
-    .with({ scope: WorkspaceScope.Bookmarks }, () => <BrowseLibraryScope />)
+    .with({ scope: WorkspaceScope.Bookmarks }, async () => {
+      return <BrowseLibraryScope />;
+    })
     .otherwise(() => notFound());
 
   return content;

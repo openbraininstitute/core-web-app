@@ -4,6 +4,7 @@ export const AUTO_ONBOARDING_DONE = 'automatic-app-onboarding';
 
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;
 export const DEFAULT_PAGE_SIZE = 30;
+export const DEFAULT_PAGE_LOW_SIZE = 15;
 export const DEFAULT_PAGE_NUMBER = 1;
 
 export const WorkspaceScope = {

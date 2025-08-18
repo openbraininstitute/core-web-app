@@ -1,14 +1,16 @@
 'use client';
 
-import { useParams, useSearchParams } from 'next/navigation';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useQuery } from '@tanstack/react-query';
+import { useAtom, useAtomValue } from 'jotai';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
-
 import snakeCase from 'lodash/snakeCase';
 import compact from 'lodash/compact';
-import get from 'lodash/get';
+import map from 'lodash/map';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { DEFAULT_PAGE_LOW_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';
+import { getProjectBookmarksPerCategory } from '@/api/virtual-lab-svc/queries/bookmark';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import {
   coreActiveColumnsAtom,
@@ -17,32 +19,47 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MainTable } from '@/ui/segments/data-table';
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
-import type { KebabCase } from '@/utils/type';
 import {
   makeSelectEntityClickEvent,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { WorkspaceContext } from '@/types/common';
+import type { KebabCase } from '@/utils/type';
+
 export function BrowseLibraryScope() {
-  const searchParams = useSearchParams();
-  const scope = searchParams.get('scope') as TWorkspaceScope;
-  const { type } = useParams<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }>();
   const { virtualLabId, projectId } = useWorkspace();
-  const dataKey = compact([virtualLabId, projectId, type, scope]).join('/');
+  const { type } = useParams<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }>();
+  const dataKey = compact([virtualLabId, projectId, type, WorkspaceScope.Bookmarks]).join('/');
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+  const [pageNumber, setPageNumber] = useAtom(corePageNumberAtom(dataKey));
+
+  const { isLoading: loadingBookmarks, data: bookmarks } = useQuery({
+    queryKey: keyBuilder.bookmarks({
+      virtualLabId,
+      projectId,
+      page: pageNumber,
+      pageSize: DEFAULT_PAGE_LOW_SIZE,
+      category: dataType,
+    }),
+    queryFn: () =>
+      getProjectBookmarksPerCategory({
+        context: { virtualLabId, projectId },
+        category: dataType as TEntityTypeDict,
+        pagination: { page: pageNumber, page_size: DEFAULT_PAGE_LOW_SIZE },
+      }),
+  });
 
   const entity = getEntityByExtendedType({ type: dataType });
-  const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
+
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const [miniViewPresent, updateDisplayMiniView] = useState(false);
 
@@ -60,10 +77,10 @@ export function BrowseLibraryScope() {
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
 
-  const { data, error, isPlaceholderData, isFetching, isLoading } = useQueryExtendedEntityType({
+  const { data, error, isLoading } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
-      workspaceScope: scope,
+      workspaceScope: WorkspaceScope.Bookmarks,
       extendedEntityType: snakeCase(type) as TExtendedEntitiesTypeDict,
     },
     workspace: { virtualLabId, projectId },
@@ -71,15 +88,16 @@ export function BrowseLibraryScope() {
       const [{ workspace, queryParameters }] = queryKey;
       return entity?.api?.query.list?.({
         withFacets: true,
-        filters: { ...queryParameters },
+        filters: {
+          ...queryParameters,
+          id__in: map(bookmarks?.data?.results, 'entity_id'),
+        },
         context: workspace,
       });
     },
-    enabled: ({ queryKey }) => {
-      const [{ queryParameters }] = queryKey;
-      if (!get(queryParameters, 'within_brain_region_brain_region_id', null)) return false;
-      return true;
-    },
+    useKeepPreviousData: false,
+    useBrainRegion: false,
+    enabled: Boolean(bookmarks?.data?.total),
   });
 
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
@@ -119,8 +137,8 @@ export function BrowseLibraryScope() {
             controlsVisible
             showLoadingState
             sticky={{ offsetHeader: 75.5 }}
-            isLoading={(isPlaceholderData && isFetching) || isLoading}
-            dataScope={scope}
+            isLoading={isLoading || loadingBookmarks}
+            dataScope={WorkspaceScope.Bookmarks}
             dataSource={dataSource ?? []}
             dataType={dataType}
             workspace={{ virtualLabId, projectId }}

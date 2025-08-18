@@ -1,3 +1,4 @@
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceContext } from '@/types/common';
 
@@ -67,4 +68,19 @@ export const keyBuilder = {
     entity?: TExtendedEntitiesTypeDict;
     type: 'build' | 'simulate';
   }) => [`${prefix}/activities`, { virtualLabId, projectId, page, pageSize, scale, type, entity }],
+  bookmarkCategories: ({ virtualLabId, projectId }: WorkspaceContext) => [
+    `${prefix}/bookmark-categories`,
+    { virtualLabId, projectId },
+  ],
+  bookmarks: ({
+    virtualLabId,
+    projectId,
+    category,
+    page,
+    pageSize,
+  }: WorkspaceContext & {
+    page: number;
+    pageSize: number;
+    category: TExtendedEntitiesTypeDict;
+  }) => [`${prefix}/bookmark-categories`, { virtualLabId, projectId, category, page, pageSize }],
 };
