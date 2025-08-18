@@ -9,7 +9,6 @@ import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
 
 import slugiy from '@/util/slugify';
 
-// Move code renderer outside the component and type props correctly
 function MarkdownCodeBlock({ children }: { children?: React.ReactNode }) {
   return (
     <pre className="border-neutral-2 text-neutral-5 mt-3 flex flex-row gap-x-2 rounded-md border border-solid px-3 py-2 text-base">

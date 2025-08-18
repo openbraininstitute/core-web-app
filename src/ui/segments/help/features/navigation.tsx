@@ -1,13 +1,15 @@
+'use client';
+
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 import { RightOutlined } from '@ant-design/icons';
 
 import { Button } from '@/ui/molecules/button';
-import { getSearchParam, PageProps } from '@/utils/getSearchParams';
+import { cn } from '@/utils/css-class';
+import { buildLink } from '@/utils/searchparams-to-link';
 
-export default function FeaturesNavigation({ searchParams }: PageProps) {
-  const scaleParams = getSearchParam(searchParams ?? {}, 'scale');
-
+export default function FeaturesNavigation() {
   const scalesList = [
     {
       name: 'Subcellular',
@@ -27,15 +29,16 @@ export default function FeaturesNavigation({ searchParams }: PageProps) {
     },
   ];
 
+  const searchParams = useSearchParams();
+  const searchParamsObj = Object.fromEntries(searchParams.entries());
+
+  const activeScale = searchParams.get('scale');
+
   return (
     <div className="col-span-1 flex flex-col gap-y-3">
       {scalesList.map((scale) => {
-        const isActive = scaleParams === scale.id;
-
-        const params = new URLSearchParams(scaleParams?.toString());
-        params.set('section', 'features');
-        params.set('scale', scale.id);
-        const href = `?${params.toString()}`;
+        const link = buildLink(searchParamsObj, { scale: scale.id });
+        const isActive = activeScale === scale.id;
 
         return (
           <Button
@@ -44,12 +47,13 @@ export default function FeaturesNavigation({ searchParams }: PageProps) {
             asChild
             key={`view-${scale.id}-features`}
             variant="outline"
-            className={`shadow-base h-15 w-full justify-start px-6 text-lg font-semibold ${
+            className={cn(
+              'shadow-base h-15 w-full justify-start px-6 text-lg font-semibold',
               isActive ? 'bg-primary-9 text-white' : ''
-            }`}
+            )}
             aria-label={`View ${scale.name} features`}
           >
-            <Link href={href} scroll={false}>
+            <Link href={link.href} scroll={false}>
               {scale.name}
               <RightOutlined className="ml-auto text-current" />
             </Link>

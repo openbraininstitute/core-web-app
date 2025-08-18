@@ -1,13 +1,20 @@
+import { z } from 'zod';
+
 import { useSanity } from '@/services/sanity';
 import { AboutContentProps } from '@/ui/segments/help/about/content';
 import { logError } from '@/util/logger';
-import { assertType } from '@/util/type-guards';
 
 const queryForAboutContent = `*[_type=="ResourceHelpSection"][0] {
   aboutContent,
   aboutTheAppContent,
   termsAndConditionContent
 }`;
+
+const AboutContentSchema = z.object({
+  aboutContent: z.unknown(),
+  aboutTheAppContent: z.unknown(),
+  termsAndConditionContent: z.unknown(),
+});
 
 export function useSanityContentForAboutContent(): AboutContentProps {
   return (
@@ -21,15 +28,7 @@ export function useSanityContentForAboutContent(): AboutContentProps {
 
 function isContentForAbout(data: unknown): data is AboutContentProps {
   try {
-    assertType(
-      data,
-      {
-        aboutContent: 'unknown',
-        aboutTheAppContent: 'unknown',
-        termsAndConditionContent: 'unknown',
-      },
-      'ContentForAbout'
-    );
+    AboutContentSchema.parse(data);
     return true;
   } catch (ex) {
     logError(ex);

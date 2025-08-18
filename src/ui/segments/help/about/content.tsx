@@ -5,7 +5,7 @@ import type { PortableTextBlock } from '@sanity/types';
 import { cn } from '@/utils/css-class';
 
 import { getAboutContent } from '@/api/sanity/help-about-section/route';
-import { getSearchParam, PageProps } from '@/utils/getSearchParams';
+import { getSearchParam } from '@/utils/getSearchParams';
 
 import styles from '@/ui/segments/help/about/about-content.module.css';
 
@@ -17,10 +17,14 @@ export type AboutContentProps = {
   aboutTheAppContent: PortableTextBlock[];
 };
 
-export default async function AboutContent({ searchParams }: PageProps) {
-  const aboutParam = getSearchParam(searchParams ?? {}, 'subsection');
-
+export default async function AboutContent({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
   const content = (await getAboutContent()) as AboutContentProps;
+
+  const aboutParam = getSearchParam(searchParams, 'subsection');
 
   const contentFiltered = (): PortableTextBlock[] => {
     if (aboutParam === 'about') {

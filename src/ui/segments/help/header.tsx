@@ -78,9 +78,8 @@ function HelpTabs() {
       defaultValue={activeTab ?? 'overview'}
       className="w-full"
       activationMode="manual"
-      onValueChange={(value) => {
-        // onChangeTab(value as HelpSectionsKeys)();
-        const section = encodeURIComponent(value as string);
+      onValueChange={(value: string) => {
+        const section = encodeURIComponent(value);
         router.replace(`${pathname}?section=${section}`, { scroll: false });
       }}
     >

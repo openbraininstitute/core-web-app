@@ -12,17 +12,13 @@ export type AIChatToolsSectionProps = {
   name: string;
 };
 
-export default function AiChatToolsSection({
-  searchParams,
-}: {
-  searchParams?: Record<string, string | string[] | undefined>;
-}) {
+export default function AiChatToolsSection() {
   const allTools: AIChatToolsSectionProps[] = useAITools() ?? [];
 
   return (
     <div className="grid h-full w-full grid-cols-4 gap-x-6">
-      <AIChatToolsNavigation content={allTools} searchParams={searchParams ?? {}} />
-      <AIChatToolsContent content={allTools} searchParams={searchParams} />
+      <AIChatToolsNavigation content={allTools} />
+      <AIChatToolsContent content={allTools} />
     </div>
   );
 }

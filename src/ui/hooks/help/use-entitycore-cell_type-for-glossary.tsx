@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
-import type { IEType, IMType, TypeFilter } from '@/api/entitycore/types/shared/global';
-import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TypeFilter } from '@/api/entitycore/types/shared/global';
 
 export const useFetchEntityTypes = ({
   cellType,
@@ -19,7 +18,7 @@ export const useFetchEntityTypes = ({
   pageSize?: number;
 }) => {
   const [state, setState] = useState<{
-    data: EntityCoreResponse<IEType> | EntityCoreResponse<IMType> | null;
+    data: any;
     loading: boolean;
     error: string | null;
   }>({
@@ -42,39 +41,8 @@ export const useFetchEntityTypes = ({
 
       const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
 
-      let normalizedResponse: EntityCoreResponse<IEType> | EntityCoreResponse<IMType>;
-
-      if (Array.isArray(response)) {
-        normalizedResponse = {
-          data: response,
-          pagination: {
-            total_items: response.length,
-            page: 1,
-            page_size: response.length,
-          },
-        };
-      } else if (
-        response &&
-        'data' in response &&
-        Array.isArray(response.data) &&
-        'pagination' in response
-      ) {
-        normalizedResponse = response;
-      } else if (response && 'items' in response && Array.isArray(response.items)) {
-        normalizedResponse = {
-          data: response.items,
-          pagination: {
-            total_items: response.data.length || response.items.length,
-            page: response.pagination.page || 1,
-            page_size: response.pagination.page_size || response.items.length,
-          },
-        };
-      } else {
-        throw new Error('Unexpected response format');
-      }
-
       setState({
-        data: normalizedResponse,
+        data: response,
         loading: false,
         error: null,
       });

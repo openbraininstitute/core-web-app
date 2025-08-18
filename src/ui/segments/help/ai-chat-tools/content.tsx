@@ -1,27 +1,29 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+
 import AIToolCard from '@/ui/segments/help/ai-chat-tools/ai-tool-card';
 
 import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools/';
 
-export default function AIChatToolsContent({
-  content,
-  searchParams,
-}: {
-  content: AIChatToolsSectionProps[];
-  searchParams?: Record<string, string | string[] | undefined>;
-}) {
-  const singleTool = content.find((tool) => tool.id === searchParams?.tool);
+export default function AIChatToolsContent({ content }: { content: AIChatToolsSectionProps[] }) {
+  const searchParams = useSearchParams();
 
-  if (!singleTool) {
+  const activeTool = searchParams.get('tool') ?? undefined;
+
+  const filteredContent = content.filter((tool) => tool.id === activeTool);
+
+  if (filteredContent.length === 0) {
     return (
-      <div className="col-span-3 text-neutral-600">
-        Pick a tool on the left to view features for that tool.
+      <div className="col-span-3">
+        No features found for tool <span className="font-medium">&quot;{activeTool}&quot;</span>.
       </div>
     );
   }
 
   return (
     <div className="col-span-3 flex max-h-[82vh] w-full flex-col gap-y-4 overflow-y-scroll">
-      {singleTool && <AIToolCard content={singleTool} />}
+      {filteredContent && <AIToolCard content={filteredContent[0]} />}
     </div>
   );
 }

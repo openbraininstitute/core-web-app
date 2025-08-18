@@ -1,11 +1,3 @@
-export type PageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
-};
-
-export type SectionsProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
-};
-
 export function getSearchParam(
   searchParams: Record<string, string | string[] | undefined>,
   key: string

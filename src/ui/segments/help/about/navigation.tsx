@@ -1,18 +1,20 @@
+'use client';
+
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 import { RightOutlined } from '@ant-design/icons';
 
 import { Button } from '@/ui/molecules/button';
-import { getSearchParam, PageProps } from '@/utils/getSearchParams';
+import { cn } from '@/utils/css-class';
+import { buildLink } from '@/utils/searchparams-to-link';
 
 export type AboutNavigationProps = {
   id: string;
   name: string;
 };
 
-export default function AboutNavigation({ searchParams }: PageProps) {
-  const sectionParams = getSearchParam(searchParams ?? {}, 'section');
-
+export default function AboutNavigation() {
   const content: AboutNavigationProps[] = [
     {
       name: 'About',
@@ -28,13 +30,16 @@ export default function AboutNavigation({ searchParams }: PageProps) {
     },
   ];
 
+  const searchParams = useSearchParams();
+  const searchParamsObj = Object.fromEntries(searchParams.entries());
+
+  const activeSubsection = searchParams.get('subsection');
+
   return (
     <div className="col-span-1 flex max-h-[82vh] w-full flex-col gap-y-4 overflow-y-scroll">
       {content?.map((section: AboutNavigationProps) => {
-        const params = new URLSearchParams(sectionParams?.toString());
-        params.set('section', 'about');
-        params.set('subsection', section.id);
-        const href = `?${params.toString()}`;
+        const link = buildLink(searchParamsObj, { subsection: section.id });
+        const isActive = activeSubsection === section.id;
 
         return (
           <Button
@@ -43,10 +48,13 @@ export default function AboutNavigation({ searchParams }: PageProps) {
             asChild
             key={`view-${section.id}-features`}
             variant="outline"
-            className="h-auto w-full justify-start font-bold shadow-sm"
+            className={cn(
+              'shadow-base h-15 w-full justify-start px-6 text-lg font-semibold',
+              isActive ? 'bg-primary-9 text-white' : ''
+            )}
             aria-label={`View ${section.name} features`}
           >
-            <Link href={href} scroll={false}>
+            <Link href={link.href} scroll={false}>
               {section.name}
               <RightOutlined className="ml-auto text-current" />
             </Link>

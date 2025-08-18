@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
@@ -14,20 +14,9 @@ export const useFetchSingleType = ({
   cellType: 'e-type' | 'm-type';
   name: string;
 }) => {
-  const [state, setState] = useState<{
-    data: EntityCoreResponse<IEType> | EntityCoreResponse<IMType> | null;
-    loading: boolean;
-    error: string | null;
-  }>({
-    data: null,
-    loading: false,
-    error: null,
-  });
-
-  const fetchEntityCellTypes = useCallback(async () => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-
-    try {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['entitycore', cellType, name],
+    queryFn: async (): Promise<EntityCoreResponse<IEType> | EntityCoreResponse<IMType>> => {
       const args = {
         filters: {
           pref_label: name,
@@ -38,10 +27,9 @@ export const useFetchSingleType = ({
 
       const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
 
-      let normalizedResponse: EntityCoreResponse<IEType> | EntityCoreResponse<IMType>;
-
+      // Normalize response logic
       if (Array.isArray(response)) {
-        normalizedResponse = {
+        return {
           data: response,
           pagination: {
             page: 1,
@@ -49,15 +37,17 @@ export const useFetchSingleType = ({
             total_items: 1,
           },
         };
-      } else if (
+      }
+      if (
         response &&
         'data' in response &&
         Array.isArray(response.data) &&
         'pagination' in response
       ) {
-        normalizedResponse = response;
-      } else if (response && 'items' in response && Array.isArray(response.items)) {
-        normalizedResponse = {
+        return response;
+      }
+      if (response && 'items' in response && Array.isArray(response.items)) {
+        return {
           data: response.items,
           pagination: {
             page: 1,
@@ -65,30 +55,16 @@ export const useFetchSingleType = ({
             total_items: 1,
           },
         };
-      } else {
-        throw new Error('Unexpected response format');
       }
-
-      setState({
-        data: normalizedResponse,
-        loading: false,
-        error: null,
-      });
-    } catch (err) {
-      setState({
-        data: null,
-        loading: false,
-        error: err instanceof Error ? err.message : 'An unknown error occurred',
-      });
-    }
-  }, [cellType, name]);
-
-  useEffect(() => {
-    fetchEntityCellTypes();
-  }, [fetchEntityCellTypes]);
+      throw new Error('Unexpected response format');
+    },
+    enabled: Boolean(name), // Only run query if name is provided
+  });
 
   return {
-    ...state,
-    refetch: fetchEntityCellTypes,
+    data,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
   };
 };

@@ -23,9 +23,9 @@ export default async function HelpSectionContent({
     .with('overview', () => <OverviewSection />)
     .with('glossary', () => <GlossarySection />)
     .with('tutorials', () => <TutorialSection />)
-    .with('features', () => <FeaturesSection searchParams={params} />)
-    .with('guides', () => <GuidesSection searchParams={params} />)
-    .with('ai-tools', () => <AiChatToolsSection searchParams={params} />)
-    .with('about', () => <AboutSection searchParams={params} />)
+    .with('features', () => <FeaturesSection />)
+    .with('guides', () => <GuidesSection />)
+    .with('ai-tools', () => <AiChatToolsSection />)
+    .with('about', () => <AboutSection searchParams={params ?? {}} />)
     .otherwise(() => <OverviewSection />);
 }

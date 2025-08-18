@@ -1,32 +1,29 @@
+import { z } from 'zod';
+
 import queryForArtifactTypes from '@/components/documentation/query/experimental-types-query';
 import { useSanity } from '@/services/sanity';
 import { ContentForGlossaryItem } from '@/types/help/type';
 import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+
+const ContentForGlossaryItemSchema = z.object({
+  Name: z.string().nullable(),
+  New_suggested_name: z.string().nullable(),
+  Description: z.string().nullable(),
+  definition: z.unknown(),
+  Data_Type: z.string().nullable(),
+  Scale: z.string().nullable(),
+  Status: z.string().nullable(),
+});
+
+const ContentForGlossarySchema = z.array(ContentForGlossaryItemSchema);
 
 export function useSanityContentForArtifactTypes() {
   return useSanity(queryForArtifactTypes, isContentForGlossary) ?? [];
 }
 
 function isContentForGlossary(data: unknown): data is ContentForGlossaryItem[] {
-  const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
   try {
-    assertType(
-      data,
-      [
-        'array',
-        {
-          Name: typeStringOrNull,
-          New_suggested_name: typeStringOrNull,
-          Description: typeStringOrNull,
-          definition: 'unknown',
-          Data_Type: typeStringOrNull,
-          Scale: typeStringOrNull,
-          Status: typeStringOrNull,
-        },
-      ],
-      'ContentForGlossary'
-    );
+    ContentForGlossarySchema.parse(data);
     return true;
   } catch (ex) {
     logError(ex);
