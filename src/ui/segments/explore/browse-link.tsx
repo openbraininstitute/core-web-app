@@ -3,7 +3,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import snakeCase from 'lodash/snakeCase';
 import Link from 'next/link';
 
-import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
+import { getEntityTypeFromUrl } from '@/ui/segments/explore/helpers';
 import { Button } from '@/ui/molecules/button';
 
 export function BrowseLink({
@@ -21,7 +21,7 @@ export function BrowseLink({
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const entityType = snakeCase(getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
+  const entityType = snakeCase(getEntityTypeFromUrl(pathname) ?? '');
   return (
     <Button
       asChild
