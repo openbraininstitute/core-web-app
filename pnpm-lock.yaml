@@ -350,9 +350,6 @@ importers:
       react-plotly.js:
         specifier: ^2.6.0
         version: 2.6.0(plotly.js@3.0.1(mapbox-gl@1.13.3)(webpack@5.99.5(esbuild@0.25.5)))(react@19.1.0)
-      react-query:
-        specifier: link:@types/@tanstack/react-query
-        version: link:@types/@tanstack/react-query
       react-resizable:
         specifier: ^3.0.5
         version: 3.0.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
