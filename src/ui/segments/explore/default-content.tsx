@@ -1,0 +1,52 @@
+'use client';
+
+import { parseAsString, useQueryState, type Parser } from 'nuqs';
+import { useState, type ReactNode } from 'react';
+import { match, P } from 'ts-pattern';
+
+import { useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { ExploreMenu } from '@/ui/segments/explore/scope-left-menu';
+import { LibraryLeftMenu } from '@/ui/segments/explore/library-left-menu';
+import { Card } from '@/ui/molecules/card';
+import { cn } from '@/utils/css-class';
+
+import { WorkspaceScope, type TWorkspaceScope } from '@/constants';
+
+type Props = { dataKey: string; children: ReactNode };
+
+export function DefaultContent({ children, dataKey }: Props) {
+  const [miniViewPresent, setMiniViewPresent] = useState(false);
+  const [scope] = useQueryState(
+    'scope',
+    parseAsString.withOptions({ clearOnDefault: false, shallow: true }) as Parser<TWorkspaceScope>
+  );
+
+  useSelectEntityClickEvent((ev) => {
+    setMiniViewPresent(ev.detail.display);
+  });
+
+  const menu = match(scope)
+    .with(P.union(WorkspaceScope.Project, WorkspaceScope.Public), () => (
+      <ExploreMenu dataKey={dataKey} />
+    ))
+    .with('bookmarks', () => <LibraryLeftMenu />)
+    .otherwise(() => <ExploreMenu dataKey={dataKey} />);
+
+  return (
+    <>
+      <div
+        id="explore-left-menu"
+        data-testid="explore-left-menu"
+        className={cn(
+          'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full overflow-hidden [grid-area:aside]',
+          { hidden: miniViewPresent }
+        )}
+      >
+        <Card borderless className="h-full w-full gap-0 bg-white py-0 shadow-lg">
+          {menu}
+        </Card>
+      </div>
+      {children}
+    </>
+  );
+}

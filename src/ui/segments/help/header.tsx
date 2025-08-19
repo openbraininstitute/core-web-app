@@ -1,5 +1,7 @@
 'use client';
 
+import { usePathname, useRouter } from 'next/navigation';
+
 import { useTabs } from '@/components/detail-view-tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
@@ -61,11 +63,14 @@ const tabsConfigItems: Array<{
 
 function HelpTabs() {
   const breakpoint = useDefaultBreakpoint();
-  const { activeTab, onChangeTab } = useTabs<HelpSectionsKeys>({
+  const { activeTab } = useTabs<HelpSectionsKeys>({
     tabsConfig: tabsConfigItems,
     tabKey: 'section',
     shallow: true,
   });
+
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <PillTabs
@@ -73,8 +78,9 @@ function HelpTabs() {
       defaultValue={activeTab ?? 'overview'}
       className="w-full"
       activationMode="manual"
-      onValueChange={(value) => {
-        onChangeTab(value as HelpSectionsKeys)();
+      onValueChange={(value: string) => {
+        const section = encodeURIComponent(value);
+        router.replace(`${pathname}?section=${section}`, { scroll: false });
       }}
     >
       <PillTabsList

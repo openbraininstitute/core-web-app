@@ -5,6 +5,7 @@ import { createClient } from 'next-sanity';
 
 import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
+import { log } from '@/utils/logger';
 
 const client = createClient({
   projectId: 'fgi7eh1v',
@@ -14,12 +15,6 @@ const client = createClient({
   useCdn: process.env.NODE_ENV === 'production',
 });
 
-/**
- * @returns The expected object, or:
- *
- * - `undefined` if the query has not finished yet.
- * - `null` if an error occured.
- */
 export function useSanity<T>(
   query: string,
   typeGuard: (data: unknown) => data is T
@@ -48,25 +43,17 @@ export async function fetchSanity<T>(
     if (typeGuard(data)) return data;
     throw Error('Type guard rejeted this type, but without any explanation!');
   } catch (ex) {
-    console.log('The following Sanity GROQ query returned a data of unexpected type:');
-    console.log(`%c${query}`, 'font-family: monospace; color: #0f0; bakground: #000');
-    console.log(data);
+    log('warn', 'The following Sanity GROQ query returned a data of unexpected type:');
+    log('log', `%c${query}`, 'font-family: monospace; color: #0f0; background: #000');
+    log('log', data);
     const msg = ex instanceof Error ? ex.message : `${ex}`;
-    console.log(`%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
+    log('log', `%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
     return null;
   }
 }
 
-// Prevent a query from being fetched twice.
 const cache = new Map<string, unknown>();
 
-/**
- * Query Sanity without checking the returned format.
- * This is an utility function used by more specific ones.
- * Please use `useSanityContentTyped()` instead.
- *
- * @see https://open-brain-institute.sanity.studio
- */
 async function fetchSanityContent(query: string): Promise<unknown> {
   const fromCache = cache.get(query);
   if (fromCache) return fromCache;

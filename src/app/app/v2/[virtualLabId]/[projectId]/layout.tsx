@@ -15,12 +15,12 @@ export default function Layout({ children }: Props) {
     <AppOnboardingProvider>
       <div className="h-screen w-full">
         <ProjectRootLayout>
-          <div className="w-full p-3 [grid-area:header]">
+          <div className="w-full p-3 pb-0 [grid-area:header]">
             <WorkspaceTopMenu />
           </div>
           <div
             id="workspace-body"
-            className="secondary-scrollbar w-full overflow-y-auto py-3 [grid-area:main]"
+            className="secondary-scrollbar w-full overflow-y-auto pb-3 [grid-area:main]"
           >
             {children}
           </div>

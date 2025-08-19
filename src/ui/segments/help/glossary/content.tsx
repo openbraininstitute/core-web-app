@@ -2,7 +2,8 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import TermCard from './term-card';
+
+import TermCard from '@/ui/segments/help/glossary/term-card';
 
 import type { ContentForGlossaryItem } from '@/components/documentation/type';
 import Slugify from '@/util/slugify';

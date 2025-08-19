@@ -1,21 +1,24 @@
-'use client';
-
-import { useSearchParams } from 'next/navigation';
-
 import { match } from 'ts-pattern';
-import AboutSection from './about';
-import AiChatToolsSection from './ai-chat-tools';
-import FeaturesSection from './features';
-import GlossarySection from './glossary';
-import GuidesSection from './guides';
-import OverviewSection from './overview';
-import TutorialSection from './tutorials';
 
-function Content() {
-  const searchParams = useSearchParams();
-  const section = searchParams.get('section');
+import AboutSection from '@/ui/segments/help/about';
+import AiChatToolsSection from '@/ui/segments/help/ai-chat-tools';
+import FeaturesSection from '@/ui/segments/help/features';
+import GlossarySection from '@/ui/segments/help/glossary';
+import GuidesSection from '@/ui/segments/help/guides';
+import OverviewSection from '@/ui/segments/help/overview';
+import TutorialSection from '@/ui/segments/help/tutorials';
+import { getSearchParam } from '@/utils/getSearchParams';
 
-  return match(section)
+export default async function HelpSectionContent({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const params = await searchParams;
+
+  const sectionParams = getSearchParam(params ?? {}, 'section');
+
+  return match(sectionParams)
     .with(null, () => <OverviewSection />)
     .with('overview', () => <OverviewSection />)
     .with('glossary', () => <GlossarySection />)
@@ -23,14 +26,6 @@ function Content() {
     .with('features', () => <FeaturesSection />)
     .with('guides', () => <GuidesSection />)
     .with('ai-tools', () => <AiChatToolsSection />)
-    .with('about', () => <AboutSection />)
+    .with('about', () => <AboutSection searchParams={params ?? {}} />)
     .otherwise(() => <OverviewSection />);
-}
-
-export default function Sections() {
-  return (
-    <div className="h-full w-full">
-      <Content />
-    </div>
-  );
 }

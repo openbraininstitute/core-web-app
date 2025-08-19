@@ -4,18 +4,19 @@ import { CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
-import { LATEST_VISITED_PROJECT_KEY, V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
 import { Bar, MetricsSkeleton } from '@/ui/segments/project/metrics/metrics-skeleton';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+import { Metrics } from '@/ui/segments/project/metrics/metrics';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { PeopleCommunity } from '@/components/icons/buttons';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { Metrics } from '@/ui/segments/project/metrics/metrics';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { LATEST_VISITED_PROJECT_KEY } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 
 import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
 
 function Header({ onClose, project }: { onClose: () => void; project?: Project | null }) {
   if (!project) return null;

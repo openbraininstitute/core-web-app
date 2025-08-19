@@ -254,13 +254,15 @@ export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepPro
                     className={cn(
                       'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
                       '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
-                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none'
+                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none',
+                      '[&_.ant-select-selection-search]:text-white'
                     )}
                     options={projects}
                     popupClassName={cn(
                       '!bg-[#0a3a76] !text-white',
                       '[&_.ant-select-item-option-content]:text-white!',
-                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!'
+                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
+                      '[&_.ant-empty-description]:text-white!'
                     )}
                     optionFilterProp="label"
                     disabled={isPending}
@@ -317,13 +319,15 @@ export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepPro
                     className={cn(
                       'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
                       '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
-                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none'
+                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none',
+                      '[&_.ant-select-selection-search]:text-white'
                     )}
                     options={projects}
                     popupClassName={cn(
                       '!bg-[#0a3a76] !text-white',
                       '[&_.ant-select-item-option-content]:text-white!',
-                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!'
+                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
+                      '[&_.ant-empty-description]:text-white!'
                     )}
                     optionFilterProp="label"
                     disabled={isPending}

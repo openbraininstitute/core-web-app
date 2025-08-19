@@ -60,7 +60,7 @@ export default function Search<T extends DefaultOptionType>({
             colorBgContainer,
             colorBgElevated: '#003A8C', // Drop down list bg
             colorBorder: colorBgContainer, // Makes it "transparent"
-            colorPrimary: 'white', // Seleced dropdown items color
+            colorPrimary: 'white', // Selected dropdown items color
             colorText: 'white', // Input value text
             colorTextSecondary: 'white', // Control item check mark
             colorTextTertiary: 'white', // Clear icon hover

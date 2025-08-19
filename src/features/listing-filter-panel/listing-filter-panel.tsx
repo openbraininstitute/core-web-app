@@ -32,36 +32,31 @@ import {
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
-import { ExploreDataScope } from '@/types/explore-section/application';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import {
-  TExtendedEntitiesTypeDict,
-  PAGE_NUMBER,
-} from '@/api/entitycore/types/extended-entity-type';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { Facets } from '@/api/entitycore/types/shared/response';
 import { fieldTitleSentenceCase } from '@/util/utils';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   CoreFilter,
   CoreFilterValues,
   GteLteValue,
   ValueOrRangeFilter,
 } from '@/entity-configuration/definitions/types';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: TExtendedEntitiesTypeDict;
-  dataScope?: ExploreDataScope;
   dataKey: string;
   filters: CoreFilter[];
   facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
-  resourceId?: string;
   virtualLabInfo?: WorkspaceContext;
   useBrainRegion?: boolean;
 };
@@ -176,13 +171,11 @@ export default function ListingFilterPanel({
   children,
   toggleDisplay,
   dataType,
-  dataScope,
   dataKey,
   filters,
   setFilters,
   facets,
   showDisplayTrigger = true,
-  resourceId,
   virtualLabInfo,
   useBrainRegion,
 }: Props) {
@@ -193,8 +186,6 @@ export default function ListingFilterPanel({
   const resetFilters = useResetAtom(
     filtersAtom({
       dataType,
-      dataScope,
-      resourceId,
       brainRegionId,
       key: dataKey,
     })
@@ -204,7 +195,6 @@ export default function ListingFilterPanel({
     previousDataAtom({
       workspace: virtualLabInfo,
       dataType,
-      dataScope,
       brainRegionId,
       key: dataKey,
     })
@@ -217,12 +207,11 @@ export default function ListingFilterPanel({
         unwrap(
           activeColumnsAtom({
             dataType,
-            dataScope,
             brainRegionId,
             key: dataKey,
           })
         ),
-      [dataType, dataScope, brainRegionId, dataKey]
+      [dataType, brainRegionId, dataKey]
     )
   );
 
@@ -258,7 +247,7 @@ export default function ListingFilterPanel({
   }, [filters]);
 
   const submitValues = () => {
-    setPageNumber(PAGE_NUMBER);
+    setPageNumber(DEFAULT_PAGE_NUMBER);
     setPrevData([]);
 
     setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));

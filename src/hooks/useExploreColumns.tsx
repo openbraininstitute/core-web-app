@@ -4,8 +4,8 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
 import throttle from 'lodash/throttle';
 
+import { fieldsDefinitionRegistry, getFieldDefinition } from 'src/entity-configuration/definitions';
 import { SortState } from '@/types/explore-section/application';
-import fieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configuration/definitions';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';

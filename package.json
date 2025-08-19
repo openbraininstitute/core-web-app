@@ -140,12 +140,13 @@
     "react-markdown": "^9.1.0",
     "react-pdf": "^9.2.1",
     "react-plotly.js": "^2.6.0",
-    "react-query": "link:@types/@tanstack/react-query",
     "react-resizable": "^3.0.5",
     "react-select": "^5.7.3",
     "react-syntax-highlighter": "^15.6.1",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "sanity": "^3.93.0",
@@ -159,7 +160,7 @@
     "use-breakpoint": "^4.0.6",
     "wavefront-obj-parser": "^2.0.1",
     "whatwg-fetch": "^3.6.19",
-    "zod": "^3.22.4"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@playwright/test": "^1.51.1",

@@ -57,7 +57,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   if (!visible) return null;
 
   return (
-    <div className="flex h-[100px] shrink-0 items-center justify-between gap-5 px-5">
+    <div className="flex h-[60px] shrink-0 items-center justify-between gap-5 px-5">
       {left}
       <div className="flex grow items-center">
         <div className="flex grow justify-center">{children}</div>

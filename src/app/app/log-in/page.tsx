@@ -3,13 +3,9 @@
 import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 
-import {
-  basePath,
-  isServer,
-  LATEST_VISITED_PROJECT_KEY,
-  V2_MIGRATION_TEMPORARY_BASE_PATH,
-} from '@/config';
+import { basePath, isServer, V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { LATEST_VISITED_PROJECT_KEY } from '@/constants';
 
 export default function Page() {
   const searchParams = useSearchParams();

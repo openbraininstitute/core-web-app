@@ -81,6 +81,12 @@ export type AITooslsProps = {
   is_online: boolean;
 };
 
+export type TutorialSteps = {
+  time: number;
+  title: string;
+  content: PortableText | null;
+};
+
 export type TutorialProps = {
   url: string | null;
   title: string | null;
@@ -89,6 +95,7 @@ export type TutorialProps = {
   imageURL: string;
   imageWidth: number;
   imageHeight: number;
+  steps: TutorialSteps[] | null;
 };
 
 export type ContentForTutorialItem = {

@@ -1,11 +1,11 @@
-import TutorialCard from './tutorial-card';
+import TutorialCard from '@/ui/segments/help/tutorials/tutorial-card';
 
-import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
+import { getTutorialContent } from '@/api/sanity/help-tutorial-section/route';
 
-import { TutorialProps } from '@/components/documentation/type';
+import type { TutorialProps } from '@/components/documentation/type';
 
-export default function TutorialSection() {
-  const tutorials = useSanityContentForTutorialsList();
+export default async function TutorialSection() {
+  const tutorials = await getTutorialContent();
 
   return (
     <div>

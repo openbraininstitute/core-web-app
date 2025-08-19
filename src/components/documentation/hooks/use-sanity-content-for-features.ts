@@ -1,9 +1,8 @@
-// import query from '../query/featuresItemHooks.groq';
-import query from '@/components/documentation/query/features-item-hooks.groq';
+import { z } from 'zod';
 
+import query from '@/components/documentation/query/features-item-hooks.groq';
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForFeatureItems() {
   return useSanity(query, isContentForFeatureItems) ?? [];
@@ -17,23 +16,21 @@ export type ContentForFeatureItem = {
   Status: string;
 };
 
+// Zod schema for ContentForFeatureItem
+const ContentForFeatureItemSchema = z.object({
+  Feature_title: z.string().nullable(),
+  Description: z.string().nullable(),
+  Topic: z.string().nullable(),
+  Scale: z.string().nullable(),
+  Status: z.string().nullable(),
+});
+
+// Zod schema for array of ContentForFeatureItem
+const ContentForFeatureItemsSchema = z.array(ContentForFeatureItemSchema);
+
 function isContentForFeatureItems(data: unknown): data is ContentForFeatureItem[] {
-  const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
   try {
-    assertType(
-      data,
-      [
-        'array',
-        {
-          Feature_title: typeStringOrNull,
-          Description: typeStringOrNull,
-          Topic: typeStringOrNull,
-          Scale: typeStringOrNull,
-          Status: typeStringOrNull,
-        },
-      ],
-      'ContentForGlossary'
-    );
+    ContentForFeatureItemsSchema.parse(data);
     return true;
   } catch (ex) {
     logError(ex);

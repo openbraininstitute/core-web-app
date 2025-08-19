@@ -7,11 +7,11 @@ interface FullScreenProps {
 
 export default function FullScreen({ isFullScreen, onToggle }: FullScreenProps) {
   return (
-    <div className="absolute top-4 left-4 z-50 cursor-pointer text-white">
+    <div className="hover:text-primary-2 absolute top-4 left-4 z-50 h-8 w-7 cursor-pointer rounded-md p-1 text-white hover:bg-black/10">
       {isFullScreen ? (
-        <FullscreenExitOutlined className="h-5 w-5 text-xl" onClick={onToggle} />
+        <FullscreenExitOutlined className="text-xl" onClick={onToggle} />
       ) : (
-        <FullscreenOutlined className="h-5 w-5 text-xl" onClick={onToggle} />
+        <FullscreenOutlined className="text-xl" onClick={onToggle} />
       )}
     </div>
   );

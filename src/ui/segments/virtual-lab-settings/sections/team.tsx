@@ -698,7 +698,8 @@ function ListingStep({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
               'h-full',
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
-              '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full'
+              '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
+              '[&_.ant-empty-description]:text-white!'
             )}
             scroll={{ y: 'calc(100vh - 180px)' }}
           />

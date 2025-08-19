@@ -100,7 +100,6 @@ export default function WithListingFilterPanel({
           setFilters={setFilters}
           toggleDisplay={() => setDisplayControlPanel(false)}
           dataType={dataType}
-          dataScope={dataScope}
           dataKey={dataKey}
           facets={facets}
           virtualLabInfo={virtualLabInfo}

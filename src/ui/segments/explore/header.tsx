@@ -34,42 +34,63 @@ const tabsConfigItems: Array<{
 
 function ExploreTabs() {
   const breakpoint = useDefaultBreakpoint();
-  const { activeTab, onChangeTab } = useTabs<ExploreSectionsKeys>({
+  const { activeTab, onChangeTab } = useTabs<ExploreSectionsKeys & 'bookmarks'>({
+    // @ts-ignore
     tabsConfig: tabsConfigItems,
-    tabKey: 'section',
-    shallow: true,
+    tabKey: 'scope',
+    shallow: false,
+    clearOnDefault: false,
+    defaultKey: 'public',
   });
 
+  const onBookmarkClick = () => onChangeTab('bookmarks');
+
   return (
-    <PillTabs
-      value={activeTab ?? 'all-public'}
-      defaultValue={activeTab ?? 'all-public'}
-      className="w-full"
-      activationMode="manual"
-      onValueChange={(value) => {
-        onChangeTab(value as ExploreSectionsKeys)();
-      }}
-    >
-      <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-2xl', {
-          'h-12': breakpoint === 'xl',
-        })}
+    <>
+      <PillTabs
+        value={activeTab ?? 'public'}
+        defaultValue={activeTab ?? 'public'}
+        className="w-full"
+        activationMode="manual"
+        onValueChange={(value) => {
+          onChangeTab(value as ExploreSectionsKeys)();
+        }}
       >
-        {tabsConfigItems.map((tab) => (
-          <PillTabsTrigger
-            key={tab.key}
-            value={tab.key}
-            position={tab.position}
-            className={cn(
-              'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
-              { 'h-12': breakpoint === 'xl' }
-            )}
-          >
-            {tab.title}
-          </PillTabsTrigger>
-        ))}
-      </PillTabsList>
-    </PillTabs>
+        <PillTabsList
+          className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-2xl', {
+            'h-12': breakpoint === 'xl',
+          })}
+        >
+          {tabsConfigItems.map((tab) => (
+            <PillTabsTrigger
+              key={tab.key}
+              value={tab.key}
+              position={tab.position}
+              className={cn(
+                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
+                { 'h-12': breakpoint === 'xl' }
+              )}
+            >
+              {tab.title}
+            </PillTabsTrigger>
+          ))}
+        </PillTabsList>
+      </PillTabs>
+      <Button
+        rounded
+        size="lg"
+        variant="outline"
+        className={cn(
+          'inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap shadow-2xl transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+          'hover:bg-neutral-1 hover:text-primary-8 h-10 border-none px-14! py-3 text-base select-none',
+          { 'h-12': breakpoint === 'xl' },
+          { 'bg-primary-9 font-bold text-white': activeTab === 'bookmarks' }
+        )}
+        onClick={onBookmarkClick()}
+      >
+        Bookmarks
+      </Button>
+    </>
   );
 }
 
@@ -80,18 +101,6 @@ export function ExploreHeader() {
     <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
         <ExploreTabs />
-        <Button
-          rounded
-          size="lg"
-          variant="outline"
-          className={cn(
-            'inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap shadow-2xl transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
-            'hover:bg-neutral-1 hover:text-primary-8 h-10 border-none px-14! py-3 text-base select-none',
-            { 'h-12': breakpoint === 'xl' }
-          )}
-        >
-          Bookmarks
-        </Button>
       </div>
       <div className="max-w-1/2">
         <Button
