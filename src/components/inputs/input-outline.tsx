@@ -3,7 +3,7 @@ import { Input as AInput, InputProps } from 'antd';
 
 import { classNames } from '@/util/utils';
 
-function Input({ className, ...props }: InputProps) {
+function Input({ className: _className, ...props }: InputProps) {
   return (
     <AInput
       size="large"

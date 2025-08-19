@@ -1,7 +1,7 @@
+import { classNames } from '@/util/utils';
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
 import { useState, type JSX } from 'react';
-import { classNames } from '@/util/utils';
 
 export default function useSearch(
   props: JSX.IntrinsicElements['input'] & { containerClassName?: string }
@@ -10,7 +10,7 @@ export default function useSearch(
 
   return {
     search,
-    // eslint-disable-next-line react/jsx-props-no-spreading
+
     Search: <Search {...props} value={search} onChange={(e) => setSearch(e.currentTarget.value)} />,
   };
 }
@@ -39,9 +39,9 @@ function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: s
         )}
       >
         <input
-          {...rest} // eslint-disable-line react/jsx-props-no-spreading
+          {...rest}
           className={classNames(
-            'text-primary-3 placeholder:text-primary-3 mr-2 bg-transparent outline-hidden',
+            'text-primary-3 mr-2 bg-transparent outline-hidden placeholder:text-gray-400',
             className
           )}
         />

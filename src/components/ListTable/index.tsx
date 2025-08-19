@@ -47,7 +47,7 @@ function CustomTable({ children, style, ...props }: { children: ReactNode; style
 
 function CustomTH({
   children,
-  handleResizing, // Removes unwanted prop from props
+  handleResizing: _handleResizing, // Removes unwanted prop from props
   style,
   ...props
 }: {

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const ItemSchema = z.object({
+const _ItemSchema = z.object({
   path: z.string(),
   mode: z.string(),
   type: z.string(),
@@ -8,7 +8,7 @@ const ItemSchema = z.object({
   size: z.number().optional(),
   url: z.string(),
 });
-export type Item = z.infer<typeof ItemSchema>;
+export type Item = z.infer<typeof _ItemSchema>;
 
 const MetadataInputSchema = z.object({
   name: z.string().optional(),
@@ -28,7 +28,7 @@ const MetadataSchema = z.object({
 });
 type Metadata = z.infer<typeof MetadataSchema>;
 
-const NotebookSchema = z.object({
+const _NotebookSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
@@ -45,13 +45,13 @@ const NotebookSchema = z.object({
   defaultBranch: z.string(),
   objectOfInterest: z.string(),
 });
-export type Notebook = z.infer<typeof NotebookSchema>;
+export type Notebook = z.infer<typeof _NotebookSchema>;
 
-const RepoDetailsSchema = z.object({
+const _RepoDetailsSchema = z.object({
   user: z.string(),
   repo: z.string(),
 });
-type RepoDetails = z.infer<typeof RepoDetailsSchema>;
+type RepoDetails = z.infer<typeof _RepoDetailsSchema>;
 
 export function assertGithubApiResponse(response: Response) {
   if (response.status === 401) throw new Error('You are not logged in to Github');

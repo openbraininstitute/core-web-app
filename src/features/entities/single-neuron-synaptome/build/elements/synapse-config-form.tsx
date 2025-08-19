@@ -273,7 +273,13 @@ export default function SynaptomeConfigurationForm({
       if (success) {
         setSynapsesHasErrors([]);
       } else if (error) {
-        setSynapsesHasErrors(error.issues.map((p) => p.path));
+        setSynapsesHasErrors(
+          error.issues.map((p) =>
+            p.path.filter(
+              (key): key is string | number => typeof key === 'string' || typeof key === 'number'
+            )
+          )
+        );
       }
     })();
   }, [watchedSynapses]);

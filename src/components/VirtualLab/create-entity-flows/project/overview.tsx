@@ -61,7 +61,7 @@ export default function Overview() {
                 }
                 setValidName({ loading: false, status: 'valid' });
                 return Promise.resolve();
-              } catch (error) {
+              } catch (_error) {
                 setValidName({ loading: false, status: 'non-valid' });
               }
             },

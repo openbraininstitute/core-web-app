@@ -35,7 +35,7 @@ export default function Heading({ content }: { content: CircuitSchemaProps }) {
         setShowConfetti(false);
         setShowMessage(false);
       }, 3500);
-    } catch (err) {
+    } catch (_err) {
       throw new Error('Failed to copy to clipboard');
     }
   };

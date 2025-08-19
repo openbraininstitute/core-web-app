@@ -68,7 +68,13 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
     },
     {
       title: 'created by',
-      value: <ul>{contributors?.map(({ id, name }) => <li key={id}>{name}</li>)}</ul>,
+      value: (
+        <ul>
+          {contributors?.map(({ id, name }) => (
+            <li key={id}>{name}</li>
+          ))}
+        </ul>
+      ),
     },
     {
       title: 'created date',
@@ -250,7 +256,7 @@ export default function Configure({ ctx, searchParams }: Props) {
 
       try {
         await runSingleNeuronAnalysis({ ctx, modelId: data.id });
-      } catch (runAnalysisError) {
+      } catch (_runAnalysisError) {
         const message = messages.RunAnalysisError;
         notification.error({ message, duration: 20 });
       }

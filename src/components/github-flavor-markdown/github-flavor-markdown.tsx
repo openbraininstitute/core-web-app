@@ -16,16 +16,17 @@ interface GithubFlavorMarkdownProps {
 
 export function GithubFlavorMarkdown({ className, children }: GithubFlavorMarkdownProps) {
   return (
-    <ReactMarkdown
-      className={classNames(className, styles.githubFlavorMarkdown)}
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
-      components={{
-        a: LinkWithExternalTarget,
-      }}
-    >
-      {children}
-    </ReactMarkdown>
+    <div className={classNames(className, styles.githubFlavorMarkdown)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          a: LinkWithExternalTarget,
+        }}
+      >
+        {children}
+      </ReactMarkdown>
+    </div>
   );
 }
 

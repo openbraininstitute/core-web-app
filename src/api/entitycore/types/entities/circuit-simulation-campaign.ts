@@ -64,7 +64,7 @@ export interface ICircuitSimulationCampaignFilter
     PaginationFilter,
     ISimulationCampaignCircuitFilter {}
 
-const CreateCircuitSimulationCampaignSchema = z.object({
+const _CreateCircuitSimulationCampaignSchema = z.object({
   name: z.string(),
   description: z.string(),
   simulation_campaign_id: z.string().uuid(),
@@ -73,4 +73,4 @@ const CreateCircuitSimulationCampaignSchema = z.object({
   authorized_public: z.boolean(),
 });
 
-export type TCreateCircuitSimulation = z.infer<typeof CreateCircuitSimulationCampaignSchema>;
+export type TCreateCircuitSimulation = z.infer<typeof _CreateCircuitSimulationCampaignSchema>;

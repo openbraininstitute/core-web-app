@@ -233,7 +233,7 @@ export function isJSON(str: any) {
   try {
     JSON.parse(str);
     return true;
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }

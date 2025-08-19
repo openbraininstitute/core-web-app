@@ -64,8 +64,8 @@ export const env = createEnv({
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ID: z.string().nonempty(),
     NEXT_PUBLIC_ENABLE_RUN_NOTEBOOK: z
       .string()
-      .transform((val) => val === 'true')
-      .default('false'),
+      .default('false')
+      .transform((val) => val === 'true'),
     NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: z.string().url().optional(),
     NEXT_PUBLIC_CORE_WEB_APP_VERSION: z.string().optional(),
   },

@@ -36,7 +36,7 @@ export default function ListParameterBox({
           </div>
         );
       }
-    } catch (error) {
+    } catch (_error) {
       return (
         <div className="relative flex w-full flex-col items-start">
           <div className="text-sm font-light tracking-wider text-gray-500 uppercase">{name}</div>

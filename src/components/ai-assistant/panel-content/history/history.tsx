@@ -166,7 +166,7 @@ function deltaDays(thread: AiAssistantHistoryItem, days: number) {
     const now = new Date();
     const delta = Math.floor((now.valueOf() - thread.date.valueOf()) / (24 * 60 * 60 * 1000));
     return delta < days;
-  } catch (ex) {
+  } catch (_ex) {
     logError('Unable to read the date from this thread:', thread);
     return false;
   }

@@ -66,7 +66,7 @@ export interface ISingleNeuronSynaptomeSimulationFilter
     PaginationFilter,
     OwnershipFilter {}
 
-const CreateSingleNeuronSynaptomeSimulationSchema = z.object({
+const _CreateSingleNeuronSynaptomeSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
   status: z.nativeEnum(SingleNeuronSimulationStatus),
@@ -78,5 +78,5 @@ const CreateSingleNeuronSynaptomeSimulationSchema = z.object({
 });
 
 export type TCreateSingleNeuronSynaptomeSimulation = z.infer<
-  typeof CreateSingleNeuronSynaptomeSimulationSchema
+  typeof _CreateSingleNeuronSynaptomeSimulationSchema
 >;

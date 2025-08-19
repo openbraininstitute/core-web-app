@@ -284,7 +284,7 @@ export function VirtualLabSetup({ error }: { error?: string | null }) {
                     }
                     setValidName({ loading: false, status: 'valid' });
                     return Promise.resolve();
-                  } catch (err) {
+                  } catch (_err) {
                     setValidName({ loading: false, status: 'non-valid' });
                   }
                 },

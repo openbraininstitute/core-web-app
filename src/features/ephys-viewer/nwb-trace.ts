@@ -101,7 +101,7 @@ export default abstract class NWBTrace {
       }
 
       return new NWBCircuitSimulationTrace(file);
-    } catch (error) {
+    } catch (_error) {
       // Defaulting to Generic NWB Trace
       return new NWBGenericTrace(file);
     }

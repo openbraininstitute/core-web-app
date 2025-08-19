@@ -111,7 +111,7 @@ export default function InviteModal({ isOpen, onClose, type, title, context }: P
 
         resetForm();
         onClose();
-      } catch (error) {
+      } catch (_error) {
         notify.error({
           message: 'We couldn’t send the invitations. Please try again shortly.',
           placement: 'topRight',

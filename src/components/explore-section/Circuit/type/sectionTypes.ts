@@ -4,7 +4,7 @@ export const SECTION_PROVENANCE = 'provenance';
 export const SECTION_RELATED_PUBLICATIONS = 'related-publications';
 export const SECTION_RELATED_CIRCUITS = 'related-circuits';
 
-const ACTIVE_SECTIONS = [
+const _ACTIVE_SECTIONS = [
   SECTION_OVERVIEW,
   SECTION_PROVENANCE,
   SECTION_RELATED_PUBLICATIONS,
@@ -12,4 +12,4 @@ const ACTIVE_SECTIONS = [
   SECTION_VISUALIZATION,
 ] as const;
 
-export type ActiveSection = (typeof ACTIVE_SECTIONS)[number];
+export type ActiveSection = (typeof _ACTIVE_SECTIONS)[number];

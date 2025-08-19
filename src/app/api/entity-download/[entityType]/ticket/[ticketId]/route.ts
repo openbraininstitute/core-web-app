@@ -57,7 +57,7 @@ export async function GET(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
 
     return NextResponse.json({ error: 'Failed to process download request' }, { status: 500 });

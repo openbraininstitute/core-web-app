@@ -1,7 +1,15 @@
 'use client';
 
 import React from 'react';
-import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
+import { ToolInvocation } from '@ai-sdk/ui-utils';
+import { UIMessage as NewUIMessage } from '@ai-sdk/react';
+import { UIMessage as OldUIMessage } from '@ai-sdk/ui-utils';
+
+// Compatibility type that handles both old and new message formats
+type CompatUIMessage = (NewUIMessage | OldUIMessage) & {
+  createdAt?: Date | string;
+  content?: string;
+};
 
 import ToolArticles from '../../../services/ai-agent/tools/articles/tool-articles';
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
@@ -17,7 +25,7 @@ import styles from './message-item.module.css';
 
 interface MessageItemProps {
   className?: string;
-  value: UIMessage;
+  value: CompatUIMessage;
   hideTools: boolean;
   rateLimit: AiAgentRateLimit | null;
 }
@@ -32,17 +40,25 @@ export default function MessageItem({ className, value, hideTools, rateLimit }: 
 }
 
 function renderMessage(
-  value: UIMessage,
+  value: CompatUIMessage,
   hideTools: boolean,
   debug: boolean,
   rateLimit: AiAgentRateLimit | null
 ): React.ReactNode {
   switch (value.role) {
-    case 'user':
+    case 'user': {
+      // Extract text content from both old and new formats
+      const content =
+        value.content ||
+        (value as any).parts
+          ?.filter((part: any) => part.type === 'text')
+          ?.map((part: any) => ('text' in part ? part.text : ''))
+          ?.join('') ||
+        '';
       return (
         <div className={styles.user}>
           <div className={styles.userContent}>
-            <div>{value.content}</div>
+            <div>{content}</div>
           </div>
           <div className={styles.info}>
             <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
@@ -62,18 +78,27 @@ function renderMessage(
           </div>
         </div>
       );
+    }
     case 'assistant': {
+      // Extract text content from both old and new formats
+      const content =
+        value.content ||
+        (value as any).parts
+          ?.filter((part: any) => part.type === 'text')
+          ?.map((part: any) => ('text' in part ? part.text : ''))
+          ?.join('') ||
+        '';
       return (
         <>
-          <ToolsProgress message={value} />
-          {value.content.trim().length > 0 && (
-            <GithubFlavorMarkdown className={styles.markdown}>{value.content}</GithubFlavorMarkdown>
+          <ToolsProgress message={value as any} />
+          {content.trim().length > 0 && (
+            <GithubFlavorMarkdown className={styles.markdown}>{content}</GithubFlavorMarkdown>
           )}
           {!hideTools && (
             <>
-              <ToolsComponents message={value} />
-              <ToolArticles message={value} />
-              <ToolMorphologies message={value} />
+              <ToolsComponents message={value as any} />
+              <ToolArticles message={value as any} />
+              <ToolMorphologies message={value as any} />
             </>
           )}
           {debug && (
@@ -95,21 +120,20 @@ function renderMessage(
   }
 }
 
-function debugToConsole(value: UIMessage) {
-  // eslint-disable-next-line no-console
+function debugToConsole(value: CompatUIMessage) {
   console.log(value);
-  for (const part of value.parts) {
+  const parts = (value as any).parts || [];
+  for (const part of parts) {
     if (part.type !== 'tool-invocation') continue;
 
-    const toolInvocation = part.toolInvocation as ToolInvocation & { result: string };
-    // eslint-disable-next-line no-console
+    const toolInvocation =
+      (part as any).toolInvocation || (part as ToolInvocation & { result: string });
+
     console.debug(`%c${toolInvocation.toolName}`, 'font-weight: bolder; font-size: 110%');
     const { result } = toolInvocation;
     try {
-      // eslint-disable-next-line no-console
       console.debug(JSON.parse(result));
-    } catch (ex) {
-      // eslint-disable-next-line no-console
+    } catch (_ex) {
       console.error('Not a valid JSON:', result);
     }
   }
@@ -129,7 +153,7 @@ function formatDate(d: Date | string): string {
     });
     const date = isString(d) ? new Date(d) : d;
     return formatter.format(date);
-  } catch (ex) {
+  } catch (_ex) {
     return '';
   }
 }

@@ -48,7 +48,7 @@ export async function getEmailVerificationCode({
     });
     const result = (await response.json()) as VerificationCodeEmailResponse;
     return result.data as VerificationCodeResponse<'init'>;
-  } catch (error) {
+  } catch (_error) {
     return {
       status: 'error',
       message: 'Error during generating a new verification code',
@@ -79,7 +79,7 @@ export async function verifyOtpCode({
     });
     const result = (await response.json()) as VerificationCodeEmailResponse;
     return result.data as VerificationCodeResponse<'verify'>;
-  } catch (error) {
+  } catch (_error) {
     return {
       status: 'error',
       message: 'Error during verification the code',

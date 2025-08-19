@@ -1,4 +1,4 @@
-import { Message } from '@ai-sdk/react';
+import { UIMessage } from '@ai-sdk/react';
 
 import { serviceAiAgentThreadMessages } from '../../api';
 import { Signal } from '../signal';
@@ -7,7 +7,7 @@ import { AssistantContext } from '../types';
 export class MessageManager {
   constructor(
     private readonly target: {
-      initialMessages: Signal<Message[]>;
+      initialMessages: Signal<UIMessage[]>;
     }
   ) {}
 
@@ -25,7 +25,21 @@ export class MessageManager {
       projectId,
       threadId,
     });
-    const initialMessages = resp.results.reverse();
+    const initialMessages = resp.results.reverse().map((msg: any) => {
+      // Transform old message format to new UIMessage structure
+      if (msg.content && !msg.parts) {
+        return {
+          ...msg,
+          parts: [
+            {
+              type: 'text',
+              text: msg.content,
+            },
+          ],
+        };
+      }
+      return msg;
+    });
     this.target.initialMessages.set(initialMessages);
   };
 }

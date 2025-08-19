@@ -232,7 +232,7 @@ export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
           setStripeSetupObject(stripeSetup.data);
           setLoadingStripe(false);
         }
-      } catch (error) {
+      } catch (_error) {
         errorNotify({
           message:
             "We're having some trouble setting up your payment options at the moment. Please try again in a little while.",

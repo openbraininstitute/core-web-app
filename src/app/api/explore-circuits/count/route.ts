@@ -38,7 +38,7 @@ export async function GET() {
     const totalCount = countAllCircuits(circuits);
 
     return NextResponse.json({ count: totalCount });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to load circuits data', count: 0 }, { status: 500 });
   }
 }

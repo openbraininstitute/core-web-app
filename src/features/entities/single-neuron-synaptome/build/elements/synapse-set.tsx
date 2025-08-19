@@ -230,7 +230,7 @@ export default function SynapseSet({
       });
       setSynapseVis(true);
       configRef.current = config;
-    } catch (error) {
+    } catch (_error) {
       return onVisualizationError();
     } finally {
       setLoadingVisualize(false);

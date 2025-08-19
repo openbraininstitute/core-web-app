@@ -53,7 +53,7 @@ export interface ISingleNeuronSynaptomeFilter
     PaginationFilter,
     OwnershipFilter {}
 
-const CreateSingleNeuronSynaptomeSchema = z.object({
+const _CreateSingleNeuronSynaptomeSchema = z.object({
   name: z.string(),
   description: z.string(),
   brain_region_id: z.number(),
@@ -61,7 +61,7 @@ const CreateSingleNeuronSynaptomeSchema = z.object({
   seed: z.number(),
 });
 
-export type TCreateSingleNeuronSynaptome = z.infer<typeof CreateSingleNeuronSynaptomeSchema>;
+export type TCreateSingleNeuronSynaptome = z.infer<typeof _CreateSingleNeuronSynaptomeSchema>;
 
 const SingleNeuronSynaptomeExclusionRuleSchema = z
   .object({
@@ -110,17 +110,15 @@ export const SingleNeuronSynaptomeConfigurationSchema = z
   })
   .superRefine(async (synapse, ctx) => {
     if (synapse.target !== 'soma') {
-      return validateSingleNeuronSynapseGenerationFormula(synapse.formula!).then((v) => {
-        if (!v) {
-          return ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'formula is not valid',
-            path: ['formula'],
-          });
-        }
-      });
+      const isValid = await validateSingleNeuronSynapseGenerationFormula(synapse.formula!);
+      if (!isValid) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'formula is not valid',
+          path: ['formula'],
+        });
+      }
     }
-    return true;
   });
 
 export type TSingleNeuronSynaptomeConfiguration = z.infer<

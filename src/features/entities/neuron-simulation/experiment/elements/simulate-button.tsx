@@ -93,7 +93,7 @@ export default function ActionButton({
           placement: 'topRight',
           key: 'download-simulation-zip',
         });
-      } catch (error) {
+      } catch (_error) {
         notifyError({
           message: messages.DownloadFailed,
           placement: 'topRight',

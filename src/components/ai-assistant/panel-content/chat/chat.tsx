@@ -53,7 +53,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const handlePrompt = (content: string) => {
     append({
       role: 'user',
-      content,
+      content, // This will be handled by the append function
     });
   };
 

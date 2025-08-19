@@ -55,14 +55,15 @@ export default function ParameterBox({
       )}
       {!link && !hasViewMore && (
         <div className="text-primary-9 text-xl leading-normal font-normal">
-          <ReactMarkdown
-            className="prose"
-            components={{
-              p: MarkdownParagraph,
-            }}
-          >
-            {String(value)}
-          </ReactMarkdown>
+          <div className="prose">
+            <ReactMarkdown
+              components={{
+                p: MarkdownParagraph,
+              }}
+            >
+              {String(value)}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
 

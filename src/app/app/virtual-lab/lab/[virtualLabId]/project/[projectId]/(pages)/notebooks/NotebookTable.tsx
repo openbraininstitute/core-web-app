@@ -7,32 +7,32 @@ import { useMemo, useState } from 'react';
 import {
   DeleteOutlined,
   LoadingOutlined,
+  PlayCircleOutlined,
   PlusOutlined,
   UndoOutlined,
-  PlayCircleOutlined,
 } from '@ant-design/icons';
 import Table from 'antd/es/table';
 import { Popover } from 'antd/lib';
 import { compareAsc, format } from 'date-fns';
 import { saveAs } from 'file-saver';
 import dynamic from 'next/dynamic';
-import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
+import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns';
 // @ts-ignore
-import { RangeValue } from 'rc-picker/lib/interface'; // eslint-disable-line import/no-extraneous-dependencies
-import { getSorter } from './utils';
-import ContentModal from './ContentModal';
-import NotebookTabs from './NotebookTabs';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import useSearch from '@/components/VirtualLab/Search';
+import { NoUndefinedRangeValueType, RangeValueType } from 'rc-picker/lib/PickerInput/RangePicker';
+import ContentModal from './ContentModal';
+import NotebookTabs from './NotebookTabs';
+import { getSorter } from './utils';
 
 import { downloadZippedNotebook } from '@/util/virtual-lab/github';
 
 import { Column } from '@/components/FilterControls/ControlPanel';
 import ColumnToggle, { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import FilterControls from '@/components/FilterControls/FilterControls';
-import { env } from '@/env';
 import { useAppNotification } from '@/components/notification';
+import { env } from '@/env';
 import { Notebook } from '@/util/virtual-lab/types';
 
 const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
@@ -136,7 +136,12 @@ function NotebookTable({
 
     try {
       const buffer = await downloadZippedNotebook(notebook);
-      const blob = new Blob([buffer], { type: 'application/zip' });
+      // Ensure we have an ArrayBuffer, not SharedArrayBuffer
+      const arrayBuffer =
+        buffer.buffer instanceof ArrayBuffer
+          ? buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+          : new ArrayBuffer(buffer.byteLength); // Convert SharedArrayBuffer to ArrayBuffer
+      const blob = new Blob([arrayBuffer], { type: 'application/zip' });
       saveAs(blob, `${notebook.name}.zip`);
       setLoadingZip(false);
     } catch {
@@ -301,8 +306,8 @@ function NotebookTable({
         token: {
           colorBgContainer: '#002766',
           colorBorderSecondary: 'transparent',
-          colorText: '#fff',
-          colorTextHeading: '#BAE7FF',
+          colorText: '#002766',
+          colorTextHeading: '#002766',
         },
       }}
     >
@@ -315,11 +320,11 @@ function NotebookTable({
               theme={{
                 token: {
                   colorBgBase: '#002766',
-                  colorPrimary: '#40a9ff',
+                  colorPrimary: '#002766',
                   colorTextPlaceholder: '#8c8c8c',
                   colorTextDisabled: '#8c8c8c',
                   colorIcon: '#8c8c8c',
-                  colorIconHover: '#40a9ff',
+                  colorIconHover: '#002766',
                 },
               }}
             >
@@ -402,8 +407,8 @@ function NotebookTable({
                 onToggle={() => toggleColumn('creationDate')}
               >
                 <RangePicker
-                  value={(filterValue('creationDate') as RangeValue<Date>) ?? null}
-                  onChange={(values: RangeValue<Date>) => {
+                  value={(filterValue('creationDate') as RangeValueType<Date> | null) ?? null}
+                  onChange={(values: NoUndefinedRangeValueType<Date> | null) => {
                     onDateChange('creationDate', values);
                   }}
                 />
@@ -432,12 +437,12 @@ function NotebookTable({
         /* Change color of sorting icons */
         #table-container .ant-table-column-sorter-up,
         #table-container .ant-table-column-sorter-down {
-          color: #bae7ff;
+          color: #002766;
         }
 
         #table-container .ant-table-column-sorter-up.active,
         #table-container .ant-table-column-sorter-down.active {
-          color: #fff !important;
+          color: #002766 !important;
         }
 
         #table-container .ant-table-thead > tr > th {

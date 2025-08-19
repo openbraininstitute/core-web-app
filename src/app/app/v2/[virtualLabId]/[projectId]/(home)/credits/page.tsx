@@ -28,7 +28,7 @@ export default async function Home({
     if (!isProjectAdmin) {
       throw new Error('User not allowed to access this page');
     }
-  } catch (error) {
+  } catch (_error) {
     notFound();
   }
 

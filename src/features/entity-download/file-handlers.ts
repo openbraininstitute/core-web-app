@@ -47,7 +47,7 @@ async function* getReconstructionMorphologyFiles(entityIds: string[], ctx?: Work
       const path = `${ASSETS_BASE_PATH}/${idx}/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
   }
 
@@ -78,7 +78,7 @@ async function* getElectricalCellRecordingFiles(entityIds: string[], ctx?: Works
       const path = `${ASSETS_BASE_PATH}/${idx}/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: trace, asset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
   }
 
@@ -170,7 +170,7 @@ async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
     try {
       const path = `${ASSETS_BASE_PATH}/${idx}/hoc/${hocFileAsset.path}`;
       yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
-    } catch (error) {}
+    } catch (_error) {}
 
     // Morphologies
     const exemplarMorphology = await getReconstructionMorphology({
@@ -184,7 +184,7 @@ async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
       const path = `${ASSETS_BASE_PATH}/${idx}/morphology/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: exemplarMorphology, asset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
 
     // MOD files
@@ -193,7 +193,7 @@ async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
       const path = `${ASSETS_BASE_PATH}/${idx}/mechanisms/${modAsset.path}`;
       try {
         yield await createAssetFileEntry({ entity: icEntity, asset: modAsset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
   }
 
@@ -228,7 +228,7 @@ async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
     try {
       const path = `${ASSETS_BASE_PATH}/${idx}/hoc/${hocFileAsset.path}`;
       yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
-    } catch (error) {}
+    } catch (_error) {}
 
     // Morphologies
     const morphology = await getReconstructionMorphology({
@@ -242,7 +242,7 @@ async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
       const path = `${ASSETS_BASE_PATH}/${idx}/morphology/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
 
     // MOD files
@@ -251,7 +251,7 @@ async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
       const path = `${ASSETS_BASE_PATH}/${idx}/mechanisms/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: icEntity, asset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
   }
 
@@ -289,7 +289,7 @@ async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: Workspa
         path,
         ctx,
       });
-    } catch (error) {}
+    } catch (_error) {}
 
     const memodel = await getMEModel({
       id: singleNeuronSynaptomeModel.me_model.id,
@@ -307,7 +307,7 @@ async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: Workspa
       const fileName = hocFileAsset.full_path.split('/').at(-1);
       const path = `${ASSETS_BASE_PATH}/${idx}/hoc/${fileName}`;
       yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
-    } catch (error) {}
+    } catch (_error) {}
 
     // Morphologies
     const morphology = await getReconstructionMorphology({
@@ -321,7 +321,7 @@ async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: Workspa
       const path = `${ASSETS_BASE_PATH}/${idx}/morphology/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
 
     // MOD files
@@ -330,7 +330,7 @@ async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: Workspa
       const path = `${ASSETS_BASE_PATH}/${idx}/mechanisms/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: icEntity, asset, path, ctx });
-      } catch (error) {}
+      } catch (_error) {}
     }
   }
 

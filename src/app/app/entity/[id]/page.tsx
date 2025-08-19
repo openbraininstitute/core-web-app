@@ -16,7 +16,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
   let entity: IEntity;
   try {
     entity = await getEntity({ id });
-  } catch (e) {
+  } catch (_e) {
     notFound();
   }
   if (entity.authorized_public) {

@@ -105,7 +105,7 @@ export default function SimulationPlot({
   useEffect(() => {
     try {
       setError(false);
-    } catch (err) {
+    } catch (_err) {
       setError(true);
     }
   }, [plotData, title, yTitle]);

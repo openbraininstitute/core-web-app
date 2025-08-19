@@ -75,7 +75,7 @@ export interface ISingleNeuronSimulationFilter
     PaginationFilter,
     OwnershipFilter {}
 
-const CreateSingleNeuronSimulationSchema = z.object({
+const _CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
   status: z.nativeEnum(SingleNeuronSimulationStatus),
@@ -86,4 +86,4 @@ const CreateSingleNeuronSimulationSchema = z.object({
   me_model_id: z.string().uuid(),
 });
 
-export type TCreateSingleNeuronSimulation = z.infer<typeof CreateSingleNeuronSimulationSchema>;
+export type TCreateSingleNeuronSimulation = z.infer<typeof _CreateSingleNeuronSimulationSchema>;

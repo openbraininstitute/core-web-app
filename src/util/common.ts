@@ -26,7 +26,7 @@ export const isValidBase64 = (str: string): boolean => {
       Buffer.from(Buffer.from(str, 'base64').toString('binary'), 'binary').toString('base64') ===
       str
     );
-  } catch (err) {
+  } catch (_err) {
     return false;
   }
 };

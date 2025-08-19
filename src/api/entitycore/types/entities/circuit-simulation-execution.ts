@@ -43,10 +43,10 @@ const activityCreateSchema = z.object({
   authorized_public: z.boolean(),
 });
 
-const simulationExecutionCreateSchema = z
+const _simulationExecutionCreateSchema = z
   .object({
     status: z.nativeEnum(CircuitSimulationExecutionStatus),
   })
   .merge(activityCreateSchema);
 
-export type ISimulationExecutionCreate = z.infer<typeof simulationExecutionCreateSchema>;
+export type ISimulationExecutionCreate = z.infer<typeof _simulationExecutionCreateSchema>;

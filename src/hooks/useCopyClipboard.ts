@@ -19,7 +19,7 @@ export function useCopyToClipboard(): [CopiedValue, CopyFn, ResetFn, boolean] {
       setCopiedText(text);
       delay(() => setCopying(false), 2000);
       return true;
-    } catch (error) {
+    } catch (_error) {
       setCopiedText(null);
       setCopying(false);
       return false;

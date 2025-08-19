@@ -83,7 +83,7 @@ export async function parseApiError(
     );
 
     return new ApiError(errMessage, { code, message, details, status });
-  } catch (error) {
+  } catch (_error) {
     return new ApiError(errMessage, { status });
   }
 }

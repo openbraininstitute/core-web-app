@@ -75,7 +75,7 @@ export function useSimulation({
         });
 
         setSimulationConfig(fileAsJson);
-      } catch (error) {
+      } catch (_error) {
         notifyError({ message: 'Error while loading the resource details', placement: 'topRight' });
       }
     })();

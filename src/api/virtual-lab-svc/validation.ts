@@ -39,5 +39,8 @@ export const CreateSubscriptionRequestSchema = z.object({
   virtualLabId: z.string().uuid().describe('id of the virtual lab to subscribe'),
   priceId: z.string().describe('selected stripe price id'),
   paymentMethodId: z.string().describe('stripe payment method id to use for billing'),
-  metadata: z.record(z.string()).optional().describe('additional metadata for the subscription'),
+  metadata: z
+    .record(z.string(), z.any())
+    .optional()
+    .describe('additional metadata for the subscription'),
 });

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
 import debounce from 'lodash/debounce';
-import { Message } from '@ai-sdk/react';
+import { UIMessage } from '@ai-sdk/react';
 
 import {
   serviceAiAgentThreadCreate,
@@ -22,7 +22,7 @@ import { logError } from '@/util/logger';
 class AiAssistantClass {
   public readonly threadId = new Signal<string | undefined>(undefined);
 
-  public readonly initialMessages = new Signal<Message[]>([]);
+  public readonly initialMessages = new Signal<UIMessage[]>([]);
 
   public readonly error = new Signal<AssistantError>(null);
 

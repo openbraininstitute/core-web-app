@@ -72,7 +72,7 @@ export async function fetchGithubFile(url: string) {
     }
 
     return new TextDecoder('utf-8').decode(bytes);
-  } catch (e) {
+  } catch (_e) {
     throw new Error(`Failed to parse contents of ${url}`);
   }
 }
@@ -103,7 +103,7 @@ export async function downloadZippedNotebook(notebook: Notebook) {
 
     const zipContent = await zip.generateAsync({ type: 'nodebuffer' });
     return zipContent;
-  } catch (e) {
+  } catch (_e) {
     throw new Error(`Failed to fetch the contents`);
   }
 }

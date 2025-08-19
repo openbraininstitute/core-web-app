@@ -78,7 +78,7 @@ export default function StimuliPreviewPlot({
       }));
 
       setStimuliPreviewPlotData(plotData);
-    } catch (error) {
+    } catch (_error) {
       if (!controller.signal.aborted) {
         captureException(new Error('Preview plot could not be retrieved for model'));
         notifyError({

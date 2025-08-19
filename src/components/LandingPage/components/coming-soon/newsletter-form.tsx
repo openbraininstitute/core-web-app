@@ -57,7 +57,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
         });
         setStatus('success');
       }
-    } catch (error) {
+    } catch (_error) {
       setStatus('error');
       delay(() => setStatus(null), 6000);
     } finally {

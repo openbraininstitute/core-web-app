@@ -9,7 +9,12 @@ type Props = {
   className?: string;
 } & Omit<React.ComponentProps<typeof Image>, 'src' | 'alt' | 'width' | 'height'>;
 
-export default function ObiLogoImage({ width, height, className = '', ...props }: Props) {
+export default function ObiLogoImage({
+  width: _width,
+  height: _height,
+  className = '',
+  ...props
+}: Props) {
   return (
     <div
       className={`relative h-[40px] w-[140px] sm:h-[48px] sm:w-[150px] lg:h-[57px] lg:w-[177px] xl:h-[64px] xl:w-[200px] ${className}`}

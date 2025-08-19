@@ -33,7 +33,7 @@ export function convertBarChart(
       },
     ],
     layout: {
-      title: obj.title,
+      title: { text: obj.title },
       autosize: true,
     },
   };

@@ -32,7 +32,7 @@ export function ExploreDownloadButton<T extends EntityCoreIdentifiable>({
         entityType,
         selectedRows.map((row) => row.id)
       );
-    } catch (error) {
+    } catch (_error) {
       // TODO: add error notification
     } finally {
       setTimeout(() => setFetching(false), 1600);
