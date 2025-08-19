@@ -265,14 +265,17 @@ class NWBLNMCTrace extends NWBTrace {
 
     /* Recording IDs are prefixed with:
       - For stimuli:
-        - 'ics__' for current.
+        - 'ics__' or `ccss__` for current.
         - 'vcs__' for voltage.
       - For responses:
-        - 'ic__' for current.
+        - 'ic__' or `ccs__` for current.
         - 'vc__' for voltage.
     */
 
-    const recRegex = recordingType === RecordingType.STIMULUS ? /^\w\ws__/ : /^\w\w__/;
+    // TODO: if more prefixes found, consider using the neurodata_type attribute.
+    const recRegex =
+      recordingType === RecordingType.STIMULUS ? /^(?:ics|ccss|vcs)__/ : /^(?:ic|ccs|vc)__/;
+
     const recId = recIds.find((id) => id.match(recRegex));
 
     const datasetKey =
