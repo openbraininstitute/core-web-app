@@ -1,5 +1,5 @@
 import { logError, logInfo } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType } from '@/util/type-guards';
 
 export interface ScientificArticle {
   title: string;
@@ -9,32 +9,25 @@ export interface ScientificArticle {
   tool: string;
 }
 
-interface LiteratureSearchToolItem {
-  article_title: string;
-  article_doi: string;
-  article_authors: string[];
-  abstract: string | null;
-}
-
 interface LiteratureSearchToolResult {
-  articles: LiteratureSearchToolItem[];
-  error: unknown;
+  content: Array<{
+    type: 'text';
+    text: string;
+  }>;
+  isError: boolean;
 }
 
 export function isLiteratureSearchToolResult(data: unknown): data is LiteratureSearchToolResult {
   try {
-    const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
     assertType(data, {
-      articles: [
+      isError: 'boolean',
+      content: [
         'array',
         {
-          article_title: 'string',
-          article_doi: typeStringOrNull,
-          article_authors: ['array', 'string'],
-          abstract: typeStringOrNull,
+          text: 'string',
+          type: 'string',
         },
       ],
-      error: 'unknown',
     });
     return true;
   } catch (ex) {

@@ -1,3 +1,4 @@
+import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -20,7 +21,14 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
       allowedFacets: true,
     },
     query: {
-      list: getElectricalCellRecordings,
+      list: (params: Parameters<typeof getElectricalCellRecordings>[0]) =>
+        getElectricalCellRecordings({
+          ...params,
+          filters: {
+            ...params.filters,
+            recording_origin: ElectricalRecordingOriginDictionary.InVitro,
+          },
+        }),
       one: getElectricalCellRecording,
     },
   },

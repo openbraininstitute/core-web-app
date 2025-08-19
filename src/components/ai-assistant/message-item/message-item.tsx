@@ -3,10 +3,10 @@
 import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
-import ToolArticles from '../../../services/ai-agent/tools/articles/tool-articles';
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
 import { IconPrice } from '../icons/price';
 import ToolsProgress from './tools-progress';
+import ToolsComponents from './tools-components';
 import { classNames } from '@/util/utils';
 import { AiAgentRateLimit } from '@/services/ai-agent';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
@@ -70,7 +70,9 @@ function renderMessage(
           )}
           {!hideTools && (
             <>
-              <ToolArticles message={value} />
+              <ToolsComponents message={value} />
+              {/* This tool component has been disabled yet */}
+              {/* <ToolArticles message={value} /> */}
               <ToolMorphologies message={value} />
             </>
           )}

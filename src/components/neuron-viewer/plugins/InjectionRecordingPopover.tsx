@@ -23,20 +23,18 @@ export default function NeuronMeshInjectionRecordingPopover({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { add } = useRecordingSourceForSimulation();
-  const [state, update] = useAtom(currentInjectionSimulationConfigAtom);
+  const [injectionConfig, setInjectionConfig] = useAtom(currentInjectionSimulationConfigAtom);
 
   const onInject = () => {
-    update(
-      state.map((o, i) => {
-        if (i === 0) {
-          return {
-            ...o,
-            injectTo: section,
-          };
-        }
-        return o;
-      })
-    );
+    if (injectionConfig.length === 0) {
+      onClose();
+      return;
+    }
+
+    setInjectionConfig([
+      { ...injectionConfig[0], inject_to: section },
+      ...injectionConfig.slice(1),
+    ]);
 
     onClose();
   };
