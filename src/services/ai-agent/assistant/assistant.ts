@@ -3,11 +3,7 @@ import React from 'react';
 import debounce from 'lodash/debounce';
 import { Message } from '@ai-sdk/react';
 
-import {
-  serviceAiAgentThreadCreate,
-  serviceAiAgentThreadDelete,
-  serviceAiAgentThreadRename,
-} from '../api';
+import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { Signal } from './signal';
 import { AiAssistantHistory, AssistantContext, AssistantError } from './types';
 import { ThreadManager } from './manager/thread';
@@ -56,13 +52,7 @@ class AiAssistantClass {
   }
 
   readonly createThread = async () => {
-    const params = {
-      ...this.context,
-      title: new Date().toUTCString(),
-    };
-    const thread = await serviceAiAgentThreadCreate(params);
-    const { threadId } = thread;
-    this.threadId.set(threadId);
+    const threadId = await this.threadmanager.createThread();
     this.historyManager.reset();
     return threadId;
   };

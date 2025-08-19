@@ -1,0 +1,11 @@
+.truncableImage {
+  display: inline-block;
+  aspect-ratio: var(--custom-aspect-ratio);
+  background-image: var(--custom-image);
+  background-size: cover;
+  background-position: center;
+  max-width: 100%;
+  max-height: 25vh;
+  width: var(--custom-width);
+  height: var(--custom-height);
+}

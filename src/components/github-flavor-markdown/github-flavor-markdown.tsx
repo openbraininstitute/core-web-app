@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
+import TruncableImage from './truncable-image';
 
 import { classNames } from '@/util/utils';
 
@@ -22,6 +23,7 @@ export function GithubFlavorMarkdown({ className, children }: GithubFlavorMarkdo
       rehypePlugins={[rehypeKatex]}
       components={{
         a: LinkWithExternalTarget,
+        img: TruncableImage,
       }}
     >
       {children}

@@ -2,12 +2,12 @@
 
 import React from 'react';
 
-import { IconMore } from '../../icons/more';
 import { IconEdit } from '../../icons/edit';
 import { IconDelete } from '../../icons/delete';
 import DialogEdit from './dialog-edit';
 import DialogDelete from './dialog-delete';
 
+import Tooltip from '@/components/tooltip';
 import { classNames } from '@/util/utils';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { AiAssistantHistory, AiAssistantHistoryItem } from '@/services/ai-agent/assistant/types';
@@ -55,48 +55,39 @@ export default function History({ className, onBack }: HistoryProps) {
                       )}
                       key={thread.id}
                     >
-                      <button
-                        key={thread.id}
-                        type="button"
-                        className={styles.mainButton}
-                        onClick={() => {
-                          setThreadId(thread.id);
-                          onBack();
-                        }}
-                      >
-                        {thread.title}
-                      </button>
-                      <div className={styles.actions}>
-                        <div className={styles.more}>
-                          <IconMore />
-                        </div>
-                        <menu>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCurrentThreadId(thread.id);
-                              setCurrentThreadTitle(thread.title);
-                              setOpenEdit(true);
-                            }}
-                          >
-                            <div>Rename</div>
-                            <IconEdit />
+                      <Tooltip tooltip="Rename this thread" arrow="topLeft">
+                        <button
+                          type="button"
+                          className={styles.edit}
+                          onClick={() => {
+                            setCurrentThreadId(thread.id);
+                            setCurrentThreadTitle(thread.title);
+                            setOpenEdit(true);
+                          }}
+                        >
+                          <IconEdit />
+                        </button>
+                      </Tooltip>
+                      <Tooltip tooltip="Click to recover this thread">
+                        <button
+                          key={thread.id}
+                          type="button"
+                          className={styles.mainButton}
+                          onClick={() => {
+                            setThreadId(thread.id);
+                            onBack();
+                          }}
+                        >
+                          {thread.title}
+                        </button>
+                      </Tooltip>
+                      {threadId !== thread.id && (
+                        <Tooltip tooltip="Delete this thread permanently" arrow="topRight">
+                          <button type="button" className={styles.delete}>
+                            <IconDelete />
                           </button>
-                          {threadId !== thread.id && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCurrentThreadId(thread.id);
-                                setCurrentThreadTitle(thread.title);
-                                setOpenDelete(true);
-                              }}
-                            >
-                              <div className={styles.red}>Delete</div>
-                              <IconDelete className={styles.red} />
-                            </button>
-                          )}
-                        </menu>
-                      </div>
+                        </Tooltip>
+                      )}
                     </div>
                   ))}
                 </div>

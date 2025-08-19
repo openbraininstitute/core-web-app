@@ -107,7 +107,6 @@
   top: 0;
   width: 48px;
   height: 96px;
-  height: 48px;
   background: var(--color-neutral-3);
   display: flex;
   flex-wrap: nowrap;

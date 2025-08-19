@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AiContextProvider, useCollapsedPanel } from './hooks';
 import PanelSplitter from './panel-splitter';
 import { IconChat } from './icons/chat';
+import { IconHistory } from './icons/history';
 import PanelContent from './panel-content';
 import { classNames } from '@/util/utils';
 import { useLocalStorage } from '@/util/storage';
@@ -60,14 +61,14 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
                   <IconChat />
                   <div>Chat</div>
                 </button>
-                {/* <button
-                type="button"
-                className={classNames(tab === 'history' && styles.selected)}
-                onClick={() => setTab('history')}
-              >
-                <IconHistory />
-                <div>History</div>
-              </button> */}
+                <button
+                  type="button"
+                  className={classNames(tab === 'history' && styles.selected)}
+                  onClick={() => setTab('history')}
+                >
+                  <IconHistory />
+                  <div>History</div>
+                </button>
               </nav>
               <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
               <PanelContent
