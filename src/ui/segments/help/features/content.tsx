@@ -19,11 +19,7 @@ export default function FeaturesContent() {
   const filteredContent = items.filter((item) => Slugify(item.Scale) === activeScale);
 
   if (filteredContent.length === 0) {
-    return (
-      <div className="col-span-3">
-        No features found for scale <span className="font-medium">&quot;{activeScale}&quot;</span>.
-      </div>
-    );
+    return <div className="col-span-3">No features found for scale</div>;
   }
 
   return (

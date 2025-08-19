@@ -14,11 +14,7 @@ export default function AIChatToolsContent({ content }: { content: AIChatToolsSe
   const filteredContent = content.filter((tool) => tool.id === activeTool);
 
   if (filteredContent.length === 0) {
-    return (
-      <div className="col-span-3">
-        No features found for tool <span className="font-medium">&quot;{activeTool}&quot;</span>.
-      </div>
-    );
+    return <div className="col-span-3">No features found for this tool</div>;
   }
 
   return (

@@ -6,6 +6,7 @@ import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { HELP_QUERY_KEYS } from '@/ui/use-query-keys/help';
 
 export const useFetchSingleType = ({
   cellType,
@@ -15,7 +16,7 @@ export const useFetchSingleType = ({
   name: string;
 }) => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['entitycore', cellType, name],
+    queryKey: HELP_QUERY_KEYS.entitycore(cellType, name),
     queryFn: async (): Promise<EntityCoreResponse<IEType> | EntityCoreResponse<IMType>> => {
       const args = {
         filters: {
@@ -27,7 +28,6 @@ export const useFetchSingleType = ({
 
       const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
 
-      // Normalize response logic
       if (Array.isArray(response)) {
         return {
           data: response,
@@ -58,7 +58,7 @@ export const useFetchSingleType = ({
       }
       throw new Error('Unexpected response format');
     },
-    enabled: Boolean(name), // Only run query if name is provided
+    enabled: Boolean(name),
   });
 
   return {

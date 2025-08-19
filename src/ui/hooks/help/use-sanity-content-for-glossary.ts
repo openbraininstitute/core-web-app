@@ -7,7 +7,6 @@ import { ContentForGlossaryItem } from '@/components/documentation/type';
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
 
-// Zod schema for ContentForGlossaryItem
 const ContentForGlossaryItemSchema = z.object({
   Name: z.string().nullable(),
   New_suggested_name: z.string().nullable(),
@@ -18,7 +17,6 @@ const ContentForGlossaryItemSchema = z.object({
   Status: z.string().nullable(),
 });
 
-// Zod schema for array of ContentForGlossaryItem
 const ContentForGlossarySchema = z.array(ContentForGlossaryItemSchema);
 
 export function useSanityContentForGlossary() {

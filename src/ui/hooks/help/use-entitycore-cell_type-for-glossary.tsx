@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import type { TypeFilter } from '@/api/entitycore/types/shared/global';
+import { HELP_QUERY_KEYS } from '@/ui/use-query-keys/help';
 
 export const useFetchEntityTypes = ({
   cellType,
@@ -17,20 +18,9 @@ export const useFetchEntityTypes = ({
   activePage?: number;
   pageSize?: number;
 }) => {
-  const [state, setState] = useState<{
-    data: any;
-    loading: boolean;
-    error: string | null;
-  }>({
-    data: null,
-    loading: false,
-    error: null,
-  });
-
-  const fetchEntityCellTypes = useCallback(async () => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-
-    try {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: HELP_QUERY_KEYS.entityTypes(cellType, activePage, pageSize, filter),
+    queryFn: async () => {
       const args = {
         filters: {
           page: activePage,
@@ -39,28 +29,16 @@ export const useFetchEntityTypes = ({
         },
       };
 
-      const response = await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
-
-      setState({
-        data: response,
-        loading: false,
-        error: null,
-      });
-    } catch (err) {
-      setState({
-        data: null,
-        loading: false,
-        error: err instanceof Error ? err.message : 'An unknown error occurred',
-      });
-    }
-  }, [cellType, activePage, pageSize, filter]);
-
-  useEffect(() => {
-    fetchEntityCellTypes();
-  }, [fetchEntityCellTypes]);
+      return await (cellType === 'm-type' ? getMtypes(args) : getEtypes(args));
+    },
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   return {
-    ...state,
-    refetch: fetchEntityCellTypes,
+    data,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
   };
 };
