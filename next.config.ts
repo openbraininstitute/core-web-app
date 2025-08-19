@@ -93,7 +93,7 @@ const nextConfig = (phase: string): NextConfig => {
 
       return [
         {
-          source: '/_next/static/media/:path*',
+          source: '/:prefix*/_next/static/media/:path*',
           headers: [
             {
               key: 'Access-Control-Allow-Origin',
