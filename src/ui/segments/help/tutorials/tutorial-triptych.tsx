@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import TutorialCard from './tutorial-card';
 
-import { TutorialProps } from '@/components/documentation/type';
-import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
+import TutorialCard from '@/ui/segments/help/tutorials/tutorial-card';
 
-export default function TutorialTriptych() {
-  const tutorials = useSanityContentForTutorialsList();
+import { getTutorialContent } from '@/api/sanity/help-tutorial-section/route';
+import type { TutorialProps } from '@/components/documentation/type';
+
+export default async function TutorialTriptych() {
+  const tutorials = await getTutorialContent();
 
   return (
     <div className="mt-8 flex w-full flex-col">

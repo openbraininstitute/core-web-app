@@ -1,0 +1,52 @@
+import { PortableText } from 'next-sanity';
+
+import type { PortableTextBlock } from '@sanity/types';
+
+import { cn } from '@/utils/css-class';
+
+import { getAboutContent } from '@/api/sanity/help-about-section/route';
+import { getSearchParam } from '@/utils/getSearchParams';
+
+import styles from '@/ui/segments/help/about/about-content.module.css';
+
+export const revalidate = 60;
+
+export type AboutContentProps = {
+  aboutContent: PortableTextBlock[];
+  termsAndConditionContent: PortableTextBlock[];
+  aboutTheAppContent: PortableTextBlock[];
+};
+
+export default async function AboutContent({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const content = (await getAboutContent()) as AboutContentProps;
+
+  const aboutParam = getSearchParam(searchParams, 'subsection');
+
+  const contentFiltered = (): PortableTextBlock[] => {
+    if (aboutParam === 'about') {
+      return content.aboutContent;
+    }
+    if (aboutParam === 'terms-and-conditions') {
+      return content.termsAndConditionContent;
+    }
+    if (aboutParam === 'about-the-app') {
+      return content.aboutTheAppContent;
+    }
+    return [];
+  };
+
+  return (
+    <div
+      className={cn(
+        'text-primary-9 col-span-3 flex max-h-[82vh] w-2/3 flex-col items-start gap-y-4 overflow-y-scroll',
+        styles.content
+      )}
+    >
+      <PortableText value={contentFiltered()} />
+    </div>
+  );
+}

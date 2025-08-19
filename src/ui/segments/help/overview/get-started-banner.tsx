@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
-import { cn } from '@/utils/css-class';
-import styles from './get-started-banner.module.css';
+import bImage from '@/ui/segments/help/overview/background-help-get_started-banner.webp';
 
 export default function GetStartedBanner() {
   return (
-    <div className={cn('rounded-lg p-10 text-white', styles.card)}>
+    <div
+      className="rounded-lg bg-cover p-10 text-white"
+      style={{ backgroundImage: `url(${bImage.src})` }}
+    >
       <header className="mb-12">
         <h2 className="text-3xl font-bold">How to use the Open Brain Platform</h2>
         <p className="mt-1 text-base font-normal">
