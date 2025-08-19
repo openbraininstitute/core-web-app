@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import { CSSProperties } from 'react';
 
 import { classNames } from '@/util/utils';

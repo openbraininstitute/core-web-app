@@ -36,10 +36,7 @@ function formatColumn({ render, ...rest }: Column) {
 
 function CustomTable({ children, style, ...props }: { children: ReactNode; style: CSSProperties }) {
   return (
-    <table
-      style={{ ...style, borderSpacing: '0 14px' }}
-      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
-    >
+    <table style={{ ...style, borderSpacing: '0 14px' }} {...props}>
       {children}
     </table>
   );
@@ -68,7 +65,7 @@ function CustomTH({
         fontWeight: 400,
         overflowWrap: 'anywhere',
       }}
-      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
+      {...props}
     >
       {children}
     </th>
@@ -87,7 +84,7 @@ function CustomTD({
 }) {
   return (
     <td
-      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
+      {...props}
       className={classNames(className, styles.customTD)}
       style={{
         ...style,

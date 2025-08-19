@@ -1,4 +1,3 @@
-/* eslint-disable no-empty */
 import {
   getElectricalCellRecording,
   getEModel,

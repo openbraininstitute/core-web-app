@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import { Input as AInput, InputProps } from 'antd';
 
 import { classNames } from '@/util/utils';

@@ -1,5 +1,3 @@
-/* eslint-disable no-nested-ternary */
-
 import { useRef, useState } from 'react';
 import { Form } from 'antd';
 import { useParams } from 'next/navigation';

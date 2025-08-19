@@ -219,8 +219,17 @@ function NotebookTable({
         }
 
         #table-container .ant-table-thead > tr > th {
-          background-color: transparent !important; /* Matching header background color */
+          background-color: transparent !important;
           font-weight: normal !important;
+        }
+
+        /* Remove row hover effect */
+        #table-container .ant-table-tbody > tr:hover > td {
+          background-color: transparent !important;
+        }
+
+        #table-container .ant-table-tbody > tr:hover {
+          background-color: transparent !important;
         }
 
         #popover * {

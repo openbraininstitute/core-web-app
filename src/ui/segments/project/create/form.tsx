@@ -1,5 +1,3 @@
-/* eslint-disable no-nested-ternary */
-
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';

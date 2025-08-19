@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { File, Group, Dataset, ready } from 'h5wasm';
 import range from 'lodash/range';
 

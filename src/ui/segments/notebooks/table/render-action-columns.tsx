@@ -34,7 +34,7 @@ const renderActionColumns = ({
     <div id="popover">
       <Popover
         content={
-          <div className="flex min-w-[120px] flex-col gap-2 text-white">
+          <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
             <div className="flex gap-4">
               <button
                 type="button"
@@ -43,7 +43,7 @@ const renderActionColumns = ({
                   setDisplay('readme');
                   setCurrentNotebook(notebook);
                 }}
-                className="inline-flex items-center gap-[10px]"
+                className="text-primary-9 inline-flex items-center gap-[10px]"
               >
                 <EyeIconWhiteWithinBox className="text-xs" aria-label="Readme" />
                 Readme
@@ -52,7 +52,7 @@ const renderActionColumns = ({
             <div className="flex gap-4">
               <button
                 type="button"
-                className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                className="text-primary-9 inline-flex items-center gap-[10px]"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDownloadClick(notebook);
@@ -68,7 +68,7 @@ const renderActionColumns = ({
               <div className="text-error flex gap-4">
                 <button
                   type="button"
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                  className="inline-flex items-center gap-[10px]"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(notebook.id);
@@ -96,13 +96,12 @@ const renderActionColumns = ({
             )}
           </div>
         }
-        overlayStyle={{ border: '1px solid #096DD9' }}
-        color="#002766"
+        color="#FFF"
         trigger="click"
-        placement="bottom"
+        placement="left"
         arrow={false}
       >
-        <PlusOutlined className="border border-[#096DD9] bg-transparent p-2 text-lg" />
+        <PlusOutlined className="rounded-full border border-[#002766] !bg-transparent p-2 text-lg" />
       </Popover>
     </div>
   );

@@ -1,5 +1,3 @@
-/* eslint-disable no-nested-ternary */
-
 import { useEffect, useRef, useState } from 'react';
 import { Form, Popover } from 'antd';
 import {

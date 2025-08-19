@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import Image from 'next/image';
 
 import { basePath } from '@/config';

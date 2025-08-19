@@ -11,7 +11,7 @@ const columns: Column<Notebook>[] = [
     dataIndex: 'name',
     key: 'name',
     sorter: getSorter('name'),
-    render: (text) => <div className="line-clamp-2 max-w-[40em] font-bold">{text}</div>,
+    render: (text) => <div className="line-clamp-2 max-w-[60em] font-bold">{text}</div>,
   },
 
   {
