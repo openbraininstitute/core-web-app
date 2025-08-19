@@ -401,10 +401,23 @@ interface UserGroupsResponse {
   groups: Array<UserGroup>;
 }
 
+export type BookmarkCategory =
+  | 'ExperimentalBoutonDensity'
+  | 'ExperimentalNeuronDensity'
+  | 'ExperimentalElectroPhysiology'
+  | 'ExperimentalSynapsePerConnection'
+  | 'ExperimentalNeuronMorphology'
+  | 'SimulationCampaign'
+  | 'CircuitEModel'
+  | 'CircuitMEModel'
+  | 'SingleNeuronSynaptome'
+  | 'SingleNeuronSimulation'
+  | 'SynaptomeSimulation';
+
 export type BookmarkRequest = {
   resource_id?: string;
   entity_id: string;
-  category: TExtendedEntitiesTypeDict;
+  category: BookmarkCategory;
 };
 
 export type DeleteBookmarksResponse = {
@@ -418,7 +431,7 @@ export interface AddBookmarkResponse extends BookmarkRequest {
 
 export interface LibraryBookmark extends AddBookmarkResponse {}
 
-type BookmarksByCategoryResponse = Record<TExtendedEntitiesTypeDict, Array<LibraryBookmark>>;
+type BookmarksByCategoryResponse = Record<BookmarkCategory, Array<LibraryBookmark>>;
 
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;

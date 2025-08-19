@@ -5,7 +5,7 @@ import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response'
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import { BookmarkCategory } from '@/api/virtual-lab-svc/queries/bookmark';
+import type { BookmarkCategory } from '@/api/virtual-lab-svc/queries/types';
 
 export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {

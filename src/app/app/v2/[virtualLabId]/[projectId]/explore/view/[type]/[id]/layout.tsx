@@ -69,7 +69,7 @@ export default async function Layout({
           entity={entity}
           entityType={entityType.type}
           ctx={{ virtualLabId, projectId }}
-          isBookmarkable={entityType.isBookmarkable}
+          bookmarkCategory={entityType.bookmarkCategory}
         />
       </div>
       <div className="grow basis-4/5">{children}</div>

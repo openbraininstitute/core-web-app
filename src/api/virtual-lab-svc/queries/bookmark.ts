@@ -1,9 +1,9 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   BookmarkRequest,
+  BookmarkCategory,
   AddBookmarkResponse,
   DeleteBookmarksResponse,
   VlmGetProjectBookmarksResponse,
@@ -41,19 +41,6 @@ export async function bookmarkToProjectLibrary(
   });
 }
 
-export type BookmarkCategory =
-  | 'ExperimentalBoutonDensity'
-  | 'ExperimentalNeuronDensity'
-  | 'ExperimentalElectroPhysiology'
-  | 'ExperimentalSynapsePerConnection'
-  | 'ExperimentalNeuronMorphology'
-  | 'SimulationCampaign'
-  | 'CircuitEModel'
-  | 'CircuitMEModel'
-  | 'SingleNeuronSynaptome'
-  | 'SingleNeuronSimulation'
-  | 'SynaptomeSimulation';
-
 /**
  * Retrieves all bookmarks for a specific project, grouped by category.
  *
@@ -63,7 +50,7 @@ export type BookmarkCategory =
  */
 export async function getAllBookmarksByCategory(
   { virtualLabId, projectId }: WorkspaceContext,
-  { category }: { category: BookmarkCategory }
+  { category }: { category?: BookmarkCategory }
 ): Promise<VlmGetProjectBookmarksResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;

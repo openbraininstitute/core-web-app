@@ -10,29 +10,22 @@ import {
 import Action from '../molecules/side-menu-action';
 
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { useQuery } from '@tanstack/react-query';
-import { getAllBookmarksByCategory } from '@/api/virtual-lab-svc/queries/bookmark';
-import { TEntityCoreConfigurationItem } from '@/entity-configuration/domain';
+
+import { bookmarkToProjectLibrary } from '@/api/virtual-lab-svc/queries/bookmark';
+import { BookmarkCategory } from '@/api/virtual-lab-svc/queries/types';
+import { useAppNotification } from '@/components/notification';
 
 export default function ActionMenu<T extends EntityCoreIdentifiable>({
   entity,
-  entityType,
-  isBookmarkable,
+  bookmarkCategory,
   ctx,
 }: {
   entity: T;
-  entityType: TEntityCoreConfigurationItem['type'];
-  isBookmarkable: boolean;
+  bookmarkCategory?: BookmarkCategory;
   ctx: { virtualLabId: string; projectId: string };
 }) {
   const [copied, setCopied] = useState(false);
-
-  const bookmarks = useQuery({
-    queryKey: [ctx.projectId, ctx.virtualLabId, entityType],
-    queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType }),
-  });
-
-  console.log(bookmarks.data);
+  const notification = useAppNotification();
 
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 pr-20 pl-10 text-lg font-bold">
@@ -58,7 +51,27 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
         {copied ? 'Copied' : 'Copy ID'}
       </Action>
       <Action icon={<ExperimentOutlined />}>Simulate</Action>
-      {isBookmarkable && <Action icon={<BookOutlined />}>Bookmark</Action>}
+      {bookmarkCategory && (
+        <Action
+          icon={
+            <BookOutlined
+              onClick={async () => {
+                try {
+                  await bookmarkToProjectLibrary(ctx, {
+                    entity_id: entity.id,
+                    category: bookmarkCategory,
+                  });
+                  notification.success({ message: 'Entity successfully bookmarked' });
+                } catch {
+                  notification.error({ message: "Couldn't add entity to bookmarks" });
+                }
+              }}
+            />
+          }
+        >
+          Bookmark
+        </Action>
+      )}
       <Action icon={<DownloadOutlined />}>Download</Action>
     </div>
   );
