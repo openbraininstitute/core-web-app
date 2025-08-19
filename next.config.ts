@@ -82,35 +82,6 @@ const nextConfig = (phase: string): NextConfig => {
         },
       ],
     },
-    async headers() {
-      if (isDev) return [];
-
-      // Skip CORS headers if CDN URI is not configured or empty
-      if (!cdnUri || typeof cdnUri !== 'string' || cdnUri.trim() === '') {
-        console.warn('CDN URI is not configured, skipping CORS headers');
-        return [];
-      }
-
-      return [
-        {
-          source: '/:prefix*/_next/static/media/:path*',
-          headers: [
-            {
-              key: 'Access-Control-Allow-Origin',
-              value: cdnUri,
-            },
-            {
-              key: 'Access-Control-Allow-Methods',
-              value: 'GET, HEAD, OPTIONS',
-            },
-            {
-              key: 'Access-Control-Allow-Headers',
-              value: '*',
-            },
-          ],
-        },
-      ];
-    },
   };
 };
 
