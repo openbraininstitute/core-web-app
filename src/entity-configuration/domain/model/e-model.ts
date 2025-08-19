@@ -34,4 +34,5 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
     extension: undefined,
   },
   isBookmarkable: true,
+  bookmarkCategory: 'CircuitEModel',
 } as const;

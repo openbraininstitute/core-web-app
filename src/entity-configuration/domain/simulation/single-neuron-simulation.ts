@@ -39,6 +39,7 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
   type: EntityTypeDict.SingleNeuronSimulation,
   slug: EntitySlug.SingleNeuronSimulation,
   isBookmarkable: true,
+  bookmarkCategory: 'SingleNeuronSimulation',
   api: {
     config: {
       allowedFacets: true,

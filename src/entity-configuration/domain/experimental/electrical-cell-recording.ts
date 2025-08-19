@@ -40,4 +40,5 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
     extension: 'application/nwb',
   },
   isBookmarkable: true,
+  bookmarkCategory: 'ExperimentalElectroPhysiology',
 } as const;

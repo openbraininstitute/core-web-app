@@ -125,6 +125,7 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SimulationCampaign,
   isBookmarkable: true,
+  bookmarkCategory: 'SimulationCampaign',
   api: {
     config: {
       allowedFacets: true,

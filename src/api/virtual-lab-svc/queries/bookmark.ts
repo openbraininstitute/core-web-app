@@ -41,6 +41,19 @@ export async function bookmarkToProjectLibrary(
   });
 }
 
+export type BookmarkCategory =
+  | 'ExperimentalBoutonDensity'
+  | 'ExperimentalNeuronDensity'
+  | 'ExperimentalElectroPhysiology'
+  | 'ExperimentalSynapsePerConnection'
+  | 'ExperimentalNeuronMorphology'
+  | 'SimulationCampaign'
+  | 'CircuitEModel'
+  | 'CircuitMEModel'
+  | 'SingleNeuronSynaptome'
+  | 'SingleNeuronSimulation'
+  | 'SynaptomeSimulation';
+
 /**
  * Retrieves all bookmarks for a specific project, grouped by category.
  *
@@ -50,7 +63,7 @@ export async function bookmarkToProjectLibrary(
  */
 export async function getAllBookmarksByCategory(
   { virtualLabId, projectId }: WorkspaceContext,
-  { category }: { category?: TExtendedEntitiesTypeDict }
+  { category }: { category: BookmarkCategory }
 ): Promise<VlmGetProjectBookmarksResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;

@@ -39,4 +39,5 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.ReconstructionMorphology],
   isBookmarkable: true,
+  bookmarkCategory: 'ExperimentalNeuronMorphology',
 } as const;
