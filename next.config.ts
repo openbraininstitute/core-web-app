@@ -2,9 +2,8 @@ import { withSentryConfig } from '@sentry/nextjs';
 import NextBundleAnalyzer from '@next/bundle-analyzer';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
-import { env } from './src/env';
-
 import type { NextConfig } from 'next/dist/types';
+import { env } from './src/env';
 
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -13,7 +12,8 @@ const withBundleAnalyzer = NextBundleAnalyzer({
 const SentryWebpackPluginOptions = { silent: true, dryRun: !env.NEXT_PUBLIC_SENTRY_DSN };
 
 const basePath = env.NEXT_PUBLIC_BASE_PATH;
-const cdnUri = env.NEXT_PUBLIC_CDN_URI;
+const cdnUri = env.NEXT_PUBLIC_CDN_URI || process.env.NEXT_PUBLIC_CDN_URI;
+
 const coreWebAppVersion = env.NEXT_PUBLIC_CORE_WEB_APP_VERSION;
 
 const nextConfig = (phase: string): NextConfig => {
@@ -81,6 +81,35 @@ const nextConfig = (phase: string): NextConfig => {
           pathname: '/**',
         },
       ],
+    },
+    async headers() {
+      if (isDev) return [];
+
+      // Skip CORS headers if CDN URI is not configured or empty
+      if (!cdnUri || typeof cdnUri !== 'string' || cdnUri.trim() === '') {
+        console.warn('CDN URI is not configured, skipping CORS headers');
+        return [];
+      }
+
+      return [
+        {
+          source: '/_next/static/media/:path*',
+          headers: [
+            {
+              key: 'Access-Control-Allow-Origin',
+              value: cdnUri,
+            },
+            {
+              key: 'Access-Control-Allow-Methods',
+              value: 'GET, HEAD, OPTIONS',
+            },
+            {
+              key: 'Access-Control-Allow-Headers',
+              value: '*',
+            },
+          ],
+        },
+      ];
     },
   };
 };
