@@ -1,19 +1,25 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BookOutlined,
   CopyOutlined,
   DownloadOutlined,
   ExperimentOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import Action from '../molecules/side-menu-action';
 
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
-import { bookmarkToProjectLibrary } from '@/api/virtual-lab-svc/queries/bookmark';
-import { BookmarkCategory } from '@/api/virtual-lab-svc/queries/types';
+import {
+  bookmarkToProjectLibrary,
+  getAllBookmarksByCategory,
+} from '@/api/virtual-lab-svc/queries/bookmark';
 import { useAppNotification } from '@/components/notification';
+import { BookmarkCategory } from '@/api/virtual-lab-svc/queries/types';
+import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
 
 export default function ActionMenu<T extends EntityCoreIdentifiable>({
   entity,
@@ -24,8 +30,76 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
   bookmarkCategory?: BookmarkCategory;
   ctx: { virtualLabId: string; projectId: string };
 }) {
+  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
+
+  const bookmarks = useQuery({
+    queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
+    queryFn: async () => getAllBookmarksByCategory(ctx, { category: bookmarkCategory }),
+  });
+
+  const existingBookmarks = bookmarkCategory
+    ? bookmarks.data?.data?.[bookmarkCategory]?.map((b) => b.entity_id)
+    : undefined;
+
+  const isBookmarked = existingBookmarks && existingBookmarks.includes(entity.id);
+
+  const handleBookmark = async () => {
+    if (!bookmarkCategory) return;
+    setLoading(true);
+    try {
+      await bookmarkToProjectLibrary(ctx, {
+        entity_id: entity.id,
+        category: bookmarkCategory,
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
+      });
+
+      notification.success({ message: 'Entity successfully bookmarked' });
+    } catch {
+      notification.error({ message: "Couldn't add entity to bookmarks" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveBookmark = async () => {
+    if (!bookmarkCategory) return;
+
+    setLoading(true);
+    try {
+      await deleteBookmarksFromProjectLibrary({
+        virtualLabId: ctx.virtualLabId,
+        projectId: ctx.projectId,
+        bookmarks: [
+          {
+            entity_id: entity.id,
+            category: bookmarkCategory,
+          },
+        ],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
+      });
+
+      notification.success({ message: 'Bookmark removed from library' });
+    } catch {
+      notification.error({ message: "Couldn't remove bookmark" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBookmarkHandler = () => {
+    if (loading) return undefined;
+    if (!isBookmarked) return handleBookmark;
+    return handleRemoveBookmark;
+  };
 
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 pr-20 pl-10 text-lg font-bold">
@@ -51,27 +125,19 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
         {copied ? 'Copied' : 'Copy ID'}
       </Action>
       <Action icon={<ExperimentOutlined />}>Simulate</Action>
-      {bookmarkCategory && (
+      {bookmarkCategory && bookmarks.data && (
         <Action
           icon={
-            <BookOutlined
-              onClick={async () => {
-                try {
-                  await bookmarkToProjectLibrary(ctx, {
-                    entity_id: entity.id,
-                    category: bookmarkCategory,
-                  });
-                  notification.success({ message: 'Entity successfully bookmarked' });
-                } catch {
-                  notification.error({ message: "Couldn't add entity to bookmarks" });
-                }
-              }}
-            />
+            <>
+              {!loading && <BookOutlined onClick={getBookmarkHandler()} />}
+              {loading && <LoadingOutlined />}
+            </>
           }
         >
-          Bookmark
+          <>{!isBookmarked ? 'Bookmark' : 'Remove from bookmarks'}</>
         </Action>
       )}
+
       <Action icon={<DownloadOutlined />}>Download</Action>
     </div>
   );
