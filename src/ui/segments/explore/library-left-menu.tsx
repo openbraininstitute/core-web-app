@@ -74,7 +74,6 @@ export function LibraryLeftMenu() {
           .fill('a')
           .map((p, ind) => (
             <div
-              // eslint-disable-next-line react/no-array-index-key
               key={`loading-link-item-${ind}`}
               className="shine h-10 w-full rounded-full bg-gray-100"
             />
