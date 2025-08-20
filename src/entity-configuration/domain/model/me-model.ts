@@ -31,5 +31,4 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
     extension: undefined,
   },
   isBookmarkable: true,
-  bookmarkCategory: 'CircuitMEModel',
 } as const;

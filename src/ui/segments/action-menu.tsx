@@ -18,7 +18,6 @@ import {
   getAllBookmarksByCategory,
 } from '@/api/virtual-lab-svc/queries/bookmark';
 import { useAppNotification } from '@/components/notification';
-import { BookmarkCategory } from '@/api/virtual-lab-svc/queries/types';
 import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
 import { downloadArchive } from '@/services/entity-download';
 import { EntitySlugValue } from '@/entity-configuration/domain/slug';
@@ -26,12 +25,10 @@ import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 
 export default function ActionMenu<T extends EntityCoreIdentifiable>({
   entity,
-  bookmarkCategory,
   ctx,
   entitySlug,
 }: {
   entity: T;
-  bookmarkCategory?: BookmarkCategory;
   ctx: { virtualLabId: string; projectId: string };
   entitySlug: EntitySlugValue;
 }) {
@@ -44,27 +41,23 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
   if (!entityType) throw Error('Invalid entity type');
 
   const bookmarks = useQuery({
-    queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
-    queryFn: async () => getAllBookmarksByCategory(ctx, { category: bookmarkCategory }),
+    queryKey: [ctx.projectId, ctx.virtualLabId, entityType.type],
+    queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType.type }),
   });
 
-  const existingBookmarks = bookmarkCategory
-    ? bookmarks.data?.data?.[bookmarkCategory]?.map((b) => b.entity_id)
-    : undefined;
-
-  const isBookmarked = existingBookmarks && existingBookmarks.includes(entity.id);
+  const existingBookmarks = bookmarks.data?.data?.[entityType.type]?.map((b) => b.entity_id);
+  const isBookmarked = !!existingBookmarks && existingBookmarks.includes(entity.id);
 
   const handleBookmark = async () => {
-    if (!bookmarkCategory) return;
     setLoading(true);
     try {
       await bookmarkToProjectLibrary(ctx, {
         entity_id: entity.id,
-        category: bookmarkCategory,
+        category: entityType.type,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
+        queryKey: [ctx.projectId, ctx.virtualLabId, entityType.type],
       });
 
       notification.success({ message: 'Entity successfully bookmarked' });
@@ -76,8 +69,6 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
   };
 
   const handleRemoveBookmark = async () => {
-    if (!bookmarkCategory) return;
-
     setLoading(true);
     try {
       await deleteBookmarksFromProjectLibrary({
@@ -86,13 +77,13 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
         bookmarks: [
           {
             entity_id: entity.id,
-            category: bookmarkCategory,
+            category: entityType.type,
           },
         ],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
+        queryKey: [ctx.projectId, ctx.virtualLabId, entityType.type],
       });
 
       notification.success({ message: 'Bookmark removed from library' });
@@ -133,7 +124,7 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
         {copied ? 'Copied' : 'Copy ID'}
       </Action>
       <Action icon={<ExperimentOutlined />}>Simulate</Action>
-      {bookmarkCategory && bookmarks.data && (
+      {bookmarks.data && (
         <Action
           icon={
             <>

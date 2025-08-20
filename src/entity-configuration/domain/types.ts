@@ -35,7 +35,6 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   };
   viewDefinition?: ViewDefinitionConfig | null;
   isBookmarkable: boolean;
-  bookmarkCategory?: BookmarkCategory;
 };
 
 export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<
