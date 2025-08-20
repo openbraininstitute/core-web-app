@@ -13,7 +13,9 @@ export interface TruncableImageProps {
 
 export default function TruncableImage({ className, src }: TruncableImageProps) {
   const [image, setImage] = React.useState<HTMLImageElement | null>(null);
+  const [error, setError] = React.useState(false);
   React.useEffect(() => {
+    setError(false);
     if (!src) {
       setImage(null);
       return;
@@ -28,9 +30,18 @@ export default function TruncableImage({ className, src }: TruncableImageProps) 
     };
     img.onerror = () => {
       logError('Unable to load image:', src);
+      setError(true);
       setImage(null);
     };
   }, [src]);
+  if (error && src) {
+    return (
+      <Link className={styles.error} href={src} target="_blank">
+        Unable to load image!
+      </Link>
+    );
+  }
+
   if (!image) return null;
 
   return (

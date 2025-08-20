@@ -22,6 +22,8 @@ export interface ChatProps {
 }
 
 export default function Chat({ className, threadId, onClearChat }: ChatProps) {
+  const refScrollLocked = React.useRef(true);
+  const refScrollTriggered = React.useRef(true);
   const { messages, clear, status, append, error, stop, rateLimit } = useServiceAiAgentChat(
     threadId ?? ''
   );
@@ -29,16 +31,19 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
   const scroll = () => {
+    if (!refScrollLocked.current) return;
+
     const div = refContainer.current;
     if (!div) return;
 
+    refScrollTriggered.current = true;
     const scrollTop = Math.max(0, div.scrollHeight - div.clientHeight);
+    console.log('Scroll!');
     div.scrollTo({
       top: scrollTop,
       behavior: 'smooth',
     });
   };
-  // refChatBottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   React.useEffect(scroll, [messages, error, status]);
   React.useEffect(() => {
     if (status !== 'ready' || suggestions.length === 0) return;
@@ -51,15 +56,29 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     clear();
   };
   const handlePrompt = (content: string) => {
+    refScrollLocked.current = true;
     append({
       role: 'user',
       content,
     });
   };
+  const handleScroll = () => {
+    console.log(
+      '🚀 [handleScroll] refScrollLocked.current, refScrollTriggered.current =',
+      refScrollLocked.current,
+      refScrollTriggered.current
+    ); // @FIXME: Remove this line written on 2025-08-20 at 08:18
+    if (!refScrollTriggered.current) refScrollLocked.current = false;
+    refScrollTriggered.current = false;
+  };
 
   return (
     <>
-      <div className={classNames(styles.articles, className)} ref={refContainer}>
+      <div
+        className={classNames(styles.articles, className)}
+        ref={refContainer}
+        onScrollEnd={handleScroll}
+      >
         {messages.length === 0 && <Welcome />}
         {messages.map((item, messageIndex) => (
           <MessageItem

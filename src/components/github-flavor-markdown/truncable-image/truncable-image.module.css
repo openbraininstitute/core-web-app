@@ -9,3 +9,12 @@
   width: var(--custom-width);
   height: var(--custom-height);
 }
+
+a.error {
+  display: inline-block !important;
+  border-radius: 99vmax;
+  padding: 0 1em;
+  background-color: #e30 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
