@@ -1,10 +1,5 @@
 'use client';
 
-import { Form, Input, Select, Button, FormListFieldData, InputNumber } from 'antd';
-import { useMemo, useReducer, useRef, useState } from 'react';
-import { useAtom, useAtomValue } from 'jotai';
-import { useParams } from 'next/navigation';
-import { Color } from 'three';
 import {
   CloseOutlined,
   DeleteOutlined,
@@ -12,28 +7,31 @@ import {
   InfoCircleFilled,
   PlusCircleOutlined,
 } from '@ant-design/icons';
+import { Button, Form, FormListFieldData, Input, InputNumber, Select } from 'antd';
+import { useAtom, useAtomValue } from 'jotai';
+import { useParams } from 'next/navigation';
+import { useMemo, useReducer, useRef, useState } from 'react';
+import { Color } from 'three';
 
-import findIndex from 'lodash/findIndex';
 import isEqual from 'lodash/isEqual';
-import groupBy from 'lodash/groupBy';
 
-import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { synapsesPlacementAtom } from '@/state/synaptome';
 import {
-  validateSingleNeuronSynapseGenerationFormula,
   getSingleNeuronSynaptomePlacement,
+  validateSingleNeuronSynapseGenerationFormula,
 } from '@/api/small-scale-simulator';
+import { tryCatch } from '@/api/utils';
 import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
-import { useAppNotification } from '@/components/notification';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
-import { messages } from '@/i18n/en/synaptome';
 import {
   sendDisplaySynapses3DEvent,
   sendRemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
+import { useAppNotification } from '@/components/notification';
+import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import { messages } from '@/i18n/en/synaptome';
+import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
+import { secNamesAtom } from '@/state/simulate/single-neuron';
+import { synapsesPlacementAtom } from '@/state/synaptome';
 import { classNames } from '@/util/utils';
-import { tryCatch } from '@/api/utils';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
@@ -74,16 +72,21 @@ export default function SynapseSet({
   const config = synapses?.[index];
   const configRef = useRef(config);
 
-  const groupedSections = Object.keys(
-    groupBy(secNames, (str) => {
-      const bracketIndex = findIndex(str, (char) => char === '[');
-      return bracketIndex !== -1 ? str.slice(0, bracketIndex) : str;
-    })
-  );
+  const neuriteTypeRegexp = /^\w+/;
+  const neuriteTypes = Array.from(
+    secNames.reduce(
+      (acc, secName) => acc.add(neuriteTypeRegexp.exec(secName)?.[0]),
+      new Set<string | undefined>()
+    )
+  )
+    // Filter out non-matches as a precaution.
+    .filter((neurityType) => neurityType !== undefined)
+    // Exclude myelin as it's not meaningful to have at as a synapse target.
+    .filter((neurityType) => neurityType !== 'myelin');
 
-  const hasApic = groupedSections.includes('apic');
+  const hasApic = neuriteTypes.includes('apic');
 
-  const targetOptions = groupedSections.map((value) => ({
+  const targetOptions = neuriteTypes.map((value) => ({
     value,
     label:
       value === 'dend' && !hasApic
