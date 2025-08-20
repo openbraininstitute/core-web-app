@@ -20,20 +20,30 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { BookmarkCategory } from '@/api/virtual-lab-svc/queries/types';
 import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
+import { downloadArchive } from '@/services/entity-download';
+import { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 
 export default function ActionMenu<T extends EntityCoreIdentifiable>({
   entity,
   bookmarkCategory,
   ctx,
+  entitySlug,
 }: {
   entity: T;
   bookmarkCategory?: BookmarkCategory;
   ctx: { virtualLabId: string; projectId: string };
+  entitySlug: EntitySlugValue;
 }) {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
+
+  const entityType = getEntityBySlug({ slug: entitySlug });
+  if (!entityType) throw Error('Invalid entity type');
+
+  console.log(entityType);
 
   const bookmarks = useQuery({
     queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
@@ -138,7 +148,11 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
         </Action>
       )}
 
-      <Action icon={<DownloadOutlined />}>Download</Action>
+      <Action
+        icon={<DownloadOutlined onClick={() => downloadArchive(entityType.type, [entity.id])} />}
+      >
+        Download
+      </Action>
     </div>
   );
 }

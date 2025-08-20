@@ -67,6 +67,7 @@ export default async function Layout({
         </div>
         <ActionMenu
           entity={entity}
+          entitySlug={type}
           bookmarkCategory={entityType.bookmarkCategory}
           ctx={{ virtualLabId, projectId }}
         />
