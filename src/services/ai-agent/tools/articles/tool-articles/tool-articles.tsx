@@ -25,7 +25,7 @@ export default function ToolArticles({ className, message }: ToolArticlesProps) 
       }
     >
       {articles.map((item) => (
-        <ArticleCard key={item.title} article={item} />
+        <ArticleCard key={item.url} article={item} />
       ))}
     </Expand>
   );
