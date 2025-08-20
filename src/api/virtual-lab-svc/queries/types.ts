@@ -1,5 +1,3 @@
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 interface VlmResponse<T> {
   message: string;
   data: T | null;
