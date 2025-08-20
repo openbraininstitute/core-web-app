@@ -7,23 +7,22 @@ import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
+import type { WorkspaceContext } from '@/types/common';
 
 interface Params {
-  virtualLabId: string;
-  projectId: string;
   id: string;
   type: EntitySlugValue;
 }
 
-export default async function Layout({
-  children,
-  params,
+export async function downloadEntity({
+  type,
+  id,
+  ctx,
 }: {
-  children: ReactNode;
-  params: Promise<Params>;
+  type: EntitySlugValue;
+  id: string;
+  ctx: WorkspaceContext;
 }) {
-  const { virtualLabId, projectId, type, id } = await params;
-
   if (!type || !id) notFound();
 
   const entityType = getEntityBySlug({ slug: type });
@@ -37,12 +36,29 @@ export default async function Layout({
   let entity: AwaitedType<ReturnType<typeof fetchEntity>> | undefined;
 
   try {
-    entity = await fetchEntity({ id, context: { virtualLabId, projectId } });
+    entity = await fetchEntity({ id, context: ctx });
   } catch {
     notFound();
   }
 
   if (!entity) notFound();
+  return { entity, entityType };
+}
+
+export default async function Layout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<Params & WorkspaceContext>;
+}) {
+  const { virtualLabId, projectId, type, id } = await params;
+
+  const { entity, entityType } = await downloadEntity({
+    type,
+    id,
+    ctx: { virtualLabId, projectId },
+  });
 
   return (
     <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
