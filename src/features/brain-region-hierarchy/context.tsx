@@ -186,7 +186,6 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       if (selectedBrainRegion?.id !== id) {
         const foundNode = find(brainRegions?.options, (o) => o.data.id === id)?.data;
         if (foundNode) {
-          setHierarchyConfig({ id: foundNode.id, annotation_value: foundNode.annotation_value });
           updateSelectedBrainRegion(omit(foundNode, 'children'));
         }
       }
@@ -220,7 +219,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
 
     isInitializedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brainRegions, id, annotation_value, stored, setHierarchyConfig, defaultSelectedBrainRegion]);
+  }, [brainRegions, id, annotation_value, stored, defaultSelectedBrainRegion]);
 
   // Sync localStorage when URL params change
   useEffect(() => {
@@ -241,9 +240,17 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     const region = node
       ? { id: node.id, name: node.name, annotation_value: node?.annotation_value }
       : null;
-    setHierarchyConfig(region);
-    updateLocalStorage(region);
-    updateSelectedBrainRegion(omit(node, 'children'));
+
+    // Only update if the values are actually different
+    if (region && (id !== region.id || annotation_value !== region.annotation_value)) {
+      setHierarchyConfig(region);
+      updateLocalStorage(region);
+      updateSelectedBrainRegion(omit(node, 'children'));
+    } else if (!region && (id !== '' || annotation_value !== 0)) {
+      setHierarchyConfig(region);
+      updateLocalStorage(region);
+      updateSelectedBrainRegion(null);
+    }
   };
 
   return {

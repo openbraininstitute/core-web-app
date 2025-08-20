@@ -19,4 +19,8 @@ export const keyBuilder = {
     `${prefix}-electrical-cell-recordings-count`,
     { virtualLabId, projectId, brainRegionId: brainRegionId ?? '' },
   ],
+  meModel: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
+    `${prefix}-single-neuron-model`,
+    { virtualLabId, projectId, entityId },
+  ],
 };

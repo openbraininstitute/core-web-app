@@ -16,6 +16,7 @@ export type ViewDefinitionConfig = {
   group?: DataTypeGroup;
   cardViewFields?: Array<TypeSummaryProps>;
   summaryViewFields?: Array<TypeSummaryProps>;
+  miniDetailView?: Array<TypeSummaryProps>;
   filterableFields?: Array<EntityCoreFields>;
   displayableFields?: Array<EntityCoreFields>;
   mlTopic?: string;

@@ -1,6 +1,6 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
@@ -100,6 +100,12 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.License },
       { field: EntityCoreFields.MType },
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.Species },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.License },
+    ],
     mlTopic: 'Neuron morphology',
   },
   [ExtendedEntitiesTypeDict.ElectricalCellRecording]: {
@@ -121,6 +127,12 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.License },
       { field: EntityCoreFields.EType },
       { field: EntityCoreFields.SubjectAge },
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.EType },
+      { field: EntityCoreFields.Species },
+      { field: EntityCoreFields.License },
     ],
     curated: true,
     mlTopic: 'Neuron spike',
@@ -171,6 +183,13 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.NeuronDensity, className: 'col-span-3' },
       { field: EntityCoreFields.NumberOfMeasurements, className: 'col-span-3' },
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.Species },
+      { field: EntityCoreFields.EType },
+      { field: EntityCoreFields.License, className: 'col-start-2 row-start-3' },
+    ],
     curated: false,
     mlTopic: 'cell composition',
   },
@@ -197,6 +216,12 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.Weight, className: 'col-span-2' },
       { field: EntityCoreFields.Sem, className: 'col-span-3' },
       { field: EntityCoreFields.NumberOfMeasurements, className: 'col-span-3' },
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.Species },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.License },
     ],
     curated: false,
     mlTopic: 'Bouton density',
@@ -229,6 +254,15 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       // {
       //   field: EntityCoreFields.NumberOfConnections,
       // },
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.PreSynapticBrainRegion },
+      { field: EntityCoreFields.PostSynapticBrainRegion },
+      { field: EntityCoreFields.PreSynapticCellType },
+      { field: EntityCoreFields.PostSynapticCellType },
+      { field: EntityCoreFields.Species },
+      { field: EntityCoreFields.SubjectAge },
+      { field: EntityCoreFields.License },
     ],
     curated: false,
     mlTopic: 'Synapse per connection',
