@@ -87,7 +87,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
             <div className={styles.footerButtons}>
               <button type="button" className={styles.actionButton} onClick={handleClearChat}>
                 <IconClear />
-                <div>Clear chat</div>
+                <div>New Chat</div>
               </button>
             </div>
             <SuggestedQuestions

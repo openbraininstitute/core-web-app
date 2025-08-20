@@ -26,10 +26,12 @@ dialog.dialog {
   max-height: 100vh;
   overflow: auto;
   background: none;
+  transition-behavior: allow-discrete;
 
   &::backdrop {
     background: none;
     backdrop-filter: blur(4px) brightness(50%);
+    transition: backdrop-filter 0.5s;
   }
 
   > button {
@@ -47,6 +49,7 @@ dialog.dialog {
       cursor: pointer;
       max-width: none;
       max-height: none;
+      box-shadow: 0 0.5em 1em #000;
     }
   }
 }
