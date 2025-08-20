@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BookOutlined,
@@ -22,6 +23,7 @@ import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
 import { downloadArchive } from '@/services/entity-download';
 import { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 export default function ActionMenu<T extends EntityCoreIdentifiable>({
   entity,
@@ -41,7 +43,11 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
   if (!entityType) throw Error('Invalid entity type');
 
   const bookmarks = useQuery({
-    queryKey: [ctx.projectId, ctx.virtualLabId, entityType.type],
+    queryKey: keyBuilder.bookmarks({
+      virtualLabId: ctx.virtualLabId,
+      projectId: ctx.projectId,
+      category: entityType.extendedType,
+    }),
     queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType.type }),
   });
 

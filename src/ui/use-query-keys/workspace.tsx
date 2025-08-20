@@ -78,8 +78,8 @@ export const keyBuilder = {
     page,
     pageSize,
   }: WorkspaceContext & {
-    page: number;
-    pageSize: number;
+    page?: number;
+    pageSize?: number;
     category: TExtendedEntitiesTypeDict;
   }) => [`${prefix}/bookmark-categories`, { virtualLabId, projectId, category, page, pageSize }],
 };
