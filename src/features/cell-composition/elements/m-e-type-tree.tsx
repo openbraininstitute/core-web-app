@@ -120,7 +120,7 @@ export function CellCompositionMETypeTree() {
           densityOrCount={densityOrCount}
           selectDensityOrCount={(v) => setDensityOrCount(v)}
         />
-        <div className="primary-scrollbar h-full overflow-y-auto rounded-md border border-[#0250b3] p-4">
+        <div className="white-scrollbar h-full overflow-y-auto rounded-md border border-[#0250b3] bg-white/2 p-4 backdrop-blur-md">
           <h6 className="px-1.5 text-sm font-normal text-gray-400">M-TYPES</h6>
           <Tree<TreeNode>
             dataKey=""

@@ -1,6 +1,7 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
+import type { ReactNode } from 'react';
 
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
@@ -8,9 +9,10 @@ import { AtlasViewer } from '@/features/brain-atlas-viewer';
 
 type Props = {
   dataKey: string;
+  children: ReactNode;
 };
 
-export function Atlas({ dataKey }: Props) {
+export function Atlas({ dataKey, children }: Props) {
   const { node: brainRegionNode } = useBrainRegionHierarchy({ dataKey });
 
   return (
@@ -26,7 +28,7 @@ export function Atlas({ dataKey }: Props) {
         })}
         resetKeys={[brainRegionNode.id, brainRegionNode.annotation_value, dataKey]}
       >
-        <AtlasViewer dataKey={dataKey} />
+        <AtlasViewer dataKey={dataKey}>{children}</AtlasViewer>
       </ErrorBoundary>
     </div>
   );
