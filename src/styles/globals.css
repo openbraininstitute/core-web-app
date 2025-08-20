@@ -353,6 +353,35 @@
   }
 }
 
+@utility white-scrollbar {
+  @layer utilities {
+    &::-webkit-scrollbar {
+      /* @apply scrollbar-size; */
+      /* ! TOFIX */
+      width: 5px;
+      margin-right: 5px;
+      border-radius: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+      @apply rounded-sm bg-transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      /* @apply scrollbar-size bg-gray-400; */
+      /* ! TOFIX */
+      @apply bg-white;
+      width: 5px;
+      margin-right: 5px;
+      border-radius: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      @apply bg-white/50;
+    }
+  }
+}
+
 @layer utilities {
   html {
     font-size: 14px;

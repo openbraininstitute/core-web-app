@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { match } from 'ts-pattern';
@@ -12,7 +12,7 @@ import Loader from '@/components/loader';
 
 import type { TSuspenseStatus } from '@/components/suspense-with-status';
 
-export function AtlasViewer({ dataKey }: { dataKey: string }) {
+export function AtlasViewer({ dataKey, children }: { dataKey: string; children: ReactNode }) {
   const threeDRef = useRef<HTMLDivElement>(null);
   const [meshLoadingStatus, setMeshLoadingStatus] = useState<TSuspenseStatus>('pending');
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -60,6 +60,7 @@ export function AtlasViewer({ dataKey }: { dataKey: string }) {
 
   const isLoading = meshLoadingStatus === 'pending' || pointCloudLoadingStatus === 'pending';
 
+  console.log('–– – index.tsx:70 – AtlasViewer – containerSize:', containerSize);
   const renderViewer = useMemo(
     () => (
       <>
@@ -67,7 +68,7 @@ export function AtlasViewer({ dataKey }: { dataKey: string }) {
           dpr={[1, 2]}
           style={{ width: containerSize.width, height: containerSize.height, display: 'block' }}
           camera={{
-            position: [506.098, 1683.079, -14311.903],
+            position: [2000, 1683.079, -14311.903],
             up: [0, -1, 0],
             fov: 55,
             far: 100000,
@@ -75,7 +76,13 @@ export function AtlasViewer({ dataKey }: { dataKey: string }) {
             type: 'PerspectiveCamera',
           }}
         >
-          <OrbitControls target={new Vector3(6612.504, 3938.164, 5712.791)} zoomSpeed={0.3} />
+          <OrbitControls
+            target={new Vector3(6612.504, 3938.164, 5712.791)}
+            zoomSpeed={0.3}
+            enablePan={true}
+            enableZoom={true}
+            enableRotate={true}
+          />
           <ViewerComposer
             dataKey={dataKey}
             onMeshLoadingStatusChange={onMeshLoadingStatusChange}
@@ -111,14 +118,17 @@ export function AtlasViewer({ dataKey }: { dataKey: string }) {
     })
     .otherwise(() => {
       return (
-        <div ref={threeDRef} className="relative h-full max-h-full w-full max-w-full">
+        <div className="relative flex h-full max-h-full w-full max-w-full items-start">
           <FullScreen isFullScreen={isFullScreen} onToggle={handleFullScreenToggle} />
-          {isLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/5">
-              <Loader className="text-neutral-3" />
-            </div>
-          )}
-          {renderViewer}
+          <div ref={threeDRef} className="h-full w-2/3 rounded-2xl">
+            {isLoading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/5">
+                <Loader className="text-neutral-3" />
+              </div>
+            )}
+            {renderViewer}
+          </div>
+          <div className="relative h-full w-1/3">{children}</div>
         </div>
       );
     });
