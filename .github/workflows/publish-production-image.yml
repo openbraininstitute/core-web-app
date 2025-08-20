@@ -47,6 +47,7 @@ jobs:
           echo "NEW_TAG=${NEW_TAG}" >> $GITHUB_ENV
           echo "New tag: $NEW_TAG"
           NEW_TAG_NODOTS="${NEW_TAG//./}"
+          echo "New tag no dots: $NEW_TAG_NODOTS"
           echo "version=${NEW_TAG_NODOTS}" >> $GITHUB_OUTPUT
 
       - name: Create Git Tag
@@ -82,7 +83,7 @@ jobs:
           # remove directory for extracted assets (can be removed later)
           rm -rf ./assets-for-s3
 
-          # create directory for extracted assets
+          # create directory for extracted assets with versioned paths
           mkdir -p ./assets-for-s3/${{ steps.tag.outputs.version }}/public
           mkdir -p ./assets-for-s3/${{ steps.tag.outputs.version }}/_next
 
@@ -94,6 +95,6 @@ jobs:
 
       - name: Sync static assets to S3 and invalidate CloudFront
         run: |
-          # upload extracted static assets to S3
-          aws s3 sync ./assets-for-s3/public s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable" # max-age is 7 days
-          aws s3 sync ./assets-for-s3/_next/static s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable" # max-age is 7 days
+          # upload extracted static assets to S3 with versioned paths
+          aws s3 sync ./assets-for-s3/${{ steps.extract_version.outputs.version }}/public s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.extract_version.outputs.version }}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
+          aws s3 sync ./assets-for-s3/${{ steps.extract_version.outputs.version }}/_next/static s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.extract_version.outputs.version }}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
