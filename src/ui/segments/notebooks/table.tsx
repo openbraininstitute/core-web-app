@@ -2,7 +2,7 @@
 
 import { ConfigProvider } from 'antd';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { LoadingOutlined } from '@ant-design/icons';
 import Table from 'antd/es/table';
@@ -44,24 +44,33 @@ function NotebookTable({
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
 
-  if (serverError)
+  // Trigger notifications after render to avoid setState during render warnings
+  const hasWarnedFailedRef = useRef(false);
+
+  useEffect(() => {
+    if (!serverError) return;
     notification.error({
       message: serverError,
       key: 'notebooks-server-error',
       placement: 'topRight',
     });
+  }, [serverError, notification]);
 
-  const resetModal = () => {
-    setCurrentNotebook(null);
-    setDisplay(null);
-  };
-
-  if (failed && failed.length)
+  useEffect(() => {
+    if (!failed || failed.length === 0) return;
+    if (hasWarnedFailedRef.current) return; // prevent duplicate toast on re-renders
     notification.warning({
       message:
         "Failed to fetch some repositories, ensure they're public and contain valid metadata for each notebook",
       placement: 'topRight',
     });
+    hasWarnedFailedRef.current = true;
+  }, [failed, notification]);
+
+  const resetModal = () => {
+    setCurrentNotebook(null);
+    setDisplay(null);
+  };
 
   const { filteredColumns, toggleColumn, isColumnHidden } = useToggleColumns(columns);
 

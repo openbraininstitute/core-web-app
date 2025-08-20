@@ -37,7 +37,17 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
     });
 
     if (!response.ok) {
-      throw new Error(`Cannot fetch the repository ${repoUrl}, ensure the repository is public.`);
+      if (response.status === 403) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        if (errorData.message?.includes('rate limit')) {
+          throw new Error(
+            `GitHub API rate limit exceeded when fetching ${repoUrl}. Please add a GITHUB_TOKEN to your environment or wait before trying again.`
+          );
+        }
+      }
+      throw new Error(
+        `Cannot fetch the repository ${repoUrl}, ensure the repository is public. (Status: ${response.status})`
+      );
     }
 
     const tree: { tree: Item[] } = await response.json();

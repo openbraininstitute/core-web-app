@@ -56,7 +56,21 @@ export async function fetchGithubFile(url: string) {
   const response = await fetch(url, options);
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch file ${url}`);
+    if (response.status === 403) {
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      if (errorData.message?.includes('rate limit')) {
+        throw new Error(
+          `GitHub API rate limit exceeded. Please add a GITHUB_TOKEN to your environment or wait before trying again. ${url}`
+        );
+      }
+      throw new Error(
+        `GitHub API access forbidden. Check permissions or add GITHUB_TOKEN to environment. ${url}`
+      );
+    }
+    if (response.status === 404) {
+      throw new Error(`GitHub file not found: ${url}`);
+    }
+    throw new Error(`Failed to fetch file ${url} (Status: ${response.status})`);
   }
 
   const data = await response.json();
