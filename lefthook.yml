@@ -1,9 +1,13 @@
-pre-push:
+pre-commit:
   parallel: true
   commands:
     eslint:
-      run: pnpm run lint
+      glob: '*.{js,jsx,ts,tsx}'
+      run: npx eslint --fix {staged_files}
     prettier:
-      run: pnpm run prettier --check
+      glob: '*.{js,jsx,ts,tsx,json}'
+      run: |
+        npx prettier --write {staged_files}
+        git add {staged_files}
     typescript:
-      run: pnpm run typecheck
+      run: npm run typecheck
