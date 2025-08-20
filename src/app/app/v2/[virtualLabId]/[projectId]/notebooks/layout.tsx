@@ -7,7 +7,7 @@ export default function NotebooksLayout({ children }: { children: ReactNode }) {
   return (
     <NotebookLayout>
       <NotebookHeader />
-      <div className="grid w-full grid-cols-5 gap-x-4 px-5 pt-8">{children}</div>
+      <div className="grid w-full grid-cols-5 gap-x-4 px-5 pt-4">{children}</div>
     </NotebookLayout>
   );
 }

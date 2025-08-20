@@ -85,18 +85,24 @@ function NotebookTable({
         },
       }}
     >
-      <NotebookFilters
-        filteredColumns={filteredColumns}
-        isColumnHidden={(dataIndex: string) => isColumnHidden(dataIndex as NotebookColumnKey)}
-        toggleColumn={(dataIndex: string) => toggleColumn(dataIndex as NotebookColumnKey)}
-        filterCount={filterCount}
-        filterValue={filterValue}
-        onChange={onChange}
-        onDateChange={onDateChange}
-        onFilterReset={onFilterReset}
-      />
+      {search}
+      <div className="flex w-full flex-row items-center justify-between px-4 pt-3">
+        <div className="text-primary-9 text-base font-normal">
+          Total notebooks: {filteredData.length}
+        </div>
+        <NotebookFilters
+          filteredColumns={filteredColumns}
+          isColumnHidden={(dataIndex: string) => isColumnHidden(dataIndex as NotebookColumnKey)}
+          toggleColumn={(dataIndex: string) => toggleColumn(dataIndex as NotebookColumnKey)}
+          filterCount={filterCount}
+          filterValue={filterValue}
+          onChange={onChange}
+          onDateChange={onDateChange}
+          onFilterReset={onFilterReset}
+        />
+      </div>
 
-      <div id="table-container" className="mt-5 w-full">
+      <div id="table-container" className="mt-5 w-full overflow-y-scroll rounded-4xl">
         <Table
           dataSource={filteredData}
           columns={filteredColumns}
