@@ -6,11 +6,10 @@ import { Suspense, useState } from 'react';
 
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
-import { EntityCount } from '@/ui/segments/explore/entity-count';
+import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
 import {
   ExploreLeftMenuContext,
   RegionBanner,
-  TExploreLeftMenuContext,
 } from '@/features/brain-region-hierarchy/region-banner';
 import {
   getAllEntitiesCount,
@@ -19,11 +18,12 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/region-banner';
 import type { TTreeNode } from '@/components/tree/types';
 
 type Props = { dataKey: string };
 
-export function ExploreMenu({ dataKey }: Props) {
+export function EntityLeftMenu({ dataKey }: Props) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -88,9 +88,7 @@ export function ExploreMenu({ dataKey }: Props) {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
           >
-            <Suspense>
-              <EntityCount dataKey={dataKey} />
-            </Suspense>
+            <EntityLinkCount dataKey={dataKey} />
           </motion.div>
         )}
       </AnimatePresence>

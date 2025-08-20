@@ -5,6 +5,7 @@ import {
   getSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -22,7 +23,7 @@ export const apiQueryExpand = {
 };
 
 export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome> = {
-  group: 'models',
+  group: EntityTypeGroup.Models,
   title: 'Synaptome',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   type: EntityTypeDict.SingleNeuronSynaptome,

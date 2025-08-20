@@ -1,6 +1,7 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   getExperimentalSynapsesPerConnections,
   getExperimentalSynapsesPerConnection,
@@ -10,7 +11,7 @@ import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
-  group: 'experimental',
+  group: EntityTypeGroup.Experimental,
   title: 'Synapse per connection',
   extendedType: ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
   type: EntityTypeDict.ExperimentalSynapsesPerConnection,

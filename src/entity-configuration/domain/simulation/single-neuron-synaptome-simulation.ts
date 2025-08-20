@@ -5,11 +5,12 @@ import {
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries/simulation/single-neuron-synaptome-simulation';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { getMEModel } from '@/api/entitycore/queries/model/me-model';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { getMEModel } from '@/api/entitycore/queries/model/me-model';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
@@ -47,7 +48,7 @@ export async function resolveSingleNeuronSynaptomeSimulation(
 
 export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuronSynaptomeSimulation> =
   {
-    group: 'simulations',
+    group: EntityTypeGroup.Simulations,
     title: 'Single Neuron Synaptome Simulation',
     extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     type: EntityTypeDict.SingleNeuronSynaptomeSimulation,

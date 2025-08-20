@@ -1,6 +1,7 @@
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
   getReconstructionMorphologies,
@@ -16,7 +17,7 @@ import type {
 export const ReconstructionMorphology: EntityCoreTypeConfig<
   IReconstructionMorphology | IReconstructionMorphologyExpanded
 > = {
-  group: 'experimental',
+  group: EntityTypeGroup.Experimental,
   title: 'Morphology',
   extendedType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
   type: EntityTypeDict.ReconstructionMorphology,

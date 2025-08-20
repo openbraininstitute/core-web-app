@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -9,7 +10,6 @@ import {
   getSingleNeuronSimulations,
 } from '@/api/entitycore/queries/simulation/single-neuron-simulation';
 import { getMEModel } from '@/api/entitycore/queries/model/me-model';
-
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -33,7 +33,7 @@ export async function resolveSingleNeuronSimulation(
 }
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
-  group: 'simulations',
+  group: EntityTypeGroup.Simulations,
   title: 'Single Neuron Simulation',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   type: EntityTypeDict.SingleNeuronSimulation,

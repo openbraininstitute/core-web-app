@@ -159,3 +159,5 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
     </>
   );
 }
+
+export default MainTable;

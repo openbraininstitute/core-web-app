@@ -9,8 +9,9 @@ import { cn } from '@/utils/css-class';
 
 export const ExploreLeftMenuContext = {
   BrainRegionHierarchy: 'brain-region-hierarchy',
-  DataType: 'data-type',
+  DataGroup: 'group',
 } as const;
+
 export type TExploreLeftMenuContext =
   (typeof ExploreLeftMenuContext)[keyof typeof ExploreLeftMenuContext];
 
@@ -21,7 +22,12 @@ type Props = {
 
 export function RegionBanner({ view, onSwitchView }: Props) {
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
-  if (!selectedBrainRegion) return <div className="h-11 py-5" />;
+  if (!selectedBrainRegion)
+    return (
+      <div className="relative mb-2 px-2 py-4">
+        <div className="shine h-10 rounded-full bg-gray-100" />
+      </div>
+    );
   return (
     <div
       id="brain-region-entities-switcher"
@@ -56,7 +62,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
           onClick={() =>
             onSwitchView(
               view === ExploreLeftMenuContext.BrainRegionHierarchy
-                ? ExploreLeftMenuContext.DataType
+                ? ExploreLeftMenuContext.DataGroup
                 : ExploreLeftMenuContext.BrainRegionHierarchy
             )
           }

@@ -19,15 +19,15 @@ import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { EntityTypeTabs, GroupTabs } from '@/features/bookmark/tabs';
 import { resolveDataKey } from '@/utils/key-builder';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { GroupedLibraryBookmarks } from '@/features/bookmark/helpers';
 import type { WorkspaceContext } from '@/types/common';
 
-const Categories: Array<{ key: EntityCoreTypeGroup; label: string }> = [
+const Categories: Array<{ key: TEntityTypeGroup; label: string }> = [
   {
     key: 'experimental',
     label: 'Experimental data',
@@ -43,7 +43,7 @@ const Categories: Array<{ key: EntityCoreTypeGroup; label: string }> = [
 ];
 
 interface Props extends WorkspaceContext {
-  activeCategory: EntityCoreTypeGroup;
+  activeCategory: TEntityTypeGroup;
   activeSlug: EntitySlugValue;
   categoryTypes: Record<string, string[]>;
   list?: GroupedLibraryBookmarks | null;
