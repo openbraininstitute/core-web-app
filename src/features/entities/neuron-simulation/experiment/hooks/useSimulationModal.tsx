@@ -32,13 +32,7 @@ export default function useSimulationModal<T extends {}>({
           className: classNames(
             '[&_.ant-modal-confirm-body]:w-full! [&_.ant-modal-confirm-paragraph]:max-w-full'
           ),
-          content: (
-            <Content
-              // eslint-disable-next-line react/jsx-props-no-spreading
-              {...props}
-              onClose={() => Modal.destroyAll()}
-            />
-          ),
+          content: <Content {...props} onClose={() => Modal.destroyAll()} />,
         });
         destroyRef.current = destroy;
         return destroy;

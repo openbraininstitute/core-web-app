@@ -10,7 +10,6 @@ export function tryType(typeName: string, data: unknown, type: TypeDef): boolean
     assertType(data, type);
     return true;
   } catch (ex) {
-    // eslint-disable-next-line no-console
     console.log('Failing type:', type);
     throw ex;
   }

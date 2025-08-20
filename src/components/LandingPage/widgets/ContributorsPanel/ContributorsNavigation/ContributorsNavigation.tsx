@@ -1,4 +1,3 @@
-/* eslint-disable react/no-array-index-key */
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Contributor, useContributors } from '../data';

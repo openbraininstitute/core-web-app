@@ -1,28 +1,26 @@
 'use client';
 
-import { ConfigProvider, DatePicker, Input, Select } from 'antd';
+import { ConfigProvider } from 'antd';
 
 import { useState } from 'react';
 
-import { LoadingOutlined, UndoOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import Table from 'antd/es/table';
 import dynamic from 'next/dynamic';
-import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns';
 // @ts-ignore
 import useSearch from '@/components/VirtualLab/Search';
-import { NoUndefinedRangeValueType, RangeValueType } from 'rc-picker/lib/PickerInput/RangePicker';
 import ContentModal from './ContentModal';
 
-import ColumnToggle, { useFilters } from '@/components/FilterControls/Filter';
-import FilterControls from '@/components/FilterControls/FilterControls';
+import { useFilters } from '@/components/FilterControls/Filter';
 import { useAppNotification } from '@/components/notification';
 import columns from '@/ui/segments/notebooks/table/columns';
-import { useToggleColumns } from '@/ui/segments/notebooks/utils/use-toggle-column';
+import {
+  NotebookColumnKey,
+  useToggleColumns,
+} from '@/ui/segments/notebooks/utils/use-toggle-column';
 import { Notebook } from '@/util/virtual-lab/types';
+import NotebookFilters from './filter-controls';
 import filteredNotebooks from './utils/filtered-notebooks';
-
-const { RangePicker } = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
-const { Option } = Select;
 
 function NotebookTable({
   notebooks,
@@ -67,7 +65,7 @@ function NotebookTable({
 
   const { filteredColumns, toggleColumn, isColumnHidden } = useToggleColumns(columns);
 
-  const { search, Search } = useSearch({
+  const { search } = useSearch({
     placeholder: 'Search for notebooks',
     containerClassName: 'ml-5',
     className: 'w-[200px] placeholder:text-gray-400',
@@ -87,113 +85,16 @@ function NotebookTable({
         },
       }}
     >
-      <div className="m flex w-full flex-row items-center justify-between">
-        {Search}
-        <FilterControls numberOfColumns={filteredColumns.length - 1} filtersCount={filterCount}>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorBgBase: '#002766',
-                colorPrimary: '#002766',
-                colorTextPlaceholder: '#8c8c8c',
-                colorTextDisabled: '#8c8c8c',
-                colorIcon: '#8c8c8c',
-                colorIconHover: '#002766',
-              },
-            }}
-          >
-            <ColumnToggle
-              hidden={isColumnHidden('name')}
-              title="Name"
-              onToggle={() => toggleColumn('name')}
-            >
-              <Input
-                value={filterValue('name') ?? ''}
-                className="w-2/3 transition-none"
-                onInput={(e) => {
-                  onChange('name', e.currentTarget.value);
-                }}
-              />
-            </ColumnToggle>
-            <ColumnToggle
-              hidden={isColumnHidden('description')}
-              title="Description"
-              onToggle={() => toggleColumn('description')}
-            >
-              <Input
-                value={filterValue('description') ?? ''}
-                className="w-2/3 transition-none"
-                onChange={(e) => onChange('description', e.currentTarget.value)}
-              />
-            </ColumnToggle>
-
-            <ColumnToggle
-              hidden={isColumnHidden('objectOfInterest')}
-              title="Object of interest"
-              onToggle={() => toggleColumn('objectOfInterest')}
-            >
-              <Input
-                value={filterValue('objectOfInterest') ?? ''}
-                className="w-2/3 transition-none"
-                onChange={(e) => onChange('objectOfInterest', e.currentTarget.value)}
-              />
-            </ColumnToggle>
-            <ColumnToggle
-              hidden={isColumnHidden('scale')}
-              title="Scale"
-              onToggle={() => toggleColumn('scale')}
-            >
-              <ConfigProvider
-                theme={{
-                  token: {
-                    colorPrimary: '#002766',
-                  },
-                }}
-              >
-                <Select
-                  placeholder="Select a scale"
-                  onChange={(value) => onChange('scale', value)}
-                  value={filterValue('scale')}
-                  style={{ width: 200 }}
-                >
-                  <Option value="cellular">Cellular</Option>
-                  <Option value="metabolism">Metabolism</Option>
-                  <Option value="circuit">Circuit</Option>
-                  <Option value="system">System</Option>
-                </Select>
-              </ConfigProvider>
-            </ColumnToggle>
-
-            <ColumnToggle
-              hidden={isColumnHidden('authors')}
-              title="Author"
-              onToggle={() => toggleColumn('authors')}
-            >
-              <Input
-                value={filterValue('authors') ?? ''}
-                className="w-2/3 transition-none"
-                onChange={(e) => onChange('authors', e.currentTarget.value)}
-              />
-            </ColumnToggle>
-            <ColumnToggle
-              hidden={isColumnHidden('creationDate')}
-              title="Creation date"
-              onToggle={() => toggleColumn('creationDate')}
-            >
-              <RangePicker
-                value={(filterValue('creationDate') as RangeValueType<Date> | null) ?? null}
-                onChange={(values: NoUndefinedRangeValueType<Date> | null) => {
-                  onDateChange('creationDate', values);
-                }}
-              />
-            </ColumnToggle>
-
-            <button type="button" className="mt-5 w-fit" onClick={onFilterReset}>
-              Clear filters <UndoOutlined className="ml-3 text-lg" />
-            </button>
-          </ConfigProvider>
-        </FilterControls>
-      </div>
+      <NotebookFilters
+        filteredColumns={filteredColumns}
+        isColumnHidden={(dataIndex: string) => isColumnHidden(dataIndex as NotebookColumnKey)}
+        toggleColumn={(dataIndex: string) => toggleColumn(dataIndex as NotebookColumnKey)}
+        filterCount={filterCount}
+        filterValue={filterValue}
+        onChange={onChange}
+        onDateChange={onDateChange}
+        onFilterReset={onFilterReset}
+      />
 
       <div id="table-container" className="mt-5 w-full">
         <Table

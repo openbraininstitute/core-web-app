@@ -1,5 +1,3 @@
-/* eslint-disable react/no-array-index-key */
-
 import FeatureBloc from './FeatureBloc';
 import PlanHeader from './PlanHeader';
 

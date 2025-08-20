@@ -21,9 +21,9 @@ import type { WorkspaceContext } from '@/types/common';
 type Props = WorkspaceContext & {
   stateId: string;
   // @FIXME: phase and origin are not used in <Configure .../>
-  // eslint-disable-next-line react/no-unused-prop-types
+
   phase: SingleNeuronSynaptomeConfigPhase;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   origin: {
     entity?: ISingleNeuronSynaptome | null;
     config: any;

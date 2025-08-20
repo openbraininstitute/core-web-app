@@ -15,7 +15,6 @@ import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
   type: EntitySlugValue;
   modelId: string;
 };

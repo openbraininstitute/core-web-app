@@ -43,7 +43,7 @@ export async function inviteToProject({
     return result;
   } catch (error) {
     // TODO: capture exception with sentry
-    // eslint-disable-next-line no-console
+
     console.error('Error inviting to project:', error);
     throw new Error(`Failed to invite user to project: ${(error as Error).message}`);
   }
@@ -83,7 +83,7 @@ export async function inviteToVirtualLab({
     return result;
   } catch (error) {
     // TODO: capture exception with sentry
-    // eslint-disable-next-line no-console
+
     console.error('Error inviting to project:', error);
     throw new Error(`Failed to invite user to project: ${(error as Error).message}`);
   }

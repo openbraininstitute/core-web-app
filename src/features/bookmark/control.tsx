@@ -144,7 +144,7 @@ export default function BookmarkButton({
       }
     },
     [notification]
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const saveToLibrary = useCallback(async () => {
     onOpRunning(entityId, 'add');
@@ -228,7 +228,7 @@ export default function BookmarkButton({
     notifyError,
     notifySuccess,
     refreshBookmarks,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+  ]);
 
   const isBookmarked = useMemo(() => {
     return (

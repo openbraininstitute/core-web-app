@@ -85,7 +85,7 @@ export function Item({
 
   return (
     <>
-      <div // eslint-disable-line jsx-a11y/interactive-supports-focus
+      <div
         role="button"
         aria-label="virtual-lab-switcher"
         data-testid="virtual-lab-switcher"

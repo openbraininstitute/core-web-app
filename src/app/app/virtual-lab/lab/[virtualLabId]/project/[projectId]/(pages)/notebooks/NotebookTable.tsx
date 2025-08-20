@@ -169,7 +169,7 @@ function NotebookTable({
                   }}
                   className="inline-flex items-center gap-[10px]"
                 >
-                  <EyeIconWhiteWithinBox className="text-xs" aria-label="Readme" />
+                  <EyeIconWhiteWithinBox props={{ className: 'text-xs', 'aria-label': 'Readme' }} />
                   Readme
                 </button>
               </div>

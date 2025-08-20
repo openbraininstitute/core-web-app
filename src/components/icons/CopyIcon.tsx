@@ -34,7 +34,6 @@ export function CopyIconOutline(props: SVGProps<SVGSVGElement>) {
       width="1em"
       height="1em"
       viewBox="0 0 512 512"
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     >
       <rect

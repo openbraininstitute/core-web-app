@@ -38,7 +38,6 @@ export function useLocalStorage<T>(
       try {
         return getLocalStorageItem(key);
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.warn(
           'useLocalStorage: Error reading from localStorage on client during getServerSnapshot call',
           e
@@ -53,7 +52,6 @@ export function useLocalStorage<T>(
     try {
       return JSON.stringify(initialValue);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.warn(
         `useLocalStorage: Non-JSON serializable initialValue for key "${key}" during SSR. Falling back to null snapshot.`,
         error
@@ -78,7 +76,6 @@ export function useLocalStorage<T>(
           setLocalStorageItem(key, nextState);
         }
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.warn(e);
       }
     },

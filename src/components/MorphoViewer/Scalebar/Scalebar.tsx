@@ -60,9 +60,9 @@ function paint(canvas: HTMLCanvasElement, scalebar: ScalebarAttributes, color: s
 
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
-  // eslint-disable-next-line no-param-reassign
+
   canvas.width = w;
-  // eslint-disable-next-line no-param-reassign
+
   canvas.height = h;
   const fontHeight = 16;
   const margin = fontHeight / 4;

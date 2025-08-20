@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import React, { Fragment } from 'react';
 import { atom } from 'jotai';
 import {
@@ -175,7 +174,7 @@ export function Section({
 
                                     // Deleting the reference to current object
 
-                                    delete entryV[fieldK]; //eslint-disable-line
+                                    delete entryV[fieldK];
 
                                     // The atom that has a reference to current object
                                     atomsMap[configK][entryKey] =

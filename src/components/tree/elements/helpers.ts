@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import transform from 'lodash/transform';
 import isObject from 'lodash/isObject';
 import isArray from 'lodash/isArray';

@@ -53,7 +53,6 @@ export function useFilters<T>(data: T[]) {
     [filters]
   );
 
-  // eslint-disable-next-line
   const onFilterChange = useCallback(function onFilterChange<K extends keyof T>(
     dataIndex: K,
     value: T[K] | null,
@@ -71,7 +70,6 @@ export function useFilters<T>(data: T[]) {
   }, []);
 
   const onChange = useCallback(
-    // eslint-disable-next-line
     function <K extends keyof T>(dataIndex: K, value: T[K]) {
       onFilterChange(dataIndex, value ?? null, (colValue) => {
         if (!value || typeof value !== 'string' || typeof colValue !== 'string') return true;
@@ -83,7 +81,6 @@ export function useFilters<T>(data: T[]) {
   );
 
   const onDateChange = useCallback(
-    // eslint-disable-next-line
     function <K extends keyof T>(dataIndex: K, values: [Date | null, Date | null] | null) {
       onFilterChange(dataIndex, values as T[K] | null, (value) => {
         if (!value && values) return false;
@@ -111,7 +108,6 @@ export function useFilters<T>(data: T[]) {
   }, []);
 
   const filterValue = useCallback(
-    // eslint-disable-next-line
     function <K extends keyof T>(dataIndex: K) {
       return filters[dataIndex]?.value ?? null;
     },

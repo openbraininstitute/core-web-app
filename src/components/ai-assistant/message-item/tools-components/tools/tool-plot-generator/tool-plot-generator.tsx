@@ -1,4 +1,3 @@
-/* eslint-disable react/no-array-index-key */
 import { Data, Layout } from 'plotly.js-dist-min';
 
 import { usePlotFile } from '../hooks';

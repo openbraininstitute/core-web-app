@@ -21,7 +21,7 @@ interface Props<TNode extends TTreeNode> {
   onToggle?: (node: TNode, expanded: boolean) => void;
   defaultExpandedNodes?: Array<string | number>;
   // @FIXME: is this prop used?
-  // eslint-disable-next-line react/no-unused-prop-types
+
   subtitle?: NodeSubtitle<TNode>;
   className?: string;
   indentation?: NodeIndentation;

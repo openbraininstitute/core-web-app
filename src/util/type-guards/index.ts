@@ -27,7 +27,7 @@ export function isArrayBuffer(data: unknown): data is ArrayBuffer {
 
 export function isStringArray(data: unknown): data is string[] {
   if (!Array.isArray(data)) return false;
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const item of data) {
     if (!isString(item)) return false;
   }
@@ -108,11 +108,10 @@ export function isType<T>(
     return true;
   } catch (ex) {
     if (logErrors) {
-      // eslint-disable-next-line no-console
       console.error('[Invalid type]', logErrors);
-      // eslint-disable-next-line no-console
+
       console.error(data);
-      // eslint-disable-next-line no-console
+
       console.debug(ex);
     }
     return false;

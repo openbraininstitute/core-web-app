@@ -98,7 +98,6 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
 
     return {
       notebooks: notebooks.map((n, i) => {
-        // eslint-disable-next-line
         n.creationDate = dates[i];
         return n;
       }),

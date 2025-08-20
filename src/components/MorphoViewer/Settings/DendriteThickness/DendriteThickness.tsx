@@ -37,7 +37,6 @@ function useRadiusMultiplier(
 ): [number, (value: number) => void] {
   const [radiusMultiplier, setRadiusMultiplier] = useState(value);
   useEffect(() => {
-    // eslint-disable-next-line no-param-reassign
     painter.radiusMultiplier = radiusMultiplier;
   }, [painter, radiusMultiplier]);
   return [radiusMultiplier, setRadiusMultiplier];

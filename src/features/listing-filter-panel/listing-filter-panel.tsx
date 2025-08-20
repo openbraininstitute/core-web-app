@@ -1,5 +1,3 @@
-/* eslint-disable no-case-declarations */
-
 import {
   ChangeEvent,
   Dispatch,
@@ -314,7 +312,7 @@ export default function ListingFilterPanel({
             <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
           </span>
           <button
-            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+            autoFocus
             type="button"
             onClick={toggleDisplay}
             className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"

@@ -131,7 +131,6 @@ export function JSONSchemaForm({
               isPlainObject(state[k]) &&
               Array.isArray(state[k].elements) &&
               state[k].elements.map((e, i) => (
-                // eslint-disable-next-line
                 <div key={i} className="flex gap-1">
                   {e}{' '}
                   {!disabled && (

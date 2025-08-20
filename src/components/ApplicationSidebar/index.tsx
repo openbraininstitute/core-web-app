@@ -11,7 +11,7 @@ type ApplicationSidebarHeaderProps = {
   title: ({ expanded }: { expanded: boolean }) => React.ReactNode;
   expanded: boolean;
   // @FIXME: Unused prop?
-  // eslint-disable-next-line react/no-unused-prop-types
+
   toggleExpand: () => void;
 };
 

@@ -34,7 +34,6 @@ export function Navigation({ className, count, value, onChange }: NavigationProp
       {new Array(count).fill(0).map((_, index) => (
         <button
           className={classNames(styles.page, index === value && styles.selected)}
-          // eslint-disable-next-line react/no-array-index-key
           key={index}
           onClick={() => onChange(index)}
           type="button"

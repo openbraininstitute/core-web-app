@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable no-param-reassign */
 import { FullscreenOutlined } from '@ant-design/icons';
 import { GizmoCanvas, MorphologyCanvas } from '@bbp/morphoviewer';
 import { useEffect, useRef } from 'react';

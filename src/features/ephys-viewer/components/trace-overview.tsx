@@ -379,7 +379,6 @@ function useDataWithUnit(
 
     // Convert the data to meet the desired units.
     optimizedPlotData.forEach((d) => {
-      // eslint-disable-next-line no-param-reassign
       d.y =
         dataUnit === 'amperes'
           ? convertCurrentSeries(d.y, 'pA', conversionFactor)

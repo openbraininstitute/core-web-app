@@ -63,7 +63,7 @@ export default function DowngradeFree({ onBack }: Props) {
           virtual lab and invited virtual labs
         </p>
         <form name="downgrade-form" className="mt-3" onSubmit={onDowngradeSubmit}>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+          {}
           <label htmlFor="reason" className="mb-1 text-lg font-bold text-white">
             Reason <span className="text-sm font-light text-gray-400">(Optional):</span>
           </label>

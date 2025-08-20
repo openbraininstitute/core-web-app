@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable no-param-reassign */
 import { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
 import { atom, useAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';

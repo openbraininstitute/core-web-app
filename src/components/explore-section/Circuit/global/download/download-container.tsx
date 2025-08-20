@@ -44,7 +44,7 @@ function FullCircuitItem({ content }: { content: DownloadItemProps }) {
           className="border-primary-6 flex h-7 w-7 items-center justify-center border border-solid"
           aria-label="Download the full circuit"
         >
-          <DownloadIcon iconColor="white" />
+          <DownloadIcon fill="white" />
         </Link>
       </div>
     </div>

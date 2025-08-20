@@ -70,7 +70,6 @@ function Users({
         {Array.from({ length: 4 })
           .fill(1)
           .map((_, i) => (
-            // eslint-disable-next-line react/no-array-index-key
             <Bar key={`loader-user-${i}`} aria-label="Loading label" className="w-20" />
           ))}
       </div>

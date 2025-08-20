@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 export function HelpIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>

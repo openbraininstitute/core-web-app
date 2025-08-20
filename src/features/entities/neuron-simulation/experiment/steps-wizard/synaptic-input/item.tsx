@@ -206,7 +206,7 @@ export default function SynapticInputItem({
                 {synapseDisplayed ? 'Hide input' : 'Show input'}
               </span>
               <div className="border border-gray-200">
-                {/* eslint-disable-next-line no-nested-ternary */}
+                {}
                 {synapseDisplayed ? (
                   <EyeInvisibleOutlined className="text-primary-8 h-8 w-8 px-2" />
                 ) : visualizeLoading ? (

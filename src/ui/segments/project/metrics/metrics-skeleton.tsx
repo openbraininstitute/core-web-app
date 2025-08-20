@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { Card, CardContent } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 

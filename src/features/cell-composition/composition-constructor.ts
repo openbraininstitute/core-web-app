@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { memoize } from '@/util/utils';
 import { log } from '@/utils/logger';
 

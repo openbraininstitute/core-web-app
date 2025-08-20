@@ -1,5 +1,3 @@
-/* eslint-disable no-case-declarations */
-
 import {
   ChangeEvent,
   Dispatch,
@@ -50,14 +48,14 @@ type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: TExtendedEntitiesTypeDict;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   dataScope?: TWorkspaceScope;
   dataKey: string;
   filters: CoreFilter[];
   facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   workspace?: WorkspaceContext;
 };
 
@@ -293,7 +291,7 @@ export function ListingFilterPanel({
             <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
           </span>
           <button
-            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+            autoFocus
             type="button"
             onClick={toggleDisplay}
             className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"

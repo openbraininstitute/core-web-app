@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { forwardRef, ForwardedRef } from 'react';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { classNames } from '@/util/utils';

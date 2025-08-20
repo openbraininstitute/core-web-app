@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { tryType, typeImage } from './_common';
 
 import query from './milestones.groq';

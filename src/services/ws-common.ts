@@ -188,7 +188,7 @@ export default class WsCommon<Cmd> {
     let queueLength = this.messageQueue.length;
 
     // TODO refactor
-    // eslint-disable-next-line no-plusplus
+
     while (queueLength--) {
       const message = this.messageQueue.shift();
       if (!message) return;

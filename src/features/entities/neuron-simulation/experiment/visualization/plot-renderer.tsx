@@ -119,7 +119,6 @@ export default function PlotRenderer({
       Plotly.react(container, data, PLOT_LAYOUT, PLOT_CONFIG);
     }
 
-    // eslint-disable-next-line consistent-return
     return () => {
       Plotly.purge(container);
     };

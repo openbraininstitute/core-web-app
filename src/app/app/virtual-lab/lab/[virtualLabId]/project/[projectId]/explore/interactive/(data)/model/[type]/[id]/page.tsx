@@ -25,6 +25,6 @@ export default async function Page({
   params: promisedParams,
 }: ServerSideComponentProp<WorkspaceContext & { type: ModelEntitySlugValue; id: string }, null>) {
   const params = await promisedParams;
-  // eslint-disable-next-line react/jsx-props-no-spreading
+
   return <DetailView {...params} />;
 }

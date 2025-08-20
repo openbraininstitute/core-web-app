@@ -316,7 +316,7 @@ export function ProjectDetailBanner({
           .catch(() => notify.error({ message: getErrorMsg(fieldName) }))
       );
     },
-    [updateProject], // eslint-disable-line react-hooks/exhaustive-deps
+    [updateProject],
     600,
     { leading: true }
   );

@@ -49,7 +49,7 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   detail: T;
   commonFields?: Array<TypeSummaryProps>;
   // @FIXME: this property is not used.
-  // eslint-disable-next-line react/no-unused-prop-types
+
   url?: string | null;
   extraHeaderAction?: ReactNode;
   commonFieldsClassName?: string;

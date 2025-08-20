@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { Input as AInput, InputProps, Select as ASelect, SelectProps, InputRef } from 'antd';
 import { TextAreaProps } from 'antd/lib/input/TextArea';
 import { ForwardedRef, forwardRef } from 'react';

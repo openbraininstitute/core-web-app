@@ -20,7 +20,7 @@ export default function NotebookMain({
   return (
     <>
       <NotebookNavigation />
-      <div className="col-span-4">
+      <div className="col-span-4 overflow-y-scroll">
         <NotebookTable
           notebooks={notebooks}
           failed={failed}

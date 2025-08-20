@@ -32,7 +32,7 @@ const columns = (
     {
       title: (
         <Tooltip title="Download files">
-          <DownloadIcon iconColor="#002766" w-auto h-5 />
+          <DownloadIcon fill="#002766" className="h-5 w-auto" />
         </Tooltip>
       ),
       key: 'download',
@@ -45,7 +45,7 @@ const columns = (
             aria-label="Open download modal"
             onClick={() => handleOpenDownloadModal(record)}
           >
-            <DownloadIcon iconColor="#003A8C" />
+            <DownloadIcon fill="#003A8C" />
           </button>
         );
       },

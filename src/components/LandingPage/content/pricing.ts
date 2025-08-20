@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { tryType } from './_common';
 import query from './pricing.groq';
 import { typeBooleanOrNull, typeNumberOrNull, typeStringOrNull } from './types';

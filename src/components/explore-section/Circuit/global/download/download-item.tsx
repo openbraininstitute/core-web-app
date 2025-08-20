@@ -37,7 +37,7 @@ function DownloadChildrenItem({
           className="border-primary-6 flex h-7 w-7 items-center justify-center border border-solid"
           aria-label={`Add download ${childrenItem.name} to the cart`}
         >
-          <DownloadIcon iconColor="white" />
+          <DownloadIcon fill="white" />
         </Link>
       </div>
     </div>

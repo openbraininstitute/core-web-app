@@ -33,7 +33,7 @@ function ModelDetails({ details }: ModelDetailsProps) {
 
 type Props = {
   // @FIXME: Is this property used somewhere?
-  // eslint-disable-next-line react/no-unused-prop-types
+
   mode: 'select' | 'summary';
   model: IEModel | IReconstructionMorphology;
   title: string;

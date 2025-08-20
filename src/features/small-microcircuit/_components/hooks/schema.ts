@@ -81,7 +81,6 @@ export function useObioneJsonSchema(
 
         setAtomsMap(map);
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.error(assertErrorMessage(e));
         notification.error({ message: assertErrorMessage(e) });
       }

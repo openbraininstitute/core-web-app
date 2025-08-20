@@ -253,7 +253,7 @@ export default function SimulationCampaignConfiguration({
                   {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
                     return (
                       <Fragment key={o.title}>
-                        {/* eslint-disable-next-line */}
+                        {}
                         <div
                           className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
                           onClick={() => {

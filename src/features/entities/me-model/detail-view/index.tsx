@@ -30,7 +30,7 @@ type Params = WorkspaceContext & {
 
 export type Props = {
   // @FIXME: Is this property necessary?
-  // eslint-disable-next-line react/no-unused-prop-types
+
   params: Params;
   showViewMode?: boolean;
   payload: {

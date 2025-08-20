@@ -1,8 +1,5 @@
 'use client';
 
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-
 import { DatePicker, Switch, Tooltip } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import moment from 'moment';

@@ -96,7 +96,6 @@ export const Switch = forwardRef<
       'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
       className
     )}
-    // eslint-disable-next-line react/jsx-props-no-spreading
     {...props}
     ref={ref}
   >

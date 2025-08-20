@@ -18,7 +18,7 @@ type Props<T> = {
   projectId: string;
   category: TExtendedEntitiesTypeDict;
   // @FIXME: Is that property used?
-  // eslint-disable-next-line react/no-unused-prop-types
+
   dataKey: string;
   clearSelectedRows: () => void;
 };

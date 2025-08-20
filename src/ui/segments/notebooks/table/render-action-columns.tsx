@@ -45,7 +45,7 @@ const renderActionColumns = ({
                 }}
                 className="text-primary-9 inline-flex items-center gap-[10px]"
               >
-                <EyeIconWhiteWithinBox className="text-xs" aria-label="Readme" />
+                <EyeIconWhiteWithinBox props={{ 'aria-label': 'Readme' }} fill="#002766" />
                 Readme
               </button>
             </div>
@@ -58,7 +58,11 @@ const renderActionColumns = ({
                   handleDownloadClick(notebook);
                 }}
               >
-                <DownloadIconWhiteWithCorners className="text-xs" aria-label="Download" />
+                <DownloadIconWhiteWithCorners
+                  className="text-xs"
+                  aria-label="Download"
+                  fill="#002766"
+                />
                 Download
               </button>
               {loadingZip && <LoadingOutlined />}
@@ -101,7 +105,7 @@ const renderActionColumns = ({
         placement="left"
         arrow={false}
       >
-        <PlusOutlined className="rounded-full border border-[#002766] !bg-transparent p-2 text-lg" />
+        <PlusOutlined className="h-8 w-8 rounded-full border border-gray-300 !bg-transparent p-2 text-lg" />
       </Popover>
     </div>
   );

@@ -5,7 +5,6 @@ export default async function VirtualLab({
 }: ServerSideComponentProp<{ notebook_uri: string }, any>) {
   const params = await promisedParams;
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   const { notebook_uri: notebookUri } = params;
 
   return (

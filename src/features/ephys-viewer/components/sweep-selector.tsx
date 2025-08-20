@@ -42,7 +42,7 @@ function SweepSelector({
         onMouseEnter={() => handlePreviewSweep(value)}
         onMouseLeave={() => handlePreviewSweep(undefined)}
       >
-        <label // eslint-disable-line jsx-a11y/label-has-associated-control
+        <label
           className={classNames(
             'flex h-[32px] w-[32px] cursor-pointer items-center rounded border-1 hover:opacity-75',
             isSelected ? 'border-[#1890ff]' : 'border-[#1890ff00]'

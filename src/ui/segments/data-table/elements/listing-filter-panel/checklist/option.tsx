@@ -35,7 +35,7 @@ export function CheckListOption({
   id: string;
   filterField: string;
   label: string;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   type?: string | null;
 }) {
   const onCheckedChange = () => handleCheckedChange(label);
@@ -65,11 +65,11 @@ function CheckListDescriptionToMemoize({
   id,
 }: {
   id: string;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   filterField: string;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   label: string;
-  // eslint-disable-next-line react/no-unused-prop-types
+
   type?: string | null;
 }) {
   const [definition, setDefinition] = useState<string | null>(null);

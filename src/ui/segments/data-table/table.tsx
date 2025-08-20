@@ -50,7 +50,7 @@ function CustomTH({
 
   return handleResizing ? (
     <th
-      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
+      {...props}
       style={{ ...modifiedStyle, padding: '16px 16px 16px 0px' }}
       className="before:content-none!"
       data-testid="column-header"
@@ -70,11 +70,7 @@ function CustomTH({
       </div>
     </th>
   ) : (
-    <th
-      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
-      data-testid="column-header"
-      style={modifiedStyle}
-    >
+    <th {...props} data-testid="column-header" style={modifiedStyle}>
       {children}
     </th>
   );
@@ -87,7 +83,7 @@ function CustomCell({ children, style, ...props }: { children: ReactNode; style:
   };
 
   return (
-    <td {...props} /* eslint-disable-line react/jsx-props-no-spreading */ style={modifiedStyle}>
+    <td {...props} style={modifiedStyle}>
       {children}
     </td>
   );

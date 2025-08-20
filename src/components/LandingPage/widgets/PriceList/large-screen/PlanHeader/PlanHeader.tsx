@@ -1,5 +1,3 @@
-/* eslint-disable react/no-array-index-key */
-
 import { useState } from 'react';
 
 import ContactUs from '../../contact-us';

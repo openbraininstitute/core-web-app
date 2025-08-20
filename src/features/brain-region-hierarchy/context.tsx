@@ -158,7 +158,6 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     annotation_value: number;
   } | null>(key, null);
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   const [{ id, annotation_value }, setHierarchyConfig] = useQueryStates(
     {
       id: parseAsString.withDefault(''),

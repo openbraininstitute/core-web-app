@@ -34,7 +34,6 @@ describe('@tolokoban/type-guards', () => {
         ['foo', true],
       ];
       for (const [input, expected] of cases) {
-        // eslint-disable-next-line @typescript-eslint/no-loop-func
         it(`should custom check ${JSON.stringify(input)}`, () => {
           expect(isType(input, oddString)).toBe(expected);
         });

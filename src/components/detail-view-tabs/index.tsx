@@ -50,7 +50,7 @@ export default function Tabs<T extends string>({
             'border-e-neutral-2 w-1/3 flex-[1_1_33%] border-0 border-r text-center text-xl font-semibold',
             'transition-all duration-200 ease-out last:border-r-0',
             activeTab === key ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white',
-            // eslint-disable-next-line
+
             typeof cls?.tab === 'string'
               ? cls.tab
               : activeTab === key

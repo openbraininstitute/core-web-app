@@ -10,8 +10,6 @@
  *
  */
 
-/* eslint-disable no-plusplus */
-
 import isDate from 'lodash/isDate';
 import isObject from 'lodash/isObject';
 

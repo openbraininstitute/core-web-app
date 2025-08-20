@@ -17,7 +17,6 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
   type: EntitySlugValue;
   modelId: string;
 };

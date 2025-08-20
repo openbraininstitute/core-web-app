@@ -14,7 +14,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   // @FIXME: Unused prop?
-  // eslint-disable-next-line react/no-unused-prop-types
+
   params: WorkspaceContext & { id: string };
   source: IEModel;
 };

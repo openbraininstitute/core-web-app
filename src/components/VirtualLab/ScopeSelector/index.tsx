@@ -118,11 +118,9 @@ export function ScopeSelector() {
       (tileType === 'small-microcircuit' || tileType === 'paired-neurons') &&
       section === 'build'
     ) {
-      // eslint-disable-next-line
       disabled = true;
     }
 
-    // eslint-disable-next-line
     if (disabled) description = 'Coming soon';
 
     const onClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {

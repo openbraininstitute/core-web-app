@@ -33,7 +33,6 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
             href={tool.docURL}
             target="documentation"
             onClick={() =>
-              // eslint-disable-next-line no-console
               console.info('Tool content:', tool, extractToolsInvocations(message, tool.id))
             }
           >
