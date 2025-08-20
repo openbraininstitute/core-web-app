@@ -11,7 +11,7 @@
     "lint": "npx eslint src && npx tsc --noEmit",
     "lint:only": "next lint",
     "lint:fix": "next lint --fix",
-    "prettier:check": "prettier --check . --log-level warn",
+    "prettier:check": "prettier --check . --log-level error",
     "prettier:write": "prettier --write . --log-level warn",
     "test": "vitest -w tests",
     "test:ci": "vitest run tests",
