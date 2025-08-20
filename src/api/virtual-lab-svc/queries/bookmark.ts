@@ -4,13 +4,13 @@ import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   BookmarkRequest,
-  BookmarkCategory,
   AddBookmarkResponse,
   DeleteBookmarksResponse,
   VlmGetProjectBookmarksResponse,
   VlmGetProjectLibraryCategories,
   VlmGetProjectLibraryPerCategory,
 } from '@/api/virtual-lab-svc/queries/types';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 const baseUri = '/virtual-labs';
 
@@ -52,7 +52,7 @@ export async function bookmarkToProjectLibrary(
  */
 export async function getAllBookmarksByCategory(
   { virtualLabId, projectId }: WorkspaceContext,
-  { category }: { category?: BookmarkCategory }
+  { category }: { category?: TExtendedEntitiesTypeDict }
 ): Promise<VlmGetProjectBookmarksResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;

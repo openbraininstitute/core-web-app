@@ -402,22 +402,9 @@ interface UserGroupsResponse {
   groups: Array<UserGroup>;
 }
 
-export type BookmarkCategory =
-  | 'ExperimentalBoutonDensity'
-  | 'ExperimentalNeuronDensity'
-  | 'ExperimentalElectroPhysiology'
-  | 'ExperimentalSynapsePerConnection'
-  | 'ExperimentalNeuronMorphology'
-  | 'SimulationCampaign'
-  | 'CircuitEModel'
-  | 'CircuitMEModel'
-  | 'SingleNeuronSynaptome'
-  | 'SingleNeuronSimulation'
-  | 'SynaptomeSimulation';
-
 export type BookmarkRequest = {
   entity_id: string;
-  category: BookmarkCategory;
+  category: TExtendedEntitiesTypeDict;
 };
 
 export type DeleteBookmarksResponse = {
