@@ -16,7 +16,6 @@ export type ContentForFeatureItem = {
   Status: string;
 };
 
-// Zod schema for ContentForFeatureItem
 const ContentForFeatureItemSchema = z.object({
   Feature_title: z.string().nullable(),
   Description: z.string().nullable(),
@@ -25,7 +24,6 @@ const ContentForFeatureItemSchema = z.object({
   Status: z.string().nullable(),
 });
 
-// Zod schema for array of ContentForFeatureItem
 const ContentForFeatureItemsSchema = z.array(ContentForFeatureItemSchema);
 
 function isContentForFeatureItems(data: unknown): data is ContentForFeatureItem[] {

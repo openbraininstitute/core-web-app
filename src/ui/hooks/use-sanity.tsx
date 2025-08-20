@@ -15,6 +15,12 @@ const client = createClient({
   useCdn: process.env.NODE_ENV === 'production',
 });
 
+/**
+ * @returns The expected object, or:
+ *
+ * - `undefined` if the query has not finished yet.
+ * - `null` if an error occured.
+ */
 export function useSanity<T>(
   query: string,
   typeGuard: (data: unknown) => data is T
@@ -47,13 +53,21 @@ export async function fetchSanity<T>(
     log('log', `%c${query}`, 'font-family: monospace; color: #0f0; background: #000');
     log('log', data);
     const msg = ex instanceof Error ? ex.message : `${ex}`;
-    log('log', `%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
+    console.log(`%c${msg}`, 'font-weight: bold; color: #fff; background: #b00');
     return null;
   }
 }
 
+// Prevent a query from being fetched twice.
 const cache = new Map<string, unknown>();
 
+/**
+ * Query Sanity without checking the returned format.
+ * This is an utility function used by more specific ones.
+ * Please use `useSanityContentTyped()` instead.
+ *
+ * @see https://open-brain-institute.sanity.studio
+ */
 async function fetchSanityContent(query: string): Promise<unknown> {
   const fromCache = cache.get(query);
   if (fromCache) return fromCache;

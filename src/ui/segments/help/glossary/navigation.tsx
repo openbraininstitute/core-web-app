@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { CellTypeContentProps } from '.';
+import type { CellTypeContentProps } from '@/ui/segments/help/glossary';
 
 import { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
 import AccordionButton from '@/ui/molecules/dropdown';
@@ -41,8 +41,8 @@ export default function GlossaryNavigation({
             <AccordionButton
               key={section.name}
               label={section.name}
-              defaultOpen={!!isSectionActive}
               isActive={!!isSectionActive}
+              defaultOpen
             >
               {section.data.map((item) => {
                 let displayName = '';
