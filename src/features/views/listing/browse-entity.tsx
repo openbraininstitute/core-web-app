@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import snakeCase from 'lodash/snakeCase';
 import compact from 'lodash/compact';
+import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
@@ -18,7 +19,6 @@ import {
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { MainTable } from '@/ui/segments/data-table';
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
 
@@ -33,7 +33,9 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 
-export function BrowseStandardScope() {
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false });
+
+export function BrowseEntityScope() {
   const searchParams = useSearchParams();
   const scope = searchParams.get('scope') as TWorkspaceScope;
   const { type } = useParams<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }>();
@@ -115,7 +117,7 @@ export function BrowseStandardScope() {
         className="h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]"
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
-          <MainTable<EntityCoreIdentifiableNamed>
+          <MainTable
             controlsVisible
             showLoadingState
             sticky={{ offsetHeader: 75.5 }}

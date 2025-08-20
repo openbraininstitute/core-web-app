@@ -1,11 +1,13 @@
 'use client';
 
 import { parseAsString, useQueryState, type Parser } from 'nuqs';
+import { useSelectedLayoutSegments } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import { match, P } from 'ts-pattern';
+import last from 'lodash/last';
 
 import { useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
-import { ExploreMenu } from '@/ui/segments/explore/scope-left-menu';
+import { EntityLeftMenu } from '@/ui/segments/explore/entity-left-menu';
 import { LibraryLeftMenu } from '@/ui/segments/explore/library-left-menu';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
@@ -15,6 +17,7 @@ import { WorkspaceScope, type TWorkspaceScope } from '@/constants';
 type Props = { dataKey: string; children: ReactNode };
 
 export function DefaultContent({ children, dataKey }: Props) {
+  const segments = useSelectedLayoutSegments();
   const [miniViewPresent, setMiniViewPresent] = useState(false);
   const [scope] = useQueryState(
     'scope',
@@ -25,12 +28,24 @@ export function DefaultContent({ children, dataKey }: Props) {
     setMiniViewPresent(ev.detail.display);
   });
 
-  const menu = match(scope)
-    .with(P.union(WorkspaceScope.Project, WorkspaceScope.Public), () => (
-      <ExploreMenu dataKey={dataKey} />
-    ))
-    .with('bookmarks', () => <LibraryLeftMenu />)
-    .otherwise(() => <ExploreMenu dataKey={dataKey} />);
+  const menu = match({ scope, segments })
+    .with(
+      {
+        scope: P.union(WorkspaceScope.Project, WorkspaceScope.Public),
+        segments: P.when((e) => {
+          if (last(e) === 'entity') return true;
+          return false;
+        }),
+      },
+      () => <EntityLeftMenu dataKey={dataKey} />
+    )
+    .with(
+      {
+        segments: P.when((e) => last(e) === 'bookmarks'),
+      },
+      () => <LibraryLeftMenu />
+    )
+    .otherwise(() => <EntityLeftMenu dataKey={dataKey} />);
 
   return (
     <>

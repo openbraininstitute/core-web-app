@@ -155,7 +155,6 @@ export default function BookmarkButton({
         bookmark: {
           category: dataType!,
           entity_id: entityId,
-          resource_id: resourceId,
         },
       }),
       resetOp,
@@ -197,7 +196,7 @@ export default function BookmarkButton({
       deleteBookmarksFromProjectLibrary({
         virtualLabId,
         projectId,
-        bookmarks: [{ category: dataType!, entity_id: entityId, resource_id: resourceId }],
+        bookmarks: [{ category: dataType!, entity_id: entityId }],
       }),
       resetOp,
       {

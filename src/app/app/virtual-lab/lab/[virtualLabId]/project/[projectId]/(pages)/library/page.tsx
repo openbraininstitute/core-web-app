@@ -9,13 +9,10 @@ import { getAllBookmarksByCategory } from '@/api/virtual-lab-svc/queries/bookmar
 import { tryCatch } from '@/api/utils';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 
-type Props = ServerSideComponentProp<
-  WorkspaceContext,
-  { c: EntityCoreTypeGroup; t: EntitySlugValue }
->;
+type Props = ServerSideComponentProp<WorkspaceContext, { c: TEntityTypeGroup; t: EntitySlugValue }>;
 
 export const dynamic = 'force-dynamic';
 

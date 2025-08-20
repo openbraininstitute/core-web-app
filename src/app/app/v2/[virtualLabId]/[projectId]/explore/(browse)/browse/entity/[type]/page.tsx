@@ -2,15 +2,28 @@ import { notFound } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import snakeCase from 'lodash/snakeCase';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { BrowseLibraryScope } from '@/features/views/listing/browse-library';
-import { BrowseStandardScope } from '@/features/views/listing/browse-scope';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { WorkspaceScope } from '@/constants';
 import { KebabCase } from '@/utils/type';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
+
+const AllowedEntities = [
+  ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+  ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+  ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+  ExtendedEntitiesTypeDict.ReconstructionMorphology,
+  ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+  ExtendedEntitiesTypeDict.Memodel,
+  ExtendedEntitiesTypeDict.Circuit,
+  ExtendedEntitiesTypeDict.Emodel,
+] as const;
 
 export default async function Page({
   params,
@@ -19,8 +32,8 @@ export default async function Page({
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   { scope: TWorkspaceScope | null }
 >) {
-  const { type } = await params;
   const { scope } = await searchParams;
+  const { type } = await params;
 
   const entity = getEntityByExtendedType({ type: snakeCase(type) as TExtendedEntitiesTypeDict });
 
@@ -29,11 +42,18 @@ export default async function Page({
     .with(
       {
         scope: P.union(P.nullish, WorkspaceScope.Public, WorkspaceScope.Project),
-        entity: P.not(P.nullish),
+        entity: P.intersection(
+          P.when((e) =>
+            AllowedEntities.includes(e?.extendedType as unknown as (typeof AllowedEntities)[number])
+          ),
+          P.not(P.nullish)
+        ),
       },
-      () => <BrowseStandardScope />
+      () => <BrowseEntityScope />
     )
-    .with({ scope: WorkspaceScope.Bookmarks }, () => <BrowseLibraryScope />)
+    .with({ scope: WorkspaceScope.Bookmarks }, () => {
+      return <BrowseLibraryScope />;
+    })
     .otherwise(() => notFound());
 
   return content;

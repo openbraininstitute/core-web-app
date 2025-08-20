@@ -16,8 +16,8 @@ import { SIMULATIONS_DATATYPES } from '@/entity-configuration/domain/simulation'
 import { MODEL_DATATYPES } from '@/entity-configuration/domain/model';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreTypeGroup } from '@/entity-configuration/domain/types';
 import type { LibraryBookmark } from '@/api/virtual-lab-svc/queries/types';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 
 type ExperimentalDataMap = Partial<
   Record<(typeof EXPERIMENTAL_DATATYPES)[number], Array<LibraryBookmark>>
@@ -67,10 +67,7 @@ export const groupBookmarksByCategory = (
   };
 };
 
-export function getAvailableTabs(
-  category: EntityCoreTypeGroup,
-  data: GroupedLibraryBookmarks | null
-) {
+export function getAvailableTabs(category: TEntityTypeGroup, data: GroupedLibraryBookmarks | null) {
   const categoriesResultKeys = data ? Object.keys(data).sort() : [];
   const pickedCategory = categoriesResultKeys.at(0);
   const activeCategory = category ?? pickedCategory ?? 'experimental';

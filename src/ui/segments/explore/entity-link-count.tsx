@@ -1,12 +1,7 @@
-import { LoadingOutlined } from '@ant-design/icons';
 import { useQueries } from '@tanstack/react-query';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
-
-import snakeCase from 'lodash/snakeCase';
 import kebabCase from 'lodash/kebabCase';
-import Link from 'next/link';
 import get from 'lodash/get';
 
 import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
@@ -15,27 +10,26 @@ import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/con
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Button } from '@/ui/molecules/button';
 import {
   getElectricalCellRecordingsCount,
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
-  getEntityTypeFromUrl,
   getAllEntitiesCount,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
 
-const ExploreDataTypeTabs = {
+export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
-  Model: 'model',
+  Models: 'models',
 } as const;
-type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
+export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
 
-const tabsConfigItems: Array<{
+export const tabsConfigItems: Array<{
   key: TExploreDataTypeTabs;
   title: string;
   position: 'first' | 'middle' | 'last';
@@ -46,7 +40,7 @@ const tabsConfigItems: Array<{
     position: 'first',
   },
   {
-    key: ExploreDataTypeTabs.Model,
+    key: ExploreDataTypeTabs.Models,
     title: 'Model',
     position: 'last',
   },
@@ -56,56 +50,14 @@ type Props = {
   dataKey: string;
 };
 
-function BrowseLink({
-  isLoading,
-  type,
-  title,
-  count,
-  href,
-}: {
-  isLoading: boolean;
-  type: string;
-  title: string;
-  count: number | null;
-  href: string;
-}) {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const entityType = snakeCase(getEntityTypeFromUrl(pathname) ?? '');
-  return (
-    <Button
-      asChild
-      rounded
-      key={`counter-${type}`}
-      variant="outline"
-      size="lg"
-      className="group w-full"
-      active={entityType === type}
-    >
-      <Link
-        href={{
-          pathname: href,
-          query: searchParams.toString(),
-        }}
-        className="flex! w-full items-center justify-between!"
-      >
-        <div className="font-bold text-current">{title}</div>
-        <div className="text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white">
-          {isLoading ? <LoadingOutlined /> : <div>{count}</div>}
-        </div>
-      </Link>
-    </Button>
-  );
-}
-
-export function EntityCount({ dataKey }: Props) {
+export function EntityLinkCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
 
   const { virtualLabId, projectId } = useWorkspace();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
     tabsConfig: tabsConfigItems,
-    tabKey: 'data-type',
+    tabKey: 'group',
     shallow: true,
   });
 
@@ -157,15 +109,16 @@ export function EntityCount({ dataKey }: Props) {
     ],
     [allLoading]
   );
+
   const content = match(activeTab)
-    .with('experimental', () => (
+    .with(ExploreDataTypeTabs.Experimental, () => (
       <>
         {experimentalState.map((value) => {
           let count: number | null = get(allData, value.type, null);
           if (value.type === EntityTypeDict.ElectricalCellRecording) {
             count = ephysData?.pagination.total_items ?? null;
           }
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.type)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
@@ -179,11 +132,11 @@ export function EntityCount({ dataKey }: Props) {
         })}
       </>
     ))
-    .with('model', () => (
+    .with(ExploreDataTypeTabs.Models, () => (
       <>
         {modelState.map((value) => {
           const count = get(allData, value.type, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.type)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
@@ -197,7 +150,7 @@ export function EntityCount({ dataKey }: Props) {
         })}
         <BrowseLink
           key="link-circuit"
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase('circuit')}`}
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase('circuit')}`}
           type={ExtendedEntitiesTypeDict.Circuit}
           title="Circuit"
           count={filteredCircuits.count}
@@ -210,8 +163,8 @@ export function EntityCount({ dataKey }: Props) {
   return (
     <div className="px-4">
       <PillTabs
-        value={activeTab ?? 'all-public'}
-        defaultValue={activeTab ?? 'all-public'}
+        value={activeTab ?? ExploreDataTypeTabs.Experimental}
+        defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
         className="w-full"
         activationMode="manual"
         onValueChange={(value) => {

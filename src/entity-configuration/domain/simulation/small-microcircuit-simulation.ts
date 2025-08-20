@@ -3,10 +3,11 @@ import keyBy from 'lodash/keyBy';
 
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { getAssetElement } from '@/api/entitycore/utils';
@@ -127,7 +128,7 @@ export async function resolveSimulationByCampaignId({
 }
 
 export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
-  group: 'simulations',
+  group: EntityTypeGroup.Simulations,
   title: 'Small microcircuit Simulation',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,

@@ -1,3 +1,6 @@
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+
 interface VlmResponse<T> {
   message: string;
   data: T | null;
@@ -413,7 +416,6 @@ export type BookmarkCategory =
   | 'SynaptomeSimulation';
 
 export type BookmarkRequest = {
-  resource_id?: string;
   entity_id: string;
   category: BookmarkCategory;
 };
@@ -429,7 +431,8 @@ export interface AddBookmarkResponse extends BookmarkRequest {
 
 export interface LibraryBookmark extends AddBookmarkResponse {}
 
-type BookmarksByCategoryResponse = Record<BookmarkCategory, Array<LibraryBookmark>>;
+type BookmarksByCategoryResponse = Record<TExtendedEntitiesTypeDict, Array<LibraryBookmark>>;
+export type ProjectBookmarksCategories = Record<TEntityTypeDict, number>;
 
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;
@@ -450,3 +453,10 @@ export type VlmUserGroupsResponse = VlmResponse<UserGroupsResponse>;
 export type VlmUserStatsResponse = VlmResponse<UserStats>;
 export type VlmAttachUsersToProjectResponse = VlmResponse<AttachUsersToProject>;
 export type VlmGetProjectBookmarksResponse = VlmResponse<BookmarksByCategoryResponse>;
+export type VlmGetProjectLibraryCategories = VlmResponse<ProjectBookmarksCategories>;
+export type VlmGetProjectLibraryPerCategory = VlmResponse<{
+  results: Array<LibraryBookmark>;
+  page: number;
+  page_size: number;
+  total: number;
+}>;

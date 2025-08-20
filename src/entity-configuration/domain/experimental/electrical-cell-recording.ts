@@ -1,5 +1,6 @@
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
@@ -11,7 +12,7 @@ import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/e
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
-  group: 'experimental',
+  group: EntityTypeGroup.Experimental,
   title: 'Electrophysiology',
   extendedType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
   type: EntityTypeDict.ElectricalCellRecording,

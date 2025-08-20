@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
@@ -10,7 +11,7 @@ import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
-  group: 'experimental',
+  group: EntityTypeGroup.Experimental,
   title: 'Neuron density',
   extendedType: ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
   type: EntityTypeDict.ExperimentalNeuronDensity,

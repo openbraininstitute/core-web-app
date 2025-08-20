@@ -16,6 +16,7 @@ import {
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
@@ -126,7 +127,7 @@ export async function resolveSimulationByCampaignId({
 }
 
 export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
-  group: 'simulations',
+  group: EntityTypeGroup.Simulations,
   title: 'Paired Neurons Simulation',
   extendedType: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,

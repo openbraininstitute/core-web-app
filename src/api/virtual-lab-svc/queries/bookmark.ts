@@ -1,5 +1,6 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   BookmarkRequest,
@@ -7,9 +8,12 @@ import type {
   AddBookmarkResponse,
   DeleteBookmarksResponse,
   VlmGetProjectBookmarksResponse,
+  VlmGetProjectLibraryCategories,
+  VlmGetProjectLibraryPerCategory,
 } from '@/api/virtual-lab-svc/queries/types';
 
 const baseUri = '/virtual-labs';
+
 /**
  * Bookmarks an entity to a specific project library within a virtual lab.
  *
@@ -17,13 +21,12 @@ const baseUri = '/virtual-labs';
  * @param {string} projectId - The identifier of the project within the lab.
  * @param {BookmarkRequest} bookmarkDetails - Details of the bookmark to add.
  * @param {string} bookmarkDetails.entity_id - The ID of the entity being bookmarked.
- * @param {string} bookmarkDetails.resource_id - The ID of the resource being bookmarked (optional, for legacy data).
  * @param {string} bookmarkDetails.category - The category to place the bookmark under.
  * @returns {Promise<AddBookmarkResponse>} A promise that resolves with the response after adding the bookmark.
  */
 export async function bookmarkToProjectLibrary(
   { virtualLabId, projectId }: WorkspaceContext,
-  { entity_id, resource_id, category }: BookmarkRequest
+  { entity_id, category }: BookmarkRequest
 ): Promise<AddBookmarkResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
@@ -31,7 +34,6 @@ export async function bookmarkToProjectLibrary(
   return await api.post<AddBookmarkResponse>(url, {
     body: {
       entity_id,
-      resource_id,
       category,
     },
     headers: {
@@ -79,6 +81,67 @@ export async function deleteBookmarksFromProjectLibrary(
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/delete`;
   return await api.post<DeleteBookmarksResponse>(url, {
     body: { bookmarks },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+}
+
+/**
+ * Retrieves the bookmark categories for a specific project within a virtual lab.
+ *
+ * @param context - The workspace context containing `virtualLabId` and `projectId`.
+ * @param params - An object containing an array of bookmark requests.
+ * @returns A promise that resolves to the project's library categories.
+ *
+ * @remarks
+ * This function sends a GET request to the virtual lab API to fetch the categories
+ * associated with the provided bookmarks for the specified project.
+ */
+export async function getProjectBookmarkCategories({
+  virtualLabId,
+  projectId,
+}: WorkspaceContext): Promise<VlmGetProjectLibraryCategories> {
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/categories`;
+  return await api.get<VlmGetProjectLibraryCategories>(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+}
+
+/**
+ * Retrieves paginated project bookmarks for a specific category within a virtual lab.
+ *
+ * @param context - Contains the `virtualLabId` and `projectId` to identify the workspace and project.
+ * @param category - The entity type category for which bookmarks are requested.
+ * @param pagination - Pagination options including `page` and `page_size`.
+ * @returns A promise resolving to the project library bookmarks per category.
+ */
+export async function getProjectBookmarksPerCategory({
+  context: { virtualLabId, projectId },
+  category,
+  pagination,
+}: {
+  context: WorkspaceContext;
+  category: TEntityTypeDict;
+  pagination: {
+    page: number;
+    page_size: number;
+  };
+}): Promise<VlmGetProjectLibraryPerCategory> {
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/paginated`;
+
+  return await api.get<VlmGetProjectLibraryPerCategory>(url, {
+    queryParams: {
+      category,
+      page: pagination.page,
+      pag_size: pagination.page_size,
+    },
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',

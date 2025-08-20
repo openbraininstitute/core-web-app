@@ -2,14 +2,14 @@ import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/vi
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { BookmarkCategory } from '@/api/virtual-lab-svc/queries/types';
 
-export type EntityCoreTypeGroup = 'experimental' | 'models' | 'simulations';
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
-  group: EntityCoreTypeGroup;
+  group: TEntityTypeGroup;
   extendedType: TExtendedEntitiesTypeDict;
   type: TEntityTypeDict;
   slug: EntitySlugValue;

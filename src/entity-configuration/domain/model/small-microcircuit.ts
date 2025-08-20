@@ -1,5 +1,6 @@
-import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
@@ -7,7 +8,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const SmallMicrocircuit: EntityCoreTypeConfig<ICircuit> = {
-  group: 'models',
+  group: EntityTypeGroup.Models,
   title: 'Small microcircuit',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
   type: EntityTypeDict.Circuit,
