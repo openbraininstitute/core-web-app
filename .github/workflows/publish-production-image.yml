@@ -96,5 +96,5 @@ jobs:
       - name: Sync static assets to S3 and invalidate CloudFront
         run: |
           # upload extracted static assets to S3 with versioned paths
-          aws s3 sync ./assets-for-s3/${{ steps.extract_version.outputs.version }}/public s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.extract_version.outputs.version }}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
-          aws s3 sync ./assets-for-s3/${{ steps.extract_version.outputs.version }}/_next/static s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.extract_version.outputs.version }}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
+          aws s3 sync ./assets-for-s3/${{ steps.tag.outputs.version }}/public s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.tag.outputs.version }}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
+          aws s3 sync ./assets-for-s3/${{ steps.tag.outputs.version }}/_next/static s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.tag.outputs.version }}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
