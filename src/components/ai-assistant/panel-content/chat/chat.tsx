@@ -38,7 +38,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
 
     refScrollTriggered.current = true;
     const scrollTop = Math.max(0, div.scrollHeight - div.clientHeight);
-    console.log('Scroll!');
     div.scrollTo({
       top: scrollTop,
       behavior: 'smooth',
@@ -63,11 +62,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     });
   };
   const handleScroll = () => {
-    console.log(
-      '🚀 [handleScroll] refScrollLocked.current, refScrollTriggered.current =',
-      refScrollLocked.current,
-      refScrollTriggered.current
-    ); // @FIXME: Remove this line written on 2025-08-20 at 08:18
     if (!refScrollTriggered.current) refScrollLocked.current = false;
     refScrollTriggered.current = false;
   };

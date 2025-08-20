@@ -21,8 +21,6 @@ export default function TruncableImage({ className, src }: TruncableImageProps) 
       return;
     }
 
-    console.log('🚀 [truncable-image] src =', src); // @FIXME: Remove this line written on 2025-08-19 at 13:55
-
     const img = new Image();
     img.src = src;
     img.onload = () => {
