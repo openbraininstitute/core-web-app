@@ -8,8 +8,6 @@ export default function DetailMenu() {
   const parentPath = path.split('/').slice(0, -1).join('/');
   const page = path.split('/').pop();
 
-  console.log(parentPath)
-
   return (
     <>
       <Tab highlight={page === 'overview'} href={`${parentPath}/overview`}>

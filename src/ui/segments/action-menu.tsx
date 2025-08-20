@@ -43,8 +43,6 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
   const entityType = getEntityBySlug({ slug: entitySlug });
   if (!entityType) throw Error('Invalid entity type');
 
-  console.log(entityType);
-
   const bookmarks = useQuery({
     queryKey: [ctx.projectId, ctx.virtualLabId, bookmarkCategory],
     queryFn: async () => getAllBookmarksByCategory(ctx, { category: bookmarkCategory }),
