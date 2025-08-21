@@ -179,11 +179,13 @@ export function getMetadataCsvEntryBase(entity: IEntity): CsvEntryBase {
     name: get(entity, 'name', ''),
     description: get(entity, 'description', ''),
     subject_name: get(entity, 'subject.name', ''),
-    species_name: get(entity, 'subject.species.name', ''),
+    // TODO: remove fallback below when the species migration into the subject table is done.
+    species_name: get(entity, 'subject.species.name') ?? get(entity, 'species.name', ''),
     brain_region: get(entity, 'brain_region.name', ''),
     contribution: get(entity, 'contributions', [])
       .map((c) => get(c, 'agent.pref_label'))
       .filter(Boolean)
+      .sort()
       .join(';'),
   };
 }
