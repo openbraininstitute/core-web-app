@@ -10,15 +10,13 @@ import {
 } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
-type JsonMetadata = {
-  [key: string]: any;
-};
+import { ElectricalCellRecordingJsonMetadata } from './types';
 
 export async function* getElectricalCellRecordingFiles(
   entityIds: string[],
   ctx?: WorkspaceContext
 ) {
-  const metadata = new Metadata<JsonMetadata>();
+  const metadata = new Metadata<ElectricalCellRecordingJsonMetadata>();
 
   try {
     yield await createTemplateFileEntry(EntityTypeEnum.ElectricalCellRecording);

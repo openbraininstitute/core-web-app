@@ -10,12 +10,10 @@ import {
 } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
-type JsonMetadata = {
-  [key: string]: any;
-};
+import { EmodelJsonMetadata } from './types';
 
 export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
-  const metadata = new Metadata<JsonMetadata>();
+  const metadata = new Metadata<EmodelJsonMetadata>();
 
   try {
     yield await createTemplateFileEntry(EntityTypeEnum.Emodel);

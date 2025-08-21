@@ -10,15 +10,13 @@ import {
 } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
-type JsonMetadata = {
-  [key: string]: any;
-};
+import { ReconstructionMorphologyJsonMetadata } from './types';
 
 export async function* getReconstructionMorphologyFiles(
   entityIds: string[],
   ctx?: WorkspaceContext
 ) {
-  const metadata = new Metadata<JsonMetadata>();
+  const metadata = new Metadata<ReconstructionMorphologyJsonMetadata>();
 
   try {
     yield await createTemplateFileEntry(EntityTypeEnum.ReconstructionMorphology);

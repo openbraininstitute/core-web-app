@@ -5,15 +5,13 @@ import { Metadata } from '@/features/entity-download/metadata';
 import { createTemplateFileEntry, getMetadataCsvEntryBase } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
-type JsonMetadata = {
-  [key: string]: any;
-};
+import { ExperimentalSynapsesPerConnectionJsonMetadata } from './types';
 
 export async function* getExperimentalSynapsesPerConnectionFiles(
   entityIds: string[],
   ctx?: WorkspaceContext
 ) {
-  const metadata = new Metadata<JsonMetadata>();
+  const metadata = new Metadata<ExperimentalSynapsesPerConnectionJsonMetadata>();
 
   try {
     yield await createTemplateFileEntry(EntityTypeEnum.ExperimentalSynapsesPerConnection);

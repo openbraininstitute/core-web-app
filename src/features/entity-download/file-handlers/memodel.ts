@@ -10,12 +10,10 @@ import {
 } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
-type JsonMetadata = {
-  [key: string]: any;
-};
+import { MemodelJsonMetadata } from './types';
 
 export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
-  const metadata = new Metadata<JsonMetadata>();
+  const metadata = new Metadata<MemodelJsonMetadata>();
 
   try {
     yield await createTemplateFileEntry(EntityTypeEnum.Memodel);

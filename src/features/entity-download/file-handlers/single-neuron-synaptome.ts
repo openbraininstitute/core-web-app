@@ -11,12 +11,10 @@ import {
 } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
-type JsonMetadata = {
-  [key: string]: any;
-};
+import { SingleNeuronSynaptomeJsonMetadata } from './types';
 
 export async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: WorkspaceContext) {
-  const metadata = new Metadata<JsonMetadata>();
+  const metadata = new Metadata<SingleNeuronSynaptomeJsonMetadata>();
 
   try {
     yield await createTemplateFileEntry(EntityTypeEnum.SingleNeuronSynaptome);
