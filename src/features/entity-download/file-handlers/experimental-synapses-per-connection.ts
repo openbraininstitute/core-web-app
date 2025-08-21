@@ -27,9 +27,11 @@ export async function* getExperimentalSynapsesPerConnectionFiles(
 
     const idx = metadata.entriesCount;
 
+    const idxExtra = { idx };
+
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(expSynapsesPerConnection), idx },
-      json: { ...expSynapsesPerConnection, idx },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(expSynapsesPerConnection) },
+      json: { ...idxExtra, ...expSynapsesPerConnection },
     });
   }
 

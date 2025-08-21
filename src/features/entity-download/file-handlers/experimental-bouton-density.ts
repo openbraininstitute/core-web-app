@@ -24,9 +24,11 @@ export async function* getExperimentalBoutonDensityFiles(
 
     const idx = metadata.entriesCount;
 
+    const idxExtra = { idx };
+
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(boutonDensity), idx },
-      json: { ...boutonDensity, idx },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(boutonDensity) },
+      json: { ...idxExtra, ...boutonDensity },
     });
   }
 

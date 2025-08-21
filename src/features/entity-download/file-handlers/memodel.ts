@@ -30,11 +30,11 @@ export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceConte
     const idx = metadata.entriesCount;
 
     const dataPath = `${ASSET_BASE_PATH}/${idx}`;
-    const extra = { idx, data_path: dataPath };
+    const idxExtra = { idx, data_path: dataPath };
 
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(memodel), ...extra },
-      json: { ...memodel, ...extra },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(memodel) },
+      json: { ...idxExtra, ...memodel },
     });
 
     const emodel = await getEModel({
@@ -45,7 +45,7 @@ export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceConte
     // HOC file
     const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc')!;
     try {
-      const path = `${dataPath}/hoc/${hocFileAsset.path}`;
+      const path = `${dataPath}/${hocFileAsset.label}/${hocFileAsset.path}`;
       yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
     } catch (error) {}
 
@@ -58,7 +58,7 @@ export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceConte
     const morphAssets = morphology.assets.filter((asset) => asset.label === 'morphology');
 
     for await (const asset of morphAssets) {
-      const path = `${dataPath}/morphology/${asset.path}`;
+      const path = `${dataPath}/${asset.label}/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
       } catch (error) {}
@@ -67,7 +67,7 @@ export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceConte
     // MOD files
     for await (const icEntity of emodel.ion_channel_models) {
       const asset = icEntity.assets.find((a) => a.label === 'neuron_mechanisms')!;
-      const path = `${dataPath}/mechanisms/${asset.path}`;
+      const path = `${dataPath}/${asset.label}/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: icEntity, asset, path, ctx });
       } catch (error) {}

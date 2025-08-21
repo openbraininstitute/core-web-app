@@ -33,11 +33,11 @@ export async function* getReconstructionMorphologyFiles(
     const idx = metadata.entriesCount;
 
     const dataPath = `${ASSET_BASE_PATH}/${idx}`;
-    const extra = { idx, data_path: dataPath };
+    const idxExtra = { idx, data_path: dataPath };
 
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(morphology), ...extra },
-      json: { ...morphology, ...extra },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(morphology) },
+      json: { ...idxExtra, ...morphology },
     });
 
     for await (const asset of morphology.assets) {

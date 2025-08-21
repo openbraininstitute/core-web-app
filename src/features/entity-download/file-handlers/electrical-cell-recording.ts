@@ -33,11 +33,11 @@ export async function* getElectricalCellRecordingFiles(
     const idx = metadata.entriesCount;
 
     const dataPath = `${ASSET_BASE_PATH}/${idx}`;
-    const extra = { idx, data_path: dataPath };
+    const idxExtra = { idx, data_path: dataPath };
 
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(trace), ...extra },
-      json: { ...trace, ...extra },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(trace) },
+      json: { ...idxExtra, ...trace },
     });
 
     for await (const asset of trace.assets) {

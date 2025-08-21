@@ -30,19 +30,28 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
     const idx = metadata.entriesCount;
 
     const dataPath = `${ASSET_BASE_PATH}/${idx}`;
-    const extra = { idx, data_path: dataPath };
+    const idxExtra = { idx, data_path: dataPath };
 
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(emodel), ...extra },
-      json: { ...emodel, ...extra },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(emodel) },
+      json: { ...idxExtra, ...emodel },
     });
 
     // HOC file
     const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc')!;
 
     try {
-      const path = `${dataPath}/hoc/${hocFileAsset.path}`;
+      const path = `${dataPath}/${hocFileAsset.label}/${hocFileAsset.path}`;
       yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
+    } catch {}
+
+    // Emodel optimization output
+    const emodelOptOutputAsset = emodel.assets.find(
+      (asset) => asset.label === 'emodel_optimization_output'
+    )!;
+    try {
+      const path = `${dataPath}/${emodelOptOutputAsset.label}/${emodelOptOutputAsset.path}`;
+      yield await createAssetFileEntry({ entity: emodel, asset: emodelOptOutputAsset, path, ctx });
     } catch {}
 
     // Morphologies
@@ -54,7 +63,7 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
     const morphAssets = exemplarMorphology.assets.filter((asset) => asset.label === 'morphology');
 
     for await (const asset of morphAssets) {
-      const path = `${dataPath}/morphology/${asset.path}`;
+      const path = `${dataPath}/${asset.label}/${asset.path}`;
       try {
         yield await createAssetFileEntry({ entity: exemplarMorphology, asset, path, ctx });
       } catch {}
@@ -63,7 +72,7 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
     // MOD files
     for await (const icEntity of emodel.ion_channel_models) {
       const modAsset = icEntity.assets.find((asset) => asset.label === 'neuron_mechanisms')!;
-      const path = `${dataPath}/mechanisms/${modAsset.path}`;
+      const path = `${dataPath}/${modAsset.label}/${modAsset.path}`;
       try {
         yield await createAssetFileEntry({ entity: icEntity, asset: modAsset, path, ctx });
       } catch {}

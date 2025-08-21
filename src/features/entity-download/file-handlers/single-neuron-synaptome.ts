@@ -32,11 +32,11 @@ export async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: 
     const idx = metadata.entriesCount;
 
     const dataPath = `${ASSET_BASE_PATH}/${idx}`;
-    const extra = { idx, data_path: dataPath };
+    const idxExtra = { idx, data_path: dataPath };
 
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(singleNeuronSynaptomeModel), ...extra },
-      json: { ...singleNeuronSynaptomeModel, ...extra },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(singleNeuronSynaptomeModel) },
+      json: { ...idxExtra, ...singleNeuronSynaptomeModel },
     });
 
     // Synaptome config

@@ -24,9 +24,11 @@ export async function* getExperimentalNeuronDensityFiles(
 
     const idx = metadata.entriesCount;
 
+    const idxExtra = { idx };
+
     metadata.add({
-      csv: { ...getMetadataCsvEntryBase(neuronDensity), idx },
-      json: { ...neuronDensity, idx },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(neuronDensity) },
+      json: { ...idxExtra, ...neuronDensity },
     });
   }
 
