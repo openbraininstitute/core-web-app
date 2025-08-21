@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
+import { ComponentProps, ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -6,12 +6,15 @@ type ExpandableTextProps = {
   id?: string;
   text: string;
   collapsedLines?: number;
-  className?: string;
+  className?: ComponentProps<'div'>['className'];
+  btnWrapperClassName?: ComponentProps<'div'>['className'];
   children?: ({ isExpanded, toggle }: { isExpanded: boolean; toggle: () => void }) => ReactNode;
 };
 
 const clampClassFor = (lines: number): string => {
   switch (lines) {
+    case 2:
+      return 'line-clamp-2';
     case 3:
       return 'line-clamp-3';
     case 4:
@@ -34,6 +37,7 @@ export function ExpandableText({
   text,
   collapsedLines = 6,
   className,
+  btnWrapperClassName,
   children,
 }: ExpandableTextProps): ReactElement {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -84,7 +88,9 @@ export function ExpandableText({
       >
         {text}
       </p>
-      {isOverflowing && <div className="mt-2">{children?.({ isExpanded, toggle })}</div>}
+      {isOverflowing && (
+        <div className={cn('mt-2', btnWrapperClassName)}>{children?.({ isExpanded, toggle })}</div>
+      )}
     </div>
   );
 }

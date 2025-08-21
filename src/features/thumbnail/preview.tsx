@@ -1,16 +1,18 @@
+/* eslint-disable no-nested-ternary */
+
 'use client';
 
 import { useInView } from 'react-intersection-observer';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Empty, Skeleton } from 'antd';
 import { match, P } from 'ts-pattern';
 import isEmpty from 'lodash/isEmpty';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
 
 import { getPreviewBlob } from '@/api/thumbnail-svc';
-import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+import { cn } from '@/utils/css-class';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
@@ -20,19 +22,27 @@ interface T extends EntityCoreResource {}
 export default function PreviewThumbnail({
   resource,
   className,
+  rootClassName,
+  loadingClassName,
   dpi,
   width,
   height,
   target,
   alt = 'img preview',
+  fill,
+  customRender,
 }: {
   resource: T;
   className?: string;
+  rootClassName?: string;
+  loadingClassName?: string;
   dpi?: number;
   width?: number | string;
   height?: number | string;
   target?: 'simulation' | 'stimulus';
   alt?: string;
+  fill?: boolean;
+  customRender?: (src: string) => ReactNode;
 }) {
   const { ref, inView } = useInView({ threshold: 0.2 });
   const [state, setState] = useState<{
@@ -88,24 +98,52 @@ export default function PreviewThumbnail({
       <Skeleton.Image
         active
         key={`thumbnail-loader-${resource.id}`}
-        className="h-full! w-full! rounded-none!"
-        rootClassName="flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!"
+        className={cn('h-full! w-full! rounded-none!', loadingClassName)}
+        rootClassName={cn(
+          `skeleton-empty-${resource.id}`,
+          'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!'
+        )}
         style={{
-          height: typeof height === 'number' ? height : undefined,
-          width: typeof width === 'number' ? width : undefined,
+          height: fill
+            ? undefined
+            : typeof height === 'number' || typeof height === 'string'
+              ? height
+              : undefined,
+          width: fill
+            ? undefined
+            : typeof width === 'number' || typeof height === 'string'
+              ? width
+              : undefined,
         }}
       />
     ))
-    .with({ loading: false, thumbnail: P.string.minLength(1).select() }, (thumbnail) => (
-      <Image
-        key={`thumbnail-${resource.id}`}
-        alt={`${'name' in resource ? resource.name : alt}`}
-        src={thumbnail}
-        className={className}
-        height={typeof height === 'number' ? height : 140}
-        width={typeof width === 'number' ? width : 196}
-      />
-    ))
+    .with(
+      { loading: false, thumbnail: P.string.minLength(1).select() },
+      (thumbnail) =>
+        customRender?.(thumbnail) ?? (
+          <Image
+            key={`thumbnail-${resource.id}`}
+            alt={`${'name' in resource ? resource.name : alt}`}
+            src={thumbnail}
+            className={className}
+            fill={fill}
+            height={fill ? undefined : typeof height === 'number' ? height : 140}
+            width={fill ? undefined : typeof width === 'number' ? width : 196}
+            style={{
+              height: fill
+                ? undefined
+                : typeof height === 'number' || typeof height === 'string'
+                  ? height
+                  : 140,
+              width: fill
+                ? undefined
+                : typeof width === 'number' || typeof height === 'string'
+                  ? width
+                  : 196,
+            }}
+          />
+        )
+    )
     .with({ error: P.nonNullable }, ({ error }) => {
       return (
         <Empty
@@ -115,14 +153,24 @@ export default function PreviewThumbnail({
             'No thumbnail available'
           }
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          className={classNames(
+          className={cn(
+            `thumbnail-error-${resource.id}`,
             'm-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!',
             '[&_.ant-empty-description]:text-center [&_.ant-empty-description]:break-words [&_.ant-empty-description]:whitespace-normal',
-            '[&_.ant-empty-description]:text-red-300! [&_.ant-empty-image>svg>g_g]:stroke-red-300!'
+            '[&_.ant-empty-description]:text-red-300! [&_.ant-empty-image>svg>g_g]:stroke-red-300!',
+            loadingClassName
           )}
           style={{
-            height: typeof height === 'number' ? height : undefined,
-            width: typeof width === 'number' ? width : undefined,
+            height: fill
+              ? undefined
+              : typeof height === 'number' || typeof height === 'string'
+                ? height
+                : undefined,
+            width: fill
+              ? undefined
+              : typeof width === 'number' || typeof height === 'string'
+                ? width
+                : undefined,
           }}
         />
       );
@@ -132,10 +180,22 @@ export default function PreviewThumbnail({
         key={`thumbnail-empty-${resource.id}`}
         description="No thumbnail available"
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        className="m-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!"
+        className={cn(
+          `thumbnail-empty-${resource.id}`,
+          'm-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!',
+          loadingClassName
+        )}
         style={{
-          height: typeof height === 'number' ? height : undefined,
-          width: typeof width === 'number' ? width : undefined,
+          height: fill
+            ? undefined
+            : typeof height === 'number' || typeof height === 'string'
+              ? height
+              : undefined,
+          width: fill
+            ? undefined
+            : typeof width === 'number' || typeof height === 'string'
+              ? width
+              : undefined,
         }}
       />
     ));
@@ -143,10 +203,18 @@ export default function PreviewThumbnail({
   return (
     <div
       ref={ref}
-      className="flex items-center justify-center"
+      className={cn('flex items-center justify-center', rootClassName)}
       style={{
-        height: typeof height === 'number' ? height : 140,
-        width: typeof width === 'number' ? width : 196,
+        height: fill
+          ? undefined
+          : typeof height === 'number' || typeof height === 'string'
+            ? height
+            : 140,
+        width: fill
+          ? undefined
+          : typeof width === 'number' || typeof width === 'string'
+            ? width
+            : 196,
       }}
     >
       {component}

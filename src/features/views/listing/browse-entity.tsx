@@ -89,9 +89,6 @@ export function BrowseEntityScope() {
   const pagination = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.pagination;
 
   const onCellClick = (_: string, record: EntityCoreIdentifiableNamed) => {
-    // navigate(
-    //   `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`
-    // );
     makeSelectEntityClickEvent({
       display: true,
       data: record,

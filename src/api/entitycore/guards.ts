@@ -14,9 +14,9 @@ import type {
 } from '@/api/entitycore/types';
 
 export function hasAssets(
-  obj: EntityCoreObjectTypes
+  obj?: EntityCoreObjectTypes | null
 ): obj is EntityCoreObjectTypes & EntityCoreBaseAsset {
-  return 'assets' in obj && (obj.assets === null || Array.isArray(obj.assets));
+  return !!obj && 'assets' in obj && (obj.assets === null || Array.isArray(obj.assets));
 }
 
 export function isReconstructionMorphology(
@@ -50,9 +50,9 @@ export function isExperimentalSynapsesPerConnection(
 }
 
 export function isSingleNeuronSynaptome(
-  entity: EntityCoreObjectTypes
+  entity?: EntityCoreObjectTypes | null
 ): entity is ISingleNeuronSynaptome {
-  return entity.type === EntityTypeDict.SingleNeuronSynaptome;
+  return Boolean(entity) && Boolean(entity?.type === EntityTypeDict.SingleNeuronSynaptome);
 }
 
 export function isMemodel(entity: EntityCoreObjectTypes): entity is IMEModel {
