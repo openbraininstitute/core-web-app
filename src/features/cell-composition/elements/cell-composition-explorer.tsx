@@ -1,3 +1,5 @@
+'use client';
+
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { CellCompositionMETypeTree } from '@/features/cell-composition/elements/m-e-type-tree';
@@ -11,7 +13,7 @@ export default function CellCompositionExplorer() {
         showButtons: false,
       })}
     >
-      <div className="flex h-full w-full min-w-[300px] flex-col gap-5 py-8 pb-0 text-white">
+      <div className="absolute top-0 right-0 flex h-full w-full flex-col gap-2 px-4 py-4 text-white">
         <CellCompositionMETypeTree />
       </div>
     </ErrorBoundary>

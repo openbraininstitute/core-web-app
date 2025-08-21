@@ -1,16 +1,16 @@
 /* eslint-disable react/jsx-props-no-spreading */
+
 import { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 
 import { loadable } from 'jotai/utils';
-import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
 import { match, P } from 'ts-pattern';
 
 import Node from '@/features/cell-composition/elements/default-node';
 import Tree from '@/components/tree';
 
+import { CellCompositionSkeleton } from '@/features/cell-composition/elements/cell-composition-skeleton';
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
 import { cellCompositionAtom, annotationTypesAtom } from '@/features/cell-composition/context';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
@@ -80,11 +80,7 @@ export function CellCompositionMETypeTree() {
         if (testAnnotations.state === 'loading' || testComposition.state === 'loading') return true;
         return false;
       },
-      () => (
-        <div className="flex h-full items-center justify-center">
-          <Spin size="large" indicator={<LoadingOutlined />} className="text-neutral-3" />
-        </div>
-      )
+      () => <CellCompositionSkeleton />
     )
     .when(
       ({ annotations: testAnnotations, composition: testComposition }) => {
@@ -105,9 +101,9 @@ export function CellCompositionMETypeTree() {
       }
     )
     .with({ composition: { data: P.select() } }, (testComposition) => (
-      <>
+      <div className="relative flex h-[80%] w-full flex-col gap-2">
         <h2
-          className="flex justify-between text-lg font-bold text-white"
+          className="sticky top-0 flex justify-between text-lg font-bold text-white"
           data-testid="total-count-or-density"
         >
           <span className="justify-self-start">Neurons [{metricToUnit[densityOrCount]}]</span>
@@ -120,10 +116,14 @@ export function CellCompositionMETypeTree() {
           densityOrCount={densityOrCount}
           selectDensityOrCount={(v) => setDensityOrCount(v)}
         />
-        <div className="primary-scrollbar h-full overflow-y-auto rounded-md border border-[#0250b3] p-4">
-          <h6 className="px-1.5 text-sm font-normal text-gray-400">M-TYPES</h6>
+        <div
+          id="cell-composition-tree-container"
+          data-testid="cell-composition-tree-container"
+          className="white-scrollbar border-primary-7 mt-2 h-full overflow-y-auto rounded-md border bg-white/2 p-4 backdrop-blur-md"
+        >
+          <h6 className="text-primary-3 px-1.5 text-sm font-normal">M-TYPES</h6>
           <Tree<TreeNode>
-            dataKey=""
+            dataKey="cell-composition-tree-container"
             data={testComposition.neurons as Array<TreeNode>}
             selectedNode={null}
             renderNode={defaultNode}
@@ -131,7 +131,7 @@ export function CellCompositionMETypeTree() {
             separator={false}
           />
         </div>
-      </>
+      </div>
     ))
     .otherwise(() => null);
 }

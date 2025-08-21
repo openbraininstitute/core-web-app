@@ -1,19 +1,17 @@
 'use client';
 
-import { usePathname, useRouter, useSelectedLayoutSegments } from 'next/navigation';
-import { LoadingOutlined, PlusOutlined, WarningFilled } from '@ant-design/icons';
+import { useRouter, useSearchParams, useSelectedLayoutSegments } from 'next/navigation';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import last from 'lodash/last';
 import sum from 'lodash/sum';
 
-import { Tooltip, TooltipArrow, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { getProjectBookmarkCategories } from '@/api/virtual-lab-svc/queries/bookmark';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -48,7 +46,7 @@ function BookmarkButton() {
   const segments = useSelectedLayoutSegments();
   const { virtualLabId, projectId } = useWorkspace();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: keyBuilder.bookmarkCategories({ virtualLabId, projectId }),
     queryFn: () => getProjectBookmarkCategories({ virtualLabId, projectId }),
     select: (response) => response.data,
@@ -69,7 +67,7 @@ function BookmarkButton() {
       variant="outline"
       className={cn(
         'inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap shadow-2xl transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
-        'hover:bg-neutral-1 hover:text-primary-8 group h-10 border-none py-3 text-base select-none',
+        'hover:bg-neutral-1 hover:text-primary-8 h-10 border-none py-3 text-base select-none',
         { 'h-12': breakpoint === 'xl' },
         { 'bg-primary-9 font-bold text-white': last(segments) === 'bookmarks' }
       )}
@@ -77,33 +75,7 @@ function BookmarkButton() {
     >
       <div className="flex w-full items-center justify-between gap-6">
         <span>Bookmarks</span>
-        {isLoading ? ( // eslint-disable-line no-nested-ternary
-          <LoadingOutlined spin />
-        ) : isError ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <WarningFilled
-                className={cn('text-destructive/60 group-hover:text-primary-9', {
-                  'text-white': last(segments) === 'bookmarks',
-                })}
-              />
-            </TooltipTrigger>
-            <TooltipContent
-              hideWhenDetached
-              arrowPadding={0}
-              sideOffset={4}
-              side="bottom"
-              align="center"
-            >
-              <p>
-                Error occurred <br /> when fetching bookmarks
-              </p>
-              <TooltipArrow className="fill-primary-9" />
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          total
-        )}
+        {isLoading ? <LoadingOutlined spin /> : total}
       </div>
     </Button>
   );
@@ -111,32 +83,20 @@ function BookmarkButton() {
 
 function ExploreTabs() {
   const navigate = useRouter().push;
-  const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
-  const segments = useSelectedLayoutSegments();
   const { virtualLabId, projectId } = useWorkspace();
-
-  const { activeTab, onChangeTab } = useTabs({
-    tabsConfig: tabsConfigItems,
-    clearOnDefault: false,
-    defaultKey: ExploreSections.Public,
-    shallow: true,
-    tabKey: 'scope',
-  });
+  const searchParams = useSearchParams();
+  const segments = useSelectedLayoutSegments();
+  const scope = searchParams.get('scope');
 
   const onTabClick = (value: string) => {
-    if (pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore`) {
-      onChangeTab(value)();
-    } else
-      navigate(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore?scope=${value}`
-      );
+    navigate(
+      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore?scope=${value}`
+    );
   };
 
   const currentScope =
-    segments.at(1) === 'entity' || !last(segments)
-      ? (activeTab ?? ExploreSections.Public)
-      : undefined;
+    segments.at(1) === 'entity' || !last(segments) ? (scope ?? ExploreSections.Public) : undefined;
 
   return (
     <>
