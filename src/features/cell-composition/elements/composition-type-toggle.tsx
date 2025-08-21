@@ -12,10 +12,10 @@ export function DensityOrCountToggle({
   selectDensityOrCount: (densityOrCount: DensityOrCount) => void;
 }) {
   return (
-    <div className="flex items-center justify-between pt-2">
+    <div className="flex items-center justify-between">
       <span className="font-light">Display:</span>
       <div className="flex items-center">
-        <span className={classNames(densityOrCount === 'count' && 'font-bold')}>count</span>
+        <span className={classNames(densityOrCount === 'count' && 'font-bold')}>Count</span>
         <Switch.Root
           className="group relative mx-4 flex h-[16px] w-8 items-center rounded-full border border-white data-[state=checked]:bg-white"
           title="density or count"
@@ -29,7 +29,7 @@ export function DensityOrCountToggle({
         >
           <Switch.Thumb className="block h-[10px] w-[10px] translate-x-[2px] rounded-full transition-transform duration-100 will-change-transform group-[data-disabled]:bg-gray-500 data-[state=checked]:translate-x-4 data-[state=checked]:bg-black data-[state=unchecked]:bg-white" />
         </Switch.Root>
-        <span className={classNames(densityOrCount === 'density' && 'font-bold')}>density</span>
+        <span className={classNames(densityOrCount === 'density' && 'font-bold')}>Density</span>
       </div>
     </div>
   );

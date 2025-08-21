@@ -2,6 +2,7 @@ import React from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { TTreeNode, RenderNodeProps } from '@/components/tree/types';
 
@@ -29,7 +30,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
       aria-label={nodeName}
       role="button"
       tabIndex={0}
-      className={classNames(
+      className={cn(
         'flex min-w-0 flex-1 cursor-default items-center transition-colors duration-200 ease-in-out',
         'hover:text-primary-1 px-2 py-1 text-white hover:font-bold',
         figureOutMargin(hasChildren, isExpanded)
@@ -66,7 +67,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
         </div>
         {hasChildren && isExpanded && (
           <div
-            className="mt-2 text-sm font-light! text-gray-400 uppercase"
+            className="text-primary-3 mt-2 text-sm font-light! uppercase"
             style={{ marginLeft: indentation?.size || 18 }}
           >
             E-Types
