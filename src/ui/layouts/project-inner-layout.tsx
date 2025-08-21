@@ -1,14 +1,14 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useDisableWorkspaceOverflow } from '@/ui/hooks/use-disable-workspace-overflow';
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 
 type Props = {
   children: ReactNode;
 };
 
 export function ProjectInnerLayout({ children }: Props) {
-  useDisableWorkspaceOverflow();
+  useDisableElementOverflow({});
 
   return (
     <div

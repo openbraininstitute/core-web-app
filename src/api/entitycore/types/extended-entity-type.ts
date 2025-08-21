@@ -9,6 +9,13 @@ export const ExtendedEntitiesTypeDict = {
   PairedNeuronCircuit: 'paired_neuron_circuit',
   PairedNeuronCircuitSimulation: 'paired_neuron_circuit_simulation',
   SmallMicrocircuitSimulation: 'small_microcircuit_simulation',
+  MicrocircuitSimulation: 'micro_circuit_simulation',
+  NGVCircuit: 'ngv_circuit', // this is temporary
+  BrainRegion: 'brain_region', // this is temporary
+  BrainSystems: 'brain_system', // this is temporary
+  WholeBrain: 'whole_brain', // this is temporary
+  Metabolism: 'metabolism', // this is temporary
+  NGVUnit: 'ngv_unit', // this is temporary
 } as const;
 
 export type TExtendedEntitiesTypeDict =

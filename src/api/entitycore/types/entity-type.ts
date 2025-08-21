@@ -19,6 +19,7 @@ export const EntityTypeDict = {
   BrainAtlasRegion: 'brain_atlas_region',
   SimulationCampaign: 'simulation_campaign',
   Simulation: 'simulation',
+  IonChannelModel: 'ion_channel_model',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {

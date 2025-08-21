@@ -46,7 +46,7 @@ export function Container(): JSX.Element {
   const targetHeight = useMemo<string>(() => {
     if (isFullscreen) return 'calc(100vh - 1rem)';
     if (isExpanded) return 'calc(100vh - 6rem)';
-    if (isCollapsed) return 'calc(100vh - 6.5rem)';
+    if (isCollapsed) return 'calc(100vh - 6rem)';
     return 'calc(100vh - 5.2rem)';
   }, [isFullscreen, isExpanded, isCollapsed]);
 
@@ -72,7 +72,7 @@ export function Container(): JSX.Element {
         'text-white [grid-area:ai]',
         { 'text-primary-9 mr-3 bg-white shadow-lg': isExpanded },
         { 'text-primary-9 my-2 bg-white px-4 shadow-lg': isFullscreen },
-        { 'bg-primary-9 border-primary-9 my-2 mr-3 text-white shadow-md': isCollapsed }
+        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed }
       )}
       animate={{
         width: targetWidth,
