@@ -37,7 +37,7 @@ jobs:
 
       - name: Build a Docker image for AWS
         run: |
-          docker build --build-arg DEPLOYMENT_ENV=dev -t ${{ vars.PUBLICECR_URI }}:dev .
+          docker build --build-arg DEPLOYMENT_ENV=development -t ${{ vars.PUBLICECR_URI }}:dev .
 
       - name: Publish the image for AWS To AWS ECR
         run: |
