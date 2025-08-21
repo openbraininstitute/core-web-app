@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - develop # TODO: remove when the dev deployment is functional
   workflow_dispatch:
 
 concurrency:
