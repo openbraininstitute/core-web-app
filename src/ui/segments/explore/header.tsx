@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams, useSelectedLayoutSegments } from 'next/navigation';
+import { usePathname, useRouter, useSelectedLayoutSegments } from 'next/navigation';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import last from 'lodash/last';
@@ -12,6 +12,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -83,21 +84,32 @@ function BookmarkButton() {
 
 function ExploreTabs() {
   const navigate = useRouter().push;
+  const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
-  const { virtualLabId, projectId } = useWorkspace();
-  const searchParams = useSearchParams();
   const segments = useSelectedLayoutSegments();
-  const scope = searchParams.get('scope');
+  const { virtualLabId, projectId } = useWorkspace();
+
+  const { activeTab, onChangeTab } = useTabs({
+    tabsConfig: tabsConfigItems,
+    clearOnDefault: false,
+    defaultKey: ExploreSections.Public,
+    shallow: true,
+    tabKey: 'scope',
+  });
 
   const onTabClick = (value: string) => {
-    navigate(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore?scope=${value}`
-    );
+    if (pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore`) {
+      onChangeTab(value)();
+    } else
+      navigate(
+        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore?scope=${value}`
+      );
   };
 
   const currentScope =
-    segments.at(1) === 'entity' || !last(segments) ? (scope ?? ExploreSections.Public) : undefined;
-
+    segments.at(1) === 'entity' || !last(segments)
+      ? (activeTab ?? ExploreSections.Public)
+      : undefined;
   return (
     <>
       <PillTabs

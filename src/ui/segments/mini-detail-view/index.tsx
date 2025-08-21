@@ -11,16 +11,22 @@ import Link from 'next/link';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  ExtendedEntitiesTypeDict,
+  TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { bookmarkToProjectLibrary } from '@/api/virtual-lab-svc/queries/bookmark';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { BookmarkIcon, DownloadIcon } from '@/components/icons/buttons';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardTitle } from '@/ui/molecules/card';
+import { LAST_REGISTERED_WORKFLOW, WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import {
   makeSelectEntityClickEvent,
@@ -29,14 +35,20 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { TWorkspaceSection } from '@/constants';
 import type {
   EntityCoreObjectTypes,
   IMEModel,
   ISingleNeuronSynaptome,
 } from '@/api/entitycore/types';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
 
-export function MiniDetailView<T extends EntityCoreObjectTypes>() {
+type Props = {
+  section?: TWorkspaceSection;
+};
+
+export function MiniDetailView<T extends EntityCoreObjectTypes>({
+  section = WorkspaceSection.Explore,
+}: Props) {
   const [record, setRecord] = useState<T | null>(null);
   useSelectEntityClickEvent<T>((event) => {
     setRecord(event.detail.data);
@@ -120,6 +132,13 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>() {
     )
     .otherwise(() => null);
 
+  const actions = match({ section })
+    .with({ section: WorkspaceSection.Explore }, () => <ExploreActions record={record} />)
+    .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
+      <WorkflowSimulateActions record={record} />
+    ))
+    .otherwise(() => null);
+
   return (
     <AnimatePresence>
       {record && (
@@ -144,7 +163,9 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>() {
             className="bg-primary-9 relative h-full gap-0.5 rounded-2xl py-0 pr-1 pl-2 text-white"
           >
             <CardTitle className="bg-primary-9 sticky top-0 flex items-start justify-between gap-4 rounded-2xl px-5 pt-4 pb-2">
-              <h1 className="text-2xl font-bold">{record.name}</h1>
+              <h1 className="text-2xl font-bold break-all" title={record.name}>
+                {record.name}
+              </h1>
               <button
                 type="button"
                 onClick={onClose}
@@ -197,7 +218,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>() {
                 })}
               </div>
             </div>
-            <Actions record={record} />
+            {actions}
           </Card>
         </motion.div>
       )}
@@ -207,7 +228,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>() {
 
 export default MiniDetailView;
 
-function Actions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
   const { virtualLabId, projectId } = useWorkspace();
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
@@ -285,6 +306,57 @@ function Actions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
           href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const [, updateLastRegisteredWorkflow] = useLocalStorage<{
+    id: string;
+    date: number;
+    type: TExtendedEntitiesTypeDict;
+    section: TWorkspaceSection;
+  } | null>(LAST_REGISTERED_WORKFLOW, null);
+
+  const onWorkflowClick = () => {
+    updateLastRegisteredWorkflow({
+      id: record.id,
+      date: new Date().getTime(),
+      type: record.type,
+      section: WorkspaceSection.SimulateWorkflow,
+    });
+  };
+
+  return (
+    <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
+      <Button
+        rounded
+        asChild
+        title="go to details page"
+        variant="default"
+        className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+      >
+        <Link
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`}
+        >
+          View details
+        </Link>
+      </Button>
+      <Button
+        rounded
+        asChild
+        title="go to details page"
+        variant="default"
+        className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+      >
+        <Link
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`}
+          onClick={onWorkflowClick}
+        >
+          Use model
         </Link>
       </Button>
     </div>

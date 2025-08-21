@@ -26,6 +26,35 @@ import type {
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
 
+export type Props<T> = {
+  facets: Facets | undefined;
+  resultPagination?: {
+    pagination: EntitycorePagination;
+    totalData: number;
+  };
+  dataScope?: TWorkspaceScope;
+  columns: ColumnProps<T>[];
+  controlsVisible: boolean;
+  dataType: TExtendedEntitiesTypeDict;
+  workspace?: WorkspaceContext;
+  cls?: {
+    container?: ComponentProps<'div'>['className']; // this is for the section html tag
+    table?: ComponentProps<'div'>['className']; // this is for ant-table-wrapper
+  };
+  dataKey: string;
+  selectionType?: RowSelectionType;
+  onRow?: TableProps<T>['onRow'];
+  sticky?: TableProps<T>['sticky'];
+  onRowsSelected?: ((rows: T[]) => void) | undefined;
+  renderButton?: ((props: RenderButtonProps<T>) => ReactNode) | undefined;
+  onCellClick?: OnCellClick<T> | undefined;
+  showLoadingState?: boolean;
+  isLoading?: boolean;
+  dataSource: Array<T>;
+  rowClassName?: ComponentProps<'td'>['className'];
+  tableStyle?: CSSProperties | undefined;
+};
+
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
   dataKey,
   dataScope,
@@ -48,34 +77,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onRowsSelected,
   onCellClick,
   tableStyle,
-}: {
-  facets: Facets | undefined;
-  resultPagination?: {
-    pagination: EntitycorePagination;
-    totalData: number;
-  };
-  dataScope?: TWorkspaceScope;
-  columns: ColumnProps<T>[];
-  controlsVisible: boolean;
-  dataType: TExtendedEntitiesTypeDict;
-  workspace?: WorkspaceContext;
-  cls?: {
-    container?: ComponentProps<'div'>['className']; // this is for the section
-    table?: ComponentProps<'div'>['className']; // this is for ant-table-wrapper
-  };
-  dataKey: string;
-  selectionType?: RowSelectionType;
-  onRow?: TableProps<T>['onRow'];
-  sticky?: TableProps<T>['sticky'];
-  onRowsSelected?: ((rows: T[]) => void) | undefined;
-  renderButton?: ((props: RenderButtonProps<T>) => ReactNode) | undefined;
-  onCellClick?: OnCellClick<T> | undefined;
-  showLoadingState?: boolean;
-  isLoading?: boolean;
-  dataSource: Array<T>;
-  rowClassName?: ComponentProps<'td'>['className'];
-  tableStyle?: CSSProperties | undefined;
-}) {
+}: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
 

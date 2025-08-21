@@ -20,7 +20,7 @@ export default function Layout({ children }: Props) {
           </div>
           <div
             id="workspace-body"
-            className="secondary-scrollbar w-full overflow-y-auto pb-3 [grid-area:main]"
+            className="secondary-scrollbar w-full overflow-x-hidden overflow-y-auto pb-3 [grid-area:main]"
           >
             {children}
           </div>

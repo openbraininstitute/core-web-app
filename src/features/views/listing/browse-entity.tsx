@@ -1,50 +1,67 @@
+/* eslint-disable react/jsx-props-no-spreading */
+
 'use client';
 
-import { useParams, useSearchParams } from 'next/navigation';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useState } from 'react';
-
-import snakeCase from 'lodash/snakeCase';
+import { useState, type ComponentProps } from 'react';
 import compact from 'lodash/compact';
 import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
+import { MiniDetailView } from '@/ui/segments/mini-detail-view';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   coreActiveColumnsAtom,
   corePageNumberAtom,
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { MiniDetailView } from '@/ui/segments/mini-detail-view';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
+import {
+  makeSelectEntityClickEvent,
+  useSelectEntityClickEvent,
+} from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
-import type { KebabCase } from '@/utils/type';
-import {
-  makeSelectEntityClickEvent,
-  useSelectEntityClickEvent,
-} from '@/ui/segments/mini-detail-view/event';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false });
 
-export function BrowseEntityScope() {
-  const searchParams = useSearchParams();
-  const scope = searchParams.get('scope') as TWorkspaceScope;
-  const { type } = useParams<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }>();
-  const { virtualLabId, projectId } = useWorkspace();
-  const dataKey = compact([virtualLabId, projectId, type, scope]).join('/');
-  const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+type Props = {
+  section?: TWorkspaceSection;
+  requireBrainRegion?: boolean;
+  requireMiniDetailView?: boolean;
+  classNames?: {
+    container?: ComponentProps<'div'>['className'];
+    miniView?: ComponentProps<'div'>['className'];
+  };
+  scope: TWorkspaceScope;
+  dataType: TExtendedEntitiesTypeDict;
+  mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
+  miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
+};
 
+export function BrowseEntityScope({
+  classNames,
+  section = WorkspaceSection.Explore,
+  requireBrainRegion = true,
+  requireMiniDetailView = true,
+  dataType,
+  scope,
+  mainTableProps,
+  miniViewProps,
+}: Props) {
+  const { virtualLabId, projectId } = useWorkspace();
+
+  const dataKey = compact([virtualLabId, projectId, section, dataType, scope]).join('/');
   const entity = getEntityByExtendedType({ type: dataType });
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
+
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const [miniViewPresent, updateDisplayMiniView] = useState(false);
 
@@ -66,7 +83,7 @@ export function BrowseEntityScope() {
     context: {
       key: dataKey,
       workspaceScope: scope,
-      extendedEntityType: snakeCase(type) as TExtendedEntitiesTypeDict,
+      extendedEntityType: dataType as TExtendedEntitiesTypeDict,
     },
     workspace: { virtualLabId, projectId },
     queryFn: async ({ queryKey }) => {
@@ -79,7 +96,8 @@ export function BrowseEntityScope() {
     },
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
-      if (!get(queryParameters, 'within_brain_region_brain_region_id', null)) return false;
+      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+        return false;
       return true;
     },
   });
@@ -111,7 +129,10 @@ export function BrowseEntityScope() {
       <div
         id="explore-body-container"
         data-testid="explore-body-container"
-        className="h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]"
+        className={cn(
+          'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
+          classNames?.container
+        )}
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
           <MainTable
@@ -137,21 +158,25 @@ export function BrowseEntityScope() {
                 '[&_.ant-table-placeholder]:bg-neutral-1! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-neutral-1!'
               ),
             }}
+            {...mainTableProps}
           />
         </div>
       </div>
-      <div
-        id="mini-detail-view-container"
-        className={cn(
-          'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
-          '[grid-area:mini-view]',
-          {
-            hidden: !miniViewPresent,
-          }
-        )}
-      >
-        <MiniDetailView />
-      </div>
+      {requireMiniDetailView && (
+        <div
+          id="mini-detail-view-container"
+          className={cn(
+            'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
+            '[grid-area:mini-view]',
+            {
+              hidden: !miniViewPresent,
+            },
+            classNames?.miniView
+          )}
+        >
+          <MiniDetailView {...miniViewProps} />
+        </div>
+      )}
     </>
   );
 }

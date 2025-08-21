@@ -183,6 +183,7 @@ export function BrowseLibraryScope() {
                 '[&_.ant-table-placeholder]:bg-neutral-1! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-neutral-1!'
               ),
             }}
+            selectionType="checkbox"
           />
         </div>
       </div>

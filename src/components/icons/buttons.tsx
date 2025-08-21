@@ -158,3 +158,39 @@ export function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function ArrowOpenRight(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      >
+        <path strokeDasharray="20" strokeDashoffset="20" d="M3 3v18">
+          <animate fill="freeze" attributeName="stroke-dashoffset" dur="0.2s" values="20;0" />
+        </path>
+        <path strokeDasharray="16" strokeDashoffset="16" d="M7 12h13.5">
+          <animate
+            fill="freeze"
+            attributeName="stroke-dashoffset"
+            begin="0.3s"
+            dur="0.2s"
+            values="16;0"
+          />
+        </path>
+        <path strokeDasharray="12" strokeDashoffset="12" d="M21 12l-7 7M21 12l-7 -7">
+          <animate
+            fill="freeze"
+            attributeName="stroke-dashoffset"
+            begin="0.5s"
+            dur="0.2s"
+            values="12;0"
+          />
+        </path>
+      </g>
+    </svg>
+  );
+}

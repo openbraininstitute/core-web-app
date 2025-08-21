@@ -193,7 +193,7 @@ function BaseTable<T extends EntityCoreIdentifiable>({
           }
           onRow={onRow}
           rowKey={(row) => row.id}
-          rowSelection={rowSelection}
+          rowSelection={rowSelection?.type ? rowSelection : undefined}
           scroll={
             scrollable
               ? {
