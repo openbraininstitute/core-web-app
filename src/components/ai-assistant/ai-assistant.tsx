@@ -32,7 +32,6 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
   const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
-
   const style: CSSProperties = {
     '--custom-panel-width': `${panelWidth.toFixed(2)}vw`,
   };
@@ -52,6 +51,7 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
           <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
           {!collapsedPanel && threadId && (
             <div className={classNames(styles.overlay, panelWidth > 25 && styles.shadow)}>
+              <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
               <nav>
                 <button
                   type="button"
@@ -70,7 +70,6 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
                   <div>History</div>
                 </button>
               </nav>
-              <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
               <PanelContent
                 className={styles.content}
                 threadId={threadId}

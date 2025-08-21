@@ -34,9 +34,25 @@ export function GithubFlavorMarkdown({ className, children }: GithubFlavorMarkdo
 function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
   if (!href) return null;
 
+  const info = resolveLinkTarget(href);
   return (
-    <Link href={href} target="_blank">
+    <Link href={info.href} target={info.target}>
       {children}
     </Link>
   );
+}
+
+function resolveLinkTarget(href: string): { href: string; target?: string } {
+  const url = new URL(href);
+  if (url.origin === globalThis.location.origin) return { href };
+
+  if (url.origin === 'https://staging.openbraininstitute.org') {
+    // This is a hack for the dev, because Ai Agent
+    // returns absolute URLs instead of relative ones.
+    return {
+      href: `${globalThis.location.origin}${href.slice(url.origin.length)}`,
+    };
+  }
+
+  return { href, target: href };
 }

@@ -1,6 +1,7 @@
-import { serviceAiAgentThreadCreate, serviceAiAgentThreadList } from '../../api';
+import { serviceAiAgentThreadCreate, serviceAiAgentThreadExists } from '../../api';
 import { Signal } from '../signal';
 import { AssistantContext } from '../types';
+import { sharedSessionStorage } from '@/util/shared-session-storage';
 
 export class ThreadManager {
   private context: AssistantContext | null = null;
@@ -13,35 +14,18 @@ export class ThreadManager {
 
   /**
    * The first time we open the AI Assistant, we try to get the
-   * last recently used thread store in session storage.
+   * last recently used thread stored in session storage.
    * If no such thread exists, we create a new one.
    */
   readonly init = async (context: AssistantContext) => {
     this.context = context;
     const { target } = this;
-    const { accessToken, virtualLabId, projectId } = context;
-    target.threadId.set(undefined);
-    const threads = await serviceAiAgentThreadList({
-      accessToken,
-      virtualLabId,
-      projectId,
-      pageSize: 1,
-      excludeEmptyThreads: false,
-    });
-    const [result] = threads.results;
-    const sessionThreadId = globalThis.sessionStorage.getItem('AI-Assistant/threadId') ?? '';
-    if (result && result.thread_id === sessionThreadId) {
-      target.threadId.set(result.thread_id);
-      globalThis.sessionStorage.setItem('AI-Assistant/threadId', result.thread_id);
+    const { accessToken } = context;
+    const sessionThreadId = await this.recoverLastThreadId(accessToken);
+    if (sessionThreadId) {
+      target.threadId.set(sessionThreadId);
     } else {
-      const thread = await serviceAiAgentThreadCreate({
-        accessToken,
-        virtualLabId,
-        projectId,
-        title: new Date().toUTCString(),
-      });
-      target.threadId.set(thread.threadId);
-      globalThis.sessionStorage.setItem('AI-Assistant/threadId', thread.threadId);
+      await this.createThread();
     }
   };
 
@@ -56,6 +40,16 @@ export class ThreadManager {
     const thread = await serviceAiAgentThreadCreate(params);
     const { threadId } = thread;
     target.threadId.set(threadId);
+    sharedSessionStorage.setItem('AI-Assistant/threadId', threadId);
     return threadId;
   };
+
+  private async recoverLastThreadId(accessToken: string): Promise<string | null> {
+    const sessionThreadId = sharedSessionStorage.getItem('AI-Assistant/threadId') ?? '';
+    if (!sessionThreadId) return null;
+
+    // Check thread existence.
+    const exists = await serviceAiAgentThreadExists({ accessToken, threadId: sessionThreadId });
+    return exists ? sessionThreadId : null;
+  }
 }

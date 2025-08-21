@@ -41,7 +41,9 @@ class AiAssistantClass {
     this.virtualLabId.event.addListener(this.handleInit);
     this.projectId.event.addListener(this.handleInit);
     this.threadId.event.addListener((threadId: string | undefined) => {
-      if (threadId) this.messageManager.loadMessages(this.context, threadId);
+      if (!threadId) return;
+
+      this.messageManager.loadMessages(this.context, threadId);
     });
   }
 
@@ -151,8 +153,9 @@ export function useAiAssistant(): Omit<AiAssistantClass, 'init' | 'history' | 'e
     AiAssistant.error.event.addListener(handleError);
     return () => AiAssistant.error.event.removeListener(handleError);
   }, [error]);
-
-  AiAssistant.init({ accessToken, virtualLabId, projectId });
+  React.useEffect(() => {
+    AiAssistant.init({ accessToken, virtualLabId, projectId });
+  }, [accessToken, virtualLabId, projectId]);
 
   return AiAssistant;
 }
