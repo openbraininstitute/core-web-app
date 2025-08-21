@@ -3,14 +3,13 @@ import { getEModel, getReconstructionMorphology } from '@/api/entitycore/queries
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
+import { EmodelJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
-
-import { EmodelJsonMetadata } from './types';
 
 export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<EmodelJsonMetadata>();
