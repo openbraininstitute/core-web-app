@@ -3,6 +3,7 @@ import fsPath from 'path';
 import { Readable } from 'stream';
 
 import { format } from 'date-fns';
+import get from 'lodash/get';
 import kebabCase from 'lodash/kebabCase';
 import template from 'lodash/template';
 
@@ -11,7 +12,7 @@ import { EntityTypeValue } from '@/api/entitycore/types';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { IAsset } from '@/api/entitycore/types/shared/global';
 import { getSession } from '@/authFetch';
-import { FileEntry } from '@/features/entity-download/types';
+import { CsvEntryBase, FileEntry } from '@/features/entity-download/types';
 import { WorkspaceContext } from '@/types/common';
 
 const README_TEMPLATE_DIR = './src/features/entity-download/readme-templates';
@@ -170,5 +171,19 @@ export async function createTemplateFileEntry(entityType: EntityTypeValue): Prom
     path: 'README.md',
     stream,
     size: buffer.length,
+  };
+}
+
+export function getMetadataCsvEntryBase(entity: IEntity): CsvEntryBase {
+  return {
+    name: get(entity, 'name', ''),
+    description: get(entity, 'description', ''),
+    subject_name: get(entity, 'subject.name', ''),
+    species_name: get(entity, 'subject.species.name', ''),
+    brain_region: get(entity, 'brain_region.name', ''),
+    contribution: get(entity, 'contributions', [])
+      .map((c) => get(c, 'agent.pref_label'))
+      .filter(Boolean)
+      .join(';'),
   };
 }
