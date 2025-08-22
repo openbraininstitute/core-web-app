@@ -49,7 +49,7 @@ const nextConfig = (phase: string): NextConfig => {
       },
     },
     basePath,
-    assetPrefix: isDev ? undefined : `${cdnUri}/${coreWebAppVersion}`,
+    assetPrefix: isDev || !cdnUri ? undefined : `${cdnUri}/${coreWebAppVersion}`,
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
