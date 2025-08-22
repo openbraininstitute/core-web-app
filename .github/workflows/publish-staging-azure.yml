@@ -1,4 +1,4 @@
-name: Create entitycore-migration image for Azure deployment
+name: Publish STAGING image for Azure deployment
 
 permissions:
   id-token: write # Required for OIDC authentication
@@ -12,12 +12,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-staging:
+  publish-staging-azure:
     runs-on: ubuntu-latest
     env:
-      ENVIRONMENT: staging
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
+      - name: Fail if branch is not main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "This workflow should not be triggered with workflow_dispatch on a branch other than main"
+          exit 1
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -35,8 +40,8 @@ jobs:
 
       - name: Build a Docker image for Azure
         run: |
-          docker build --build-arg DEPLOYMENT_ENV=staging-next-azure -t ${{ vars.PUBLICECR_URI }}:entitycore-migration-azure .
+          docker build --build-arg DEPLOYMENT_ENV=staging-azure -t ${{ vars.PUBLICECR_URI }}:staging-azure .
 
       - name: Publish the image for Azure To AWS ECR
         run: |
-          docker push ${{ vars.PUBLICECR_URI }}:entitycore-migration-azure
+          docker push ${{ vars.PUBLICECR_URI }}:staging-azure

@@ -7,7 +7,8 @@ permissions:
 on:
   push:
     branches:
-      - develop
+      - main
+      - develop # TODO: remove when the dev deployment is functional
   workflow_dispatch:
 
 concurrency:
@@ -18,7 +19,6 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     env:
-      ENVIRONMENT: staging
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
       - name: Checkout code
