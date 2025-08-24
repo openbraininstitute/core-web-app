@@ -11,8 +11,6 @@ import FullScreen from '@/features/brain-atlas-viewer/full-screen';
 import Loader from '@/components/loader';
 import { log } from '@/utils/logger';
 
-import type { TSuspenseStatus } from '@/components/suspense-with-status';
-
 /**
  * CameraController synchronizes the camera's zoom level with external state and detects user-initiated zoom changes.
  *
@@ -79,11 +77,8 @@ function CameraController({
 
 export function AtlasViewer({ dataKey, children }: { dataKey: string; children?: ReactNode }) {
   const threeDRef = useRef<HTMLDivElement>(null);
-  const [meshLoadingStatus, setMeshLoadingStatus] = useState<TSuspenseStatus>('pending');
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  const [pointCloudLoadingStatus, setPointCloudLoadingStatus] =
-    useState<TSuspenseStatus>('pending');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // track user's manual zoom level
   const [userBaseZoom, setUserBaseZoom] = useState<number>(1.3);
@@ -179,19 +174,17 @@ export function AtlasViewer({ dataKey, children }: { dataKey: string; children?:
     };
   }, [isFullScreen, updateSize]);
 
-  const onMeshLoadingStatusChange = useCallback((status: TSuspenseStatus) => {
-    setMeshLoadingStatus(status);
-  }, []);
-
-  const onPointCloudLoadingStatusChange = useCallback((status: TSuspenseStatus) => {
-    setPointCloudLoadingStatus(status);
+  // After first render, let loading overlay be controlled by subcomponents via global atoms
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 0);
+    return () => clearTimeout(t);
   }, []);
 
   const handleFullScreenToggle = () => {
     setIsFullScreen((prev) => !prev);
   };
 
-  const isLoading = meshLoadingStatus === 'pending' || pointCloudLoadingStatus === 'pending';
+  // kept as local fast guard for initial layout while Jotai loadables spin up
 
   const handleUserZoomChange = useCallback((newZoom: number) => {
     setUserBaseZoom(newZoom);
@@ -309,16 +302,15 @@ export function AtlasViewer({ dataKey, children }: { dataKey: string; children?:
           />
           <ViewerComposer
             dataKey={dataKey}
-            onMeshLoadingStatusChange={onMeshLoadingStatusChange}
-            onPointCloudLoadingStatusChange={onPointCloudLoadingStatusChange}
+            onLoadingChange={(_type, loading) => {
+              setIsLoading(loading);
+            }}
           />
         </Canvas>
       </>
     ),
     [
       dataKey,
-      onMeshLoadingStatusChange,
-      onPointCloudLoadingStatusChange,
       containerSize.width,
       containerSize.height,
       finalZoom,
