@@ -109,7 +109,7 @@ export function BrowseLibraryScope() {
       });
     },
     useKeepPreviousData: false,
-    useBrainRegion: false,
+    requireBrainRegion: false,
     enabled: Boolean(bookmarks?.data?.total),
   });
 
@@ -183,6 +183,7 @@ export function BrowseLibraryScope() {
                 '[&_.ant-table-placeholder]:bg-neutral-1! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-neutral-1!'
               ),
             }}
+            selectionType="checkbox"
           />
         </div>
       </div>
