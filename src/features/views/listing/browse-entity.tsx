@@ -4,6 +4,7 @@
 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useState, type ComponentProps } from 'react';
+import { WarningOutlined } from '@ant-design/icons';
 import compact from 'lodash/compact';
 import dynamic from 'next/dynamic';
 import get from 'lodash/get';
@@ -13,6 +14,7 @@ import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
+import { GenericError } from '@/ui/molecules/generic-error';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   coreActiveColumnsAtom,
@@ -24,6 +26,7 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -118,12 +121,19 @@ export function BrowseEntityScope({
     updateDisplayMiniView(event.detail.display);
   });
 
-  if (error)
+  if (error) {
+    log('error', error);
     return (
-      <div>
-        <pre>{JSON.stringify(error, null, 2)}</pre>
-      </div>
+      <GenericError
+        shouldContactSupport
+        text={`
+    An error occurred while fetching  "${entity?.title ?? 'entities'}" data for this region.
+    We are sorry about the inconvenience. Please contact support
+    `}
+        icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
+      />
     );
+  }
 
   return (
     <>

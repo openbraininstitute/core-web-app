@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
 export function BrowseLink({
   isLoading,
@@ -40,8 +41,13 @@ export function BrowseLink({
         className="flex! w-full items-center justify-between!"
       >
         <div className="font-bold text-current">{title}</div>
-        <div className="text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white">
-          {isLoading ? <LoadingOutlined /> : <div>{count}</div>}
+        <div
+          className={cn(
+            'text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white',
+            { 'font-bold text-white': entityType === type }
+          )}
+        >
+          {isLoading ? <LoadingOutlined /> : count}
         </div>
       </Link>
     </Button>

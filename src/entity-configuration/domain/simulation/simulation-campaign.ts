@@ -4,6 +4,7 @@ import keyBy from 'lodash/keyBy';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -34,6 +35,9 @@ async function resolveSimulationCampaigns({
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
 }) {
+  // eslint-disable-next-line no-param-reassign
+  filters = discardBrainRegionQueryParams(filters);
+
   const source = await getCircuitSimulationCampaigns({ context, withFacets, filters });
   // extract all simulation IDs
   const allSimIds = flatMap(
@@ -120,7 +124,7 @@ export async function resolveSimulationByCampaignId({
 
 export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Simulation Campaign',
+  title: 'Simulation campaign',
   extendedType: ExtendedEntitiesTypeDict.SimulationCampaign,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SimulationCampaign,

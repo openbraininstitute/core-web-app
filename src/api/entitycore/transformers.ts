@@ -1,6 +1,7 @@
-import map from 'lodash/map';
-import sortBy from 'lodash/sortBy';
 import isEmpty from 'lodash/isEmpty';
+import sortBy from 'lodash/sortBy';
+import omit from 'lodash/omit';
+import map from 'lodash/map';
 
 import type { Agent, IContributor } from '@/api/entitycore/types/shared/global';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
@@ -156,4 +157,12 @@ function resolveAgentName(agent: Agent) {
     default:
       return '';
   }
+}
+
+export function discardBrainRegionQueryParams(filters?: Record<string, any>) {
+  return omit(filters, [
+    'within_brain_region_hierarchy_id',
+    'within_brain_region_brain_region_id',
+    'within_brain_region_ascendants',
+  ]);
 }

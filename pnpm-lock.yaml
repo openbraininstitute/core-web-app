@@ -173,9 +173,6 @@ importers:
       distinct-colors:
         specifier: ^3.0.0
         version: 3.0.0
-      elastic-builder:
-        specifier: ^2.20.0
-        version: 2.31.0
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.1.0)
@@ -263,6 +260,9 @@ importers:
       optics-ts:
         specifier: ^2.4.0
         version: 2.4.1
+      p-props:
+        specifier: ^6.0.0
+        version: 6.0.0
       pako:
         specifier: ^2.1.0
         version: 2.1.0
@@ -6636,9 +6636,6 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
 
-  elastic-builder@2.31.0:
-    resolution: {integrity: sha512-tfVd2ATari9dOdMl90Iu6Z9W84qiGbmqhZGJa9Y4jFU6Y8VCNobtfWis8uDAcZNgJdzpU3Y5Np5pshvlHIflLw==}
-
   electron-to-chromium@1.5.136:
     resolution: {integrity: sha512-kL4+wUTD7RSA5FHx5YwWtjDnEEkIIikFgWHR4P6fqjw1PPLlqYkxeOb++wAauAssat0YClCy8Y3C5SxgSkjibQ==}
 
@@ -8718,20 +8715,8 @@ packages:
   lodash.groupby@4.6.0:
     resolution: {integrity: sha512-5dcWxm23+VAoz+awKmBaiBvzox8+RqMgFhi7UvX9DHZr2HdxHXM/Wrf8cfKpsW37RNrvtPn6hSwNqurSILbmJw==}
 
-  lodash.has@4.5.2:
-    resolution: {integrity: sha512-rnYUdIo6xRCJnQmbVFEwcxF144erlD+M3YcJUVesflU9paQaE8p+fJDcIQrlMYbxoANFL+AB9hZrzSBBk5PL+g==}
-
-  lodash.hasin@4.5.2:
-    resolution: {integrity: sha512-AFAitwTSq1Ka/1J9uBaVxpLBP5OI3INQvkl4wKcgIYxoA0S3aqO1QWXHR9aCcOrWtPFqP7GzlFncZfe0Jz0kNw==}
-
-  lodash.head@4.0.1:
-    resolution: {integrity: sha512-cw2auMZNAJp4bAAbG0CITl68eE0j4SkbIPEskppHhIyQ2SFQWSrcoH6mnpcFPgsOqSI/lcrnCHKlz8r54D4jCA==}
-
   lodash.isboolean@3.0.3:
     resolution: {integrity: sha512-Bz5mupy2SVbPHURB98VAcw+aHh4vRV5IPNhILUCsOzRmsTmSQ17jIuqopAentWoehktxGd9e/hbIXq980/1QJg==}
-
-  lodash.isempty@4.4.0:
-    resolution: {integrity: sha512-oKMuF3xEeqDltrGMfDxAPGIVMSSRv8tbRSODbrs4KGsRRLEhrW8N8Rd4DRgB2+621hY8A8XwwrTVhXWpxFvMzg==}
 
   lodash.isequal@4.5.0:
     resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
@@ -8743,21 +8728,11 @@ packages:
   lodash.isnil@4.0.0:
     resolution: {integrity: sha512-up2Mzq3545mwVnMhTDMdfoG1OurpA/s5t88JmQX809eH3C8491iu2sfKhTfhQtKY78oPNhiaHJUpT/dUDAAtng==}
 
-  lodash.isobject@3.0.2:
-    resolution: {integrity: sha512-3/Qptq2vr7WeJbB4KHUSKlq8Pl7ASXi3UG6CMbBm8WRtXi8+GHm7mKaU3urfpSEzWe2wCIChs6/sdocUsTKJiA==}
-
-  lodash.isstring@4.0.1:
-    resolution: {integrity: sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw==}
-
   lodash.isundefined@3.0.1:
     resolution: {integrity: sha512-MXB1is3s899/cD8jheYYE2V9qTHwKvt+npCwpD+1Sxm3Q3cECXCiYHjeHWXNwr6Q0SOBPrYUDxendrO6goVTEA==}
 
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
-
-  lodash.omit@4.5.0:
-    resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
-    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
 
   lodash.startcase@4.4.0:
     resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
@@ -9589,8 +9564,16 @@ packages:
     resolution: {integrity: sha512-r6zKACMNhjPJMTl8KcFH4li//gkrXWfbD6feV8l6doRHlzljFWGJ2AP6iKaCJXyZmAUMOPtvbW7EXkbWO/pLEA==}
     engines: {node: '>=4'}
 
+  p-map@6.0.0:
+    resolution: {integrity: sha512-T8BatKGY+k5rU+Q/GTYgrEf2r4xRMevAN5mtXc2aPc4rS1j3s+vWTaO2Wag94neXuCAUAs8cxBL9EeB5EA6diw==}
+    engines: {node: '>=16'}
+
   p-map@7.0.3:
     resolution: {integrity: sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA==}
+    engines: {node: '>=18'}
+
+  p-props@6.0.0:
+    resolution: {integrity: sha512-vk89p9/3y/53LtD99tg1Ld2deVb4BXzw3Ekl1/0unNTvHAqbmgrf+T7eLDXv0mkVXl0mc/wmJoeO00IK7UwF7A==}
     engines: {node: '>=18'}
 
   p-queue@2.4.2:
@@ -19300,17 +19283,6 @@ snapshots:
     dependencies:
       jake: 10.9.2
 
-  elastic-builder@2.31.0:
-    dependencies:
-      lodash.has: 4.5.2
-      lodash.hasin: 4.5.2
-      lodash.head: 4.0.1
-      lodash.isempty: 4.4.0
-      lodash.isnil: 4.0.0
-      lodash.isobject: 3.0.2
-      lodash.isstring: 4.0.1
-      lodash.omit: 4.5.0
-
   electron-to-chromium@1.5.136: {}
 
   element-size@1.1.1: {}
@@ -21887,15 +21859,7 @@ snapshots:
 
   lodash.groupby@4.6.0: {}
 
-  lodash.has@4.5.2: {}
-
-  lodash.hasin@4.5.2: {}
-
-  lodash.head@4.0.1: {}
-
   lodash.isboolean@3.0.3: {}
-
-  lodash.isempty@4.4.0: {}
 
   lodash.isequal@4.5.0: {}
 
@@ -21903,15 +21867,9 @@ snapshots:
 
   lodash.isnil@4.0.0: {}
 
-  lodash.isobject@3.0.2: {}
-
-  lodash.isstring@4.0.1: {}
-
   lodash.isundefined@3.0.1: {}
 
   lodash.merge@4.6.2: {}
-
-  lodash.omit@4.5.0: {}
 
   lodash.startcase@4.4.0: {}
 
@@ -23027,7 +22985,13 @@ snapshots:
 
   p-map@1.2.0: {}
 
+  p-map@6.0.0: {}
+
   p-map@7.0.3: {}
+
+  p-props@6.0.0:
+    dependencies:
+      p-map: 6.0.0
 
   p-queue@2.4.2: {}
 

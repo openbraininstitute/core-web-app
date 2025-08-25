@@ -11,6 +11,15 @@ export const keyBuilder = {
     `${prefix}-count`,
     { virtualLabId, projectId, brainRegionId: brainRegionId ?? '' },
   ],
+  userSimulationsCount: ({
+    virtualLabId,
+    projectId,
+    brainRegionId,
+    personId,
+  }: WorkspaceContext & { brainRegionId?: string; personId?: string }) => [
+    `${prefix}-simulations-count`,
+    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', personId: personId ?? '' },
+  ],
   electricalCellRecordingsCount: ({
     virtualLabId,
     projectId,
